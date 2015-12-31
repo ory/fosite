@@ -1,6 +1,24 @@
 # fosite
 Simple and extensible OAuth2 server-side helpers with enterprise security and zero suck. This library implements rfc6819 and rfc6749.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**
+
+- [Motivation](#motivation)
+- [Good to know](#good-to-know)
+- [Security](#security)
+- [Encourage security by enforcing it!](#encourage-security-by-enforcing-it)
+- [Provide extensibility and interoperability](#provide-extensibility-and-interoperability)
+- [Tokens](#tokens)
+- [Usage](#usage)
+- [Store](#store)
+- [Authorize Endpoint](#authorize-endpoint)
+- [OpenID Connect](#openid-connect)
+- [Token Endpoint](#token-endpoint)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Motivation
 
 Why write another OAuth2 server side library for Go Lang?
