@@ -17,7 +17,7 @@ type CryptoGenerator struct {
 const minimumEntropy = 32
 
 // GenerateAuthorizeCode generates a new authorize code or returns an error.
-// This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets
+// This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets.
 func (c *CryptoGenerator) GenerateAuthorizeCode() (*AuthorizeCode, error) {
 	if c.AuthCodeEntropy < minimumEntropy {
 		c.AuthCodeEntropy = minimumEntropy

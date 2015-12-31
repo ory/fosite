@@ -11,7 +11,7 @@ type AuthorizeCode struct {
 	Signature string
 }
 
-// FromString extracts key and signature from "<key>.<signature>"
+// FromString extracts key and signature from "<key>.<signature>".
 func (a *AuthorizeCode) FromString(data string) {
 	a.Key = ""
 	a.Signature = ""
@@ -36,7 +36,7 @@ func (a *AuthorizeCode) FromString(data string) {
 	return
 }
 
-// String will return the authorize code as "<key>.<signature>"
+// String will return the authorize code as "<key>.<signature>".
 func (a *AuthorizeCode) String() string {
 	return a.Key + "." + a.Signature
 }

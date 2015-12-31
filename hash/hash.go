@@ -1,6 +1,6 @@
 package hash
 
-// Hasher defines how a oauth2-compatible hasher should look like
+// Hasher defines how a oauth2-compatible hasher should look like.
 type Hasher interface {
 	// Compare compares data with a hash and returns an error
 	// if the two do not match.

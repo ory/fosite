@@ -5,7 +5,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// BCrypt implements the Hasher interface by providing BCrypt hashing.
+// BCrypt implements the Hasher interface by using BCrypt.
 type BCrypt struct {
 	WorkFactor int
 }
