@@ -10,16 +10,16 @@ type BCrypt struct {
 	WorkFactor int
 }
 
-func (b *BCrypt) Hash(data string) (string, error) {
-	s, err := bcrypt.GenerateFromPassword([]byte(data), b.WorkFactor)
+func (b *BCrypt) Hash(data []byte) ([]byte, error) {
+	s, err := bcrypt.GenerateFromPassword(data, b.WorkFactor)
 	if err != nil {
 		return "", errors.New(err)
 	}
 	return string(s), nil
 }
 
-func (b *BCrypt) Compare(hash string, data string) error {
-	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(data)); err != nil {
+func (b *BCrypt) Compare(hash, data []byte) error {
+	if err := bcrypt.CompareHashAndPassword(hash, data); err != nil {
 		return errors.New(err)
 	}
 	return nil

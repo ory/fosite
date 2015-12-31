@@ -5,7 +5,7 @@ type Storage interface {
 	// GetClient loads the client by its ID or returns an error
 	// if the client does not exist or another error occurred.
 	GetClient(id string) (Client, error)
-
+/*
 	// StoreClient stores the client.
 	StoreClient(Client) error
 
@@ -39,4 +39,5 @@ type Storage interface {
 
 	// RemoveRefresh revokes or deletes refresh AccessData.
 	RemoveRefresh(token string) error
+*/
 }

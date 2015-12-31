@@ -4,8 +4,8 @@ package hash
 type Hasher interface {
 	// Compare compares data with a hash and returns an error
 	// if the two do not match.
-	Compare(hash, data string) error
+	Compare(hash, data []byte) error
 
 	// Hash creates a hash from data or returns an error.
-	Hash(data string) (string, error)
+	Hash(data []byte) ([]byte, error)
 }
