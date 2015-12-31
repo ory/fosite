@@ -14,6 +14,12 @@ This library implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enfor
 - [Good to know](#good-to-know)
 - [Security](#security)
   - [Encourage security by enforcing it!](#encourage-security-by-enforcing-it)
+    - [Secure Tokens](#secure-tokens)
+    - [No state, no token](#no-state-no-token)
+    - [Opaque tokens](#opaque-tokens)
+    - [Advanced Token Validation](#advanced-token-validation)
+    - [Encrypt credentials at rest](#encrypt-credentials-at-rest)
+    - [Implement peer reviewed IETF Standards](#implement-peer-reviewed-ietf-standards)
   - [Provide extensibility and interoperability](#provide-extensibility-and-interoperability)
   - [Tokens](#tokens)
 - [Usage](#usage)
@@ -49,29 +55,46 @@ Fosite has two commandments.
 
 ### Encourage security by enforcing it!
 
-This is achieved with:
-* **Secure Tokens:** Tokens are generated with a minimum entropy of 256 bit. You can use more, if you want.
-* **No state, no token:** Without a random-looking state, *GET /oauth2/auth* will fail.
-* **Opaque tokens:** Token generators should know nothing about the request or context.
-* **Advanced Token Validation:** Tokens are layouted as `<key>.<signature>`. The following workflow requires an attacker
- to gain
- *(a)* access to the database
- *(b)* write permission in the persistent store,
- *(c)* get hold of the token encryption secret.
- A database leak or (exclusively) the knowledge of the token encrpytion secret are not enough to maliciously obtain or create a valid token. Tokens and credentials can
- however still be stolen by man-in-the-middle attacks, by malicious or vulnerable clients and other attack vectors.
- * Issuance
-    1. The key is hashed using BCrypt (variable) and used as `<signature>``.
-    2. The client is presented with `<key>.<signature>`.
-    3. The signature is encrypted and stored in the database using AES (variable).
- * Validation
-    1. The client presents `<key>.<signature>`.
-    2. It is validated if <key> matches <signature> using BCrypt (variable).
-    3. The signature is encrypted using AES (variable).
-    4. The encrypted signature is looked up in the database, failing validation if no such row exists.
-    5. They key is considered valid and is now subject for other validations, like audience, redirect or state matching.
-* **Encrypt credentials at rest:** Credentials (tokens, passwords and secrets) are always be stored encrypted.
-* **Implement peer reviewed IETF Standards:** Fosite implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enforces countermeasures suggested in [rfc6819](https://tools.ietf.org/html/rfc6819).
+#### Secure Tokens
+
+Tokens are generated with a minimum entropy of 256 bit. You can use more, if you want.
+
+#### No state, no token
+
+Without a random-looking state, *GET /oauth2/auth* will fail.
+
+#### Opaque tokens
+
+Token generators should know nothing about the request or context.
+
+#### Advanced Token Validation
+
+Tokens are layouted as `<key>.<signature>`. The following workflow requires an attacker to gain
+
+a. access to the database
+b. write permission in the persistent store,
+c. get hold of the token encryption secret.
+
+A database leak or (exclusively) the knowledge of the token encrpytion secret are not enough to maliciously obtain or create a valid token. Tokens and credentials can
+however still be stolen by man-in-the-middle attacks, by malicious or vulnerable clients and other attack vectors.
+* Issuance
+  1. The key is hashed using BCrypt (variable) and used as `<signature>`.
+  2. The client is presented with `<key>.<signature>`.
+  3. The signature is encrypted and stored in the database using AES (variable).
+* Validation
+ 1. The client presents `<key>.<signature>`.
+ 2. It is validated if <key> matches <signature> using BCrypt (variable).
+ 3. The signature is encrypted using AES (variable).
+ 4. The encrypted signature is looked up in the database, failing validation if no such row exists.
+ 5. They key is considered valid and is now subject for other validations, like audience, redirect or state matching.
+
+#### Encrypt credentials at rest
+
+Credentials (tokens, passwords and secrets) are always encrypted at rest.
+
+#### Implement peer reviewed IETF Standards
+
+Fosite implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enforces countermeasures suggested in [rfc6819](https://tools.ietf.org/html/rfc6819).
 
 ### Provide extensibility and interoperability
 
