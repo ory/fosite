@@ -1,10 +1,13 @@
-package fosite
+package auth
 
 import (
 	"net/http"
 	"github.com/go-errors/errors"
 	"net/url"
 	"strings"
+	"golang.org/x/net/context"
+	. "github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/generator"
 )
 
 // Authorize request information
@@ -15,7 +18,7 @@ type AuthorizeRequest struct {
 	RedirectURI string
 	State       string
 	Expiration int32
-	Code string
+	Code generator.AuthorizeCode
 	Config *Config
 }
 
@@ -78,7 +81,7 @@ func (c *Config) DoesClientWhiteListRedirect(redirectURI string, client Client) 
 // It also introduces countermeasures described in rfc6819:
 // * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
 // * rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
-func (c *Config) NewAuthorizeRequest(r *http.Request, store Storage) (*AuthorizeRequest, error) {
+func (c *Config) NewAuthorizeRequest(_ context.Context, r *http.Request, store Storage) (*AuthorizeRequest, error) {
 	if err := r.ParseForm(); err != nil {
 		return nil, errors.Wrap(ErrInvalidRequest, 0)
 	}

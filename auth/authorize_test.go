@@ -1,8 +1,10 @@
-package fosite
+package auth
+
 import (
 "net/url"
 "testing"
 	"github.com/stretchr/testify/assert"
+	. "github.com/ory-am/fosite"
 )
 
 func TestGetRedirectURIAgainstRFC6749Section3(t *testing.T) {
