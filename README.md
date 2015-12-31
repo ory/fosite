@@ -8,14 +8,14 @@ Simple and extensible OAuth2 server-side helpers with enterprise security and ze
 - [Motivation](#motivation)
 - [Good to know](#good-to-know)
 - [Security](#security)
-- [Encourage security by enforcing it!](#encourage-security-by-enforcing-it)
-- [Provide extensibility and interoperability](#provide-extensibility-and-interoperability)
-- [Tokens](#tokens)
+  - [Encourage security by enforcing it!](#encourage-security-by-enforcing-it)
+  - [Provide extensibility and interoperability](#provide-extensibility-and-interoperability)
+  - [Tokens](#tokens)
 - [Usage](#usage)
-- [Store](#store)
-- [Authorize Endpoint](#authorize-endpoint)
-- [OpenID Connect](#openid-connect)
-- [Token Endpoint](#token-endpoint)
+  - [Store](#store)
+  - [Authorize Endpoint](#authorize-endpoint)
+  - [OpenID Connect](#openid-connect)
+  - [Token Endpoint](#token-endpoint)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
