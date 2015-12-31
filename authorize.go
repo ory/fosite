@@ -5,7 +5,6 @@ import (
 	"github.com/go-errors/errors"
 	"net/url"
 	"strings"
-	"time"
 )
 
 // Authorize request information
@@ -16,39 +15,12 @@ type AuthorizeRequest struct {
 	RedirectURI string
 	State       string
 	Expiration int32
-	Config *Config
-}
-
-type AuthorizeData struct {
-	// Client information.
-	Client Client
-
-	// Authorization code.
 	Code string
-
-	// Token expiration in seconds.
-	ExpiresIn int32
-
-	// Requested scope.
-	Scope string
-
-	// Redirect Uri from request.
-	RedirectUri string
-
-	// State data from request.
-	State string
-
-	// CreatedAt defines when this request was created.
-	CreatedAt time.Time
-
-	// Extra data to be passed to storage. Not used by the library.
-	Extra interface{}
+	Config *Config
 }
 
 type ScopeStrategy interface {
 }
-
-var scopeStragies = []ScopeStrategy
 
 // GetRedirectURI extracts the redirect_uri from values.
 // * rfc6749 3.1.   Authorization Endpoint
@@ -72,13 +44,13 @@ func (c *Config) GetRedirectURI(values url.Values) (string, error) {
 		return "", errors.Wrap(ErrInvalidRequest, 0)
 	}
 
-	return redirectURI
+	return redirectURI, nil
 }
 
-// RedirectClientLookup looks up if redirect and client are matching.
+// DoesClientWhiteListRedirect looks up if redirect and client are matching.
 // * rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 // * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-func (c *Config) RedirectClientLookup(redirectURI string, client Client) (string, error) {
+func (c *Config) DoesClientWhiteListRedirect(redirectURI string, client Client) (string, error) {
 	// rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 	// The authorization server	MUST require public clients and SHOULD require confidential clients
 	// to register their redirection URIs.  If a redirection URI is provided
@@ -91,9 +63,9 @@ func (c *Config) RedirectClientLookup(redirectURI string, client Client) (string
 	if redirectURI == "" && len(client.GetRedirectURIs()) == 1 {
 		redirectURI = client.GetRedirectURIs()[0]
 	} else if !stringInSlice(redirectURI, client.GetRedirectURIs()) {
-		return nil, errors.Wrap(ErrInvalidRequest, 0)
+		return "", errors.Wrap(ErrInvalidRequest, 0)
 	}
-	return nil
+	return redirectURI, nil
 }
 
 // NewAuthorizeRequest returns an AuthorizeRequest. This method makes rfc6749 compliant
@@ -123,7 +95,7 @@ func (c *Config) NewAuthorizeRequest(r *http.Request, store Storage) (*Authorize
 
 	// * rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 	// * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-	if redirectURI, err = c.RedirectClientLookup(redirectURI, client); err != nil {
+	if redirectURI, err = c.DoesClientWhiteListRedirect(redirectURI, client); err != nil {
 		return nil, errors.Wrap(ErrInvalidRequest, 0)
 	}
 
@@ -150,7 +122,7 @@ func (c *Config) NewAuthorizeRequest(r *http.Request, store Storage) (*Authorize
 		return nil, errors.Wrap(ErrInvalidRequest, 0)
 	}
 
-	code, err := c.AuthorizeCodeGenerator()
+	code, err := c.AuthorizeCodeGenerator.GenerateAuthorizeCode()
 	if state == "" {
 		return nil, errors.Wrap(ErrServerError, 0)
 	}
@@ -183,7 +155,7 @@ func (c *Config) WriteAuthError(rw http.ResponseWriter, req *http.Request, err e
 
 	// * rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 	// * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-	if redirectURI, err = c.RedirectClientLookup(redirectURI, client); err != nil {
+	if redirectURI, err = c.DoesClientWhiteListRedirect(redirectURI, client); err != nil {
 		http.Error(rw, ErrInvalidRequest, http.StatusBadRequest)
 		return
 	}
@@ -206,7 +178,7 @@ func (c *Config) PersistAndWriteAuthorizeCode(*AuthorizeRequest) {
 
 }
 
-func areResponseTypesValid(c *Config, responseTypes string) bool {
+func areResponseTypesValid(c *Config, responseTypes []string) bool {
 	if len(responseTypes) < 1 {
 		return false
 	}

@@ -22,13 +22,23 @@ Once releases roll out, you will be able to fetch a specific fosite API version 
 
 ## Security
 
-Fosite has three basic rules:
-1. Hash credentials (secrets, tokens, codes) at rest.
-2. Enforce security rather than encouraging it:
- * Tokens can not have less than 256 bit entropy.
- * No strong state parameter = no token.
- * Tokens are opaque.
-3. Be as extensible as possible.
+Fosite has two commandments.
+
+### Encourage security by enforcing it!
+
+This is achieved with:
+* **Secure Tokens:** Tokens are generated with a minimum entropy of 256 bit. You can use more, if you want.
+* **No state, no token:** Without a random-looking state, *GET /oauth2/auth* will fail.
+* **Opaque tokens:** Token generators should know nothing about the request or context.
+* **Hash tokens at rest:** Tokens are layouted as "<key>.<signature>". The key is required to validate the signature. The signature is used for database lookup. No more plain-text tokens at rest!
+* **Hash credentials at rest:** Credentials (tokens, passwords and secrets) are always be stored as salted hashes.
+* **Implement peer reviewed IETF Standards:** Fosite implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enforces countermeasures suggested in [rfc6819](https://tools.ietf.org/html/rfc6819).
+
+### Provide extensibility and interoperability
+
+... because OAuth2 is an extensible and flexible **framework**. Fosite let's you register new response types, new grant
+types and new response key value pares. This is useful, if you want to provide OpenID Connect on top of your
+OAuth2 stack. Or custom assertions, what ever you like and as long as it is secure. ;)
 
 ### Tokens
 
@@ -47,7 +57,10 @@ GUULhK6Od/7UAlnKvMau8APHSKXSRwm9aoOk56SHBns.JDJhJDEwJDdwVmpCQmJLYzM2VDg1VHJ5aEdV
 
 This section is WIP and we welcome discussions via PRs or in the issues.
 
-**/oauth2/auth**
+### Store
+
+### Authorize Endpoint
+
 ```go
 var r *http.Request // we're assuming that we are inside a http.Handler
 var rw http.ResponseWriter  // we're assuming that we are inside a http.Handler
@@ -95,3 +108,7 @@ implemented the work flow the right way:
 It is not clear yet how HandleAuthorizeRequest could be extensible. It might be possible to introduce an interface like AuthorizeStrategy
 and implement different strategies like IDTokenStrategy, AuthorizeCodeStrategy, AccessTokenStrategy.
 What could be tricky though is to define a good response / result model because the strategies be very different in execution logic and requirements.
+
+### OpenID Connect
+
+### Token Endpoint
