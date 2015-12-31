@@ -1,10 +1,10 @@
 package generator
 
 import (
-	"testing"
 	"github.com/ory-am/fosite/hash"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestGenerateAuthorizeCode(t *testing.T) {
@@ -20,12 +20,12 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 	assert.Equal(t, validCode.Signature, code.Signature)
 }
 
-func TestValidateAuthorizeCode(t *testing.T){
+func TestValidateAuthorizeCode(t *testing.T) {
 	var err error
 	cg := CryptoGenerator{
 		Hasher: &hash.BCrypt{},
 	}
-	for _, c := range []string {
+	for _, c := range []string{
 		"",
 		" ",
 		"foo.bar",

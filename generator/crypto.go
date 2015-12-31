@@ -1,11 +1,11 @@
 package generator
 
 import (
-	"github.com/ory-am/fosite/rand"
-	"encoding/base64"
-	"github.com/ory-am/fosite/hash"
-	"github.com/go-errors/errors"
 	"bytes"
+	"encoding/base64"
+	"github.com/go-errors/errors"
+	"github.com/ory-am/fosite/hash"
+	"github.com/ory-am/fosite/rand"
 )
 
 type CryptoGenerator struct {
@@ -49,7 +49,7 @@ func (c *CryptoGenerator) GenerateAuthorizeCode() (*AuthorizeCode, error) {
 	resultHash = bytes.Trim(resultHash, "\x00")
 
 	return &AuthorizeCode{
-		Key: string(resultKey),
+		Key:       string(resultKey),
 		Signature: string(resultHash),
 	}, nil
 }
