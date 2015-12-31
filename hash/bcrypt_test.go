@@ -10,7 +10,7 @@ func TestHash(t *testing.T) {
 	h := &BCrypt{
 		WorkFactor: 10,
 	}
-	password := "foo"
+	password := []byte("foo")
 	hash, err := h.Hash(password)
 	assert.Nil(t, err)
 	assert.NotNil(t, hash)
@@ -21,7 +21,7 @@ func TestCompareEquals(t *testing.T) {
 	h := &BCrypt{
 		WorkFactor: 10,
 	}
-	password := "foo"
+	password := []byte("foo")
 	hash, err := h.Hash(password)
 	assert.Nil(t, err)
 	assert.NotNil(t, hash)
@@ -33,10 +33,10 @@ func TestCompareDifferent(t *testing.T) {
 	h := &BCrypt{
 		WorkFactor: 10,
 	}
-	password := "foo"
+	password := []byte("foo")
 	hash, err := h.Hash(password)
 	assert.Nil(t, err)
 	assert.NotNil(t, hash)
-	err = h.Compare(hash, uuid.NewRandom().String())
+	err = h.Compare(hash, []byte(uuid.NewRandom().String()))
 	assert.NotNil(t, err)
 }

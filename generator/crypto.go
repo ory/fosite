@@ -4,12 +4,13 @@ import (
 	"github.com/ory-am/fosite/rand"
 	"encoding/base64"
 	"github.com/ory-am/fosite/hash"
-"github.com/go-errors/errors"
+	"github.com/go-errors/errors"
+	"bytes"
 )
 
 type CryptoGenerator struct {
 	AuthCodeEntropy int
-	Hasher hash.Hasher
+	Hasher          hash.Hasher
 }
 
 // Default of 32 bytes * 8 = 256 bit which is >= 128 bits as recommended by rfc6819 section 5.1.4.2.2.
@@ -29,45 +30,48 @@ func (c *CryptoGenerator) GenerateAuthorizeCode() (*AuthorizeCode, error) {
 	// constructed from a cryptographically strong random or pseudo-random
 	// number sequence (see [RFC4086] for best current practice) generated
 	// by the authorization server.
-	bytes, err := rand.RandomBytes(c.AuthCodeEntropy, 10)
+	randomBytes, err := rand.RandomBytes(c.AuthCodeEntropy, 20)
 	if err != nil {
 		return nil, err
 	}
 
-	hash, err := c.Hasher.Hash(bytes)
+	resultKey := make([]byte, base64.StdEncoding.EncodedLen(c.AuthCodeEntropy))
+	base64.RawStdEncoding.Encode(resultKey, randomBytes)
+	resultKey = bytes.Trim(resultKey, "\x00")
+
+	hash, err := c.Hasher.Hash(resultKey)
 	if err != nil {
 		return nil, err
 	}
 
-	var result []byte
-	if _, err = base64.RawURLEncoding.Decode(&result, bytes); err != nil {
-		return nil, err
-	}
+	resultHash := make([]byte, base64.StdEncoding.EncodedLen(len(hash)))
+	base64.RawStdEncoding.Encode(resultHash, hash)
+	resultHash = bytes.Trim(resultHash, "\x00")
 
 	return &AuthorizeCode{
-		Key: result,
-		Signature: hash,
+		Key: string(resultKey),
+		Signature: string(resultHash),
 	}, nil
 }
 
 // ValidateAuthorizeCodeSignature returns an AuthorizeCode, if the code argument is a valid authorize code
 // and the signature matches the key.
-func (c *CryptoGenerator) ValidateAuthorizeCodeSignature(code string) (ac *AuthorizeCode,err error) {
+func (c *CryptoGenerator) ValidateAuthorizeCode(code string) (ac *AuthorizeCode, err error) {
+	ac = new(AuthorizeCode)
 	ac.FromString(code)
 	if ac.Key == "" || ac.Signature == "" {
 		return nil, errors.New("Key and signature must both be not empty")
 	}
 
-	var result []byte
-	if _, err = base64.RawURLEncoding.Encode(&result, []byte(ac.Key)); err != nil {
-		// Not valid base64 decoding
+	signature := make([]byte, base64.RawStdEncoding.DecodedLen(len(ac.Signature)))
+	if _, err := base64.RawStdEncoding.Decode(signature, []byte(ac.Signature)); err != nil {
 		return nil, err
 	}
 
-	if err := c.Hasher.Compare([]byte(ac.Signature), result); err != nil {
+	if err := c.Hasher.Compare(signature, []byte(ac.Key)); err != nil {
 		// Hash is invalid
 		return nil, err
 	}
 
-	return ac
+	return ac, nil
 }

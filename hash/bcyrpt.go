@@ -13,9 +13,9 @@ type BCrypt struct {
 func (b *BCrypt) Hash(data []byte) ([]byte, error) {
 	s, err := bcrypt.GenerateFromPassword(data, b.WorkFactor)
 	if err != nil {
-		return "", errors.New(err)
+		return nil, errors.New(err)
 	}
-	return string(s), nil
+	return s, nil
 }
 
 func (b *BCrypt) Compare(hash, data []byte) error {
