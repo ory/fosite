@@ -7,7 +7,7 @@ import (
 )
 
 // Session defines a authorize flow session which will be persisted and passed to the token endpoint (Authorize Code Flow).
-type Session interface {
+type AuthorizeSession interface {
 	// SetExtra sets extra information that you want to be persisted. Ignore this if you have
 	// your own session management or do not need additional persistent states.
 	SetExtra(extra interface{}) error
@@ -24,6 +24,9 @@ type Session interface {
 	// GetResponseTypes returns the scope for this authorize session.
 	GetScopes() []string
 
+	// GetUser returns the user for this authorize session.
+	GetUserID() string
+
 	// GetResponseTypes returns the redirect_uri for this authorize session.
 	GetRedirectURI() string
 
@@ -37,9 +40,9 @@ type Session interface {
 	GetCodeSignature() string
 }
 
-// JSONSession uses json.Marshal and json.Unmarshall to store extra information. It is recommended to use this
+// defaultSession uses json.Marshal and json.Unmarshall to store extra information. It is recommended to use this
 // implementation.
-type JSONSession struct {
+type defaultSession struct {
 	extra         []byte
 	responseTypes []string
 	clientID      string
@@ -47,22 +50,25 @@ type JSONSession struct {
 	redirectURI   string
 	state         string
 	signature     string
+	userID        string
 	ar            *fosite.AuthorizeRequest
 }
 
-func NewJSONSession(ar *fosite.AuthorizeRequest) *JSONSession {
-	return &JSONSession{
+func NewAuthorizeSession(ar *fosite.AuthorizeRequest, userID string) AuthorizeSession {
+	return &defaultSession{
 		ar:            ar,
 		signature:     ar.Code.Signature,
 		extra:         []byte{},
-		responseTypes: ar.Types,
+		responseTypes: ar.ResponseTypes,
 		clientID:      ar.Client.GetID(),
 		state:         ar.State,
+		scopes:        ar.Scopes,
 		redirectURI:   ar.RedirectURI,
+		userID:        userID,
 	}
 }
 
-func (s *JSONSession) SetExtra(extra interface{}) error {
+func (s *defaultSession) SetExtra(extra interface{}) error {
 	result, err := json.Marshal(extra)
 	if err != nil {
 		return errors.New(err)
@@ -71,33 +77,37 @@ func (s *JSONSession) SetExtra(extra interface{}) error {
 	return nil
 }
 
-func (s *JSONSession) WriteExtra(to interface{}) error {
+func (s *defaultSession) WriteExtra(to interface{}) error {
 	if err := json.Unmarshal(s.extra, to); err != nil {
 		return errors.New(err)
 	}
 	return nil
 }
 
-func (s *JSONSession) GetResponseTypes() []string {
+func (s *defaultSession) GetResponseTypes() []string {
 	return s.responseTypes
 }
 
-func (s *JSONSession) GetClientID() string {
+func (s *defaultSession) GetClientID() string {
 	return s.clientID
 }
 
-func (s *JSONSession) GetScopes() []string {
+func (s *defaultSession) GetScopes() []string {
 	return s.scopes
 }
 
-func (s *JSONSession) GetRedirectURI() string {
+func (s *defaultSession) GetRedirectURI() string {
 	return s.redirectURI
 }
 
-func (s *JSONSession) GetState() string {
+func (s *defaultSession) GetState() string {
 	return s.state
 }
 
-func (s *JSONSession) GetCodeSignature() string {
-	return s.GetCodeSignature()
+func (s *defaultSession) GetCodeSignature() string {
+	return s.signature
+}
+
+func (s *defaultSession) GetUserID() string {
+	return s.userID
 }

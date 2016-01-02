@@ -1,10 +1,10 @@
 package fosite
 
 import (
-	"testing"
-	"github.com/stretchr/testify/assert"
-	"github.com/go-errors/errors"
 	native "errors"
+	"github.com/go-errors/errors"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestErrorToRFC6749(t *testing.T) {
@@ -21,4 +21,5 @@ func TestErrorToRFC6749(t *testing.T) {
 	assert.Equal(t, errUnsupportedGrantTypeName, ErrorToRFC6749(errors.New(ErrUnsupportedGrantType)).Name)
 	assert.Equal(t, errInvalidGrantName, ErrorToRFC6749(errors.New(ErrInvalidGrant)).Name)
 	assert.Equal(t, errInvalidClientName, ErrorToRFC6749(errors.New(ErrInvalidClient)).Name)
+	assert.Equal(t, errInvalidState, ErrorToRFC6749(errors.New(ErrInvalidState)).Name)
 }

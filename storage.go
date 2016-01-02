@@ -39,10 +39,3 @@ type Storage interface {
 	// RemoveRefresh revokes or deletes refresh AccessData.
 	// RemoveRefresh(token string) error
 }
-
-// Manager defines an optional but recommended API for your fosite storage implementation. This API is not
-// consumed by fosite itself. You don not need to implement this library, it is merely a good practice guide.
-type Manager interface {
-	// StoreClient stores a client or returns an error.
-	StoreClient(Client) error
-}

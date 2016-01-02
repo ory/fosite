@@ -1,8 +1,8 @@
 package rand
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestRandomBytes(t *testing.T) {

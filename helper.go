@@ -10,7 +10,7 @@ func areResponseTypesValid(c *Config, responseTypes []string) bool {
 		return false
 	}
 	for _, responseType := range responseTypes {
-		if !stringInSlice(responseType, c.AllowedAuthorizeResponseTypes) {
+		if !stringInSlice(responseType, c.AllowedResponseTypes) {
 			return false
 		}
 	}
