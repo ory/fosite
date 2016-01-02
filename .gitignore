@@ -2,3 +2,4 @@
 *.iml
 .cover
 *.log
+cover.out

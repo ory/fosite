@@ -36,7 +36,7 @@ func (c *CryptoGenerator) Generate() (*Token, error) {
 	}
 
 	resultKey := make([]byte, base64.StdEncoding.EncodedLen(c.AuthCodeEntropy))
-	base64.RawStdEncoding.Encode(resultKey, randomBytes)
+	base64.StdEncoding.Encode(resultKey, randomBytes)
 	resultKey = bytes.Trim(resultKey, "\x00")
 
 	hash, err := c.Hasher.Hash(resultKey)
@@ -45,7 +45,7 @@ func (c *CryptoGenerator) Generate() (*Token, error) {
 	}
 
 	resultHash := make([]byte, base64.StdEncoding.EncodedLen(len(hash)))
-	base64.RawStdEncoding.Encode(resultHash, hash)
+	base64.StdEncoding.Encode(resultHash, hash)
 	resultHash = bytes.Trim(resultHash, "\x00")
 
 	return &Token{
@@ -61,8 +61,8 @@ func (c *CryptoGenerator) ValidateSignature(t *Token) (err error) {
 		return errors.New("Key and signature must both be not empty")
 	}
 
-	signature := make([]byte, base64.RawStdEncoding.DecodedLen(len(t.Signature)))
-	if _, err := base64.RawStdEncoding.Decode(signature, []byte(t.Signature)); err != nil {
+	signature := make([]byte, base64.StdEncoding.DecodedLen(len(t.Signature)))
+	if _, err := base64.StdEncoding.Decode(signature, []byte(t.Signature)); err != nil {
 		return err
 	}
 
