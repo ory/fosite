@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func areResponseTypesValid(c *Config, responseTypes []string) bool {
+func areResponseTypesValid(c *OAuth2, responseTypes []string) bool {
 	if len(responseTypes) < 1 {
 		return false
 	}

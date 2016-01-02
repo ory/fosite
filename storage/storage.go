@@ -1,4 +1,4 @@
-package fosite
+package storage
 
 import . "github.com/ory-am/fosite/client"
 

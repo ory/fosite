@@ -104,7 +104,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 
 	for k, c := range []struct {
 		desc          string
-		conf          *Config
+		conf          *OAuth2
 		r             *http.Request
 		query         url.Values
 		expectedError error
@@ -114,7 +114,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* empty request */
 		{
 			desc:          "empty request fails",
-			conf:          &Config{Store: store},
+			conf:          &OAuth2{Store: store},
 			r:             &http.Request{},
 			expectedError: ErrInvalidRequest,
 			mock:          func() {},
@@ -122,7 +122,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid redirect uri */
 		{
 			desc:          "invalid redirect uri fails",
-			conf:          &Config{Store: store},
+			conf:          &OAuth2{Store: store},
 			query:         url.Values{"redirect_uri": []string{"invalid"}},
 			expectedError: ErrInvalidRequest,
 			mock:          func() {},
@@ -130,7 +130,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid client */
 		{
 			desc:          "invalid client uri fails",
-			conf:          &Config{Store: store},
+			conf:          &OAuth2{Store: store},
 			query:         url.Values{"redirect_uri": []string{"http://foo.bar/cb"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -140,7 +140,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Config{Store: store},
+			conf: &OAuth2{Store: store},
 			query: url.Values{
 				"redirect_uri": []string{"http://foo.bar/cb"},
 				"client_id":    []string{"1234"},
@@ -153,7 +153,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* no response type */
 		{
 			desc: "no response type",
-			conf: &Config{Store: store},
+			conf: &OAuth2{Store: store},
 			query: url.Values{
 				"redirect_uri": []string{"http://foo.bar/cb"},
 				"client_id":    []string{"1234"},
@@ -166,7 +166,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid response type */
 		{
 			desc: "invalid response type",
-			conf: &Config{Store: store},
+			conf: &OAuth2{Store: store},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -180,7 +180,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid response type */
 		{
 			desc: "invalid response type",
-			conf: &Config{Store: store},
+			conf: &OAuth2{Store: store},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -194,7 +194,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* unsupported response type */
 		{
 			desc: "unspported response type",
-			conf: &Config{Store: store, AllowedResponseTypes: []string{"code"}},
+			conf: &OAuth2{Store: store, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -208,7 +208,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* unsupported response type */
 		{
 			desc: "unspported response type",
-			conf: &Config{Store: store, AllowedResponseTypes: []string{"code"}},
+			conf: &OAuth2{Store: store, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -222,7 +222,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* no state */
 		{
 			desc: "no state",
-			conf: &Config{Store: store, AllowedResponseTypes: []string{"code"}},
+			conf: &OAuth2{Store: store, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -236,7 +236,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* short state */
 		{
 			desc: "short state",
-			conf: &Config{Store: store, AllowedResponseTypes: []string{"code"}},
+			conf: &OAuth2{Store: store, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -251,7 +251,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* code gen fails */
 		{
 			desc: "code gen fails",
-			conf: &Config{Store: store, AuthorizeCodeGenerator: gen, AllowedResponseTypes: []string{"code"}},
+			conf: &OAuth2{Store: store, AuthorizeCodeGenerator: gen, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -267,7 +267,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* success case */
 		{
 			desc: "should pass",
-			conf: &Config{
+			conf: &OAuth2{
 				Store: store,
 				AuthorizeCodeGenerator: gen,
 				AllowedResponseTypes:   []string{"code", "token"},

@@ -1,8 +1,11 @@
 package fosite
 
-import "github.com/ory-am/fosite/generator"
+import (
+	"github.com/ory-am/fosite/generator"
+	. "github.com/ory-am/fosite/storage"
+)
 
-type Config struct {
+type OAuth2 struct {
 	AllowedResponseTypes      []string
 	AllowedTokenResponseTypes []string
 	Lifetime                  int32
@@ -11,8 +14,8 @@ type Config struct {
 	AuthorizeCodeGenerator    generator.Generator
 }
 
-func NewDefaultConfig() *Config {
-	return &Config{
+func NewDefaultOAuth2() *OAuth2 {
+	return &OAuth2{
 		AllowedResponseTypes:      []string{"code", "token", "id_token"},
 		AllowedTokenResponseTypes: []string{},
 		Lifetime:                  3600,

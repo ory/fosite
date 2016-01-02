@@ -36,7 +36,7 @@ type ScopeStrategy interface {
 // It also introduces countermeasures described in rfc6819:
 // * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
 // * rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
-func (c *Config) NewAuthorizeRequest(_ context.Context, r *http.Request) (*AuthorizeRequest, error) {
+func (c *OAuth2) NewAuthorizeRequest(_ context.Context, r *http.Request) (*AuthorizeRequest, error) {
 	if err := r.ParseForm(); err != nil {
 		return nil, errors.New(ErrInvalidRequest)
 	}
@@ -106,7 +106,7 @@ func (c *Config) NewAuthorizeRequest(_ context.Context, r *http.Request) (*Autho
 	}, nil
 }
 
-func (c *Config) WriteAuthError(rw http.ResponseWriter, req *http.Request, err error) {
+func (c *OAuth2) WriteAuthError(rw http.ResponseWriter, req *http.Request, err error) {
 	redirectURI, err := redirectFromValues(req.Form)
 	if err != nil {
 		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
