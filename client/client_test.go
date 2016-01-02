@@ -1,4 +1,4 @@
-package fosite
+package client
 
 import "testing"
 import (

@@ -143,11 +143,20 @@ if err != nil {
 // decide what to do based on scope and response type
 // e.g: response, err = oauth.HandleAuthorizeRequest(authorizeRequest)
 
-// set up a session
-// session := oauth2.NewAuthorizeSession(123)
-// session.SetExtra(extra interface{})
+// now you can show the authorize page where a user logs in etc.
+// userID := "12345"
 
-// finally, persist code in store and send response
+
+// set up a session. an authorize session MUST include an arbitrary user id formatted as string
+// session := oauth2.NewAuthorizeSession(authorizeRequest, userID)
+
+// now you can store additional metadata, for example
+// session.SetExtra(map[string]interface{}{
+//      "userEmail": "foo@bar",
+//      "lastSeen": new Date(),
+// })
+
+// finally, persist code in store and send response to the user agent
 // e.g: oauth2.FinishAccessRequest(rw, response, session)
 ```
 

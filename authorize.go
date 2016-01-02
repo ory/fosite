@@ -2,6 +2,7 @@ package fosite
 
 import (
 	"github.com/go-errors/errors"
+	. "github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/generator"
 	"golang.org/x/net/context"
 	"net/http"
@@ -23,10 +24,10 @@ type AuthorizeRequest struct {
 type ScopeStrategy interface {
 }
 
-// GetRedirectURI extracts the redirect_uri from values.
+// redirectFromValues extracts the redirect_uri from values.
 // * rfc6749 3.1.   Authorization Endpoint
 // * rfc6749 3.1.2. Redirection Endpoint
-func (c *Config) GetRedirectURI(values url.Values) (string, error) {
+func (c *Config) redirectFromValues(values url.Values) (string, error) {
 	// rfc6749 3.1.   Authorization Endpoint
 	// The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component
 	redirectURI, err := url.QueryUnescape(values.Get("redirect_uri"))
@@ -36,22 +37,17 @@ func (c *Config) GetRedirectURI(values url.Values) (string, error) {
 
 	// rfc6749 3.1.2.  Redirection Endpoint
 	// "The redirection endpoint URI MUST be an absolute URI as defined by [RFC3986] Section 4.3"
-	if rp, err := url.Parse(redirectURI); err != nil {
-		return "", errors.Wrap(ErrInvalidRequest, 0)
-	} else if rp.Host == "" {
-		return "", errors.Wrap(ErrInvalidRequest, 0)
-	} else if rp.Fragment != "" {
-		// "The endpoint URI MUST NOT include a fragment component."
+	if !(isValidURL(redirectURI)) {
 		return "", errors.Wrap(ErrInvalidRequest, 0)
 	}
 
 	return redirectURI, nil
 }
 
-// DoesClientWhiteListRedirect looks up if redirect and client are matching.
+// redirectFromClient looks up if redirect and client are matching.
 // * rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 // * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-func (c *Config) DoesClientWhiteListRedirect(redirectURI string, client Client) (string, error) {
+func (c *Config) redirectFromClient(redirectURI string, client Client) (string, error) {
 	// rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 	// The authorization server	MUST require public clients and SHOULD require confidential clients
 	// to register their redirection URIs.  If a redirection URI is provided
@@ -62,11 +58,14 @@ func (c *Config) DoesClientWhiteListRedirect(redirectURI string, client Client) 
 	// The authorization server may also enforce the usage and validation
 	// of pre-registered redirect URIs (see Section 5.2.3.5).
 	if redirectURI == "" && len(client.GetRedirectURIs()) == 1 {
-		redirectURI = client.GetRedirectURIs()[0]
-	} else if !stringInSlice(redirectURI, client.GetRedirectURIs()) {
-		return "", errors.Wrap(ErrInvalidRequest, 0)
+		if isValidURL(client.GetRedirectURIs()[0]) {
+			return client.GetRedirectURIs()[0], nil
+		}
+	} else if stringInSlice(redirectURI, client.GetRedirectURIs()) {
+		return redirectURI, nil
 	}
-	return redirectURI, nil
+
+	return "", errors.New(ErrInvalidRequest)
 }
 
 // NewAuthorizeRequest returns an AuthorizeRequest. This method makes rfc6749 compliant
@@ -84,7 +83,7 @@ func (c *Config) NewAuthorizeRequest(_ context.Context, r *http.Request, store S
 		return nil, errors.Wrap(ErrInvalidRequest, 0)
 	}
 
-	redirectURI, err := c.GetRedirectURI(r.Form)
+	redirectURI, err := c.redirectFromValues(r.Form)
 	if err != nil {
 		return nil, errors.Wrap(ErrInvalidRequest, 0)
 	}
@@ -96,7 +95,7 @@ func (c *Config) NewAuthorizeRequest(_ context.Context, r *http.Request, store S
 
 	// * rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 	// * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-	if redirectURI, err = c.DoesClientWhiteListRedirect(redirectURI, client); err != nil {
+	if redirectURI, err = c.redirectFromClient(redirectURI, client); err != nil {
 		return nil, errors.Wrap(ErrInvalidRequest, 0)
 	}
 
@@ -141,7 +140,7 @@ func (c *Config) NewAuthorizeRequest(_ context.Context, r *http.Request, store S
 }
 
 func (c *Config) WriteAuthError(rw http.ResponseWriter, req *http.Request, err error) {
-	redirectURI, err := c.GetRedirectURI(req.Form)
+	redirectURI, err := c.redirectFromValues(req.Form)
 	if err != nil {
 		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
 		return
@@ -155,7 +154,7 @@ func (c *Config) WriteAuthError(rw http.ResponseWriter, req *http.Request, err e
 
 	// * rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 	// * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-	if redirectURI, err = c.DoesClientWhiteListRedirect(redirectURI, client); err != nil {
+	if redirectURI, err = c.redirectFromClient(redirectURI, client); err != nil {
 		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
 		return
 	}
@@ -172,35 +171,4 @@ func (c *Config) WriteAuthError(rw http.ResponseWriter, req *http.Request, err e
 	redir.RawQuery = query.Encode()
 	rw.Header().Add("Location", redir.String())
 	rw.WriteHeader(http.StatusFound)
-}
-
-func areResponseTypesValid(c *Config, responseTypes []string) bool {
-	if len(responseTypes) < 1 {
-		return false
-	}
-	for _, responseType := range responseTypes {
-		if !stringInSlice(responseType, c.AllowedAuthorizeResponseTypes) {
-			return false
-		}
-	}
-	return true
-}
-
-func stringInSlice(needle string, haystack []string) bool {
-	for _, b := range haystack {
-		if b == needle {
-			return true
-		}
-	}
-	return false
-}
-
-func removeEmpty(args []string) (ret []string) {
-	for _, v := range args {
-		v = strings.TrimSpace(v)
-		if v != "" {
-			ret = append(ret, v)
-		}
-	}
-	return
 }

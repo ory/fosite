@@ -37,6 +37,6 @@ func TestCompareDifferent(t *testing.T) {
 	hash, err := h.Hash(password)
 	assert.Nil(t, err)
 	assert.NotNil(t, hash)
-	err = h.Compare(hash, []byte(uuid.NewRandom().String()))
+	err = h.Compare(hash, []byte(uuid.NewRandom()))
 	assert.NotNil(t, err)
 }

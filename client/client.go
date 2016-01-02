@@ -1,4 +1,4 @@
-package fosite
+package client
 
 import "github.com/ory-am/fosite/hash"
 
