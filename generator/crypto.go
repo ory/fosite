@@ -18,7 +18,7 @@ const minimumEntropy = 32
 
 // GenerateAuthorizeCode generates a new authorize code or returns an error.
 // This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets.
-func (c *CryptoGenerator) GenerateAuthorizeCode() (*AuthorizeCode, error) {
+func (c *CryptoGenerator) Generate() (*Token, error) {
 	if c.AuthCodeEntropy < minimumEntropy {
 		c.AuthCodeEntropy = minimumEntropy
 	}
@@ -48,7 +48,7 @@ func (c *CryptoGenerator) GenerateAuthorizeCode() (*AuthorizeCode, error) {
 	base64.RawStdEncoding.Encode(resultHash, hash)
 	resultHash = bytes.Trim(resultHash, "\x00")
 
-	return &AuthorizeCode{
+	return &Token{
 		Key:       string(resultKey),
 		Signature: string(resultHash),
 	}, nil
@@ -56,22 +56,20 @@ func (c *CryptoGenerator) GenerateAuthorizeCode() (*AuthorizeCode, error) {
 
 // ValidateAuthorizeCodeSignature returns an AuthorizeCode, if the code argument is a valid authorize code
 // and the signature matches the key.
-func (c *CryptoGenerator) ValidateAuthorizeCode(code string) (ac *AuthorizeCode, err error) {
-	ac = new(AuthorizeCode)
-	ac.FromString(code)
-	if ac.Key == "" || ac.Signature == "" {
-		return nil, errors.New("Key and signature must both be not empty")
+func (c *CryptoGenerator) ValidateSignature(t *Token) (err error) {
+	if t.Key == "" || t.Signature == "" {
+		return errors.New("Key and signature must both be not empty")
 	}
 
-	signature := make([]byte, base64.RawStdEncoding.DecodedLen(len(ac.Signature)))
-	if _, err := base64.RawStdEncoding.Decode(signature, []byte(ac.Signature)); err != nil {
-		return nil, err
+	signature := make([]byte, base64.RawStdEncoding.DecodedLen(len(t.Signature)))
+	if _, err := base64.RawStdEncoding.Decode(signature, []byte(t.Signature)); err != nil {
+		return err
 	}
 
-	if err := c.Hasher.Compare(signature, []byte(ac.Key)); err != nil {
+	if err := c.Hasher.Compare(signature, []byte(t.Key)); err != nil {
 		// Hash is invalid
-		return nil, err
+		return errors.New("Key and signature do not match")
 	}
 
-	return ac, nil
+	return nil
 }

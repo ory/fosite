@@ -77,20 +77,22 @@ c. get hold of the token encryption secret.
 
 A database leak or (exclusively) the knowledge of the token encrpytion secret are not enough to maliciously obtain or create a valid token. Tokens and credentials can
 however still be stolen by man-in-the-middle attacks, by malicious or vulnerable clients and other attack vectors.
-* Issuance
-  1. The key is hashed using BCrypt (variable) and used as `<signature>`.
-  2. The client is presented with `<key>.<signature>`.
-  3. The signature is encrypted and stored in the database using AES (variable).
-* Validation
- 1. The client presents `<key>.<signature>`.
- 2. It is validated if <key> matches <signature> using BCrypt (variable).
- 3. The signature is encrypted using AES (variable).
- 4. The encrypted signature is looked up in the database, failing validation if no such row exists.
- 5. They key is considered valid and is now subject for other validations, like audience, redirect or state matching.
+
+**Issuance**
+1. The key is hashed using BCrypt (variable) and used as `<signature>`.
+2. The client is presented and entrusted with `<key>.<signature>` which can act for example as an access token or an authorize code.
+3. The signature is encrypted and stored in the database using AES (variable).
+
+**Validation**
+1. The client presents `<key>.<signature>`.
+2. It is validated if <key> matches <signature> using BCrypt (variable).
+3. The signature is encrypted using AES (variable).
+4. The encrypted signature is looked up in the database, failing validation if no such row exists.
+5. They key is considered valid and is now subject for other validations, like audience, redirect or state matching.
 
 #### Encrypt credentials at rest
 
-Credentials (tokens, passwords and secrets) are always encrypted at rest.
+Credentials (token signatures, passwords and secrets) are always encrypted at rest.
 
 #### Implement peer reviewed IETF Standards
 
@@ -128,8 +130,7 @@ var r *http.Request // we're assuming that we are inside a http.Handler
 var rw http.ResponseWriter  // we're assuming that we are inside a http.Handler
 
 var store fosite.Storage // needs to be implemented or by using some library
-config := fosite.NewDefaultConfig()
-oauth := fosite.NewOAuth(config)
+oauth := fosite.NewDefault()
 authorizeRequest, err := oauth.NewAuthorizeRequest(r, store)
 if err != nil {
     oauth.RedirectError(rw, error)
@@ -146,11 +147,8 @@ if err != nil {
 // session := oauth2.NewAuthorizeSession(123)
 // session.SetExtra(extra interface{})
 
-// persist that stuff in the database
-// err = oauth2.PersistAuthorizeRequest(authorizeRequest, session) // sets e.g. session.Persistent = true
-
 // finally, persist code in store and send response
-// e.g: oauth2.WriteResponse(rw, response, session)
+// e.g: oauth2.FinishAccessRequest(rw, response, session)
 ```
 
 Because each component returns a different type, we can be (if safeguards are installed) quite sure, that the developer
@@ -160,11 +158,9 @@ implemented the work flow the right way:
 2. do whatever you like
 3. `HandleAuthorizeRequest(args...) *AuthorizeResponse`: Handle authorize request (check scopes and response types, hydrate response...)
 4. do whatever you like
-5. `oauth2.NewAuthorizeSession(*AuthorizeResponse) *AuthorizeSession`: A session
+5. `oauth2.NewAuthorizeSession(*AuthorizeResponse) (*AuthorizeSession, error)`: A session
 6. do whatever you like, e.g. `session.SetExtra(map[string]interface{"foo": "bar"})`
-7. `oauth2.PersistAuthorizeRequest` persists the request in the database so the token endpoint can look up information
-8. do whatever you like
-9. `oauth2.WriteResponse(rw, response, session)` to write the response
+9. `oauth2.FinishAccessRequest(rw, response, session)` to write and persist the response
 10. done.
 
 It is not clear yet how HandleAuthorizeRequest could be extensible. It might be possible to introduce an interface like AuthorizeStrategy

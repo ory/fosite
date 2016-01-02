@@ -28,7 +28,7 @@ func (c *SecureClient) GetID() string {
 }
 
 func (c *SecureClient) CompareSecretWith(secret string) bool {
-	return c.Hasher.Compare(c.Secret, secret) == nil
+	return c.Hasher.Compare([]byte(c.Secret), []byte(secret)) == nil
 }
 
 func (c *SecureClient) GetRedirectURIs() []string {

@@ -1,25 +1,23 @@
-package auth
+package fosite
 
 import (
-	"net/http"
 	"github.com/go-errors/errors"
+	"github.com/ory-am/fosite/generator"
+	"golang.org/x/net/context"
+	"net/http"
 	"net/url"
 	"strings"
-	"golang.org/x/net/context"
-	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/generator"
 )
 
 // Authorize request information
 type AuthorizeRequest struct {
-	Types        []string
+	Types       []string
 	Client      Client
-	Scopes       []string
+	Scopes      []string
 	RedirectURI string
 	State       string
-	Expiration int32
-	Code generator.AuthorizeCode
-	Config *Config
+	Expiration  int32
+	Code        *generator.Token
 }
 
 type ScopeStrategy interface {
@@ -125,47 +123,46 @@ func (c *Config) NewAuthorizeRequest(_ context.Context, r *http.Request, store S
 		return nil, errors.Wrap(ErrInvalidRequest, 0)
 	}
 
-	code, err := c.AuthorizeCodeGenerator.GenerateAuthorizeCode()
+	code, err := c.AuthorizeCodeGenerator.Generate()
 	if state == "" {
 		return nil, errors.Wrap(ErrServerError, 0)
 	}
 
 	scopes := removeEmpty(strings.Split(r.Form.Get("scope"), " "))
 	return &AuthorizeRequest{
-		Types: responseTypes,
-		Client: client,
-		Scopes: scopes,
-		State: state,
-		Expiration: c.Lifetime,
+		Types:       responseTypes,
+		Client:      client,
+		Scopes:      scopes,
+		State:       state,
+		Expiration:  c.Lifetime,
 		RedirectURI: redirectURI,
-		Config: Config,
-		Code: code,
+		Code:        code,
 	}, nil
 }
 
 func (c *Config) WriteAuthError(rw http.ResponseWriter, req *http.Request, err error) {
 	redirectURI, err := c.GetRedirectURI(req.Form)
 	if err != nil {
-		http.Error(rw, ErrInvalidRequest, http.StatusBadRequest)
+		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
 		return
 	}
 
 	client, err := c.Store.GetClient(req.Form.Get("client_id"))
 	if err != nil {
-		http.Error(rw, ErrInvalidClient, http.StatusBadRequest)
+		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
 		return
 	}
 
 	// * rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 	// * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
 	if redirectURI, err = c.DoesClientWhiteListRedirect(redirectURI, client); err != nil {
-		http.Error(rw, ErrInvalidRequest, http.StatusBadRequest)
+		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
 		return
 	}
 
 	redir, err := url.Parse(redirectURI)
 	if err != nil {
-		http.Error(rw, ErrInvalidRequest, http.StatusBadRequest)
+		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
 		return
 	}
 
@@ -175,10 +172,6 @@ func (c *Config) WriteAuthError(rw http.ResponseWriter, req *http.Request, err e
 	redir.RawQuery = query.Encode()
 	rw.Header().Add("Location", redir.String())
 	rw.WriteHeader(http.StatusFound)
-}
-
-func (c *Config) PersistAndWriteAuthorizeCode(*AuthorizeRequest) {
-
 }
 
 func areResponseTypesValid(c *Config, responseTypes []string) bool {

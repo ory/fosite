@@ -7,24 +7,22 @@ import (
 	"testing"
 )
 
-func TestGenerateAuthorizeCode(t *testing.T) {
-	cg := CryptoGenerator{
-		Hasher: &hash.BCrypt{},
-	}
-	code, err := cg.GenerateAuthorizeCode()
+func TestGenerate(t *testing.T) {
+	cg := CryptoGenerator{Hasher: &hash.BCrypt{}}
+	code, err := cg.Generate()
 	require.Nil(t, err, "%s", err)
-	assert.NotEmpty(t, code)
-	validCode, err := cg.ValidateAuthorizeCode(code.String())
+	require.NotNil(t, code)
+
+	err = cg.ValidateSignature(code)
 	require.Nil(t, err, "%s", err)
-	assert.Equal(t, validCode.Key, code.Key)
-	assert.Equal(t, validCode.Signature, code.Signature)
 }
 
-func TestValidateAuthorizeCode(t *testing.T) {
+func TestValidateSignatureRejects(t *testing.T) {
 	var err error
 	cg := CryptoGenerator{
 		Hasher: &hash.BCrypt{},
 	}
+	token := new(Token)
 	for _, c := range []string{
 		"",
 		" ",
@@ -32,7 +30,8 @@ func TestValidateAuthorizeCode(t *testing.T) {
 		"foo.",
 		".foo",
 	} {
-		_, err = cg.ValidateAuthorizeCode(c)
-		assert.NotNil(t, err)
+		token.FromString(c)
+		err = cg.ValidateSignature(token)
+		assert.NotNil(t, err, "%s", err)
 	}
 }

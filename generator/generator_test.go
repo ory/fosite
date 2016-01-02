@@ -5,15 +5,15 @@ import (
 	"testing"
 )
 
-func TestAuthorizeCodeToString(t *testing.T) {
-	ac := &AuthorizeCode{
+func TestTokenToString(t *testing.T) {
+	ac := &Token{
 		Key:       "foo",
 		Signature: "bar",
 	}
 	assert.Equal(t, "foo.bar", ac.String())
 }
-func TestAuthorizeCodeFromString(t *testing.T) {
-	ac := new(AuthorizeCode)
+func TestTokenFromString(t *testing.T) {
+	ac := new(Token)
 	for _, c := range [][]string{
 		{"foo.bar", "foo", "bar"},
 		{"foo.", "", ""},

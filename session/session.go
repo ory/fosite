@@ -3,7 +3,7 @@ package session
 import (
 	"encoding/json"
 	"github.com/go-errors/errors"
-	"github.com/ory-am/fosite/auth"
+	"github.com/ory-am/fosite"
 )
 
 // Session defines a authorize flow session which will be persisted and passed to the token endpoint (Authorize Code Flow).
@@ -47,18 +47,18 @@ type JSONSession struct {
 	redirectURI   string
 	state         string
 	signature     string
-	ar            *auth.AuthorizeRequest
+	ar            *fosite.AuthorizeRequest
 }
 
-func NewJSONSession(ar *auth.AuthorizeRequest) *JSONSession {
+func NewJSONSession(ar *fosite.AuthorizeRequest) *JSONSession {
 	return &JSONSession{
-		ar: ar,
-		signature: ar.Code.Signature,
-		extra: []byte{},
+		ar:            ar,
+		signature:     ar.Code.Signature,
+		extra:         []byte{},
 		responseTypes: ar.Types,
-		clientID: ar.Client.GetID(),
-		state: ar.State,
-		redirectURI: ar.RedirectURI,
+		clientID:      ar.Client.GetID(),
+		state:         ar.State,
+		redirectURI:   ar.RedirectURI,
 	}
 }
 

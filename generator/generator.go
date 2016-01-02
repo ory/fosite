@@ -2,8 +2,8 @@ package generator
 
 import "strings"
 
-// AuthorizeCode represents an authorize code.
-type AuthorizeCode struct {
+// Token represents an authorize code.
+type Token struct {
 	// Key is the code's key
 	Key string
 
@@ -12,7 +12,7 @@ type AuthorizeCode struct {
 }
 
 // FromString extracts key and signature from "<key>.<signature>".
-func (a *AuthorizeCode) FromString(data string) {
+func (a *Token) FromString(data string) {
 	a.Key = ""
 	a.Signature = ""
 
@@ -37,24 +37,16 @@ func (a *AuthorizeCode) FromString(data string) {
 }
 
 // String will return the authorize code as "<key>.<signature>".
-func (a *AuthorizeCode) String() string {
+func (a *Token) String() string {
 	return a.Key + "." + a.Signature
 }
 
 // Generator provides a set of methods to create access, refresh and authorize tokens.
 type Generator interface {
+	// Generate generates a opaque and signed token.
+	// RFC6749 does not require tokens to be opaque, but it is considered best practice.
+	Generate() (*Token, error)
 
-	// GenerateAccessToken generates an access token.
-	// Spec does not require tokens to be opaque but it is considered best practice.
-	GenerateAccessToken() (string, error)
-
-	// GenerateAccessToken generates a refresh token.
-	// Spec does not require tokens to be opaque but it is considered best practice.
-	GenerateRefreshToken() (string, error)
-
-	// GenerateAccessToken generates a authorize code.
-	// Spec does not require tokens to be opaque but it is considered best practice.
-	GenerateAuthorizeCode() (AuthorizeCode, error)
-
-	ValidateAuthorizeCodeSignature(code string) (AuthorizeCode, error)
+	// ValidateSignature verifies that the tokens key matches the tokens signature.
+	ValidateSignature(token *Token) error
 }
