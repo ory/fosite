@@ -190,7 +190,7 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
     // It is additionally going to output a result based on response_type.
 
     // ** API not finalized yet **
-    // err := oauth2.FinishAccessRequest(rw, response, session)
+    // err := oauth2.FinishAuthorizeRequest(rw, response, session)
     // ****
 }
 ```
