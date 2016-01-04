@@ -1,7 +1,6 @@
-package session
+package fosite
 
 import (
-	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/generator"
 	"github.com/stretchr/testify/assert"
@@ -9,7 +8,7 @@ import (
 )
 
 func TestNewAuthorizeSession(t *testing.T) {
-	ar := &fosite.AuthorizeRequest{
+	ar := &AuthorizeRequest{
 		ResponseTypes: []string{"code token"},
 		Client:        &client.SecureClient{ID: "client"},
 		Scopes:        []string{"email id_token"},

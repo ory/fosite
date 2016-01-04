@@ -1,9 +1,8 @@
-package session
+package fosite
 
 import (
 	"encoding/json"
 	"github.com/go-errors/errors"
-	"github.com/ory-am/fosite"
 )
 
 // Session defines a authorize flow session which will be persisted and passed to the token endpoint (Authorize Code Flow).
@@ -51,10 +50,10 @@ type defaultSession struct {
 	state         string
 	signature     string
 	userID        string
-	ar            *fosite.AuthorizeRequest
+	ar            *AuthorizeRequest
 }
 
-func NewAuthorizeSession(ar *fosite.AuthorizeRequest, userID string) AuthorizeSession {
+func NewAuthorizeSession(ar *AuthorizeRequest, userID string) AuthorizeSession {
 	return &defaultSession{
 		ar:            ar,
 		signature:     ar.Code.Signature,

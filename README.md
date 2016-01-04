@@ -131,12 +131,8 @@ import "github.com/ory-am/fosite/storage"
 
 // Let's assume that we're in a http handler
 func handleAuth(rw http.ResponseWriter, req *http.Request) {
-    oauth2 := fosite.NewDefaultOAuth2()
-
-    // ** This part of the API is not finalized yet **
-    // var store storage.Storage
-    // this should be something like: store := fosite.NewPostgreSQLStore()
-    // ****
+    store := fosite.NewPostgreSQLStore()
+    oauth2 := fosite.NewDefaultOAuth2(store)
 
     authorizeRequest, err := oauth2.NewAuthorizeRequest(r, store)
     if err != nil {
@@ -144,7 +140,7 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
         // oauth2.RedirectError(rw, error)
         // oauth2.WriteError(rw, error)
         // oauth2.handleError...
-    // ****
+        // ****
         return
     }
 
@@ -157,14 +153,21 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
     // Once you have confirmed the users identity and consent that he indeed wants to give app XYZ authorization,
     // you will use the user's id to create an authorize session
     user := "12345"
-    session := session.NewAuthorizeSession(authorizeRequest, user)
+    session := fosite.NewAuthorizeSession(authorizeRequest, user)
 
-    // You can store additional metadata, for example
-    // session.SetExtra(map[string]interface{}{
-    //      "userEmail": "foo@bar",
-    //      "lastSeen": new Date(),
-    //      "usingIdentityProvider": "google",
-    // })
+    // You can store additional metadata, for example:
+    session.SetExtra(map[string]interface{}{
+         "userEmail": "foo@bar",
+         "lastSeen": new Date(),
+         "usingIdentityProvider": "google",
+    })
+
+    // or
+    session.SetExtra(&struct{
+        Name string
+    } {
+        Name: "foo"
+    })
 
     // Now is the time to handle the response types
 
