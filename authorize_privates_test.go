@@ -3,6 +3,7 @@ package fosite
 import (
 	. "github.com/ory-am/fosite/client"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/url"
 	"testing"
 )
@@ -42,9 +43,6 @@ func TestGetRedirectURI(t *testing.T) {
 // The authorization server may also enforce the usage and validation
 // of pre-registered redirect URIs (see Section 5.2.3.5).
 func TestDoesClientWhiteListRedirect(t *testing.T) {
-	var err error
-	var redir string
-
 	for k, c := range []struct {
 		client   Client
 		url      string
@@ -84,8 +82,13 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			isError: true,
 		},
 	} {
-		redir, err = redirectFromClient(c.url, c.client)
+		u, err := url.Parse(c.url)
+		require.Nil(t, err)
+		redir, err := redirectFromClient(u, c.client)
 		assert.Equal(t, c.isError, err != nil, "%d: %s", k, err)
-		assert.Equal(t, c.expected, redir)
+		if err == nil {
+			require.NotNil(t, redir, "%d", k)
+			assert.Equal(t, c.expected, redir.String(), "%d", k)
+		}
 	}
 }

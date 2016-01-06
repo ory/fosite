@@ -15,7 +15,7 @@ type AuthorizeRequest struct {
 	ResponseTypes []string
 	Client        Client
 	Scopes        []string
-	RedirectURI   string
+	RedirectURI   *url.URL
 	State         string
 	ExpiresIn     int32
 	Code          *generator.Token
@@ -106,7 +106,22 @@ func (c *OAuth2) NewAuthorizeRequest(_ context.Context, r *http.Request) (*Autho
 	}, nil
 }
 
-func (c *OAuth2) WriteAuthError(rw http.ResponseWriter, req *http.Request, err error) {
+func (c *OAuth2) FinishAuthorizeRequest(rw http.ResponseWriter, ar *AuthorizeRequest, resp *AuthorizeResponse, session *AuthorizeSession) error {
+	if err := c.Store.StoreAuthorizeSession(session); err != nil {
+		return errors.Wrap(err, 1)
+	}
+
+	q := ar.RedirectURI.Query()
+	for k, _ := range resp.Query {
+		q.Add(k, resp.Query.Get(k))
+	}
+	ar.RedirectURI.RawQuery = q.Encode()
+	rw.Header().Add("Location", ar.RedirectURI.String())
+	rw.WriteHeader(http.StatusFound)
+	return nil
+}
+
+func (c *OAuth2) WriteAuthorizeError(rw http.ResponseWriter, req *http.Request, err error) {
 	redirectURI, err := redirectFromValues(req.Form)
 	if err != nil {
 		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
@@ -126,44 +141,39 @@ func (c *OAuth2) WriteAuthError(rw http.ResponseWriter, req *http.Request, err e
 		return
 	}
 
-	redir, err := url.Parse(redirectURI)
-	if err != nil {
-		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
-		return
-	}
-
-	query := redir.Query()
+	query := redirectURI.Query()
 	query.Add("error", err.Error())
 	query.Add("description", err.Error())
-	redir.RawQuery = query.Encode()
-	rw.Header().Add("Location", redir.String())
+	redirectURI.RawQuery = query.Encode()
+	rw.Header().Add("Location", redirectURI.String())
 	rw.WriteHeader(http.StatusFound)
 }
 
 // redirectFromValues extracts the redirect_uri from values.
 // * rfc6749 3.1.   Authorization Endpoint
 // * rfc6749 3.1.2. Redirection Endpoint
-func redirectFromValues(values url.Values) (string, error) {
+func redirectFromValues(values url.Values) (urlobj *url.URL, err error) {
 	// rfc6749 3.1.   Authorization Endpoint
 	// The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component
 	redirectURI, err := url.QueryUnescape(values.Get("redirect_uri"))
 	if err != nil {
-		return "", errors.Wrap(ErrInvalidRequest, 0)
+		return nil, errors.Wrap(ErrInvalidRequest, 0)
 	}
 
 	// rfc6749 3.1.2.  Redirection Endpoint
 	// "The redirection endpoint URI MUST be an absolute URI as defined by [RFC3986] Section 4.3"
-	if !(isValidURL(redirectURI)) {
-		return "", errors.Wrap(ErrInvalidRequest, 0)
+	urlobj, valid := validateURL(redirectURI)
+	if !valid {
+		return nil, errors.Wrap(ErrInvalidRequest, 0)
 	}
 
-	return redirectURI, nil
+	return urlobj, nil
 }
 
 // redirectFromClient looks up if redirect and client are matching.
 // * rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 // * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-func redirectFromClient(redirectURI string, client Client) (string, error) {
+func redirectFromClient(parseduri *url.URL, client Client) (*url.URL, error) {
 	// rfc6749 10.6.  Authorization Code Redirection URI Manipulation
 	// The authorization server	MUST require public clients and SHOULD require confidential clients
 	// to register their redirection URIs.  If a redirection URI is provided
@@ -173,13 +183,18 @@ func redirectFromClient(redirectURI string, client Client) (string, error) {
 	// rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
 	// The authorization server may also enforce the usage and validation
 	// of pre-registered redirect URIs (see Section 5.2.3.5).
-	if redirectURI == "" && len(client.GetRedirectURIs()) == 1 {
-		if isValidURL(client.GetRedirectURIs()[0]) {
-			return client.GetRedirectURIs()[0], nil
-		}
-	} else if stringInSlice(redirectURI, client.GetRedirectURIs()) {
-		return redirectURI, nil
+	var rawuri string
+	if parseduri != nil {
+		rawuri = parseduri.String()
 	}
 
-	return "", errors.New(ErrInvalidRequest)
+	if rawuri == "" && len(client.GetRedirectURIs()) == 1 {
+		if purl, valid := validateURL(client.GetRedirectURIs()[0]); valid {
+			return purl, nil
+		}
+	} else if rawuri != "" && stringInSlice(rawuri, client.GetRedirectURIs()) {
+		return parseduri, nil
+	}
+
+	return nil, errors.New(ErrInvalidRequest)
 }

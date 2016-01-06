@@ -6,6 +6,7 @@ import (
 	"github.com/ory-am/fosite/generator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net/url"
 	"testing"
 )
 
@@ -20,12 +21,13 @@ func TestNewAuthorizeSessionSQL(t *testing.T) {
 		Foo: "foo",
 		Bar: "bar",
 	}
+	redir, _ := url.Parse("http://foo.bar/cb")
 
 	ar := &AuthorizeRequest{
 		ResponseTypes: []string{"code token"},
 		Client:        &client.SecureClient{ID: "client"},
 		Scopes:        []string{"email id_token"},
-		RedirectURI:   "https://foo.bar/cb",
+		RedirectURI:   redir,
 		State:         "randomState",
 		ExpiresIn:     30,
 		Code:          &generator.Token{Key: "key", Signature: "sig"},
@@ -40,7 +42,7 @@ func TestNewAuthorizeSessionSQL(t *testing.T) {
 
 	assert.Equal(t, ar.Client.GetID(), as.GetClientID())
 	assert.Equal(t, ar.Code.Signature, as.GetCodeSignature())
-	assert.Equal(t, ar.RedirectURI, as.GetRedirectURI())
+	assert.Equal(t, ar.RedirectURI.String(), as.GetRedirectURI())
 	assert.Equal(t, ar.ResponseTypes, as.GetResponseTypes())
 	assert.Equal(t, ar.Scopes, as.GetScopes())
 	assert.Equal(t, "1234", as.GetUserID())

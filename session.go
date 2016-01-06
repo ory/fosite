@@ -58,6 +58,10 @@ type sqlSession struct {
 // NewAuthorizeSessionSQL creates a new authorize session and uses gob.Encode and gob.Decode to store extra information.
 // It is recommended to use this implementation.
 func NewAuthorizeSessionSQL(ar *AuthorizeRequest, userID string) AuthorizeSession {
+	var uri string
+	if ar.RedirectURI != nil {
+		uri = ar.RedirectURI.String()
+	}
 	return &sqlSession{
 		ar:            ar,
 		code:          ar.Code,
@@ -66,7 +70,7 @@ func NewAuthorizeSessionSQL(ar *AuthorizeRequest, userID string) AuthorizeSessio
 		clientID:      ar.Client.GetID(),
 		state:         ar.State,
 		scopes:        ar.Scopes,
-		redirectURI:   ar.RedirectURI,
+		redirectURI:   uri,
 		userID:        userID,
 	}
 }

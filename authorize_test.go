@@ -15,11 +15,17 @@ import (
 	"testing"
 )
 
+func WriteAuthorizeError(t *testing.T) {
+
+}
+
 func TestAuthorizeWorkflow(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := NewMockStorage(ctrl)
 	gen := NewMockGenerator(ctrl)
 	defer ctrl.Finish()
+
+	redir, _ := url.Parse("http://foo.bar/cb")
 
 	for k, c := range []struct {
 		desc          string
@@ -50,7 +56,7 @@ func TestAuthorizeWorkflow(t *testing.T) {
 				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
 			},
 			expect: &AuthorizeRequest{
-				RedirectURI:   "http://foo.bar/cb",
+				RedirectURI:   redir,
 				Client:        &SecureClient{ID: "1234", RedirectURIs: []string{"http://foo.bar/cb"}},
 				ResponseTypes: []string{"code", "token"},
 				State:         "strong-state",
@@ -109,6 +115,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 	gen := NewMockGenerator(ctrl)
 	defer ctrl.Finish()
 
+	redir, _ := url.Parse("http://foo.bar/cb")
 	for k, c := range []struct {
 		desc          string
 		conf          *OAuth2
@@ -292,7 +299,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
 			},
 			expect: &AuthorizeRequest{
-				RedirectURI:   "http://foo.bar/cb",
+				RedirectURI:   redir,
 				Client:        &SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}},
 				ResponseTypes: []string{"code", "token"},
 				State:         "strong-state",

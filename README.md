@@ -11,6 +11,7 @@ This library implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enfor
 **Table of Contents**
 
 - [Motivation](#motivation)
+- [A note on security](#a-note-on-security)
 - [Good to know](#good-to-know)
 - [Security](#security)
   - [Encourage security by enforcing it!](#encourage-security-by-enforcing-it)
@@ -21,7 +22,6 @@ This library implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enfor
     - [Encrypt credentials at rest](#encrypt-credentials-at-rest)
     - [Implement peer reviewed IETF Standards](#implement-peer-reviewed-ietf-standards)
   - [Provide extensibility and interoperability](#provide-extensibility-and-interoperability)
-  - [Tokens](#tokens)
 - [Usage](#usage)
   - [Store](#store)
   - [Authorize Endpoint](#authorize-endpoint)
@@ -41,6 +41,12 @@ the extensibility of OAuth2 and instead bind you to a pattern-enforcing framewor
 
 Fosite was written because [Hydra](https://github.com/ory-am/hydra) required a more secure and extensible OAuth2 library
 then the one it was using.
+
+## A note on security
+
+Please be aware that Fosite only secures your server side security. You still need to secure your apps and clients, keep
+your tokens safe, prevent CSRF attacks and much more. If you need any help or advice feel free to contact our security
+staff through [our website](https://ory.am/)!
 
 ## Good to know
 
@@ -138,14 +144,12 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
     oauth2 := fosite.NewDefaultOAuth2(store)
     ctx := context.Background()
 
+    // Let's create an AuthorizeRequest object!
+    // It will analyze the request and extract important information like scopes, response type and others.
     authorizeRequest, err := oauth2.NewAuthorizeRequest(ctx, r)
     if err != nil {
-        // ** This part of the API is not finalized yet **
-        // oauth2.RedirectError(rw, error)
-        // oauth2.WriteError(rw, error)
-        // oauth2.handleError...
-        // ****
-        return
+       oauth2.WriteAuthorizeError(rw, req, err)
+       return
     }
 
     // you have now access to authorizeRequest, Code ResponseTypes, Scopes ...
@@ -162,31 +166,34 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
     session := fosite.NewAuthorizeSessionSQL(authorizeRequest, user)
 
     // You can store additional metadata, for example:
-    session.SetExtra(map[string]interface{}{
-         "userEmail": "foo@bar",
-         "lastSeen": new Date(),
-         "usingIdentityProvider": "google",
+    session.SetExtra(&struct{
+        UserEmail string
+        LastSeen time.Time
+        UsingIdentityProvider string
+    }{
+         UserEmail: "foo@bar",
+         LastSeen: new Date(),
+         UsingIdentityProvider: "google",
     })
 
-    // or
-    session.SetExtra(&struct{
-        Name string
-    } {
-        Name: "foo"
-    })
 
     // Now is the time to handle the response types
-
-    // you can use a custom list of response type handlers by setting
+    // You can use a custom list of response type handlers by setting
     // oauth2.ResponseTypeHandlers = []fosite.ResponseTypeHandler{}
     response, err := oauth2.HandleResponseTypes(ctx, authorizeRequest, r)
+    if err != nil {
+       oauth2.WriteAuthorizeError(rw, req, err)
+       return
+    }
 
-    // Almost done! The next step is going to persist the session in the database for later use.
-    // It is additionally going to output a result based on response_type.
+    // The next step is going to persist the session in the database for later use and redirect the
+    // user agent back to the application demanding access.
+    if err = oauth2.FinishAuthorizeRequest(rw, ar, response, session); err != nil {
+        oauth2.WriteAuthorizeError(rw, req, err)
+        return
+    }
 
-    // ** API not finalized yet **
-    // err := oauth2.FinishAuthorizeRequest(rw, response, session)
-    // ****
+    // Done! The client should now have a valid authorize code!
 }
 ```
 

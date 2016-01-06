@@ -38,14 +38,15 @@ func removeEmpty(args []string) (ret []string) {
 
 // rfc6749 3.1.2.  Redirection Endpoint
 // "The redirection endpoint URI MUST be an absolute URI as defined by [RFC3986] Section 4.3"
-func isValidURL(validate string) bool {
-	if rp, err := url.Parse(validate); err != nil {
-		return false
-	} else if rp.Host == "" {
-		return false
-	} else if rp.Fragment != "" {
+func validateURL(rawurl string) (purl *url.URL, _ bool) {
+	purl, err := url.Parse(rawurl)
+	if err != nil {
+		return nil, false
+	} else if purl.Host == "" {
+		return nil, false
+	} else if purl.Fragment != "" {
 		// "The endpoint URI MUST NOT include a fragment component."
-		return false
+		return nil, false
 	}
-	return true
+	return purl, true
 }

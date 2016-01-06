@@ -26,7 +26,7 @@ func TestNewAuthorizeResponse(t *testing.T) {
 		handlers     []ResponseTypeHandler
 		mock         func()
 		expectsError error
-		expects      *Response
+		expects      *AuthorizeResponse
 	}{
 		{
 			handlers: []ResponseTypeHandler{

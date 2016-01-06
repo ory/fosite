@@ -31,7 +31,7 @@ func (_m *MockResponseTypeHandler) EXPECT() *_MockResponseTypeHandlerRecorder {
 	return _m.recorder
 }
 
-func (_m *MockResponseTypeHandler) HandleResponseType(_param0 context.Context, _param1 *Response, _param2 AuthorizeRequest, _param3 http.Request) error {
+func (_m *MockResponseTypeHandler) HandleResponseType(_param0 context.Context, _param1 *AuthorizeResponse, _param2 AuthorizeRequest, _param3 http.Request) error {
 	ret := _m.ctrl.Call(_m, "HandleResponseType", _param0, _param1, _param2, _param3)
 	ret0, _ := ret[0].(error)
 	return ret0
