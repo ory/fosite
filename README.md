@@ -1,20 +1,28 @@
-# ![Fosite](fosite.png)
+# ![Fosite security first OAuth2 framework](fosite.png)
 
-Simple and extensible OAuth2 server-side helpers with enterprise security and zero suck.
-This library implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enforces countermeasures suggested in [rfc6819](https://tools.ietf.org/html/rfc6819).
+**The security first OAuth2 framework for [Google's Go Language](https://golang.org).**
+Built simple, powerful and extensible. This library implements peer-reviewed [IETF RFC6749](https://tools.ietf.org/html/rfc6749),
+counterfeits weaknesses covered in peer-reviewed [IETF RFC6819](https://tools.ietf.org/html/rfc6819) and countermeasures various database
+attack scenarios, keeping your application safe when that hacker penetrates and leaks your database.
+
+If you are here to contribute, feel free to check [this Pull Request](https://github.com/ory-am/fosite/pull/1).
 
 [![Build Status](https://travis-ci.org/ory-am/fosite.svg?branch=master)](https://travis-ci.org/ory-am/fosite?branch=master)
 [![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github)](https://coveralls.io/github/ory-am/fosite?branch=master)
+
+Fosite is in active development. We will use gopkg for releasing new versions of the API.
+Be aware that "go get github.com/ory-am/fosite" will give you the master branch, which is and always will be *nightly*.
+Once releases roll out, you will be able to fetch a specific fosite API version through gopkg.in.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
 - [Motivation](#motivation)
-- [A note on security](#a-note-on-security)
-- [Good to know](#good-to-know)
+- [A word on quality](#a-word-on-quality)
+- [A word on security](#a-word-on-security)
 - [Security](#security)
-  - [Encourage security by enforcing it!](#encourage-security-by-enforcing-it)
+  - [Encourage security by enforcing it](#encourage-security-by-enforcing-it)
     - [Secure Tokens](#secure-tokens)
     - [No state, no token](#no-state-no-token)
     - [Opaque tokens](#opaque-tokens)
@@ -26,6 +34,7 @@ This library implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enfor
   - [Store](#store)
   - [Authorize Endpoint](#authorize-endpoint)
   - [Token Endpoint](#token-endpoint)
+- [Hall of Fame](#hall-of-fame)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -33,32 +42,34 @@ This library implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enfor
 
 Why write another OAuth2 server side library for Go Lang?
 
-Other libraries are perfect for a non-critical set ups, but [fail](https://github.com/RangelReale/osin/issues/107) to comply with enterprise security standards.
-This is unfortunately not an issue exclusive to Go's eco system but to many other eco systems as well.
-
-OpenID Connect on top of OAuth2? Not possible with popular OAuth2 libraries. Current libraries do not support capture
-the extensibility of OAuth2 and instead bind you to a pattern-enforcing framework with almost no possibilities for extension.
+Other libraries are perfect for a non-critical set ups, but [fail](https://github.com/RangelReale/osin/issues/107)
+to comply with advanced security requirements. Additionally, the frameworks we analyzed did not support extension
+of the OAuth2 protocol easily. But OAuth2 is an extensible framework. Your OAuth2 should as well.
+This is unfortunately not an issue exclusive to Go's eco system but to many others as well.
 
 Fosite was written because [Hydra](https://github.com/ory-am/hydra) required a more secure and extensible OAuth2 library
-then the one it was using.
+then the one it was using. We quickly realized, that OAuth2 implementations out there are *not secure* nor *extensible,
+so we decided to write one *that is*.
 
-## A note on security
+## A word on quality
+
+We tried to set up as many tests as possible and test for as many cases covered in the RFCs as possible. But we are only
+human. Please, feel free to add tests for the various cases defined in the OAuth2 RFCs 6749 and 6819.
+
+**Everyone** writing an RFC conform test that breaks with the current implementation, will receive a place in the
+[Hall of Fame](#hall-of-fame)!
+
+## A word on security
 
 Please be aware that Fosite only secures your server side security. You still need to secure your apps and clients, keep
 your tokens safe, prevent CSRF attacks and much more. If you need any help or advice feel free to contact our security
 staff through [our website](https://ory.am/)!
 
-## Good to know
-
-Fosite is in early development. We will use gopkg for releasing new versions of the API.
-Be aware that "go get github.com/ory-am/fosite" will give you the master branch, which is and always will be *unstable*.
-Once releases roll out, you will be able to fetch a specific fosite API version through gopkg.in.
-
 ## Security
 
-Fosite has two commandments.
+Fosite has two commandments!
 
-### Encourage security by enforcing it!
+### Encourage security by enforcing it
 
 #### Secure Tokens
 
@@ -198,3 +209,10 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
 ```
 
 ### Token Endpoint
+
+## Hall of Fame
+
+This place is reserved for the fearless bug hunters, reviewers and contributors.
+
+Find out more about the [author](https://aeneas.io/) of Fosite and Hydra, and the
+[Ory Company](https://ory.am/).
