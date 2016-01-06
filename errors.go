@@ -37,7 +37,7 @@ type RFC6749Error struct {
 	Hint        string `json:"-"`
 }
 
-func ErrorToRFC6749(err error) *RFC6749Error {
+func ErrorToRFC6749Error(err error) *RFC6749Error {
 	ge, ok := err.(*errors.Error)
 	if !ok {
 		return &RFC6749Error{

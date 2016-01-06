@@ -2,6 +2,7 @@ package fosite
 
 import (
 	"github.com/go-errors/errors"
+	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/generator"
 	"golang.org/x/net/context"
@@ -106,7 +107,9 @@ func (c *OAuth2) NewAuthorizeRequest(_ context.Context, r *http.Request) (*Autho
 	}, nil
 }
 
-func (c *OAuth2) FinishAuthorizeRequest(rw http.ResponseWriter, ar *AuthorizeRequest, resp *AuthorizeResponse, session *AuthorizeSession) error {
+// FinishAuthorizeRequest persists the AuthorizeSession in the store and redirects the user agent to the provided
+// redirect url or returns an error if storage failed.
+func (c *OAuth2) FinishAuthorizeRequest(rw http.ResponseWriter, ar AuthorizeRequest, resp AuthorizeResponse, session *AuthorizeSession) error {
 	if err := c.Store.StoreAuthorizeSession(session); err != nil {
 		return errors.Wrap(err, 1)
 	}
@@ -116,35 +119,40 @@ func (c *OAuth2) FinishAuthorizeRequest(rw http.ResponseWriter, ar *AuthorizeReq
 		q.Add(k, resp.Query.Get(k))
 	}
 	ar.RedirectURI.RawQuery = q.Encode()
-	rw.Header().Add("Location", ar.RedirectURI.String())
+	for k, v := range resp.Header {
+		for _, vv := range v {
+			rw.Header().Add(k, vv)
+		}
+	}
+
+	// https://tools.ietf.org/html/rfc6749#section-4.1.1
+	// When a decision is established, the authorization server directs the
+	// user-agent to the provided client redirection URI using an HTTP
+	// redirection response, or by other means available to it via the
+	// user-agent.
+	rw.Header().Set("Location", ar.RedirectURI.String())
 	rw.WriteHeader(http.StatusFound)
 	return nil
 }
 
-func (c *OAuth2) WriteAuthorizeError(rw http.ResponseWriter, req *http.Request, err error) {
-	redirectURI, err := redirectFromValues(req.Form)
-	if err != nil {
-		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
+// WriteAuthorizeError returns the error codes to the redirection endpoint or shows the error to the user, if no valid
+// redirect uri was given. Implements rfc6749#section-4.1.2.1
+func (c *OAuth2) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest, err error) {
+	rfcerr := ErrorToRFC6749Error(err)
+
+	// rfc6749#section-4.1.2.1
+	if ar.RedirectURI.String() == "" {
+		pkg.WriteJSON(rw, rfcerr)
 		return
 	}
 
-	client, err := c.Store.GetClient(req.Form.Get("client_id"))
-	if err != nil {
-		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
-		return
-	}
-
-	// * rfc6749 10.6.  Authorization Code Redirection URI Manipulation
-	// * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-	if redirectURI, err = redirectFromClient(redirectURI, client); err != nil {
-		http.Error(rw, errInvalidRequestName, http.StatusBadRequest)
-		return
-	}
-
+	// Defer the uri so we don't mess with the redirect data
+	redirectURI := ar.RedirectURI
 	query := redirectURI.Query()
-	query.Add("error", err.Error())
-	query.Add("description", err.Error())
+	query.Add("error", rfcerr.Name)
+	query.Add("error_description", rfcerr.Description)
 	redirectURI.RawQuery = query.Encode()
+
 	rw.Header().Add("Location", redirectURI.String())
 	rw.WriteHeader(http.StatusFound)
 }

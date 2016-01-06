@@ -15,8 +15,154 @@ import (
 	"testing"
 )
 
-func WriteAuthorizeError(t *testing.T) {
+func TestFinishAuthorizeRequest(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	rw := NewMockResponseWriter(ctrl)
+	store := NewMockStorage(ctrl)
+	defer ctrl.Finish()
 
+	redir, _ := url.Parse("http://foobar.com/")
+	header := http.Header{}
+	oauth2 := &OAuth2{Store: store}
+	for k, c := range []struct {
+		ar          AuthorizeRequest
+		resp        AuthorizeResponse
+		isErr       bool
+		mock        func()
+		checkHeader func(int)
+	}{
+		{
+			ar: AuthorizeRequest{RedirectURI: redir},
+			resp: AuthorizeResponse{
+				Header: http.Header{
+					"foo": []string{"bar"},
+				},
+				Query: url.Values{
+					"baz": []string{"bar"},
+					"foo": []string{"baz"},
+				},
+			},
+			mock: func() {
+				store.EXPECT().StoreAuthorizeSession(gomock.Nil()).Return(ErrServerError)
+				//rw.EXPECT().Header().Return(header)
+				//rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(k int) {
+				//assert.Equal(t, "http://foobar.com/?baz=bar&foo=baz", header.Get("Location"), "%d", k)
+				//assert.Equal(t, "bar", header.Get("foo"), "%d", k)
+				//assert.Equal(t, "http://foobar.com/?baz=bar&foo=baz", header.Get("Location"), "%d", k)
+			},
+			isErr: true,
+		},
+		{
+			ar: AuthorizeRequest{RedirectURI: redir},
+			resp: AuthorizeResponse{
+				Header: http.Header{
+					"foo": []string{"x-bar"},
+				},
+				Query: url.Values{
+					"baz": []string{"bar"},
+					"foo": []string{"baz"},
+				},
+			},
+			mock: func() {
+				store.EXPECT().StoreAuthorizeSession(gomock.Nil()).Return(nil)
+				rw.EXPECT().Header().AnyTimes().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(k int) {
+				assert.Equal(t, "x-bar", header.Get("Foo"), "%d: %s", k, header)
+				assert.Equal(t, "http://foobar.com/?baz=bar&foo=baz", header.Get("Location"), "%d", k)
+			},
+			isErr: false,
+		},
+	} {
+		c.mock()
+		err := oauth2.FinishAuthorizeRequest(rw, c.ar, c.resp, nil)
+		assert.Equal(t, c.isErr, err != nil, "%d: %s", k, err)
+		if err == nil {
+			c.checkHeader(k)
+		}
+		header = http.Header{}
+	}
+}
+
+// https://tools.ietf.org/html/rfc6749#section-4.1.2.1
+// If the request fails due to a missing, invalid, or mismatching
+// redirection URI, or if the client identifier is missing or invalid,
+// the authorization server SHOULD inform the resource owner of the
+// error and MUST NOT automatically redirect the user-agent to the
+// invalid redirection URI.
+func TestWriteAuthorizeError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	rw := NewMockResponseWriter(ctrl)
+	defer ctrl.Finish()
+
+	var urls = []string{
+		"",
+		"http://foobar.com/",
+		"http://foobar.com/?foo=bar",
+	}
+	var purls = []*url.URL{}
+	for _, u := range urls {
+		purl, _ := url.Parse(u)
+		purls = append(purls, purl)
+	}
+
+	oauth2 := &OAuth2{}
+	header := http.Header{}
+	for k, c := range []struct {
+		ar          AuthorizeRequest
+		err         error
+		mock        func()
+		checkHeader func(int)
+	}{
+		{
+			ar:  AuthorizeRequest{RedirectURI: purls[0]},
+			err: ErrInvalidGrant,
+			mock: func() {
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusOK)
+				rw.EXPECT().Write(gomock.Any())
+			},
+			checkHeader: func(k int) {
+				assert.Equal(t, "application/json", header.Get("Content-Type"), "%d", k)
+			},
+		},
+		{
+			ar:  AuthorizeRequest{RedirectURI: purls[1]},
+			err: ErrInvalidRequest,
+			mock: func() {
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(k int) {
+				a, _ := url.Parse("http://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed")
+				b, _ := url.Parse(header.Get("Location"))
+				assert.Equal(t, a, b, "%d", k)
+			},
+		},
+		{
+			ar:  AuthorizeRequest{RedirectURI: purls[2]},
+			err: ErrInvalidRequest,
+			mock: func() {
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(k int) {
+				a, _ := url.Parse("http://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&foo=bar")
+				b, _ := url.Parse(header.Get("Location"))
+				assert.Equal(t, a, b, "%d", k)
+			},
+		},
+	} {
+		c.mock()
+		ar := c.ar
+		oauth2.WriteAuthorizeError(rw, ar, c.err)
+		assert.Equal(t, c.ar, ar, "%d", k)
+		c.checkHeader(k)
+		header = http.Header{}
+	}
 }
 
 func TestAuthorizeWorkflow(t *testing.T) {
