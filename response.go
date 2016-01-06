@@ -16,8 +16,3 @@ type Response struct {
 func (r *Response) Set(key string, value interface{}) {
 	r.Output[key] = value
 }
-
-// SetOutput replaces Response.Output.
-func (r *Response) SetOutput(out map[string]interface{}) {
-	r.Output = out
-}

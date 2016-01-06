@@ -5,6 +5,7 @@ package internal
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/client"
 )
 
@@ -40,33 +41,22 @@ func (_mr *_MockStorageRecorder) GetClient(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetClient", arg0)
 }
 
-// Mock of Manager interface
-type MockManager struct {
-	ctrl     *gomock.Controller
-	recorder *_MockManagerRecorder
-}
-
-// Recorder for MockManager (not exported)
-type _MockManagerRecorder struct {
-	mock *MockManager
-}
-
-func NewMockManager(ctrl *gomock.Controller) *MockManager {
-	mock := &MockManager{ctrl: ctrl}
-	mock.recorder = &_MockManagerRecorder{mock}
-	return mock
-}
-
-func (_m *MockManager) EXPECT() *_MockManagerRecorder {
-	return _m.recorder
-}
-
-func (_m *MockManager) StoreClient(_param0 Client) error {
-	ret := _m.ctrl.Call(_m, "StoreClient", _param0)
+func (_m *MockStorage) StoreAuthorizeSession(session *AuthorizeSession) error {
+	ret := _m.ctrl.Call(_m, "StoreAuthorizeSession", session)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockManagerRecorder) StoreClient(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "StoreClient", arg0)
+func (_mr *_MockStorageRecorder) StoreAuthorizeSession(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "StoreAuthorizeSession", arg0)
+}
+
+func (_m *MockStorage) GetAuthorizeSession(signature string, session *AuthorizeSession) error {
+	ret := _m.ctrl.Call(_m, "GetAuthorizeSession", signature, session)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockStorageRecorder) GetAuthorizeSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAuthorizeSession", arg0, arg1)
 }

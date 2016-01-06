@@ -1,12 +1,20 @@
-package storage
+package fosite
 
-import . "github.com/ory-am/fosite/client"
+import (
+	. "github.com/ory-am/fosite/client"
+)
 
 // Storage defines fosite's minimal storage interface.
 type Storage interface {
 	// GetClient loads the client by its ID or returns an error
 	// if the client does not exist or another error occurred.
 	GetClient(id string) (Client, error)
+
+	// StoreAuthorizeSession persists an authorize request session in the store.
+	StoreAuthorizeSession(session *AuthorizeSession) error
+
+	// GetAuthorizeSession finds an authorize request session in the store by the code signature.
+	GetAuthorizeSession(signature string, session *AuthorizeSession) error
 
 	// SaveAuthorize saves authorize data.
 	// StoreAuthorizeRequest(*AuthorizeData) error

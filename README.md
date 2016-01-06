@@ -125,16 +125,20 @@ will be added in the close future.
 ```go
 package main
 
-import "github.com/ory-am/fosite"
-import "github.com/ory-am/fosite/session"
-import "github.com/ory-am/fosite/storage"
+import(
+    "github.com/ory-am/fosite"
+    "github.com/ory-am/fosite/session"
+    "github.com/ory-am/fosite/storage"
+	"golang.org/x/net/context"
+)
 
 // Let's assume that we're in a http handler
 func handleAuth(rw http.ResponseWriter, req *http.Request) {
     store := fosite.NewPostgreSQLStore()
     oauth2 := fosite.NewDefaultOAuth2(store)
+    ctx := context.Background()
 
-    authorizeRequest, err := oauth2.NewAuthorizeRequest(r, store)
+    authorizeRequest, err := oauth2.NewAuthorizeRequest(ctx, r)
     if err != nil {
         // ** This part of the API is not finalized yet **
         // oauth2.RedirectError(rw, error)
@@ -153,7 +157,9 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
     // Once you have confirmed the users identity and consent that he indeed wants to give app XYZ authorization,
     // you will use the user's id to create an authorize session
     user := "12345"
-    session := fosite.NewAuthorizeSession(authorizeRequest, user)
+
+    // NewAuthorizeSessionSQL uses gob.encode to safely store data set with SetExtra
+    session := fosite.NewAuthorizeSessionSQL(authorizeRequest, user)
 
     // You can store additional metadata, for example:
     session.SetExtra(map[string]interface{}{
@@ -171,20 +177,9 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
 
     // Now is the time to handle the response types
 
-    // ** This part of the API is not finalized yet **
-    // response = &AuthorizeResponse{}
-    // err = oauth2.HandleResponseTypes(authorizeRequest, response, session)
-    // err = alsoHandleMyCustomResponseType(authorizeRequest, response, "fancyArguments", 1234)
-    //
-    // or
-    //
-    // this approach would make it possible to check if all response types could be served or not
-    // additionally, a callback for FinishAccessRequest could be provided
-    //
-    // response = &AuthorizeResponse{}
-    // oauth2.RegisterResponseTypeHandler("custom_type", alsoHandleMyCustomResponseType)
-    // err = oauth2.HandleResponseTypes(authorizeRequest, response, session)
-    // ****
+    // you can use a custom list of response type handlers by setting
+    // oauth2.ResponseTypeHandlers = []fosite.ResponseTypeHandler{}
+    response, err := oauth2.HandleResponseTypes(ctx, authorizeRequest, r)
 
     // Almost done! The next step is going to persist the session in the database for later use.
     // It is additionally going to output a result based on response_type.

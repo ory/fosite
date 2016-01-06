@@ -1,8 +1,10 @@
 package fosite
 
 import (
-	"encoding/json"
+	"bytes"
+	"encoding/gob"
 	"github.com/go-errors/errors"
+	"github.com/ory-am/fosite/generator"
 )
 
 // Session defines a authorize flow session which will be persisted and passed to the token endpoint (Authorize Code Flow).
@@ -39,24 +41,26 @@ type AuthorizeSession interface {
 	GetCodeSignature() string
 }
 
-// defaultSession uses json.Marshal and json.Unmarshall to store extra information. It is recommended to use this
+// defaultSession uses gob.Encode and gob.Decode to store extra information. It is recommended to use this
 // implementation.
-type defaultSession struct {
+type sqlSession struct {
 	extra         []byte
 	responseTypes []string
 	clientID      string
 	scopes        []string
 	redirectURI   string
 	state         string
-	signature     string
+	code          *generator.Token
 	userID        string
 	ar            *AuthorizeRequest
 }
 
-func NewAuthorizeSession(ar *AuthorizeRequest, userID string) AuthorizeSession {
-	return &defaultSession{
+// NewAuthorizeSessionSQL creates a new authorize session and uses gob.Encode and gob.Decode to store extra information.
+// It is recommended to use this implementation.
+func NewAuthorizeSessionSQL(ar *AuthorizeRequest, userID string) AuthorizeSession {
+	return &sqlSession{
 		ar:            ar,
-		signature:     ar.Code.Signature,
+		code:          ar.Code,
 		extra:         []byte{},
 		responseTypes: ar.ResponseTypes,
 		clientID:      ar.Client.GetID(),
@@ -67,46 +71,46 @@ func NewAuthorizeSession(ar *AuthorizeRequest, userID string) AuthorizeSession {
 	}
 }
 
-func (s *defaultSession) SetExtra(extra interface{}) error {
-	result, err := json.Marshal(extra)
-	if err != nil {
+func (s *sqlSession) SetExtra(extra interface{}) error {
+	var network bytes.Buffer
+	if err := gob.NewEncoder(&network).Encode(extra); err != nil {
 		return errors.New(err)
 	}
-	s.extra = result
+	s.extra = network.Bytes()
 	return nil
 }
 
-func (s *defaultSession) WriteExtra(to interface{}) error {
-	if err := json.Unmarshal(s.extra, to); err != nil {
+func (s *sqlSession) WriteExtra(to interface{}) error {
+	if err := gob.NewDecoder(bytes.NewReader(s.extra)).Decode(to); err != nil {
 		return errors.New(err)
 	}
 	return nil
 }
 
-func (s *defaultSession) GetResponseTypes() []string {
+func (s *sqlSession) GetResponseTypes() []string {
 	return s.responseTypes
 }
 
-func (s *defaultSession) GetClientID() string {
+func (s *sqlSession) GetClientID() string {
 	return s.clientID
 }
 
-func (s *defaultSession) GetScopes() []string {
+func (s *sqlSession) GetScopes() []string {
 	return s.scopes
 }
 
-func (s *defaultSession) GetRedirectURI() string {
+func (s *sqlSession) GetRedirectURI() string {
 	return s.redirectURI
 }
 
-func (s *defaultSession) GetState() string {
+func (s *sqlSession) GetState() string {
 	return s.state
 }
 
-func (s *defaultSession) GetCodeSignature() string {
-	return s.signature
+func (s *sqlSession) GetCodeSignature() string {
+	return s.code.Signature
 }
 
-func (s *defaultSession) GetUserID() string {
+func (s *sqlSession) GetUserID() string {
 	return s.userID
 }

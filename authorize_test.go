@@ -1,11 +1,13 @@
-package fosite
+package fosite_test
 
 import (
 	"github.com/golang/mock/gomock"
+	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/generator"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/vektra/errors"
 	"golang.org/x/net/context"
 	"net/http"
@@ -13,86 +15,91 @@ import (
 	"testing"
 )
 
-// TODO rfc6749 3.1. Authorization Endpoint
-// The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component
-//
-// rfc6749 3.1.2. Redirection Endpoint
-// "The redirection endpoint URI MUST be an absolute URI as defined by [RFC3986] Section 4.3"
-func TestGetRedirectURI(t *testing.T) {
-	for _, c := range []struct {
-		in       string
-		isError  bool
-		expected string
-	}{
-		{in: "", isError: true},
-	} {
-		values := url.Values{}
-		values.Set("redirect_uri", c.in)
-		res, err := redirectFromValues(values)
-		assert.Equal(t, c.isError, err != nil, "%s", err)
-		if err == nil {
-			assert.Equal(t, c.expected, res)
-		}
-	}
-}
-
-// rfc6749 10.6.
-// Authorization Code Redirection URI Manipulation
-// The authorization server	MUST require public clients and SHOULD require confidential clients
-// to register their redirection URIs.  If a redirection URI is provided
-// in the request, the authorization server MUST validate it against the
-// registered value.
-//
-// rfc6819 4.4.1.7.
-// Threat: Authorization "code" Leakage through Counterfeit Client
-// The authorization server may also enforce the usage and validation
-// of pre-registered redirect URIs (see Section 5.2.3.5).
-func TestDoesClientWhiteListRedirect(t *testing.T) {
-	var err error
-	var redir string
+func TestAuthorizeWorkflow(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	store := NewMockStorage(ctrl)
+	gen := NewMockGenerator(ctrl)
+	defer ctrl.Finish()
 
 	for k, c := range []struct {
-		client   Client
-		url      string
-		isError  bool
-		expected string
+		desc          string
+		conf          *OAuth2
+		r             *http.Request
+		query         url.Values
+		expectedError error
+		mock          func()
+		expect        *AuthorizeRequest
 	}{
 		{
-			client:  &SecureClient{RedirectURIs: []string{""}},
-			url:     "http://foo.com/cb",
-			isError: true,
-		},
-		{
-			client:  &SecureClient{RedirectURIs: []string{"http://bar.com/cb"}},
-			url:     "http://foo.com/cb",
-			isError: true,
-		},
-		{
-			client:   &SecureClient{RedirectURIs: []string{"http://bar.com/cb"}},
-			url:      "",
-			isError:  false,
-			expected: "http://bar.com/cb",
-		},
-		{
-			client:  &SecureClient{RedirectURIs: []string{""}},
-			url:     "",
-			isError: true,
-		},
-		{
-			client:   &SecureClient{RedirectURIs: []string{"http://bar.com/cb"}},
-			url:      "http://bar.com/cb",
-			isError:  false,
-			expected: "http://bar.com/cb",
-		},
-		{
-			client:  &SecureClient{RedirectURIs: []string{"http://bar.com/cb"}},
-			url:     "http://bar.com/cb123",
-			isError: true,
+			desc: "should pass",
+			conf: &OAuth2{
+				Store: store,
+				AuthorizeCodeGenerator: gen,
+				AllowedResponseTypes:   []string{"code", "token"},
+				Lifetime:               3600,
+			},
+			query: url.Values{
+				"redirect_uri":  []string{"http://foo.bar/cb"},
+				"client_id":     []string{"1234"},
+				"response_type": []string{"code token"},
+				"state":         []string{"strong-state"},
+				"scope":         []string{"foo bar"},
+			},
+			mock: func() {
+				gen.EXPECT().Generate().Return(&generator.Token{Key: "foo", Signature: "bar"}, nil)
+				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
+			},
+			expect: &AuthorizeRequest{
+				RedirectURI:   "http://foo.bar/cb",
+				Client:        &SecureClient{ID: "1234", RedirectURIs: []string{"http://foo.bar/cb"}},
+				ResponseTypes: []string{"code", "token"},
+				State:         "strong-state",
+				Scopes:        []string{"foo", "bar"},
+				ExpiresIn:     3600,
+				Code:          &generator.Token{Key: "foo", Signature: "bar"},
+			},
 		},
 	} {
-		redir, err = redirectFromClient(c.url, c.client)
-		assert.Equal(t, c.isError, err != nil, "%d: %s", k, err)
-		assert.Equal(t, c.expected, redir)
+		c.mock()
+		if c.r == nil {
+			c.r = &http.Request{Header: http.Header{}}
+			if c.query != nil {
+				c.r.URL = &url.URL{RawQuery: c.query.Encode()}
+			}
+		}
+
+		// equals to: c.conf = NewDefaultOAuth2(store)
+		c.conf.Store = store
+		authorizeRequest, err := c.conf.NewAuthorizeRequest(context.Background(), c.r)
+		require.Nil(t, err, "%d: %s", k, err)
+
+		userID := "user-id"
+		_ = NewAuthorizeSessionSQL(authorizeRequest, userID)
+
+		// 	if err := store.StoreAuthorizeSession(sess); err != nil {
+		// 		return err
+		// 	}
+
+		//response := NewAuthorizeResponse()
+		// err = oauth2.HandleResponseTypes(authorizeRequest, response, session)
+		// err = alsoHandleMyCustomResponseType(authorizeRequest, response, "fancyArguments", 1234)
+		//
+		// or
+		//
+		// this approach would make it possible to check if all response types could be served or not
+		// additionally, a callback for FinishAccessRequest could be provided
+		//
+		// response = &AuthorizeResponse{}
+		// oauth2.RegisterResponseTypeHandler("custom_type", alsoHandleMyCustomResponseType)
+		// err = oauth2.HandleResponseTypes(authorizeRequest, response, session)
+		// ****
+
+		// Almost done! The next step is going to persist the session in the database for later use.
+		// It is additionally going to output a result based on response_type.
+
+		// ** API not finalized yet **
+		// err := oauth2.FinishAuthorizeRequest(rw, response, session)
+		// ****
 	}
 }
 
