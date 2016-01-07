@@ -7,7 +7,6 @@ import (
 	"github.com/ory-am/fosite/generator"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/vektra/errors"
 	"golang.org/x/net/context"
 	"net/http"
@@ -23,17 +22,17 @@ func TestFinishAuthorizeRequest(t *testing.T) {
 
 	redir, _ := url.Parse("http://foobar.com/")
 	header := http.Header{}
-	oauth2 := &OAuth2{Store: store}
+	oauth2 := &Fosite{Store: store}
 	for k, c := range []struct {
-		ar          AuthorizeRequest
-		resp        AuthorizeResponse
+		ar          AuthorizeRequester
+		resp        AuthorizeResponder
 		isErr       bool
 		mock        func()
 		checkHeader func(int)
 	}{
 		{
-			ar: AuthorizeRequest{RedirectURI: redir},
-			resp: AuthorizeResponse{
+			ar: AuthorizeRequester{RedirectURI: redir},
+			resp: AuthorizeResponder{
 				Header: http.Header{
 					"foo": []string{"bar"},
 				},
@@ -44,19 +43,13 @@ func TestFinishAuthorizeRequest(t *testing.T) {
 			},
 			mock: func() {
 				store.EXPECT().StoreAuthorizeSession(gomock.Nil()).Return(ErrServerError)
-				//rw.EXPECT().Header().Return(header)
-				//rw.EXPECT().WriteHeader(http.StatusFound)
 			},
-			checkHeader: func(k int) {
-				//assert.Equal(t, "http://foobar.com/?baz=bar&foo=baz", header.Get("Location"), "%d", k)
-				//assert.Equal(t, "bar", header.Get("foo"), "%d", k)
-				//assert.Equal(t, "http://foobar.com/?baz=bar&foo=baz", header.Get("Location"), "%d", k)
-			},
-			isErr: true,
+			checkHeader: func(_ int) {},
+			isErr:       true,
 		},
 		{
-			ar: AuthorizeRequest{RedirectURI: redir},
-			resp: AuthorizeResponse{
+			ar: AuthorizeRequester{RedirectURI: redir},
+			resp: AuthorizeResponder{
 				Header: http.Header{
 					"foo": []string{"x-bar"},
 				},
@@ -109,16 +102,16 @@ func TestWriteAuthorizeError(t *testing.T) {
 		purls = append(purls, purl)
 	}
 
-	oauth2 := &OAuth2{}
+	oauth2 := &Fosite{}
 	header := http.Header{}
 	for k, c := range []struct {
-		ar          AuthorizeRequest
+		ar          AuthorizeRequester
 		err         error
 		mock        func()
 		checkHeader func(int)
 	}{
 		{
-			ar:  AuthorizeRequest{RedirectURI: purls[0]},
+			ar:  AuthorizeRequester{RedirectURI: purls[0]},
 			err: ErrInvalidGrant,
 			mock: func() {
 				rw.EXPECT().Header().Return(header)
@@ -130,7 +123,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 			},
 		},
 		{
-			ar:  AuthorizeRequest{RedirectURI: purls[1]},
+			ar:  AuthorizeRequester{RedirectURI: purls[1]},
 			err: ErrInvalidRequest,
 			mock: func() {
 				rw.EXPECT().Header().Return(header)
@@ -143,7 +136,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 			},
 		},
 		{
-			ar:  AuthorizeRequest{RedirectURI: purls[2]},
+			ar:  AuthorizeRequester{RedirectURI: purls[2]},
 			err: ErrInvalidRequest,
 			mock: func() {
 				rw.EXPECT().Header().Return(header)
@@ -165,96 +158,6 @@ func TestWriteAuthorizeError(t *testing.T) {
 	}
 }
 
-func TestAuthorizeWorkflow(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	store := NewMockStorage(ctrl)
-	gen := NewMockGenerator(ctrl)
-	defer ctrl.Finish()
-
-	redir, _ := url.Parse("http://foo.bar/cb")
-
-	for k, c := range []struct {
-		desc          string
-		conf          *OAuth2
-		r             *http.Request
-		query         url.Values
-		expectedError error
-		mock          func()
-		expect        *AuthorizeRequest
-	}{
-		{
-			desc: "should pass",
-			conf: &OAuth2{
-				Store: store,
-				AuthorizeCodeGenerator: gen,
-				AllowedResponseTypes:   []string{"code", "token"},
-				Lifetime:               3600,
-			},
-			query: url.Values{
-				"redirect_uri":  []string{"http://foo.bar/cb"},
-				"client_id":     []string{"1234"},
-				"response_type": []string{"code token"},
-				"state":         []string{"strong-state"},
-				"scope":         []string{"foo bar"},
-			},
-			mock: func() {
-				gen.EXPECT().Generate().Return(&generator.Token{Key: "foo", Signature: "bar"}, nil)
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
-			},
-			expect: &AuthorizeRequest{
-				RedirectURI:   redir,
-				Client:        &SecureClient{ID: "1234", RedirectURIs: []string{"http://foo.bar/cb"}},
-				ResponseTypes: []string{"code", "token"},
-				State:         "strong-state",
-				Scopes:        []string{"foo", "bar"},
-				ExpiresIn:     3600,
-				Code:          &generator.Token{Key: "foo", Signature: "bar"},
-			},
-		},
-	} {
-		c.mock()
-		if c.r == nil {
-			c.r = &http.Request{Header: http.Header{}}
-			if c.query != nil {
-				c.r.URL = &url.URL{RawQuery: c.query.Encode()}
-			}
-		}
-
-		// equals to: c.conf = NewDefaultOAuth2(store)
-		c.conf.Store = store
-		authorizeRequest, err := c.conf.NewAuthorizeRequest(context.Background(), c.r)
-		require.Nil(t, err, "%d: %s", k, err)
-
-		userID := "user-id"
-		_ = NewAuthorizeSessionSQL(authorizeRequest, userID)
-
-		// 	if err := store.StoreAuthorizeSession(sess); err != nil {
-		// 		return err
-		// 	}
-
-		//response := NewAuthorizeResponse()
-		// err = oauth2.HandleResponseTypes(authorizeRequest, response, session)
-		// err = alsoHandleMyCustomResponseType(authorizeRequest, response, "fancyArguments", 1234)
-		//
-		// or
-		//
-		// this approach would make it possible to check if all response types could be served or not
-		// additionally, a callback for FinishAccessRequest could be provided
-		//
-		// response = &AuthorizeResponse{}
-		// oauth2.RegisterResponseTypeHandler("custom_type", alsoHandleMyCustomResponseType)
-		// err = oauth2.HandleResponseTypes(authorizeRequest, response, session)
-		// ****
-
-		// Almost done! The next step is going to persist the session in the database for later use.
-		// It is additionally going to output a result based on response_type.
-
-		// ** API not finalized yet **
-		// err := oauth2.FinishAuthorizeRequest(rw, response, session)
-		// ****
-	}
-}
-
 func TestNewAuthorizeRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := NewMockStorage(ctrl)
@@ -264,17 +167,17 @@ func TestNewAuthorizeRequest(t *testing.T) {
 	redir, _ := url.Parse("http://foo.bar/cb")
 	for k, c := range []struct {
 		desc          string
-		conf          *OAuth2
+		conf          *Fosite
 		r             *http.Request
 		query         url.Values
 		expectedError error
 		mock          func()
-		expect        *AuthorizeRequest
+		expect        *AuthorizeRequester
 	}{
 		/* empty request */
 		{
 			desc:          "empty request fails",
-			conf:          &OAuth2{Store: store},
+			conf:          &Fosite{Store: store},
 			r:             &http.Request{},
 			expectedError: ErrInvalidRequest,
 			mock:          func() {},
@@ -282,7 +185,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid redirect uri */
 		{
 			desc:          "invalid redirect uri fails",
-			conf:          &OAuth2{Store: store},
+			conf:          &Fosite{Store: store},
 			query:         url.Values{"redirect_uri": []string{"invalid"}},
 			expectedError: ErrInvalidRequest,
 			mock:          func() {},
@@ -290,7 +193,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid client */
 		{
 			desc:          "invalid client uri fails",
-			conf:          &OAuth2{Store: store},
+			conf:          &Fosite{Store: store},
 			query:         url.Values{"redirect_uri": []string{"http://foo.bar/cb"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -300,7 +203,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &OAuth2{Store: store},
+			conf: &Fosite{Store: store},
 			query: url.Values{
 				"redirect_uri": []string{"http://foo.bar/cb"},
 				"client_id":    []string{"1234"},
@@ -313,7 +216,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* no response type */
 		{
 			desc: "no response type",
-			conf: &OAuth2{Store: store},
+			conf: &Fosite{Store: store},
 			query: url.Values{
 				"redirect_uri": []string{"http://foo.bar/cb"},
 				"client_id":    []string{"1234"},
@@ -326,7 +229,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid response type */
 		{
 			desc: "invalid response type",
-			conf: &OAuth2{Store: store},
+			conf: &Fosite{Store: store},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -340,7 +243,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid response type */
 		{
 			desc: "invalid response type",
-			conf: &OAuth2{Store: store},
+			conf: &Fosite{Store: store},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -354,7 +257,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* unsupported response type */
 		{
 			desc: "unspported response type",
-			conf: &OAuth2{Store: store, AllowedResponseTypes: []string{"code"}},
+			conf: &Fosite{Store: store, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -368,7 +271,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* unsupported response type */
 		{
 			desc: "unspported response type",
-			conf: &OAuth2{Store: store, AllowedResponseTypes: []string{"code"}},
+			conf: &Fosite{Store: store, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -382,7 +285,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* no state */
 		{
 			desc: "no state",
-			conf: &OAuth2{Store: store, AllowedResponseTypes: []string{"code"}},
+			conf: &Fosite{Store: store, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -396,7 +299,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* short state */
 		{
 			desc: "short state",
-			conf: &OAuth2{Store: store, AllowedResponseTypes: []string{"code"}},
+			conf: &Fosite{Store: store, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -411,7 +314,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* code gen fails */
 		{
 			desc: "code gen fails",
-			conf: &OAuth2{Store: store, AuthorizeCodeGenerator: gen, AllowedResponseTypes: []string{"code"}},
+			conf: &Fosite{Store: store, AuthorizeCodeGenerator: gen, AllowedResponseTypes: []string{"code"}},
 			query: url.Values{
 				"redirect_uri":  []string{"http://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -427,7 +330,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* success case */
 		{
 			desc: "should pass",
-			conf: &OAuth2{
+			conf: &Fosite{
 				Store: store,
 				AuthorizeCodeGenerator: gen,
 				AllowedResponseTypes:   []string{"code", "token"},
@@ -444,7 +347,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				gen.EXPECT().Generate().Return(&generator.Token{Key: "foo", Signature: "bar"}, nil)
 				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
 			},
-			expect: &AuthorizeRequest{
+			expect: &AuthorizeRequester{
 				RedirectURI:   redir,
 				Client:        &SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}},
 				ResponseTypes: []string{"code", "token"},

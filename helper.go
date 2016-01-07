@@ -5,19 +5,19 @@ import (
 	"strings"
 )
 
-func areResponseTypesValid(c *OAuth2, responseTypes []string) bool {
+func areResponseTypesValid(c *Fosite, responseTypes []string) bool {
 	if len(responseTypes) < 1 {
 		return false
 	}
 	for _, responseType := range responseTypes {
-		if !stringInSlice(responseType, c.AllowedResponseTypes) {
+		if !StringInSlice(responseType, c.AllowedResponseTypes) {
 			return false
 		}
 	}
 	return true
 }
 
-func stringInSlice(needle string, haystack []string) bool {
+func StringInSlice(needle string, haystack []string) bool {
 	for _, b := range haystack {
 		if b == needle {
 			return true

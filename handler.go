@@ -4,9 +4,13 @@ import (
 	"errors"
 	"golang.org/x/net/context"
 	"net/http"
+	"net/url"
 )
 
+// ErrInvalidResponseType is thrown by a ResponseTypeHandler if it is not responsible for handling the authorize request.
 var ErrInvalidResponseType = errors.New("This handler is unable handle any of the response types requested by the auhtorize request")
+
+// ErrNoResponseTypeHandlerFound is thrown if no ResponseTypeHandler was found responsible for the request.
 var ErrNoResponseTypeHandlerFound = errors.New("None of the handler's are able to handle this authorize request")
 
 type ResponseTypeHandler interface {
@@ -14,32 +18,5 @@ type ResponseTypeHandler interface {
 	// is passed along, if further information retrieval is required.
 	//
 	// If HandleResponseType fails, the handler implementation MUST return ErrInvalidResponseType.
-	HandleResponseType(context.Context, *AuthorizeResponse, AuthorizeRequest, http.Request) error
-}
-
-// NewAuthorizeResponse iterates through all response type handlers and returns their result or
-// ErrNoResponseTypeHandlerFound if none of the handler's were able to handle it.
-//
-// Important: Every ResponseTypeHandler should return ErrInvalidResponseType if it is unable to handle
-// the given request and an arbitrary error if an error occurred
-func (o *OAuth2) NewAuthorizeResponse(ctx context.Context, ar *AuthorizeRequest, r *http.Request) (*AuthorizeResponse, error) {
-	var resp = new(AuthorizeResponse)
-	var err error
-	var found bool
-
-	for _, h := range o.ResponseTypeHandlers {
-		// Dereference http request and authorize request so handler's can't mess with it.
-		err = h.HandleResponseType(ctx, resp, *ar, *r)
-		if err == nil {
-			found = true
-		} else if err != ErrInvalidResponseType {
-			return nil, err
-		}
-	}
-
-	if !found {
-		return nil, ErrNoResponseTypeHandlerFound
-	}
-
-	return resp, nil
+	HandleResponseType(context.Context, *AuthorizeResponder, AuthorizeRequester, http.Request, session interface{}) error
 }

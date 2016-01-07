@@ -14,6 +14,12 @@ Fosite is in active development. We will use gopkg for releasing new versions of
 Be aware that "go get github.com/ory-am/fosite" will give you the master branch, which is and always will be *nightly*.
 Once releases roll out, you will be able to fetch a specific fosite API version through gopkg.in.
 
+These Standards have been reviewed during the development of Fosite:
+* [OAuth 2.0 Multiple Response Type Encoding Practices](http://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
+* [OpenID Connect Core 1.0](http://openid.net/specs/openid-connect-core-1_0.html)
+* [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
+* [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -31,7 +37,6 @@ Once releases roll out, you will be able to fetch a specific fosite API version 
     - [Implement peer reviewed IETF Standards](#implement-peer-reviewed-ietf-standards)
   - [Provide extensibility and interoperability](#provide-extensibility-and-interoperability)
 - [Usage](#usage)
-  - [Store](#store)
   - [Authorize Endpoint](#authorize-endpoint)
   - [Token Endpoint](#token-endpoint)
 - [Hall of Fame](#hall-of-fame)

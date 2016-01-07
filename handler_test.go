@@ -26,7 +26,7 @@ func TestNewAuthorizeResponse(t *testing.T) {
 		handlers     []ResponseTypeHandler
 		mock         func()
 		expectsError error
-		expects      *AuthorizeResponse
+		expects      *AuthorizeResponder
 	}{
 		{
 			handlers: []ResponseTypeHandler{
@@ -34,7 +34,7 @@ func TestNewAuthorizeResponse(t *testing.T) {
 				rths[1],
 			},
 			mock: func() {
-				rths[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(arbitraryError)
+				rths[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(arbitraryError)
 			},
 			expectsError: arbitraryError,
 		},
@@ -44,17 +44,17 @@ func TestNewAuthorizeResponse(t *testing.T) {
 				rths[1],
 			},
 			mock: func() {
-				rths[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrInvalidResponseType)
-				rths[1].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(arbitraryError)
+				rths[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrInvalidResponseType)
+				rths[1].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(arbitraryError)
 			},
 			expectsError: arbitraryError,
 		},
 	} {
 		c.mock()
-		o := &OAuth2{
+		o := &Fosite{
 			ResponseTypeHandlers: c.handlers,
 		}
-		resp, err := o.NewAuthorizeResponse(context.Background(), &AuthorizeRequest{}, &http.Request{})
+		resp, err := o.NewAuthorizeResponse(context.Background(), &AuthorizeRequester{}, &http.Request{})
 		require.Equal(t, c.expectsError, err, "%d: %s", k, err)
 		if err != nil {
 			require.Equal(t, c.expects, resp)

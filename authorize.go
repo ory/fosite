@@ -4,40 +4,16 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite/client"
-	"github.com/ory-am/fosite/generator"
 	"golang.org/x/net/context"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
-
-// Authorize request information
-type AuthorizeRequest struct {
-	ResponseTypes []string
-	Client        Client
-	Scopes        []string
-	RedirectURI   *url.URL
-	State         string
-	ExpiresIn     int32
-	Code          *generator.Token
-}
 
 const minStateLength = 8
 
-type ScopeStrategy interface {
-}
-
-// NewAuthorizeRequest returns an AuthorizeRequest. This method makes rfc6749 compliant
-// checks:
-// * rfc6749 3.1.   Authorization Endpoint
-// * rfc6749 3.1.1. Response Type
-// * rfc6749 3.1.2. Redirection Endpoint
-// * rfx6749 10.6.  Authorization Code Redirection URI Manipulation
-//
-// It also introduces countermeasures described in rfc6819:
-// * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-// * rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
-func (c *OAuth2) NewAuthorizeRequest(_ context.Context, r *http.Request) (*AuthorizeRequest, error) {
+func (c *Fosite) NewAuthorizeRequest(_ context.Context, r *http.Request) (AuthorizeRequester, error) {
 	if err := r.ParseForm(); err != nil {
 		return nil, errors.New(ErrInvalidRequest)
 	}
@@ -87,12 +63,6 @@ func (c *OAuth2) NewAuthorizeRequest(_ context.Context, r *http.Request) (*Autho
 		return nil, errors.New(ErrInvalidState)
 	}
 
-	// Generate the auth token
-	code, err := c.AuthorizeCodeGenerator.Generate()
-	if err != nil {
-		return nil, errors.New(ErrServerError)
-	}
-
 	// Remove empty items from arrays
 	scopes := removeEmpty(strings.Split(r.Form.Get("scope"), " "))
 
@@ -101,25 +71,20 @@ func (c *OAuth2) NewAuthorizeRequest(_ context.Context, r *http.Request) (*Autho
 		Client:        client,
 		Scopes:        scopes,
 		State:         state,
-		ExpiresIn:     c.Lifetime,
 		RedirectURI:   redirectURI,
-		Code:          code,
+		RequestedAt:   time.Time,
 	}, nil
 }
 
-// FinishAuthorizeRequest persists the AuthorizeSession in the store and redirects the user agent to the provided
-// redirect url or returns an error if storage failed.
-func (c *OAuth2) FinishAuthorizeRequest(rw http.ResponseWriter, ar AuthorizeRequest, resp AuthorizeResponse, session *AuthorizeSession) error {
-	if err := c.Store.StoreAuthorizeSession(session); err != nil {
-		return errors.Wrap(err, 1)
+func (c *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
+	q := ar.GetRedirectURI().Query()
+	args := resp.GetArguments()
+	for k, _ := range args {
+		q.Add(k, args.Get(k))
 	}
-
-	q := ar.RedirectURI.Query()
-	for k, _ := range resp.Query {
-		q.Add(k, resp.Query.Get(k))
-	}
-	ar.RedirectURI.RawQuery = q.Encode()
-	for k, v := range resp.Header {
+	ar.GetRedirectURI().RawQuery = q.Encode()
+	header := resp.GetHeader()
+	for k, v := range header {
 		for _, vv := range v {
 			rw.Header().Add(k, vv)
 		}
@@ -130,24 +95,21 @@ func (c *OAuth2) FinishAuthorizeRequest(rw http.ResponseWriter, ar AuthorizeRequ
 	// user-agent to the provided client redirection URI using an HTTP
 	// redirection response, or by other means available to it via the
 	// user-agent.
-	rw.Header().Set("Location", ar.RedirectURI.String())
+	rw.Header().Set("Location", ar.GetRedirectURI().String())
 	rw.WriteHeader(http.StatusFound)
-	return nil
 }
 
-// WriteAuthorizeError returns the error codes to the redirection endpoint or shows the error to the user, if no valid
-// redirect uri was given. Implements rfc6749#section-4.1.2.1
-func (c *OAuth2) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest, err error) {
+func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 	rfcerr := ErrorToRFC6749Error(err)
 
 	// rfc6749#section-4.1.2.1
-	if ar.RedirectURI.String() == "" {
+	if ar.GetRedirectURI().String() == "" {
 		pkg.WriteJSON(rw, rfcerr)
 		return
 	}
 
 	// Defer the uri so we don't mess with the redirect data
-	redirectURI := ar.RedirectURI
+	redirectURI := ar.GetRedirectURI()
 	query := redirectURI.Query()
 	query.Add("error", rfcerr.Name)
 	query.Add("error_description", rfcerr.Description)
@@ -155,6 +117,28 @@ func (c *OAuth2) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 
 	rw.Header().Add("Location", redirectURI.String())
 	rw.WriteHeader(http.StatusFound)
+}
+
+func (o *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester, r *http.Request, session interface{}) (AuthorizeResponder, error) {
+	var resp = new(AuthorizeResponder)
+	var err error
+	var found bool
+
+	for _, h := range o.ResponseTypeHandlers {
+		// Dereference http request and authorize request so handler's can't mess with it.
+		err = h.HandleResponseType(ctx, resp, *ar, *r, session)
+		if err == nil {
+			found = true
+		} else if err != ErrInvalidResponseType {
+			return nil, err
+		}
+	}
+
+	if !found {
+		return nil, ErrNoResponseTypeHandlerFound
+	}
+
+	return resp, nil
 }
 
 // redirectFromValues extracts the redirect_uri from values.
@@ -200,7 +184,7 @@ func redirectFromClient(parseduri *url.URL, client Client) (*url.URL, error) {
 		if purl, valid := validateURL(client.GetRedirectURIs()[0]); valid {
 			return purl, nil
 		}
-	} else if rawuri != "" && stringInSlice(rawuri, client.GetRedirectURIs()) {
+	} else if rawuri != "" && StringInSlice(rawuri, client.GetRedirectURIs()) {
 		return parseduri, nil
 	}
 

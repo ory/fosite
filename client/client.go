@@ -13,6 +13,12 @@ type Client interface {
 
 	// Returns the client's allowed redirect URIs.
 	GetRedirectURIs() []string
+
+	// IsImplicitGrantAllowed() bool
+
+	// IsUserPasswordGrantAllowed() bool
+
+	// IsClientGrantAllowed() bool
 }
 
 // DefaultClient is a simple default implementation of the Client interface.
