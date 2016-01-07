@@ -132,11 +132,6 @@ OAuth2 stack. Or custom assertions, what ever you like and as long as it is secu
 
 This section is WIP and we welcome discussions via PRs or in the issues.
 
-### Store
-
-To use fosite, you need to implement `fosite.Storage`. Example implementations (e.g. postgres) of `fosite.Storage`
-will be added in the close future.
-
 ### Authorize Endpoint
 
 ```go
@@ -144,15 +139,16 @@ package main
 
 import(
     "github.com/ory-am/fosite"
-    "github.com/ory-am/fosite/session"
-    "github.com/ory-am/fosite/storage"
+    "github.com/ory-am/fosite/service"
 	"golang.org/x/net/context"
 )
 
+
+var store = fosite.NewPostgreSQLStore()
+var oauth2 = service.NewDefaultOAuth2(store)
+
 // Let's assume that we're in a http handler
 func handleAuth(rw http.ResponseWriter, req *http.Request) {
-    store := fosite.NewPostgreSQLStore()
-    oauth2 := fosite.NewDefaultOAuth2(store)
     ctx := context.Background()
 
     // Let's create an AuthorizeRequest object!
@@ -164,7 +160,13 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
     }
 
     // you have now access to authorizeRequest, Code ResponseTypes, Scopes ...
-    // and can show the user agent a login or consent page.
+    // and can show the user agent a login or consent page
+    //
+    // or, for example:
+    // if authorizeRequest.GetScopes().Has("admin") {
+    //     http.Error(rw, "you're not allowed to do that", http.StatusForbidden)
+    //     return
+    // }
 
     // it would also be possible to redirect the user to an identity provider (google, microsoft live, ...) here
     // and do fancy stuff like OpenID Connect amongst others
@@ -173,25 +175,33 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
     // you will use the user's id to create an authorize session
     user := "12345"
 
-    // NewAuthorizeSessionSQL uses gob.encode to safely store data set with SetExtra
-    session := fosite.NewAuthorizeSessionSQL(authorizeRequest, user)
-
-    // You can store additional metadata, for example:
-    session.SetExtra(&struct{
-        UserEmail string
-        LastSeen time.Time
+    // mySessionData is going to be persisted alongside the other data. Note that mySessionData is arbitrary.
+    // You will however absolutely need the user id later on, so at least store that!
+    mySessionData := struct {
+        User string
         UsingIdentityProvider string
-    }{
-         UserEmail: "foo@bar",
-         LastSeen: new Date(),
-         UsingIdentityProvider: "google",
-    })
+        Foo string
+    } {
+        User: user,
+        UsingIdentityProvider: "google",
+        Foo: "bar",
+    }
 
+    // if you want to support OpenID Connect, this would be a good place to do stuff like
+    // user := getUserFromCookie()
+    // mySessionData := NewImplementsOpenIDSession()
+    // if authorizeRequest.GetScopes().Has("openid") {
+    //     if authorizeRequest.GetScopes().Has("email") {
+    //         mySessionData.AddField("email", user.Email)
+    //     }
+    //     mySessionData.AddField("id", user.ID)
+    // }
+    //
 
     // Now is the time to handle the response types
     // You can use a custom list of response type handlers by setting
     // oauth2.ResponseTypeHandlers = []fosite.ResponseTypeHandler{}
-    response, err := oauth2.HandleResponseTypes(ctx, authorizeRequest, r)
+    response, err := oauth2.HandleAuthorizeRequest(ctx, authorizeRequest, r, &mySessionData)
     if err != nil {
        oauth2.WriteAuthorizeError(rw, req, err)
        return
@@ -199,16 +209,44 @@ func handleAuth(rw http.ResponseWriter, req *http.Request) {
 
     // The next step is going to persist the session in the database for later use and redirect the
     // user agent back to the application demanding access.
-    if err = oauth2.FinishAuthorizeRequest(rw, ar, response, session); err != nil {
-        oauth2.WriteAuthorizeError(rw, req, err)
-        return
-    }
+    oauth2.WriteAuthorizeResponse(rw, ar, response)
 
     // Done! The client should now have a valid authorize code!
 }
 ```
 
 ### Token Endpoint
+
+draft
+
+```go
+func handleToken(rw http.ResponseWriter, req *http.Request) {
+    var mySessionData = struct {
+        User string
+        UsingIdentityProvider string
+        Foo string
+    }
+
+    accessRequest, err := oauth2.NewAccessRequest(ctx, r, &mySessionData)
+    if err != nil {
+       oauth2.WriteAccessError(rw, req, err)
+       return
+    }
+
+    if mySessionData != nil {
+        // normally, mySessionData will always be nil unless: accessRequest.GetGrantTypes().Has("authorization_code")
+        // mySessionData.User === "12345"
+    }
+
+    response, err := oauth2.NewAccessResponse(ctx, accessRequest, r, mySessionData)
+    if err != nil {
+       oauth2.WriteAccessError(rw, req, err)
+       return
+    }
+
+    oauth2.WriteAccessResponse(rw, ar, response)
+}
+```
 
 ## Hall of Fame
 
