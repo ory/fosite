@@ -23,7 +23,7 @@ const (
 	errUnsupportedResponseTypeName = "unsupported_response_type"
 	errInvalidScopeName            = "invalid_scope"
 	errServerErrorName             = "server_error"
-	errTemporarilyUnavailableName  = "errTemporarilyUnavailableName"
+	errTemporarilyUnavailableName  = "temporarily_unavailable"
 	errUnsupportedGrantTypeName    = "unsupported_grant_type"
 	errInvalidGrantName            = "invalid_grant"
 	errInvalidClientName           = "invalid_client"
