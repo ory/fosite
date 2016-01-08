@@ -1,19 +1,20 @@
-package generator
+package enigma
 
 import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestTokenToString(t *testing.T) {
-	ac := &Token{
+func TestChallengeToString(t *testing.T) {
+	ac := &Challenge{
 		Key:       "foo",
 		Signature: "bar",
 	}
 	assert.Equal(t, "foo.bar", ac.String())
 }
-func TestTokenFromString(t *testing.T) {
-	ac := new(Token)
+
+func TestChallengeFromString(t *testing.T) {
+	ac := new(Challenge)
 	for _, c := range [][]string{
 		{"foo.bar", "foo", "bar"},
 		{"foo.", "", ""},
