@@ -153,7 +153,7 @@ var store = fosite.NewPostgreSQLStore()
 var oauth2 = service.NewDefaultOAuth2(store)
 
 // Let's assume that we're in a http handler
-func handleAuth(rw http.ResponseWriter, req *http.Request) {
+func handleAuth(rw http.ResponseWriter, r *http.Request) {
     ctx := context.Background()
 
     // Let's create an AuthorizeRequest object!
@@ -249,7 +249,7 @@ func handleToken(rw http.ResponseWriter, req *http.Request) {
        return
     }
 
-    oauth2.WriteAccessResponse(rw, ar, response)
+    oauth2.WriteAccessResponse(rw, accessRequest, response)
 }
 ```
 
