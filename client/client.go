@@ -9,22 +9,19 @@ type Client interface {
 
 	// CompareSecret compares a secret with the stored one (e.g. a hash) and returns true if
 	// the secrets match.
-	CompareSecretWith(secret string) bool
+	CompareSecretWith(secret []byte) bool
+
+	// GetHashedSecret returns the hashed secret as it is stored in the store.
+	GetHashedSecret() []byte
 
 	// Returns the client's allowed redirect URIs.
 	GetRedirectURIs() []string
-
-	// IsImplicitGrantAllowed() bool
-
-	// IsUserPasswordGrantAllowed() bool
-
-	// IsClientGrantAllowed() bool
 }
 
 // DefaultClient is a simple default implementation of the Client interface.
 type SecureClient struct {
 	ID           string      `json:"id"`
-	Secret       string      `json:"secret"`
+	Secret       []byte      `json:"secret"`
 	RedirectURIs []string    `json:"redirectURIs"`
 	Hasher       hash.Hasher `json:"-"`
 }
@@ -33,10 +30,14 @@ func (c *SecureClient) GetID() string {
 	return c.ID
 }
 
-func (c *SecureClient) CompareSecretWith(secret string) bool {
-	return c.Hasher.Compare([]byte(c.Secret), []byte(secret)) == nil
+func (c *SecureClient) CompareSecretWith(secret []byte) bool {
+	return c.Hasher.Compare(c.Secret, secret) == nil
 }
 
 func (c *SecureClient) GetRedirectURIs() []string {
 	return c.RedirectURIs
+}
+
+func (c *SecureClient) GetHashedSecret() []byte {
+	return c.Secret
 }

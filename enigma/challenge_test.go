@@ -15,7 +15,7 @@ func TestChallengeToString(t *testing.T) {
 
 func TestChallengeFromString(t *testing.T) {
 	ac := new(Challenge)
-	for _, c := range [][]string{
+	for k, c := range [][]string{
 		{"foo.bar", "foo", "bar"},
 		{"foo.", "", ""},
 		{"foo", "", ""},
@@ -24,5 +24,6 @@ func TestChallengeFromString(t *testing.T) {
 		ac.FromString(c[0])
 		assert.Equal(t, c[1], ac.Key)
 		assert.Equal(t, c[2], ac.Signature)
+		t.Logf("Passed test case %d", k)
 	}
 }

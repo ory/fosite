@@ -53,7 +53,7 @@ func TestValidateSignatureRejects(t *testing.T) {
 		GlobalSecret: []byte("12345678901234567890"),
 	}
 	token := new(Challenge)
-	for _, c := range []string{
+	for k, c := range []string{
 		"",
 		" ",
 		"foo.bar",
@@ -63,5 +63,6 @@ func TestValidateSignatureRejects(t *testing.T) {
 		token.FromString(c)
 		err = cg.ValidateChallenge([]byte("09876543210987654321"), token)
 		assert.NotNil(t, err, "%s", err)
+		t.Logf("Passed test case %d", k)
 	}
 }

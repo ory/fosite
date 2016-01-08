@@ -1,8 +1,8 @@
 package fosite
 
 import (
-	"net/http"
 	"golang.org/x/net/context"
+	"net/http"
 )
 
 // OAuth2Provider
@@ -24,7 +24,7 @@ type OAuth2Provider interface {
 	//
 	// Important: Every ResponseTypeHandler should return ErrInvalidResponseType if it is unable to handle
 	// the given request and an arbitrary error if an error occurred
-	NewAuthorizeResponse(context.Context, *http.Request, AuthorizeRequest, session interface{}) (AuthorizeResponder, error)
+	NewAuthorizeResponse(ctx context.Context, req *http.Request, ar AuthorizeRequest, session interface{}) (AuthorizeResponder, error)
 
 	// WriteAuthorizeError returns the error codes to the redirection endpoint or shows the error to the user, if no valid
 	// redirect uri was given. Implements rfc6749#section-4.1.2.1
@@ -37,6 +37,6 @@ type OAuth2Provider interface {
 
 // Fosite ships all the various oauth2 helpers like NewAuthorizeRequest
 type Fosite struct {
-	Store                     Storage
-	ResponseTypeHandlers      []ResponseTypeHandler
+	Store                Storage
+	ResponseTypeHandlers []ResponseTypeHandler
 }

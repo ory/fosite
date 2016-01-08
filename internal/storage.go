@@ -5,7 +5,6 @@ package internal
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/client"
 )
 
@@ -39,24 +38,4 @@ func (_m *MockStorage) GetClient(id string) (Client, error) {
 
 func (_mr *_MockStorageRecorder) GetClient(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetClient", arg0)
-}
-
-func (_m *MockStorage) StoreAuthorizeSession(session *AuthorizeSession) error {
-	ret := _m.ctrl.Call(_m, "StoreAuthorizeSession", session)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (_mr *_MockStorageRecorder) StoreAuthorizeSession(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "StoreAuthorizeSession", arg0)
-}
-
-func (_m *MockStorage) GetAuthorizeSession(signature string, session *AuthorizeSession) error {
-	ret := _m.ctrl.Call(_m, "GetAuthorizeSession", signature, session)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (_mr *_MockStorageRecorder) GetAuthorizeSession(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAuthorizeSession", arg0, arg1)
 }

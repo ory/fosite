@@ -6,18 +6,18 @@ import (
 )
 
 // RandomBytes returns n random bytes by reading from crypto/rand.Reader
-func RandomBytes(entropy, tries int) ([]byte, error) {
-	bytes := make([]byte, entropy)
+func RandomBytes(n, tries int) ([]byte, error) {
+	bytes := make([]byte, n)
 
-	var n int
+	var z int
 	var err error
 	for i := 0; i < tries; i++ {
-		n, err = rand.Reader.Read(bytes)
+		z, err = rand.Reader.Read(bytes)
 		if err != nil {
 			return nil, errors.Wrap(err, 0)
 		}
 	}
-	if n < entropy {
+	if z < n {
 		return nil, errors.Errorf("Could not read enough data with %d tries", tries)
 	}
 

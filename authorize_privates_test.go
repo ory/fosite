@@ -8,26 +8,30 @@ import (
 	"testing"
 )
 
-// TODO rfc6749 3.1. Authorization Endpoint
-// The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component
-//
-// rfc6749 3.1.2. Redirection Endpoint
-// "The redirection endpoint URI MUST be an absolute URI as defined by [RFC3986] Section 4.3"
+// Test for
+// * https://tools.ietf.org/html/rfc6749#section-3.1.2
+//   The endpoint URI MAY include an
+//   "application/x-www-form-urlencoded" formatted (per Appendix B) query
+//   component ([RFC3986] Section 3.4), which MUST be retained when adding
+//   additional query parameters.
 func TestGetRedirectURI(t *testing.T) {
-	for _, c := range []struct {
+	for k, c := range []struct {
 		in       string
 		isError  bool
 		expected string
 	}{
-		{in: "", isError: true},
+		{in: "", isError: false, expected: ""},
+		{in: "http://google.com/", isError: false, expected: "http://google.com/"},
+		{in: "http://google.com/?foo=bar%20foo+baz", isError: false, expected: "http://google.com/?foo=bar foo baz"},
 	} {
 		values := url.Values{}
 		values.Set("redirect_uri", c.in)
-		res, err := redirectFromValues(values)
+		res, err := GetRedirectURIFromRequestValues(values)
 		assert.Equal(t, c.isError, err != nil, "%s", err)
 		if err == nil {
 			assert.Equal(t, c.expected, res)
 		}
+		t.Logf("Passed test case %d", k)
 	}
 }
 
@@ -82,13 +86,12 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			isError: true,
 		},
 	} {
-		u, err := url.Parse(c.url)
-		require.Nil(t, err)
-		redir, err := redirectFromClient(u, c.client)
+		redir, err := MatchRedirectURIWithClientRedirectURIs(c.url, c.client)
 		assert.Equal(t, c.isError, err != nil, "%d: %s", k, err)
 		if err == nil {
 			require.NotNil(t, redir, "%d", k)
 			assert.Equal(t, c.expected, redir.String(), "%d", k)
 		}
+		t.Logf("Passed test case %d", k)
 	}
 }

@@ -12,26 +12,27 @@ func TestArgumentsHas(t *testing.T) {
 		expect bool
 	}{
 		{
-			args:   &Arguments{"foo", "bar"},
+			args:   Arguments{"foo", "bar"},
 			has:    "foo",
 			expect: true,
 		},
 		{
-			args:   &Arguments{"foo", "bar"},
+			args:   Arguments{"foo", "bar"},
 			has:    "bar",
 			expect: true,
 		},
 		{
-			args:   &Arguments{"foo", "bar"},
+			args:   Arguments{"foo", "bar"},
 			has:    "baz",
 			expect: false,
 		},
 		{
-			args:   &Arguments{},
+			args:   Arguments{},
 			has:    "baz",
 			expect: false,
 		},
 	} {
-		assert.Equal(t, c.expect, c.args.Has("c.has"), "%d", k)
+		assert.Equal(t, c.expect, c.args.Has(c.has), "%d", k)
+		t.Logf("Passed test case %d", k)
 	}
 }
