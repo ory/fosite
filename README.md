@@ -257,5 +257,7 @@ func handleToken(rw http.ResponseWriter, req *http.Request) {
 
 This place is reserved for the fearless bug hunters, reviewers and contributors.
 
+1. [danielchatfield](https://github.com/danielchatfield) for [#8](https://github.com/ory-am/fosite/issues/8)
+
 Find out more about the [author](https://aeneas.io/) of Fosite and Hydra, and the
 [Ory Company](https://ory.am/).
