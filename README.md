@@ -185,14 +185,21 @@ func handleAuth(rw http.ResponseWriter, r *http.Request) {
     // Now is the time to handle the response types
     // You can use a custom list of response type handlers by setting
     // oauth2.ResponseTypeHandlers = []fosite.ResponseTypeHandler{}
+    //
+    // Each ResponseTypeHandler is responsible for managing his own state data. For example, the code response type
+    // handler stores the access token and the session data in a database backend and retrieves it later on
+    // when handling a grant type.
+    //
+    // If you use advanced ResponseTypeHandlers it is a good idea to read the README first and check if your
+    // session object needs to implement any interface. Think of the session as a persistent context
+    // for the handlers.
     response, err := oauth2.HandleAuthorizeRequest(ctx, authorizeRequest, r, &mySessionData)
     if err != nil {
        oauth2.WriteAuthorizeError(rw, req, err)
        return
     }
 
-    // The next step is going to persist the session in the database for later use and redirect the
-    // user agent back to the application demanding access.
+    // The next step is going to redirect the user by either using implicit or explicit grant or both (for OpenID connect)
     oauth2.WriteAuthorizeResponse(rw, ar, response)
 
     // Done! The client should now have a valid authorize code!
