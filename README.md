@@ -39,6 +39,7 @@ These Standards have been reviewed during the development of Fosite:
 - [Usage](#usage)
   - [Authorize Endpoint](#authorize-endpoint)
   - [Token Endpoint](#token-endpoint)
+  - [Extensible handlers](#extensible-handlers)
 - [Hall of Fame](#hall-of-fame)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -238,6 +239,32 @@ func handleToken(rw http.ResponseWriter, req *http.Request) {
     oauth2.WriteAccessResponse(rw, accessRequest, response)
 }
 ```
+
+### Extensible handlers
+
+You can replace Fosite's inner workings, for example response type (/auth endpoint) handlers or grant type
+(/token endpoint) handlers.
+
+Let's take the code handler. He is responsible for handling the
+[authorize_code workflow](https://aaronparecki.com/articles/2012/07/29/1/oauth2-simplified#web-server-apps).
+If you want to enable him, you could do it like this:
+
+```go
+codeHandler := &code.CodeResponseTypeHandler{
+	Generator: &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
+	Store:     myCodeStore, // Needs to implement CodeResponseTypeStorage
+}
+oauth2 := &Fosite{
+	ResponseTypeHandlers: []ResponseTypeHandler{
+		codeHandler,
+	},
+}
+```
+
+Easy, right? You can add or remove any handler you wish like this, even custom ones and extend OAuth2 by, for example, OpenID
+Connect.
+
+The token endpoint is still in the making so stay tuned on how to run custom token endpoint handlers.
 
 ## Hall of Fame
 
