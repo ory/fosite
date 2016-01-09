@@ -70,25 +70,31 @@ func (c *Fosite) NewAuthorizeRequest(_ context.Context, r *http.Request) (Author
 
 func (c *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
 	redir := ar.GetRedirectURI()
+
+	// Explicit grants
 	q := redir.Query()
-	args := resp.GetQuery()
-	for k, _ := range args {
-		q.Add(k, args.Get(k))
+	rq := resp.GetQuery()
+	for k, _ := range rq {
+		q.Set(k, rq.Get(k))
 	}
 	redir.RawQuery = q.Encode()
-	header := resp.GetHeader()
-	for k, v := range header {
-		for _, vv := range v {
-			rw.Header().Add(k, vv)
-		}
+
+	// Set custom headers, e.g. "X-MySuperCoolCustomHeader" or "X-DONT-CACHE-ME"...
+	wh := rw.Header()
+	rh := resp.GetHeader()
+	for k, _ := range rh {
+		wh.Set(k, rh.Get(k))
 	}
+
+	// Implicit grants
+	redir.Fragment = resp.GetFragment().Encode()
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.1
 	// When a decision is established, the authorization server directs the
 	// user-agent to the provided client redirection URI using an HTTP
 	// redirection response, or by other means available to it via the
 	// user-agent.
-	rw.Header().Set("Location", ar.GetRedirectURI().String())
+	wh.Set("Location", redir.String())
 	rw.WriteHeader(http.StatusFound)
 }
 
