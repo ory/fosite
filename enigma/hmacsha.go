@@ -40,7 +40,7 @@ func (c *HMACSHAEnigma) GenerateChallenge(secret []byte) (*Challenge, error) {
 	// constructed from a cryptographically strong random or pseudo-random
 	// number sequence (see [RFC4086] for best current practice) generated
 	// by the authorization server.
-	randomBytes, err := rand.RandomBytes(c.AuthCodeEntropy, 20)
+	randomBytes, err := rand.RandomBytes(c.AuthCodeEntropy)
 	if err != nil {
 		return nil, errors.New(err)
 	}

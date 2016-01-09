@@ -117,6 +117,30 @@ OAuth2 stack. Or custom assertions, what ever you like and as long as it is secu
 
 This section is WIP and we welcome discussions via PRs or in the issues.
 
+### Installation
+
+Obviously, you will need [Go](https://golang.org) installed on your machine and it is required that you have set up your
+GOPATH environment variable.
+
+Fosite is being shipped through gopkg.in so new updates don't break your code.
+
+```
+go get gopkg.in/ory-am/fosite.v{X}/...
+```
+
+To see a full list of available versions check the [tags](https://github.com/ory-am/fosite/tags) page. If you want
+to use api version 2 for example (version 2 does not exist yet), do:
+
+```
+go get gopkg.in/ory-am/fosite.v2/...
+```
+
+To use the unstable master branch, which is only recommended for testing purposes, do:
+
+```
+go get gopkg.in/ory-am/fosite.v0/...
+```
+
 ### Authorize Endpoint
 
 ```go
@@ -134,7 +158,7 @@ var oauth2 = service.NewDefaultOAuth2(store)
 
 // Let's assume that we're in a http handler
 func handleAuth(rw http.ResponseWriter, r *http.Request) {
-    ctx := context.Background()
+    ctx := fosite.NewContext()
 
     // Let's create an AuthorizeRequest object!
     // It will analyze the request and extract important information like scopes, response type and others.
@@ -185,13 +209,13 @@ func handleAuth(rw http.ResponseWriter, r *http.Request) {
 
     // Now is the time to handle the response types
     // You can use a custom list of response type handlers by setting
-    // oauth2.ResponseTypeHandlers = []fosite.ResponseTypeHandler{}
+    // oauth2.AuthorizeEndpointHandlers = []fosite.AuthorizeEndpointHandler{}
     //
-    // Each ResponseTypeHandler is responsible for managing his own state data. For example, the code response type
+    // Each AuthorizeEndpointHandler is responsible for managing his own state data. For example, the code response type
     // handler stores the access token and the session data in a database backend and retrieves it later on
     // when handling a grant type.
     //
-    // If you use advanced ResponseTypeHandlers it is a good idea to read the README first and check if your
+    // If you use advanced AuthorizeEndpointHandlers it is a good idea to read the README first and check if your
     // session object needs to implement any interface. Think of the session as a persistent context
     // for the handlers.
     response, err := oauth2.NewAuthorizeResponse(ctx, req, authorizeRequest, &mySessionData)
@@ -250,12 +274,12 @@ Let's take the code handler. He is responsible for handling the
 If you want to enable him, you could do it like this:
 
 ```go
-codeHandler := &code.CodeResponseTypeHandler{
+codeHandler := &code.CodeAuthorizeEndpointHandler{
 	Generator: &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
 	Store:     myCodeStore, // Needs to implement CodeResponseTypeStorage
 }
 oauth2 := &Fosite{
-	ResponseTypeHandlers: []ResponseTypeHandler{
+	AuthorizeEndpointHandlers: []AuthorizeEndpointHandler{
 		codeHandler,
 	},
 }

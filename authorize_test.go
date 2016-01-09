@@ -16,15 +16,15 @@ import (
 
 func TestNewNewAuthorizeResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	handlers := []*MockResponseTypeHandler{NewMockResponseTypeHandler(ctrl)}
+	handlers := []*MockAuthorizeEndpointHandler{NewMockAuthorizeEndpointHandler(ctrl)}
 	defer ctrl.Finish()
 
 	ctx := context.Background()
 	oauth2 := &Fosite{
-		ResponseTypeHandlers: []ResponseTypeHandler{handlers[0]},
+		AuthorizeEndpointHandlers: []AuthorizeEndpointHandler{handlers[0]},
 	}
 	duo := &Fosite{
-		ResponseTypeHandlers: []ResponseTypeHandler{handlers[0], handlers[0]},
+		AuthorizeEndpointHandlers: []AuthorizeEndpointHandler{handlers[0], handlers[0]},
 	}
 	fooErr := errors.New("foo")
 	for k, c := range []struct {
@@ -34,45 +34,45 @@ func TestNewNewAuthorizeResponse(t *testing.T) {
 	}{
 		{
 			mock: func() {
-				handlers[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fooErr)
+				handlers[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fooErr)
 			},
 			isErr:     true,
 			expectErr: fooErr,
 		},
 		{
 			mock: func() {
-				handlers[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrInvalidResponseType)
+				handlers[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrHandlerNotResponsible)
 			},
 			isErr:     true,
-			expectErr: ErrNoResponseTypeHandlerFound,
+			expectErr: ErrNoAuthorizeEndpointHandlerFound,
 		},
 		{
 			mock: func() {
-				handlers[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			isErr: false,
 		},
 		{
 			mock: func() {
 				oauth2 = duo
-				handlers[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				handlers[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			isErr: false,
 		},
 		{
 			mock: func() {
 				oauth2 = duo
-				handlers[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				handlers[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrInvalidResponseType)
+				handlers[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrHandlerNotResponsible)
 			},
 			isErr: false,
 		},
 		{
 			mock: func() {
 				oauth2 = duo
-				handlers[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				handlers[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fooErr)
+				handlers[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fooErr)
 			},
 			isErr:     true,
 			expectErr: fooErr,

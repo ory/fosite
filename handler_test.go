@@ -25,44 +25,44 @@ var arbitraryError = errors.New("")
 // * https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#rnc
 func TestNewAuthorizeResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	rths := []*MockResponseTypeHandler{
-		NewMockResponseTypeHandler(ctrl),
-		NewMockResponseTypeHandler(ctrl),
+	rths := []*MockAuthorizeEndpointHandler{
+		NewMockAuthorizeEndpointHandler(ctrl),
+		NewMockAuthorizeEndpointHandler(ctrl),
 	}
 	req := NewMockAuthorizeRequester(ctrl)
 	defer ctrl.Finish()
 
 	for k, c := range []struct {
-		handlers     []ResponseTypeHandler
+		handlers     []AuthorizeEndpointHandler
 		mock         func()
 		expectsError error
 		expects      AuthorizeResponder
 	}{
 		{
-			handlers: []ResponseTypeHandler{
+			handlers: []AuthorizeEndpointHandler{
 				rths[0],
 				rths[1],
 			},
 			mock: func() {
-				rths[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(arbitraryError)
+				rths[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(arbitraryError)
 			},
 			expectsError: arbitraryError,
 		},
 		{
-			handlers: []ResponseTypeHandler{
+			handlers: []AuthorizeEndpointHandler{
 				rths[0],
 				rths[1],
 			},
 			mock: func() {
-				rths[0].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrInvalidResponseType)
-				rths[1].EXPECT().HandleResponseType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(arbitraryError)
+				rths[0].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrHandlerNotResponsible)
+				rths[1].EXPECT().HandleAuthorizeRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(arbitraryError)
 			},
 			expectsError: arbitraryError,
 		},
 	} {
 		c.mock()
 		o := &Fosite{
-			ResponseTypeHandlers: c.handlers,
+			AuthorizeEndpointHandlers: c.handlers,
 		}
 		resp, err := o.NewAuthorizeResponse(context.Background(), &http.Request{}, req, nil)
 		require.Equal(t, c.expectsError, err, "%d: %s", k, err)

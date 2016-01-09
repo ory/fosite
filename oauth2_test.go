@@ -35,13 +35,13 @@ func TestFosite(t *testing.T) {
 	mockPluginCodeStore = NewMockCodeResponseTypeStorage(ctrl)
 	defer ctrl.Finish()
 
-	codeHandler := &code.CodeResponseTypeHandler{
+	codeHandler := &code.CodeAuthorizeEndpointHandler{
 		Generator: &enigma.HMACSHAEnigma{GlobalSecret: []byte("super-global-secret")},
 		Store:     mockPluginCodeStore,
 	}
 	oauth2 := &Fosite{
 		Store: mockStore,
-		ResponseTypeHandlers: []ResponseTypeHandler{
+		AuthorizeEndpointHandlers: []AuthorizeEndpointHandler{
 			codeHandler,
 		},
 	}

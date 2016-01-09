@@ -10,33 +10,33 @@ import (
 	http "net/http"
 )
 
-// Mock of ResponseTypeHandler interface
-type MockResponseTypeHandler struct {
+// Mock of AuthorizeEndpointHandler interface
+type MockAuthorizeEndpointHandler struct {
 	ctrl     *gomock.Controller
-	recorder *_MockResponseTypeHandlerRecorder
+	recorder *_MockAuthorizeEndpointHandlerRecorder
 }
 
-// Recorder for MockResponseTypeHandler (not exported)
-type _MockResponseTypeHandlerRecorder struct {
-	mock *MockResponseTypeHandler
+// Recorder for MockAuthorizeEndpointHandler (not exported)
+type _MockAuthorizeEndpointHandlerRecorder struct {
+	mock *MockAuthorizeEndpointHandler
 }
 
-func NewMockResponseTypeHandler(ctrl *gomock.Controller) *MockResponseTypeHandler {
-	mock := &MockResponseTypeHandler{ctrl: ctrl}
-	mock.recorder = &_MockResponseTypeHandlerRecorder{mock}
+func NewMockAuthorizeEndpointHandler(ctrl *gomock.Controller) *MockAuthorizeEndpointHandler {
+	mock := &MockAuthorizeEndpointHandler{ctrl: ctrl}
+	mock.recorder = &_MockAuthorizeEndpointHandlerRecorder{mock}
 	return mock
 }
 
-func (_m *MockResponseTypeHandler) EXPECT() *_MockResponseTypeHandlerRecorder {
+func (_m *MockAuthorizeEndpointHandler) EXPECT() *_MockAuthorizeEndpointHandlerRecorder {
 	return _m.recorder
 }
 
-func (_m *MockResponseTypeHandler) HandleResponseType(ctx context.Context, responder AuthorizeResponder, requester AuthorizeRequester, req *http.Request, session interface{}) error {
-	ret := _m.ctrl.Call(_m, "HandleResponseType", ctx, responder, requester, req, session)
+func (_m *MockAuthorizeEndpointHandler) HandleAuthorizeRequest(ctx context.Context, responder AuthorizeResponder, requester AuthorizeRequester, req *http.Request, session interface{}) error {
+	ret := _m.ctrl.Call(_m, "HandleAuthorizeRequest", ctx, responder, requester, req, session)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockResponseTypeHandlerRecorder) HandleResponseType(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "HandleResponseType", arg0, arg1, arg2, arg3, arg4)
+func (_mr *_MockAuthorizeEndpointHandlerRecorder) HandleAuthorizeRequest(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "HandleAuthorizeRequest", arg0, arg1, arg2, arg3, arg4)
 }

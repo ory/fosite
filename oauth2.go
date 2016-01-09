@@ -5,38 +5,78 @@ import (
 	"net/http"
 )
 
-// OAuth2Provider
+// OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
+// Check fosite.Fosite for an implementation of this interface.
 type OAuth2Provider interface {
-	// NewAuthorizeRequest returns an AuthorizeRequest. This method makes rfc6749 compliant
-	// checks:
-	// * rfc6749 3.1.   Authorization Endpoint
-	// * rfc6749 3.1.1. Response Type
-	// * rfc6749 3.1.2. Redirection Endpoint
-	// * rfx6749 10.6.  Authorization Code Redirection URI Manipulation
+	// NewAuthorizeRequest returns an AuthorizeRequest.
 	//
-	// It also introduces countermeasures described in rfc6819:
-	// * rfc6819 4.4.1.7.  Threat: Authorization "code" Leakage through Counterfeit Client
-	// * rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
+	// The following specs must be considered in any implementation of this method:
+	// * https://tools.ietf.org/html/rfc6749#section-3.1
+	//	 Extension response types MAY contain a space-delimited (%x20) list of
+	//	 values, where the order of values does not matter (e.g., response
+	//	 type "a b" is the same as "b a").  The meaning of such composite
+	//	 response types is defined by their respective specifications.
+	// * https://tools.ietf.org/html/rfc6749#section-3.1.2
+	//   The redirection endpoint URI MUST be an absolute URI as defined by
+	//   [RFC3986] Section 4.3.  The endpoint URI MAY include an
+	//   "application/x-www-form-urlencoded" formatted (per Appendix B) query
+	//   component ([RFC3986] Section 3.4), which MUST be retained when adding
+	//   additional query parameters.  The endpoint URI MUST NOT include a
+	//   fragment component.
+	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
 	NewAuthorizeRequest(context.Context, *http.Request) (AuthorizeRequester, error)
 
 	// NewAuthorizeResponse iterates through all response type handlers and returns their result or
-	// ErrNoResponseTypeHandlerFound if none of the handler's were able to handle it.
+	// ErrUnsupportedResponseType if none of the handler's were able to handle it.
 	//
-	// Important: Every ResponseTypeHandler should return ErrInvalidResponseType if it is unable to handle
-	// the given request and an arbitrary error if an error occurred
+	// The following specs must be considered in any implementation of this method:
+	// * https://tools.ietf.org/html/rfc6749#section-3.1.1
+	//	 Extension response types MAY contain a space-delimited (%x20) list of
+	//	 values, where the order of values does not matter (e.g., response
+	//	 type "a b" is the same as "b a").  The meaning of such composite
+	//	 response types is defined by their respective specifications.
+	//	 If an authorization request is missing the "response_type" parameter,
+	//	 or if the response type is not understood, the authorization server
+	//	 MUST return an error response as described in Section 4.1.2.1.
 	NewAuthorizeResponse(ctx context.Context, req *http.Request, ar AuthorizeRequester, session interface{}) (AuthorizeResponder, error)
 
 	// WriteAuthorizeError returns the error codes to the redirection endpoint or shows the error to the user, if no valid
 	// redirect uri was given. Implements rfc6749#section-4.1.2.1
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://tools.ietf.org/html/rfc6749#section-3.1.2
+	//   The redirection endpoint URI MUST be an absolute URI as defined by
+	//   [RFC3986] Section 4.3.  The endpoint URI MAY include an
+	//   "application/x-www-form-urlencoded" formatted (per Appendix B) query
+	//   component ([RFC3986] Section 3.4), which MUST be retained when adding
+	//   additional query parameters.  The endpoint URI MUST NOT include a
+	//   fragment component.
+	// * https://tools.ietf.org/html/rfc6749#section-4.1.2.1 (everything)
+	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
 	WriteAuthorizeError(http.ResponseWriter, AuthorizeRequester, error)
 
 	// WriteAuthorizeResponse persists the AuthorizeSession in the store and redirects the user agent to the provided
 	// redirect url or returns an error if storage failed.
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://tools.ietf.org/html/rfc6749#rfc6749#section-4.1.2.1
+	//   After completing its interaction with the resource owner, the
+	//   authorization server directs the resource owner's user-agent back to
+	//   the client.  The authorization server redirects the user-agent to the
+	//   client's redirection endpoint previously established with the
+	//   authorization server during the client registration process or when
+	//   making the authorization request.
+	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
 	WriteAuthorizeResponse(http.ResponseWriter, AuthorizeRequester, AuthorizeResponder)
+
+	NewAccessRequest(_ context.Context, r *http.Request) (AccessRequester, error)
+	LoadAccessRequestSession(ctx context.Context, ar AccessRequester, r *http.Request, session interface{}) error
 }
 
-// Fosite ships all the various oauth2 helpers like NewAuthorizeRequest
+// Fosite implements OAuth2Provider
 type Fosite struct {
-	Store                Storage
-	ResponseTypeHandlers []ResponseTypeHandler
+	Store                       Storage
+	AuthorizeEndpointHandlers   []AuthorizeEndpointHandler
+	TokenEndpointSessionLoaders []TokenEndpointSessionLoader
+	TokenEndpointHandlers       []TokenEndpointHandler
 }

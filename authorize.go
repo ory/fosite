@@ -5,98 +5,11 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite/client"
-	"golang.org/x/net/context"
 	"net/http"
 	"net/url"
-	"strings"
-	"time"
 )
 
 const minStateLength = 8
-
-func (c *Fosite) NewAuthorizeRequest(_ context.Context, r *http.Request) (AuthorizeRequester, error) {
-	request := &AuthorizeRequest{
-		RequestedAt: time.Now(),
-	}
-
-	if err := r.ParseForm(); err != nil {
-		return request, errors.New(ErrInvalidRequest)
-	}
-
-	client, err := c.Store.GetClient(r.Form.Get("client_id"))
-	if err != nil {
-		return request, errors.New(ErrInvalidClient)
-	}
-	request.Client = client
-
-	// Fetch redirect URI from request
-	rawRedirURI, err := GetRedirectURIFromRequestValues(r.Form)
-	if err != nil {
-		return request, errors.New(ErrInvalidRequest)
-	}
-
-	// Validate redirect uri
-	redirectURI, err := MatchRedirectURIWithClientRedirectURIs(rawRedirURI, client)
-	if err != nil {
-		return request, errors.New(ErrInvalidRequest)
-	} else if !IsValidRedirectURI(redirectURI) {
-		return request, errors.New(ErrInvalidRequest)
-	}
-	request.RedirectURI = redirectURI
-
-	responseTypes := removeEmpty(strings.Split(r.Form.Get("response_type"), " "))
-	request.ResponseTypes = responseTypes
-
-	// rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
-	// The "state" parameter should be used to link the authorization
-	// request with the redirect URI used to deliver the access token (Section 5.3.5).
-	//
-	// https://tools.ietf.org/html/rfc6819#section-4.4.1.8
-	// The "state" parameter should not	be guessable
-	state := r.Form.Get("state")
-	if state == "" {
-		return request, errors.New(ErrInvalidState)
-	} else if len(state) < minStateLength {
-		// We're assuming that using less then 6 characters for the state can not be considered "unguessable"
-		return request, errors.New(ErrInvalidState)
-	}
-	request.State = state
-
-	// Remove empty items from arrays
-	request.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
-
-	return request, nil
-}
-
-func (c *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
-	redir := ar.GetRedirectURI()
-
-	// Explicit grants
-	q := redir.Query()
-	rq := resp.GetQuery()
-	for k, _ := range rq {
-		q.Set(k, rq.Get(k))
-	}
-	redir.RawQuery = q.Encode()
-
-	// Set custom headers, e.g. "X-MySuperCoolCustomHeader" or "X-DONT-CACHE-ME"...
-	wh := rw.Header()
-	rh := resp.GetHeader()
-	for k, _ := range rh {
-		wh.Set(k, rh.Get(k))
-	}
-
-	// Implicit grants
-	redir.Fragment = resp.GetFragment().Encode()
-
-	// https://tools.ietf.org/html/rfc6749#section-4.1.1
-	// When a decision is established, the authorization server directs the
-	// user-agent to the provided client redirection URI using an HTTP
-	// redirection response, or by other means available to it via the
-	// user-agent.
-	wh.Set("Location", redir.String())
-	rw.WriteHeader(http.StatusFound)
-}
 
 func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 	rfcerr := ErrorToRFC6749Error(err)
@@ -114,27 +27,6 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 
 	rw.Header().Add("Location", redirectURI.String())
 	rw.WriteHeader(http.StatusFound)
-}
-
-func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar AuthorizeRequester, session interface{}) (AuthorizeResponder, error) {
-	var resp = NewAuthorizeResponse()
-	var err error
-	var found bool
-
-	for _, h := range o.ResponseTypeHandlers {
-		err = h.HandleResponseType(ctx, resp, ar, r, session)
-		if err == nil {
-			found = true
-		} else if err != ErrInvalidResponseType {
-			return nil, err
-		}
-	}
-
-	if !found {
-		return nil, ErrNoResponseTypeHandlerFound
-	}
-
-	return resp, nil
 }
 
 // GetRedirectURIFromRequestValues extracts the redirect_uri from values but does not do any sort of validation.
