@@ -29,12 +29,32 @@ func (_m *MockCodeResponseTypeStorage) EXPECT() *_MockCodeResponseTypeStorageRec
 	return _m.recorder
 }
 
-func (_m *MockCodeResponseTypeStorage) StoreAuthorizeCodeSession(code string, authorizeRequest fosite.AuthorizeRequester, extra interface{}) error {
-	ret := _m.ctrl.Call(_m, "StoreAuthorizeCodeSession", code, authorizeRequest, extra)
+func (_m *MockCodeResponseTypeStorage) CreateAuthorizeCodeSession(code string, authorizeRequest fosite.AuthorizeRequester, extra interface{}) error {
+	ret := _m.ctrl.Call(_m, "CreateAuthorizeCodeSession", code, authorizeRequest, extra)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockCodeResponseTypeStorageRecorder) StoreAuthorizeCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "StoreAuthorizeCodeSession", arg0, arg1, arg2)
+func (_mr *_MockCodeResponseTypeStorageRecorder) CreateAuthorizeCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAuthorizeCodeSession", arg0, arg1, arg2)
+}
+
+func (_m *MockCodeResponseTypeStorage) GetAuthorizeCodeSession(code string, authorizeRequest fosite.AuthorizeRequester, extra interface{}) error {
+	ret := _m.ctrl.Call(_m, "GetAuthorizeCodeSession", code, authorizeRequest, extra)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockCodeResponseTypeStorageRecorder) GetAuthorizeCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAuthorizeCodeSession", arg0, arg1, arg2)
+}
+
+func (_m *MockCodeResponseTypeStorage) DeleteAuthorizeCodeSession(code string) error {
+	ret := _m.ctrl.Call(_m, "DeleteAuthorizeCodeSession", code)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockCodeResponseTypeStorageRecorder) DeleteAuthorizeCodeSession(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAuthorizeCodeSession", arg0)
 }

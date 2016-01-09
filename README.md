@@ -193,14 +193,14 @@ func handleAuth(rw http.ResponseWriter, r *http.Request) {
     // If you use advanced ResponseTypeHandlers it is a good idea to read the README first and check if your
     // session object needs to implement any interface. Think of the session as a persistent context
     // for the handlers.
-    response, err := oauth2.HandleAuthorizeRequest(ctx, authorizeRequest, r, &mySessionData)
+    response, err := oauth2.NewAuthorizeResponse(ctx, req, authorizeRequest, &mySessionData)
     if err != nil {
        oauth2.WriteAuthorizeError(rw, req, err)
        return
     }
 
     // The next step is going to redirect the user by either using implicit or explicit grant or both (for OpenID connect)
-    oauth2.WriteAuthorizeResponse(rw, ar, response)
+    oauth2.WriteAuthorizeResponse(rw, authorizeRequest, response)
 
     // Done! The client should now have a valid authorize code!
 }

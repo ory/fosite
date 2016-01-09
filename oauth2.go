@@ -24,7 +24,7 @@ type OAuth2Provider interface {
 	//
 	// Important: Every ResponseTypeHandler should return ErrInvalidResponseType if it is unable to handle
 	// the given request and an arbitrary error if an error occurred
-	NewAuthorizeResponse(ctx context.Context, req *http.Request, ar AuthorizeRequest, session interface{}) (AuthorizeResponder, error)
+	NewAuthorizeResponse(ctx context.Context, req *http.Request, ar AuthorizeRequester, session interface{}) (AuthorizeResponder, error)
 
 	// WriteAuthorizeError returns the error codes to the redirection endpoint or shows the error to the user, if no valid
 	// redirect uri was given. Implements rfc6749#section-4.1.2.1

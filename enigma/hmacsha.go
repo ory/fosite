@@ -9,8 +9,9 @@ import (
 	"github.com/ory-am/fosite/rand"
 )
 
-// CryptoEnigma is the default implementation for generating and validating challenges.
-type CryptoEnigma struct {
+// HMACSHAEnigma is the default implementation for generating and validating challenges. It uses HMAC-SHA256 to
+// generate and validate challenges.
+type HMACSHAEnigma struct {
 	AuthCodeEntropy int
 	GlobalSecret    []byte
 }
@@ -23,7 +24,7 @@ const minimumSecretLength = 32
 
 // GenerateAuthorizeCode generates a new authorize code or returns an error. set secret
 // This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets.
-func (c *CryptoEnigma) GenerateChallenge(secret []byte) (*Challenge, error) {
+func (c *HMACSHAEnigma) GenerateChallenge(secret []byte) (*Challenge, error) {
 	if len(secret) < minimumSecretLength/2 || len(c.GlobalSecret) < minimumSecretLength/2 {
 		return nil, errors.New("Secret or GlobalSecret are not strong enough")
 	}
@@ -72,7 +73,7 @@ func (c *CryptoEnigma) GenerateChallenge(secret []byte) (*Challenge, error) {
 
 // ValidateAuthorizeCodeSignature returns an AuthorizeCode, if the code argument is a valid authorize code
 // and the signature matches the key.
-func (c *CryptoEnigma) ValidateChallenge(secret []byte, t *Challenge) (err error) {
+func (c *HMACSHAEnigma) ValidateChallenge(secret []byte, t *Challenge) (err error) {
 	if t.Key == "" || t.Signature == "" {
 		return errors.New("Key and signature must both be not empty")
 	}

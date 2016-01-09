@@ -15,7 +15,7 @@ type CodeResponseTypeHandler struct {
 	Store     CodeResponseTypeStorage
 }
 
-func (c *CodeResponseTypeHandler) HandleResponseType(_ context.Context, resp AuthorizeResponder, ar AuthorizeRequester, _ http.Request, session interface{}) error {
+func (c *CodeResponseTypeHandler) HandleResponseType(_ context.Context, resp AuthorizeResponder, ar AuthorizeRequester, _ *http.Request, session interface{}) error {
 	// This let's us define multiple response types, for example open id connect's id_token
 	if ar.GetResponseTypes().Has("code") {
 		// Generate the code
@@ -24,7 +24,7 @@ func (c *CodeResponseTypeHandler) HandleResponseType(_ context.Context, resp Aut
 			return errors.Wrap(err, 1)
 		}
 
-		if err := c.Store.StoreAuthorizeCodeSession(code.Signature, ar, session); err != nil {
+		if err := c.Store.CreateAuthorizeCodeSession(code.Signature, ar, session); err != nil {
 			return errors.Wrap(err, 1)
 		}
 

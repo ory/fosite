@@ -7,7 +7,7 @@ import (
 )
 
 func TestGenerateFailsWithShortCredentials(t *testing.T) {
-	cg := CryptoEnigma{
+	cg := HMACSHAEnigma{
 		GlobalSecret: []byte("foo"),
 	}
 
@@ -27,7 +27,7 @@ func TestGenerateFailsWithShortCredentials(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	cg := CryptoEnigma{
+	cg := HMACSHAEnigma{
 		GlobalSecret: []byte("12345678901234567890"),
 	}
 
@@ -49,7 +49,7 @@ func TestGenerate(t *testing.T) {
 
 func TestValidateSignatureRejects(t *testing.T) {
 	var err error
-	cg := CryptoEnigma{
+	cg := HMACSHAEnigma{
 		GlobalSecret: []byte("12345678901234567890"),
 	}
 	token := new(Challenge)

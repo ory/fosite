@@ -17,6 +17,14 @@ type AuthorizeResponder interface {
 	AddFragment(key, value string)
 }
 
+func NewAuthorizeResponse() *AuthorizeResponse {
+	return &AuthorizeResponse{
+		Header:   &http.Header{},
+		Query:    &url.Values{},
+		Fragment: &url.Values{},
+	}
+}
+
 type AuthorizeResponse struct {
 	Header   *http.Header
 	Query    *url.Values

@@ -28,8 +28,15 @@ type AuthorizeRequest struct {
 }
 
 func (d *AuthorizeRequest) IsRedirectURIValid() bool {
-	// Validate redirect uri
+	if d.GetRedirectURI() == nil {
+		return false
+	}
+
 	raw := d.GetRedirectURI().String()
+	if d.GetClient() == nil {
+		return false
+	}
+
 	redirectURI, err := MatchRedirectURIWithClientRedirectURIs(raw, d.GetClient())
 	if err != nil {
 		return false

@@ -64,7 +64,7 @@ func TestNewAuthorizeResponse(t *testing.T) {
 		o := &Fosite{
 			ResponseTypeHandlers: c.handlers,
 		}
-		resp, err := o.NewAuthorizeResponse(context.Background(), req, &http.Request{}, nil)
+		resp, err := o.NewAuthorizeResponse(context.Background(), &http.Request{}, req, nil)
 		require.Equal(t, c.expectsError, err, "%d: %s", k, err)
 		if err != nil {
 			require.Equal(t, c.expects, resp)

@@ -102,7 +102,7 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	rfcerr := ErrorToRFC6749Error(err)
 
 	if !ar.IsRedirectURIValid() {
-		pkg.WriteJSON(rw, rfcerr)
+		pkg.WriteIndentJSON(rw, rfcerr)
 		return
 	}
 
@@ -116,8 +116,8 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	rw.WriteHeader(http.StatusFound)
 }
 
-func (o *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester, r *http.Request, session interface{}) (AuthorizeResponder, error) {
-	var resp = new(AuthorizeResponse)
+func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar AuthorizeRequester, session interface{}) (AuthorizeResponder, error) {
+	var resp = NewAuthorizeResponse()
 	var err error
 	var found bool
 
