@@ -2,7 +2,6 @@ package rand
 
 import (
 	"crypto/rand"
-	"github.com/go-errors/errors"
 )
 
 // RandomBytes returns n random bytes by reading from crypto/rand.Reader

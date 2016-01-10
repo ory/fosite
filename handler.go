@@ -1,21 +1,14 @@
 package fosite
 
 import (
-	"errors"
 	"golang.org/x/net/context"
 	"net/http"
 )
 
-// ErrUnaccountableForAuthorizeRequest is thrown by a AuthorizeEndpointHandler if it is not responsible for handling the authorize request.
-var ErrHandlerNotResponsible = errors.New("This handler is not feeling responsible for handling this request")
-
-// ErrNoAuthorizeEndpointHandlerFound is thrown if no AuthorizeEndpointHandler was found responsible for the request.
-var ErrNoAuthorizeEndpointHandlerFound = errors.New("None of the handler's are able to handle this authorize request")
-
 type AuthorizeEndpointHandler interface {
 	// HandleAuthorizeRequest handles an authorize endpoint request. To extend the handler's capabilities, the http request
-	// is passed along, if further information retrieval is required. If HandleAuthorizeRequest fails, the handler
-	// implementation MUST return ErrHandlerNotResponsible.
+	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
+	// the authorize request, he must return nil and NOT modify session nor responder neither requester.
 	//
 	// The following spec is a good example of what HandleAuthorizeRequest should do.
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.1
@@ -27,15 +20,15 @@ type AuthorizeEndpointHandler interface {
 	HandleAuthorizeEndpointRequest(ctx context.Context, responder AuthorizeResponder, requester AuthorizeRequester, req *http.Request, session interface{}) error
 }
 
-type TokenEndpointSessionLoader interface {
-	// HandleAuthorizeRequest handles an authorize endpoint request.
-	LoadTokenEndpointSession(ctx context.Context, request AccessRequester, req *http.Request, session interface{}) error
-}
-
 type TokenEndpointHandler interface {
 	// HandleAuthorizeRequest handles an authorize request. To extend the handler's capabilities, the http request
-	// is passed along, if further information retrieval is required. If HandleAuthorizeRequest fails, the handler
-	// implementation MUST return ErrInvalidResponseType.
+	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
+	// the authorize request, he must return nil and NOT modify session nor responder neither requester.
 	//
-	HandleTokenEndpointRequest(ctx context.Context, responder AccessResponder, requester AccessRequester, req *http.Request, session interface{}) error
+	HandleTokenEndpointResponse(ctx context.Context, responder AccessResponder, requester AccessRequester, req *http.Request, session interface{}) error
+
+	// HandleTokenEndpointRequest
+	// If the handler feels that he is not responsible for the authorize request, he must return nil and NOT modify
+	// session nor responder neither requester.
+	HandleTokenEndpointRequest(ctx context.Context, requester AccessRequester, req *http.Request, session interface{}) error
 }

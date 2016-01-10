@@ -1,4 +1,4 @@
-package authorize
+package token
 
 import (
 	. "github.com/ory-am/fosite"
@@ -18,7 +18,7 @@ func (c *CodeAuthorizeEndpointHandler) HandleAuthorizeRequest(_ context.Context,
 	}
 
 	// Handler is not responsible for this request
-	return ErrHandlerNotResponsible
+	return nil
 }
 
 func (c *CodeAuthorizeEndpointHandler) HandleGrantType() {

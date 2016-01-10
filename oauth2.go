@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+const DefaultRequiredScopeName = "core"
+
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
 // Check fosite.Fosite for an implementation of this interface.
 type OAuth2Provider interface {
@@ -24,7 +26,7 @@ type OAuth2Provider interface {
 	//   additional query parameters.  The endpoint URI MUST NOT include a
 	//   fragment component.
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
-	NewAuthorizeRequest(context.Context, *http.Request) (AuthorizeRequester, error)
+	NewAuthorizeRequest(ctx context.Context, req *http.Request) (AuthorizeRequester, error)
 
 	// NewAuthorizeResponse iterates through all response type handlers and returns their result or
 	// ErrUnsupportedResponseType if none of the handler's were able to handle it.
@@ -38,7 +40,7 @@ type OAuth2Provider interface {
 	//	 If an authorization request is missing the "response_type" parameter,
 	//	 or if the response type is not understood, the authorization server
 	//	 MUST return an error response as described in Section 4.1.2.1.
-	NewAuthorizeResponse(ctx context.Context, req *http.Request, ar AuthorizeRequester, session interface{}) (AuthorizeResponder, error)
+	NewAuthorizeResponse(ctx context.Context, req *http.Request, requester AuthorizeRequester, session interface{}) (AuthorizeResponder, error)
 
 	// WriteAuthorizeError returns the error codes to the redirection endpoint or shows the error to the user, if no valid
 	// redirect uri was given. Implements rfc6749#section-4.1.2.1
@@ -53,7 +55,7 @@ type OAuth2Provider interface {
 	//   fragment component.
 	// * https://tools.ietf.org/html/rfc6749#section-4.1.2.1 (everything)
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
-	WriteAuthorizeError(http.ResponseWriter, AuthorizeRequester, error)
+	WriteAuthorizeError(rw http.ResponseWriter, requester AuthorizeRequester, err error)
 
 	// WriteAuthorizeResponse persists the AuthorizeSession in the store and redirects the user agent to the provided
 	// redirect url or returns an error if storage failed.
@@ -67,16 +69,10 @@ type OAuth2Provider interface {
 	//   authorization server during the client registration process or when
 	//   making the authorization request.
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
-	WriteAuthorizeResponse(http.ResponseWriter, AuthorizeRequester, AuthorizeResponder)
+	WriteAuthorizeResponse(rw http.ResponseWriter, requester AuthorizeRequester, responder AuthorizeResponder)
 
-	NewAccessRequest(_ context.Context, r *http.Request) (AccessRequester, error)
-	LoadAccessRequestSession(ctx context.Context, ar AccessRequester, r *http.Request, session interface{}) error
-}
-
-// Fosite implements OAuth2Provider
-type Fosite struct {
-	Store                       Storage
-	AuthorizeEndpointHandlers   []AuthorizeEndpointHandler
-	TokenEndpointSessionLoaders []TokenEndpointSessionLoader
-	TokenEndpointHandlers       []TokenEndpointHandler
+	NewAccessRequest(ctx context.Context, req *http.Request, session interface{}) (AccessRequester, error)
+	//NewAccessResponse(_ context.Context, req *http.Request, requester AccessRequester, session interface{}) (AccessResponder, error)
+	//WriteAccessError(rw http.ResponseWriter, requester AuthorizeRequester, err error)
+	//WriteAccessResponse(rw http.ResponseWriter, requester AuthorizeRequester, responder AuthorizeResponder)
 }

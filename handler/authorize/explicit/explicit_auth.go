@@ -1,21 +1,26 @@
-package code
+package explicit
 
 import (
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma"
+	. "github.com/ory-am/fosite/handler/authorize"
 	"golang.org/x/net/context"
 	"net/http"
+	"time"
 )
+
+const authCodeDefaultLifespan = time.Hour / 2
 
 // CodeAuthorizeEndpointHandler is a response handler for the Authorize Code grant using the explicit grant type
 // as defined in https://tools.ietf.org/html/rfc6749#section-4.1
-type CodeAuthorizeEndpointHandler struct {
-	Generator enigma.Enigma
-	Store     CodeResponseTypeStorage
+type AuthorizeExplicitEndpointHandler struct {
+	Generator        enigma.Enigma
+	Store            AuthorizeStorage
+	AuthCodeLifespan time.Duration
 }
 
-func (c *CodeAuthorizeEndpointHandler) HandleAuthorizeEndpointRequest(_ context.Context, resp AuthorizeResponder, ar AuthorizeRequester, _ *http.Request, session interface{}) error {
+func (c *AuthorizeExplicitEndpointHandler) HandleAuthorizeEndpointRequest(_ context.Context, resp AuthorizeResponder, ar AuthorizeRequester, req *http.Request, session interface{}) error {
 	// This let's us define multiple response types, for example open id connect's id_token
 	if ar.GetResponseTypes().Has("code") {
 		// Generate the code
@@ -24,18 +29,17 @@ func (c *CodeAuthorizeEndpointHandler) HandleAuthorizeEndpointRequest(_ context.
 			return errors.Wrap(err, 1)
 		}
 
-		if err := c.Store.CreateAuthorizeCodeSession(code.Signature, ar, session); err != nil {
+		if err := c.Store.CreateAuthorizeCodeSession(code.Signature, ar, &AuthorizeSession{
+			Extra:              session,
+			RequestRedirectURI: req.Form.Get("redirect_uri"),
+		}); err != nil {
 			return errors.Wrap(err, 1)
 		}
 
 		resp.AddQuery("code", code.String())
+		ar.SetResponseTypeHandled("code")
 		return nil
 	}
 
-	// Handler is not responsible for this request
-	return ErrHandlerNotResponsible
-}
-
-func (c *CodeAuthorizeEndpointHandler) HandleGrantType() {
-
+	return nil
 }

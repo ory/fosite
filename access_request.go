@@ -5,17 +5,37 @@ import (
 	"github.com/ory-am/fosite/client"
 	"golang.org/x/net/context"
 	"net/http"
+	"time"
 )
 
-type AccessRequester interface{}
+type AccessRequester interface {
+	GetGrantType() string
+	GetClient() client.Client
+	GetRequestedAt() time.Time
+}
 
 type AccessRequest struct {
-	GrantType string
-	Client    client.Client
+	GrantType   string
+	RequestedAt time.Time
+	Client      client.Client
+}
+
+func (a *AccessRequest) GetGrantType() string {
+	return a.GrantType
+}
+
+func (a *AccessRequest) GetRequestedAt() time.Time {
+	return a.RequestedAt
+}
+
+func (a *AccessRequest) GetClient() client.Client {
+	return a.Client
 }
 
 func NewAccessRequest() *AccessRequest {
-	return &AccessRequest{}
+	return &AccessRequest{
+		RequestedAt: time.Now(),
+	}
 }
 
 //
@@ -36,9 +56,27 @@ func NewAccessRequest() *AccessRequest {
 //   password-based HTTP authentication schemes).  The parameters can only
 //   be transmitted in the request-body and MUST NOT be included in the
 //   request URI.
-func (c *Fosite) NewAccessRequest(_ context.Context, r *http.Request) (AccessRequester, error) {
+//   * https://tools.ietf.org/html/rfc6749#section-3.2.1
+//   - Confidential clients or other clients issued client credentials MUST
+//   authenticate with the authorization server as described in
+//   Section 2.3 when making requests to the token endpoint.
+//   - If the client type is confidential or the client was issued client
+//   credentials (or assigned other authentication requirements), the
+//   client MUST authenticate with the authorization server as described
+//   in Section 3.2.1.
+func (c *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session interface{}) (AccessRequester, error) {
 	ar := NewAccessRequest()
-	r.ParseForm()
+	if c.RequiredScope == "" {
+		c.RequiredScope = DefaultRequiredScopeName
+	}
+
+	if err := r.ParseForm(); err != nil {
+		return ar, errors.New(ErrInvalidRequest)
+	}
+
+	if session == nil {
+		return ar, errors.New("Session must not be nil")
+	}
 
 	ar.GrantType = r.Form.Get("grant_type")
 	if ar.GrantType == "" {
@@ -47,6 +85,9 @@ func (c *Fosite) NewAccessRequest(_ context.Context, r *http.Request) (AccessReq
 
 	clientID, clientSecret, ok := r.BasicAuth()
 	if !ok {
+		clientID = r.Form.Get("client_id")
+	}
+	if clientID == "" {
 		return ar, errors.New(ErrInvalidRequest)
 	}
 
@@ -55,22 +96,17 @@ func (c *Fosite) NewAccessRequest(_ context.Context, r *http.Request) (AccessReq
 		return ar, errors.New(ErrInvalidClient)
 	}
 
-	// Spec doesn't specify if all extension grants should require authorization as well. But we will
-	// assume that they do for now.
-	if !client.CompareSecretWith([]byte(r.Form.Get(clientSecret))) {
+	// Enforce client authentication
+	if !client.CompareSecretWith([]byte(clientSecret)) {
 		return ar, errors.New(ErrInvalidClient)
 	}
-
 	ar.Client = client
 
-	return ar, nil
-}
-
-func (c *Fosite) LoadAccessRequestSession(ctx context.Context, ar AccessRequester, r *http.Request, session interface{}) error {
-	for _, loader := range c.TokenEndpointSessionLoaders {
-		if err := loader.LoadTokenEndpointSession(ctx, ar, r, session); err != nil {
-			return err
+	for _, loader := range c.TokenEndpointHandlers {
+		if err := loader.HandleTokenEndpointRequest(ctx, ar, r, session); err != nil {
+			return ar, err
 		}
 	}
-	return nil
+
+	return ar, nil
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/ory-am/fosite/enigma"
-	"github.com/ory-am/fosite/plugin/code"
+	"github.com/ory-am/fosite/handler/authorize/explicit"
 	"github.com/parnurzeal/gorequest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,32 +26,32 @@ var ts *httptest.Server
 
 var mockStore *MockStorage
 var mockClient *MockClient
-var mockPluginCodeStore *MockCodeResponseTypeStorage
+var mockAuthStore *MockAuthorizeStorage
 
 func TestFosite(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockStore = NewMockStorage(ctrl)
 	mockClient = NewMockClient(ctrl)
-	mockPluginCodeStore = NewMockCodeResponseTypeStorage(ctrl)
+	mockAuthStore = NewMockAuthorizeStorage(ctrl)
 	defer ctrl.Finish()
 
-	codeHandler := &code.CodeAuthorizeEndpointHandler{
+	authExplicitHandler := &explicit.AuthorizeExplicitEndpointHandler{
 		Generator: &enigma.HMACSHAEnigma{GlobalSecret: []byte("super-global-secret")},
-		Store:     mockPluginCodeStore,
+		Store:     mockAuthStore,
 	}
 	oauth2 := &Fosite{
 		Store: mockStore,
 		AuthorizeEndpointHandlers: []AuthorizeEndpointHandler{
-			codeHandler,
+			authExplicitHandler,
 		},
 	}
 
 	oauth2TestAuthorizeCodeWorkFlow(oauth2, t, func() {
 		mockStore = NewMockStorage(ctrl)
 		mockClient = NewMockClient(ctrl)
-		mockPluginCodeStore = NewMockCodeResponseTypeStorage(ctrl)
+		mockAuthStore = NewMockAuthorizeStorage(ctrl)
 		oauth2.Store = mockStore
-		codeHandler.Store = mockPluginCodeStore
+		authExplicitHandler.Store = mockAuthStore
 	})
 }
 
@@ -132,7 +132,7 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				mockClient.EXPECT().CompareSecretWith(gomock.Eq(clientSecret)).AnyTimes().Return(true)
 				mockClient.EXPECT().GetHashedSecret().AnyTimes().Return(workingClientHashedSecret)
 				mockClient.EXPECT().GetRedirectURIs().AnyTimes().Return([]string{ts.URL + "/cb"})
-				mockPluginCodeStore.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				mockAuthStore.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			expectStatusCode: http.StatusOK,
 			expectPath:       "/cb",

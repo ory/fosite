@@ -3,31 +3,9 @@ package fosite
 import (
 	"github.com/asaskevich/govalidator"
 	"github.com/go-errors/errors"
-	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite/client"
-	"net/http"
 	"net/url"
 )
-
-const minStateLength = 8
-
-func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
-	rfcerr := ErrorToRFC6749Error(err)
-
-	if !ar.IsRedirectURIValid() {
-		pkg.WriteIndentJSON(rw, rfcerr)
-		return
-	}
-
-	redirectURI := ar.GetRedirectURI()
-	query := redirectURI.Query()
-	query.Add("error", rfcerr.Name)
-	query.Add("error_description", rfcerr.Description)
-	redirectURI.RawQuery = query.Encode()
-
-	rw.Header().Add("Location", redirectURI.String())
-	rw.WriteHeader(http.StatusFound)
-}
 
 // GetRedirectURIFromRequestValues extracts the redirect_uri from values but does not do any sort of validation.
 //

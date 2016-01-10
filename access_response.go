@@ -1,6 +1,10 @@
 package fosite
 
 type AccessResponder interface {
-	Set(key string, value interface{})
-	Get(key string) interface{}
+	SetExtra(key string, value interface{})
+	GetExtra(key string) interface{}
+	SetAccessToken(string)
+	SetTokenType(string)
+	GetAccessToken() string
+	GetTokenType() string
 }

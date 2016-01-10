@@ -71,15 +71,32 @@ Please be aware that Fosite only secures your server side security. You still ne
 your tokens safe, prevent CSRF attacks and much more. If you need any help or advice feel free to contact our security
 staff through [our website](https://ory.am/)!
 
-## Security
+## Security first or encouraging security by enforcing it
 
-Fosite has two commandments!
+We have given [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819#section-5.1.5.3)
+a very close look and included everything we thought was in the scope of this framework. Here is a complete list
+of things we implemented in Fosite:
 
-### Encourage security by enforcing it
+* [No Cleartext Storage of Credentials](https://tools.ietf.org/html/rfc6819#section-5.1.4.1.3)
+* [Encryption of Credentials](https://tools.ietf.org/html/rfc6819#section-5.1.4.1.4)
+* [Use Short Expiration Time](https://tools.ietf.org/html/rfc6819#section-5.1.5.3)
+* [Limit Number of Usages or One-Time Usage](https://tools.ietf.org/html/rfc6819#section-5.1.5.4)
+* [Bind Token to Client id](https://tools.ietf.org/html/rfc6819#section-5.1.5.8)
+* [Automatic Revocation of Derived Tokens If Abuse Is Detected](https://tools.ietf.org/html/rfc6819#section-5.2.1.1)
+* [Binding of Refresh Token to "client_id"](https://tools.ietf.org/html/rfc6819#section-5.2.2.2)
+* [Refresh Token Rotation](https://tools.ietf.org/html/rfc6819#section-5.2.2.3)
+* [Revocation of Refresh Tokens](https://tools.ietf.org/html/rfc6819#section-5.2.2.4)
+* [Validate Pre-Registered "redirect_uri"](https://tools.ietf.org/html/rfc6819#section-5.2.3.5)
+* [Binding of Authorization "code" to "client_id"](https://tools.ietf.org/html/rfc6819#section-5.2.4.4)
+* [Binding of Authorization "code" to "redirect_uri"](https://tools.ietf.org/html/rfc6819#section-5.2.4.6)
 
-#### Secure Tokens
+Not implemented yet:
+* [Use of Asymmetric Cryptography](https://tools.ietf.org/html/rfc6819#section-5.1.4.1.5) - enigma should use asymmetric
+  cryptography per default instead of HMAC-SHA (but support both).
 
-Tokens are generated with a minimum entropy of 256 bit. You can use more, if you want.
+Sections below [Section 5](https://tools.ietf.org/html/rfc6819#section-5)
+that are not covered in the list above should be reviewed by you. If you think that a specific section should be something
+that is covered in Fosite, feel free to create an [issue](https://github.com/ory-am/fosite/issues).
 
 #### No state, no token
 
@@ -249,12 +266,7 @@ func handleToken(rw http.ResponseWriter, req *http.Request) {
        return
     }
 
-    if mySessionData != nil {
-        // normally, mySessionData will always be nil unless: accessRequest.GetGrantTypes().Has("authorization_code")
-        // mySessionData.User === "12345"
-    }
-
-    response, err := oauth2.NewAccessResponse(ctx, accessRequest, r, mySessionData)
+    response, err := oauth2.NewAccessResponse(ctx, accessRequest, r, &mySessionData)
     if err != nil {
        oauth2.WriteAccessError(rw, req, err)
        return
@@ -290,11 +302,46 @@ Connect.
 
 The token endpoint is still in the making so stay tuned on how to run custom token endpoint handlers.
 
+## Develop fosite
+
+This section is work in progress.
+
+### Useful commands
+
+**Create storage mocks**
+```
+mockgen -destination internal/storage.go github.com/ory-am/fosite Storage
+mockgen -destination internal/authorize_storage.go github.com/ory-am/fosite/handler/authorize AuthorizeStorage
+mockgen -destination internal/token_storage.go github.com/ory-am/fosite/handler/token TokenStorage
+```
+
+**Create handler mocks**
+```
+mockgen -destination internal/authorize_handler.go github.com/ory-am/fosite AuthorizeEndpointHandler
+mockgen -destination internal/token_handler.go github.com/ory-am/fosite TokenEndpointHandler
+```
+
+**Create stateful "context" mocks**
+```
+mockgen -destination internal/access_request.go github.com/ory-am/fosite AccessRequester
+mockgen -destination internal/access__response.go github.com/ory-am/fosite AccessResponder
+mockgen -destination internal/authorize_request.go github.com/ory-am/fosite AuthorizeRequester
+mockgen -destination internal/authorize_response.go github.com/ory-am/fosite AuthorizeResponder
+```
+
 ## Hall of Fame
 
-This place is reserved for the fearless bug hunters, reviewers and contributors.
+This place is reserved for the fearless bug hunters, reviewers and contributors (alphabetical order).
 
-1. [danielchatfield](https://github.com/danielchatfield) for [#8](https://github.com/ory-am/fosite/issues/8)
+* [agtorre](https://github.com/agtorre):
+  [contributions](https://github.com/ory-am/fosite/issues?q=author%3Aagtorre),
+  [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Aagtorre).
+* [danielchatfield](https://github.com/danielchatfield):
+  [contributions](https://github.com/ory-am/fosite/issues?q=author%3Adanielchatfield),
+  [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Adanielchatfield).
+* [leetal](https://github.com/leetal):
+  [contributions](https://github.com/ory-am/fosite/issues?q=author%3Aleetal),
+  [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Aleetal).
 
 Find out more about the [author](https://aeneas.io/) of Fosite and Hydra, and the
 [Ory Company](https://ory.am/).
