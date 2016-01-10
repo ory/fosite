@@ -1,11 +1,11 @@
 package fosite_test
 
 import (
+	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"github.com/vektra/errors"
 	"golang.org/x/net/context"
 	"net/http"
 	"net/url"

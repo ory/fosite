@@ -35,6 +35,7 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(_ context.
 	if err := c.Generator.ValidateChallenge(request.GetClient().GetHashedSecret(), challenge); err != nil {
 		return errors.New(ErrInvalidRequest)
 	}
+
 	ar, err := c.Store.GetAuthorizeCodeSession(challenge.Signature, &authSess)
 	if err == pkg.ErrNotFound {
 		return errors.New(ErrInvalidRequest)
@@ -79,6 +80,12 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(_ context.
 }
 
 func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointResponse(ctx context.Context, responder AccessResponder, requester AccessRequester, req *http.Request, session interface{}) error {
+	// grant_type REQUIRED.
+	// Value MUST be set to "authorization_code".
+	if requester.GetGrantType() != "authorize_code" {
+		return nil
+	}
+
 	access, err := c.Generator.GenerateChallenge(requester.GetClient().GetHashedSecret())
 	if err != nil {
 		return errors.New(ErrServerError)
@@ -88,10 +95,10 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointResponse(ctx conte
 	if err != nil {
 		return errors.New(ErrServerError)
 	}
+
 	responder.SetAccessToken(access.String())
 	responder.SetTokenType("bearer")
 	responder.SetExtra("expires_in", int(c.AuthCodeLifespan.Seconds()))
-
 	if err := c.Store.DeleteAuthorizeCodeSession(req.Form.Get("code")); err != nil {
 		return errors.New(ErrServerError)
 	}

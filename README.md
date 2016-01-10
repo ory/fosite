@@ -324,7 +324,7 @@ mockgen -destination internal/token_handler.go github.com/ory-am/fosite TokenEnd
 **Create stateful "context" mocks**
 ```
 mockgen -destination internal/access_request.go github.com/ory-am/fosite AccessRequester
-mockgen -destination internal/access__response.go github.com/ory-am/fosite AccessResponder
+mockgen -destination internal/access_response.go github.com/ory-am/fosite AccessResponder
 mockgen -destination internal/authorize_request.go github.com/ory-am/fosite AuthorizeRequester
 mockgen -destination internal/authorize_response.go github.com/ory-am/fosite AuthorizeResponder
 ```

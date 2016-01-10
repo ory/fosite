@@ -71,8 +71,23 @@ type OAuth2Provider interface {
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
 	WriteAuthorizeResponse(rw http.ResponseWriter, requester AuthorizeRequester, responder AuthorizeResponder)
 
+	// NewAccessRequest creates a new access request object and validates
+	// various parameters.
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://tools.ietf.org/html/rfc6749#section-3.2 (everything)
+	// * https://tools.ietf.org/html/rfc6749#section-3.2.1 (everything)
+	//
+	// Furthermore the registered handlers should implement their specs accordingly.
 	NewAccessRequest(ctx context.Context, req *http.Request, session interface{}) (AccessRequester, error)
+
 	//NewAccessResponse(_ context.Context, req *http.Request, requester AccessRequester, session interface{}) (AccessResponder, error)
-	//WriteAccessError(rw http.ResponseWriter, requester AuthorizeRequester, err error)
-	//WriteAccessResponse(rw http.ResponseWriter, requester AuthorizeRequester, responder AuthorizeResponder)
+
+	// WriteAccessError
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://tools.ietf.org/html/rfc6749#section-5.2 (everything)
+	WriteAccessError(rw http.ResponseWriter, requester AccessRequester, err error)
+
+	WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder)
 }

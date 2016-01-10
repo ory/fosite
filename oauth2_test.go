@@ -1,22 +1,21 @@
 package fosite_test
 
 import (
-	. "github.com/ory-am/fosite"
-	. "github.com/ory-am/fosite/internal"
-	"net/http"
-	"testing"
-
-	"errors"
+	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
+	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma"
 	"github.com/ory-am/fosite/handler/authorize/explicit"
+	. "github.com/ory-am/fosite/internal"
 	"github.com/parnurzeal/gorequest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	goauth2 "golang.org/x/oauth2"
+	"net/http"
 	"net/http/httptest"
+	"testing"
 )
 
 var clientID = "foo"
