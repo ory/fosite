@@ -44,16 +44,11 @@ func TestFosite(t *testing.T) {
 		Enigma: &enigma.HMACSHAEnigma{GlobalSecret: []byte("super-global-secret")},
 		Store:  mockAuthStore,
 	}
-	oauth2 := &Fosite{
-		Store:  mockStore,
-		Hasher: mockHasher,
-		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{
-			"code": authExplicitHandler,
-		},
-		TokenEndpointHandlers: TokenEndpointHandlers{
-			"code": authExplicitHandler,
-		},
-	}
+
+	oauth2 := NewFosite(mockStore)
+	oauth2.Hasher = mockHasher
+	oauth2.AuthorizeEndpointHandlers.Add("code", authExplicitHandler)
+	oauth2.TokenEndpointHandlers.Add("code", authExplicitHandler)
 
 	oauth2TestAuthorizeCodeWorkFlow(oauth2, t, func() {
 		mockStore = NewMockStorage(ctrl)

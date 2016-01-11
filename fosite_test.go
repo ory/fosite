@@ -14,3 +14,11 @@ func TestAuthorizeEndpointHandlers(t *testing.T) {
 	assert.Len(t, hs, 1)
 	assert.Equal(t, hs["k"], h)
 }
+
+func TestTokenEndpointHandlers(t *testing.T) {
+	h := &explicit.AuthorizeExplicitEndpointHandler{}
+	hs := TokenEndpointHandlers{}
+	hs.Add("k", h)
+	assert.Len(t, hs, 1)
+	assert.Equal(t, hs["k"], h)
+}

@@ -19,6 +19,10 @@ func TestAuthorizeRequest(t *testing.T) {
 		isRedirValid bool
 	}{
 		{
+			ar:           NewAuthorizeRequest(),
+			isRedirValid: false,
+		},
+		{
 			ar:           &AuthorizeRequest{},
 			isRedirValid: false,
 		},
@@ -83,6 +87,8 @@ func TestAuthorizeRequest(t *testing.T) {
 		assert.Equal(t, c.ar.State, c.ar.GetState(), "%d", k)
 		assert.Equal(t, c.isRedirValid, c.ar.IsRedirectURIValid(), "%d", k)
 		c.ar.GrantScope("foo")
+		c.ar.SetScopes([]string{"foo"})
 		assert.True(t, c.ar.GetGrantedScopes().Has("foo"))
+		assert.True(t, c.ar.GetScopes().Has("foo"))
 	}
 }
