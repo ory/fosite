@@ -81,13 +81,21 @@ type OAuth2Provider interface {
 	// Furthermore the registered handlers should implement their specs accordingly.
 	NewAccessRequest(ctx context.Context, req *http.Request, session interface{}) (AccessRequester, error)
 
-	//NewAccessResponse(_ context.Context, req *http.Request, requester AccessRequester, session interface{}) (AccessResponder, error)
+	// NewAccessResponse creates a new access response and validates that access_token and token_type are set.
+	//
+	// The following specs must be considered in any implementation of this method:
+	// https://tools.ietf.org/html/rfc6749#section-5.1
+	NewAccessResponse(_ context.Context, req *http.Request, requester AccessRequester, session interface{}) (AccessResponder, error)
 
-	// WriteAccessError
+	// WriteAccessError writes an access request error response.
 	//
 	// The following specs must be considered in any implementation of this method:
 	// * https://tools.ietf.org/html/rfc6749#section-5.2 (everything)
 	WriteAccessError(rw http.ResponseWriter, requester AccessRequester, err error)
 
+	// WriteAccessResponse writes the access response.
+	//
+	// The following specs must be considered in any implementation of this method:
+	// https://tools.ietf.org/html/rfc6749#section-5.1
 	WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder)
 }
