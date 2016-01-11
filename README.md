@@ -10,7 +10,7 @@ If you are here to contribute, feel free to check [this Pull Request](https://gi
 [![Build Status](https://travis-ci.org/ory-am/fosite.svg?branch=master)](https://travis-ci.org/ory-am/fosite?branch=master)
 [![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github)](https://coveralls.io/github/ory-am/fosite?branch=master)
 
-Fosite is in active development. We will use gopkg for releasing new versions of the API.
+Fosite is in active development. Most of the framework is done and tested.  We will use gopkg for releasing new versions of the API.
 Be aware that "go get github.com/ory-am/fosite" will give you the master branch, which is and always will be *nightly*.
 Once releases roll out, you will be able to fetch a specific fosite API version through gopkg.in.
 
@@ -27,19 +27,19 @@ These Standards have been reviewed during the development of Fosite:
 - [Motivation](#motivation)
 - [A word on quality](#a-word-on-quality)
 - [A word on security](#a-word-on-security)
-- [Security](#security)
-  - [Encourage security by enforcing it](#encourage-security-by-enforcing-it)
-    - [Secure Tokens](#secure-tokens)
-    - [No state, no token](#no-state-no-token)
+- [Security first or encouraging security by enforcing it](#security-first-or-encouraging-security-by-enforcing-it)
     - [Opaque tokens](#opaque-tokens)
     - [Advanced Token Validation](#advanced-token-validation)
     - [Encrypt credentials at rest](#encrypt-credentials-at-rest)
     - [Implement peer reviewed IETF Standards](#implement-peer-reviewed-ietf-standards)
   - [Provide extensibility and interoperability](#provide-extensibility-and-interoperability)
 - [Usage](#usage)
-  - [Authorize Endpoint](#authorize-endpoint)
-  - [Token Endpoint](#token-endpoint)
+  - [Installation](#installation)
+  - [[Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)](#authorization-endpointhttpstoolsietforghtmlrfc6749section-31)
+  - [[Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)](#token-endpointhttpstoolsietforghtmlrfc6749section-32)
   - [Extensible handlers](#extensible-handlers)
+- [Develop fosite](#develop-fosite)
+  - [Useful commands](#useful-commands)
 - [Hall of Fame](#hall-of-fame)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -89,18 +89,20 @@ of things we implemented in Fosite:
 * [Validate Pre-Registered "redirect_uri"](https://tools.ietf.org/html/rfc6819#section-5.2.3.5)
 * [Binding of Authorization "code" to "client_id"](https://tools.ietf.org/html/rfc6819#section-5.2.4.4)
 * [Binding of Authorization "code" to "redirect_uri"](https://tools.ietf.org/html/rfc6819#section-5.2.4.6)
+* [Opaque access tokens](https://tools.ietf.org/html/rfc6749#section-1.4)
+* [Opaque refresh tokens](https://tools.ietf.org/html/rfc6749#section-1.5)
 
 Not implemented yet:
 * [Use of Asymmetric Cryptography](https://tools.ietf.org/html/rfc6819#section-5.1.4.1.5) - enigma should use asymmetric
   cryptography per default instead of HMAC-SHA (but support both).
 
+Additionally, we added these safeguards:
+* Enforcing random states: Without a random-looking state the request will fail.
+*
+
 Sections below [Section 5](https://tools.ietf.org/html/rfc6819#section-5)
 that are not covered in the list above should be reviewed by you. If you think that a specific section should be something
 that is covered in Fosite, feel free to create an [issue](https://github.com/ory-am/fosite/issues).
-
-#### No state, no token
-
-Without a random-looking state, *GET /oauth2/auth* will fail.
 
 #### Opaque tokens
 
@@ -158,7 +160,7 @@ To use the unstable master branch, which is only recommended for testing purpose
 go get gopkg.in/ory-am/fosite.v0/...
 ```
 
-### Authorize Endpoint
+### [Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)
 
 ```go
 package main
@@ -248,63 +250,96 @@ func handleAuth(rw http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### Token Endpoint
-
-draft
+### [Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)
 
 ```go
 func handleToken(rw http.ResponseWriter, req *http.Request) {
+    // First we need to define a session object. Some handlers might require the session to implement
+    // a specific interface, so keep that in mind when using them.
     var mySessionData = struct {
         User string
         UsingIdentityProvider string
         Foo string
     }
 
+    // This will create an access request object and iterate through the registered TokenEndpointHandlers.
+    // These might populate mySessionData so do not pass nils.
     accessRequest, err := oauth2.NewAccessRequest(ctx, r, &mySessionData)
     if err != nil {
        oauth2.WriteAccessError(rw, req, err)
        return
     }
 
+    // Now we have access to mySessionData's populated values and can do crazy things.
+
+    // Next we create a response for the access request. Again, we iterate through the TokenEndpointHandlers
+    // and aggregate the result in response.
     response, err := oauth2.NewAccessResponse(ctx, accessRequest, r, &mySessionData)
     if err != nil {
        oauth2.WriteAccessError(rw, req, err)
        return
     }
 
+    // All done, send the response.
     oauth2.WriteAccessResponse(rw, accessRequest, response)
 }
 ```
 
 ### Extensible handlers
 
-You can replace Fosite's inner workings, for example response type (/auth endpoint) handlers or grant type
-(/token endpoint) handlers.
+You can replace the Token and Authorize endpoint logic by modifying `Fosite.TokenEndpointHandlers` and
+`Fosite.AuthorizeEndpointHandlers`.
 
-Let's take the code handler. He is responsible for handling the
-[authorize_code workflow](https://aaronparecki.com/articles/2012/07/29/1/oauth2-simplified#web-server-apps).
-If you want to enable him, you could do it like this:
+Let's take the explicit authorize handler. He is responsible for handling the
+[authorize code workflow](https://aaronparecki.com/articles/2012/07/29/1/oauth2-simplified#web-server-apps).
+
+If you want to enable the handler able to handle this workflow, you can do this:
 
 ```go
-codeHandler := &code.CodeAuthorizeEndpointHandler{
+handler := &explicit.AuthorizeExplicitEndpointHandler{
 	Generator: &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
 	Store:     myCodeStore, // Needs to implement CodeResponseTypeStorage
 }
-oauth2 := &Fosite{
-	AuthorizeEndpointHandlers: []AuthorizeEndpointHandler{
-		codeHandler,
+oauth2 := &fosite.Fosite{
+	AuthorizeEndpointHandlers: []fosite.AuthorizeEndpointHandler{
+		handler,
+	},
+	TokenEndpointHandlers: []fosite.TokenEndpointHandler{
+		handler,
 	},
 }
 ```
 
-Easy, right? You can add or remove any handler you wish like this, even custom ones and extend OAuth2 by, for example, OpenID
-Connect.
+As you probably noticed, there are two types of handlers, one for the [authorization */auth* endpoint](https://tools.ietf.org/html/rfc6749#section-3.1) and one for the [token
+*/token* endpoint](https://tools.ietf.org/html/rfc6749#section-3.2). The `AuthorizeExplicitEndpointHandler` implements
+API requirements for both endpoints, while, for example, the `AuthorizeImplicitEndpointHandler` only implements
+the `AuthorizeEndpointHandler` API.
 
-The token endpoint is still in the making so stay tuned on how to run custom token endpoint handlers.
+You can find a complete list of handlers inside the [handler directory](). A short list is documented here:
+
+* *github.com/ory-am/fosite/handler/authorize/explicit.AuthorizeExplicitEndpointHandler:* implements the
+  [Authorization Code Grant](https://tools.ietf.org/html/rfc6749#section-4.1)
+* *github.com/ory-am/fosite/handler/authorize/implicit.AuthorizeImplicitEndpointHandler:* implements the
+  [Implicit Grant](https://tools.ietf.org/html/rfc6749#section-4.2)
+* *github.com/ory-am/fosite/handler/authorize/token/owner.TokenROPasswordCredentialsEndpointHandler:* implements the
+  [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3)
+* *github.com/ory-am/fosite/handler/authorize/token/client.TokenClientCredentialsEndpointHandler:* implements the
+  [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4)
 
 ## Develop fosite
 
-This section is work in progress.
+You need git and golang installed on your system.
+
+```
+go get github.com/ory-am/fosite/... -d
+cd $GOPATH/src/ github.com/ory-am/fosite
+git status
+git remote add myfork <url-to-your-fork>
+go test ./...
+```
+
+Simple, right? Now you are ready to go! Make sure to run `go test ./...` often, detecting problems with your code
+rather sooner than later.
 
 ### Useful commands
 
