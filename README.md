@@ -27,17 +27,13 @@ These Standards have been reviewed during the development of Fosite:
 - [Motivation](#motivation)
 - [A word on quality](#a-word-on-quality)
 - [A word on security](#a-word-on-security)
-- [Security first or encouraging security by enforcing it](#security-first-or-encouraging-security-by-enforcing-it)
-    - [Opaque tokens](#opaque-tokens)
-    - [Advanced Token Validation](#advanced-token-validation)
-    - [Encrypt credentials at rest](#encrypt-credentials-at-rest)
-    - [Implement peer reviewed IETF Standards](#implement-peer-reviewed-ietf-standards)
-  - [Provide extensibility and interoperability](#provide-extensibility-and-interoperability)
+- [A word on extensibility](#a-word-on-extensibility)
 - [Usage](#usage)
   - [Installation](#installation)
   - [[Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)](#authorization-endpointhttpstoolsietforghtmlrfc6749section-31)
   - [[Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)](#token-endpointhttpstoolsietforghtmlrfc6749section-32)
   - [Extensible handlers](#extensible-handlers)
+  - [Replaceable storage](#replaceable-storage)
 - [Develop fosite](#develop-fosite)
   - [Useful commands](#useful-commands)
 - [Hall of Fame](#hall-of-fame)
@@ -71,9 +67,7 @@ Please be aware that Fosite only secures your server side security. You still ne
 your tokens safe, prevent CSRF attacks and much more. If you need any help or advice feel free to contact our security
 staff through [our website](https://ory.am/)!
 
-## Security first or encouraging security by enforcing it
-
-We have given [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819#section-5.1.5.3)
+We have given the [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819#section-5.1.5.3)
 a very close look and included everything we thought was in the scope of this framework. Here is a complete list
 of things we implemented in Fosite:
 
@@ -97,11 +91,14 @@ Not implemented yet:
   cryptography per default instead of HMAC-SHA (but support both).
 
 Additionally, we added these safeguards:
-* Enforcing random states: Without a random-looking state the request will fail.
-* Advanced Token Validation: Tokens are layouted as `<key>.<signature>` where `<signature>` is created using HMAC-SHA256, a global secret
+* **Enforcing random states:** Without a random-looking state the request will fail.
+* **Advanced Token Validation:** Tokens are layouted as `<key>.<signature>` where `<signature>` is created using HMAC-SHA256, a global secret
   and the client's secret. Read more about this workflow in the [proposal](https://github.com/ory-am/fosite/issues/11).
   This is what a token can look like:
   `/tgBeUhWlAT8tM8Bhmnx+Amf8rOYOUhrDi3pGzmjP7c=.BiV/Yhma+5moTP46anxMT6cWW8gz5R5vpC9RbpwSDdM=`
+* **Enforging scopes:** By default, you always need to include the `fosite` scope or fosite will not execute the request
+  properly. Obviously, you can change the scope to `basic` or `core` but be aware that you *must use scopes* if you use
+  OAuth2.
 
 It is strongly encouraged to use the handlers shipped with Fosite as the follow specs.
 
@@ -120,22 +117,13 @@ The following list documents which sections of the RFCs we reviewed for each act
   * [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
     * ...
 
-####
+## A word on extensibility
 
-
-#### Encrypt credentials at rest
-
-Credentials (token signatures, passwords and secrets) are always encrypted at rest.
-
-#### Implement peer reviewed IETF Standards
-
-Fosite implements [rfc6749](https://tools.ietf.org/html/rfc6749) and enforces countermeasures suggested in [rfc6819](https://tools.ietf.org/html/rfc6819).
-
-### Provide extensibility and interoperability
-
-... because OAuth2 is an extensible and flexible **framework**. Fosite let's you register new response types, new grant
-types and new response key value pares. This is useful, if you want to provide OpenID Connect on top of your
-OAuth2 stack. Or custom assertions, what ever you like and as long as it is secure. ;)
+Fosite is extensible ... because OAuth2 is an extensible and flexible **framework**.
+Fosite let's you register custom token and authorize endpoint handlers with the security that the requests
+have been validated against the OAuth2 specs beforehand.
+You can easily extend Fosite's capabilities. For example, if you want to provide OpenID Connect on top of your
+OAuth2 stack, that's no problem. Or custom assertions, what ever you like and as long as it is secure. ;)
 
 ## Usage
 

@@ -52,6 +52,16 @@ func (_mr *_MockAuthorizeRequesterRecorder) GetClient() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetClient")
 }
 
+func (_m *MockAuthorizeRequester) GetGrantedScopes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetGrantedScopes")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) GetGrantedScopes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantedScopes")
+}
+
 func (_m *MockAuthorizeRequester) GetRedirectURI() *url.URL {
 	ret := _m.ctrl.Call(_m, "GetRedirectURI")
 	ret0, _ := ret[0].(*url.URL)
@@ -118,4 +128,12 @@ func (_m *MockAuthorizeRequester) SetResponseTypeHandled(_param0 string) {
 
 func (_mr *_MockAuthorizeRequesterRecorder) SetResponseTypeHandled(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetResponseTypeHandled", arg0)
+}
+
+func (_m *MockAuthorizeRequester) SetScopes(_param0 fosite.Arguments) {
+	_m.ctrl.Call(_m, "SetScopes", _param0)
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) SetScopes(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetScopes", arg0)
 }

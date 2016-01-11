@@ -5,6 +5,7 @@ package internal
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	fosite "github.com/ory-am/fosite"
 	client "github.com/ory-am/fosite/client"
 	time "time"
 )
@@ -60,6 +61,16 @@ func (_mr *_MockAccessRequesterRecorder) GetGrantType() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantType")
 }
 
+func (_m *MockAccessRequester) GetGrantedScopes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetGrantedScopes")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockAccessRequesterRecorder) GetGrantedScopes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantedScopes")
+}
+
 func (_m *MockAccessRequester) GetRequestedAt() time.Time {
 	ret := _m.ctrl.Call(_m, "GetRequestedAt")
 	ret0, _ := ret[0].(time.Time)
@@ -70,10 +81,36 @@ func (_mr *_MockAccessRequesterRecorder) GetRequestedAt() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedAt")
 }
 
+func (_m *MockAccessRequester) GetScopes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetScopes")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockAccessRequesterRecorder) GetScopes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetScopes")
+}
+
+func (_m *MockAccessRequester) GrantScope(_param0 string) {
+	_m.ctrl.Call(_m, "GrantScope", _param0)
+}
+
+func (_mr *_MockAccessRequesterRecorder) GrantScope(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GrantScope", arg0)
+}
+
 func (_m *MockAccessRequester) SetGrantTypeHandled(_param0 string) {
 	_m.ctrl.Call(_m, "SetGrantTypeHandled", _param0)
 }
 
 func (_mr *_MockAccessRequesterRecorder) SetGrantTypeHandled(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetGrantTypeHandled", arg0)
+}
+
+func (_m *MockAccessRequester) SetScopes(_param0 fosite.Arguments) {
+	_m.ctrl.Call(_m, "SetScopes", _param0)
+}
+
+func (_mr *_MockAccessRequesterRecorder) SetScopes(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetScopes", arg0)
 }

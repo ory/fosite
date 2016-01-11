@@ -4,6 +4,7 @@ import (
 	"github.com/go-errors/errors"
 	"golang.org/x/net/context"
 	"net/http"
+	"strings"
 )
 
 // Implements
@@ -31,14 +32,14 @@ import (
 //   credentials (or assigned other authentication requirements), the
 //   client MUST authenticate with the authorization server as described
 //   in Section 3.2.1.
-func (c *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session interface{}) (AccessRequester, error) {
+func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session interface{}) (AccessRequester, error) {
 	ar := NewAccessRequest()
 	if r.Method != "POST" {
 		return ar, errors.New(ErrInvalidRequest)
 	}
 
-	if c.RequiredScope == "" {
-		c.RequiredScope = DefaultRequiredScopeName
+	if f.RequiredScope == "" {
+		f.RequiredScope = DefaultRequiredScopeName
 	}
 
 	if err := r.ParseForm(); err != nil {
@@ -49,6 +50,7 @@ func (c *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return ar, errors.New("Session must not be nil")
 	}
 
+	ar.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
 	ar.GrantType = r.Form.Get("grant_type")
 	if ar.GrantType == "" {
 		return ar, errors.New(ErrInvalidRequest)
@@ -59,7 +61,7 @@ func (c *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return ar, errors.New(ErrInvalidRequest)
 	}
 
-	client, err := c.Store.GetClient(clientID)
+	client, err := f.Store.GetClient(clientID)
 	if err != nil {
 		return ar, errors.New(ErrInvalidClient)
 	}
@@ -70,7 +72,7 @@ func (c *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 	ar.Client = client
 
-	for _, loader := range c.TokenEndpointHandlers {
+	for _, loader := range f.TokenEndpointHandlers {
 		if err := loader.HandleTokenEndpointRequest(ctx, r, ar, session); err != nil {
 			return ar, err
 		}
@@ -80,5 +82,10 @@ func (c *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return ar, errors.New(ErrUnsupportedGrantType)
 	}
 
+	if !ar.GetScopes().Has(f.RequiredScope) {
+		return ar, errors.New(ErrInvalidScope)
+	}
+
+	ar.GrantScope(f.RequiredScope)
 	return ar, nil
 }

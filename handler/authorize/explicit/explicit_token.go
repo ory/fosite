@@ -43,6 +43,9 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(_ context.
 		return errors.New(ErrServerError)
 	}
 
+	// Override scopes
+	request.SetScopes(ar.GetScopes())
+
 	// The authorization server MUST ensure that the authorization code was issued to the authenticated
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,

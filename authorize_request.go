@@ -36,10 +36,21 @@ type AuthorizeRequester interface {
 	// IsRedirectURIValid returns false if the redirect is not rfc-conform (i.e. missing client, not on white list,
 	// or malformed)
 	IsRedirectURIValid() bool
+
+	// SetScopes sets the request's scopes.
+	SetScopes(Arguments)
+
+	// GetGrantScopes returns all granted scopes.
+	GetGrantedScopes() Arguments
 }
 
 func NewAuthorizeRequest() *AuthorizeRequest {
-	return &AuthorizeRequest{}
+	return &AuthorizeRequest{
+		ResponseTypes:        Arguments{},
+		Scopes:               Arguments{},
+		HandledResponseTypes: Arguments{},
+		GrantedScopes:        []string{},
+	}
 }
 
 // AuthorizeRequest is an implementation of AuthorizeRequester
@@ -51,6 +62,7 @@ type AuthorizeRequest struct {
 	State                string
 	RequestedAt          time.Time
 	HandledResponseTypes Arguments
+	GrantedScopes        []string
 }
 
 func (d *AuthorizeRequest) IsRedirectURIValid() bool {
@@ -106,4 +118,16 @@ func (d *AuthorizeRequest) DidHandleAllResponseTypes() bool {
 	}
 
 	return len(d.ResponseTypes) > 0
+}
+
+func (a *AuthorizeRequest) GetGrantedScopes() Arguments {
+	return Arguments(a.GrantedScopes)
+}
+
+func (a *AuthorizeRequest) GrantScope(scope string) {
+	a.GrantedScopes = append(a.GrantedScopes, scope)
+}
+
+func (a *AuthorizeRequest) SetScopes(s Arguments) {
+	a.Scopes = s
 }

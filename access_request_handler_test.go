@@ -171,6 +171,26 @@ func TestNewAccessRequest(t *testing.T) {
 				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(true)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester, _ interface{}) {
 					a.SetGrantTypeHandled("foo")
+					a.SetScopes([]string{"asdfasdf"})
+				}).Return(nil)
+			},
+			handlers:  TokenEndpointHandlers{handler},
+			expectErr: ErrInvalidScope,
+		},
+		{
+			header: http.Header{
+				"Authorization": {basicAuth("foo", "bar")},
+			},
+			method: "POST",
+			form: url.Values{
+				"grant_type": {"foo"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
+				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(true)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester, _ interface{}) {
+					a.SetGrantTypeHandled("foo")
+					a.SetScopes([]string{DefaultRequiredScopeName})
 				}).Return(nil)
 			},
 			handlers: TokenEndpointHandlers{handler},

@@ -15,6 +15,18 @@ type AccessRequester interface {
 	// GetRequestedAt returns the time the request was created.
 	GetRequestedAt() time.Time
 
+	// GetScopes returns the request's scopes.
+	GetScopes() Arguments
+
+	// SetScopes sets the request's scopes.
+	SetScopes(Arguments)
+
+	// GetGrantScopes returns all granted scopes.
+	GetGrantedScopes() Arguments
+
+	// GrantScope marks a request's scope as granted.
+	GrantScope(string)
+
 	// SetGrantTypeHandled marks a grant type as handled indicating that the response type is supported.
 	SetGrantTypeHandled(string)
 
@@ -27,6 +39,8 @@ type AccessRequest struct {
 	HandledGrantType []string
 	RequestedAt      time.Time
 	Client           client.Client
+	Scopes           Arguments
+	GrantedScopes    []string
 }
 
 func NewAccessRequest() *AccessRequest {
@@ -54,4 +68,20 @@ func (a *AccessRequest) GetRequestedAt() time.Time {
 
 func (a *AccessRequest) GetClient() client.Client {
 	return a.Client
+}
+
+func (a *AccessRequest) GetScopes() Arguments {
+	return a.Scopes
+}
+
+func (a *AccessRequest) SetScopes(s Arguments) {
+	a.Scopes = s
+}
+
+func (a *AccessRequest) GetGrantedScopes() Arguments {
+	return Arguments(a.GrantedScopes)
+}
+
+func (a *AccessRequest) GrantScope(scope string) {
+	a.GrantedScopes = append(a.GrantedScopes, scope)
 }

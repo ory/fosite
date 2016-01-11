@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-const DefaultRequiredScopeName = "core"
+var DefaultRequiredScopeName = "fosite"
 
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
 // Check fosite.Fosite for an implementation of this interface.

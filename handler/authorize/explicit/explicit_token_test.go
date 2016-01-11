@@ -226,6 +226,8 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				chgen.EXPECT().ValidateChallenge(gomock.Any(), gomock.Any()).Return(nil)
 				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(authreq, nil)
 
+				authreq.EXPECT().GetScopes().Return([]string{})
+				areq.EXPECT().SetScopes(gomock.Any())
 				authreq.EXPECT().GetClient().Return(&client.SecureClient{ID: "bar"})
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -244,6 +246,8 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 					sess.RequestRedirectURI = "request-redir"
 				}).Return(authreq, nil)
 
+				authreq.EXPECT().GetScopes().Return([]string{})
+				areq.EXPECT().SetScopes(gomock.Any())
 				authreq.EXPECT().GetClient().Return(&client.SecureClient{ID: "foo"})
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -263,6 +267,8 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 					sess.RequestRedirectURI = "request-redir"
 				}).Return(authreq, nil)
 
+				authreq.EXPECT().GetScopes().Return([]string{})
+				areq.EXPECT().SetScopes(gomock.Any())
 				authreq.EXPECT().GetClient().Return(&client.SecureClient{ID: "foo"})
 				authreq.EXPECT().GetRequestedAt().Return(time.Now().Add(-time.Hour))
 			},
@@ -281,6 +287,8 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				chgen.EXPECT().ValidateChallenge(gomock.Any(), gomock.Any()).Return(nil)
 				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(authreq, nil)
 
+				authreq.EXPECT().GetScopes().Return([]string{})
+				areq.EXPECT().SetScopes(gomock.Any())
 				authreq.EXPECT().GetClient().Return(&client.SecureClient{ID: "foo"})
 				authreq.EXPECT().GetRequestedAt().Return(time.Now().Add(-time.Hour))
 			},
@@ -298,6 +306,8 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				chgen.EXPECT().ValidateChallenge(gomock.Any(), gomock.Any()).Return(nil)
 				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(authreq, nil)
 
+				authreq.EXPECT().GetScopes().Return([]string{})
+				areq.EXPECT().SetScopes(gomock.Any())
 				authreq.EXPECT().GetClient().Return(&client.SecureClient{ID: "foo"})
 				authreq.EXPECT().GetRequestedAt().Return(time.Now().Add(time.Hour))
 				areq.EXPECT().SetGrantTypeHandled("authorization_code")

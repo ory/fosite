@@ -122,10 +122,10 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			desc: "short state",
 			conf: &Fosite{Store: store},
 			query: url.Values{
-				"redirect_uri":  []string{"http://foo.bar/cb"},
-				"client_id":     []string{"1234"},
-				"response_type": []string{"code"},
-				"state":         []string{"short"},
+				"redirect_uri":  {"http://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code"},
+				"state":         {"short"},
 			},
 			expectedError: ErrInvalidState,
 			mock: func() {
@@ -137,11 +137,27 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			desc: "should pass",
 			conf: &Fosite{Store: store},
 			query: url.Values{
-				"redirect_uri":  []string{"http://foo.bar/cb"},
-				"client_id":     []string{"1234"},
-				"response_type": []string{"code token"},
-				"state":         []string{"strong-state"},
-				"scope":         []string{"foo bar"},
+				"redirect_uri":  {"http://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
+			},
+			expectedError: ErrInvalidScope,
+		},
+		/* success case */
+		{
+			desc: "should pass",
+			conf: &Fosite{Store: store},
+			query: url.Values{
+				"redirect_uri":  {"http://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {DefaultRequiredScopeName + " foo bar"},
 			},
 			mock: func() {
 				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
@@ -151,7 +167,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				Client:        &SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}},
 				ResponseTypes: []string{"code", "token"},
 				State:         "strong-state",
-				Scopes:        []string{"foo", "bar"},
+				Scopes:        []string{DefaultRequiredScopeName, "foo", "bar"},
 			},
 		},
 	} {

@@ -187,6 +187,31 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				mockClient.EXPECT().CompareSecretWith(gomock.Eq(clientSecretByte)).AnyTimes().Return(true)
 				mockClient.EXPECT().GetHashedSecret().AnyTimes().Return(workingClientHashedSecret)
 				mockClient.EXPECT().GetRedirectURIs().AnyTimes().Return([]string{ts.URL + "/cb"})
+
+				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().AnyTimes().Return(nil, errors.New("foo"))
+			},
+			expectStatusCode:   http.StatusOK,
+			expectPath:         "/cb",
+			expectBody:         "error: invalid_scope",
+			expectedTokenError: true,
+		},
+		{
+			conf: goauth2.Config{
+				ClientID:     clientID,
+				ClientSecret: clientSecret,
+				Scopes:       []string{DefaultRequiredScopeName},
+				RedirectURL:  ts.URL + "/cb",
+				Endpoint: goauth2.Endpoint{
+					AuthURL:  ts.URL + "/auth",
+					TokenURL: ts.URL + "/token",
+				},
+			},
+			state: state,
+			mock: func() {
+				mockStore.EXPECT().GetClient(gomock.Eq(clientID)).AnyTimes().Return(mockClient, nil)
+				mockClient.EXPECT().CompareSecretWith(gomock.Eq(clientSecretByte)).AnyTimes().Return(true)
+				mockClient.EXPECT().GetHashedSecret().AnyTimes().Return(workingClientHashedSecret)
+				mockClient.EXPECT().GetRedirectURIs().AnyTimes().Return([]string{ts.URL + "/cb"})
 				mockAuthStore.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().AnyTimes().Return(nil, errors.New("foo"))
@@ -201,6 +226,7 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				ClientID:     clientID,
 				ClientSecret: clientSecret,
 				RedirectURL:  ts.URL + "/cb",
+				Scopes:       []string{DefaultRequiredScopeName},
 				Endpoint: goauth2.Endpoint{
 					AuthURL:  ts.URL + "/auth",
 					TokenURL: ts.URL + "/token",
@@ -222,6 +248,7 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				mockAuthStore.EXPECT().DeleteAuthorizeCodeSession(gomock.Any()).AnyTimes().Return(nil)
 				mockAuthReq.EXPECT().GetClient().AnyTimes().Return(mockClient)
 				mockAuthReq.EXPECT().GetRequestedAt().AnyTimes().Return(time.Now())
+				mockAuthReq.EXPECT().GetScopes().Return([]string{DefaultRequiredScopeName})
 			},
 			expectStatusCode:   http.StatusOK,
 			expectPath:         "/cb",
