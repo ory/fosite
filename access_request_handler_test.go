@@ -20,9 +20,10 @@ func TestNewAccessRequest(t *testing.T) {
 	store := internal.NewMockStorage(ctrl)
 	client := internal.NewMockClient(ctrl)
 	handler := internal.NewMockTokenEndpointHandler(ctrl)
+	hasher := internal.NewMockHasher(ctrl)
 	defer ctrl.Finish()
 
-	fosite := &Fosite{Store: store}
+	fosite := &Fosite{Store: store, Hasher: hasher}
 	for k, c := range []struct {
 		header    http.Header
 		form      url.Values
@@ -105,7 +106,8 @@ func TestNewAccessRequest(t *testing.T) {
 			expectErr: ErrInvalidClient,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(false)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(errors.New(""))
 			},
 		},
 		{
@@ -119,10 +121,11 @@ func TestNewAccessRequest(t *testing.T) {
 			expectErr: ErrServerError,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(true)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
 			},
-			handlers: TokenEndpointHandlers{handler},
+			handlers: TokenEndpointHandlers{"a": handler},
 		},
 		{
 			header: http.Header{
@@ -135,10 +138,11 @@ func TestNewAccessRequest(t *testing.T) {
 			expectErr: ErrUnsupportedGrantType,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(true)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
-			handlers: TokenEndpointHandlers{handler},
+			handlers: TokenEndpointHandlers{"a": handler},
 		},
 		{
 			header: http.Header{
@@ -151,12 +155,13 @@ func TestNewAccessRequest(t *testing.T) {
 			expectErr: ErrUnsupportedGrantType,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(true)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester, _ interface{}) {
 					a.SetGrantTypeHandled("bar")
 				}).Return(nil)
 			},
-			handlers: TokenEndpointHandlers{handler},
+			handlers: TokenEndpointHandlers{"a": handler},
 		},
 		{
 			header: http.Header{
@@ -168,13 +173,14 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(true)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester, _ interface{}) {
 					a.SetGrantTypeHandled("foo")
 					a.SetScopes([]string{"asdfasdf"})
 				}).Return(nil)
 			},
-			handlers:  TokenEndpointHandlers{handler},
+			handlers:  TokenEndpointHandlers{"a": handler},
 			expectErr: ErrInvalidScope,
 		},
 		{
@@ -187,13 +193,14 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(true)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester, _ interface{}) {
 					a.SetGrantTypeHandled("foo")
 					a.SetScopes([]string{DefaultRequiredScopeName})
 				}).Return(nil)
 			},
-			handlers: TokenEndpointHandlers{handler},
+			handlers: TokenEndpointHandlers{"a": handler},
 			expect: &AccessRequest{
 				GrantType:        "foo",
 				HandledGrantType: []string{"foo"},

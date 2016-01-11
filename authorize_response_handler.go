@@ -49,7 +49,7 @@ func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar A
 	}
 
 	if !ar.DidHandleAllResponseTypes() {
-		return nil, ErrUnsupportedResponseType
+		return nil, errors.New(ErrUnsupportedResponseType)
 	}
 
 	return resp, nil

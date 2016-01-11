@@ -67,7 +67,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	// Enforce client authentication
-	if !client.CompareSecretWith([]byte(clientSecret)) {
+	if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
 		return ar, errors.New(ErrInvalidClient)
 	}
 	ar.Client = client

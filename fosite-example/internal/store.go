@@ -1,0 +1,100 @@
+package internal
+
+import (
+	"github.com/ory-am/common/pkg"
+	"github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/client"
+	"github.com/ory-am/fosite/handler/authorize"
+	"github.com/ory-am/fosite/handler/token"
+)
+
+type AuthorizeCodesRelation struct {
+	request fosite.AuthorizeRequester
+	session *authorize.AuthorizeSession
+}
+
+type AccessRelation struct {
+	access  fosite.AccessRequester
+	session *token.TokenSession
+}
+
+type Store struct {
+	Clients        map[string]client.Client
+	AuthorizeCodes map[string]AuthorizeCodesRelation
+	AccessTokens   map[string]AccessRelation
+	RefreshTokens  map[string]AccessRelation
+}
+
+func NewStore() *Store {
+	return &Store{
+		Clients:        map[string]client.Client{},
+		AuthorizeCodes: map[string]AuthorizeCodesRelation{},
+		AccessTokens:   map[string]AccessRelation{},
+		RefreshTokens:  map[string]AccessRelation{},
+	}
+}
+
+func (s *Store) GetClient(id string) (client.Client, error) {
+	cl, ok := s.Clients[id]
+	if !ok {
+		return nil, pkg.ErrNotFound
+	}
+	return cl, nil
+}
+
+func (s *Store) CreateAuthorizeCodeSession(code string, ar fosite.AuthorizeRequester, sess *authorize.AuthorizeSession) error {
+	s.AuthorizeCodes[code] = AuthorizeCodesRelation{request: ar, session: sess}
+	return nil
+}
+
+func (s *Store) GetAuthorizeCodeSession(code string, sess *authorize.AuthorizeSession) (fosite.AuthorizeRequester, error) {
+	rel, ok := s.AuthorizeCodes[code]
+	if !ok {
+		return nil, pkg.ErrNotFound
+	}
+	sess = rel.session
+	return rel.request, nil
+}
+
+func (s *Store) DeleteAuthorizeCodeSession(code string) error {
+	delete(s.AuthorizeCodes, code)
+	return nil
+}
+
+func (s *Store) CreateAccessTokenSession(signature string, access fosite.AccessRequester, session *token.TokenSession) error {
+	s.AccessTokens[signature] = AccessRelation{access: access, session: session}
+	return nil
+}
+
+func (s *Store) GetAccessTokenSession(signature string, session *token.TokenSession) (fosite.AccessRequester, error) {
+	rel, ok := s.AccessTokens[signature]
+	if !ok {
+		return nil, pkg.ErrNotFound
+	}
+	session = rel.session
+	return rel.access, nil
+}
+
+func (s *Store) DeleteAccessTokenSession(signature string) error {
+	delete(s.AccessTokens, signature)
+	return nil
+}
+
+func (s *Store) CreateRefreshTokenSession(signature string, access fosite.AccessRequester, session *token.TokenSession) error {
+	s.RefreshTokens[signature] = AccessRelation{access: access, session: session}
+	return nil
+}
+
+func (s *Store) GetRefreshTokenSession(signature string, session *token.TokenSession) (fosite.AccessRequester, error) {
+	rel, ok := s.RefreshTokens[signature]
+	if !ok {
+		return nil, pkg.ErrNotFound
+	}
+	session = rel.session
+	return rel.access, nil
+}
+
+func (s *Store) DeleteRefreshTokenSession(signature string) error {
+	delete(s.RefreshTokens, signature)
+	return nil
+}

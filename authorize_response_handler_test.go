@@ -20,10 +20,10 @@ func TestNewAuthorizeResponse(t *testing.T) {
 
 	ctx := context.Background()
 	oauth2 := &Fosite{
-		AuthorizeEndpointHandlers: []AuthorizeEndpointHandler{handlers[0]},
+		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{"a": handlers[0]},
 	}
 	duo := &Fosite{
-		AuthorizeEndpointHandlers: []AuthorizeEndpointHandler{handlers[0], handlers[0]},
+		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{"a": handlers[0], "b": handlers[0]},
 	}
 	fooErr := errors.New("foo")
 	for k, c := range []struct {

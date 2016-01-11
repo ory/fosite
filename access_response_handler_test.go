@@ -32,14 +32,14 @@ func TestNewAccessResponse(t *testing.T) {
 			mock: func() {
 				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
 			},
-			handlers:  TokenEndpointHandlers{handler},
+			handlers:  TokenEndpointHandlers{"a": handler},
 			expectErr: ErrServerError,
 		},
 		{
 			mock: func() {
 				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
-			handlers:  TokenEndpointHandlers{handler},
+			handlers:  TokenEndpointHandlers{"a": handler},
 			expectErr: ErrUnsupportedGrantType,
 		},
 		{
@@ -48,7 +48,7 @@ func TestNewAccessResponse(t *testing.T) {
 					resp.SetAccessToken("foo")
 				}).Return(nil)
 			},
-			handlers:  TokenEndpointHandlers{handler},
+			handlers:  TokenEndpointHandlers{"a": handler},
 			expectErr: ErrUnsupportedGrantType,
 		},
 		{
@@ -58,7 +58,7 @@ func TestNewAccessResponse(t *testing.T) {
 					resp.SetTokenType("bar")
 				}).Return(nil)
 			},
-			handlers: TokenEndpointHandlers{handler},
+			handlers: TokenEndpointHandlers{"a": handler},
 			expect: &AccessResponse{
 				Extra:       map[string]interface{}{},
 				AccessToken: "foo",

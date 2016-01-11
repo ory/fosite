@@ -29,6 +29,7 @@ These Standards have been reviewed during the development of Fosite:
 - [A word on security](#a-word-on-security)
 - [A word on extensibility](#a-word-on-extensibility)
 - [Usage](#usage)
+  - [See it in action](#see-it-in-action)
   - [Installation](#installation)
   - [[Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)](#authorization-endpointhttpstoolsietforghtmlrfc6749section-31)
   - [[Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)](#token-endpointhttpstoolsietforghtmlrfc6749section-32)
@@ -128,6 +129,21 @@ OAuth2 stack, that's no problem. Or custom assertions, what ever you like and as
 ## Usage
 
 This section is WIP and we welcome discussions via PRs or in the issues.
+
+### See it in action
+
+![Authorize Code Grant](docs/authorize-code-grant.gif)
+
+You can run this minimalistic example by doing
+
+```
+go get github.com/ory-am/fosite/fosite-example
+go install github.com/ory-am/fosite/fosite-example
+fosite-example
+```
+
+There should be a server listening on [localhost:3846](http://localhost:3846/). You can check out the example's
+source code [here](/fosite-example/main.go).
 
 ### Installation
 
@@ -290,7 +306,7 @@ func handleToken(rw http.ResponseWriter, req *http.Request) {
     // These might populate mySessionData so do not pass nils.
     accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
     if err != nil {
-       oauth2.WriteAccessError(rw, req, err)
+       oauth2.WriteAccessError(rw, accessRequest, err)
        return
     }
 
@@ -298,9 +314,9 @@ func handleToken(rw http.ResponseWriter, req *http.Request) {
 
     // Next we create a response for the access request. Again, we iterate through the TokenEndpointHandlers
     // and aggregate the result in response.
-    response, err := oauth2.NewAccessResponse(ctx, accessRequest, req, &mySessionData)
+    response, err := oauth2.NewAccessResponse(ctx, req, accessRequest, &mySessionData)
     if err != nil {
-       oauth2.WriteAccessError(rw, req, err)
+       oauth2.WriteAccessError(rw, accessRequest, err)
        return
     }
 
@@ -388,6 +404,7 @@ mockgen -destination internal/token_handler.go github.com/ory-am/fosite TokenEnd
 
 **Create stateful "context" mocks**
 ```
+mockgen -destination internal/client.go github.com/ory-am/fosite/client Client
 mockgen -destination internal/access_request.go github.com/ory-am/fosite AccessRequester
 mockgen -destination internal/access_response.go github.com/ory-am/fosite AccessResponder
 mockgen -destination internal/authorize_request.go github.com/ory-am/fosite AuthorizeRequester
