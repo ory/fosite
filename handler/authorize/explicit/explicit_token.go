@@ -14,16 +14,16 @@ import (
 
 // implements
 // * https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything)
-func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(_ context.Context, request AccessRequester, req *http.Request, session interface{}) error {
+func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(_ context.Context, req *http.Request, request AccessRequester, session interface{}) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
-	if request.GetGrantType() != "authorize_code" {
+	if request.GetGrantType() != "authorization_code" {
 		return nil
 	}
 
 	var authSess AuthorizeSession
 	challenge := &enigma.Challenge{}
-	challenge.FromString(req.Form.Get("code"))
+	challenge.FromString(req.PostForm.Get("code"))
 
 	// code REQUIRED.
 	// The authorization code received from the authorization server.
@@ -40,7 +40,7 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(_ context.
 	if err == pkg.ErrNotFound {
 		return errors.New(ErrInvalidRequest)
 	} else if err != nil {
-		return errors.Wrap(err, 1)
+		return errors.New(ErrServerError)
 	}
 
 	// The authorization server MUST ensure that the authorization code was issued to the authenticated
@@ -54,7 +54,7 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(_ context.
 	// "redirect_uri" parameter was included in the initial authorization
 	// request as described in Section 4.1.1, and if included ensure that
 	// their values are identical.
-	if authSess.RequestRedirectURI != "" && (req.Form.Get("redirect_uri") != ar.GetRedirectURI().String()) {
+	if authSess.RequestRedirectURI != "" && (req.PostForm.Get("redirect_uri") != authSess.RequestRedirectURI) {
 		return errors.New(ErrInvalidRequest)
 	}
 
@@ -75,14 +75,15 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(_ context.
 	// credentials (or assigned other authentication requirements), the
 	// client MUST authenticate with the authorization server as described
 	// in Section 3.2.1.
+	request.SetGrantTypeHandled("authorization_code")
 	session = authSess.Extra
 	return nil
 }
 
-func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointResponse(ctx context.Context, responder AccessResponder, requester AccessRequester, req *http.Request, session interface{}) error {
+func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder, session interface{}) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
-	if requester.GetGrantType() != "authorize_code" {
+	if requester.GetGrantType() != "authorization_code" {
 		return nil
 	}
 
@@ -99,11 +100,15 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointResponse(ctx conte
 	responder.SetAccessToken(access.String())
 	responder.SetTokenType("bearer")
 	responder.SetExtra("expires_in", int(c.AuthCodeLifespan.Seconds()))
-	if err := c.Store.DeleteAuthorizeCodeSession(req.Form.Get("code")); err != nil {
+	responder.SetExtra("refresh_token", refresh.String())
+	if err := c.Store.DeleteAuthorizeCodeSession(req.PostForm.Get("code")); err != nil {
 		return errors.New(ErrServerError)
 	}
 
-	c.Store.CreateAccessTokenSession(access.Signature, requester, &token.TokenSession{})
-	c.Store.CreateRefreshTokenSession(refresh.Signature, requester, &token.TokenSession{})
+	if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &token.TokenSession{}); err != nil {
+		return errors.New(ErrServerError)
+	} else if err := c.Store.CreateRefreshTokenSession(refresh.Signature, requester, &token.TokenSession{}); err != nil {
+		return errors.New(ErrServerError)
+	}
 	return nil
 }

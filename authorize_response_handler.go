@@ -43,7 +43,7 @@ func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar A
 
 	var resp = NewAuthorizeResponse()
 	for _, h := range o.AuthorizeEndpointHandlers {
-		if err := h.HandleAuthorizeEndpointRequest(ctx, resp, ar, r, session); err != nil {
+		if err := h.HandleAuthorizeEndpointRequest(ctx, r, ar, resp, session); err != nil {
 			return nil, err
 		}
 	}

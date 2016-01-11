@@ -98,25 +98,30 @@ Not implemented yet:
 
 Additionally, we added these safeguards:
 * Enforcing random states: Without a random-looking state the request will fail.
-*
+* Advanced Token Validation: Tokens are layouted as `<key>.<signature>` where `<signature>` is created using HMAC-SHA256, a global secret
+  and the client's secret. Read more about this workflow in the [proposal](https://github.com/ory-am/fosite/issues/11).
+  This is what a token can look like:
+  `/tgBeUhWlAT8tM8Bhmnx+Amf8rOYOUhrDi3pGzmjP7c=.BiV/Yhma+5moTP46anxMT6cWW8gz5R5vpC9RbpwSDdM=`
+
+It is strongly encouraged to use the handlers shipped with Fosite as the follow specs.
 
 Sections below [Section 5](https://tools.ietf.org/html/rfc6819#section-5)
 that are not covered in the list above should be reviewed by you. If you think that a specific section should be something
 that is covered in Fosite, feel free to create an [issue](https://github.com/ory-am/fosite/issues).
 
-#### Opaque tokens
+The following list documents which sections of the RFCs we reviewed for each action. This list is not complete yet.
 
-Token generators should know nothing about the request or context.
+* AuthorizeExplicitEndpointHandler: Managing the authorization code grant
+  * [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
+    * (Authorization Endpoint)[https://tools.ietf.org/html/rfc6749#section-3.1]
+    * (Response Type)[https://tools.ietf.org/html/rfc6749#section-3.1.1]
+    * (Redirection Endpoint)[https://tools.ietf.org/html/rfc6749#section-3.1.2]
+    * ...
+  * [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
+    * ...
 
-#### Advanced Token Validation
+####
 
-Tokens are layouted as `<key>.<signature>` where `<signature>` is created using HMAC-SHA256, a global secret
-and the client's secret. Read more about this workflow in the [proposal](https://github.com/ory-am/fosite/issues/11).
-
-A created token looks like:
-```
-/tgBeUhWlAT8tM8Bhmnx+Amf8rOYOUhrDi3pGzmjP7c=.BiV/Yhma+5moTP46anxMT6cWW8gz5R5vpC9RbpwSDdM=
-```
 
 #### Encrypt credentials at rest
 
@@ -283,9 +288,11 @@ func handleAuth(rw http.ResponseWriter, r *http.Request) {
 // ...
 
 func handleToken(rw http.ResponseWriter, req *http.Request) {
+    ctx := NewContext()
+
     // First we need to define a session object. Some handlers might require the session to implement
     // a specific interface, so keep that in mind when using them.
-    var mySessionData = struct {
+    var mySessionData struct {
         User string
         UsingIdentityProvider string
         Foo string
@@ -293,7 +300,7 @@ func handleToken(rw http.ResponseWriter, req *http.Request) {
 
     // This will create an access request object and iterate through the registered TokenEndpointHandlers.
     // These might populate mySessionData so do not pass nils.
-    accessRequest, err := oauth2.NewAccessRequest(ctx, r, &mySessionData)
+    accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
     if err != nil {
        oauth2.WriteAccessError(rw, req, err)
        return
@@ -303,7 +310,7 @@ func handleToken(rw http.ResponseWriter, req *http.Request) {
 
     // Next we create a response for the access request. Again, we iterate through the TokenEndpointHandlers
     // and aggregate the result in response.
-    response, err := oauth2.NewAccessResponse(ctx, accessRequest, r, &mySessionData)
+    response, err := oauth2.NewAccessResponse(ctx, accessRequest, req, &mySessionData)
     if err != nil {
        oauth2.WriteAccessError(rw, req, err)
        return

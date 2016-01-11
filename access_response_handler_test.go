@@ -44,7 +44,7 @@ func TestNewAccessResponse(t *testing.T) {
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, resp AccessResponder, _ AccessRequester, _ *http.Request, _param4 interface{}) {
+				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder, _param4 interface{}) {
 					resp.SetAccessToken("foo")
 				}).Return(nil)
 			},
@@ -53,7 +53,7 @@ func TestNewAccessResponse(t *testing.T) {
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, resp AccessResponder, _ AccessRequester, _ *http.Request, _param4 interface{}) {
+				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder, _param4 interface{}) {
 					resp.SetAccessToken("foo")
 					resp.SetTokenType("bar")
 				}).Return(nil)

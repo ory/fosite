@@ -28,20 +28,20 @@ type AuthorizeExplicitEndpointHandler struct {
 	AccessTokenLifespan time.Duration
 }
 
-func (c *AuthorizeExplicitEndpointHandler) HandleAuthorizeEndpointRequest(_ context.Context, resp AuthorizeResponder, ar AuthorizeRequester, req *http.Request, session interface{}) error {
+func (c *AuthorizeExplicitEndpointHandler) HandleAuthorizeEndpointRequest(_ context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder, session interface{}) error {
 	// This let's us define multiple response types, for example open id connect's id_token
 	if ar.GetResponseTypes().Has("code") {
 		// Generate the code
 		code, err := c.Enigma.GenerateChallenge(ar.GetClient().GetHashedSecret())
 		if err != nil {
-			return errors.Wrap(err, 1)
+			return errors.New(ErrServerError)
 		}
 
 		if err := c.Store.CreateAuthorizeCodeSession(code.Signature, ar, &AuthorizeSession{
 			Extra:              session,
 			RequestRedirectURI: req.Form.Get("redirect_uri"),
 		}); err != nil {
-			return errors.Wrap(err, 1)
+			return errors.New(ErrServerError)
 		}
 
 		resp.AddQuery("code", code.String())

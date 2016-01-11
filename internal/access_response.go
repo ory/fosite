@@ -81,3 +81,13 @@ func (_m *MockAccessResponder) SetTokenType(_param0 string) {
 func (_mr *_MockAccessResponderRecorder) SetTokenType(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTokenType", arg0)
 }
+
+func (_m *MockAccessResponder) ToMap() map[string]interface{} {
+	ret := _m.ctrl.Call(_m, "ToMap")
+	ret0, _ := ret[0].(map[string]interface{})
+	return ret0
+}
+
+func (_mr *_MockAccessResponderRecorder) ToMap() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "ToMap")
+}

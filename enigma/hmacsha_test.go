@@ -36,6 +36,14 @@ func TestGenerate(t *testing.T) {
 	require.NotNil(t, challenge)
 	t.Logf("%s.%s", challenge.Key, challenge.Signature)
 
+	err = cg.ValidateChallenge([]byte("09876543210987654321"), challenge)
+	require.Nil(t, err, "%s", err)
+
+	challenge.FromString(challenge.String())
+
+	err = cg.ValidateChallenge([]byte("09876543210987654321"), challenge)
+	require.Nil(t, err, "%s", err)
+
 	err = cg.ValidateChallenge([]byte("bar"), challenge)
 	require.NotNil(t, err, "%s", err)
 

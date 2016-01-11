@@ -1,7 +1,6 @@
 package enigma
 
 import (
-	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -21,6 +20,8 @@ const minimumEntropy = 32
 
 // the secrets (client and global) should each have at least 16 characters making it harder to guess them
 const minimumSecretLength = 32
+
+var b64 = base64.StdEncoding.WithPadding(base64.NoPadding)
 
 // GenerateAuthorizeCode generates a new authorize code or returns an error. set secret
 // This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets.
@@ -57,17 +58,9 @@ func (c *HMACSHAEnigma) GenerateChallenge(secret []byte) (*Challenge, error) {
 	}
 	signature := mac.Sum([]byte{})
 
-	encodedKey := make([]byte, base64.StdEncoding.EncodedLen(c.AuthCodeEntropy))
-	base64.StdEncoding.Encode(encodedKey, randomBytes)
-	encodedKey = bytes.Trim(encodedKey, "\x00")
-
-	encodedSignature := make([]byte, base64.StdEncoding.EncodedLen(len(signature)))
-	base64.StdEncoding.Encode(encodedSignature, signature)
-	encodedSignature = bytes.Trim(encodedSignature, "\x00")
-
 	return &Challenge{
-		Key:       string(encodedKey),
-		Signature: string(encodedSignature),
+		Key:       b64.EncodeToString(randomBytes),
+		Signature: b64.EncodeToString(signature),
 	}, nil
 }
 
@@ -78,13 +71,13 @@ func (c *HMACSHAEnigma) ValidateChallenge(secret []byte, t *Challenge) (err erro
 		return errors.New("Key and signature must both be not empty")
 	}
 
-	key := make([]byte, base64.StdEncoding.DecodedLen(len(t.Key)))
-	if _, err := base64.StdEncoding.Decode(key, []byte(t.Signature)); err != nil {
+	signature, err := b64.DecodeString(t.Signature)
+	if err != nil {
 		return err
 	}
 
-	signature := make([]byte, base64.StdEncoding.DecodedLen(len(t.Signature)))
-	if _, err := base64.StdEncoding.Decode(signature, []byte(t.Signature)); err != nil {
+	key, err := b64.DecodeString(t.Key)
+	if err != nil {
 		return err
 	}
 

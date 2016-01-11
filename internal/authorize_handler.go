@@ -31,7 +31,7 @@ func (_m *MockAuthorizeEndpointHandler) EXPECT() *_MockAuthorizeEndpointHandlerR
 	return _m.recorder
 }
 
-func (_m *MockAuthorizeEndpointHandler) HandleAuthorizeEndpointRequest(_param0 context.Context, _param1 fosite.AuthorizeResponder, _param2 fosite.AuthorizeRequester, _param3 *http.Request, _param4 interface{}) error {
+func (_m *MockAuthorizeEndpointHandler) HandleAuthorizeEndpointRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AuthorizeRequester, _param3 fosite.AuthorizeResponder, _param4 interface{}) error {
 	ret := _m.ctrl.Call(_m, "HandleAuthorizeEndpointRequest", _param0, _param1, _param2, _param3, _param4)
 	ret0, _ := ret[0].(error)
 	return ret0

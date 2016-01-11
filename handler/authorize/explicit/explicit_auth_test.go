@@ -56,7 +56,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 				chgen.EXPECT().GenerateChallenge(gomock.Eq([]byte("foosecret"))).Return(&enigma.Challenge{}, nil)
 				store.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(fosite.ErrTemporarilyUnavailable)
 			},
-			expectErr: fosite.ErrTemporarilyUnavailable,
+			expectErr: fosite.ErrServerError,
 		},
 		{
 			req: &http.Request{Form: url.Values{"redirect_uri": {"foobar"}}},
@@ -71,7 +71,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := h.HandleAuthorizeEndpointRequest(nil, aresp, areq, c.req, nil)
+		err := h.HandleAuthorizeEndpointRequest(nil, c.req, areq, aresp, nil)
 		assert.True(t, errors.Is(c.expectErr, err), "%d\n%s\n%s", k, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

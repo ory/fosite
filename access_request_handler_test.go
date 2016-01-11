@@ -152,7 +152,7 @@ func TestNewAccessRequest(t *testing.T) {
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(true)
-				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, a AccessRequester, _ *http.Request, _ interface{}) {
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester, _ interface{}) {
 					a.SetGrantTypeHandled("bar")
 				}).Return(nil)
 			},
@@ -169,7 +169,7 @@ func TestNewAccessRequest(t *testing.T) {
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().CompareSecretWith(gomock.Eq([]byte("bar"))).Return(true)
-				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, a AccessRequester, _ *http.Request, _ interface{}) {
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester, _ interface{}) {
 					a.SetGrantTypeHandled("foo")
 				}).Return(nil)
 			},

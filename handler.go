@@ -17,7 +17,7 @@ type AuthorizeEndpointHandler interface {
 	//   authorization code as described by Section 4.1.1, "token" for
 	//   requesting an access token (implicit grant) as described by
 	//   Section 4.2.1, or a registered extension value as described by Section 8.4.
-	HandleAuthorizeEndpointRequest(ctx context.Context, responder AuthorizeResponder, requester AuthorizeRequester, req *http.Request, session interface{}) error
+	HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, requester AuthorizeRequester, responder AuthorizeResponder, session interface{}) error
 }
 
 type TokenEndpointHandler interface {
@@ -25,10 +25,10 @@ type TokenEndpointHandler interface {
 	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
 	// the authorize request, he must return nil and NOT modify session nor responder neither requester.
 	//
-	HandleTokenEndpointResponse(ctx context.Context, responder AccessResponder, requester AccessRequester, req *http.Request, session interface{}) error
+	HandleTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder, session interface{}) error
 
 	// HandleTokenEndpointRequest
 	// If the handler feels that he is not responsible for the authorize request, he must return nil and NOT modify
 	// session nor responder neither requester.
-	HandleTokenEndpointRequest(ctx context.Context, requester AccessRequester, req *http.Request, session interface{}) error
+	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, session interface{}) error
 }

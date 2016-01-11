@@ -12,7 +12,7 @@ func (f *Fosite) NewAccessResponse(ctx context.Context, req *http.Request, reque
 
 	response := NewAccessResponse()
 	for _, tk = range f.TokenEndpointHandlers {
-		if err = tk.HandleTokenEndpointResponse(ctx, response, requester, req, session); err != nil {
+		if err = tk.HandleTokenEndpointResponse(ctx, req, requester, response, session); err != nil {
 			return nil, errors.Wrap(err, 1)
 		}
 	}
