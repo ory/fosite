@@ -31,22 +31,22 @@ func (_m *MockTokenEndpointHandler) EXPECT() *_MockTokenEndpointHandlerRecorder 
 	return _m.recorder
 }
 
-func (_m *MockTokenEndpointHandler) HandleTokenEndpointRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AccessRequester, _param3 interface{}) error {
-	ret := _m.ctrl.Call(_m, "HandleTokenEndpointRequest", _param0, _param1, _param2, _param3)
+func (_m *MockTokenEndpointHandler) ValidateTokenEndpointRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AccessRequester, _param3 interface{}) error {
+	ret := _m.ctrl.Call(_m, "ValidateTokenEndpointRequest", _param0, _param1, _param2, _param3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockTokenEndpointHandlerRecorder) HandleTokenEndpointRequest(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "HandleTokenEndpointRequest", arg0, arg1, arg2, arg3)
+func (_mr *_MockTokenEndpointHandlerRecorder) ValidateTokenEndpointRequest(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "ValidateTokenEndpointRequest", arg0, arg1, arg2, arg3)
 }
 
-func (_m *MockTokenEndpointHandler) HandleTokenEndpointResponse(_param0 context.Context, _param1 *http.Request, _param2 fosite.AccessRequester, _param3 fosite.AccessResponder, _param4 interface{}) error {
-	ret := _m.ctrl.Call(_m, "HandleTokenEndpointResponse", _param0, _param1, _param2, _param3, _param4)
+func (_m *MockTokenEndpointHandler) HandleTokenEndpointRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AccessRequester, _param3 fosite.AccessResponder, _param4 interface{}) error {
+	ret := _m.ctrl.Call(_m, "HandleTokenEndpointRequest", _param0, _param1, _param2, _param3, _param4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockTokenEndpointHandlerRecorder) HandleTokenEndpointResponse(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "HandleTokenEndpointResponse", arg0, arg1, arg2, arg3, arg4)
+func (_mr *_MockTokenEndpointHandlerRecorder) HandleTokenEndpointRequest(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "HandleTokenEndpointRequest", arg0, arg1, arg2, arg3, arg4)
 }

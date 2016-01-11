@@ -10,7 +10,7 @@ type AuthorizeSession struct {
 	Extra              interface{}
 }
 
-type AuthorizeStorage interface {
+type AuthorizeExplicitStorage interface {
 	CreateAuthorizeCodeSession(string, fosite.AuthorizeRequester, *AuthorizeSession) error
 
 	GetAuthorizeCodeSession(string, *AuthorizeSession) (fosite.AuthorizeRequester, error)
@@ -18,4 +18,8 @@ type AuthorizeStorage interface {
 	DeleteAuthorizeCodeSession(code string) error
 
 	token.TokenStorage
+}
+
+type AuthorizeImplicitStorage interface {
+	CreateImplicitAccessTokenSession(string, fosite.AuthorizeRequester, *AuthorizeSession) error
 }

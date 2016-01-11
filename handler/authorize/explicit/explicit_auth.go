@@ -7,6 +7,7 @@ import (
 	. "github.com/ory-am/fosite/handler/authorize"
 	"golang.org/x/net/context"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -19,7 +20,7 @@ type AuthorizeExplicitEndpointHandler struct {
 	Enigma enigma.Enigma
 
 	// Store is used to persist session data across requests.
-	Store AuthorizeStorage
+	Store AuthorizeExplicitStorage
 
 	// AuthCodeLifespan defines the lifetime of an authorize code.
 	AuthCodeLifespan time.Duration
@@ -45,6 +46,8 @@ func (c *AuthorizeExplicitEndpointHandler) HandleAuthorizeEndpointRequest(_ cont
 		}
 
 		resp.AddQuery("code", code.String())
+		resp.AddQuery("state", ar.GetState())
+		resp.AddQuery("scope", strings.Join(ar.GetScopes(), " "))
 		ar.SetResponseTypeHandled("code")
 		return nil
 	}

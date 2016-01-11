@@ -25,10 +25,10 @@ type TokenEndpointHandler interface {
 	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
 	// the authorize request, he must return nil and NOT modify session nor responder neither requester.
 	//
-	HandleTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder, session interface{}) error
+	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder, session interface{}) error
 
-	// HandleTokenEndpointRequest
+	// ValidateTokenEndpointRequest
 	// If the handler feels that he is not responsible for the authorize request, he must return nil and NOT modify
 	// session nor responder neither requester.
-	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, session interface{}) error
+	ValidateTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, session interface{}) error
 }

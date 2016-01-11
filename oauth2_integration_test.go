@@ -27,7 +27,7 @@ var ts *httptest.Server
 
 var mockStore *MockStorage
 var mockClient *MockClient
-var mockAuthStore *MockAuthorizeStorage
+var mockAuthStore *MockAuthorizeExplicitStorage
 var mockAuthReq *MockAuthorizeRequester
 var mockHasher *MockHasher
 
@@ -35,7 +35,7 @@ func TestFosite(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockStore = NewMockStorage(ctrl)
 	mockClient = NewMockClient(ctrl)
-	mockAuthStore = NewMockAuthorizeStorage(ctrl)
+	mockAuthStore = NewMockAuthorizeExplicitStorage(ctrl)
 	mockAuthReq = NewMockAuthorizeRequester(ctrl)
 	mockHasher = NewMockHasher(ctrl)
 	defer ctrl.Finish()
@@ -54,7 +54,7 @@ func TestFosite(t *testing.T) {
 		mockStore = NewMockStorage(ctrl)
 		mockAuthReq = NewMockAuthorizeRequester(ctrl)
 		mockClient = NewMockClient(ctrl)
-		mockAuthStore = NewMockAuthorizeStorage(ctrl)
+		mockAuthStore = NewMockAuthorizeExplicitStorage(ctrl)
 		mockHasher = NewMockHasher(ctrl)
 		oauth2.Hasher = mockHasher
 		oauth2.Store = mockStore
@@ -75,66 +75,9 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 	}
 
 	router := mux.NewRouter()
-	router.HandleFunc("/auth", func(rw http.ResponseWriter, req *http.Request) {
-		ctx := NewContext()
-
-		ar, err := oauth2.NewAuthorizeRequest(ctx, req)
-		if err != nil {
-			t.Logf("Request %s failed because %s", ar, err)
-			oauth2.WriteAuthorizeError(rw, ar, err)
-			return
-		}
-
-		// Normally, this would be the place where you would check if the user is logged in and gives his consent.
-		// For this test, let's assume that the user exists, is logged in, and gives his consent...
-
-		response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, session)
-		if err != nil {
-			t.Logf("Response %s failed because %s", ar, err)
-			oauth2.WriteAuthorizeError(rw, ar, err)
-			return
-		}
-
-		oauth2.WriteAuthorizeResponse(rw, ar, response)
-	})
-	router.HandleFunc("/cb", func(rw http.ResponseWriter, req *http.Request) {
-		q := req.URL.Query()
-		if q.Get("code") == "" && q.Get("error") == "" {
-			assert.NotEmpty(t, q.Get("code"))
-			assert.NotEmpty(t, q.Get("error"))
-		}
-
-		if q.Get("code") != "" {
-			rw.Write([]byte("code: ok"))
-		}
-		if q.Get("error") != "" {
-			rw.Write([]byte("error: " + q.Get("error")))
-		}
-	})
-	router.HandleFunc("/token", func(rw http.ResponseWriter, req *http.Request) {
-		req.ParseForm()
-		ctx := NewContext()
-		var mySessionData struct {
-			Foo string
-		}
-
-		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
-		if err != nil {
-			t.Logf("Access request %s failed because %s", accessRequest, err.Error())
-			oauth2.WriteAccessError(rw, accessRequest, err)
-			return
-		}
-
-		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest, &mySessionData)
-		if err != nil {
-			t.Logf("Access resonse %s failed because %s\n", accessRequest, err.Error())
-			oauth2.WriteAccessError(rw, accessRequest, err)
-			return
-		}
-
-		oauth2.WriteAccessResponse(rw, accessRequest, response)
-	})
-
+	router.HandleFunc("/auth", authEndpoint(t, oauth2, session))
+	router.HandleFunc("/cb", cbEndpoint(t))
+	router.HandleFunc("/token", tokenEndpoint(t, oauth2))
 	ts = httptest.NewServer(router)
 	defer ts.Close()
 
@@ -189,7 +132,7 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				mockClient.EXPECT().GetHashedSecret().AnyTimes().Return(workingClientHashedSecret)
 				mockClient.EXPECT().GetRedirectURIs().AnyTimes().Return([]string{ts.URL + "/cb"})
 
-				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().AnyTimes().Return(nil, errors.New("foo"))
+				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, errors.New("foo"))
 			},
 			expectStatusCode:   http.StatusOK,
 			expectPath:         "/cb",
@@ -217,7 +160,7 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				mockClient.EXPECT().GetRedirectURIs().AnyTimes().Return([]string{ts.URL + "/cb"})
 
 				mockAuthStore.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().AnyTimes().Return(nil, errors.New("foo"))
+				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, errors.New("foo"))
 			},
 			expectStatusCode:   http.StatusOK,
 			expectPath:         "/cb",
@@ -246,7 +189,7 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				mockClient.EXPECT().GetRedirectURIs().AnyTimes().Return([]string{ts.URL + "/cb"})
 
 				mockAuthStore.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
-				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().Return(mockAuthReq, nil)
+				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().AnyTimes().Return(mockAuthReq, nil)
 				mockAuthStore.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 				mockAuthStore.EXPECT().CreateRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 				mockAuthStore.EXPECT().DeleteAuthorizeCodeSession(gomock.Any()).AnyTimes().Return(nil)
@@ -254,6 +197,7 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				mockAuthReq.EXPECT().GetClient().AnyTimes().Return(mockClient)
 				mockAuthReq.EXPECT().GetRequestedAt().AnyTimes().Return(time.Now())
 				mockAuthReq.EXPECT().GetScopes().Return([]string{DefaultRequiredScopeName})
+				mockAuthReq.EXPECT().GetState()
 			},
 			expectStatusCode:   http.StatusOK,
 			expectPath:         "/cb",

@@ -30,21 +30,21 @@ func TestNewAccessResponse(t *testing.T) {
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
 			},
 			handlers:  TokenEndpointHandlers{"a": handler},
 			expectErr: ErrServerError,
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers:  TokenEndpointHandlers{"a": handler},
 			expectErr: ErrUnsupportedGrantType,
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder, _param4 interface{}) {
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder, _param4 interface{}) {
 					resp.SetAccessToken("foo")
 				}).Return(nil)
 			},
@@ -53,7 +53,7 @@ func TestNewAccessResponse(t *testing.T) {
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder, _param4 interface{}) {
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder, _param4 interface{}) {
 					resp.SetAccessToken("foo")
 					resp.SetTokenType("bar")
 				}).Return(nil)

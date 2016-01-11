@@ -69,7 +69,6 @@ func (c *Fosite) NewAuthorizeRequest(_ context.Context, r *http.Request) (Author
 
 	// Remove empty items from arrays
 	request.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
-
 	if !request.Scopes.Has(c.RequiredScope) {
 		return request, errors.New(ErrInvalidScope)
 	}

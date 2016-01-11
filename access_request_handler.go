@@ -73,7 +73,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	ar.Client = client
 
 	for _, loader := range f.TokenEndpointHandlers {
-		if err := loader.HandleTokenEndpointRequest(ctx, r, ar, session); err != nil {
+		if err := loader.ValidateTokenEndpointRequest(ctx, r, ar, session); err != nil {
 			return ar, err
 		}
 	}

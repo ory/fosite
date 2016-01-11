@@ -16,9 +16,9 @@ import (
 	"time"
 )
 
-func TestHandleTokenEndpointResponse(t *testing.T) {
+func TestHandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockAuthorizeStorage(ctrl)
+	store := internal.NewMockAuthorizeExplicitStorage(ctrl)
 	chgen := internal.NewMockEnigma(ctrl)
 	areq := internal.NewMockAccessRequester(ctrl)
 	aresp := internal.NewMockAccessResponder(ctrl)
@@ -53,15 +53,11 @@ func TestHandleTokenEndpointResponse(t *testing.T) {
 				areq.EXPECT().GetGrantType().Return("authorization_code")
 				areq.EXPECT().GetClient().Return(&client.SecureClient{})
 				areq.EXPECT().GetClient().Return(&client.SecureClient{})
+
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 
-				aresp.EXPECT().SetAccessToken(gomock.Eq("."))
-				aresp.EXPECT().SetTokenType(gomock.Eq("bearer"))
-				aresp.EXPECT().SetExtra(gomock.Eq("refresh_token"), gomock.Any())
-				aresp.EXPECT().SetExtra(gomock.Eq("expires_in"), gomock.Any())
-
-				store.EXPECT().DeleteAuthorizeCodeSession(gomock.Any()).Return(errors.New(""))
+				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -71,14 +67,11 @@ func TestHandleTokenEndpointResponse(t *testing.T) {
 				areq.EXPECT().GetGrantType().Return("authorization_code")
 				areq.EXPECT().GetClient().Return(&client.SecureClient{})
 				areq.EXPECT().GetClient().Return(&client.SecureClient{})
+
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 
-				aresp.EXPECT().SetAccessToken(gomock.Eq("."))
-				aresp.EXPECT().SetTokenType(gomock.Eq("bearer"))
-				aresp.EXPECT().SetExtra(gomock.Eq("refresh_token"), gomock.Any())
-				aresp.EXPECT().SetExtra(gomock.Eq("expires_in"), gomock.Any())
-
+				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(&fosite.AuthorizeRequest{}, nil)
 				store.EXPECT().DeleteAuthorizeCodeSession(gomock.Any()).Return(nil)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
 			},
@@ -93,12 +86,8 @@ func TestHandleTokenEndpointResponse(t *testing.T) {
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 
-				aresp.EXPECT().SetAccessToken(gomock.Eq("."))
-				aresp.EXPECT().SetTokenType(gomock.Eq("bearer"))
-				aresp.EXPECT().SetExtra(gomock.Eq("refresh_token"), gomock.Any())
-				aresp.EXPECT().SetExtra(gomock.Eq("expires_in"), gomock.Any())
-
 				store.EXPECT().DeleteAuthorizeCodeSession(gomock.Any()).Return(nil)
+				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(&fosite.AuthorizeRequest{}, nil)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				store.EXPECT().CreateRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
 			},
@@ -108,6 +97,7 @@ func TestHandleTokenEndpointResponse(t *testing.T) {
 			req: &http.Request{PostForm: url.Values{}},
 			mock: func() {
 				areq.EXPECT().GetGrantType().Return("authorization_code")
+				areq.EXPECT().GetScopes()
 				areq.EXPECT().GetClient().Return(&client.SecureClient{})
 				areq.EXPECT().GetClient().Return(&client.SecureClient{})
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
@@ -117,23 +107,26 @@ func TestHandleTokenEndpointResponse(t *testing.T) {
 				aresp.EXPECT().SetTokenType(gomock.Eq("bearer"))
 				aresp.EXPECT().SetExtra(gomock.Eq("refresh_token"), gomock.Any())
 				aresp.EXPECT().SetExtra(gomock.Eq("expires_in"), gomock.Any())
+				aresp.EXPECT().SetExtra(gomock.Eq("state"), gomock.Any())
+				aresp.EXPECT().SetExtra(gomock.Eq("scope"), gomock.Any())
 
 				store.EXPECT().DeleteAuthorizeCodeSession(gomock.Any()).Return(nil)
+				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(&fosite.AuthorizeRequest{}, nil)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				store.EXPECT().CreateRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 		},
 	} {
 		c.mock()
-		err := h.HandleTokenEndpointResponse(nil, c.req, areq, aresp, nil)
+		err := h.HandleTokenEndpointRequest(nil, c.req, areq, aresp, nil)
 		assert.True(t, errors.Is(c.expectErr, err), "%d\n%s\n%s", k, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }
 
-func TestHandleTokenEndpointRequest(t *testing.T) {
+func TestValidateTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockAuthorizeStorage(ctrl)
+	store := internal.NewMockAuthorizeExplicitStorage(ctrl)
 	chgen := internal.NewMockEnigma(ctrl)
 	areq := internal.NewMockAccessRequester(ctrl)
 	authreq := internal.NewMockAuthorizeRequester(ctrl)
@@ -315,7 +308,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := h.HandleTokenEndpointRequest(nil, c.req, areq, nil)
+		err := h.ValidateTokenEndpointRequest(nil, c.req, areq, nil)
 		assert.True(t, errors.Is(c.expectErr, err), "%d\n%s\n%s", k, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

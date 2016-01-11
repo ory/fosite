@@ -15,7 +15,7 @@ import (
 
 func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockAuthorizeStorage(ctrl)
+	store := internal.NewMockAuthorizeExplicitStorage(ctrl)
 	chgen := internal.NewMockEnigma(ctrl)
 	areq := internal.NewMockAuthorizeRequester(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
@@ -66,7 +66,11 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 				chgen.EXPECT().GenerateChallenge(gomock.Eq([]byte("foosecret"))).Return(&enigma.Challenge{Key: "foo", Signature: "bar"}, nil)
 				store.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				aresp.EXPECT().AddQuery(gomock.Eq("code"), gomock.Eq("foo.bar"))
+				aresp.EXPECT().AddQuery(gomock.Eq("scope"), gomock.Any())
+				aresp.EXPECT().AddQuery(gomock.Eq("state"), gomock.Any())
 				areq.EXPECT().SetResponseTypeHandled(gomock.Eq("code"))
+				areq.EXPECT().GetScopes()
+				areq.EXPECT().GetState()
 			},
 		},
 	} {

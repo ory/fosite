@@ -22,6 +22,7 @@ type Store struct {
 	Clients        map[string]client.Client
 	AuthorizeCodes map[string]AuthorizeCodesRelation
 	AccessTokens   map[string]AccessRelation
+	Implicit       map[string]AuthorizeCodesRelation
 	RefreshTokens  map[string]AccessRelation
 }
 
@@ -29,6 +30,7 @@ func NewStore() *Store {
 	return &Store{
 		Clients:        map[string]client.Client{},
 		AuthorizeCodes: map[string]AuthorizeCodesRelation{},
+		Implicit:       map[string]AuthorizeCodesRelation{},
 		AccessTokens:   map[string]AccessRelation{},
 		RefreshTokens:  map[string]AccessRelation{},
 	}
@@ -96,5 +98,10 @@ func (s *Store) GetRefreshTokenSession(signature string, session *token.TokenSes
 
 func (s *Store) DeleteRefreshTokenSession(signature string) error {
 	delete(s.RefreshTokens, signature)
+	return nil
+}
+
+func (s *Store) CreateImplicitAccessTokenSession(code string, ar fosite.AuthorizeRequester, sess *authorize.AuthorizeSession) error {
+	s.Implicit[code] = AuthorizeCodesRelation{request: ar, session: sess}
 	return nil
 }
