@@ -32,7 +32,7 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(_ context.
 	}
 
 	// The authorization server MUST verify that the authorization code is valid
-	if err := c.Generator.ValidateChallenge(request.GetClient().GetHashedSecret(), challenge); err != nil {
+	if err := c.Enigma.ValidateChallenge(request.GetClient().GetHashedSecret(), challenge); err != nil {
 		return errors.New(ErrInvalidRequest)
 	}
 
@@ -86,12 +86,12 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointResponse(ctx conte
 		return nil
 	}
 
-	access, err := c.Generator.GenerateChallenge(requester.GetClient().GetHashedSecret())
+	access, err := c.Enigma.GenerateChallenge(requester.GetClient().GetHashedSecret())
 	if err != nil {
 		return errors.New(ErrServerError)
 	}
 
-	refresh, err := c.Generator.GenerateChallenge(requester.GetClient().GetHashedSecret())
+	refresh, err := c.Enigma.GenerateChallenge(requester.GetClient().GetHashedSecret())
 	if err != nil {
 		return errors.New(ErrServerError)
 	}

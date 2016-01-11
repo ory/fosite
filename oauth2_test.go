@@ -35,8 +35,8 @@ func TestFosite(t *testing.T) {
 	defer ctrl.Finish()
 
 	authExplicitHandler := &explicit.AuthorizeExplicitEndpointHandler{
-		Generator: &enigma.HMACSHAEnigma{GlobalSecret: []byte("super-global-secret")},
-		Store:     mockAuthStore,
+		Enigma: &enigma.HMACSHAEnigma{GlobalSecret: []byte("super-global-secret")},
+		Store:  mockAuthStore,
 	}
 	oauth2 := &Fosite{
 		Store: mockStore,

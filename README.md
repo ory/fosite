@@ -167,13 +167,38 @@ package main
 
 import(
     "github.com/ory-am/fosite"
-    "github.com/ory-am/fosite/service"
+    "github.com/ory-am/handler/authorize/explicit"
 	"golang.org/x/net/context"
 )
 
+var oauth2 fosite.OAuth2Provider = fositeFactory()
 
-var store = fosite.NewPostgreSQLStore()
-var oauth2 = service.NewDefaultOAuth2(store)
+func fositeFactory() fosite.OAuth2Provider {
+    // NewMyStorageImplementation should implement all storage interfaces.
+    var store = newMyStorageImplementation()
+
+    f := fosite.NewDefaultFosite(store)
+    accessTokenLifespan := time.Hour
+
+    // Let's enable the explicit authorize code grant!
+    explicitHandler := &explicit.AuthorizeExplicitEndpointHandler struct {
+        Enigma:           &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
+        Store:            store,
+        AuthCodeLifespan: time.Minute * 10,
+    }
+    f.AuthorizeEndpointHandlers.Add(explicitHandler)
+    f.TokenEndpointHandlers.Add(explicitHandler)
+
+    // Next let's enable the implicit one!
+    explicitHandler := &implicit.AuthorizeImplicitEndpointHandler struct {
+        Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
+        Store:               store,
+        AccessTokenLifespan: accessTokenLifespan,
+    }
+    f.AuthorizeEndpointHandlers.Add(implicitHandler)
+
+    return f
+}
 
 // Let's assume that we're in a http handler
 func handleAuth(rw http.ResponseWriter, r *http.Request) {
@@ -248,11 +273,15 @@ func handleAuth(rw http.ResponseWriter, r *http.Request) {
 
     // Done! The client should now have a valid authorize code!
 }
+
+// ...
 ```
 
 ### [Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)
 
 ```go
+// ...
+
 func handleToken(rw http.ResponseWriter, req *http.Request) {
     // First we need to define a session object. Some handlers might require the session to implement
     // a specific interface, so keep that in mind when using them.
@@ -325,6 +354,12 @@ You can find a complete list of handlers inside the [handler directory](). A sho
   [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3)
 * *github.com/ory-am/fosite/handler/authorize/token/client.TokenClientCredentialsEndpointHandler:* implements the
   [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4)
+
+### Replaceable storage
+
+Fosite does not ship a storage implementation yet. To get fosite running, you need to implement `github.com/ory-am/fosite.Storage`.
+Additionally, most of the token / authorize endpoint handlers require a store as well. It is probably smart to
+implement all of those interfaces in one struct.
 
 ## Develop fosite
 
