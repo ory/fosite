@@ -35,11 +35,11 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) ValidateTokenEndpointRequ
 	username := req.PostForm.Get("username")
 	password := req.PostForm.Get("password")
 	if username == "" || password == "" {
-		return fosite.ErrInvalidRequest
+		return errors.New(fosite.ErrInvalidRequest)
 	} else if err := c.Store.DoCredentialsAuthenticate(username, password); err == pkg.ErrNotFound {
-		return fosite.ErrInvalidRequest
+		return errors.New(fosite.ErrInvalidRequest)
 	} else if err != nil {
-		return fosite.ErrServerError
+		return errors.New(fosite.ErrServerError)
 	}
 
 	request.SetGrantTypeHandled("password")

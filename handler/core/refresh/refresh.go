@@ -36,20 +36,20 @@ func (c *RefreshTokenGrantHandler) ValidateTokenEndpointRequest(_ context.Contex
 	challenge := new(enigma.Challenge)
 	challenge.FromString(req.Form.Get("refresh_token"))
 	if err := c.Enigma.ValidateChallenge(request.GetClient().GetHashedSecret(), challenge); err != nil {
-		return fosite.ErrInvalidRequest
+		return errors.New(fosite.ErrInvalidRequest)
 	}
 
 	var ts core.TokenSession
 	ar, err := c.Store.GetRefreshTokenSession(challenge.Signature, &ts)
 	if err == pkg.ErrNotFound {
-		return fosite.ErrInvalidRequest
+		return errors.New(fosite.ErrInvalidRequest)
 	} else if err != nil {
-		return fosite.ErrServerError
+		return errors.New(fosite.ErrServerError)
 	}
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
 	if ar.GetClient().GetID() != request.GetClient().GetID() {
-		return fosite.ErrInvalidRequest
+		return errors.New(fosite.ErrInvalidRequest)
 	}
 
 	request.SetGrantTypeHandled("refresh_token")
