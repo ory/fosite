@@ -176,7 +176,7 @@ package main
 
 import(
     "github.com/ory-am/fosite"
-    "github.com/ory-am/handler/authorize/explicit"
+    "github.com/ory-am/handler/core/explicit"
 	"golang.org/x/net/context"
 )
 
@@ -357,13 +357,13 @@ the `AuthorizeEndpointHandler` API.
 
 You can find a complete list of handlers inside the [handler directory](). A short list is documented here:
 
-* *github.com/ory-am/fosite/handler/authorize/explicit.AuthorizeExplicitEndpointHandler:* implements the
+* *github.com/ory-am/fosite/handler/core/explicit.AuthorizeExplicitEndpointHandler:* implements the
   [Authorization Code Grant](https://tools.ietf.org/html/rfc6749#section-4.1)
-* *github.com/ory-am/fosite/handler/authorize/implicit.AuthorizeImplicitEndpointHandler:* implements the
+* *github.com/ory-am/fosite/handler/core/implicit.AuthorizeImplicitEndpointHandler:* implements the
   [Implicit Grant](https://tools.ietf.org/html/rfc6749#section-4.2)
-* *github.com/ory-am/fosite/handler/authorize/token/owner.TokenROPasswordCredentialsEndpointHandler:* implements the
+* *github.com/ory-am/fosite/handler/core/token/owner.TokenROPasswordCredentialsEndpointHandler:* implements the
   [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3)
-* *github.com/ory-am/fosite/handler/authorize/token/client.TokenClientCredentialsEndpointHandler:* implements the
+* *github.com/ory-am/fosite/handler/core/token/client.TokenClientCredentialsEndpointHandler:* implements the
   [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4)
 
 ### Replaceable storage
@@ -392,9 +392,9 @@ rather sooner than later.
 **Create storage mocks**
 ```
 mockgen -destination internal/storage.go github.com/ory-am/fosite Storage
-mockgen -destination internal/authorize_explicit_storage.go github.com/ory-am/fosite/handler/authorize AuthorizeExplicitStorage
-mockgen -destination internal/authorize_implicit_storage.go github.com/ory-am/fosite/handler/authorize AuthorizeImplicitStorage
-mockgen -destination internal/token_storage.go github.com/ory-am/fosite/handler/token TokenStorage
+mockgen -destination internal/authorize_explicit_storage.go github.com/ory-am/fosite/handler/core AuthorizeExplicitStorage
+mockgen -destination internal/authorize_implicit_storage.go github.com/ory-am/fosite/handler/core AuthorizeImplicitStorage
+mockgen -destination internal/token_storage.go github.com/ory-am/fosite/handler/core TokenStorage
 ```
 
 **Create handler mocks**

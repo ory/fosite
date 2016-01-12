@@ -6,8 +6,7 @@ package internal
 import (
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
-	authorize "github.com/ory-am/fosite/handler/authorize"
-	token "github.com/ory-am/fosite/handler/token"
+	core "github.com/ory-am/fosite/handler/core"
 )
 
 // Mock of AuthorizeExplicitStorage interface
@@ -31,7 +30,7 @@ func (_m *MockAuthorizeExplicitStorage) EXPECT() *_MockAuthorizeExplicitStorageR
 	return _m.recorder
 }
 
-func (_m *MockAuthorizeExplicitStorage) CreateAccessTokenSession(_param0 string, _param1 fosite.AccessRequester, _param2 *token.TokenSession) error {
+func (_m *MockAuthorizeExplicitStorage) CreateAccessTokenSession(_param0 string, _param1 fosite.AccessRequester, _param2 *core.TokenSession) error {
 	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -41,7 +40,7 @@ func (_mr *_MockAuthorizeExplicitStorageRecorder) CreateAccessTokenSession(arg0,
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1, arg2)
 }
 
-func (_m *MockAuthorizeExplicitStorage) CreateAuthorizeCodeSession(_param0 string, _param1 fosite.AuthorizeRequester, _param2 *authorize.AuthorizeSession) error {
+func (_m *MockAuthorizeExplicitStorage) CreateAuthorizeCodeSession(_param0 string, _param1 fosite.AuthorizeRequester, _param2 *core.AuthorizeSession) error {
 	ret := _m.ctrl.Call(_m, "CreateAuthorizeCodeSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -51,7 +50,7 @@ func (_mr *_MockAuthorizeExplicitStorageRecorder) CreateAuthorizeCodeSession(arg
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAuthorizeCodeSession", arg0, arg1, arg2)
 }
 
-func (_m *MockAuthorizeExplicitStorage) CreateRefreshTokenSession(_param0 string, _param1 fosite.AccessRequester, _param2 *token.TokenSession) error {
+func (_m *MockAuthorizeExplicitStorage) CreateRefreshTokenSession(_param0 string, _param1 fosite.AccessRequester, _param2 *core.TokenSession) error {
 	ret := _m.ctrl.Call(_m, "CreateRefreshTokenSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -91,7 +90,7 @@ func (_mr *_MockAuthorizeExplicitStorageRecorder) DeleteRefreshTokenSession(arg0
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteRefreshTokenSession", arg0)
 }
 
-func (_m *MockAuthorizeExplicitStorage) GetAccessTokenSession(_param0 string, _param1 *token.TokenSession) (fosite.AccessRequester, error) {
+func (_m *MockAuthorizeExplicitStorage) GetAccessTokenSession(_param0 string, _param1 *core.TokenSession) (fosite.AccessRequester, error) {
 	ret := _m.ctrl.Call(_m, "GetAccessTokenSession", _param0, _param1)
 	ret0, _ := ret[0].(fosite.AccessRequester)
 	ret1, _ := ret[1].(error)
@@ -102,7 +101,7 @@ func (_mr *_MockAuthorizeExplicitStorageRecorder) GetAccessTokenSession(arg0, ar
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAccessTokenSession", arg0, arg1)
 }
 
-func (_m *MockAuthorizeExplicitStorage) GetAuthorizeCodeSession(_param0 string, _param1 *authorize.AuthorizeSession) (fosite.AuthorizeRequester, error) {
+func (_m *MockAuthorizeExplicitStorage) GetAuthorizeCodeSession(_param0 string, _param1 *core.AuthorizeSession) (fosite.AuthorizeRequester, error) {
 	ret := _m.ctrl.Call(_m, "GetAuthorizeCodeSession", _param0, _param1)
 	ret0, _ := ret[0].(fosite.AuthorizeRequester)
 	ret1, _ := ret[1].(error)
@@ -113,7 +112,7 @@ func (_mr *_MockAuthorizeExplicitStorageRecorder) GetAuthorizeCodeSession(arg0, 
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAuthorizeCodeSession", arg0, arg1)
 }
 
-func (_m *MockAuthorizeExplicitStorage) GetRefreshTokenSession(_param0 string, _param1 *token.TokenSession) (fosite.AccessRequester, error) {
+func (_m *MockAuthorizeExplicitStorage) GetRefreshTokenSession(_param0 string, _param1 *core.TokenSession) (fosite.AccessRequester, error) {
 	ret := _m.ctrl.Call(_m, "GetRefreshTokenSession", _param0, _param1)
 	ret0, _ := ret[0].(fosite.AccessRequester)
 	ret1, _ := ret[1].(error)

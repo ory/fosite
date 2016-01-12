@@ -5,10 +5,11 @@ import (
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma"
-	. "github.com/ory-am/fosite/handler/authorize"
-	"github.com/ory-am/fosite/handler/token"
+	"github.com/ory-am/fosite/handler/core"
+	. "github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -73,7 +74,7 @@ func (c *AuthorizeExplicitEndpointHandler) ValidateTokenEndpointRequest(_ contex
 		return errors.New(ErrInvalidRequest)
 	}
 
-	// Checking of client_id skipped, because:
+	// Checking of POST client_id skipped, because:
 	// If the client type is confidential or the client was issued client
 	// credentials (or assigned other authentication requirements), the
 	// client MUST authenticate with the authorization server as described
@@ -112,17 +113,15 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(ctx contex
 
 	if err := c.Store.DeleteAuthorizeCodeSession(req.PostForm.Get("code")); err != nil {
 		return errors.New(ErrServerError)
-	}
-
-	if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &token.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{}); err != nil {
 		return errors.New(ErrServerError)
-	} else if err := c.Store.CreateRefreshTokenSession(refresh.Signature, requester, &token.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateRefreshTokenSession(refresh.Signature, requester, &core.TokenSession{}); err != nil {
 		return errors.New(ErrServerError)
 	}
 
 	responder.SetAccessToken(access.String())
 	responder.SetTokenType("bearer")
-	responder.SetExtra("expires_in", int(c.AuthCodeLifespan.Seconds()))
+	responder.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
 	responder.SetExtra("refresh_token", refresh.String())
 	responder.SetExtra("state", ar.GetState())
 	responder.SetExtra("scope", requester.GetScopes())

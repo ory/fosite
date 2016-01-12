@@ -1,8 +1,27 @@
-package token
+package core
 
 import (
 	"github.com/ory-am/fosite"
 )
+
+type AuthorizeSession struct {
+	RequestRedirectURI string
+	Extra              interface{}
+}
+
+type AuthorizeExplicitStorage interface {
+	CreateAuthorizeCodeSession(string, fosite.AuthorizeRequester, *AuthorizeSession) error
+
+	GetAuthorizeCodeSession(string, *AuthorizeSession) (fosite.AuthorizeRequester, error)
+
+	DeleteAuthorizeCodeSession(code string) error
+
+	TokenStorage
+}
+
+type AuthorizeImplicitStorage interface {
+	CreateImplicitAccessTokenSession(string, fosite.AuthorizeRequester, *AuthorizeSession) error
+}
 
 type TokenSession struct {
 	Extra interface{}

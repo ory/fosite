@@ -7,9 +7,11 @@ import (
 	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/enigma"
 	"github.com/ory-am/fosite/fosite-example/internal"
-	"github.com/ory-am/fosite/handler/authorize/explicit"
-	"github.com/ory-am/fosite/handler/authorize/implicit"
+	coreclient "github.com/ory-am/fosite/handler/core/client"
+	"github.com/ory-am/fosite/handler/core/explicit"
+	"github.com/ory-am/fosite/handler/core/implicit"
 	goauth "golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
 	"log"
 	"net/http"
 	"time"
@@ -39,18 +41,69 @@ var clientConf = goauth.Config{
 		AuthURL:  "http://localhost:3846/auth",
 	},
 }
+var appClientConf = clientcredentials.Config{
+	ClientID:     "my-client",
+	ClientSecret: "foobar",
+	Scopes:       []string{"fosite"},
+	TokenURL:     "http://localhost:3846/token",
+}
 
 type session struct {
 	User string
 }
 
-func main() {
+func fositeFactory() OAuth2Provider {
+	// NewMyStorageImplementation should implement all storage interfaces.
 
+	f := NewFosite(store)
+	accessTokenLifespan := time.Hour
+
+	// Let's enable the explicit authorize code grant!
+	explicitHandler := &explicit.AuthorizeExplicitEndpointHandler{
+		Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
+		Store:               store,
+		AuthCodeLifespan:    time.Minute * 10,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+	f.AuthorizeEndpointHandlers.Add("code", explicitHandler)
+	f.TokenEndpointHandlers.Add("code", explicitHandler)
+
+	// Implicit grant type
+	implicitHandler := &implicit.AuthorizeImplicitEndpointHandler{
+		Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
+		Store:               store,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+	f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
+
+	clientHandler := &coreclient.AuthorizeClientEndpointHandler{
+		Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
+		Store:               store,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+	f.TokenEndpointHandlers.Add("client", clientHandler)
+
+	return f
+}
+
+func main() {
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/callback", callbackHandler)
 	http.HandleFunc("/auth", authEndpoint)
 	http.HandleFunc("/token", tokenEndpoint)
+	http.HandleFunc("/client", clientEndpoint)
 	http.ListenAndServe(":3846", nil)
+}
+
+func clientEndpoint(rw http.ResponseWriter, req *http.Request) {
+	rw.Write([]byte(fmt.Sprintf(`<h1>Client Credentials Grant</h1>`)))
+	token, err := appClientConf.Token(goauth.NoContext)
+	if err != nil {
+		rw.Write([]byte(fmt.Sprintf(`<p>I tried to get a token but received an error: %s</p>`, err.Error())))
+		return
+	}
+	rw.Write([]byte(fmt.Sprintf(`<p>Awesome, you just received an access token!<br><br>%s<br><br><strong>more info:</strong><br><br>%s</p>`, token.AccessToken, token)))
+	rw.Write([]byte(`<p><a href="/">Go back</a></p>`))
 }
 
 func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
@@ -81,6 +134,9 @@ func homeHandler(rw http.ResponseWriter, req *http.Request) {
 	</li>
 	<li>
 		<a href="%s">Implicit grant</a>
+	</li>
+	<li>
+		<a href="/client">Client credentials grant</a>
 	</li>
 	<li>
 		<a href="%s">Make an invalid request</a>
@@ -144,10 +200,14 @@ access token <small><a href="https://en.wikipedia.org/wiki/Fragment_identifier#B
 	<li>
 		Refresh token: %s<br>
 	</li>
+	<li>
+		Extra info: %s<br>
+	</li>
 </ul>
 `,
 			token.AccessToken,
 			token.RefreshToken,
+			token,
 		)))
 	}
 }
@@ -190,31 +250,4 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	oauth2.WriteAuthorizeResponse(rw, ar, response)
-}
-
-func fositeFactory() OAuth2Provider {
-	// NewMyStorageImplementation should implement all storage interfaces.
-
-	f := NewFosite(store)
-	accessTokenLifespan := time.Hour
-
-	// Let's enable the explicit authorize code grant!
-	explicitHandler := &explicit.AuthorizeExplicitEndpointHandler{
-		Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
-		Store:               store,
-		AuthCodeLifespan:    time.Minute * 10,
-		AccessTokenLifespan: accessTokenLifespan,
-	}
-	f.AuthorizeEndpointHandlers.Add("code", explicitHandler)
-	f.TokenEndpointHandlers.Add("code", explicitHandler)
-
-	// Implicit grant type
-	implicitHandler := &implicit.AuthorizeImplicitEndpointHandler{
-		Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
-		Store:               store,
-		AccessTokenLifespan: accessTokenLifespan,
-	}
-	f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
-
-	return f
 }

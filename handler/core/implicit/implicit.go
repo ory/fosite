@@ -4,7 +4,7 @@ import (
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma"
-	"github.com/ory-am/fosite/handler/authorize"
+	authorize "github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
 	"net/http"
 	"strconv"
@@ -32,9 +32,7 @@ func (c *AuthorizeImplicitEndpointHandler) HandleAuthorizeEndpointRequest(_ cont
 		access, err := c.Enigma.GenerateChallenge(ar.GetClient().GetHashedSecret())
 		if err != nil {
 			return errors.New(ErrServerError)
-		}
-
-		if err := c.Store.CreateImplicitAccessTokenSession(access.Signature, ar, &authorize.AuthorizeSession{
+		} else if err := c.Store.CreateImplicitAccessTokenSession(access.Signature, ar, &authorize.AuthorizeSession{
 			Extra:              session,
 			RequestRedirectURI: req.Form.Get("redirect_uri"),
 		}); err != nil {

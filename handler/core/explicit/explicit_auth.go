@@ -4,7 +4,7 @@ import (
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma"
-	. "github.com/ory-am/fosite/handler/authorize"
+	. "github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
 	"net/http"
 	"strings"

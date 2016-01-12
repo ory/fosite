@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma"
-	"github.com/ory-am/fosite/handler/authorize/explicit"
+	"github.com/ory-am/fosite/handler/core/explicit"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/parnurzeal/gorequest"
 	"github.com/stretchr/testify/assert"

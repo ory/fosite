@@ -2,7 +2,7 @@ package fosite_test
 
 import (
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/handler/authorize/explicit"
+	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

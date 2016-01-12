@@ -4,18 +4,17 @@ import (
 	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
-	"github.com/ory-am/fosite/handler/authorize"
-	"github.com/ory-am/fosite/handler/token"
+	core "github.com/ory-am/fosite/handler/core"
 )
 
 type AuthorizeCodesRelation struct {
 	request fosite.AuthorizeRequester
-	session *authorize.AuthorizeSession
+	session *core.AuthorizeSession
 }
 
 type AccessRelation struct {
 	access  fosite.AccessRequester
-	session *token.TokenSession
+	session *core.TokenSession
 }
 
 type Store struct {
@@ -44,12 +43,12 @@ func (s *Store) GetClient(id string) (client.Client, error) {
 	return cl, nil
 }
 
-func (s *Store) CreateAuthorizeCodeSession(code string, ar fosite.AuthorizeRequester, sess *authorize.AuthorizeSession) error {
+func (s *Store) CreateAuthorizeCodeSession(code string, ar fosite.AuthorizeRequester, sess *core.AuthorizeSession) error {
 	s.AuthorizeCodes[code] = AuthorizeCodesRelation{request: ar, session: sess}
 	return nil
 }
 
-func (s *Store) GetAuthorizeCodeSession(code string, sess *authorize.AuthorizeSession) (fosite.AuthorizeRequester, error) {
+func (s *Store) GetAuthorizeCodeSession(code string, sess *core.AuthorizeSession) (fosite.AuthorizeRequester, error) {
 	rel, ok := s.AuthorizeCodes[code]
 	if !ok {
 		return nil, pkg.ErrNotFound
@@ -63,12 +62,12 @@ func (s *Store) DeleteAuthorizeCodeSession(code string) error {
 	return nil
 }
 
-func (s *Store) CreateAccessTokenSession(signature string, access fosite.AccessRequester, session *token.TokenSession) error {
+func (s *Store) CreateAccessTokenSession(signature string, access fosite.AccessRequester, session *core.TokenSession) error {
 	s.AccessTokens[signature] = AccessRelation{access: access, session: session}
 	return nil
 }
 
-func (s *Store) GetAccessTokenSession(signature string, session *token.TokenSession) (fosite.AccessRequester, error) {
+func (s *Store) GetAccessTokenSession(signature string, session *core.TokenSession) (fosite.AccessRequester, error) {
 	rel, ok := s.AccessTokens[signature]
 	if !ok {
 		return nil, pkg.ErrNotFound
@@ -82,12 +81,12 @@ func (s *Store) DeleteAccessTokenSession(signature string) error {
 	return nil
 }
 
-func (s *Store) CreateRefreshTokenSession(signature string, access fosite.AccessRequester, session *token.TokenSession) error {
+func (s *Store) CreateRefreshTokenSession(signature string, access fosite.AccessRequester, session *core.TokenSession) error {
 	s.RefreshTokens[signature] = AccessRelation{access: access, session: session}
 	return nil
 }
 
-func (s *Store) GetRefreshTokenSession(signature string, session *token.TokenSession) (fosite.AccessRequester, error) {
+func (s *Store) GetRefreshTokenSession(signature string, session *core.TokenSession) (fosite.AccessRequester, error) {
 	rel, ok := s.RefreshTokens[signature]
 	if !ok {
 		return nil, pkg.ErrNotFound
@@ -101,7 +100,7 @@ func (s *Store) DeleteRefreshTokenSession(signature string) error {
 	return nil
 }
 
-func (s *Store) CreateImplicitAccessTokenSession(code string, ar fosite.AuthorizeRequester, sess *authorize.AuthorizeSession) error {
+func (s *Store) CreateImplicitAccessTokenSession(code string, ar fosite.AuthorizeRequester, sess *core.AuthorizeSession) error {
 	s.Implicit[code] = AuthorizeCodesRelation{request: ar, session: sess}
 	return nil
 }

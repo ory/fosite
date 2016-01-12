@@ -6,7 +6,7 @@ package internal
 import (
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
-	authorize "github.com/ory-am/fosite/handler/authorize"
+	authorize "github.com/ory-am/fosite/handler/core"
 )
 
 // Mock of AuthorizeImplicitStorage interface

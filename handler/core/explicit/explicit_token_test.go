@@ -7,7 +7,7 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/enigma"
-	"github.com/ory-am/fosite/handler/authorize"
+	authorize "github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
