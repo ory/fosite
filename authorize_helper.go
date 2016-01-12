@@ -5,6 +5,7 @@ import (
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite/client"
 	"net/url"
+	"strings"
 )
 
 // GetRedirectURIFromRequestValues extracts the redirect_uri from values but does not do any sort of validation.
@@ -29,7 +30,7 @@ func GetRedirectURIFromRequestValues(values url.Values) (string, error) {
 // uri validation.
 //
 // Considered specifications
-// * http://tools.ietf.org/html/rfc6749#section-3.1.2.3
+// * https://tools.ietf.org/html/rfc6749#section-3.1.2.3
 //   If multiple redirection URIs have been registered, if only part of
 //   the redirection URI has been registered, or if no redirection URI has
 //   been registered, the client MUST include a redirection URI with the
@@ -80,6 +81,7 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 //   * The endpoint URI MUST NOT include a fragment component.
 // * https://tools.ietf.org/html/rfc3986#section-4.3
 //   absolute-URI  = scheme ":" hier-part [ "?" query ]
+// * https://tools.ietf.org/html/rfc6819#section-5.1.1
 func IsValidRedirectURI(redirectURI *url.URL) bool {
 	// We need to explicitly check for a scheme
 	if !govalidator.IsRequestURL(redirectURI.String()) {
@@ -91,5 +93,14 @@ func IsValidRedirectURI(redirectURI *url.URL) bool {
 		return false
 	}
 
+	if redirectURI.Scheme != "https" && !isLocalhost(redirectURI) {
+		return false
+	}
+
 	return true
+}
+
+func isLocalhost(redirectURI *url.URL) bool {
+	host := strings.Split(redirectURI.Host, ":")[0]
+	return host == "localhost" || host == "127.0.0.1"
 }

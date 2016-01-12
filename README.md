@@ -15,8 +15,8 @@ Be aware that "go get github.com/ory-am/fosite" will give you the master branch,
 Once releases roll out, you will be able to fetch a specific fosite API version through gopkg.in.
 
 These Standards have been reviewed during the development of Fosite:
-* [OAuth 2.0 Multiple Response Type Encoding Practices](http://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
-* [OpenID Connect Core 1.0](http://openid.net/specs/openid-connect-core-1_0.html)
+* [OAuth 2.0 Multiple Response Type Encoding Practices](https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
+* [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
 * [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
 * [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
 
@@ -43,16 +43,9 @@ These Standards have been reviewed during the development of Fosite:
 
 ## Motivation
 
-Why write another OAuth2 server side library for Go Lang?
-
-Other libraries are perfect for a non-critical set ups, but [fail](https://github.com/RangelReale/osin/issues/107)
-to comply with advanced security requirements. Additionally, the frameworks we analyzed did not support extension
-of the OAuth2 protocol easily. But OAuth2 is an extensible framework. Your OAuth2 should as well.
-This is unfortunately not an issue exclusive to Go's eco system but to many others as well.
-
-Fosite was written because [Hydra](https://github.com/ory-am/hydra) required a more secure and extensible OAuth2 library
-then the one it was using. We quickly realized, that OAuth2 implementations out there are *not secure* nor *extensible,
-so we decided to write one *that is*.
+Fosite was written because our OAuth2 and OpenID Connect service [Hydra](https://github.com/ory-am/hydra)
+required a secure and extensible OAuth2 library. We had to realize that nothing matching our requirements
+was out there, so we decided to build it ourselves.
 
 ## A word on quality
 
@@ -86,6 +79,9 @@ of things we implemented in Fosite:
 * [Binding of Authorization "code" to "redirect_uri"](https://tools.ietf.org/html/rfc6819#section-5.2.4.6)
 * [Opaque access tokens](https://tools.ietf.org/html/rfc6749#section-1.4)
 * [Opaque refresh tokens](https://tools.ietf.org/html/rfc6749#section-1.5)
+* [Ensure Confidentiality of Requests](https://tools.ietf.org/html/rfc6819#section-5.1.1)
+  Fosite ensures that redirect URIs use https **except localhost** but you need to implement
+  TLS for the token and auth endpoints yourself.
 
 Not implemented yet:
 * [Use of Asymmetric Cryptography](https://tools.ietf.org/html/rfc6819#section-5.1.4.1.5) - enigma should use asymmetric
@@ -132,6 +128,9 @@ This section is WIP and we welcome discussions via PRs or in the issues.
 
 ### See it in action
 
+The example does not have nice visuals but it should give you an idea of what you can do with Fosite and a few lines
+of code.
+
 ![Authorize Code Grant](docs/authorize-code-grant.gif)
 
 You can run this minimalistic example by doing
@@ -142,7 +141,7 @@ go install github.com/ory-am/fosite/fosite-example
 fosite-example
 ```
 
-There should be a server listening on [localhost:3846](http://localhost:3846/). You can check out the example's
+There should be a server listening on [localhost:3846](https://localhost:3846/). You can check out the example's
 source code [here](/fosite-example/main.go).
 
 ### Installation
@@ -156,7 +155,7 @@ Fosite is being shipped through gopkg.in so new updates don't break your code.
 go get gopkg.in/ory-am/fosite.v{X}/...
 ```
 
-To see a full list of available versions check the [tags](https://github.com/ory-am/fosite/tags) page. If you want
+To see a full list of available versions check [gopkg.in/ory-am/fosite.v0](https://gopkg.in/ory-am/fosite.v0). If you want
 to use api version 2 for example (version 2 does not exist yet), do:
 
 ```
@@ -357,13 +356,13 @@ the `AuthorizeEndpointHandler` API.
 
 You can find a complete list of handlers inside the [handler directory](). A short list is documented here:
 
-* *github.com/ory-am/fosite/handler/core/explicit.AuthorizeExplicitEndpointHandler:* implements the
+* `github.com/ory-am/fosite/handler/core/explicit.AuthorizeExplicitEndpointHandler` implements the
   [Authorization Code Grant](https://tools.ietf.org/html/rfc6749#section-4.1)
-* *github.com/ory-am/fosite/handler/core/implicit.AuthorizeImplicitEndpointHandler:* implements the
+* `github.com/ory-am/fosite/handler/core/implicit.AuthorizeImplicitEndpointHandler` implements the
   [Implicit Grant](https://tools.ietf.org/html/rfc6749#section-4.2)
-* *github.com/ory-am/fosite/handler/core/token/owner.TokenROPasswordCredentialsEndpointHandler:* implements the
+* `github.com/ory-am/fosite/handler/core/token/owner.TokenROPasswordCredentialsEndpointHandler` implements the
   [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3)
-* *github.com/ory-am/fosite/handler/core/token/client.TokenClientCredentialsEndpointHandler:* implements the
+* `github.com/ory-am/fosite/handler/core/token/client.TokenClientCredentialsEndpointHandler` implements the
   [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4)
 
 ### Replaceable storage

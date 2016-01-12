@@ -28,14 +28,14 @@ func TestAuthorizeRequest(t *testing.T) {
 		},
 		{
 			ar: &AuthorizeRequest{
-				RedirectURI: urlparse("http://foobar"),
+				RedirectURI: urlparse("https://foobar"),
 			},
 			isRedirValid: false,
 		},
 		{
 			ar: &AuthorizeRequest{
 				Client:      &client.SecureClient{RedirectURIs: []string{""}},
-				RedirectURI: urlparse("http://foobar"),
+				RedirectURI: urlparse("https://foobar"),
 			},
 			isRedirValid: false,
 		},
@@ -55,22 +55,22 @@ func TestAuthorizeRequest(t *testing.T) {
 		},
 		{
 			ar: &AuthorizeRequest{
-				Client:      &client.SecureClient{RedirectURIs: []string{"http://foobar.com#123"}},
-				RedirectURI: urlparse("http://foobar.com#123"),
+				Client:      &client.SecureClient{RedirectURIs: []string{"https://foobar.com#123"}},
+				RedirectURI: urlparse("https://foobar.com#123"),
 			},
 			isRedirValid: false,
 		},
 		{
 			ar: &AuthorizeRequest{
-				Client:      &client.SecureClient{RedirectURIs: []string{"http://foobar.com"}},
-				RedirectURI: urlparse("http://foobar.com#123"),
+				Client:      &client.SecureClient{RedirectURIs: []string{"https://foobar.com"}},
+				RedirectURI: urlparse("https://foobar.com#123"),
 			},
 			isRedirValid: false,
 		},
 		{
 			ar: &AuthorizeRequest{
-				Client:        &client.SecureClient{RedirectURIs: []string{"http://foobar.com/cb"}},
-				RedirectURI:   urlparse("http://foobar.com/cb"),
+				Client:        &client.SecureClient{RedirectURIs: []string{"https://foobar.com/cb"}},
+				RedirectURI:   urlparse("https://foobar.com/cb"),
 				RequestedAt:   time.Now(),
 				ResponseTypes: []string{"foo", "bar"},
 				Scopes:        []string{"foo", "bar"},

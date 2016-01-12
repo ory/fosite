@@ -25,7 +25,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 	store := NewMockStorage(ctrl)
 	defer ctrl.Finish()
 
-	redir, _ := url.Parse("http://foo.bar/cb")
+	redir, _ := url.Parse("https://foo.bar/cb")
 	for k, c := range []struct {
 		desc          string
 		conf          *Fosite
@@ -59,7 +59,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		{
 			desc:          "invalid client fails",
 			conf:          &Fosite{Store: store},
-			query:         url.Values{"redirect_uri": []string{"http://foo.bar/cb"}},
+			query:         url.Values{"redirect_uri": []string{"https://foo.bar/cb"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any()).Return(nil, errors.New("foo"))
@@ -95,7 +95,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			desc: "client and request redirects mismatch",
 			conf: &Fosite{Store: store},
 			query: url.Values{
-				"redirect_uri": []string{"http://foo.bar/cb"},
+				"redirect_uri": []string{"https://foo.bar/cb"},
 				"client_id":    []string{"1234"},
 			},
 			expectedError: ErrInvalidRequest,
@@ -108,13 +108,13 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			desc: "no state",
 			conf: &Fosite{Store: store},
 			query: url.Values{
-				"redirect_uri":  []string{"http://foo.bar/cb"},
+				"redirect_uri":  []string{"https://foo.bar/cb"},
 				"client_id":     []string{"1234"},
 				"response_type": []string{"code"},
 			},
 			expectedError: ErrInvalidState,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 		},
 		/* short state */
@@ -122,14 +122,14 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			desc: "short state",
 			conf: &Fosite{Store: store},
 			query: url.Values{
-				"redirect_uri":  {"http://foo.bar/cb"},
+				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
 				"response_type": {"code"},
 				"state":         {"short"},
 			},
 			expectedError: ErrInvalidState,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 		},
 		/* success case */
@@ -137,14 +137,14 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			desc: "should pass",
 			conf: &Fosite{Store: store},
 			query: url.Values{
-				"redirect_uri":  {"http://foo.bar/cb"},
+				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
 				"response_type": {"code token"},
 				"state":         {"strong-state"},
 				"scope":         {"foo bar"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 			expectedError: ErrInvalidScope,
 		},
@@ -153,18 +153,18 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			desc: "should pass",
 			conf: &Fosite{Store: store},
 			query: url.Values{
-				"redirect_uri":  {"http://foo.bar/cb"},
+				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
 				"response_type": {"code token"},
 				"state":         {"strong-state"},
 				"scope":         {DefaultRequiredScopeName + " foo bar"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 			expect: &AuthorizeRequest{
 				RedirectURI:   redir,
-				Client:        &SecureClient{RedirectURIs: []string{"http://foo.bar/cb"}},
+				Client:        &SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}},
 				ResponseTypes: []string{"code", "token"},
 				State:         "strong-state",
 				Scopes:        []string{DefaultRequiredScopeName, "foo", "bar"},

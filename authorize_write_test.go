@@ -25,7 +25,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 	}{
 		{
 			setup: func() {
-				redir, _ := url.Parse("http://foobar.com/?foo=bar")
+				redir, _ := url.Parse("https://foobar.com/?foo=bar")
 				ar.EXPECT().GetRedirectURI().Return(redir)
 				resp.EXPECT().GetFragment().Return(url.Values{})
 				resp.EXPECT().GetHeader().Return(http.Header{})
@@ -36,13 +36,13 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
-					"Location": []string{"http://foobar.com/?foo=bar"},
+					"Location": []string{"https://foobar.com/?foo=bar"},
 				}, header)
 			},
 		},
 		{
 			setup: func() {
-				redir, _ := url.Parse("http://foobar.com/?foo=bar")
+				redir, _ := url.Parse("https://foobar.com/?foo=bar")
 				ar.EXPECT().GetRedirectURI().Return(redir)
 				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}})
 				resp.EXPECT().GetHeader().Return(http.Header{})
@@ -53,13 +53,13 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
-					"Location": []string{"http://foobar.com/?foo=bar#bar=baz"},
+					"Location": []string{"https://foobar.com/?foo=bar#bar=baz"},
 				}, header)
 			},
 		},
 		{
 			setup: func() {
-				redir, _ := url.Parse("http://foobar.com/?foo=bar")
+				redir, _ := url.Parse("https://foobar.com/?foo=bar")
 				ar.EXPECT().GetRedirectURI().Return(redir)
 				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}})
 				resp.EXPECT().GetHeader().Return(http.Header{})
@@ -70,13 +70,13 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
-					"Location": []string{"http://foobar.com/?bar=baz&foo=bar#bar=baz"},
+					"Location": []string{"https://foobar.com/?bar=baz&foo=bar#bar=baz"},
 				}, header)
 			},
 		},
 		{
 			setup: func() {
-				redir, _ := url.Parse("http://foobar.com/?foo=bar")
+				redir, _ := url.Parse("https://foobar.com/?foo=bar")
 				ar.EXPECT().GetRedirectURI().Return(redir)
 				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}})
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
@@ -88,7 +88,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			expect: func() {
 				assert.Equal(t, http.Header{
 					"X-Bar":    {"baz"},
-					"Location": {"http://foobar.com/?bar=baz&foo=bar#bar=baz"},
+					"Location": {"https://foobar.com/?bar=baz&foo=bar#bar=baz"},
 				}, header)
 			},
 		},

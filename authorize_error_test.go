@@ -31,8 +31,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 	defer ctrl.Finish()
 
 	var urls = []string{
-		"http://foobar.com/",
-		"http://foobar.com/?foo=bar",
+		"https://foobar.com/",
+		"https://foobar.com/?foo=bar",
 	}
 	var purls = []*url.URL{}
 	for _, u := range urls {
@@ -68,7 +68,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(k int) {
-				a, _ := url.Parse("http://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed")
+				a, _ := url.Parse("https://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed")
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b, "%d", k)
 			},
@@ -82,7 +82,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(k int) {
-				a, _ := url.Parse("http://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&foo=bar")
+				a, _ := url.Parse("https://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&foo=bar")
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b, "%d", k)
 			},

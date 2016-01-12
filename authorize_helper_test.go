@@ -8,6 +8,22 @@ import (
 	"testing"
 )
 
+func TestIsLocalhost(t *testing.T) {
+	for k, c := range []struct {
+		expect bool
+		rawurl string
+	}{
+		{expect: false, rawurl: "https://foo.bar"},
+		{expect: true, rawurl: "https://localhost"},
+		{expect: true, rawurl: "https://localhost:1234"},
+		{expect: true, rawurl: "https://127.0.0.1:1234"},
+		{expect: true, rawurl: "https://127.0.0.1"},
+	} {
+		u, _ := url.Parse(c.rawurl)
+		assert.Equal(t, c.expect, isLocalhost(u), "case %d", k)
+	}
+}
+
 // Test for
 // * https://tools.ietf.org/html/rfc6749#section-3.1.2
 //   The endpoint URI MAY include an
@@ -21,8 +37,8 @@ func TestGetRedirectURI(t *testing.T) {
 		expected string
 	}{
 		{in: "", isError: false, expected: ""},
-		{in: "http://google.com/", isError: false, expected: "http://google.com/"},
-		{in: "http://google.com/?foo=bar%20foo+baz", isError: false, expected: "http://google.com/?foo=bar foo baz"},
+		{in: "https://google.com/", isError: false, expected: "https://google.com/"},
+		{in: "https://google.com/?foo=bar%20foo+baz", isError: false, expected: "https://google.com/?foo=bar foo baz"},
 	} {
 		values := url.Values{}
 		values.Set("redirect_uri", c.in)
@@ -55,19 +71,19 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 	}{
 		{
 			client:  &SecureClient{RedirectURIs: []string{""}},
-			url:     "http://foo.com/cb",
+			url:     "https://foo.com/cb",
 			isError: true,
 		},
 		{
-			client:  &SecureClient{RedirectURIs: []string{"http://bar.com/cb"}},
-			url:     "http://foo.com/cb",
+			client:  &SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
+			url:     "https://foo.com/cb",
 			isError: true,
 		},
 		{
-			client:   &SecureClient{RedirectURIs: []string{"http://bar.com/cb"}},
+			client:   &SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
 			url:      "",
 			isError:  false,
-			expected: "http://bar.com/cb",
+			expected: "https://bar.com/cb",
 		},
 		{
 			client:  &SecureClient{RedirectURIs: []string{""}},
@@ -75,14 +91,14 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			isError: true,
 		},
 		{
-			client:   &SecureClient{RedirectURIs: []string{"http://bar.com/cb"}},
-			url:      "http://bar.com/cb",
+			client:   &SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
+			url:      "https://bar.com/cb",
 			isError:  false,
-			expected: "http://bar.com/cb",
+			expected: "https://bar.com/cb",
 		},
 		{
-			client:  &SecureClient{RedirectURIs: []string{"http://bar.com/cb"}},
-			url:     "http://bar.com/cb123",
+			client:  &SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
+			url:     "https://bar.com/cb123",
 			isError: true,
 		},
 	} {
