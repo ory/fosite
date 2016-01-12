@@ -27,7 +27,7 @@ var ts *httptest.Server
 
 var mockStore *MockStorage
 var mockClient *MockClient
-var mockAuthStore *MockAuthorizeExplicitStorage
+var mockAuthStore *MockAuthorizeCodeGrantStorage
 var mockAuthReq *MockAuthorizeRequester
 var mockHasher *MockHasher
 
@@ -35,12 +35,12 @@ func TestFosite(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mockStore = NewMockStorage(ctrl)
 	mockClient = NewMockClient(ctrl)
-	mockAuthStore = NewMockAuthorizeExplicitStorage(ctrl)
+	mockAuthStore = NewMockAuthorizeCodeGrantStorage(ctrl)
 	mockAuthReq = NewMockAuthorizeRequester(ctrl)
 	mockHasher = NewMockHasher(ctrl)
 	defer ctrl.Finish()
 
-	authExplicitHandler := &explicit.AuthorizeExplicitEndpointHandler{
+	authExplicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
 		Enigma: &enigma.HMACSHAEnigma{GlobalSecret: []byte("super-global-secret")},
 		Store:  mockAuthStore,
 	}
@@ -54,7 +54,7 @@ func TestFosite(t *testing.T) {
 		mockStore = NewMockStorage(ctrl)
 		mockAuthReq = NewMockAuthorizeRequester(ctrl)
 		mockClient = NewMockClient(ctrl)
-		mockAuthStore = NewMockAuthorizeExplicitStorage(ctrl)
+		mockAuthStore = NewMockAuthorizeCodeGrantStorage(ctrl)
 		mockHasher = NewMockHasher(ctrl)
 		oauth2.Hasher = mockHasher
 		oauth2.Store = mockStore

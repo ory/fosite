@@ -10,12 +10,13 @@ import (
 	"golang.org/x/net/context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
 // implements
 // * https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything)
-func (c *AuthorizeExplicitEndpointHandler) ValidateTokenEndpointRequest(_ context.Context, req *http.Request, request AccessRequester, session interface{}) error {
+func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(_ context.Context, req *http.Request, request AccessRequester, session interface{}) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if request.GetGrantType() != "authorization_code" {
@@ -84,7 +85,7 @@ func (c *AuthorizeExplicitEndpointHandler) ValidateTokenEndpointRequest(_ contex
 	return nil
 }
 
-func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder, session interface{}) error {
+func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder, session interface{}) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if requester.GetGrantType() != "authorization_code" {
@@ -124,6 +125,6 @@ func (c *AuthorizeExplicitEndpointHandler) HandleTokenEndpointRequest(ctx contex
 	responder.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
 	responder.SetExtra("refresh_token", refresh.String())
 	responder.SetExtra("state", ar.GetState())
-	responder.SetExtra("scope", requester.GetScopes())
+	responder.SetExtra("scope", strings.Join(requester.GetGrantedScopes(), " "))
 	return nil
 }

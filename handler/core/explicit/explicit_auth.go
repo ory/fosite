@@ -15,12 +15,12 @@ const authCodeDefaultLifespan = time.Hour / 2
 
 // CodeAuthorizeEndpointHandler is a response handler for the Authorize Code grant using the explicit grant type
 // as defined in https://tools.ietf.org/html/rfc6749#section-4.1
-type AuthorizeExplicitEndpointHandler struct {
+type AuthorizeExplicitGrantTypeHandler struct {
 	// Enigma is the algorithm responsible for creating a validatable, opaque string.
 	Enigma enigma.Enigma
 
 	// Store is used to persist session data across requests.
-	Store AuthorizeExplicitStorage
+	Store AuthorizeCodeGrantStorage
 
 	// AuthCodeLifespan defines the lifetime of an authorize code.
 	AuthCodeLifespan time.Duration
@@ -29,7 +29,7 @@ type AuthorizeExplicitEndpointHandler struct {
 	AccessTokenLifespan time.Duration
 }
 
-func (c *AuthorizeExplicitEndpointHandler) HandleAuthorizeEndpointRequest(_ context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder, session interface{}) error {
+func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(_ context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder, session interface{}) error {
 	// This let's us define multiple response types, for example open id connect's id_token
 	if ar.GetResponseTypes().Has("code") {
 		// Generate the code
@@ -47,7 +47,7 @@ func (c *AuthorizeExplicitEndpointHandler) HandleAuthorizeEndpointRequest(_ cont
 
 		resp.AddQuery("code", code.String())
 		resp.AddQuery("state", ar.GetState())
-		resp.AddQuery("scope", strings.Join(ar.GetScopes(), " "))
+		resp.AddQuery("scope", strings.Join(ar.GetGrantedScopes(), " "))
 		ar.SetResponseTypeHandled("code")
 		return nil
 	}

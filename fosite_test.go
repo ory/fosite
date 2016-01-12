@@ -8,7 +8,7 @@ import (
 )
 
 func TestAuthorizeEndpointHandlers(t *testing.T) {
-	h := &explicit.AuthorizeExplicitEndpointHandler{}
+	h := &explicit.AuthorizeExplicitGrantTypeHandler{}
 	hs := AuthorizeEndpointHandlers{}
 	hs.Add("k", h)
 	assert.Len(t, hs, 1)
@@ -16,7 +16,7 @@ func TestAuthorizeEndpointHandlers(t *testing.T) {
 }
 
 func TestTokenEndpointHandlers(t *testing.T) {
-	h := &explicit.AuthorizeExplicitEndpointHandler{}
+	h := &explicit.AuthorizeExplicitGrantTypeHandler{}
 	hs := TokenEndpointHandlers{}
 	hs.Add("k", h)
 	assert.Len(t, hs, 1)

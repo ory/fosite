@@ -18,14 +18,14 @@ import (
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockAuthorizeExplicitStorage(ctrl)
+	store := internal.NewMockAuthorizeCodeGrantStorage(ctrl)
 	chgen := internal.NewMockEnigma(ctrl)
 	areq := internal.NewMockAccessRequester(ctrl)
 	aresp := internal.NewMockAccessResponder(ctrl)
 	//mockcl := internal.NewMockClient(ctrl)
 	defer ctrl.Finish()
 
-	h := AuthorizeExplicitEndpointHandler{
+	h := AuthorizeExplicitGrantTypeHandler{
 		Store:  store,
 		Enigma: chgen,
 	}
@@ -97,7 +97,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			req: &http.Request{PostForm: url.Values{}},
 			mock: func() {
 				areq.EXPECT().GetGrantType().Return("authorization_code")
-				areq.EXPECT().GetScopes()
+				areq.EXPECT().GetGrantedScopes()
 				areq.EXPECT().GetClient().Return(&client.SecureClient{})
 				areq.EXPECT().GetClient().Return(&client.SecureClient{})
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
@@ -126,13 +126,13 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 
 func TestValidateTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockAuthorizeExplicitStorage(ctrl)
+	store := internal.NewMockAuthorizeCodeGrantStorage(ctrl)
 	chgen := internal.NewMockEnigma(ctrl)
 	areq := internal.NewMockAccessRequester(ctrl)
 	authreq := internal.NewMockAuthorizeRequester(ctrl)
 	defer ctrl.Finish()
 
-	h := AuthorizeExplicitEndpointHandler{
+	h := AuthorizeExplicitGrantTypeHandler{
 		Store:  store,
 		Enigma: chgen,
 	}

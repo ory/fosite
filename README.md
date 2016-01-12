@@ -392,9 +392,11 @@ rather sooner than later.
 **Create storage mocks**
 ```
 mockgen -destination internal/storage.go github.com/ory-am/fosite Storage
-mockgen -destination internal/authorize_explicit_storage.go github.com/ory-am/fosite/handler/core AuthorizeExplicitStorage
-mockgen -destination internal/authorize_implicit_storage.go github.com/ory-am/fosite/handler/core AuthorizeImplicitStorage
-mockgen -destination internal/token_storage.go github.com/ory-am/fosite/handler/core TokenStorage
+mockgen -destination internal/core_client_storage.go github.com/ory-am/fosite/handler/core/client ClientCredentialsGrantStorage
+mockgen -destination internal/core_explicit_storage.go github.com/ory-am/fosite/handler/core/explicit AuthorizeCodeGrantStorage
+mockgen -destination internal/core_implicit_storage.go github.com/ory-am/fosite/handler/core/implicit ImplicitGrantStorage
+mockgen -destination internal/core_owner_storage.go github.com/ory-am/fosite/handler/core/owner ResourceOwnerPasswordCredentialsGrantStorage
+mockgen -destination internal/core_refresh_storage.go github.com/ory-am/fosite/handler/core/refresh RefreshTokenGrantStorage
 ```
 
 **Create handler mocks**

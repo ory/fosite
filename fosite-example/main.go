@@ -10,6 +10,8 @@ import (
 	coreclient "github.com/ory-am/fosite/handler/core/client"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/implicit"
+	"github.com/ory-am/fosite/handler/core/owner"
+	"github.com/ory-am/fosite/handler/core/refresh"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 	"log"
@@ -23,6 +25,12 @@ var store = &internal.Store{
 			ID:           "my-client",
 			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 			RedirectURIs: []string{"http://localhost:3846/callback"},
+		},
+	},
+	Users: map[string]internal.UserRelation{
+		"peter": internal.UserRelation{
+			Username: "peter",
+			Password: "foobar",
 		},
 	},
 	AuthorizeCodes: map[string]internal.AuthorizeCodesRelation{},
@@ -56,11 +64,12 @@ func fositeFactory() OAuth2Provider {
 	// NewMyStorageImplementation should implement all storage interfaces.
 
 	f := NewFosite(store)
+	enigmaService := &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")}
 	accessTokenLifespan := time.Hour
 
 	// Let's enable the explicit authorize code grant!
-	explicitHandler := &explicit.AuthorizeExplicitEndpointHandler{
-		Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
+	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
+		Enigma:              enigmaService,
 		Store:               store,
 		AuthCodeLifespan:    time.Minute * 10,
 		AccessTokenLifespan: accessTokenLifespan,
@@ -69,19 +78,33 @@ func fositeFactory() OAuth2Provider {
 	f.TokenEndpointHandlers.Add("code", explicitHandler)
 
 	// Implicit grant type
-	implicitHandler := &implicit.AuthorizeImplicitEndpointHandler{
-		Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
+	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
+		Enigma:              enigmaService,
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
 	f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
 
-	clientHandler := &coreclient.AuthorizeClientEndpointHandler{
-		Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
+	clientHandler := &coreclient.ClientCredentialsGrantHandler{
+		Enigma:              enigmaService,
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
 	f.TokenEndpointHandlers.Add("client", clientHandler)
+
+	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
+		Enigma:              enigmaService,
+		Store:               store,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+	f.TokenEndpointHandlers.Add("owner", ownerHandler)
+
+	refreshHandler := &refresh.RefreshTokenGrantHandler{
+		Enigma:              enigmaService,
+		Store:               store,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+	f.TokenEndpointHandlers.Add("refresh", refreshHandler)
 
 	return f
 }
@@ -92,7 +115,8 @@ func main() {
 	http.HandleFunc("/auth", authEndpoint)
 	http.HandleFunc("/token", tokenEndpoint)
 	http.HandleFunc("/client", clientEndpoint)
-	http.ListenAndServe(":3846", nil)
+	http.HandleFunc("/owner", ownerEndpoint)
+	log.Fatal(http.ListenAndServe(":3846", nil))
 }
 
 func clientEndpoint(rw http.ResponseWriter, req *http.Request) {
@@ -100,6 +124,39 @@ func clientEndpoint(rw http.ResponseWriter, req *http.Request) {
 	token, err := appClientConf.Token(goauth.NoContext)
 	if err != nil {
 		rw.Write([]byte(fmt.Sprintf(`<p>I tried to get a token but received an error: %s</p>`, err.Error())))
+		return
+	}
+	rw.Write([]byte(fmt.Sprintf(`<p>Awesome, you just received an access token!<br><br>%s<br><br><strong>more info:</strong><br><br>%s</p>`, token.AccessToken, token)))
+	rw.Write([]byte(`<p><a href="/">Go back</a></p>`))
+}
+
+func ownerEndpoint(rw http.ResponseWriter, req *http.Request) {
+	rw.Write([]byte(fmt.Sprintf(`<h1>Resource Owner Password Credentials Grant</h1>`)))
+	req.ParseForm()
+	if req.Form.Get("username") == "" || req.Form.Get("password") == "" {
+		rw.Write([]byte(`
+<form method="post">
+	<ul>
+		<li>
+			<input type="text" name="username" placeholder="username"/> <small>try peter</small>
+		</li>
+		<li>
+			<input type="password" name="password" placeholder="password"/> <small>try foobar</small><br>
+		</li>
+		<li>
+			<input type="submit" />
+		</li>
+	</ul>
+</form>
+`))
+		rw.Write([]byte(`<p><a href="/">Go back</a></p>`))
+		return
+	}
+
+	token, err := clientConf.PasswordCredentialsToken(goauth.NoContext, req.Form.Get("username"), req.Form.Get("password"))
+	if err != nil {
+		rw.Write([]byte(fmt.Sprintf(`<p>I tried to get a token but received an error: %s</p>`, err.Error())))
+		rw.Write([]byte(`<p><a href="/">Go back</a></p>`))
 		return
 	}
 	rw.Write([]byte(fmt.Sprintf(`<p>Awesome, you just received an access token!<br><br>%s<br><br><strong>more info:</strong><br><br>%s</p>`, token.AccessToken, token)))
@@ -137,6 +194,12 @@ func homeHandler(rw http.ResponseWriter, req *http.Request) {
 	</li>
 	<li>
 		<a href="/client">Client credentials grant</a>
+	</li>
+	<li>
+		<a href="/owner">Resource owner password credentials grant</a>
+	</li>
+	<li>
+		<a href="/refresh">Refresh grant</a>
 	</li>
 	<li>
 		<a href="%s">Make an invalid request</a>
@@ -190,26 +253,28 @@ access token <small><a href="https://en.wikipedia.org/wiki/Fragment_identifier#B
 `,
 			err.Error(),
 		)))
-	} else {
-		rw.Write([]byte(fmt.Sprintf(`
+		return
+	}
+
+	rw.Write([]byte(fmt.Sprintf(`
 <p>Cool! You are now a proud token owner.<br>
 <ul>
 	<li>
 		Access token: %s<br>
 	</li>
 	<li>
-		Refresh token: %s<br>
+		Refresh token: %s (click to refresh <a href="%s">here</a>)<br>
 	</li>
 	<li>
 		Extra info: %s<br>
 	</li>
 </ul>
 `,
-			token.AccessToken,
-			token.RefreshToken,
-			token,
-		)))
-	}
+		token.AccessToken,
+		token.RefreshToken,
+		"",
+		token,
+	)))
 }
 
 func authEndpoint(rw http.ResponseWriter, req *http.Request) {

@@ -18,13 +18,13 @@ import (
 
 func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockAuthorizeImplicitStorage(ctrl)
+	store := internal.NewMockImplicitGrantStorage(ctrl)
 	chgen := internal.NewMockEnigma(ctrl)
 	areq := internal.NewMockAuthorizeRequester(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 	defer ctrl.Finish()
 
-	h := AuthorizeImplicitEndpointHandler{
+	h := AuthorizeImplicitGrantTypeHandler{
 		Store:               store,
 		Enigma:              chgen,
 		AccessTokenLifespan: time.Hour,

@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"github.com/go-errors/errors"
 	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
@@ -17,12 +18,18 @@ type AccessRelation struct {
 	session *core.TokenSession
 }
 
+type UserRelation struct {
+	Username string
+	Password string
+}
+
 type Store struct {
 	Clients        map[string]client.Client
 	AuthorizeCodes map[string]AuthorizeCodesRelation
 	AccessTokens   map[string]AccessRelation
 	Implicit       map[string]AuthorizeCodesRelation
 	RefreshTokens  map[string]AccessRelation
+	Users          map[string]UserRelation
 }
 
 func NewStore() *Store {
@@ -32,6 +39,7 @@ func NewStore() *Store {
 		Implicit:       map[string]AuthorizeCodesRelation{},
 		AccessTokens:   map[string]AccessRelation{},
 		RefreshTokens:  map[string]AccessRelation{},
+		Users:          map[string]UserRelation{},
 	}
 }
 
@@ -102,5 +110,16 @@ func (s *Store) DeleteRefreshTokenSession(signature string) error {
 
 func (s *Store) CreateImplicitAccessTokenSession(code string, ar fosite.AuthorizeRequester, sess *core.AuthorizeSession) error {
 	s.Implicit[code] = AuthorizeCodesRelation{request: ar, session: sess}
+	return nil
+}
+
+func (s *Store) DoCredentialsAuthenticate(name string, secret string) error {
+	rel, ok := s.Users[name]
+	if !ok {
+		return pkg.ErrNotFound
+	}
+	if rel.Password != secret {
+		return errors.New("Invalid credentials")
+	}
 	return nil
 }

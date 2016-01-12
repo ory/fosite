@@ -15,13 +15,13 @@ import (
 
 func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockAuthorizeExplicitStorage(ctrl)
+	store := internal.NewMockAuthorizeCodeGrantStorage(ctrl)
 	chgen := internal.NewMockEnigma(ctrl)
 	areq := internal.NewMockAuthorizeRequester(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 	defer ctrl.Finish()
 
-	h := AuthorizeExplicitEndpointHandler{
+	h := AuthorizeExplicitGrantTypeHandler{
 		Store:  store,
 		Enigma: chgen,
 	}
@@ -69,7 +69,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 				aresp.EXPECT().AddQuery(gomock.Eq("scope"), gomock.Any())
 				aresp.EXPECT().AddQuery(gomock.Eq("state"), gomock.Any())
 				areq.EXPECT().SetResponseTypeHandled(gomock.Eq("code"))
-				areq.EXPECT().GetScopes()
+				areq.EXPECT().GetGrantedScopes()
 				areq.EXPECT().GetState()
 			},
 		},
