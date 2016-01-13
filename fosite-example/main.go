@@ -26,7 +26,7 @@ var store = &internal.Store{
 		"my-client": &client.SecureClient{
 			ID:           "my-client",
 			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
-			RedirectURIs: []string{"https://localhost:3846/callback"},
+			RedirectURIs: []string{"http://localhost:3846/callback"},
 		},
 	},
 	Users: map[string]internal.UserRelation{
@@ -44,18 +44,18 @@ var oauth2 OAuth2Provider = fositeFactory()
 var clientConf = goauth.Config{
 	ClientID:     "my-client",
 	ClientSecret: "foobar",
-	RedirectURL:  "https://localhost:3846/callback",
+	RedirectURL:  "http://localhost:3846/callback",
 	Scopes:       []string{"fosite"},
 	Endpoint: goauth.Endpoint{
-		TokenURL: "https://localhost:3846/token",
-		AuthURL:  "https://localhost:3846/auth",
+		TokenURL: "http://localhost:3846/token",
+		AuthURL:  "http://localhost:3846/auth",
 	},
 }
 var appClientConf = clientcredentials.Config{
 	ClientID:     "my-client",
 	ClientSecret: "foobar",
 	Scopes:       []string{"fosite"},
-	TokenURL:     "https://localhost:3846/token",
+	TokenURL:     "http://localhost:3846/token",
 }
 
 type session struct {
@@ -208,9 +208,9 @@ func homeHandler(rw http.ResponseWriter, req *http.Request) {
 			</li>
 		</ul>`,
 		clientConf.AuthCodeURL("some-random-state-foobar"),
-		"https://localhost:3846/auth?client_id=my-client&redirect_uri=http%3A%2F%2Flocalhost%3A3846%2Fcallback&response_type=token&scope=fosite&state=some-random-state-foobar",
+		"http://localhost:3846/auth?client_id=my-client&redirect_uri=http%3A%2F%2Flocalhost%3A3846%2Fcallback&response_type=token&scope=fosite&state=some-random-state-foobar",
 		clientConf.AuthCodeURL("some-random-state-foobar"),
-		"/auth?client_id=my-client&scope=fosite&response_type=123&redirect_uri=https://localhost:3846/callback",
+		"/auth?client_id=my-client&scope=fosite&response_type=123&redirect_uri=http://localhost:3846/callback",
 	)))
 }
 
@@ -245,7 +245,7 @@ func callbackHandler(rw http.ResponseWriter, req *http.Request) {
 	if req.URL.Query().Get("code") == "" {
 		rw.Write([]byte(fmt.Sprintf(`<p>Could not find the authorize code. If you've used the implicit grant, check the
 			browser location bar for the
-			access token <small><a href="https://en.wikipedia.org/wiki/Fragment_identifier#Basics">(the server side does not have access to url fragments)</a></small>
+			access token <small><a href="http://en.wikipedia.org/wiki/Fragment_identifier#Basics">(the server side does not have access to url fragments)</a></small>
 			</p>`,
 		)))
 		return
