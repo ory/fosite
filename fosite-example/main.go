@@ -2,6 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"time"
+
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
@@ -15,10 +20,6 @@ import (
 	"github.com/parnurzeal/gorequest"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	"log"
-	"net/http"
-	"net/url"
-	"time"
 )
 
 var store = &internal.Store{
@@ -40,7 +41,7 @@ var store = &internal.Store{
 	RefreshTokens:  map[string]internal.AccessRelation{},
 	Implicit:       map[string]internal.AuthorizeCodesRelation{},
 }
-var oauth2 OAuth2Provider = fositeFactory()
+var oauth2 = fositeFactory()
 var clientConf = goauth.Config{
 	ClientID:     "my-client",
 	ClientSecret: "foobar",
@@ -66,8 +67,31 @@ func fositeFactory() OAuth2Provider {
 	// NewMyStorageImplementation should implement all storage interfaces.
 
 	f := NewFosite(store)
-	enigmaService := &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")}
+
 	accessTokenLifespan := time.Hour
+
+	// Default use HMACSHA256 as default enigma
+	enigmaService := &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")}
+
+	// JWT: Uncomment below, and comment out enigmaService above to enable JWT support instead OF HMACSHA256
+	/*
+		userDefinedClaims := map[string]interface{}{
+			"custom_paramter": "You can put whatever key-value pair (string, string) you want here..",
+		}
+		claims, err := jwthelper.NewClaimsContext("fosite", "peter", "group0",
+			time.Now().Add(accessTokenLifespan), time.Now(), time.Now(), userDefinedClaims)
+
+		if err != nil {
+			log.Panicf("Could not create claims. %s", err.Error())
+		}
+
+		enigmaService := &enigma.JWTEnigma{
+			PrivateKey: []byte(enigma.TestCertificates[0][1]),
+			PublicKey:  []byte(enigma.TestCertificates[1][1]),
+			Claims:     *claims,
+			Headers:    make(map[string]interface{}),
+		}
+	*/
 
 	// Let's enable the explicit authorize code grant!
 	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
