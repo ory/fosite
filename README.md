@@ -23,14 +23,14 @@ During development, we took reviewed the following open specifications:
 **Table of Contents**
 
 - [Motivation](#motivation)
+- [Example](#example)
 - [A word on quality](#a-word-on-quality)
 - [A word on security](#a-word-on-security)
 - [A word on extensibility](#a-word-on-extensibility)
 - [Usage](#usage)
-  - [See it in action](#see-it-in-action)
   - [Installation](#installation)
-  - [[Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)](#authorization-endpointhttpstoolsietforghtmlrfc6749section-31)
-  - [[Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)](#token-endpointhttpstoolsietforghtmlrfc6749section-32)
+  - [Exemplary [Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)](#exemplary-authorization-endpointhttpstoolsietforghtmlrfc6749section-31)
+  - [Exemplary [Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)](#exemplary-token-endpointhttpstoolsietforghtmlrfc6749section-32)
   - [Extensible handlers](#extensible-handlers)
   - [Replaceable storage](#replaceable-storage)
 - [Develop fosite](#develop-fosite)
@@ -44,6 +44,24 @@ During development, we took reviewed the following open specifications:
 Fosite was written because our OAuth2 and OpenID Connect service [Hydra](https://github.com/ory-am/hydra)
 required a secure and extensible OAuth2 library. We had to realize that nothing matching our requirements
 was out there, so we decided to build it ourselves.
+
+## Example
+
+The example does not have nice visuals but it should give you an idea of what you can do with Fosite and a few lines
+of code.
+
+![Authorize Code Grant](docs/authorize-code-grant.gif)
+
+You can run this minimalistic example by doing
+
+```
+go get github.com/ory-am/fosite/fosite-example
+go install github.com/ory-am/fosite/fosite-example
+fosite-example
+```
+
+There should be a server listening on [localhost:3846](https://localhost:3846/). You can check out the example's
+source code [here](/fosite-example/main.go).
 
 ## A word on quality
 
@@ -109,47 +127,17 @@ have been validated against the OAuth2 specs beforehand.
 You can easily extend Fosite's capabilities. For example, if you want to provide OpenID Connect on top of your
 OAuth2 stack, that's no problem. Or custom assertions, what ever you like and as long as it is secure. ;)
 
-## Example
-
-The example does not have nice visuals but it should give you an idea of what you can do with Fosite and a few lines
-of code.
-
-![Authorize Code Grant](docs/authorize-code-grant.gif)
-
-You can run this minimalistic example by doing
-
-```
-go get github.com/ory-am/fosite/fosite-example
-go install github.com/ory-am/fosite/fosite-example
-fosite-example
-```
-
-There should be a server listening on [localhost:3846](https://localhost:3846/). You can check out the example's
-source code [here](/fosite-example/main.go).
-
 ## Usage
 
 There is an API documentation available at [godoc.org/ory-am/fosite](https://godoc.org/github.com/ory-am/fosite).
 
 ### Installation
 
-Obviously, you will need [Go](https://golang.org) installed on your machine and it is required that you have set up your
-GOPATH environment variable.
+You will need [Go](https://golang.org) installed on your machine and it is required that you have set up your
+GOPATH environment variable. Fosite is being shipped through gopkg.in so new updates don't break your code.
+To see a full list of available versions check [gopkg.in/ory-am/fosite.v0](https://gopkg.in/ory-am/fosite.v0).
 
-Fosite is being shipped through gopkg.in so new updates don't break your code.
-
-```
-go get gopkg.in/ory-am/fosite.v{X}/...
-```
-
-To see a full list of available versions check [gopkg.in/ory-am/fosite.v0](https://gopkg.in/ory-am/fosite.v0). If you want
-to use api version 2 for example (version 2 does not exist yet), do:
-
-```
-go get gopkg.in/ory-am/fosite.v2/...
-```
-
-To use the unstable master branch, which is only recommended for testing purposes, do:
+Right now, there is only an unstable release versioned as the v0 branch:
 
 ```
 go get gopkg.in/ory-am/fosite.v0/...
