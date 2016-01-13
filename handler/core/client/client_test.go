@@ -49,7 +49,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 	}
 }
 
-func HandleTokenEndpointRequest(t *testing.T) {
+func TestHandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockClientCredentialsGrantStorage(ctrl)
 	chgen := internal.NewMockEnigma(ctrl)
@@ -72,7 +72,6 @@ func HandleTokenEndpointRequest(t *testing.T) {
 			mock: func() {
 				areq.EXPECT().GetGrantType().Return("")
 			},
-			expectErr: fosite.ErrServerError,
 		},
 		{
 			mock: func() {
@@ -86,7 +85,7 @@ func HandleTokenEndpointRequest(t *testing.T) {
 			mock: func() {
 				areq.EXPECT().GetGrantType().Return("client_credentials")
 				areq.EXPECT().GetClient().Return(&client.SecureClient{})
-				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(nil, nil)
+				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
@@ -98,6 +97,7 @@ func HandleTokenEndpointRequest(t *testing.T) {
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
+				areq.EXPECT().GetGrantedScopes()
 				aresp.EXPECT().SetAccessToken(".")
 				aresp.EXPECT().SetTokenType("bearer")
 				aresp.EXPECT().SetExtra("expires_in", gomock.Any())

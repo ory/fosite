@@ -96,7 +96,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 	}
 }
 
-func T123estHandleTokenEndpointRequest(t *testing.T) {
+func TestHandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockRefreshTokenGrantStorage(ctrl)
 	chgen := internal.NewMockEnigma(ctrl)
@@ -104,6 +104,8 @@ func T123estHandleTokenEndpointRequest(t *testing.T) {
 	aresp := internal.NewMockAccessResponder(ctrl)
 	//mockcl := internal.NewMockClient(ctrl)
 	defer ctrl.Finish()
+
+	areq.EXPECT().GetClient().AnyTimes().Return(&client.SecureClient{})
 
 	h := RefreshTokenGrantHandler{
 		Store:               store,
@@ -122,32 +124,49 @@ func T123estHandleTokenEndpointRequest(t *testing.T) {
 		},
 		{
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-				areq.EXPECT().GetClient().Return(&client.SecureClient{})
+				areq.EXPECT().GetGrantType().Return("refresh_token")
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
+			req: &http.Request{PostForm: url.Values{}},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-				areq.EXPECT().GetClient().Return(&client.SecureClient{})
+				areq.EXPECT().GetGrantType().Return("refresh_token")
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
-				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
+				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
+				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				store.EXPECT().CreateRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
+			req: &http.Request{PostForm: url.Values{}},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-				areq.EXPECT().GetClient().Return(&client.SecureClient{})
+				areq.EXPECT().GetGrantType().Return("refresh_token")
+				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				store.EXPECT().CreateRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				store.EXPECT().DeleteRefreshTokenSession(gomock.Any()).Return(errors.New(""))
+			},
+			expectErr: fosite.ErrServerError,
+		},
+		{
+			req: &http.Request{PostForm: url.Values{}},
+			mock: func() {
+				areq.EXPECT().GetGrantType().Return("refresh_token")
+				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
+				chgen.EXPECT().GenerateChallenge(gomock.Any()).Return(&enigma.Challenge{}, nil)
+				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				store.EXPECT().CreateRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				store.EXPECT().DeleteRefreshTokenSession(gomock.Any()).Return(nil)
 
 				aresp.EXPECT().SetAccessToken(".")
 				aresp.EXPECT().SetTokenType("bearer")
 				aresp.EXPECT().SetExtra("expires_in", gomock.Any())
 				aresp.EXPECT().SetExtra("scope", gomock.Any())
+				aresp.EXPECT().SetExtra("refresh_token", ".")
 				areq.EXPECT().GetGrantedScopes()
 			},
 		},
