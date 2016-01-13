@@ -26,6 +26,7 @@ func NewFosite(store Storage) *Fosite {
 		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{},
 		TokenEndpointHandlers:     TokenEndpointHandlers{},
 		Hasher:                    &hash.BCrypt{WorkFactor: 12},
+		AllowHybridFlow:           false,
 	}
 }
 
@@ -36,4 +37,8 @@ type Fosite struct {
 	AuthorizeEndpointHandlers AuthorizeEndpointHandlers
 	TokenEndpointHandlers     TokenEndpointHandlers
 	Hasher                    hash.Hasher
+
+	// AllowHybridFlow sets if the hybrid flow should be allowed.
+	// More: http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth
+	AllowHybridFlow bool
 }

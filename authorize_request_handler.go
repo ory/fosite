@@ -50,6 +50,12 @@ func (c *Fosite) NewAuthorizeRequest(_ context.Context, r *http.Request) (Author
 	// type "a b" is the same as "b a").  The meaning of such composite
 	// response types is defined by their respective specifications.
 	responseTypes := removeEmpty(strings.Split(r.Form.Get("response_type"), " "))
+
+	// Allow or deny http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth
+	if !c.AllowHybridFlow && len(responseTypes) > 1 {
+		return request, errors.New(ErrInvalidRequest)
+	}
+
 	request.ResponseTypes = responseTypes
 
 	// rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
