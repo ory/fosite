@@ -5,16 +5,14 @@ Built simple, powerful and extensible. This library implements peer-reviewed [IE
 counterfeits weaknesses covered in peer-reviewed [IETF RFC6819](https://tools.ietf.org/html/rfc6819) and countermeasures various database
 attack scenarios, keeping your application safe when that hacker penetrates and leaks your database.
 
-If you are here to contribute, feel free to check [this Pull Request](https://github.com/ory-am/fosite/pull/1).
-
 [![Build Status](https://travis-ci.org/ory-am/fosite.svg?branch=master)](https://travis-ci.org/ory-am/fosite?branch=master)
 [![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github)](https://coveralls.io/github/ory-am/fosite?branch=master)
 
-Fosite is in active development. Most of the framework is done and tested.  We will use gopkg for releasing new versions of the API.
-Be aware that "go get github.com/ory-am/fosite" will give you the master branch, which is and always will be *nightly*.
-Once releases roll out, you will be able to fetch a specific fosite API version through gopkg.in.
+Be aware that `go get github.com/ory-am/fosite` will give you the master branch, which is and always will be *nightly*.
+Once releases roll out, you will be able to fetch a specific [fosite API version through gopkg.in](#installation).
+As of now, no stable `v1` version exists.
 
-These Standards have been reviewed during the development of Fosite:
+During development, we took reviewed the following open specifications:
 * [OAuth 2.0 Multiple Response Type Encoding Practices](https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
 * [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
 * [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
@@ -94,7 +92,7 @@ Additionally, we added these safeguards:
   This is what a token can look like:
   `/tgBeUhWlAT8tM8Bhmnx+Amf8rOYOUhrDi3pGzmjP7c=.BiV/Yhma+5moTP46anxMT6cWW8gz5R5vpC9RbpwSDdM=`
 * **Enforging scopes:** By default, you always need to include the `fosite` scope or fosite will not execute the request
-  properly. Obviously, you can change the scope to `basic` or `core` but be aware that you *must use scopes* if you use
+  properly. Obviously, you can change the scope to `basic` or `core` but be aware that you should use scopes if you use
   OAuth2.
 
 It is strongly encouraged to use the handlers shipped with Fosite as the follow specs.
@@ -102,17 +100,6 @@ It is strongly encouraged to use the handlers shipped with Fosite as the follow 
 Sections below [Section 5](https://tools.ietf.org/html/rfc6819#section-5)
 that are not covered in the list above should be reviewed by you. If you think that a specific section should be something
 that is covered in Fosite, feel free to create an [issue](https://github.com/ory-am/fosite/issues).
-
-The following list documents which sections of the RFCs we reviewed for each action. This list is not complete yet.
-
-* AuthorizeExplicitEndpointHandler: Managing the authorization code grant
-  * [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
-    * (Authorization Endpoint)[https://tools.ietf.org/html/rfc6749#section-3.1]
-    * (Response Type)[https://tools.ietf.org/html/rfc6749#section-3.1.1]
-    * (Redirection Endpoint)[https://tools.ietf.org/html/rfc6749#section-3.1.2]
-    * ...
-  * [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
-    * ...
 
 ## A word on extensibility
 
@@ -122,11 +109,7 @@ have been validated against the OAuth2 specs beforehand.
 You can easily extend Fosite's capabilities. For example, if you want to provide OpenID Connect on top of your
 OAuth2 stack, that's no problem. Or custom assertions, what ever you like and as long as it is secure. ;)
 
-## Usage
-
-This section is WIP and we welcome discussions via PRs or in the issues.
-
-### See it in action
+## Example
 
 The example does not have nice visuals but it should give you an idea of what you can do with Fosite and a few lines
 of code.
@@ -143,6 +126,10 @@ fosite-example
 
 There should be a server listening on [localhost:3846](https://localhost:3846/). You can check out the example's
 source code [here](/fosite-example/main.go).
+
+## Usage
+
+There is an API documentation available at [godoc.org/ory-am/fosite](https://godoc.org/github.com/ory-am/fosite).
 
 ### Installation
 
@@ -168,7 +155,7 @@ To use the unstable master branch, which is only recommended for testing purpose
 go get gopkg.in/ory-am/fosite.v0/...
 ```
 
-### [Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)
+### Exemplary [Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)
 
 ```go
 package main
@@ -179,31 +166,29 @@ import(
 	"golang.org/x/net/context"
 )
 
-var oauth2 fosite.OAuth2Provider = fositeFactory()
-
 func fositeFactory() fosite.OAuth2Provider {
     // NewMyStorageImplementation should implement all storage interfaces.
     var store = newMyStorageImplementation()
 
-    f := fosite.NewDefaultFosite(store)
+    f := fosite.NewFosite(store)
     accessTokenLifespan := time.Hour
 
     // Let's enable the explicit authorize code grant!
-    explicitHandler := &explicit.AuthorizeExplicitEndpointHandler struct {
+    explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler struct {
         Enigma:           &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
         Store:            store,
         AuthCodeLifespan: time.Minute * 10,
     }
-    f.AuthorizeEndpointHandlers.Add(explicitHandler)
-    f.TokenEndpointHandlers.Add(explicitHandler)
+    f.AuthorizeEndpointHandlers.Add("code", explicitHandler)
+    f.TokenEndpointHandlers.Add("code", explicitHandler)
 
     // Next let's enable the implicit one!
-    explicitHandler := &implicit.AuthorizeImplicitEndpointHandler struct {
+    explicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler struct {
         Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
         Store:               store,
         AccessTokenLifespan: accessTokenLifespan,
     }
-    f.AuthorizeEndpointHandlers.Add(implicitHandler)
+    f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
 
     return f
 }
@@ -285,7 +270,7 @@ func handleAuth(rw http.ResponseWriter, r *http.Request) {
 // ...
 ```
 
-### [Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)
+### Exemplary [Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)
 
 ```go
 // ...
@@ -335,15 +320,15 @@ Let's take the explicit authorize handler. He is responsible for handling the
 If you want to enable the handler able to handle this workflow, you can do this:
 
 ```go
-handler := &explicit.AuthorizeExplicitEndpointHandler{
+handler := &explicit.AuthorizeExplicitGrantTypeHandler{
 	Generator: &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
 	Store:     myCodeStore, // Needs to implement CodeResponseTypeStorage
 }
 oauth2 := &fosite.Fosite{
-	AuthorizeEndpointHandlers: []fosite.AuthorizeEndpointHandler{
+	AuthorizeEndpointHandlers: fosite.AuthorizeEndpointHandlers{
 		handler,
 	},
-	TokenEndpointHandlers: []fosite.TokenEndpointHandler{
+	TokenEndpointHandlers: fosite.TokenEndpointHandlers{
 		handler,
 	},
 }
