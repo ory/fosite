@@ -23,7 +23,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(_ conte
 		return nil
 	}
 
-	var authSess AuthorizeSession
+	authSess := AuthorizeSession{Extra: session}
 	challenge := &enigma.Challenge{}
 	challenge.FromString(req.PostForm.Get("code"))
 
@@ -102,10 +102,9 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 		return errors.New(ErrServerError)
 	}
 
-	var authSess AuthorizeSession
 	challenge := &enigma.Challenge{}
 	challenge.FromString(req.PostForm.Get("code"))
-	ar, err := c.Store.GetAuthorizeCodeSession(challenge.Signature, &authSess)
+	ar, err := c.Store.GetAuthorizeCodeSession(challenge.Signature, &AuthorizeSession{Extra: session})
 	if err != nil {
 		// The signature has already been verified both cryptographically and with lookup. If lookup fails here
 		// it is due to some internal error.
@@ -114,9 +113,9 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 
 	if err := c.Store.DeleteAuthorizeCodeSession(req.PostForm.Get("code")); err != nil {
 		return errors.New(ErrServerError)
-	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{Extra: session}); err != nil {
 		return errors.New(ErrServerError)
-	} else if err := c.Store.CreateRefreshTokenSession(refresh.Signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateRefreshTokenSession(refresh.Signature, requester, &core.TokenSession{Extra: session}); err != nil {
 		return errors.New(ErrServerError)
 	}
 
