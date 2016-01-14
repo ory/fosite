@@ -392,6 +392,9 @@ This place is reserved for the fearless bug hunters, reviewers and contributors 
 * [agtorre](https://github.com/agtorre):
   [contributions](https://github.com/ory-am/fosite/issues?q=author%3Aagtorre),
   [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Aagtorre).
+* [cristiangraz](https://github.com/cristiangraz):
+  [contributions](https://github.com/ory-am/fosite/issues?q=author%3Aacristiangraz),
+  [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Acristiangraz).
 * [danielchatfield](https://github.com/danielchatfield):
   [contributions](https://github.com/ory-am/fosite/issues?q=author%3Adanielchatfield),
   [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Adanielchatfield).
