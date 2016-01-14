@@ -3,7 +3,7 @@
 **The security first OAuth2 framework for [Google's Go Language](https://golang.org).**
 Built simple, powerful and extensible. This library implements peer-reviewed [IETF RFC6749](https://tools.ietf.org/html/rfc6749),
 counterfeits weaknesses covered in peer-reviewed [IETF RFC6819](https://tools.ietf.org/html/rfc6819) and countermeasures various database
-attack scenarios, keeping your application safe when that hacker penetrates and leaks your database.
+attack scenarios, keeping your application safe when that hacker penetrates or leaks your database.
 
 [![Build Status](https://travis-ci.org/ory-am/fosite.svg?branch=master)](https://travis-ci.org/ory-am/fosite?branch=master)
 [![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github&foo)](https://coveralls.io/github/ory-am/fosite?branch=master)
@@ -12,7 +12,7 @@ Be aware that `go get github.com/ory-am/fosite` will give you the master branch,
 Once releases roll out, you will be able to fetch a specific [fosite API version through gopkg.in](#installation).
 As of now, no stable `v1` version exists.
 
-During development, we took reviewed the following open specifications:
+During development, we reviewed the following open specifications:
 * [OAuth 2.0 Multiple Response Type Encoding Practices](https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
 * [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
 * [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
@@ -29,8 +29,8 @@ During development, we took reviewed the following open specifications:
 - [A word on extensibility](#a-word-on-extensibility)
 - [Usage](#usage)
   - [Installation](#installation)
-  - [Exemplary [Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)](#exemplary-authorization-endpointhttpstoolsietforghtmlrfc6749section-31)
-  - [Exemplary [Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)](#exemplary-token-endpointhttpstoolsietforghtmlrfc6749section-32)
+  - [Exemplary Authorization Endpoint](#exemplary-authorization-endpoint)
+  - [Exemplary Token Endpoint](#exemplary-token-endpoint)
   - [Extensible handlers](#extensible-handlers)
   - [Replaceable storage](#replaceable-storage)
 - [Develop fosite](#develop-fosite)
@@ -41,7 +41,7 @@ During development, we took reviewed the following open specifications:
 
 ## Motivation
 
-Fosite was written because our OAuth2 and OpenID Connect service [Hydra](https://github.com/ory-am/hydra)
+Fosite was written because our OAuth2 and OpenID Connect service [**Hydra**](https://github.com/ory-am/hydra)
 required a secure and extensible OAuth2 library. We had to realize that nothing matching our requirements
 was out there, so we decided to build it ourselves.
 
@@ -66,18 +66,17 @@ source code [here](/fosite-example/main.go).
 ## A word on quality
 
 We tried to set up as many tests as possible and test for as many cases covered in the RFCs as possible. But we are only
-human. Please, feel free to add tests for the various cases defined in the OAuth2 RFCs 6749 and 6819.
+human. Please, feel free to add tests for the various cases defined in the OAuth2 RFCs 6749 and 6819 or any other cases that improve the tests.
 
 **Everyone** writing an RFC conform test that breaks with the current implementation, will receive a place in the
 [Hall of Fame](#hall-of-fame)!
 
 ## A word on security
 
-Please be aware that Fosite only secures your server side security. You still need to secure your apps and clients, keep
-your tokens safe, prevent CSRF attacks and much more. If you need any help or advice feel free to contact our security
-staff through [our website](https://ory.am/)!
+Please be aware that Fosite only secures parts your server side security. You still need to secure your apps and clients, keep
+your tokens safe, prevent CSRF attacks, ensure database security, use valid and strong TLS certificates and much more. If you need any help or advice feel free to contact our security staff through [our website](https://ory.am/)!
 
-We have given the [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819#section-5.1.5.3)
+We have given the various specifications, especially [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819#section-5.1.5.3),
 a very close look and included everything we thought was in the scope of this framework. Here is a complete list
 of things we implemented in Fosite:
 
@@ -113,11 +112,11 @@ Additionally, we added these safeguards:
   properly. Obviously, you can change the scope to `basic` or `core` but be aware that you should use scopes if you use
   OAuth2.
 
-It is strongly encouraged to use the handlers shipped with Fosite as the follow specs.
-
 Sections below [Section 5](https://tools.ietf.org/html/rfc6819#section-5)
 that are not covered in the list above should be reviewed by you. If you think that a specific section should be something
 that is covered in Fosite, feel free to create an [issue](https://github.com/ory-am/fosite/issues).
+
+**It is strongly encouraged to use the handlers shipped with Fosite as they follow the specs and are well tested.**
 
 ## A word on extensibility
 
