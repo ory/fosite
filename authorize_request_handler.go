@@ -8,20 +8,25 @@ import (
 	"time"
 )
 
-func (c *Fosite) NewAuthorizeRequest(_ context.Context, r *http.Request) (AuthorizeRequester, error) {
+func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	if c.RequiredScope == "" {
 		c.RequiredScope = DefaultRequiredScopeName
 	}
 
 	request := &AuthorizeRequest{
-		RequestedAt:   time.Now(),
-		ResponseTypes: Arguments{},
-		Scopes:        Arguments{},
+		ResponseTypes:        Arguments{},
+		HandledResponseTypes: Arguments{},
+		Request: Request{
+			Scopes:      Arguments{},
+			RequestedAt: time.Now(),
+		},
 	}
 
 	if err := r.ParseForm(); err != nil {
 		return request, errors.New(ErrInvalidRequest)
 	}
+
+	request.Form = r.Form
 
 	client, err := c.Store.GetClient(r.Form.Get("client_id"))
 	if err != nil {

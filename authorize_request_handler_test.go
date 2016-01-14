@@ -178,10 +178,12 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expect: &AuthorizeRequest{
 				RedirectURI:   redir,
-				Client:        &SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}},
 				ResponseTypes: []string{"code"},
 				State:         "strong-state",
-				Scopes:        []string{DefaultRequiredScopeName, "foo", "bar"},
+				Request: Request{
+					Scopes: []string{DefaultRequiredScopeName, "foo", "bar"},
+					Client: &SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}},
+				},
 			},
 		},
 		{
@@ -199,10 +201,12 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expect: &AuthorizeRequest{
 				RedirectURI:   redir,
-				Client:        &SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}},
 				ResponseTypes: []string{"code", "token"},
 				State:         "strong-state",
-				Scopes:        []string{DefaultRequiredScopeName, "foo", "bar"},
+				Request: Request{
+					Client: &SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}},
+					Scopes: []string{DefaultRequiredScopeName, "foo", "bar"},
+				},
 			},
 		},
 	} {

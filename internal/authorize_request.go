@@ -72,6 +72,16 @@ func (_mr *_MockAuthorizeRequesterRecorder) GetRedirectURI() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRedirectURI")
 }
 
+func (_m *MockAuthorizeRequester) GetRequestForm() url.Values {
+	ret := _m.ctrl.Call(_m, "GetRequestForm")
+	ret0, _ := ret[0].(url.Values)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) GetRequestForm() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestForm")
+}
+
 func (_m *MockAuthorizeRequester) GetRequestedAt() time.Time {
 	ret := _m.ctrl.Call(_m, "GetRequestedAt")
 	ret0, _ := ret[0].(time.Time)
@@ -102,6 +112,16 @@ func (_mr *_MockAuthorizeRequesterRecorder) GetScopes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetScopes")
 }
 
+func (_m *MockAuthorizeRequester) GetSession() interface{} {
+	ret := _m.ctrl.Call(_m, "GetSession")
+	ret0, _ := ret[0].(interface{})
+	return ret0
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) GetSession() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetSession")
+}
+
 func (_m *MockAuthorizeRequester) GetState() string {
 	ret := _m.ctrl.Call(_m, "GetState")
 	ret0, _ := ret[0].(string)
@@ -110,6 +130,14 @@ func (_m *MockAuthorizeRequester) GetState() string {
 
 func (_mr *_MockAuthorizeRequesterRecorder) GetState() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetState")
+}
+
+func (_m *MockAuthorizeRequester) GrantScope(_param0 string) {
+	_m.ctrl.Call(_m, "GrantScope", _param0)
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) GrantScope(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GrantScope", arg0)
 }
 
 func (_m *MockAuthorizeRequester) IsRedirectURIValid() bool {
@@ -136,4 +164,12 @@ func (_m *MockAuthorizeRequester) SetScopes(_param0 fosite.Arguments) {
 
 func (_mr *_MockAuthorizeRequesterRecorder) SetScopes(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetScopes", arg0)
+}
+
+func (_m *MockAuthorizeRequester) SetSession(_param0 interface{}) {
+	_m.ctrl.Call(_m, "SetSession", _param0)
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) SetSession(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetSession", arg0)
 }

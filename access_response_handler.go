@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-func (f *Fosite) NewAccessResponse(ctx context.Context, req *http.Request, requester AccessRequester, session interface{}) (AccessResponder, error) {
+func (f *Fosite) NewAccessResponse(ctx context.Context, req *http.Request, requester AccessRequester) (AccessResponder, error) {
 	var err error
 	var tk TokenEndpointHandler
 
 	response := NewAccessResponse()
 	for _, tk = range f.TokenEndpointHandlers {
-		if err = tk.HandleTokenEndpointRequest(ctx, req, requester, response, session); err != nil {
+		if err = tk.HandleTokenEndpointRequest(ctx, req, requester, response); err != nil {
 			return nil, errors.Wrap(err, 1)
 		}
 	}

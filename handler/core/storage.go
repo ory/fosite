@@ -4,35 +4,26 @@ import (
 	"github.com/ory-am/fosite"
 )
 
-type TokenSession struct {
-	Extra interface{}
-}
-
-type AuthorizeSession struct {
-	RequestRedirectURI string
-	Extra              interface{}
-}
-
 type AuthorizeCodeStorage interface {
-	CreateAuthorizeCodeSession(string, fosite.AuthorizeRequester, *AuthorizeSession) error
+	CreateAuthorizeCodeSession(code string, request fosite.Requester) (err error)
 
-	GetAuthorizeCodeSession(string, *AuthorizeSession) (fosite.AuthorizeRequester, error)
+	GetAuthorizeCodeSession(code string, session interface{}) (request fosite.Requester, err error)
 
-	DeleteAuthorizeCodeSession(code string) error
+	DeleteAuthorizeCodeSession(code string) (err error)
 }
 
 type AccessTokenStorage interface {
-	CreateAccessTokenSession(signature string, access fosite.AccessRequester, session *TokenSession) error
+	CreateAccessTokenSession(signature string, request fosite.Requester) (err error)
 
-	GetAccessTokenSession(signature string, session *TokenSession) (fosite.AccessRequester, error)
+	GetAccessTokenSession(signature string, session interface{}) (request fosite.Requester, err error)
 
-	DeleteAccessTokenSession(signature string) error
+	DeleteAccessTokenSession(signature string) (err error)
 }
 
 type RefreshTokenStorage interface {
-	CreateRefreshTokenSession(signature string, access fosite.AccessRequester, session *TokenSession) error
+	CreateRefreshTokenSession(signature string, request fosite.Requester) (err error)
 
-	GetRefreshTokenSession(signature string, session *TokenSession) (fosite.AccessRequester, error)
+	GetRefreshTokenSession(signature string, session interface{}) (request fosite.Requester, err error)
 
-	DeleteRefreshTokenSession(signature string) error
+	DeleteRefreshTokenSession(signature string) (err error)
 }

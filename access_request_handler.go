@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/context"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Implements
@@ -33,9 +34,16 @@ import (
 //   client MUST authenticate with the authorization server as described
 //   in Section 3.2.1.
 func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session interface{}) (AccessRequester, error) {
-	ar := NewAccessRequest()
+	accessRequest := &AccessRequest{
+		Request: Request{
+			Scopes:      Arguments{},
+			Session:     session,
+			RequestedAt: time.Now(),
+		},
+	}
+
 	if r.Method != "POST" {
-		return ar, errors.New(ErrInvalidRequest)
+		return accessRequest, errors.New(ErrInvalidRequest)
 	}
 
 	if f.RequiredScope == "" {
@@ -43,49 +51,51 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	if err := r.ParseForm(); err != nil {
-		return ar, errors.New(ErrInvalidRequest)
+		return accessRequest, errors.New(ErrInvalidRequest)
 	}
+
+	accessRequest.Form = r.PostForm
 
 	if session == nil {
-		return ar, errors.New("Session must not be nil")
+		return accessRequest, errors.New("Session must not be nil")
 	}
 
-	ar.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
-	ar.GrantType = r.Form.Get("grant_type")
-	if ar.GrantType == "" {
-		return ar, errors.New(ErrInvalidRequest)
+	accessRequest.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
+	accessRequest.GrantType = r.Form.Get("grant_type")
+	if accessRequest.GrantType == "" {
+		return accessRequest, errors.New(ErrInvalidRequest)
 	}
 
 	clientID, clientSecret, ok := r.BasicAuth()
 	if !ok {
-		return ar, errors.New(ErrInvalidRequest)
+		return accessRequest, errors.New(ErrInvalidRequest)
 	}
 
 	client, err := f.Store.GetClient(clientID)
 	if err != nil {
-		return ar, errors.New(ErrInvalidClient)
+		return accessRequest, errors.New(ErrInvalidClient)
 	}
 
 	// Enforce client authentication
 	if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-		return ar, errors.New(ErrInvalidClient)
+		return accessRequest, errors.New(ErrInvalidClient)
 	}
-	ar.Client = client
+	accessRequest.Client = client
 
 	for _, loader := range f.TokenEndpointHandlers {
-		if err := loader.ValidateTokenEndpointRequest(ctx, r, ar, session); err != nil {
-			return ar, err
+		if err := loader.ValidateTokenEndpointRequest(ctx, r, accessRequest); err != nil {
+			return accessRequest, err
 		}
 	}
 
-	if !ar.DidHandleGrantType() {
-		return ar, errors.New(ErrUnsupportedGrantType)
+	if !accessRequest.DidHandleGrantType() {
+		return accessRequest, errors.New(ErrUnsupportedGrantType)
 	}
 
-	if !ar.GetScopes().Has(f.RequiredScope) {
-		return ar, errors.New(ErrInvalidScope)
+	if !accessRequest.GetScopes().Has(f.RequiredScope) {
+		return accessRequest, errors.New(ErrInvalidScope)
 	}
 
-	ar.GrantScope(f.RequiredScope)
-	return ar, nil
+	accessRequest.GrantScope(f.RequiredScope)
+	return accessRequest, nil
 }
