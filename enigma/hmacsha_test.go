@@ -11,17 +11,17 @@ func TestGenerateFailsWithShortCredentials(t *testing.T) {
 		GlobalSecret: []byte("foo"),
 	}
 
-	challenge, err := cg.GenerateChallenge([]byte("bar"))
+	challenge, err := cg.Generate([]byte("bar"))
 	require.NotNil(t, err, "%s", err)
 	require.Nil(t, challenge)
 
 	cg.GlobalSecret = []byte("12345678901234567890")
-	challenge, err = cg.GenerateChallenge([]byte("bar"))
+	challenge, err = cg.Generate([]byte("bar"))
 	require.NotNil(t, err, "%s", err)
 	require.Nil(t, challenge)
 
 	cg.GlobalSecret = []byte("bar")
-	challenge, err = cg.GenerateChallenge([]byte("12345678901234567890"))
+	challenge, err = cg.Generate([]byte("12345678901234567890"))
 	require.NotNil(t, err, "%s", err)
 	require.Nil(t, challenge)
 }
@@ -31,7 +31,7 @@ func TestGenerate(t *testing.T) {
 		GlobalSecret: []byte("12345678901234567890"),
 	}
 
-	challenge, err := cg.GenerateChallenge([]byte("09876543210987654321"))
+	challenge, err := cg.Generate([]byte("09876543210987654321"))
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, challenge)
 	t.Logf("%s.%s", challenge.Key, challenge.Signature)

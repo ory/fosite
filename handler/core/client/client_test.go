@@ -22,7 +22,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 
 	h := ClientCredentialsGrantHandler{
 		Store:               store,
-		Enigma:              chgen,
+		AccessTokenStrategy: chgen,
 		AccessTokenLifespan: time.Hour,
 	}
 	for k, c := range []struct {
@@ -60,7 +60,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 
 	h := ClientCredentialsGrantHandler{
 		Store:               store,
-		Enigma:              chgen,
+		AccessTokenStrategy: chgen,
 		AccessTokenLifespan: time.Hour,
 	}
 	for k, c := range []struct {

@@ -13,8 +13,8 @@ import (
 )
 
 type ClientCredentialsGrantHandler struct {
-	// Enigma is the algorithm responsible for creating a validatable, opaque string.
-	Enigma enigma.Enigma
+	// AccessTokenStrategy is the algorithm responsible for creating a validatable token.
+	AccessTokenStrategy core.AccessTokenStrategy
 
 	// Store is used to persist session data across requests.
 	Store ClientCredentialsGrantStorage
@@ -47,14 +47,14 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.C
 		return nil
 	}
 
-	access, err := c.Enigma.GenerateChallenge(requester.GetClient().GetHashedSecret())
+	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester, session)
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
-	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateAccessTokenSession(signature, requester, &core.TokenSession{}); err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 
-	responder.SetAccessToken(access.String())
+	responder.SetAccessToken(token)
 	responder.SetTokenType("bearer")
 	responder.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
 	responder.SetExtra("scope", strings.Join(requester.GetGrantedScopes(), " "))

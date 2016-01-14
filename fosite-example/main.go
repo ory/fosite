@@ -88,7 +88,7 @@ func fositeFactory() OAuth2Provider {
 	f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
 
 	clientHandler := &coreclient.ClientCredentialsGrantHandler{
-		Enigma:              enigmaService,
+		AccessTokenStrategy: enigmaService,
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
