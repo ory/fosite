@@ -39,8 +39,7 @@ func (c *RefreshTokenGrantHandler) ValidateTokenEndpointRequest(_ context.Contex
 		return errors.New(fosite.ErrInvalidRequest)
 	}
 
-	var ts core.TokenSession
-	ar, err := c.Store.GetRefreshTokenSession(challenge.Signature, &ts)
+	ar, err := c.Store.GetRefreshTokenSession(challenge.Signature, &core.TokenSession{Extra: session})
 	if err == pkg.ErrNotFound {
 		return errors.New(fosite.ErrInvalidRequest)
 	} else if err != nil {
@@ -65,14 +64,14 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	access, err := c.Enigma.GenerateChallenge(requester.GetClient().GetHashedSecret())
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
-	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{Extra: session}); err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 
 	refresh, err := c.Enigma.GenerateChallenge(requester.GetClient().GetHashedSecret())
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
-	} else if err := c.Store.CreateRefreshTokenSession(refresh.Signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateRefreshTokenSession(refresh.Signature, requester, &core.TokenSession{Extra: session}); err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 

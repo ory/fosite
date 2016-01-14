@@ -55,7 +55,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	access, err := c.Enigma.GenerateChallenge(requester.GetClient().GetHashedSecret())
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
-	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{Extra: session}); err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 
