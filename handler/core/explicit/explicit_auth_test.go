@@ -4,8 +4,6 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/client"
-	"github.com/ory-am/fosite/enigma"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -16,14 +14,14 @@ import (
 func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockAuthorizeCodeGrantStorage(ctrl)
-	chgen := internal.NewMockEnigma(ctrl)
+	chgen := internal.NewMockAuthorizeCodeStrategy(ctrl)
 	areq := internal.NewMockAuthorizeRequester(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 	defer ctrl.Finish()
 
 	h := AuthorizeExplicitGrantTypeHandler{
-		Store:  store,
-		Enigma: chgen,
+		Store: store,
+		AuthorizeCodeStrategy: chgen,
 	}
 	for k, c := range []struct {
 		mock      func()
@@ -43,8 +41,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 		{
 			mock: func() {
 				areq.EXPECT().GetResponseTypes().Return(fosite.Arguments{"code"})
-				areq.EXPECT().GetClient().Return(&client.SecureClient{Secret: []byte("foosecret")})
-				chgen.EXPECT().GenerateChallenge(gomock.Eq([]byte("foosecret"))).Return(nil, fosite.ErrServerError)
+				chgen.EXPECT().GenerateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", fosite.ErrServerError)
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -52,9 +49,8 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			req: &http.Request{Form: url.Values{"redirect_uri": {"foobar"}}},
 			mock: func() {
 				areq.EXPECT().GetResponseTypes().Return(fosite.Arguments{"code"})
-				areq.EXPECT().GetClient().Return(&client.SecureClient{Secret: []byte("foosecret")})
-				chgen.EXPECT().GenerateChallenge(gomock.Eq([]byte("foosecret"))).Return(&enigma.Challenge{}, nil)
-				store.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(fosite.ErrTemporarilyUnavailable)
+				chgen.EXPECT().GenerateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
+				store.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(fosite.ErrTemporarilyUnavailable)
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -62,20 +58,20 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			req: &http.Request{Form: url.Values{"redirect_uri": {"foobar"}}},
 			mock: func() {
 				areq.EXPECT().GetResponseTypes().Return(fosite.Arguments{"code"})
-				areq.EXPECT().GetClient().Return(&client.SecureClient{Secret: []byte("foosecret")})
-				chgen.EXPECT().GenerateChallenge(gomock.Eq([]byte("foosecret"))).Return(&enigma.Challenge{Key: "foo", Signature: "bar"}, nil)
-				store.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				aresp.EXPECT().AddQuery(gomock.Eq("code"), gomock.Eq("foo.bar"))
-				aresp.EXPECT().AddQuery(gomock.Eq("scope"), gomock.Any())
-				aresp.EXPECT().AddQuery(gomock.Eq("state"), gomock.Any())
-				areq.EXPECT().SetResponseTypeHandled(gomock.Eq("code"))
+				chgen.EXPECT().GenerateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any()).Return("foo.bar", "bar", nil)
+				store.EXPECT().CreateAuthorizeCodeSession("bar", gomock.Any()).Return(nil)
+
+				aresp.EXPECT().AddQuery("code", "foo.bar")
+				aresp.EXPECT().AddQuery("scope", gomock.Any())
+				aresp.EXPECT().AddQuery("state", gomock.Any())
+				areq.EXPECT().SetResponseTypeHandled("code")
 				areq.EXPECT().GetGrantedScopes()
 				areq.EXPECT().GetState()
 			},
 		},
 	} {
 		c.mock()
-		err := h.HandleAuthorizeEndpointRequest(nil, c.req, areq, aresp, nil)
+		err := h.HandleAuthorizeEndpointRequest(nil, c.req, areq, aresp)
 		assert.True(t, errors.Is(c.expectErr, err), "%d\n%s\n%s", k, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

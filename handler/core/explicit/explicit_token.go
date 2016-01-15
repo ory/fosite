@@ -26,7 +26,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(ctx con
 		return errors.New(ErrInvalidRequest)
 	}
 
-	authorizeRequest, err := c.Store.GetAuthorizeCodeSession(signature)
+	authorizeRequest, err := c.Store.GetAuthorizeCodeSession(signature, request.GetSession())
 	if err == pkg.ErrNotFound {
 		return errors.New(ErrInvalidRequest)
 	} else if err != nil {
@@ -47,7 +47,8 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(ctx con
 	// "redirect_uri" parameter was included in the initial authorization
 	// request as described in Section 4.1.1, and if included ensure that
 	// their values are identical.
-	if authorizeRequest.GetRequestForm().Get("redirect_uri") != r.PostForm.Get("redirect_uri") {
+	forcedRedirectURI := authorizeRequest.GetRequestForm().Get("redirect_uri")
+	if forcedRedirectURI != "" && forcedRedirectURI != r.PostForm.Get("redirect_uri") {
 		return errors.New(ErrInvalidRequest)
 	}
 
@@ -90,18 +91,18 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 		return errors.New(ErrServerError)
 	}
 
-	accessRequest, err := c.Store.GetAuthorizeCodeSession(req.PostForm.Get("code"))
+	accessRequest, err := c.Store.GetAuthorizeCodeSession(req.PostForm.Get("code"), nil)
 	if err != nil {
 		// The signature has already been verified both cryptographically and with lookup. If lookup fails here
 		// it is due to some internal error.
 		return errors.New(ErrServerError)
 	}
 
-	if err := c.Store.DeleteAuthorizeCodeSession(req.PostForm.Get("code")); err != nil {
-		return errors.New(ErrServerError)
-	} else if err := c.Store.CreateAccessTokenSession(accessSignature, requester); err != nil {
+	if err := c.Store.CreateAccessTokenSession(accessSignature, requester); err != nil {
 		return errors.New(ErrServerError)
 	} else if err := c.Store.CreateRefreshTokenSession(refreshSignature, requester); err != nil {
+		return errors.New(ErrServerError)
+	} else if err := c.Store.DeleteAuthorizeCodeSession(req.PostForm.Get("code")); err != nil {
 		return errors.New(ErrServerError)
 	}
 
@@ -109,7 +110,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	responder.SetTokenType("bearer")
 	responder.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
 	responder.SetExtra("refresh_token", refresh)
-	responder.SetExtra("state", accessRequest.GetState())
+	responder.SetExtra("state", accessRequest.GetRequestForm().Get("state"))
 	responder.SetExtra("scope", strings.Join(requester.GetGrantedScopes(), " "))
 	return nil
 }

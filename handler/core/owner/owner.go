@@ -23,7 +23,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 }
 
 // ValidateTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.2
-func (c *ResourceOwnerPasswordCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.Context, req *http.Request, request fosite.AccessRequester, session interface{}) error {
+func (c *ResourceOwnerPasswordCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.Context, req *http.Request, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "password".
 	if request.GetGrantType() != "password" {
@@ -39,6 +39,9 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) ValidateTokenEndpointRequ
 	} else if err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
+
+	// Credentials must not be passed around, potentially leaking to the database!
+	delete(request.GetRequestForm(), "password")
 
 	request.SetGrantTypeHandled("password")
 	return nil

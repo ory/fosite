@@ -39,9 +39,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 			Scopes:      Arguments{},
 			Session:     session,
 			RequestedAt: time.Now(),
-			Form:        r.Form,
 		},
-		Scopes: Arguments{},
 	}
 
 	if r.Method != "POST" {
@@ -55,6 +53,8 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	if err := r.ParseForm(); err != nil {
 		return accessRequest, errors.New(ErrInvalidRequest)
 	}
+
+	accessRequest.Form = r.PostForm
 
 	if session == nil {
 		return accessRequest, errors.New("Session must not be nil")

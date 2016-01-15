@@ -35,7 +35,7 @@ func TestGenerate(t *testing.T) {
 	require.Nil(t, err, "%s", err)
 	require.NotEmpty(t, token)
 	require.NotEmpty(t, signature)
-	t.Logf("%s.%s", token, signature)
+	t.Logf("Token: %s\n Signature: %s", token, signature)
 
 	validateSignature, err := cg.Validate([]byte("09876543210987654321"), token)
 	require.Nil(t, err, "%s", err)

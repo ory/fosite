@@ -5,25 +5,25 @@ import (
 )
 
 type AuthorizeCodeStorage interface {
-	CreateAuthorizeCodeSession(code string, request fosite.AuthorizeRequester) (err error)
+	CreateAuthorizeCodeSession(code string, request fosite.Requester) (err error)
 
-	GetAuthorizeCodeSession(code string) (request fosite.AuthorizeRequester, err error)
+	GetAuthorizeCodeSession(code string, session interface{}) (request fosite.Requester, err error)
 
 	DeleteAuthorizeCodeSession(code string) (err error)
 }
 
 type AccessTokenStorage interface {
-	CreateAccessTokenSession(signature string, request fosite.AccessRequester) (err error)
+	CreateAccessTokenSession(signature string, request fosite.Requester) (err error)
 
-	GetAccessTokenSession(signature string) (request fosite.AccessRequester, err error)
+	GetAccessTokenSession(signature string, session interface{}) (request fosite.Requester, err error)
 
 	DeleteAccessTokenSession(signature string) (err error)
 }
 
 type RefreshTokenStorage interface {
-	CreateRefreshTokenSession(signature string, request fosite.AccessRequester) (err error)
+	CreateRefreshTokenSession(signature string, request fosite.Requester) (err error)
 
-	GetRefreshTokenSession(signature string) (request fosite.AccessRequester, err error)
+	GetRefreshTokenSession(signature string, session interface{}) (request fosite.Requester, err error)
 
 	DeleteRefreshTokenSession(signature string) (err error)
 }

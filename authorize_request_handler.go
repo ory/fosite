@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request, session interface{}) (AuthorizeRequester, error) {
+func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	if c.RequiredScope == "" {
 		c.RequiredScope = DefaultRequiredScopeName
 	}
@@ -18,15 +18,15 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request, sessi
 		HandledResponseTypes: Arguments{},
 		Request: Request{
 			Scopes:      Arguments{},
-			Session:     session,
 			RequestedAt: time.Now(),
-			Form:        r.Form,
 		},
 	}
 
 	if err := r.ParseForm(); err != nil {
 		return request, errors.New(ErrInvalidRequest)
 	}
+
+	request.Form = r.Form
 
 	client, err := c.Store.GetClient(r.Form.Get("client_id"))
 	if err != nil {

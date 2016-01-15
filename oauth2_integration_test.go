@@ -7,6 +7,7 @@ import (
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma"
 	"github.com/ory-am/fosite/handler/core/explicit"
+	"github.com/ory-am/fosite/handler/core/strategy"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/parnurzeal/gorequest"
 	"github.com/stretchr/testify/assert"
@@ -15,14 +16,13 @@ import (
 	goauth2 "golang.org/x/oauth2"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 )
 
 var clientID = "foo"
 var clientSecret = "barbarbarbarbar"
-var clientSecretByte = []byte("barbarbarbarbar")
-var state = "random-state"
 var ts *httptest.Server
 
 var mockStore *MockStorage
@@ -30,6 +30,12 @@ var mockClient *MockClient
 var mockAuthStore *MockAuthorizeCodeGrantStorage
 var mockAuthReq *MockAuthorizeRequester
 var mockHasher *MockHasher
+
+var defaultStrategy = &strategy.HMACSHAStrategy{
+	Enigma: &enigma.HMACSHAEnigma{
+		GlobalSecret: []byte("super-global-secret"),
+	},
+}
 
 func TestFosite(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -41,8 +47,10 @@ func TestFosite(t *testing.T) {
 	defer ctrl.Finish()
 
 	authExplicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
-		Enigma: &enigma.HMACSHAEnigma{GlobalSecret: []byte("super-global-secret")},
-		Store:  mockAuthStore,
+		AccessTokenStrategy:   defaultStrategy,
+		RefreshTokenStrategy:  defaultStrategy,
+		AuthorizeCodeStrategy: defaultStrategy,
+		Store: mockAuthStore,
 	}
 
 	oauth2 := NewFosite(mockStore)
@@ -159,7 +167,7 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				mockClient.EXPECT().GetHashedSecret().AnyTimes().Return(workingClientHashedSecret)
 				mockClient.EXPECT().GetRedirectURIs().AnyTimes().Return([]string{ts.URL + "/cb"})
 
-				mockAuthStore.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				mockAuthStore.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(nil)
 				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, errors.New("foo"))
 			},
 			expectStatusCode:   http.StatusOK,
@@ -188,16 +196,17 @@ func oauth2TestAuthorizeCodeWorkFlow(oauth2 OAuth2Provider, t *testing.T, refres
 				mockClient.EXPECT().GetHashedSecret().AnyTimes().Return(workingClientHashedSecret)
 				mockClient.EXPECT().GetRedirectURIs().AnyTimes().Return([]string{ts.URL + "/cb"})
 
-				mockAuthStore.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
-				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().AnyTimes().Return(mockAuthReq, nil)
-				mockAuthStore.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
-				mockAuthStore.EXPECT().CreateRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
+				mockAuthStore.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
+				mockAuthStore.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).AnyTimes().Return(mockAuthReq, nil)
+				mockAuthStore.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
+				mockAuthStore.EXPECT().CreateRefreshTokenSession(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 				mockAuthStore.EXPECT().DeleteAuthorizeCodeSession(gomock.Any()).AnyTimes().Return(nil)
 
 				mockAuthReq.EXPECT().GetClient().AnyTimes().Return(mockClient)
 				mockAuthReq.EXPECT().GetRequestedAt().AnyTimes().Return(time.Now())
+				mockAuthReq.EXPECT().GetRequestForm().AnyTimes().Return(url.Values{})
+				mockAuthReq.EXPECT().GetSession().AnyTimes().Return(nil)
 				mockAuthReq.EXPECT().GetScopes().Return([]string{DefaultRequiredScopeName})
-				mockAuthReq.EXPECT().GetState()
 			},
 			expectStatusCode:   http.StatusOK,
 			expectPath:         "/cb",

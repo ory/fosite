@@ -1,7 +1,6 @@
 package fosite
 
 import (
-	"github.com/ory-am/fosite/client"
 	"time"
 )
 
@@ -9,10 +8,6 @@ type AccessRequest struct {
 	GrantType        string
 	HandledGrantType []string
 	RequestedAt      time.Time
-	Client           client.Client
-	Scopes           Arguments
-	GrantedScopes    []string
-	Session          interface{}
 
 	Request
 }

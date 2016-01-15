@@ -43,25 +43,26 @@ func (c *HMACSHAEnigma) Generate(secret []byte) (string, string, error) {
 	// constructed from a cryptographically strong random or pseudo-random
 	// number sequence (see [RFC4086] for best current practice) generated
 	// by the authorization server.
-	randomBytes, err := rand.RandomBytes(c.AuthCodeEntropy)
+	key, err := rand.RandomBytes(c.AuthCodeEntropy)
 	if err != nil {
 		return "", "", errors.New(err)
 	}
 
-	if len(randomBytes) < c.AuthCodeEntropy {
+	if len(key) < c.AuthCodeEntropy {
 		return "", "", errors.New("Could not read enough random data for key generation")
 	}
 
 	useSecret := append([]byte{}, c.GlobalSecret...)
 	mac := hmac.New(sha256.New, append(useSecret, secret...))
-	_, err = mac.Write(randomBytes)
+	_, err = mac.Write(key)
 	if err != nil {
 		return "", "", errors.New(err)
 	}
-	signature := mac.Sum([]byte{})
 
-	token := fmt.Sprintf("%s.%s", b64.EncodeToString(randomBytes), b64.EncodeToString(signature))
-	return token, b64.EncodeToString(signature), nil
+	signature := mac.Sum([]byte{})
+	encodedSignature := b64.EncodeToString(signature)
+	encodedToken := fmt.Sprintf("%s.%s", b64.EncodeToString(key), encodedSignature)
+	return encodedToken, encodedSignature, nil
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
@@ -71,8 +72,8 @@ func (c *HMACSHAEnigma) Validate(secret []byte, token string) (string, error) {
 		return "", errors.New("Key and signature must both be set")
 	}
 
-	signature := split[0]
-	key := split[1]
+	key := split[0]
+	signature := split[1]
 	if key == "" || signature == "" {
 		return "", errors.New("Key and signature must both be set")
 	}

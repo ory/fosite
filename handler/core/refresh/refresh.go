@@ -38,7 +38,7 @@ func (c *RefreshTokenGrantHandler) ValidateTokenEndpointRequest(ctx context.Cont
 		return errors.New(fosite.ErrInvalidRequest)
 	}
 
-	ar, err := c.Store.GetRefreshTokenSession(signature)
+	accessRequest, err := c.Store.GetRefreshTokenSession(signature, nil)
 	if err == pkg.ErrNotFound {
 		return errors.New(fosite.ErrInvalidRequest)
 	} else if err != nil {
@@ -46,7 +46,7 @@ func (c *RefreshTokenGrantHandler) ValidateTokenEndpointRequest(ctx context.Cont
 	}
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
-	if ar.GetClient().GetID() != request.GetClient().GetID() {
+	if accessRequest.GetClient().GetID() != request.GetClient().GetID() {
 		return errors.New(fosite.ErrInvalidRequest)
 	}
 

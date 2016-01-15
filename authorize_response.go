@@ -5,24 +5,15 @@ import (
 	"net/url"
 )
 
-// NewAuthorizeResponse creates a new AuthorizeResponse
-func NewAuthorizeResponse() *AuthorizeResponse {
-	return &AuthorizeResponse{
-		Header:   &http.Header{},
-		Query:    &url.Values{},
-		Fragment: &url.Values{},
-	}
-}
-
 // AuthorizeResponse is an implementation of AuthorizeResponder
 type AuthorizeResponse struct {
-	Header   *http.Header
-	Query    *url.Values
-	Fragment *url.Values
+	Header   http.Header
+	Query    url.Values
+	Fragment url.Values
 }
 
 func (a *AuthorizeResponse) GetHeader() http.Header {
-	return *a.Header
+	return a.Header
 }
 
 func (a *AuthorizeResponse) AddHeader(key, value string) {
@@ -30,11 +21,11 @@ func (a *AuthorizeResponse) AddHeader(key, value string) {
 }
 
 func (a *AuthorizeResponse) GetQuery() url.Values {
-	return *a.Query
+	return a.Query
 }
 
 func (a *AuthorizeResponse) GetFragment() url.Values {
-	return *a.Fragment
+	return a.Fragment
 }
 
 func (a *AuthorizeResponse) AddQuery(key, value string) {

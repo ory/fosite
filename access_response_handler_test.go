@@ -30,21 +30,21 @@ func TestNewAccessResponse(t *testing.T) {
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
 			},
 			handlers:  TokenEndpointHandlers{"a": handler},
 			expectErr: ErrServerError,
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers:  TokenEndpointHandlers{"a": handler},
 			expectErr: ErrUnsupportedGrantType,
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder, _param4 interface{}) {
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder) {
 					resp.SetAccessToken("foo")
 				}).Return(nil)
 			},
@@ -53,7 +53,7 @@ func TestNewAccessResponse(t *testing.T) {
 		},
 		{
 			mock: func() {
-				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder, _param4 interface{}) {
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, _ AccessRequester, resp AccessResponder) {
 					resp.SetAccessToken("foo")
 					resp.SetTokenType("bar")
 				}).Return(nil)
@@ -68,7 +68,7 @@ func TestNewAccessResponse(t *testing.T) {
 	} {
 		f.TokenEndpointHandlers = c.handlers
 		c.mock()
-		ar, err := f.NewAccessResponse(nil, nil, nil, struct{}{})
+		ar, err := f.NewAccessResponse(nil, nil, nil)
 		assert.True(t, errors.Is(c.expectErr, err), "%d", k)
 		assert.Equal(t, ar, c.expect)
 		t.Logf("Passed test case %d", k)
