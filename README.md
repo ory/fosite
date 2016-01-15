@@ -35,7 +35,6 @@ During development, we reviewed the following open specifications:
     - [Exemplary [Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)](#exemplary-token-endpointhttpstoolsietforghtmlrfc6749section-32)
     - [Exemplary Storage Implementation](#exemplary-storage-implementation)
     - [Extensible handlers](#extensible-handlers)
-    - [Replaceable storage](#replaceable-storage)
   - [Develop fosite](#develop-fosite)
     - [Useful commands](#useful-commands)
   - [Hall of Fame](#hall-of-fame)
@@ -351,8 +350,13 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 
 ### Exemplary Storage Implementation
 
-This code is taken from [fosite-example/internal/store.go](fosite-example/internal/store.go). This implementation
-is capable of supplying storage methods to all the OAuth2 [core handlers](handler/core).
+Fosite does not ship a storage implementation yet. To get fosite running, you need to implement `github.com/ory-am/fosite.Storage`.
+Additionally, most of the token / authorize endpoint handlers require a store as well. You could however use one struct
+to implement all the signatures.
+
+The following code is taken from [fosite-example/internal/store.go](fosite-example/internal/store.go) and a working example
+of such a struct. This store is capable of supplying storage methods to all the OAuth2 [core handlers](handler/core).
+
 
 ```go
 package internal
@@ -369,6 +373,7 @@ type UserRelation struct {
 	Password string
 }
 
+// Store is an in memory storage.
 type Store struct {
 	Clients        map[string]client.Client
 	AuthorizeCodes map[string]fosite.Requester
@@ -507,12 +512,6 @@ You can find a complete list of handlers inside the [handler directory](handler)
   [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3)
 * `github.com/ory-am/fosite/handler/core/token/client.TokenClientCredentialsEndpointHandler` implements the
   [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4)
-
-### Replaceable storage
-
-Fosite does not ship a storage implementation yet. To get fosite running, you need to implement `github.com/ory-am/fosite.Storage`.
-Additionally, most of the token / authorize endpoint handlers require a store as well. It is probably smart to
-implement all of those interfaces in one struct.
 
 ## Develop fosite
 
