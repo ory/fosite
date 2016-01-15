@@ -94,6 +94,7 @@ func fositeFactory() OAuth2Provider {
 	}
 	f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
 
+	// Client credentials grant type
 	clientHandler := &coreclient.ClientCredentialsGrantHandler{
 		AccessTokenStrategy: hmacStrategy,
 		Store:               store,
@@ -101,6 +102,7 @@ func fositeFactory() OAuth2Provider {
 	}
 	f.TokenEndpointHandlers.Add("client", clientHandler)
 
+	// Resource owner password credentials grant type
 	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
 		AccessTokenStrategy: hmacStrategy,
 		Store:               store,
@@ -108,6 +110,7 @@ func fositeFactory() OAuth2Provider {
 	}
 	f.TokenEndpointHandlers.Add("owner", ownerHandler)
 
+	// Refresh grant type
 	refreshHandler := &refresh.RefreshTokenGrantHandler{
 		AccessTokenStrategy:  hmacStrategy,
 		RefreshTokenStrategy: hmacStrategy,

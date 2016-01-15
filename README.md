@@ -61,7 +61,7 @@ fosite-example
 ```
 
 There should be a server listening on [localhost:3846](https://localhost:3846/). You can check out the example's
-source code [here](/fosite-example/main.go).
+source code [here](fosite-example/main.go).
 
 ## A word on quality
 
@@ -142,55 +142,126 @@ Right now, there is only an unstable release versioned as the v0 branch:
 go get gopkg.in/ory-am/fosite.v0/...
 ```
 
-### Exemplary [Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)
+**Before you read ahead.**
+Take a look at these real-life implementations:
+* [tests](oauth2_integration_helper_test.go)
+* [example app](fosite/example/main.go)
+
+### Exemplary Server Implementation
 
 ```go
 package main
 
 import(
-    "github.com/ory-am/fosite"
-    "github.com/ory-am/handler/core/explicit"
-	"golang.org/x/net/context"
+	"github.com/go-errors/errors"
+
+	. "github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/enigma"
+	"github.com/ory-am/fosite/handler/core/explicit"
+	"github.com/ory-am/fosite/handler/core/implicit"
+	"github.com/ory-am/fosite/handler/core/owner"
+	"github.com/ory-am/fosite/handler/core/refresh"
+	"github.com/ory-am/fosite/handler/core/strategy"
+	"github.com/ory-am/fosite/handler/core/client"
+	"log"
+	"net/http"
+	"time"
 )
 
-func fositeFactory() fosite.OAuth2Provider {
+var hmacStrategy = &strategy.HMACSHAStrategy{
+	Enigma: &enigma.HMACSHAEnigma{
+		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
+	},
+}
+
+var oauth2 = fositeFactory()
+
+func main() {
+    // Note that you MUST use http over TLS if you use OAuth2. Do not use OAuth2 otherwise.
+    // This example does not implement TLS for simplicity.
+	http.HandleFunc("/auth", authEndpoint)
+	http.HandleFunc("/token", tokenEndpoint)
+	log.Fatal(http.ListenAndServe(":3846", nil))
+}
+
+func fositeFactory() OAuth2Provider {
     // NewMyStorageImplementation should implement all storage interfaces.
+    // You can find an exemplary implementation in ./fosite-example/internal/store.go
     var store = newMyStorageImplementation()
 
-    f := fosite.NewFosite(store)
-    accessTokenLifespan := time.Hour
+	f := NewFosite(store)
+	accessTokenLifespan := time.Hour
 
-    // Let's enable the explicit authorize code grant!
-    explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler struct {
-        Enigma:           &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
-        Store:            store,
-        AuthCodeLifespan: time.Minute * 10,
-    }
-    f.AuthorizeEndpointHandlers.Add("code", explicitHandler)
-    f.TokenEndpointHandlers.Add("code", explicitHandler)
+	// Let's enable the explicit authorize code grant!
+	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
+		AccessTokenStrategy:   hmacStrategy,
+		RefreshTokenStrategy:  hmacStrategy,
+		AuthorizeCodeStrategy: hmacStrategy,
+		Store:               store,
+		AuthCodeLifespan:    time.Minute * 10,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+	f.AuthorizeEndpointHandlers.Add("code", explicitHandler)
+	f.TokenEndpointHandlers.Add("code", explicitHandler)
 
-    // Next let's enable the implicit one!
-    explicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler struct {
-        Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
-        Store:               store,
-        AccessTokenLifespan: accessTokenLifespan,
-    }
-    f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
+	// Implicit grant type
+	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
+		AccessTokenStrategy: hmacStrategy,
+		Store:               store,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+	f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
+
+	// Client credentials grant type
+	clientHandler := &coreclient.ClientCredentialsGrantHandler{
+		AccessTokenStrategy: hmacStrategy,
+		Store:               store,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+	f.TokenEndpointHandlers.Add("client", clientHandler)
+
+	// Resource owner password credentials grant type
+	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
+		AccessTokenStrategy: hmacStrategy,
+		Store:               store,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+	f.TokenEndpointHandlers.Add("owner", ownerHandler)
+
+	// Refresh grant type
+	refreshHandler := &refresh.RefreshTokenGrantHandler{
+		AccessTokenStrategy:  hmacStrategy,
+		RefreshTokenStrategy: hmacStrategy,
+		Store:                store,
+		AccessTokenLifespan:  accessTokenLifespan,
+	}
+	f.TokenEndpointHandlers.Add("refresh", refreshHandler)
 
     return f
 }
+// ...
+```
 
-// Let's assume that we're in a http handler
-func handleAuth(rw http.ResponseWriter, r *http.Request) {
-    ctx := fosite.NewContext()
+### Exemplary [Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)
+
+```go
+// ...
+type session struct {
+	User string
+}
+
+func authEndpoint(rw http.ResponseWriter, req *http.Request) {
+    // This context will be passed to all methods.
+	ctx := NewContext()
 
     // Let's create an AuthorizeRequest object!
     // It will analyze the request and extract important information like scopes, response type and others.
-    authorizeRequest, err := oauth2.NewAuthorizeRequest(ctx, r)
-    if err != nil {
-       oauth2.WriteAuthorizeError(rw, req, err)
-       return
-    }
+	ar, err := oauth2.NewAuthorizeRequest(ctx, req)
+	if err != nil {
+		log.Printf("Error occurred in NewAuthorizeRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+		oauth2.WriteAuthorizeError(rw, ar, err)
+		return
+	}
 
     // you have now access to authorizeRequest, Code ResponseTypes, Scopes ...
     // and can show the user agent a login or consent page
@@ -201,55 +272,36 @@ func handleAuth(rw http.ResponseWriter, r *http.Request) {
     //     return
     // }
 
-    // it would also be possible to redirect the user to an identity provider (google, microsoft live, ...) here
-    // and do fancy stuff like OpenID Connect amongst others
+	// Normally, this would be the place where you would check if the user is logged in and gives his consent.
+	// We're simplifying things and just checking if the request includes a valid username and password
+	if req.Form.Get("username") != "peter" || req.Form.Get("password") != "secret password" {
+		rw.Write([]byte(`<h1>Please log in</h1>`))
+		// ...
+		return
+	}
 
-    // Once you have confirmed the users identity and consent that he indeed wants to give app XYZ authorization,
-    // you will use the user's id to create an authorize session
-    user := "12345"
+	// You MUST also get the user's consent which is left out here for simplicity.
 
-    // mySessionData is going to be persisted alongside the other data. Note that mySessionData is arbitrary.
-    // You will however absolutely need the user id later on, so at least store that!
-    mySessionData := struct {
-        User string
-        UsingIdentityProvider string
-        Foo string
-    } {
-        User: user,
-        UsingIdentityProvider: "google",
-        Foo: "bar",
-    }
+    // Now it's time to persist some data. This session will be later available to us in the token endpoint.
+    // So make sure to store things like the user id here.
+    // The authorize request will be stored additionally, so no need to save scopes or similar things.
+	sess := &session{User: "peter"}
 
-    // if you want to support OpenID Connect, this would be a good place to do stuff like
-    // user := getUserFromCookie()
-    // mySessionData := NewImplementsOpenIDSession()
-    // if authorizeRequest.GetScopes().Has("openid") {
-    //     if authorizeRequest.GetScopes().Has("email") {
-    //         mySessionData.AddField("email", user.Email)
-    //     }
-    //     mySessionData.AddField("id", user.ID)
-    // }
-    //
+	// Now we need to get an response.
+	// This is the place where the AuthorizeEndpointHandlers kick in and start processing the request.
+	// In our case (let's assume response_type=code), the AuthorizeExplicitGrantTypeHandler is going to handle the request.
+	//
+	// NewAuthorizeResponse is capable of running multiple response type handlers which in turn enables this library
+	// to support open id connect.
+	response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, sess)
+	if err != nil {
+		log.Printf("Error occurred in NewAuthorizeResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+		oauth2.WriteAuthorizeError(rw, ar, err)
+		return
+	}
 
-    // Now is the time to handle the response types
-    // You can use a custom list of response type handlers by setting
-    // oauth2.AuthorizeEndpointHandlers = []fosite.AuthorizeEndpointHandler{}
-    //
-    // Each AuthorizeEndpointHandler is responsible for managing his own state data. For example, the code response type
-    // handler stores the access token and the session data in a database backend and retrieves it later on
-    // when handling a grant type.
-    //
-    // If you use advanced AuthorizeEndpointHandlers it is a good idea to read the README first and check if your
-    // session object needs to implement any interface. Think of the session as a persistent context
-    // for the handlers.
-    response, err := oauth2.NewAuthorizeResponse(ctx, req, authorizeRequest, &mySessionData)
-    if err != nil {
-       oauth2.WriteAuthorizeError(rw, req, err)
-       return
-    }
-
-    // The next step is going to redirect the user by either using implicit or explicit grant or both (for OpenID connect)
-    oauth2.WriteAuthorizeResponse(rw, authorizeRequest, response)
+    // Last but not least, send the response!
+	oauth2.WriteAuthorizeResponse(rw, ar, response)
 
     // Done! The client should now have a valid authorize code!
 }
@@ -261,38 +313,144 @@ func handleAuth(rw http.ResponseWriter, r *http.Request) {
 
 ```go
 // ...
+func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
+    // This context will be passed to all methods.
+	ctx := NewContext()
 
-func handleToken(rw http.ResponseWriter, req *http.Request) {
-    ctx := NewContext()
+	// Remember the sesion data from before? Yup, that's going to be saved in here!
+	var mySessionData session
 
-    // First we need to define a session object. Some handlers might require the session to implement
-    // a specific interface, so keep that in mind when using them.
-    var mySessionData struct {
-        User string
-        UsingIdentityProvider string
-        Foo string
-    }
-
-    // This will create an access request object and iterate through the registered TokenEndpointHandlers.
-    // These might populate mySessionData so do not pass nils.
-    accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
-    if err != nil {
-       oauth2.WriteAccessError(rw, accessRequest, err)
-       return
-    }
+    // This will create an access request object and iterate through the registered TokenEndpointHandlers to validate the request.
+	accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
+	if err != nil {
+		log.Printf("Error occurred in NewAccessRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+		oauth2.WriteAccessError(rw, accessRequest, err)
+		return
+	}
 
     // Now we have access to mySessionData's populated values and can do crazy things.
 
     // Next we create a response for the access request. Again, we iterate through the TokenEndpointHandlers
     // and aggregate the result in response.
-    response, err := oauth2.NewAccessResponse(ctx, req, accessRequest, &mySessionData)
-    if err != nil {
-       oauth2.WriteAccessError(rw, accessRequest, err)
-       return
-    }
+	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
+	if err != nil {
+		log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+		oauth2.WriteAccessError(rw, accessRequest, err)
+		return
+	}
 
     // All done, send the response.
-    oauth2.WriteAccessResponse(rw, accessRequest, response)
+	oauth2.WriteAccessResponse(rw, accessRequest, response)
+
+	// Your client does now have a valid access token
+}
+```
+
+### Exemplary Storage Implementation
+
+This code is taken from [fosite-example/internal/store.go](fosite-example/internal/store.go). This implementation
+is capable of supplying storage methods to all the OAuth2 [core handlers](handler/core).
+
+```go
+package internal
+
+import (
+	"github.com/go-errors/errors"
+	"github.com/ory-am/common/pkg"
+	"github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/client"
+)
+
+type UserRelation struct {
+	Username string
+	Password string
+}
+
+type Store struct {
+	Clients        map[string]client.Client
+	AuthorizeCodes map[string]fosite.Requester
+	AccessTokens   map[string]fosite.Requester
+	Implicit       map[string]fosite.Requester
+	RefreshTokens  map[string]fosite.Requester
+	Users          map[string]UserRelation
+}
+
+func (s *Store) GetClient(id string) (client.Client, error) {
+	cl, ok := s.Clients[id]
+	if !ok {
+		return nil, pkg.ErrNotFound
+	}
+	return cl, nil
+}
+
+func (s *Store) CreateAuthorizeCodeSession(code string, req fosite.Requester) error {
+	s.AuthorizeCodes[code] = req
+	return nil
+}
+
+func (s *Store) GetAuthorizeCodeSession(code string, _ interface{}) (fosite.Requester, error) {
+	rel, ok := s.AuthorizeCodes[code]
+	if !ok {
+		return nil, pkg.ErrNotFound
+	}
+	return rel, nil
+}
+
+func (s *Store) DeleteAuthorizeCodeSession(code string) error {
+	delete(s.AuthorizeCodes, code)
+	return nil
+}
+
+func (s *Store) CreateAccessTokenSession(signature string, req fosite.Requester) error {
+	s.AccessTokens[signature] = req
+	return nil
+}
+
+func (s *Store) GetAccessTokenSession(signature string, _ interface{}) (fosite.Requester, error) {
+	rel, ok := s.AccessTokens[signature]
+	if !ok {
+		return nil, pkg.ErrNotFound
+	}
+	return rel, nil
+}
+
+func (s *Store) DeleteAccessTokenSession(signature string) error {
+	delete(s.AccessTokens, signature)
+	return nil
+}
+
+func (s *Store) CreateRefreshTokenSession(signature string, req fosite.Requester) error {
+	s.RefreshTokens[signature] = req
+	return nil
+}
+
+func (s *Store) GetRefreshTokenSession(signature string, _ interface{}) (fosite.Requester, error) {
+	rel, ok := s.RefreshTokens[signature]
+	if !ok {
+		return nil, pkg.ErrNotFound
+	}
+	return rel, nil
+}
+
+func (s *Store) DeleteRefreshTokenSession(signature string) error {
+	delete(s.RefreshTokens, signature)
+	return nil
+}
+
+func (s *Store) CreateImplicitAccessTokenSession(code string, req fosite.Requester) error {
+	s.Implicit[code] = req
+	return nil
+}
+
+func (s *Store) DoCredentialsAuthenticate(name string, secret string) error {
+	rel, ok := s.Users[name]
+	if !ok {
+		return pkg.ErrNotFound
+	}
+	if rel.Password != secret {
+		return errors.New("Invalid credentials")
+	}
+	return nil
 }
 ```
 
@@ -307,18 +465,28 @@ Let's take the explicit authorize handler. He is responsible for handling the
 If you want to enable the handler able to handle this workflow, you can do this:
 
 ```go
-handler := &explicit.AuthorizeExplicitGrantTypeHandler{
-	Generator: &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
-	Store:     myCodeStore, // Needs to implement CodeResponseTypeStorage
-}
-oauth2 := &fosite.Fosite{
-	AuthorizeEndpointHandlers: fosite.AuthorizeEndpointHandlers{
-		handler,
-	},
-	TokenEndpointHandlers: fosite.TokenEndpointHandlers{
-		handler,
+var hmacStrategy = &strategy.HMACSHAStrategy{
+	Enigma: &enigma.HMACSHAEnigma{
+		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }
+
+// var store = ...
+
+f := NewFosite(store)
+accessTokenLifespan := time.Hour
+
+// Let's enable the explicit authorize code grant!
+explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
+    AccessTokenStrategy:   hmacStrategy,
+    RefreshTokenStrategy:  hmacStrategy,
+    AuthorizeCodeStrategy: hmacStrategy,
+    Store:               store,
+    AuthCodeLifespan:    time.Minute * 10,
+    AccessTokenLifespan: accessTokenLifespan,
+}
+f.AuthorizeEndpointHandlers.Add("code", explicitHandler)
+f.TokenEndpointHandlers.Add("code", explicitHandler)
 ```
 
 As you probably noticed, there are two types of handlers, one for the [authorization */auth* endpoint](https://tools.ietf.org/html/rfc6749#section-3.1) and one for the [token
@@ -326,7 +494,7 @@ As you probably noticed, there are two types of handlers, one for the [authoriza
 API requirements for both endpoints, while, for example, the `AuthorizeImplicitEndpointHandler` only implements
 the `AuthorizeEndpointHandler` API.
 
-You can find a complete list of handlers inside the [handler directory](). A short list is documented here:
+You can find a complete list of handlers inside the [handler directory](handler). A short list is documented here:
 
 * `github.com/ory-am/fosite/handler/core/explicit.AuthorizeExplicitEndpointHandler` implements the
   [Authorization Code Grant](https://tools.ietf.org/html/rfc6749#section-4.1)
