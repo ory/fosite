@@ -33,7 +33,7 @@ func (c *RefreshTokenGrantHandler) ValidateTokenEndpointRequest(ctx context.Cont
 	}
 
 	// The authorization server MUST ... validate the refresh token.
-	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(req.Form.Get("refresh_token"), ctx, req, request, session)
+	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(req.Form.Get("refresh_token"), ctx, req, request)
 	if err != nil {
 		return errors.New(fosite.ErrInvalidRequest)
 	}

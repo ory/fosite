@@ -167,7 +167,7 @@ type AuthorizeRequester interface {
 	IsRedirectURIValid() (isValid bool)
 
 	// GetState returns the request's state.
-	GetState()
+	GetState() (state string)
 
 	Requester
 }

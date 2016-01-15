@@ -361,7 +361,7 @@ rather sooner than later.
 ### Useful commands
 
 **Create storage mocks**
-```
+```sh
 mockgen -destination internal/storage.go github.com/ory-am/fosite Storage
 mockgen -destination internal/core_client_storage.go github.com/ory-am/fosite/handler/core/client ClientCredentialsGrantStorage
 mockgen -destination internal/core_explicit_storage.go github.com/ory-am/fosite/handler/core/explicit AuthorizeCodeGrantStorage
@@ -370,15 +370,23 @@ mockgen -destination internal/core_owner_storage.go github.com/ory-am/fosite/han
 mockgen -destination internal/core_refresh_storage.go github.com/ory-am/fosite/handler/core/refresh RefreshTokenGrantStorage
 ```
 
-**Create handler mocks**
+**Create strategy mocks**
+```sh
+mockgen -destination internal/access_token_strategy.go github.com/ory-am/fosite/handler/core AccessTokenStrategy
+mockgen -destination internal/refresh_token_strategy.go github.com/ory-am/fosite/handler/core RefreshTokenStrategy
+mockgen -destination internal/authorize_code_strategy.go github.com/ory-am/fosite/handler/core AuthorizeCodeStrategy
 ```
+
+**Create handler mocks**
+```sh
 mockgen -destination internal/authorize_handler.go github.com/ory-am/fosite AuthorizeEndpointHandler
 mockgen -destination internal/token_handler.go github.com/ory-am/fosite TokenEndpointHandler
 ```
 
 **Create stateful "context" mocks**
-```
+```sh
 mockgen -destination internal/client.go github.com/ory-am/fosite/client Client
+mockgen -destination internal/request.go github.com/ory-am/fosite Requester
 mockgen -destination internal/access_request.go github.com/ory-am/fosite AccessRequester
 mockgen -destination internal/access_response.go github.com/ory-am/fosite AccessResponder
 mockgen -destination internal/authorize_request.go github.com/ory-am/fosite AuthorizeRequester
