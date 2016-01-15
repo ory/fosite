@@ -170,7 +170,7 @@ func fositeFactory() fosite.OAuth2Provider {
     f.TokenEndpointHandlers.Add("code", explicitHandler)
 
     // Next let's enable the implicit one!
-    explicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler struct {
+    implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler struct {
         Enigma:              &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")},
         Store:               store,
         AccessTokenLifespan: accessTokenLifespan,
