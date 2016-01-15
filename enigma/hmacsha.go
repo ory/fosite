@@ -61,7 +61,7 @@ func (c *HMACSHAEnigma) Generate(secret []byte) (string, string, error) {
 	signature := mac.Sum([]byte{})
 
 	token := fmt.Sprintf("%s.%s", b64.EncodeToString(randomBytes), b64.EncodeToString(signature))
-	return token, signature, nil
+	return token, b64.EncodeToString(signature), nil
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.

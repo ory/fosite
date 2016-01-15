@@ -6,14 +6,10 @@ import (
 	"net/http"
 )
 
-func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar AuthorizeRequester, session interface{}) (AuthorizeResponder, error) {
-	if session == nil {
-		return nil, errors.New("Session must not be nil")
-	}
-
+func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar AuthorizeRequester) (AuthorizeResponder, error) {
 	var resp = NewAuthorizeResponse()
 	for _, h := range o.AuthorizeEndpointHandlers {
-		if err := h.HandleAuthorizeEndpointRequest(ctx, r, ar, resp, session); err != nil {
+		if err := h.HandleAuthorizeEndpointRequest(ctx, r, ar, resp); err != nil {
 			return nil, err
 		}
 	}

@@ -3,7 +3,6 @@ package client
 import (
 	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma"
 	"github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
 	"net/http"
@@ -24,7 +23,7 @@ type ClientCredentialsGrantHandler struct {
 }
 
 // ValidateTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
-func (c *ClientCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.Context, req *http.Request, request fosite.AccessRequester, session interface{}) error {
+func (c *ClientCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.Context, r *http.Request, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
 	if request.GetGrantType() != "client_credentials" {
@@ -42,22 +41,22 @@ func (c *ClientCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.C
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.3
-func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder, session interface{}) error {
-	if requester.GetGrantType() != "client_credentials" {
+func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request fosite.AccessRequester, response fosite.AccessResponder) error {
+	if request.GetGrantType() != "client_credentials" {
 		return nil
 	}
 
-	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester, session)
+	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, r, request)
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
-	} else if err := c.Store.CreateAccessTokenSession(signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateAccessTokenSession(signature, request); err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 
-	responder.SetAccessToken(token)
-	responder.SetTokenType("bearer")
-	responder.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
-	responder.SetExtra("scope", strings.Join(requester.GetGrantedScopes(), " "))
+	response.SetAccessToken(token)
+	response.SetTokenType("bearer")
+	response.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
+	response.SetExtra("scope", strings.Join(request.GetGrantedScopes(), " "))
 
 	// "A refresh token SHOULD NOT be included."
 	// -> we won't issue one

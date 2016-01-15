@@ -5,18 +5,6 @@ import (
 	"net/url"
 )
 
-// AuthorizeResponder defines fosite's response model
-type AuthorizeResponder interface {
-	GetHeader() http.Header
-	AddHeader(key, value string)
-
-	GetQuery() url.Values
-	AddQuery(key, value string)
-
-	GetFragment() url.Values
-	AddFragment(key, value string)
-}
-
 // NewAuthorizeResponse creates a new AuthorizeResponse
 func NewAuthorizeResponse() *AuthorizeResponse {
 	return &AuthorizeResponse{

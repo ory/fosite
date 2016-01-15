@@ -7,23 +7,23 @@ import (
 )
 
 func TestGenerateFailsWithShortCredentials(t *testing.T) {
-	cg := HMACSHAEnigma{
-		GlobalSecret: []byte("foo"),
-	}
-
-	challenge, err := cg.Generate([]byte("bar"))
+	cg := HMACSHAEnigma{GlobalSecret: []byte("foo")}
+	challenge, signature, err := cg.Generate([]byte("bar"))
 	require.NotNil(t, err, "%s", err)
-	require.Nil(t, challenge)
+	require.Empty(t, challenge)
+	require.Empty(t, signature)
 
 	cg.GlobalSecret = []byte("12345678901234567890")
-	challenge, err = cg.Generate([]byte("bar"))
+	challenge, signature, err = cg.Generate([]byte("bar"))
 	require.NotNil(t, err, "%s", err)
-	require.Nil(t, challenge)
+	require.Empty(t, challenge)
+	require.Empty(t, signature)
 
 	cg.GlobalSecret = []byte("bar")
-	challenge, err = cg.Generate([]byte("12345678901234567890"))
+	challenge, signature, err = cg.Generate([]byte("12345678901234567890"))
 	require.NotNil(t, err, "%s", err)
-	require.Nil(t, challenge)
+	require.Empty(t, challenge)
+	require.Empty(t, signature)
 }
 
 func TestGenerate(t *testing.T) {
@@ -31,27 +31,24 @@ func TestGenerate(t *testing.T) {
 		GlobalSecret: []byte("12345678901234567890"),
 	}
 
-	challenge, err := cg.Generate([]byte("09876543210987654321"))
+	token, signature, err := cg.Generate([]byte("09876543210987654321"))
 	require.Nil(t, err, "%s", err)
-	require.NotNil(t, challenge)
-	t.Logf("%s.%s", challenge.Key, challenge.Signature)
+	require.NotEmpty(t, token)
+	require.NotEmpty(t, signature)
+	t.Logf("%s.%s", token, signature)
 
-	err = cg.ValidateChallenge([]byte("09876543210987654321"), challenge)
+	validateSignature, err := cg.Validate([]byte("09876543210987654321"), token)
 	require.Nil(t, err, "%s", err)
+	assert.Equal(t, signature, validateSignature)
 
-	challenge.FromString(challenge.String())
-
-	err = cg.ValidateChallenge([]byte("09876543210987654321"), challenge)
-	require.Nil(t, err, "%s", err)
-
-	err = cg.ValidateChallenge([]byte("bar"), challenge)
+	_, err = cg.Validate([]byte("bar"), token)
 	require.NotNil(t, err, "%s", err)
 
-	err = cg.ValidateChallenge([]byte("baz"), challenge)
+	_, err = cg.Validate([]byte("baz"), token)
 	require.NotNil(t, err, "%s", err)
 
 	cg.GlobalSecret = []byte("baz")
-	err = cg.ValidateChallenge([]byte("bar"), challenge)
+	_, err = cg.Validate([]byte("bar"), token)
 	require.NotNil(t, err, "%s", err)
 }
 
@@ -60,7 +57,6 @@ func TestValidateSignatureRejects(t *testing.T) {
 	cg := HMACSHAEnigma{
 		GlobalSecret: []byte("12345678901234567890"),
 	}
-	token := new(Challenge)
 	for k, c := range []string{
 		"",
 		" ",
@@ -68,8 +64,7 @@ func TestValidateSignatureRejects(t *testing.T) {
 		"foo.",
 		".foo",
 	} {
-		token.FromString(c)
-		err = cg.ValidateChallenge([]byte("09876543210987654321"), token)
+		_, err = cg.Validate([]byte("09876543210987654321"), c)
 		assert.NotNil(t, err, "%s", err)
 		t.Logf("Passed test case %d", k)
 	}

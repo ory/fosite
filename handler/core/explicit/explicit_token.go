@@ -4,7 +4,6 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma"
 	"github.com/ory-am/fosite/handler/core"
 	. "github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
@@ -16,29 +15,20 @@ import (
 
 // implements
 // * https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything)
-func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(_ context.Context, req *http.Request, request AccessRequester, session interface{}) error {
+func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(ctx context.Context, r *http.Request, request AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if request.GetGrantType() != "authorization_code" {
 		return nil
 	}
 
-	var authSess AuthorizeSession
-	challenge := &enigma.Challenge{}
-	challenge.FromString(req.PostForm.Get("code"))
-
-	// code REQUIRED.
-	// The authorization code received from the authorization server.
-	if challenge.Key == "" || challenge.Signature == "" {
-		return errors.New(ErrInvalidRequest)
-	}
-
 	// The authorization server MUST verify that the authorization code is valid
-	if err := c.Enigma.ValidateChallenge(request.GetClient().GetHashedSecret(), challenge); err != nil {
+	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(r.PostForm.Get("code"), ctx, r, request)
+	if err != nil {
 		return errors.New(ErrInvalidRequest)
 	}
 
-	ar, err := c.Store.GetAuthorizeCodeSession(challenge.Signature, &authSess)
+	authorizeRequest, err := c.Store.GetAuthorizeCodeSession(signature)
 	if err == pkg.ErrNotFound {
 		return errors.New(ErrInvalidRequest)
 	} else if err != nil {
@@ -46,12 +36,12 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(_ conte
 	}
 
 	// Override scopes
-	request.SetScopes(ar.GetScopes())
+	request.SetScopes(authorizeRequest.GetScopes())
 
 	// The authorization server MUST ensure that the authorization code was issued to the authenticated
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,
-	if ar.GetClient().GetID() != request.GetClient().GetID() {
+	if authorizeRequest.GetClient().GetID() != request.GetClient().GetID() {
 		return errors.New(ErrInvalidRequest)
 	}
 
@@ -59,7 +49,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(_ conte
 	// "redirect_uri" parameter was included in the initial authorization
 	// request as described in Section 4.1.1, and if included ensure that
 	// their values are identical.
-	if authSess.RequestRedirectURI != "" && (req.PostForm.Get("redirect_uri") != authSess.RequestRedirectURI) {
+	if authorizeRequest.GetRequestForm().Get("redirect_uri") != r.PostForm.Get("redirect_uri") {
 		return errors.New(ErrInvalidRequest)
 	}
 
@@ -71,7 +61,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(_ conte
 	// https://tools.ietf.org/html/rfc6819#section-5.1.5.3]
 	// A short expiration time for tokens is a means of protection against
 	// the following threats: replay, token leak, online guessing
-	if ar.GetRequestedAt().Add(c.AuthCodeLifespan).Before(time.Now()) {
+	if authorizeRequest.GetRequestedAt().Add(c.AuthCodeLifespan).Before(time.Now()) {
 		return errors.New(ErrInvalidRequest)
 	}
 
@@ -81,31 +71,28 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(_ conte
 	// client MUST authenticate with the authorization server as described
 	// in Section 3.2.1.
 	request.SetGrantTypeHandled("authorization_code")
-	session = authSess.Extra
+	request.SetSession(authorizeRequest.GetSession())
 	return nil
 }
 
-func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder, session interface{}) error {
+func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if requester.GetGrantType() != "authorization_code" {
 		return nil
 	}
 
-	access, err := c.Enigma.GenerateChallenge(requester.GetClient().GetHashedSecret())
+	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester)
 	if err != nil {
 		return errors.New(ErrServerError)
 	}
 
-	refresh, err := c.Enigma.GenerateChallenge(requester.GetClient().GetHashedSecret())
+	refresh, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, req, requester)
 	if err != nil {
 		return errors.New(ErrServerError)
 	}
 
-	var authSess AuthorizeSession
-	challenge := &enigma.Challenge{}
-	challenge.FromString(req.PostForm.Get("code"))
-	ar, err := c.Store.GetAuthorizeCodeSession(challenge.Signature, &authSess)
+	accessRequest, err := c.Store.GetAuthorizeCodeSession(req.PostForm.Get("code"))
 	if err != nil {
 		// The signature has already been verified both cryptographically and with lookup. If lookup fails here
 		// it is due to some internal error.
@@ -114,17 +101,17 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 
 	if err := c.Store.DeleteAuthorizeCodeSession(req.PostForm.Get("code")); err != nil {
 		return errors.New(ErrServerError)
-	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateAccessTokenSession(accessSignature, requester); err != nil {
 		return errors.New(ErrServerError)
-	} else if err := c.Store.CreateRefreshTokenSession(refresh.Signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateRefreshTokenSession(refreshSignature, requester); err != nil {
 		return errors.New(ErrServerError)
 	}
 
-	responder.SetAccessToken(access.String())
+	responder.SetAccessToken(access)
 	responder.SetTokenType("bearer")
 	responder.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
-	responder.SetExtra("refresh_token", refresh.String())
-	responder.SetExtra("state", ar.GetState())
+	responder.SetExtra("refresh_token", refresh)
+	responder.SetExtra("state", accessRequest.GetState())
 	responder.SetExtra("scope", strings.Join(requester.GetGrantedScopes(), " "))
 	return nil
 }
