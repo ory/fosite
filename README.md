@@ -22,20 +22,23 @@ During development, we reviewed the following open specifications:
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Motivation](#motivation)
-- [Example](#example)
-- [A word on quality](#a-word-on-quality)
-- [A word on security](#a-word-on-security)
-- [A word on extensibility](#a-word-on-extensibility)
-- [Usage](#usage)
-  - [Installation](#installation)
-  - [Exemplary Authorization Endpoint](#exemplary-authorization-endpoint)
-  - [Exemplary Token Endpoint](#exemplary-token-endpoint)
-  - [Extensible handlers](#extensible-handlers)
-  - [Replaceable storage](#replaceable-storage)
-- [Develop fosite](#develop-fosite)
-  - [Useful commands](#useful-commands)
-- [Hall of Fame](#hall-of-fame)
+  - [Motivation](#motivation)
+  - [Example](#example)
+  - [A word on quality](#a-word-on-quality)
+  - [A word on security](#a-word-on-security)
+  - [A word on extensibility](#a-word-on-extensibility)
+  - [Usage](#usage)
+    - [Installation](#installation)
+    - [Exemplary Server Implementation](#exemplary-server-implementation)
+    - [Exemplary [Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)](#exemplary-authorization-endpointhttpstoolsietforghtmlrfc6749section-31)
+- [Please log in](#please-log-in)
+    - [Exemplary [Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)](#exemplary-token-endpointhttpstoolsietforghtmlrfc6749section-32)
+    - [Exemplary Storage Implementation](#exemplary-storage-implementation)
+    - [Extensible handlers](#extensible-handlers)
+    - [Replaceable storage](#replaceable-storage)
+  - [Develop fosite](#develop-fosite)
+    - [Useful commands](#useful-commands)
+  - [Hall of Fame](#hall-of-fame)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
