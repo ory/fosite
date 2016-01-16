@@ -17,6 +17,7 @@ import (
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/core/owner"
 	"github.com/ory-am/fosite/handler/core/refresh"
+	"github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/parnurzeal/gorequest"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
@@ -31,15 +32,15 @@ var store = &internal.Store{
 		},
 	},
 	Users: map[string]internal.UserRelation{
-		"peter": internal.UserRelation{
+		"peter": {
 			Username: "peter",
 			Password: "foobar",
 		},
 	},
-	AuthorizeCodes: map[string]internal.AuthorizeCodesRelation{},
-	AccessTokens:   map[string]internal.AccessRelation{},
-	RefreshTokens:  map[string]internal.AccessRelation{},
-	Implicit:       map[string]internal.AuthorizeCodesRelation{},
+	AuthorizeCodes: map[string]Requester{},
+	Implicit:       map[string]Requester{},
+	AccessTokens:   map[string]Requester{},
+	RefreshTokens:  map[string]Requester{},
 }
 var oauth2 = fositeFactory()
 var clientConf = goauth.Config{
@@ -58,6 +59,11 @@ var appClientConf = clientcredentials.Config{
 	Scopes:       []string{"fosite"},
 	TokenURL:     "http://localhost:3846/token",
 }
+var hmacStrategy = &strategy.HMACSHAStrategy{
+	Enigma: &enigma.HMACSHAEnigma{
+		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
+	},
+}
 
 type session struct {
 	User string
@@ -71,7 +77,7 @@ func fositeFactory() OAuth2Provider {
 	accessTokenLifespan := time.Hour
 
 	// Default use HMACSHA256 as default enigma
-	enigmaService := &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")}
+	//enigmaService := &enigma.HMACSHAEnigma{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows")}
 
 	// JWT: Uncomment below, and comment out enigmaService above to enable JWT support instead OF HMACSHA256
 	/*
@@ -95,7 +101,9 @@ func fositeFactory() OAuth2Provider {
 
 	// Let's enable the explicit authorize code grant!
 	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
-		Enigma:              enigmaService,
+		AccessTokenStrategy:   hmacStrategy,
+		RefreshTokenStrategy:  hmacStrategy,
+		AuthorizeCodeStrategy: hmacStrategy,
 		Store:               store,
 		AuthCodeLifespan:    time.Minute * 10,
 		AccessTokenLifespan: accessTokenLifespan,
@@ -105,30 +113,34 @@ func fositeFactory() OAuth2Provider {
 
 	// Implicit grant type
 	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
-		Enigma:              enigmaService,
+		AccessTokenStrategy: hmacStrategy,
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
 	f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
 
+	// Client credentials grant type
 	clientHandler := &coreclient.ClientCredentialsGrantHandler{
-		Enigma:              enigmaService,
+		AccessTokenStrategy: hmacStrategy,
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
 	f.TokenEndpointHandlers.Add("client", clientHandler)
 
+	// Resource owner password credentials grant type
 	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
-		Enigma:              enigmaService,
+		AccessTokenStrategy: hmacStrategy,
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
 	f.TokenEndpointHandlers.Add("owner", ownerHandler)
 
+	// Refresh grant type
 	refreshHandler := &refresh.RefreshTokenGrantHandler{
-		Enigma:              enigmaService,
-		Store:               store,
-		AccessTokenLifespan: accessTokenLifespan,
+		AccessTokenStrategy:  hmacStrategy,
+		RefreshTokenStrategy: hmacStrategy,
+		Store:                store,
+		AccessTokenLifespan:  accessTokenLifespan,
 	}
 	f.TokenEndpointHandlers.Add("refresh", refreshHandler)
 
@@ -157,7 +169,7 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest, &mySessionData)
+	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
 	if err != nil {
 		log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
 		oauth2.WriteAccessError(rw, accessRequest, err)

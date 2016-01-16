@@ -2,11 +2,17 @@ package fosite
 
 import (
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/url"
 	"testing"
 )
 
 func TestAuthorizeResponse(t *testing.T) {
-	ar := NewAuthorizeResponse()
+	ar := &AuthorizeResponse{
+		Header:   http.Header{},
+		Query:    url.Values{},
+		Fragment: url.Values{},
+	}
 	ar.AddFragment("foo", "bar")
 	ar.AddQuery("foo", "baz")
 	ar.AddHeader("foo", "foo")

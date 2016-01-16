@@ -6,7 +6,6 @@ package internal
 import (
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
-	core "github.com/ory-am/fosite/handler/core"
 )
 
 // Mock of ClientCredentialsGrantStorage interface
@@ -30,14 +29,14 @@ func (_m *MockClientCredentialsGrantStorage) EXPECT() *_MockClientCredentialsGra
 	return _m.recorder
 }
 
-func (_m *MockClientCredentialsGrantStorage) CreateAccessTokenSession(_param0 string, _param1 fosite.AccessRequester, _param2 *core.TokenSession) error {
-	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1, _param2)
+func (_m *MockClientCredentialsGrantStorage) CreateAccessTokenSession(_param0 string, _param1 fosite.Requester) error {
+	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockClientCredentialsGrantStorageRecorder) CreateAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1, arg2)
+func (_mr *_MockClientCredentialsGrantStorageRecorder) CreateAccessTokenSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1)
 }
 
 func (_m *MockClientCredentialsGrantStorage) DeleteAccessTokenSession(_param0 string) error {
@@ -50,9 +49,9 @@ func (_mr *_MockClientCredentialsGrantStorageRecorder) DeleteAccessTokenSession(
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAccessTokenSession", arg0)
 }
 
-func (_m *MockClientCredentialsGrantStorage) GetAccessTokenSession(_param0 string, _param1 *core.TokenSession) (fosite.AccessRequester, error) {
+func (_m *MockClientCredentialsGrantStorage) GetAccessTokenSession(_param0 string, _param1 interface{}) (fosite.Requester, error) {
 	ret := _m.ctrl.Call(_m, "GetAccessTokenSession", _param0, _param1)
-	ret0, _ := ret[0].(fosite.AccessRequester)
+	ret0, _ := ret[0].(fosite.Requester)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

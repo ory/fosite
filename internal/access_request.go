@@ -7,6 +7,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	client "github.com/ory-am/fosite/client"
+	url "net/url"
 	time "time"
 )
 
@@ -71,6 +72,16 @@ func (_mr *_MockAccessRequesterRecorder) GetGrantedScopes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantedScopes")
 }
 
+func (_m *MockAccessRequester) GetRequestForm() url.Values {
+	ret := _m.ctrl.Call(_m, "GetRequestForm")
+	ret0, _ := ret[0].(url.Values)
+	return ret0
+}
+
+func (_mr *_MockAccessRequesterRecorder) GetRequestForm() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestForm")
+}
+
 func (_m *MockAccessRequester) GetRequestedAt() time.Time {
 	ret := _m.ctrl.Call(_m, "GetRequestedAt")
 	ret0, _ := ret[0].(time.Time)
@@ -89,6 +100,16 @@ func (_m *MockAccessRequester) GetScopes() fosite.Arguments {
 
 func (_mr *_MockAccessRequesterRecorder) GetScopes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetScopes")
+}
+
+func (_m *MockAccessRequester) GetSession() interface{} {
+	ret := _m.ctrl.Call(_m, "GetSession")
+	ret0, _ := ret[0].(interface{})
+	return ret0
+}
+
+func (_mr *_MockAccessRequesterRecorder) GetSession() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetSession")
 }
 
 func (_m *MockAccessRequester) GrantScope(_param0 string) {
@@ -113,4 +134,12 @@ func (_m *MockAccessRequester) SetScopes(_param0 fosite.Arguments) {
 
 func (_mr *_MockAccessRequesterRecorder) SetScopes(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetScopes", arg0)
+}
+
+func (_m *MockAccessRequester) SetSession(_param0 interface{}) {
+	_m.ctrl.Call(_m, "SetSession", _param0)
+}
+
+func (_mr *_MockAccessRequesterRecorder) SetSession(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetSession", arg0)
 }

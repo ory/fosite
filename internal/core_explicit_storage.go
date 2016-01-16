@@ -6,7 +6,6 @@ package internal
 import (
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
-	core "github.com/ory-am/fosite/handler/core"
 )
 
 // Mock of AuthorizeCodeGrantStorage interface
@@ -30,34 +29,34 @@ func (_m *MockAuthorizeCodeGrantStorage) EXPECT() *_MockAuthorizeCodeGrantStorag
 	return _m.recorder
 }
 
-func (_m *MockAuthorizeCodeGrantStorage) CreateAccessTokenSession(_param0 string, _param1 fosite.AccessRequester, _param2 *core.TokenSession) error {
-	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1, _param2)
+func (_m *MockAuthorizeCodeGrantStorage) CreateAccessTokenSession(_param0 string, _param1 fosite.Requester) error {
+	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockAuthorizeCodeGrantStorageRecorder) CreateAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1, arg2)
+func (_mr *_MockAuthorizeCodeGrantStorageRecorder) CreateAccessTokenSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1)
 }
 
-func (_m *MockAuthorizeCodeGrantStorage) CreateAuthorizeCodeSession(_param0 string, _param1 fosite.AuthorizeRequester, _param2 *core.AuthorizeSession) error {
-	ret := _m.ctrl.Call(_m, "CreateAuthorizeCodeSession", _param0, _param1, _param2)
+func (_m *MockAuthorizeCodeGrantStorage) CreateAuthorizeCodeSession(_param0 string, _param1 fosite.Requester) error {
+	ret := _m.ctrl.Call(_m, "CreateAuthorizeCodeSession", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockAuthorizeCodeGrantStorageRecorder) CreateAuthorizeCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAuthorizeCodeSession", arg0, arg1, arg2)
+func (_mr *_MockAuthorizeCodeGrantStorageRecorder) CreateAuthorizeCodeSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAuthorizeCodeSession", arg0, arg1)
 }
 
-func (_m *MockAuthorizeCodeGrantStorage) CreateRefreshTokenSession(_param0 string, _param1 fosite.AccessRequester, _param2 *core.TokenSession) error {
-	ret := _m.ctrl.Call(_m, "CreateRefreshTokenSession", _param0, _param1, _param2)
+func (_m *MockAuthorizeCodeGrantStorage) CreateRefreshTokenSession(_param0 string, _param1 fosite.Requester) error {
+	ret := _m.ctrl.Call(_m, "CreateRefreshTokenSession", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockAuthorizeCodeGrantStorageRecorder) CreateRefreshTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateRefreshTokenSession", arg0, arg1, arg2)
+func (_mr *_MockAuthorizeCodeGrantStorageRecorder) CreateRefreshTokenSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateRefreshTokenSession", arg0, arg1)
 }
 
 func (_m *MockAuthorizeCodeGrantStorage) DeleteAccessTokenSession(_param0 string) error {
@@ -90,9 +89,9 @@ func (_mr *_MockAuthorizeCodeGrantStorageRecorder) DeleteRefreshTokenSession(arg
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteRefreshTokenSession", arg0)
 }
 
-func (_m *MockAuthorizeCodeGrantStorage) GetAccessTokenSession(_param0 string, _param1 *core.TokenSession) (fosite.AccessRequester, error) {
+func (_m *MockAuthorizeCodeGrantStorage) GetAccessTokenSession(_param0 string, _param1 interface{}) (fosite.Requester, error) {
 	ret := _m.ctrl.Call(_m, "GetAccessTokenSession", _param0, _param1)
-	ret0, _ := ret[0].(fosite.AccessRequester)
+	ret0, _ := ret[0].(fosite.Requester)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -101,9 +100,9 @@ func (_mr *_MockAuthorizeCodeGrantStorageRecorder) GetAccessTokenSession(arg0, a
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAccessTokenSession", arg0, arg1)
 }
 
-func (_m *MockAuthorizeCodeGrantStorage) GetAuthorizeCodeSession(_param0 string, _param1 *core.AuthorizeSession) (fosite.AuthorizeRequester, error) {
+func (_m *MockAuthorizeCodeGrantStorage) GetAuthorizeCodeSession(_param0 string, _param1 interface{}) (fosite.Requester, error) {
 	ret := _m.ctrl.Call(_m, "GetAuthorizeCodeSession", _param0, _param1)
-	ret0, _ := ret[0].(fosite.AuthorizeRequester)
+	ret0, _ := ret[0].(fosite.Requester)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -112,9 +111,9 @@ func (_mr *_MockAuthorizeCodeGrantStorageRecorder) GetAuthorizeCodeSession(arg0,
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAuthorizeCodeSession", arg0, arg1)
 }
 
-func (_m *MockAuthorizeCodeGrantStorage) GetRefreshTokenSession(_param0 string, _param1 *core.TokenSession) (fosite.AccessRequester, error) {
+func (_m *MockAuthorizeCodeGrantStorage) GetRefreshTokenSession(_param0 string, _param1 interface{}) (fosite.Requester, error) {
 	ret := _m.ctrl.Call(_m, "GetRefreshTokenSession", _param0, _param1)
-	ret0, _ := ret[0].(fosite.AccessRequester)
+	ret0, _ := ret[0].(fosite.Requester)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

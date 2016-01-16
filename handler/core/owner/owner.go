@@ -4,7 +4,6 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma"
 	"github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
 	"net/http"
@@ -14,8 +13,7 @@ import (
 )
 
 type ResourceOwnerPasswordCredentialsGrantHandler struct {
-	// Enigma is the algorithm responsible for creating a validatable, opaque string.
-	Enigma enigma.Enigma
+	AccessTokenStrategy core.AccessTokenStrategy
 
 	// Store is used to persist session data across requests.
 	Store ResourceOwnerPasswordCredentialsGrantStorage
@@ -25,7 +23,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 }
 
 // ValidateTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.2
-func (c *ResourceOwnerPasswordCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.Context, req *http.Request, request fosite.AccessRequester, session interface{}) error {
+func (c *ResourceOwnerPasswordCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.Context, req *http.Request, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "password".
 	if request.GetGrantType() != "password" {
@@ -42,24 +40,27 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) ValidateTokenEndpointRequ
 		return errors.New(fosite.ErrServerError)
 	}
 
+	// Credentials must not be passed around, potentially leaking to the database!
+	delete(request.GetRequestForm(), "password")
+
 	request.SetGrantTypeHandled("password")
 	return nil
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.3
-func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder, session interface{}) error {
+func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if requester.GetGrantType() != "password" {
 		return nil
 	}
 
-	access, err := c.Enigma.GenerateChallenge(requester.GetClient().GetHashedSecret())
+	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester)
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
-	} else if err := c.Store.CreateAccessTokenSession(access.Signature, requester, &core.TokenSession{}); err != nil {
+	} else if err := c.Store.CreateAccessTokenSession(signature, requester); err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 
-	responder.SetAccessToken(access.String())
+	responder.SetAccessToken(token)
 	responder.SetTokenType("bearer")
 	responder.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
 	responder.SetExtra("scope", strings.Join(requester.GetGrantedScopes(), " "))
