@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-errors/errors"
@@ -67,8 +68,6 @@ ODIRe1AuTyHceAbewn8b462yEWKARdpd9AjQW5SIVPfdsz5B6GlYQ5LdYKtznTuy
 type JWTEnigma struct {
 	PrivateKey []byte
 	PublicKey  []byte
-	Claims     jwthelper.ClaimsContext
-	Headers    map[string]interface{}
 }
 
 // LoadCertificate : Read certificate from specified file
@@ -97,78 +96,73 @@ func merge(a, b map[string]interface{}) map[string]interface{} {
 	return a
 }
 
-// GenerateChallenge : Generates a new authorize code or returns an error. set secret
-func (j *JWTEnigma) GenerateChallenge(secret []byte) (*Challenge, error) {
-	//** secret is not used with JWT using RSA **
-
+// Generate : Generates a new authorize code or returns an error. set secret
+func (j *JWTEnigma) Generate(claims jwthelper.ClaimsContext, headers map[string]interface{}) (string, string, error) {
 	// As per RFC, no overrides of header "alg"!
-	if _, ok := j.Headers["alg"]; ok {
-		return nil, errors.New("You may not override the alg header key.")
+	if _, ok := headers["alg"]; ok {
+		return "", "", errors.New("You may not override the alg header key.")
 	}
 
 	// As per RFC, no overrides of header "typ"!
-	if _, ok := j.Headers["typ"]; ok {
-		return nil, errors.New("You may not override the typ header key.")
+	if _, ok := headers["typ"]; ok {
+		return "", "", errors.New("You may not override the typ header key.")
 	}
 
 	token := jwt.New(jwt.SigningMethodRS256)
-	token.Claims = j.Claims
-	token.Header = merge(token.Header, j.Headers)
+	token.Claims = claims
+	token.Header = merge(token.Header, headers)
 	rsaKey, err := jwt.ParseRSAPrivateKeyFromPEM(j.PrivateKey)
 
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
 
 	var sig, sstr string
 
 	if sstr, err = token.SigningString(); err != nil {
-		return nil, err
+		return "", "", err
 	}
 
 	if sig, err = token.Method.Sign(sstr, rsaKey); err != nil {
-		return nil, err
+		return "", "", err
 	}
 
-	return &Challenge{
-		Key:       sstr,
-		Signature: sig,
-	}, nil
+	return sstr, sig, nil
 }
 
-// ValidateChallenge :  Returns nil, if the code argument is a valid authorize code
-// and the signature matches the key.
-func (j *JWTEnigma) ValidateChallenge(secret []byte, t *Challenge) (err error) {
-	if t.Key == "" || t.Signature == "" {
-		return errors.New("Key and signature must both be not empty")
+// Validate : Validates a token and returns its signature or an error if the token is not valid.
+func (j *JWTEnigma) Validate(token string) (string, error) {
+	split := strings.Split(token, ".")
+	if len(split) != 3 {
+		return "", errors.New("Header, body and signature must all be set")
 	}
 
 	// Parse the token.
-	token, err := jwt.Parse(t.String(), func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, errors.Errorf("Unexpected signing method: %v", token.Header["alg"])
+	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, errors.Errorf("Unexpected signing method: %v", t.Header["alg"])
 		}
 		return jwt.ParseRSAPublicKeyFromPEM(j.PublicKey)
 	})
 
 	if err != nil {
-		return errors.Errorf("Couldn't parse token: %v", err)
-	} else if !token.Valid {
-		return errors.Errorf("Token is invalid")
+		return "", errors.Errorf("Couldn't parse token: %v", err)
+	} else if !parsedToken.Valid {
+		return "", errors.Errorf("Token is invalid")
 	}
 
 	// make sure we can work with the data
-	claimsContext := jwthelper.ClaimsContext(token.Claims)
+	claimsContext := jwthelper.ClaimsContext(parsedToken.Claims)
 
 	if claimsContext.AssertExpired() {
-		token.Valid = false
-		return errors.Errorf("Token expired at %v", claimsContext.GetExpiresAt())
+		parsedToken.Valid = false
+		return "", errors.Errorf("Token expired at %v", claimsContext.GetExpiresAt())
 	}
 
 	if claimsContext.AssertNotYetValid() {
-		token.Valid = false
-		return errors.Errorf("Token validates in the future: %v", claimsContext.GetNotBefore())
+		parsedToken.Valid = false
+		return "", errors.Errorf("Token validates in the future: %v", claimsContext.GetNotBefore())
 	}
 
-	return nil
+	return split[2], nil
 }

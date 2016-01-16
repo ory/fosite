@@ -59,9 +59,18 @@ var appClientConf = clientcredentials.Config{
 	Scopes:       []string{"fosite"},
 	TokenURL:     "http://localhost:3846/token",
 }
+
 var hmacStrategy = &strategy.HMACSHAStrategy{
 	Enigma: &enigma.HMACSHAEnigma{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
+	},
+}
+
+var jwtStrategy = &strategy.JWTStrategy{
+	Enigma: &enigma.JWTEnigma{
+		PrivateKey: []byte(enigma.TestCertificates[0][1]),
+		PublicKey:  []byte(enigma.TestCertificates[1][1]),
+		Headers:    make(map[string]interface{}),
 	},
 }
 
