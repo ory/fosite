@@ -101,7 +101,7 @@ func (c ClaimsContext) GetIssuer() string {
 func (c ClaimsContext) String() (string, error) {
 	result, err := json.Marshal(c)
 	if err != nil {
-		return "", errors.New("Reserved claim keys cannot be used in public claims")
+		return "", err
 	}
 	return string(result), nil
 }

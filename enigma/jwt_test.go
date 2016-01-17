@@ -1,6 +1,7 @@
 package enigma
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -49,18 +50,19 @@ func TestLoadCertificate(t *testing.T) {
 }
 
 func TestRejectsAlgAndTypHeader(t *testing.T) {
-	for _, c := range []map[string]interface{}{
+	for _, headers := range []map[string]interface{}{
 		{"alg": "foo"},
 		{"typ": "foo"},
 		{"typ": "foo", "alg": "foo"},
 	} {
+		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0",
+			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+
 		j := JWTEnigma{
 			PrivateKey: []byte(TestCertificates[0][1]),
 			PublicKey:  []byte(TestCertificates[1][1]),
-			Claims:     make(map[string]interface{}),
-			Headers:    c,
 		}
-		_, err := j.GenerateChallenge([]byte(""))
+		_, _, err := j.Generate(claims, headers)
 		assert.NotNil(t, err)
 	}
 }
@@ -68,63 +70,77 @@ func TestRejectsAlgAndTypHeader(t *testing.T) {
 func TestGenerateJWT(t *testing.T) {
 	claims, err := jwthelper.NewClaimsContext("fosite", "peter", "group0",
 		time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+
 	j := JWTEnigma{
 		PrivateKey: []byte(TestCertificates[0][1]),
 		PublicKey:  []byte(TestCertificates[1][1]),
-		Claims:     *claims,
-		Headers:    make(map[string]interface{}),
 	}
 
-	challenge, err := j.GenerateChallenge([]byte(""))
+	token, sig, err := j.Generate(claims, make(map[string]interface{}))
 	require.Nil(t, err, "%s", err)
-	require.NotNil(t, challenge)
-	t.Logf("%s.%s", challenge.Key, challenge.Signature)
+	require.NotNil(t, token)
 
-	err = j.ValidateChallenge([]byte(""), challenge)
+	sig, err = j.Validate(token)
 	require.Nil(t, err, "%s", err)
 
-	challenge.FromString(challenge.String())
-	t.Logf("%s", challenge.Key)
-	err = j.ValidateChallenge([]byte(""), challenge)
-	require.Nil(t, err, "%s", err)
+	sig, err = j.Validate(token + "." + "0123456789")
+	require.NotNil(t, err, "%s", err)
+
+	partToken := strings.Split(token, ".")[2]
+
+	sig, err = j.Validate(partToken)
+	require.NotNil(t, err, "%s", err)
 
 	// Lets change the public certificate to a different public one...
-	t.Logf("Old: %s", j.PublicKey)
 	j.PublicKey = []byte("new")
-	t.Logf("New: %s", j.PublicKey)
 
-	err = j.ValidateChallenge([]byte(""), challenge)
+	_, err = j.Validate(token)
 	require.NotNil(t, err, "%s", err)
-}
 
-func TestPlainJWTToken(t *testing.T) {
-	j := JWTEnigma{
-		PrivateKey: []byte(TestCertificates[0][1]),
-		PublicKey:  []byte(TestCertificates[1][1]),
-		Claims:     make(map[string]interface{}),
-		Headers:    make(map[string]interface{}),
-	}
+	// Reset public key
+	j.PublicKey = []byte(TestCertificates[1][1])
 
-	challenge := &Challenge{}
-	challenge.FromString("eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJncm91cDAiLCJjdXN0b21fcGFyYW10ZXIiOiJjdXN0b21fdmFsdWUuIFlvdSBjYW4gcHV0IHdoYXRldmVyIHlvdSB3YW50IGhlcmUuLiIsImV4cCI6MTQ1MjcyMjE0MSwiaWF0IjoxNDUyNzE4NTQxLCJpc3MiOiJmb3NpdGUiLCJuYmYiOjE0NTI3MTg1NDEsInN1YiI6InBldGVyIn0.lp_FsFQRmz76ACj88qW54y3rVJqZcMixkVEYNtCXoDZZDqilraDEtybpX1eGaDgav2DwIYxS4Zweo3HadreAoour9UhYxjaQD1VDwahEnNR_zz2qjFouNvTjA6Ac9vxW14Ne0HE1Y_CCC-93zm5JKr5tSnfsaOzTvT7fgm76fyooGtdiHSDAWNrc4TmYKalS5yFk2YcZCWoVGoDNp1ZA6KfxsZf4-XD0EMNUpaxudcRlAttxlqIVLPFs4g-PYyoYXvTgdtA6Hokc1POc7D8STpHvl11huDQWU1fsm4mnaP2mmHsG44XqqsHOhnH0i5nWSrDkot9W5Htg51wpHL-_MQ")
-	require.NotEmpty(t, challenge.Key)
-	require.NotEmpty(t, challenge.Signature)
+	// Lets change the private certificate to a different one...
+	j.PrivateKey = []byte("new")
+	_, _, err = j.Generate(claims, make(map[string]interface{}))
+	require.NotNil(t, err, "%s", err)
 
-	err := j.ValidateChallenge([]byte(""), challenge)
+	// Reset private key
+	j.PrivateKey = []byte(TestCertificates[0][1])
+
+	// Lets validate the exp claim
+	claims, err = jwthelper.NewClaimsContext("fosite", "peter", "group0",
+		time.Now().Add(-time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+
+	token, sig, err = j.Generate(claims, make(map[string]interface{}))
 	require.Nil(t, err, "%s", err)
+	require.NotNil(t, token)
+	t.Logf("%s.%s", token, sig)
+
+	sig, err = j.Validate(token)
+	require.NotNil(t, err, "%s", err)
+
+	// Lets validate the nbf claim
+	claims, err = jwthelper.NewClaimsContext("fosite", "peter", "group0",
+		time.Now().Add(time.Hour), time.Now().Add(time.Hour), time.Now(), make(map[string]interface{}))
+
+	token, sig, err = j.Generate(claims, make(map[string]interface{}))
+	require.Nil(t, err, "%s", err)
+	require.NotNil(t, token)
+	t.Logf("%s.%s", token, sig)
+
+	sig, err = j.Validate(token)
+	require.NotNil(t, err, "%s", err)
+
 }
 
 func TestValidateSignatureRejectsJWT(t *testing.T) {
 	var err error
-	claims, err := jwthelper.NewClaimsContext("fosite", "peter", "group0",
-		time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
 	j := JWTEnigma{
 		PrivateKey: []byte(TestCertificates[0][1]),
 		PublicKey:  []byte(TestCertificates[1][1]),
-		Claims:     *claims,
-		Headers:    make(map[string]interface{}),
 	}
-	token := new(Challenge)
+
 	for k, c := range []string{
 		"",
 		" ",
@@ -132,8 +148,7 @@ func TestValidateSignatureRejectsJWT(t *testing.T) {
 		"foo.",
 		".foo",
 	} {
-		token.FromString(c)
-		err = j.ValidateChallenge([]byte(""), token)
+		_, err = j.Validate(c)
 		assert.NotNil(t, err, "%s", err)
 		t.Logf("Passed test case %d", k)
 	}

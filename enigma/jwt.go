@@ -8,6 +8,7 @@ package enigma
 *******************************************************************************/
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -97,7 +98,7 @@ func merge(a, b map[string]interface{}) map[string]interface{} {
 }
 
 // Generate : Generates a new authorize code or returns an error. set secret
-func (j *JWTEnigma) Generate(claims jwthelper.ClaimsContext, headers map[string]interface{}) (string, string, error) {
+func (j *JWTEnigma) Generate(claims *jwthelper.ClaimsContext, headers map[string]interface{}) (string, string, error) {
 	// As per RFC, no overrides of header "alg"!
 	if _, ok := headers["alg"]; ok {
 		return "", "", errors.New("You may not override the alg header key.")
@@ -109,7 +110,7 @@ func (j *JWTEnigma) Generate(claims jwthelper.ClaimsContext, headers map[string]
 	}
 
 	token := jwt.New(jwt.SigningMethodRS256)
-	token.Claims = claims
+	token.Claims = *claims
 	token.Header = merge(token.Header, headers)
 	rsaKey, err := jwt.ParseRSAPrivateKeyFromPEM(j.PrivateKey)
 
@@ -127,7 +128,7 @@ func (j *JWTEnigma) Generate(claims jwthelper.ClaimsContext, headers map[string]
 		return "", "", err
 	}
 
-	return sstr, sig, nil
+	return fmt.Sprintf("%s.%s", sstr, sig), sig, nil
 }
 
 // Validate : Validates a token and returns its signature or an error if the token is not valid.
