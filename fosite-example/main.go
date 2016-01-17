@@ -5,12 +5,14 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"reflect"
 	"time"
 
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/enigma"
+	"github.com/ory-am/fosite/enigma/jwthelper"
 	"github.com/ory-am/fosite/fosite-example/internal"
 	coreclient "github.com/ory-am/fosite/handler/core/client"
 	"github.com/ory-am/fosite/handler/core/explicit"
@@ -155,25 +157,58 @@ func main() {
 	log.Fatal(http.ListenAndServe(":3846", nil))
 }
 
+func typeof(v interface{}) string {
+	return reflect.TypeOf(v).String()
+}
+
 func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 	ctx := NewContext()
-	var mySessionData session
 
-	accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
-	if err != nil {
-		log.Printf("Error occurred in NewAccessRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
-		oauth2.WriteAccessError(rw, accessRequest, err)
-		return
+	if typeof(*selectedStrategy) == "strategy.JWTStrategy" {
+		// JWT
+		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0",
+			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+
+		mySessionData := strategy.JWTSession{
+			JWTClaimsCtx: *claims,
+			JWTHeaders:   make(map[string]interface{}),
+		}
+
+		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
+		if err != nil {
+			log.Printf("Error occurred in NewAccessRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAccessError(rw, accessRequest, err)
+			return
+		}
+
+		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
+		if err != nil {
+			log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAccessError(rw, accessRequest, err)
+			return
+		}
+
+		oauth2.WriteAccessResponse(rw, accessRequest, response)
+	} else {
+		// HMAC
+		mySessionData := session{}
+
+		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
+		if err != nil {
+			log.Printf("Error occurred in NewAccessRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAccessError(rw, accessRequest, err)
+			return
+		}
+
+		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
+		if err != nil {
+			log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAccessError(rw, accessRequest, err)
+			return
+		}
+
+		oauth2.WriteAccessResponse(rw, accessRequest, response)
 	}
-
-	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
-	if err != nil {
-		log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
-		oauth2.WriteAccessError(rw, accessRequest, err)
-		return
-	}
-
-	oauth2.WriteAccessResponse(rw, accessRequest, response)
 }
 
 func authEndpoint(rw http.ResponseWriter, req *http.Request) {
@@ -202,15 +237,36 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 	// Normally, this would be the place where you would check if the user is logged in and gives his consent.
 	// For this test, let's assume that the user exists, is logged in, and gives his consent...
 
-	sess := &session{User: "peter"}
-	response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, sess)
-	if err != nil {
-		log.Printf("Error occurred in NewAuthorizeResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
-		oauth2.WriteAuthorizeError(rw, ar, err)
-		return
-	}
+	if typeof(*selectedStrategy) == "strategy.JWTStrategy" {
+		// JWT
+		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0",
+			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
 
-	oauth2.WriteAuthorizeResponse(rw, ar, response)
+		mySessionData := strategy.JWTSession{
+			JWTClaimsCtx: *claims,
+			JWTHeaders:   make(map[string]interface{}),
+		}
+
+		response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, &mySessionData)
+		if err != nil {
+			log.Printf("Error occurred in NewAuthorizeResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAuthorizeError(rw, ar, err)
+			return
+		}
+		oauth2.WriteAuthorizeResponse(rw, ar, response)
+
+	} else {
+		// HMAC
+		mySessionData := session{User: "peter"}
+
+		response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, &mySessionData)
+		if err != nil {
+			log.Printf("Error occurred in NewAuthorizeResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAuthorizeError(rw, ar, err)
+			return
+		}
+		oauth2.WriteAuthorizeResponse(rw, ar, response)
+	}
 }
 
 //

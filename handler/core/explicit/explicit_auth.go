@@ -1,13 +1,14 @@
 package explicit
 
 import (
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
-	"net/http"
-	"strings"
-	"time"
 )
 
 const authCodeDefaultLifespan = time.Hour / 2

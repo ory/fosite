@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/go-errors/errors"
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite"
@@ -94,7 +93,6 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	}
 
 	accessRequest, err := c.Store.GetAuthorizeCodeSession(req.PostForm.Get("code"), nil)
-	log.Debug(req.PostForm.Encode())
 	if err != nil {
 		// The signature has already been verified both cryptographically and with lookup. If lookup fails here
 		// it is due to some internal error.
