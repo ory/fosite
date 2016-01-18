@@ -65,7 +65,7 @@ func tokenEndpoint(t *testing.T, oauth2 OAuth2Provider) func(rw http.ResponseWri
 			return
 		}
 
-		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest, &mySessionData)
+		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
 		if err != nil {
 			t.Logf("Access resonse %s failed because %s\n", accessRequest, err.Error())
 			oauth2.WriteAccessError(rw, accessRequest, err)

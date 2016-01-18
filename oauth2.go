@@ -1,8 +1,11 @@
 package fosite
 
 import (
+	"github.com/ory-am/fosite/client"
 	"golang.org/x/net/context"
 	"net/http"
+	"net/url"
+	"time"
 )
 
 var DefaultRequiredScopeName = "fosite"
@@ -85,7 +88,7 @@ type OAuth2Provider interface {
 	//
 	// The following specs must be considered in any implementation of this method:
 	// https://tools.ietf.org/html/rfc6749#section-5.1
-	NewAccessResponse(_ context.Context, req *http.Request, requester AccessRequester, session interface{}) (AccessResponder, error)
+	NewAccessResponse(ctx context.Context, req *http.Request, requester AccessRequester) (AccessResponder, error)
 
 	// WriteAccessError writes an access request error response.
 	//
@@ -98,4 +101,118 @@ type OAuth2Provider interface {
 	// The following specs must be considered in any implementation of this method:
 	// https://tools.ietf.org/html/rfc6749#section-5.1
 	WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder)
+}
+
+// Requester is an abstract interface for handling requests in Fosite.
+type Requester interface {
+	// GetRequestedAt returns the time the request was created.
+	GetRequestedAt() (requestedAt time.Time)
+
+	// GetClient returns the requests client.
+	GetClient() (client client.Client)
+
+	// GetScopes returns the request's scopes.
+	GetScopes() (scopes Arguments)
+
+	// SetScopes sets the request's scopes.
+	SetScopes(scopes Arguments)
+
+	// GetGrantScopes returns all granted scopes.
+	GetGrantedScopes() (grantedScopes Arguments)
+
+	// GrantScope marks a request's scope as granted.
+	GrantScope(scope string)
+
+	// GetSession returns a pointer to the request's session or nil if none is set.
+	GetSession() (session interface{})
+
+	// GetSession sets the request's session pointer.
+	SetSession(session interface{})
+
+	// GetRequestForm returns the request's form input.
+	GetRequestForm() url.Values
+}
+
+// AccessRequester is a token endpoint's request context.
+type AccessRequester interface {
+	// GetGrantType returns the requests grant type.
+	GetGrantType() (grantType string)
+
+	// SetGrantTypeHandled marks a grant type as handled indicating that the response type is supported.
+	SetGrantTypeHandled(grantType string)
+
+	// DidHandleGrantType returns if the requested grant type has been handled correctly.
+	DidHandleGrantType() (didHandle bool)
+
+	Requester
+}
+
+// AuthorizeRequester is an authorize endpoint's request context.
+type AuthorizeRequester interface {
+	// GetResponseTypes returns the requested response types
+	GetResponseTypes() (responseTypes Arguments)
+
+	// SetResponseTypeHandled marks a response_type (e.g. token or code) as handled indicating that the response type
+	// is supported.
+	SetResponseTypeHandled(responseType string)
+
+	// DidHandleAllResponseTypes returns if all requested response types have been handled correctly
+	DidHandleAllResponseTypes() (didHandle bool)
+
+	// GetRedirectURI returns the requested redirect URI
+	GetRedirectURI() (redirectURL *url.URL)
+
+	// IsRedirectURIValid returns false if the redirect is not rfc-conform (i.e. missing client, not on white list,
+	// or malformed)
+	IsRedirectURIValid() (isValid bool)
+
+	// GetState returns the request's state.
+	GetState() (state string)
+
+	Requester
+}
+
+// AccessResponder is a token endpoint's response.
+type AccessResponder interface {
+	// SetExtra sets a key value pair for the access response.
+	SetExtra(key string, value interface{})
+
+	// GetExtra returns a key's value.
+	GetExtra(key string) interface{}
+
+	// SetAccessToken sets the responses mandatory access token.
+	SetAccessToken(token string)
+
+	// SetTokenType set's the responses mandatory token type
+	SetTokenType(tokenType string)
+
+	// SetAccessToken returns the responses access token.
+	GetAccessToken() (token string)
+
+	// GetTokenType returns the responses token type.
+	GetTokenType() (token string)
+
+	// ToMap converts the response to a map.
+	ToMap() map[string]interface{}
+}
+
+// AuthorizeResponder is an authorization endpoint's response.
+type AuthorizeResponder interface {
+	// GetHeader returns the response's header
+	GetHeader() (header http.Header)
+
+	// AddHeader adds an header key value pair to the response
+	AddHeader(key, value string)
+
+	// GetQuery returns the response's query
+	GetQuery() (query url.Values)
+
+	// AddQuery adds an url query key value pair to the response
+	AddQuery(key, value string)
+
+	// GetHeader returns the response's url fragments
+	GetFragment() (fragment url.Values)
+
+	// AddHeader adds a key value pair to the response's url fragment
+	AddFragment(key, value string)
 }

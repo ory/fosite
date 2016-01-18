@@ -6,7 +6,6 @@ package internal
 import (
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
-	core "github.com/ory-am/fosite/handler/core"
 )
 
 // Mock of ResourceOwnerPasswordCredentialsGrantStorage interface
@@ -30,14 +29,14 @@ func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) EXPECT() *_MockResou
 	return _m.recorder
 }
 
-func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) CreateAccessTokenSession(_param0 string, _param1 fosite.AccessRequester, _param2 *core.TokenSession) error {
-	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1, _param2)
+func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) CreateAccessTokenSession(_param0 string, _param1 fosite.Requester) error {
+	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) CreateAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1, arg2)
+func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) CreateAccessTokenSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1)
 }
 
 func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) DeleteAccessTokenSession(_param0 string) error {
@@ -60,9 +59,9 @@ func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) DoCredenti
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DoCredentialsAuthenticate", arg0, arg1)
 }
 
-func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) GetAccessTokenSession(_param0 string, _param1 *core.TokenSession) (fosite.AccessRequester, error) {
+func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) GetAccessTokenSession(_param0 string, _param1 interface{}) (fosite.Requester, error) {
 	ret := _m.ctrl.Call(_m, "GetAccessTokenSession", _param0, _param1)
-	ret0, _ := ret[0].(fosite.AccessRequester)
+	ret0, _ := ret[0].(fosite.Requester)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

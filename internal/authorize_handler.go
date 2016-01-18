@@ -31,12 +31,12 @@ func (_m *MockAuthorizeEndpointHandler) EXPECT() *_MockAuthorizeEndpointHandlerR
 	return _m.recorder
 }
 
-func (_m *MockAuthorizeEndpointHandler) HandleAuthorizeEndpointRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AuthorizeRequester, _param3 fosite.AuthorizeResponder, _param4 interface{}) error {
-	ret := _m.ctrl.Call(_m, "HandleAuthorizeEndpointRequest", _param0, _param1, _param2, _param3, _param4)
+func (_m *MockAuthorizeEndpointHandler) HandleAuthorizeEndpointRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AuthorizeRequester, _param3 fosite.AuthorizeResponder) error {
+	ret := _m.ctrl.Call(_m, "HandleAuthorizeEndpointRequest", _param0, _param1, _param2, _param3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockAuthorizeEndpointHandlerRecorder) HandleAuthorizeEndpointRequest(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "HandleAuthorizeEndpointRequest", arg0, arg1, arg2, arg3, arg4)
+func (_mr *_MockAuthorizeEndpointHandlerRecorder) HandleAuthorizeEndpointRequest(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "HandleAuthorizeEndpointRequest", arg0, arg1, arg2, arg3)
 }
