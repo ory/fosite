@@ -75,7 +75,17 @@ var jwtStrategy = &strategy.JWTStrategy{
 	},
 }
 
-// Change below to change the signing method
+/*
+NOTE One thing to keep in mind is that the power of JWT does not mean anything
+     when used as an authorize token, since the authorize token really just should
+		 be a random string that is hard to guess.
+
+		 In a real life implementation with fosite using JWT, it's best practice to use HMAC
+		 for all authorize strategies instead of JWT, but for the sake being, here
+		 we use JWTStrategy for all generators.
+*/
+
+// Change below to change the signing method (hmacStrategy or jwtStrategy)
 var selectedStrategy = hmacStrategy
 
 type session struct {

@@ -2,9 +2,7 @@ package strategy
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"reflect"
 
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma"
@@ -52,7 +50,6 @@ func (h JWTStrategy) ValidateRefreshToken(token string, _ context.Context, _ *ht
 }
 
 func (h JWTStrategy) GenerateAuthorizeCode(_ context.Context, _ *http.Request, requester fosite.Requester) (token string, signature string, err error) {
-	fmt.Printf("Session: %s", reflect.TypeOf(requester.GetSession()).String())
 	if jwtSession, ok := requester.GetSession().(*JWTSession); ok {
 		if jwtSession.JWTClaimsCtx != nil {
 			return h.Enigma.Generate(&jwtSession.JWTClaimsCtx, jwtSession.JWTHeaders)

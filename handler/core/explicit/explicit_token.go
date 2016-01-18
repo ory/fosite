@@ -92,7 +92,12 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 		return errors.New(ErrServerError)
 	}
 
-	accessRequest, err := c.Store.GetAuthorizeCodeSession(req.PostForm.Get("code"), nil)
+	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(req.PostForm.Get("code"), ctx, req, requester)
+	if err != nil {
+		return errors.New(ErrInvalidRequest)
+	}
+
+	accessRequest, err := c.Store.GetAuthorizeCodeSession(signature, nil)
 	if err != nil {
 		// The signature has already been verified both cryptographically and with lookup. If lookup fails here
 		// it is due to some internal error.
@@ -103,7 +108,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 		return errors.New(ErrServerError)
 	} else if err := c.Store.CreateRefreshTokenSession(refreshSignature, requester); err != nil {
 		return errors.New(ErrServerError)
-	} else if err := c.Store.DeleteAuthorizeCodeSession(req.PostForm.Get("code")); err != nil {
+	} else if err := c.Store.DeleteAuthorizeCodeSession(signature); err != nil {
 		return errors.New(ErrServerError)
 	}
 
