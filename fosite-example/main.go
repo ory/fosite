@@ -86,17 +86,7 @@ func fositeFactory() OAuth2Provider {
 	// NewMyStorageImplementation should implement all storage interfaces.
 
 	f := NewFosite(store)
-
 	accessTokenLifespan := time.Hour
-
-	/*
-		userDefinedClaims := map[string]interface{}{
-			"custom_paramter": "You can put whatever key-value pair (string, string) you want here..",
-		}
-		claims, err := jwthelper.NewClaimsContext("fosite", "peter", "group0",
-			time.Now().Add(accessTokenLifespan), time.Now(), time.Now(), userDefinedClaims)
-
-	*/
 
 	// Let's enable the explicit authorize code grant!
 	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{

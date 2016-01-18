@@ -1,6 +1,11 @@
 package explicit
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
@@ -8,10 +13,6 @@ import (
 	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"testing"
-	"time"
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
@@ -19,15 +20,17 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	store := internal.NewMockAuthorizeCodeGrantStorage(ctrl)
 	ach := internal.NewMockAccessTokenStrategy(ctrl)
 	rch := internal.NewMockRefreshTokenStrategy(ctrl)
+	auch := internal.NewMockAuthorizeCodeStrategy(ctrl)
 	areq := internal.NewMockAccessRequester(ctrl)
 	aresp := internal.NewMockAccessResponder(ctrl)
 	//mockcl := internal.NewMockClient(ctrl)
 	defer ctrl.Finish()
 
 	h := AuthorizeExplicitGrantTypeHandler{
-		Store:                store,
-		AccessTokenStrategy:  ach,
-		RefreshTokenStrategy: rch,
+		Store: store,
+		AuthorizeCodeStrategy: auch,
+		AccessTokenStrategy:   ach,
+		RefreshTokenStrategy:  rch,
 	}
 	for k, c := range []struct {
 		mock      func()
@@ -52,6 +55,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetGrantType().Return("authorization_code")
 				ach.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
 				rch.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
+				auch.EXPECT().ValidateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
 
 				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(nil, errors.New(""))
 			},
@@ -64,6 +68,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 
 				ach.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
 				rch.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
+				auch.EXPECT().ValidateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
 
 				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(&fosite.AuthorizeRequest{}, nil)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any()).Return(errors.New(""))
@@ -77,7 +82,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 
 				ach.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
 				rch.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
-
+				auch.EXPECT().ValidateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
 				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(&fosite.AuthorizeRequest{}, nil)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any()).Return(nil)
 				store.EXPECT().CreateRefreshTokenSession(gomock.Any(), gomock.Any()).Return(errors.New(""))
@@ -92,7 +97,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 
 				ach.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("access.at", "at", nil)
 				rch.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("refresh.rt", "rt", nil)
-
+				auch.EXPECT().ValidateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
 				aresp.EXPECT().SetAccessToken("access.at")
 				aresp.EXPECT().SetTokenType("bearer")
 				aresp.EXPECT().SetExtra("refresh_token", "refresh.rt")

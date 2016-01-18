@@ -30,6 +30,7 @@ var r = &fosite.Request{
 	Client: &client.SecureClient{
 		Secret: []byte("foobarfoobarfoobarfoobar"),
 	},
+
 	Session: &JWTSession{
 		JWTClaimsCtx: *claims,
 		JWTHeaders:   make(map[string]interface{}),

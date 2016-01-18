@@ -1,15 +1,16 @@
 package refresh
 
 import (
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/go-errors/errors"
 	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type RefreshTokenGrantHandler struct {
@@ -74,7 +75,12 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.New(fosite.ErrServerError)
 	}
 
-	if err := c.Store.DeleteRefreshTokenSession(req.Form.Get("refresh_token")); err != nil {
+	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(req.PostForm.Get("refresh_token"), ctx, req, requester)
+	if err != nil {
+		return errors.New(fosite.ErrInvalidRequest)
+	}
+
+	if err := c.Store.DeleteRefreshTokenSession(signature); err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 

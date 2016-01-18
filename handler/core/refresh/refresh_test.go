@@ -1,6 +1,11 @@
 package refresh
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
@@ -8,10 +13,6 @@ import (
 	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"testing"
-	"time"
 )
 
 func TestValidateTokenEndpointRequest(t *testing.T) {
@@ -142,6 +143,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetGrantType().Return("refresh_token")
 				acts.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "access", nil)
 				rcts.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "refresh", nil)
+				rcts.EXPECT().ValidateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
 				store.EXPECT().CreateAccessTokenSession("access", gomock.Any()).Return(nil)
 				store.EXPECT().CreateRefreshTokenSession("refresh", gomock.Any()).Return(nil)
 				store.EXPECT().DeleteRefreshTokenSession(gomock.Any()).Return(errors.New(""))
@@ -154,6 +156,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetGrantType().Return("refresh_token")
 				acts.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("access.token", "access", nil)
 				rcts.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("refresh.token", "refresh", nil)
+				rcts.EXPECT().ValidateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
 				store.EXPECT().CreateAccessTokenSession("access", gomock.Any()).Return(nil)
 				store.EXPECT().CreateRefreshTokenSession("refresh", gomock.Any()).Return(nil)
 				store.EXPECT().DeleteRefreshTokenSession(gomock.Any()).Return(nil)
