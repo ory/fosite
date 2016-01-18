@@ -5,9 +5,9 @@ import (
 )
 
 type AuthorizeCodeStorage interface {
-	CreateAuthorizeCodeSession(code string, request fosite.Requester) (err error)
+	CreateAuthorizeCodeSession(code string, request fosite.AuthorizeRequester) (err error)
 
-	GetAuthorizeCodeSession(code string, session interface{}) (request fosite.Requester, err error)
+	GetAuthorizeCodeSession(code string, session interface{}) (request fosite.AuthorizeRequester, err error)
 
 	DeleteAuthorizeCodeSession(code string) (err error)
 }
