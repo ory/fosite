@@ -1,14 +1,15 @@
 package explicit
 
 import (
-	"github.com/go-errors/errors"
-	"github.com/ory-am/common/pkg"
-	. "github.com/ory-am/fosite"
-	"golang.org/x/net/context"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-errors/errors"
+	"github.com/ory-am/common/pkg"
+	. "github.com/ory-am/fosite"
+	"golang.org/x/net/context"
 )
 
 // implements
