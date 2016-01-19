@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-errors/errors"
+	"github.com/pborman/uuid"
 )
 
 // ClaimsContext : The context in which the claims are handled
@@ -24,7 +25,7 @@ var reservedClaimNames = map[string]string{
 	"nbf": "nbf",
 	"aud": "aud",
 	"exp": "exp",
-	"jti": "jti", // TODO fix jti as per RFC
+	"jti": "jti",
 }
 
 // NewClaimsContext : Dezignated initializer of the ClaimsContext handler
@@ -49,6 +50,7 @@ func NewClaimsContext(issuer string, subject string, audience string,
 	allClaims["nbf"] = notBefore.Unix()
 	allClaims["aud"] = audience
 	allClaims["exp"] = expiresAt.Unix()
+	allClaims["jti"] = uuid.New()
 
 	return &allClaims, nil
 }
