@@ -166,7 +166,7 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 
 	if typeof(*selectedStrategy) == "strategy.JWTStrategy" {
 		// JWT
-		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0",
+		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
 			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
 
 		mySessionData := strategy.JWTSession{
@@ -239,7 +239,7 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 
 	if typeof(*selectedStrategy) == "strategy.JWTStrategy" {
 		// JWT
-		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0",
+		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
 			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
 
 		mySessionData := strategy.JWTSession{

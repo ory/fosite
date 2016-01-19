@@ -23,7 +23,7 @@ var j = &JWTStrategy{
 	},
 }
 
-var claims, claimsErr = jwthelper.NewClaimsContext("fosite", "peter", "group0",
+var claims, claimsErr = jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
 	time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
 
 var r = &fosite.Request{

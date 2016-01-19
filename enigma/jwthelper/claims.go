@@ -29,7 +29,7 @@ var reservedClaimNames = map[string]string{
 }
 
 // NewClaimsContext : Dezignated initializer of the ClaimsContext handler
-func NewClaimsContext(issuer string, subject string, audience string,
+func NewClaimsContext(issuer string, subject string, audience string, tokenId string,
 	expiresAt time.Time, notBefore time.Time, issuedAt time.Time,
 	userClaims map[string]interface{}) (*ClaimsContext, error) {
 
@@ -50,7 +50,11 @@ func NewClaimsContext(issuer string, subject string, audience string,
 	allClaims["nbf"] = notBefore.Unix()
 	allClaims["aud"] = audience
 	allClaims["exp"] = expiresAt.Unix()
-	allClaims["jti"] = uuid.New()
+	if tokenId != "" {
+		allClaims["jti"] = tokenId
+	} else {
+		allClaims["jti"] = uuid.New()
+	}
 
 	return &allClaims, nil
 }

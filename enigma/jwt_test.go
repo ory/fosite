@@ -55,7 +55,7 @@ func TestRejectsAlgAndTypHeader(t *testing.T) {
 		{"typ": "foo"},
 		{"typ": "foo", "alg": "foo"},
 	} {
-		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0",
+		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
 			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
 
 		j := JWTEnigma{
@@ -68,7 +68,7 @@ func TestRejectsAlgAndTypHeader(t *testing.T) {
 }
 
 func TestGenerateJWT(t *testing.T) {
-	claims, err := jwthelper.NewClaimsContext("fosite", "peter", "group0",
+	claims, err := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
 		time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
 
 	j := JWTEnigma{
@@ -109,7 +109,7 @@ func TestGenerateJWT(t *testing.T) {
 	j.PrivateKey = []byte(TestCertificates[0][1])
 
 	// Lets validate the exp claim
-	claims, err = jwthelper.NewClaimsContext("fosite", "peter", "group0",
+	claims, err = jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
 		time.Now().Add(-time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
 
 	token, sig, err = j.Generate(claims, make(map[string]interface{}))
@@ -121,7 +121,7 @@ func TestGenerateJWT(t *testing.T) {
 	require.NotNil(t, err, "%s", err)
 
 	// Lets validate the nbf claim
-	claims, err = jwthelper.NewClaimsContext("fosite", "peter", "group0",
+	claims, err = jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
 		time.Now().Add(time.Hour), time.Now().Add(time.Hour), time.Now(), make(map[string]interface{}))
 
 	token, sig, err = j.Generate(claims, make(map[string]interface{}))

@@ -9,7 +9,7 @@ import (
 
 func TestValidClaimsContext(t *testing.T) {
 	userClaims := ClaimsContext{"user-id": "123456", "custom-time": 1453066866, "custom-time-f": 1631.083, "custom-date": time.Date(2016, time.January, 17, 19, 00, 00, 00, &time.Location{})}
-	ctx, err := NewClaimsContext("fosite/auth", "Peter", "peter@ory-am.com", time.Now().Add(time.Hour), time.Now(), time.Now(), userClaims)
+	ctx, err := NewClaimsContext("fosite/auth", "Peter", "peter@ory-am.com", "", time.Now().Add(time.Hour), time.Now(), time.Now(), userClaims)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "fosite/auth", ctx.GetIssuer())
@@ -41,11 +41,11 @@ func TestValidClaimsContext(t *testing.T) {
 
 func TestInvalidClaimsContext(t *testing.T) {
 	userClaims := ClaimsContext{"sub": "the \"sub\" field cannot be passed to claims context since it's a reserved claim"}
-	claimsCtx, err := NewClaimsContext("fosite/auth", "Peter", "peter@ory-am.com", time.Now().Add(time.Hour), time.Now(), time.Now(), userClaims)
+	claimsCtx, err := NewClaimsContext("fosite/auth", "Peter", "peter@ory-am.com", "", time.Now().Add(time.Hour), time.Now(), time.Now(), userClaims)
 	assert.NotNil(t, err)
 
 	userClaims = ClaimsContext{"alt": ""}
-	claimsCtx, err = NewClaimsContext("fosite/auth", "Peter", "peter@ory-am.com", time.Now().Add(-time.Hour), time.Now().Add(time.Hour), time.Now(), userClaims)
+	claimsCtx, err = NewClaimsContext("fosite/auth", "Peter", "peter@ory-am.com", "", time.Now().Add(-time.Hour), time.Now().Add(time.Hour), time.Now(), userClaims)
 	assert.Nil(t, err)
 
 	assert.True(t, claimsCtx.AssertExpired())
