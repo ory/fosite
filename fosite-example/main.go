@@ -2,10 +2,17 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"reflect"
+	"time"
+
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/enigma"
+	"github.com/ory-am/fosite/enigma/jwthelper"
 	"github.com/ory-am/fosite/fosite-example/internal"
 	coreclient "github.com/ory-am/fosite/handler/core/client"
 	"github.com/ory-am/fosite/handler/core/explicit"
@@ -16,10 +23,6 @@ import (
 	"github.com/parnurzeal/gorequest"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	"log"
-	"net/http"
-	"net/url"
-	"time"
 )
 
 var store = &internal.Store{
@@ -41,7 +44,7 @@ var store = &internal.Store{
 	AccessTokens:   map[string]Requester{},
 	RefreshTokens:  map[string]Requester{},
 }
-var oauth2 OAuth2Provider = fositeFactory()
+var oauth2 = fositeFactory()
 var clientConf = goauth.Config{
 	ClientID:     "my-client",
 	ClientSecret: "foobar",
@@ -58,11 +61,32 @@ var appClientConf = clientcredentials.Config{
 	Scopes:       []string{"fosite"},
 	TokenURL:     "http://localhost:3846/token",
 }
+
 var hmacStrategy = &strategy.HMACSHAStrategy{
 	Enigma: &enigma.HMACSHAEnigma{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }
+
+var jwtStrategy = &strategy.JWTStrategy{
+	Enigma: &enigma.JWTEnigma{
+		PrivateKey: []byte(enigma.TestCertificates[0][1]),
+		PublicKey:  []byte(enigma.TestCertificates[1][1]),
+	},
+}
+
+/*
+NOTE One thing to keep in mind is that the power of JWT does not mean anything
+     when used as an authorize token, since the authorize token really just should
+		 be a random string that is hard to guess.
+
+NOTE In a real life implementation with fosite using JWT, it's best practice to use HMAC
+		 for all authorize strategies instead of JWT, but for the sake being, here
+		 we use JWTStrategy for all generators.
+*/
+
+// Change below to change the signing method (hmacStrategy or jwtStrategy)
+var selectedStrategy = hmacStrategy
 
 type session struct {
 	User string
@@ -76,9 +100,9 @@ func fositeFactory() OAuth2Provider {
 
 	// Let's enable the explicit authorize code grant!
 	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
-		AccessTokenStrategy:   hmacStrategy,
-		RefreshTokenStrategy:  hmacStrategy,
-		AuthorizeCodeStrategy: hmacStrategy,
+		AccessTokenStrategy:   selectedStrategy,
+		RefreshTokenStrategy:  selectedStrategy,
+		AuthorizeCodeStrategy: selectedStrategy,
 		Store:               store,
 		AuthCodeLifespan:    time.Minute * 10,
 		AccessTokenLifespan: accessTokenLifespan,
@@ -88,7 +112,7 @@ func fositeFactory() OAuth2Provider {
 
 	// Implicit grant type
 	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStrategy: hmacStrategy,
+		AccessTokenStrategy: selectedStrategy,
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
@@ -96,7 +120,7 @@ func fositeFactory() OAuth2Provider {
 
 	// Client credentials grant type
 	clientHandler := &coreclient.ClientCredentialsGrantHandler{
-		AccessTokenStrategy: hmacStrategy,
+		AccessTokenStrategy: selectedStrategy,
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
@@ -104,7 +128,7 @@ func fositeFactory() OAuth2Provider {
 
 	// Resource owner password credentials grant type
 	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
-		AccessTokenStrategy: hmacStrategy,
+		AccessTokenStrategy: selectedStrategy,
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
@@ -112,8 +136,8 @@ func fositeFactory() OAuth2Provider {
 
 	// Refresh grant type
 	refreshHandler := &refresh.RefreshTokenGrantHandler{
-		AccessTokenStrategy:  hmacStrategy,
-		RefreshTokenStrategy: hmacStrategy,
+		AccessTokenStrategy:  selectedStrategy,
+		RefreshTokenStrategy: selectedStrategy,
 		Store:                store,
 		AccessTokenLifespan:  accessTokenLifespan,
 	}
@@ -133,25 +157,58 @@ func main() {
 	log.Fatal(http.ListenAndServe(":3846", nil))
 }
 
+func typeof(v interface{}) string {
+	return reflect.TypeOf(v).String()
+}
+
 func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 	ctx := NewContext()
-	var mySessionData session
 
-	accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
-	if err != nil {
-		log.Printf("Error occurred in NewAccessRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
-		oauth2.WriteAccessError(rw, accessRequest, err)
-		return
+	if typeof(*selectedStrategy) == "strategy.JWTStrategy" {
+		// JWT
+		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
+			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+
+		mySessionData := strategy.JWTSession{
+			JWTClaimsCtx: *claims,
+			JWTHeaders:   make(map[string]interface{}),
+		}
+
+		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
+		if err != nil {
+			log.Printf("Error occurred in NewAccessRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAccessError(rw, accessRequest, err)
+			return
+		}
+
+		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
+		if err != nil {
+			log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAccessError(rw, accessRequest, err)
+			return
+		}
+
+		oauth2.WriteAccessResponse(rw, accessRequest, response)
+	} else {
+		// HMAC
+		mySessionData := session{}
+
+		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
+		if err != nil {
+			log.Printf("Error occurred in NewAccessRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAccessError(rw, accessRequest, err)
+			return
+		}
+
+		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
+		if err != nil {
+			log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAccessError(rw, accessRequest, err)
+			return
+		}
+
+		oauth2.WriteAccessResponse(rw, accessRequest, response)
 	}
-
-	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
-	if err != nil {
-		log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
-		oauth2.WriteAccessError(rw, accessRequest, err)
-		return
-	}
-
-	oauth2.WriteAccessResponse(rw, accessRequest, response)
 }
 
 func authEndpoint(rw http.ResponseWriter, req *http.Request) {
@@ -180,15 +237,36 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 	// Normally, this would be the place where you would check if the user is logged in and gives his consent.
 	// For this test, let's assume that the user exists, is logged in, and gives his consent...
 
-	sess := &session{User: "peter"}
-	response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, sess)
-	if err != nil {
-		log.Printf("Error occurred in NewAuthorizeResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
-		oauth2.WriteAuthorizeError(rw, ar, err)
-		return
-	}
+	if typeof(*selectedStrategy) == "strategy.JWTStrategy" {
+		// JWT
+		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
+			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
 
-	oauth2.WriteAuthorizeResponse(rw, ar, response)
+		mySessionData := strategy.JWTSession{
+			JWTClaimsCtx: *claims,
+			JWTHeaders:   make(map[string]interface{}),
+		}
+
+		response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, &mySessionData)
+		if err != nil {
+			log.Printf("Error occurred in NewAuthorizeResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAuthorizeError(rw, ar, err)
+			return
+		}
+		oauth2.WriteAuthorizeResponse(rw, ar, response)
+
+	} else {
+		// HMAC
+		mySessionData := session{User: "peter"}
+
+		response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, &mySessionData)
+		if err != nil {
+			log.Printf("Error occurred in NewAuthorizeResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+			oauth2.WriteAuthorizeError(rw, ar, err)
+			return
+		}
+		oauth2.WriteAuthorizeResponse(rw, ar, response)
+	}
 }
 
 //

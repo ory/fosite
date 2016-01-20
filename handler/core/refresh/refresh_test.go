@@ -1,6 +1,11 @@
 package refresh
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
@@ -8,10 +13,6 @@ import (
 	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"testing"
-	"time"
 )
 
 func TestValidateTokenEndpointRequest(t *testing.T) {

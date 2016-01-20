@@ -1,11 +1,12 @@
 package fosite
 
 import (
-	"github.com/ory-am/fosite/client"
-	"golang.org/x/net/context"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/ory-am/fosite/client"
+	"golang.org/x/net/context"
 )
 
 var DefaultRequiredScopeName = "fosite"
