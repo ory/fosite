@@ -147,7 +147,7 @@ go get gopkg.in/ory-am/fosite.v0/...
 **Before you read ahead.**
 Take a look at these real-life implementations:
 * [tests](oauth2_integration_helper_test.go)
-* [example app](fosite/example/main.go)
+* [example app](fosite-example/main.go)
 
 ### Exemplary Server Implementation
 
