@@ -1,11 +1,6 @@
-package enigma
-
-/*******************************************************************************
-*													       JWT Generator                                 *
-*    Base taken from Hydra (https://github.com/ory-am/hydra) ©2016 ory-am      *
-*        Makes transitions of claims easier throught the implementation        *
-*		  RFC: https://tools.ietf.org/html/draft-ietf-oauth-json-web-token-32      *
-*******************************************************************************/
+// Package JWT is able to generate and validate json web tokens.
+// Follows https://tools.ietf.org/html/draft-ietf-oauth-json-web-token-32
+package jwt
 
 import (
 	"fmt"
@@ -16,13 +11,12 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-errors/errors"
-	"github.com/ory-am/fosite/enigma/jwthelper"
 )
 
-// TestCertificates : Certificates used for testing and localhost
+// TestCertificates are certificates used for testing and localhost.
 // NOTE Only use these for tests!
 var TestCertificates = [][]string{
-	{"../fosite-example/cert/rs256-private.pem",
+	{"../../fosite-example/cert/rs256-private.pem",
 		`-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEA4f5wg5l2hKsTeNem/V41fGnJm6gOdrj8ym3rFkEU/wT8RDtn
 SgFEZOQpHEgQ7JL38xUfU0Y3g6aYw9QT0hJ7mCpz9Er5qLaMXJwZxzHzAahlfA0i
@@ -51,7 +45,7 @@ CKuHRG+AP579dncdUnOMvfXOtkdM4vk0+hWASBQzM9xzVcztCa+koAugjVaLS9A+
 9uQoqEeVNTckxx0S2bYevRy7hGQmUJTyQm3j1zEUR5jpdbL83Fbq
 -----END RSA PRIVATE KEY-----
 `},
-	{"../fosite-example/cert/rs256-public.pem",
+	{"../../fosite-example/cert/rs256-public.pem",
 		`-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4f5wg5l2hKsTeNem/V41
 fGnJm6gOdrj8ym3rFkEU/wT8RDtnSgFEZOQpHEgQ7JL38xUfU0Y3g6aYw9QT0hJ7
@@ -65,13 +59,13 @@ ODIRe1AuTyHceAbewn8b462yEWKARdpd9AjQW5SIVPfdsz5B6GlYQ5LdYKtznTuy
 	},
 }
 
-// JWTEnigma : Container for jwt
-type JWTEnigma struct {
+// Enigma is responsible for generating and validating challenges.
+type Enigma struct {
 	PrivateKey []byte
 	PublicKey  []byte
 }
 
-// LoadCertificate : Read certificate from specified file
+// LoadCertificate reads certificate from the specified file.
 func LoadCertificate(path string) ([]byte, error) {
 	if path == "" {
 		return nil, errors.Errorf("No path specified")
@@ -87,31 +81,15 @@ func LoadCertificate(path string) ([]byte, error) {
 	return ioutil.ReadAll(rdr)
 }
 
-func merge(a, b map[string]interface{}) map[string]interface{} {
-	for k, w := range b {
-		if _, ok := a[k]; ok {
-			continue
-		}
-		a[k] = w
-	}
-	return a
-}
-
-// Generate : Generates a new authorize code or returns an error. set secret
-func (j *JWTEnigma) Generate(claims *jwthelper.ClaimsContext, headers map[string]interface{}) (string, string, error) {
-	// As per RFC, no overrides of header "alg"!
-	if _, ok := headers["alg"]; ok {
-		return "", "", errors.New("You may not override the alg header key.")
-	}
-
-	// As per RFC, no overrides of header "typ"!
-	if _, ok := headers["typ"]; ok {
-		return "", "", errors.New("You may not override the typ header key.")
+// Generate generates a new authorize code or returns an error. set secret
+func (j *Enigma) Generate(claims *Claims, header *Header) (string, string, error) {
+	if header == nil || claims == nil {
+		return "", "", errors.New("Either claims or header is nil.")
 	}
 
 	token := jwt.New(jwt.SigningMethodRS256)
-	token.Claims = *claims
-	token.Header = merge(token.Header, headers)
+	token.Claims = claims.ToMap()
+	token.Header = assign(token.Header, header.ToMap())
 	rsaKey, err := jwt.ParseRSAPrivateKeyFromPEM(j.PrivateKey)
 
 	if err != nil {
@@ -132,7 +110,7 @@ func (j *JWTEnigma) Generate(claims *jwthelper.ClaimsContext, headers map[string
 }
 
 // Validate : Validates a token and returns its signature or an error if the token is not valid.
-func (j *JWTEnigma) Validate(token string) (string, error) {
+func (j *Enigma) Validate(token string) (string, error) {
 	split := strings.Split(token, ".")
 	if len(split) != 3 {
 		return "", errors.New("Header, body and signature must all be set")
@@ -153,17 +131,27 @@ func (j *JWTEnigma) Validate(token string) (string, error) {
 	}
 
 	// make sure we can work with the data
-	claimsContext := jwthelper.ClaimsContext(parsedToken.Claims)
+	claimsContext := ClaimsFromMap(parsedToken.Claims)
 
 	if claimsContext.AssertExpired() {
 		parsedToken.Valid = false
-		return "", errors.Errorf("Token expired at %v", claimsContext.GetExpiresAt())
+		return "", errors.Errorf("Token expired at %v", claimsContext.ExpiresAt)
 	}
 
 	if claimsContext.AssertNotYetValid() {
 		parsedToken.Valid = false
-		return "", errors.Errorf("Token validates in the future: %v", claimsContext.GetNotBefore())
+		return "", errors.Errorf("Token validates in the future: %v", claimsContext.NotValidBefore)
 	}
 
 	return split[2], nil
+}
+
+func assign(a, b map[string]interface{}) map[string]interface{} {
+	for k, w := range b {
+		if _, ok := a[k]; ok {
+			continue
+		}
+		a[k] = w
+	}
+	return a
 }

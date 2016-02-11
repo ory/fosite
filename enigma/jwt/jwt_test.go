@@ -1,16 +1,21 @@
-package enigma
+package jwt
 
 import (
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/ory-am/fosite/enigma/jwthelper"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"time"
 )
 
-func TestMerge(t *testing.T) {
+var header = &Header{
+	Extra: map[string]interface{}{
+		"foo": "bar",
+	},
+}
+
+func TestAssign(t *testing.T) {
 	for k, c := range [][]map[string]interface{}{
 		{
 			{"foo": "bar"},
@@ -33,7 +38,7 @@ func TestMerge(t *testing.T) {
 			{"foo": "bar", "bar": "baz"},
 		},
 	} {
-		assert.EqualValues(t, c[2], merge(c[0], c[1]), "Case %d", k)
+		assert.EqualValues(t, c[2], assign(c[0], c[1]), "Case %d", k)
 	}
 }
 
@@ -49,36 +54,20 @@ func TestLoadCertificate(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestRejectsAlgAndTypHeader(t *testing.T) {
-	for _, headers := range []map[string]interface{}{
-		{"alg": "foo"},
-		{"typ": "foo"},
-		{"typ": "foo", "alg": "foo"},
-	} {
-		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
-			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
-
-		j := JWTEnigma{
-			PrivateKey: []byte(TestCertificates[0][1]),
-			PublicKey:  []byte(TestCertificates[1][1]),
-		}
-		_, _, err := j.Generate(claims, headers)
-		assert.NotNil(t, err)
-	}
-}
-
 func TestGenerateJWT(t *testing.T) {
-	claims, err := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
-		time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+	claims := &Claims{
+		ExpiresAt: time.Now().Add(time.Hour),
+	}
 
-	j := JWTEnigma{
+	j := Enigma{
 		PrivateKey: []byte(TestCertificates[0][1]),
 		PublicKey:  []byte(TestCertificates[1][1]),
 	}
 
-	token, sig, err := j.Generate(claims, make(map[string]interface{}))
+	token, sig, err := j.Generate(claims, header)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, token)
+	t.Logf("%s", token)
 
 	sig, err = j.Validate(token)
 	require.Nil(t, err, "%s", err)
@@ -102,17 +91,16 @@ func TestGenerateJWT(t *testing.T) {
 
 	// Lets change the private certificate to a different one...
 	j.PrivateKey = []byte("new")
-	_, _, err = j.Generate(claims, make(map[string]interface{}))
+	_, _, err = j.Generate(claims, header)
 	require.NotNil(t, err, "%s", err)
 
 	// Reset private key
 	j.PrivateKey = []byte(TestCertificates[0][1])
 
 	// Lets validate the exp claim
-	claims, err = jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
-		time.Now().Add(-time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+	claims = &Claims{}
 
-	token, sig, err = j.Generate(claims, make(map[string]interface{}))
+	token, sig, err = j.Generate(claims, header)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, token)
 	t.Logf("%s.%s", token, sig)
@@ -121,10 +109,9 @@ func TestGenerateJWT(t *testing.T) {
 	require.NotNil(t, err, "%s", err)
 
 	// Lets validate the nbf claim
-	claims, err = jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
-		time.Now().Add(time.Hour), time.Now().Add(time.Hour), time.Now(), make(map[string]interface{}))
+	claims = &Claims{}
 
-	token, sig, err = j.Generate(claims, make(map[string]interface{}))
+	token, sig, err = j.Generate(claims, header)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, token)
 	t.Logf("%s.%s", token, sig)
@@ -136,7 +123,7 @@ func TestGenerateJWT(t *testing.T) {
 
 func TestValidateSignatureRejectsJWT(t *testing.T) {
 	var err error
-	j := JWTEnigma{
+	j := Enigma{
 		PrivateKey: []byte(TestCertificates[0][1]),
 		PublicKey:  []byte(TestCertificates[1][1]),
 	}

@@ -1,4 +1,6 @@
-package enigma
+// Package hmac is the default implementation for generating and validating challenges. It uses HMAC-SHA256 to
+// generate and validate challenges.
+package hmac
 
 import (
 	"crypto/hmac"
@@ -10,9 +12,8 @@ import (
 	"strings"
 )
 
-// HMACSHAEnigma is the default implementation for generating and validating challenges. It uses HMAC-SHA256 to
-// generate and validate challenges.
-type HMACSHAEnigma struct {
+// Enigma is responsible for generating and validating challenges.
+type Enigma struct {
 	AuthCodeEntropy int
 	GlobalSecret    []byte
 }
@@ -27,7 +28,7 @@ var b64 = base64.StdEncoding.WithPadding(base64.NoPadding)
 
 // Generate generates a token and a matching signature or returns an error.
 // This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets.
-func (c *HMACSHAEnigma) Generate(secret []byte) (string, string, error) {
+func (c *Enigma) Generate(secret []byte) (string, string, error) {
 	if len(secret) < minimumSecretLength/2 || len(c.GlobalSecret) < minimumSecretLength/2 {
 		return "", "", errors.New("Secret or GlobalSecret are not strong enough")
 	}
@@ -66,7 +67,7 @@ func (c *HMACSHAEnigma) Generate(secret []byte) (string, string, error) {
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
-func (c *HMACSHAEnigma) Validate(secret []byte, token string) (string, error) {
+func (c *Enigma) Validate(secret []byte, token string) (string, error) {
 	split := strings.Split(token, ".")
 	if len(split) != 2 {
 		return "", errors.New("Key and signature must both be set")

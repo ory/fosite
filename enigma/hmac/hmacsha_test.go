@@ -1,4 +1,4 @@
-package enigma
+package hmac
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestGenerateFailsWithShortCredentials(t *testing.T) {
-	cg := HMACSHAEnigma{GlobalSecret: []byte("foo")}
+	cg := Enigma{GlobalSecret: []byte("foo")}
 	challenge, signature, err := cg.Generate([]byte("bar"))
 	require.NotNil(t, err, "%s", err)
 	require.Empty(t, challenge)
@@ -27,7 +27,7 @@ func TestGenerateFailsWithShortCredentials(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	cg := HMACSHAEnigma{
+	cg := Enigma{
 		GlobalSecret: []byte("12345678901234567890"),
 	}
 
@@ -54,7 +54,7 @@ func TestGenerate(t *testing.T) {
 
 func TestValidateSignatureRejects(t *testing.T) {
 	var err error
-	cg := HMACSHAEnigma{
+	cg := Enigma{
 		GlobalSecret: []byte("12345678901234567890"),
 	}
 	for k, c := range []string{
