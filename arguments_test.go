@@ -1,38 +1,148 @@
 package fosite
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestArgumentsHas(t *testing.T) {
+func TestArgumentsExact(t *testing.T) {
 	for k, c := range []struct {
 		args   Arguments
-		has    string
+		exact  string
 		expect bool
 	}{
 		{
-			args:   Arguments{"foo", "bar"},
-			has:    "foo",
+			args:   Arguments{"foo"},
+			exact:  "foo",
 			expect: true,
 		},
 		{
 			args:   Arguments{"foo", "bar"},
-			has:    "bar",
-			expect: true,
+			exact:  "foo",
+			expect: false,
 		},
 		{
 			args:   Arguments{"foo", "bar"},
-			has:    "baz",
+			exact:  "bar",
+			expect: false,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			exact:  "baz",
 			expect: false,
 		},
 		{
 			args:   Arguments{},
-			has:    "baz",
+			exact:  "baz",
 			expect: false,
 		},
 	} {
-		assert.Equal(t, c.expect, c.args.Has(c.has), "%d", k)
+		assert.Equal(t, c.expect, c.args.Exact(c.exact), "%d", k)
+		t.Logf("Passed test case %d", k)
+	}
+}
+
+func TestArgumentsHas(t *testing.T) {
+	for k, c := range []struct {
+		args   Arguments
+		has    []string
+		expect bool
+	}{
+		{
+			args:   Arguments{"foo", "bar"},
+			has:    []string{"foo", "bar"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			has:    []string{"bar", "foo"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"bar", "foo"},
+			has:    []string{"foo"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			has:    []string{"bar", "foo", "baz"},
+			expect: false,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			has:    []string{"foo"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			has:    []string{"bar"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			has:    []string{"baz"},
+			expect: false,
+		},
+		{
+			args:   Arguments{},
+			has:    []string{"baz"},
+			expect: false,
+		},
+	} {
+		assert.Equal(t, c.expect, c.args.Has(c.has...), "%d", k)
+		t.Logf("Passed test case %d", k)
+	}
+}
+
+func TestArgumentsIs(t *testing.T) {
+	for k, c := range []struct {
+		args   Arguments
+		is     []string
+		expect bool
+	}{
+		{
+			args:   Arguments{"foo", "bar"},
+			is:     []string{"foo", "bar"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"foo", "foo"},
+			is:     []string{"foo"},
+			expect: false,
+		},
+		{
+			args:   Arguments{"foo", "foo"},
+			is:     []string{"bar", "foo"},
+			expect: false,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			is:     []string{"bar", "foo", "baz"},
+			expect: false,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			is:     []string{"foo"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			is:     []string{"bar"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"foo", "bar"},
+			is:     []string{"baz"},
+			expect: false,
+		},
+		{
+			args:   Arguments{},
+			is:     []string{"baz"},
+			expect: false,
+		},
+	} {
+		assert.Equal(t, c.expect, c.args.Is(c.is...), "%d", k)
 		t.Logf("Passed test case %d", k)
 	}
 }

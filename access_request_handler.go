@@ -1,11 +1,11 @@
 package fosite
 
 import (
-	"github.com/go-errors/errors"
-	"golang.org/x/net/context"
 	"net/http"
 	"strings"
-	"time"
+
+	"github.com/go-errors/errors"
+	"golang.org/x/net/context"
 )
 
 // Implements
@@ -34,13 +34,7 @@ import (
 //   client MUST authenticate with the authorization server as described
 //   in Section 3.2.1.
 func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session interface{}) (AccessRequester, error) {
-	accessRequest := &AccessRequest{
-		Request: Request{
-			Scopes:      Arguments{},
-			Session:     session,
-			RequestedAt: time.Now(),
-		},
-	}
+	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
 		return accessRequest, errors.New(ErrInvalidRequest)
@@ -61,8 +55,8 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	accessRequest.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
-	accessRequest.GrantType = r.Form.Get("grant_type")
-	if accessRequest.GrantType == "" {
+	accessRequest.GrantTypes = removeEmpty(strings.Split(r.Form.Get("grant_type"), " "))
+	if len(accessRequest.GrantTypes) < 1 {
 		return accessRequest, errors.New(ErrInvalidRequest)
 	}
 
@@ -88,7 +82,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		}
 	}
 
-	if !accessRequest.DidHandleGrantType() {
+	if !accessRequest.DidHandleGrantTypes() {
 		return accessRequest, errors.New(ErrUnsupportedGrantType)
 	}
 

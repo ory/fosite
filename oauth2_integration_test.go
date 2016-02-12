@@ -1,11 +1,17 @@
 package fosite_test
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma"
+	enigma "github.com/ory-am/fosite/enigma/hmac"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/strategy"
 	. "github.com/ory-am/fosite/internal"
@@ -14,11 +20,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 	goauth2 "golang.org/x/oauth2"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"testing"
-	"time"
 )
 
 var clientID = "foo"
@@ -32,7 +33,7 @@ var mockAuthReq *MockAuthorizeRequester
 var mockHasher *MockHasher
 
 var defaultStrategy = &strategy.HMACSHAStrategy{
-	Enigma: &enigma.HMACSHAEnigma{
+	Enigma: &enigma.Enigma{
 		GlobalSecret: []byte("super-global-secret"),
 	},
 }
@@ -55,8 +56,8 @@ func TestFosite(t *testing.T) {
 
 	oauth2 := NewFosite(mockStore)
 	oauth2.Hasher = mockHasher
-	oauth2.AuthorizeEndpointHandlers.Add("code", authExplicitHandler)
-	oauth2.TokenEndpointHandlers.Add("code", authExplicitHandler)
+	oauth2.AuthorizeEndpointHandlers.Append(authExplicitHandler)
+	oauth2.TokenEndpointHandlers.Append(authExplicitHandler)
 
 	oauth2TestAuthorizeCodeWorkFlow(oauth2, t, func() {
 		mockStore = NewMockStorage(ctrl)

@@ -1,25 +1,38 @@
 package fosite
 
-import (
-	"time"
-)
+import "time"
 
 type AccessRequest struct {
-	GrantType        string
-	HandledGrantType []string
+	GrantTypes       Arguments
+	HandledGrantType Arguments
 	RequestedAt      time.Time
 
 	Request
 }
 
-func (a *AccessRequest) DidHandleGrantType() bool {
-	return StringInSlice(a.GrantType, a.HandledGrantType)
+func NewAccessRequest(session interface{}) *AccessRequest {
+	return &AccessRequest{
+		Request: Request{
+			Scopes:      Arguments{},
+			Session:     session,
+			RequestedAt: time.Now(),
+		},
+	}
+}
+
+func (a *AccessRequest) DidHandleGrantTypes() bool {
+	for _, grantType := range a.GrantTypes {
+		if !StringInSlice(grantType, a.HandledGrantType) {
+			return false
+		}
+	}
+	return true
 }
 
 func (a *AccessRequest) SetGrantTypeHandled(name string) {
 	a.HandledGrantType = append(a.HandledGrantType, name)
 }
 
-func (a *AccessRequest) GetGrantType() string {
-	return a.GrantType
+func (a *AccessRequest) GetGrantTypes() Arguments {
+	return a.GrantTypes
 }

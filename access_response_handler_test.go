@@ -1,14 +1,15 @@
 package fosite_test
 
 import (
+	"net/http"
+	"testing"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
-	"net/http"
-	"testing"
 )
 
 func TestNewAccessResponse(t *testing.T) {
@@ -32,14 +33,14 @@ func TestNewAccessResponse(t *testing.T) {
 			mock: func() {
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
 			},
-			handlers:  TokenEndpointHandlers{"a": handler},
+			handlers:  TokenEndpointHandlers{handler},
 			expectErr: ErrServerError,
 		},
 		{
 			mock: func() {
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
-			handlers:  TokenEndpointHandlers{"a": handler},
+			handlers:  TokenEndpointHandlers{handler},
 			expectErr: ErrUnsupportedGrantType,
 		},
 		{
@@ -48,7 +49,7 @@ func TestNewAccessResponse(t *testing.T) {
 					resp.SetAccessToken("foo")
 				}).Return(nil)
 			},
-			handlers:  TokenEndpointHandlers{"a": handler},
+			handlers:  TokenEndpointHandlers{handler},
 			expectErr: ErrUnsupportedGrantType,
 		},
 		{
@@ -58,7 +59,7 @@ func TestNewAccessResponse(t *testing.T) {
 					resp.SetTokenType("bar")
 				}).Return(nil)
 			},
-			handlers: TokenEndpointHandlers{"a": handler},
+			handlers: TokenEndpointHandlers{handler},
 			expect: &AccessResponse{
 				Extra:       map[string]interface{}{},
 				AccessToken: "foo",

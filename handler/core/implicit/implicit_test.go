@@ -1,17 +1,18 @@
 package implicit_test
 
 import (
+	"net/http"
+	"net/url"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"strconv"
-	"testing"
-	"time"
 )
 
 func TestAuthorizeImplicitEndpointHandler(t *testing.T) {

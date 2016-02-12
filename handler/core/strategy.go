@@ -1,9 +1,10 @@
 package core
 
 import (
+	"net/http"
+
 	"github.com/ory-am/fosite"
 	"golang.org/x/net/context"
-	"net/http"
 )
 
 type AccessTokenStrategy interface {

@@ -159,7 +159,9 @@ import(
 	"github.com/go-errors/errors"
 
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma"
+	
+	// Import hmac strategy for enigma
+	enigma "github.com/ory-am/fosite/enigma/hmac"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/core/owner"
@@ -172,7 +174,7 @@ import(
 )
 
 var hmacStrategy = &strategy.HMACSHAStrategy{
-	Enigma: &enigma.HMACSHAEnigma{
+	Enigma: &enigma.Enigma{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }
@@ -204,8 +206,8 @@ func fositeFactory() OAuth2Provider {
 		AuthCodeLifespan:    time.Minute * 10,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
-	f.AuthorizeEndpointHandlers.Add("code", explicitHandler)
-	f.TokenEndpointHandlers.Add("code", explicitHandler)
+	f.AuthorizeEndpointHandlers.Append(explicitHandler)
+	f.TokenEndpointHandlers.Append(explicitHandler)
 
 	// Implicit grant type
 	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
@@ -213,7 +215,7 @@ func fositeFactory() OAuth2Provider {
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
-	f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
+	f.AuthorizeEndpointHandlers.Append(implicitHandler)
 
 	// Client credentials grant type
 	clientHandler := &coreclient.ClientCredentialsGrantHandler{
@@ -221,7 +223,7 @@ func fositeFactory() OAuth2Provider {
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
-	f.TokenEndpointHandlers.Add("client", clientHandler)
+	f.TokenEndpointHandlers.Append(clientHandler)
 
 	// Resource owner password credentials grant type
 	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
@@ -229,7 +231,7 @@ func fositeFactory() OAuth2Provider {
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
-	f.TokenEndpointHandlers.Add("owner", ownerHandler)
+	f.TokenEndpointHandlers.Append(ownerHandler)
 
 	// Refresh grant type
 	refreshHandler := &refresh.RefreshTokenGrantHandler{
@@ -238,7 +240,7 @@ func fositeFactory() OAuth2Provider {
 		Store:                store,
 		AccessTokenLifespan:  accessTokenLifespan,
 	}
-	f.TokenEndpointHandlers.Add("refresh", refreshHandler)
+	f.TokenEndpointHandlers.Append(refreshHandler)
 
     return f
 }
@@ -475,7 +477,7 @@ If you want to enable the handler able to handle this workflow, you can do this:
 
 ```go
 var hmacStrategy = &strategy.HMACSHAStrategy{
-	Enigma: &enigma.HMACSHAEnigma{
+	Enigma: &enigma.Enigma{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }
@@ -494,8 +496,10 @@ explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
     AuthCodeLifespan:    time.Minute * 10,
     AccessTokenLifespan: accessTokenLifespan,
 }
-f.AuthorizeEndpointHandlers.Add("code", explicitHandler)
-f.TokenEndpointHandlers.Add("code", explicitHandler)
+
+// Please note that order matters!
+f.AuthorizeEndpointHandlers.Append(explicitHandler)
+f.TokenEndpointHandlers.Append(explicitHandler)
 ```
 
 As you probably noticed, there are two types of handlers, one for the [authorization */auth* endpoint](https://tools.ietf.org/html/rfc6749#section-3.1) and one for the [token
@@ -534,11 +538,15 @@ rather sooner than later.
 **Create storage mocks**
 ```sh
 mockgen -destination internal/storage.go github.com/ory-am/fosite Storage
+mockgen -destination internal/authorize_code_storage.go github.com/ory-am/fosite/handler/core AuthorizeCodeStorage
+mockgen -destination internal/access_token_storage.go github.com/ory-am/fosite/handler/core AccessTokenStorage
+mockgen -destination internal/refresh_token_strategy.go github.com/ory-am/fosite/handler/core RefreshTokenStorage
 mockgen -destination internal/core_client_storage.go github.com/ory-am/fosite/handler/core/client ClientCredentialsGrantStorage
 mockgen -destination internal/core_explicit_storage.go github.com/ory-am/fosite/handler/core/explicit AuthorizeCodeGrantStorage
 mockgen -destination internal/core_implicit_storage.go github.com/ory-am/fosite/handler/core/implicit ImplicitGrantStorage
 mockgen -destination internal/core_owner_storage.go github.com/ory-am/fosite/handler/core/owner ResourceOwnerPasswordCredentialsGrantStorage
 mockgen -destination internal/core_refresh_storage.go github.com/ory-am/fosite/handler/core/refresh RefreshTokenGrantStorage
+mockgen -destination internal/oidc_id_token_storage.go github.com/ory-am/fosite/handler/oidc OpenIDConnectRequestStorage
 ```
 
 **Create strategy mocks**
@@ -546,6 +554,7 @@ mockgen -destination internal/core_refresh_storage.go github.com/ory-am/fosite/h
 mockgen -destination internal/access_token_strategy.go github.com/ory-am/fosite/handler/core AccessTokenStrategy
 mockgen -destination internal/refresh_token_strategy.go github.com/ory-am/fosite/handler/core RefreshTokenStrategy
 mockgen -destination internal/authorize_code_strategy.go github.com/ory-am/fosite/handler/core AuthorizeCodeStrategy
+mockgen -destination internal/id_token_strategy.go github.com/ory-am/fosite/handler/oidc OpenIDConnectTokenStrategy
 ```
 
 **Create handler mocks**

@@ -5,6 +5,8 @@ package internal
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	fosite "github.com/ory-am/fosite"
+	time "time"
 )
 
 // Mock of AccessResponder interface
@@ -66,12 +68,28 @@ func (_mr *_MockAccessResponderRecorder) SetAccessToken(arg0 interface{}) *gomoc
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetAccessToken", arg0)
 }
 
+func (_m *MockAccessResponder) SetExpiresIn(_param0 time.Duration) {
+	_m.ctrl.Call(_m, "SetExpiresIn", _param0)
+}
+
+func (_mr *_MockAccessResponderRecorder) SetExpiresIn(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetExpiresIn", arg0)
+}
+
 func (_m *MockAccessResponder) SetExtra(_param0 string, _param1 interface{}) {
 	_m.ctrl.Call(_m, "SetExtra", _param0, _param1)
 }
 
 func (_mr *_MockAccessResponderRecorder) SetExtra(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetExtra", arg0, arg1)
+}
+
+func (_m *MockAccessResponder) SetScopes(_param0 fosite.Arguments) {
+	_m.ctrl.Call(_m, "SetScopes", _param0)
+}
+
+func (_mr *_MockAccessResponderRecorder) SetScopes(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetScopes", arg0)
 }
 
 func (_m *MockAccessResponder) SetTokenType(_param0 string) {

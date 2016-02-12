@@ -1,9 +1,10 @@
 package fosite
 
 import (
-	"github.com/ory-am/fosite/client"
 	"net/url"
 	"time"
+
+	"github.com/ory-am/fosite/client"
 )
 
 // Request is an implementation of Requester

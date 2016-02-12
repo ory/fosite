@@ -1,9 +1,10 @@
 package fosite
 
 import (
+	"net/http"
+
 	"github.com/go-errors/errors"
 	"golang.org/x/net/context"
-	"net/http"
 )
 
 func (f *Fosite) NewAccessResponse(ctx context.Context, req *http.Request, requester AccessRequester) (AccessResponder, error) {

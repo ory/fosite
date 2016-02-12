@@ -1,13 +1,14 @@
 package fosite_test
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"testing"
 )
 
 func TestWriteAuthorizeResponse(t *testing.T) {

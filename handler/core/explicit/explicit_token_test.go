@@ -39,12 +39,12 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	}{
 		{
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("13245678")
+				areq.EXPECT().GetGrantTypes().Return([]string{"13245678"})
 			},
 		},
 		{
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code")
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"})
 				ach.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", fosite.ErrServerError)
 			},
 			expectErr: fosite.ErrServerError,
@@ -52,7 +52,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		{
 			req: &http.Request{PostForm: url.Values{}},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code")
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"})
 				ach.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
 				rch.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
 				auch.EXPECT().ValidateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
@@ -64,7 +64,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		{
 			req: &http.Request{PostForm: url.Values{}},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code")
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"})
 
 				ach.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
 				rch.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
@@ -78,7 +78,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		{
 			req: &http.Request{PostForm: url.Values{}},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code")
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"})
 
 				ach.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
 				rch.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
@@ -92,7 +92,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		{
 			req: &http.Request{PostForm: url.Values{}},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code")
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"})
 				areq.EXPECT().GetGrantedScopes()
 
 				ach.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("access.at", "at", nil)
@@ -138,7 +138,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 	}{
 		{
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("13245678") // grant_type REQUIRED. Value MUST be set to "authorization_code".
+				areq.EXPECT().GetGrantTypes().Return([]string{"12345678"}) // grant_type REQUIRED. Value MUST be set to "authorization_code".
 			},
 		},
 		{
@@ -146,7 +146,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 				PostForm: url.Values{"code": {"foo.bar"}}, // code REQUIRED. The authorization code received from the authorization server.
 			},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code") // grant_type REQUIRED. Value MUST be set to "authorization_code".
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"}) // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				ach.EXPECT().ValidateAuthorizeCode("foo.bar", gomock.Any(), gomock.Any(), gomock.Any()).Return("", errors.New("foo"))
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -156,7 +156,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 				PostForm: url.Values{"code": {"foo.bar"}}, // code REQUIRED. The authorization code received from the authorization server.
 			},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code") // grant_type REQUIRED. Value MUST be set to "authorization_code".
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"}) // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				areq.EXPECT().GetSession().Return("asdf")
 				ach.EXPECT().ValidateAuthorizeCode("foo.bar", gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
 				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), "asdf").Return(nil, pkg.ErrNotFound)
@@ -168,7 +168,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 				PostForm: url.Values{"code": {"foo.bar"}}, // code REQUIRED. The authorization code received from the authorization server.
 			},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code") // grant_type REQUIRED. Value MUST be set to "authorization_code".
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"}) // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				areq.EXPECT().GetSession().Return(nil)
 				ach.EXPECT().ValidateAuthorizeCode("foo.bar", gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
 				store.EXPECT().GetAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(nil, errors.New("foo"))
@@ -181,7 +181,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 				PostForm: url.Values{"code": {"foo.bar"}}, // code REQUIRED. The authorization code received from the authorization server.
 			},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code") // grant_type REQUIRED. Value MUST be set to "authorization_code".
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"}) // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				areq.EXPECT().GetClient().AnyTimes().Return(&client.SecureClient{ID: "foo"})
 				areq.EXPECT().GetSession().Return(nil)
 				ach.EXPECT().ValidateAuthorizeCode("foo.bar", gomock.Any(), gomock.Any(), gomock.Any()).Return("bar", nil)
@@ -200,7 +200,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 				},
 			},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code") // grant_type REQUIRED. Value MUST be set to "authorization_code".
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"}) // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				areq.EXPECT().GetClient().AnyTimes().Return(&client.SecureClient{ID: "foo"})
 				areq.EXPECT().GetSession().Return(nil)
 				ach.EXPECT().ValidateAuthorizeCode("foo.bar", gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
@@ -221,7 +221,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 				},
 			},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code") // grant_type REQUIRED. Value MUST be set to "authorization_code".
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"}) // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				areq.EXPECT().GetClient().AnyTimes().Return(&client.SecureClient{ID: "foo"})
 				areq.EXPECT().GetSession().Return(nil)
 				ach.EXPECT().ValidateAuthorizeCode("foo.bar", gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
@@ -243,7 +243,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 				},
 			},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code") // grant_type REQUIRED. Value MUST be set to "authorization_code".
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"}) // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				areq.EXPECT().GetClient().AnyTimes().Return(&client.SecureClient{ID: "foo"})
 				areq.EXPECT().GetSession().Return(nil)
 				ach.EXPECT().ValidateAuthorizeCode("foo.bar", gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)
@@ -264,7 +264,7 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 				},
 			},
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("authorization_code") // grant_type REQUIRED. Value MUST be set to "authorization_code".
+				areq.EXPECT().GetGrantTypes().Return([]string{"authorization_code"}) // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				areq.EXPECT().GetClient().AnyTimes().Return(&client.SecureClient{ID: "foo"})
 				areq.EXPECT().GetSession().Return(nil)
 				ach.EXPECT().ValidateAuthorizeCode("foo.bar", gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil)

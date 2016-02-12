@@ -137,13 +137,13 @@ type Requester interface {
 // AccessRequester is a token endpoint's request context.
 type AccessRequester interface {
 	// GetGrantType returns the requests grant type.
-	GetGrantType() (grantType string)
+	GetGrantTypes() (grantTypes Arguments)
 
 	// SetGrantTypeHandled marks a grant type as handled indicating that the response type is supported.
 	SetGrantTypeHandled(grantType string)
 
 	// DidHandleGrantType returns if the requested grant type has been handled correctly.
-	DidHandleGrantType() (didHandle bool)
+	DidHandleGrantTypes() (didHandle bool)
 
 	Requester
 }
@@ -181,6 +181,10 @@ type AccessResponder interface {
 	// GetExtra returns a key's value.
 	GetExtra(key string) interface{}
 
+	SetExpiresIn(time.Duration)
+
+	SetScopes(scopes Arguments)
+
 	// SetAccessToken sets the responses mandatory access token.
 	SetAccessToken(token string)
 
@@ -199,6 +203,12 @@ type AccessResponder interface {
 
 // AuthorizeResponder is an authorization endpoint's response.
 type AuthorizeResponder interface {
+	// GetID returns the response's authorize id.
+	GetID() string
+
+	// SetID sets the response's authorize id.
+	SetID(string)
+
 	// GetHeader returns the response's header
 	GetHeader() (header http.Header)
 

@@ -1,11 +1,12 @@
 package fosite
 
 import (
-	"github.com/ory-am/fosite/client"
-	"github.com/stretchr/testify/assert"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory-am/fosite/client"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthorizeRequest(t *testing.T) {

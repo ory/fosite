@@ -1,11 +1,12 @@
 package fosite
 
 import (
+	"net/url"
+	"strings"
+
 	"github.com/asaskevich/govalidator"
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite/client"
-	"net/url"
-	"strings"
 )
 
 // GetRedirectURIFromRequestValues extracts the redirect_uri from values but does not do any sort of validation.

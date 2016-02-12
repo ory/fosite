@@ -1,11 +1,12 @@
 package fosite
 
 import (
-	"github.com/go-errors/errors"
-	"golang.org/x/net/context"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/go-errors/errors"
+	"golang.org/x/net/context"
 )
 
 func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
@@ -56,8 +57,8 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	// response types is defined by their respective specifications.
 	responseTypes := removeEmpty(strings.Split(r.Form.Get("response_type"), " "))
 
-	// Allow or deny http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth
-	if !c.AllowHybridFlow && len(responseTypes) > 1 {
+	// Enable support of multiple response types. This is for example required by OpenID Connect.
+	if !c.EnableHybridAuthorizationFlow && len(responseTypes) > 1 {
 		return request, errors.New(ErrInvalidRequest)
 	}
 

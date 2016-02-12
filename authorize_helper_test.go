@@ -1,11 +1,12 @@
 package fosite
 
 import (
+	"net/url"
+	"testing"
+
 	. "github.com/ory-am/fosite/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"net/url"
-	"testing"
 )
 
 func TestIsLocalhost(t *testing.T) {

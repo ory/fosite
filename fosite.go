@@ -3,19 +3,19 @@ package fosite
 import "github.com/ory-am/fosite/hash"
 
 // AuthorizeEndpointHandlers is a list of AuthorizeEndpointHandler
-type AuthorizeEndpointHandlers map[string]AuthorizeEndpointHandler
+type AuthorizeEndpointHandlers []AuthorizeEndpointHandler
 
 // Add adds an AuthorizeEndpointHandler to this list
-func (a AuthorizeEndpointHandlers) Add(key string, h AuthorizeEndpointHandler) {
-	a[key] = h
+func (a *AuthorizeEndpointHandlers) Append(h AuthorizeEndpointHandler) {
+	*a = append(*a, h)
 }
 
 // TokenEndpointHandlers is a list of TokenEndpointHandler
-type TokenEndpointHandlers map[string]TokenEndpointHandler
+type TokenEndpointHandlers []TokenEndpointHandler
 
 // Add adds an TokenEndpointHandler to this list
-func (t TokenEndpointHandlers) Add(key string, h TokenEndpointHandler) {
-	t[key] = h
+func (t *TokenEndpointHandlers) Append(h TokenEndpointHandler) {
+	*t = append(*t, h)
 }
 
 // NewFosite returns a new OAuth2Provider implementation
@@ -26,7 +26,6 @@ func NewFosite(store Storage) *Fosite {
 		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{},
 		TokenEndpointHandlers:     TokenEndpointHandlers{},
 		Hasher:                    &hash.BCrypt{WorkFactor: 12},
-		AllowHybridFlow:           false,
 	}
 }
 
@@ -38,7 +37,7 @@ type Fosite struct {
 	TokenEndpointHandlers     TokenEndpointHandlers
 	Hasher                    hash.Hasher
 
-	// AllowHybridFlow sets if the hybrid flow should be allowed.
+	// EnableHybridAuthorizationFlow sets if the hybrid flow should be allowed.
 	// More: http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth
-	AllowHybridFlow bool
+	EnableHybridAuthorizationFlow bool
 }

@@ -7,9 +7,10 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"strings"
+
 	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite/rand"
-	"strings"
 )
 
 // Enigma is responsible for generating and validating challenges.

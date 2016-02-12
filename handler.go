@@ -1,8 +1,9 @@
 package fosite
 
 import (
-	"golang.org/x/net/context"
 	"net/http"
+
+	"golang.org/x/net/context"
 )
 
 type AuthorizeEndpointHandler interface {

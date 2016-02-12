@@ -2,9 +2,10 @@ package fosite
 
 import (
 	native "errors"
+	"testing"
+
 	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestErrorToRFC6749(t *testing.T) {

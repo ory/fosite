@@ -1,8 +1,9 @@
 package fosite
 
 import (
-	"github.com/ory-am/common/pkg"
 	"net/http"
+
+	"github.com/ory-am/common/pkg"
 )
 
 func (c *Fosite) WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder) {

@@ -3,6 +3,10 @@ package fosite_test
 import (
 	"encoding/base64"
 	"fmt"
+	"net/http"
+	"net/url"
+	"testing"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
@@ -10,9 +14,6 @@ import (
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
-	"net/http"
-	"net/url"
-	"testing"
 )
 
 func TestNewAccessRequest(t *testing.T) {
@@ -125,7 +126,7 @@ func TestNewAccessRequest(t *testing.T) {
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().ValidateTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
 			},
-			handlers: TokenEndpointHandlers{"a": handler},
+			handlers: TokenEndpointHandlers{handler},
 		},
 		{
 			header: http.Header{
@@ -142,7 +143,7 @@ func TestNewAccessRequest(t *testing.T) {
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().ValidateTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
-			handlers: TokenEndpointHandlers{"a": handler},
+			handlers: TokenEndpointHandlers{handler},
 		},
 		{
 			header: http.Header{
@@ -161,7 +162,7 @@ func TestNewAccessRequest(t *testing.T) {
 					a.SetGrantTypeHandled("bar")
 				}).Return(nil)
 			},
-			handlers: TokenEndpointHandlers{"a": handler},
+			handlers: TokenEndpointHandlers{handler},
 		},
 		{
 			header: http.Header{
@@ -180,7 +181,7 @@ func TestNewAccessRequest(t *testing.T) {
 					a.SetScopes([]string{"asdfasdf"})
 				}).Return(nil)
 			},
-			handlers:  TokenEndpointHandlers{"a": handler},
+			handlers:  TokenEndpointHandlers{handler},
 			expectErr: ErrInvalidScope,
 		},
 		{
@@ -200,9 +201,9 @@ func TestNewAccessRequest(t *testing.T) {
 					a.SetScopes([]string{DefaultRequiredScopeName})
 				}).Return(nil)
 			},
-			handlers: TokenEndpointHandlers{"a": handler},
+			handlers: TokenEndpointHandlers{handler},
 			expect: &AccessRequest{
-				GrantType:        "foo",
+				GrantTypes:       Arguments{"foo"},
 				HandledGrantType: []string{"foo"},
 				Request: Request{
 					Client: client,

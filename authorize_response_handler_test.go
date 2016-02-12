@@ -1,14 +1,15 @@
 package fosite_test
 
 import (
+	"net/http"
+	"testing"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
-	"net/http"
-	"testing"
 )
 
 func TestNewAuthorizeResponse(t *testing.T) {
@@ -19,10 +20,10 @@ func TestNewAuthorizeResponse(t *testing.T) {
 
 	ctx := context.Background()
 	oauth2 := &Fosite{
-		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{"a": handlers[0]},
+		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{handlers[0]},
 	}
 	duo := &Fosite{
-		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{"a": handlers[0], "b": handlers[0]},
+		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{handlers[0], handlers[0]},
 	}
 	ar.EXPECT().SetSession(gomock.Eq(struct{}{})).AnyTimes()
 	fooErr := errors.New("foo")

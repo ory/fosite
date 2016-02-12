@@ -12,7 +12,7 @@ type Client interface {
 	GetRedirectURIs() []string
 }
 
-// DefaultClient is a simple default implementation of the Client interface.
+// SecureClient is a simple default implementation of the Client interface.
 type SecureClient struct {
 	ID           string   `json:"id"`
 	Secret       []byte   `json:"secret"`

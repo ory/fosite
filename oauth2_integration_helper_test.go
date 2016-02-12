@@ -1,10 +1,11 @@
 package fosite_test
 
 import (
-	. "github.com/ory-am/fosite"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	. "github.com/ory-am/fosite"
+	"github.com/stretchr/testify/assert"
 )
 
 func authEndpoint(t *testing.T, oauth2 OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {

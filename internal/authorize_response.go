@@ -74,6 +74,16 @@ func (_mr *_MockAuthorizeResponderRecorder) GetHeader() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetHeader")
 }
 
+func (_m *MockAuthorizeResponder) GetID() string {
+	ret := _m.ctrl.Call(_m, "GetID")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeResponderRecorder) GetID() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetID")
+}
+
 func (_m *MockAuthorizeResponder) GetQuery() url.Values {
 	ret := _m.ctrl.Call(_m, "GetQuery")
 	ret0, _ := ret[0].(url.Values)
@@ -82,4 +92,12 @@ func (_m *MockAuthorizeResponder) GetQuery() url.Values {
 
 func (_mr *_MockAuthorizeResponderRecorder) GetQuery() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetQuery")
+}
+
+func (_m *MockAuthorizeResponder) SetID(_param0 string) {
+	_m.ctrl.Call(_m, "SetID", _param0)
+}
+
+func (_mr *_MockAuthorizeResponderRecorder) SetID(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetID", arg0)
 }

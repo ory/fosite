@@ -2,8 +2,9 @@ package jwt
 
 import (
 	"encoding/json"
-	"github.com/pborman/uuid"
 	"time"
+
+	"github.com/pborman/uuid"
 )
 
 // Claims represent a token's claims.
@@ -24,16 +25,23 @@ func (c *Claims) ToMap() map[string]interface{} {
 		ret[k] = v
 	}
 	ret["sub"] = c.Subject
-	ret["iat"] = c.IssuedAt.Unix()
 	ret["iss"] = c.Issuer
-	ret["nbf"] = c.NotValidBefore.Unix()
 	ret["aud"] = c.Audience
+	ret["iat"] = c.IssuedAt.Unix()
+	ret["nbf"] = c.NotValidBefore.Unix()
 	ret["exp"] = c.ExpiresAt.Unix()
 	ret["jti"] = uuid.New()
 	if c.ID != "" {
 		ret["jti"] = c.ID
 	}
 	return ret
+}
+
+func (c *Claims) AddExtra(key string, value interface{}) {
+	if c.Extra == nil {
+		c.Extra = make(map[string]interface{})
+	}
+	c.Extra[key] = value
 }
 
 func ClaimsFromMap(m map[string]interface{}) *Claims {
@@ -48,14 +56,14 @@ func ClaimsFromMap(m map[string]interface{}) *Claims {
 	}
 
 	return &Claims{
-		Subject:   toString(m["sub"]),
-		IssuedAt:  toTime(m["iat"]),
-		Issuer:    toString(m["iss"]),
+		Subject:        toString(m["sub"]),
+		IssuedAt:       toTime(m["iat"]),
+		Issuer:         toString(m["iss"]),
 		NotValidBefore: toTime(m["nbf"]),
-		Audience:  toString(m["aud"]),
-		ExpiresAt: toTime(m["exp"]),
-		ID:        toString(m["jti"]),
-		Extra:     extra,
+		Audience:       toString(m["aud"]),
+		ExpiresAt:      toTime(m["exp"]),
+		ID:             toString(m["jti"]),
+		Extra:          extra,
 	}
 }
 
@@ -97,6 +105,8 @@ func toTime(i interface{}) time.Time {
 
 	if t, ok := i.(int64); ok {
 		return time.Unix(t, 0)
+	} else if t, ok := i.(float64); ok {
+		return time.Unix(int64(t), 0)
 	}
 
 	return time.Time{}

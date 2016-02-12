@@ -11,8 +11,8 @@ import (
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
-	"github.com/ory-am/fosite/enigma"
-	"github.com/ory-am/fosite/enigma/jwthelper"
+	hmac "github.com/ory-am/fosite/enigma/hmac"
+	jwt "github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/fosite-example/internal"
 	coreclient "github.com/ory-am/fosite/handler/core/client"
 	"github.com/ory-am/fosite/handler/core/explicit"
@@ -63,15 +63,15 @@ var appClientConf = clientcredentials.Config{
 }
 
 var hmacStrategy = &strategy.HMACSHAStrategy{
-	Enigma: &enigma.HMACSHAEnigma{
+	Enigma: &hmac.Enigma{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }
 
 var jwtStrategy = &strategy.JWTStrategy{
-	Enigma: &enigma.JWTEnigma{
-		PrivateKey: []byte(enigma.TestCertificates[0][1]),
-		PublicKey:  []byte(enigma.TestCertificates[1][1]),
+	Enigma: &jwt.Enigma{
+		PrivateKey: []byte(jwt.TestCertificates[0][1]),
+		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
 }
 
@@ -107,8 +107,8 @@ func fositeFactory() OAuth2Provider {
 		AuthCodeLifespan:    time.Minute * 10,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
-	f.AuthorizeEndpointHandlers.Add("code", explicitHandler)
-	f.TokenEndpointHandlers.Add("code", explicitHandler)
+	f.AuthorizeEndpointHandlers.Append(explicitHandler)
+	f.TokenEndpointHandlers.Append(explicitHandler)
 
 	// Implicit grant type
 	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
@@ -116,7 +116,7 @@ func fositeFactory() OAuth2Provider {
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
-	f.AuthorizeEndpointHandlers.Add("implicit", implicitHandler)
+	f.AuthorizeEndpointHandlers.Append(implicitHandler)
 
 	// Client credentials grant type
 	clientHandler := &coreclient.ClientCredentialsGrantHandler{
@@ -124,7 +124,7 @@ func fositeFactory() OAuth2Provider {
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
-	f.TokenEndpointHandlers.Add("client", clientHandler)
+	f.TokenEndpointHandlers.Append(clientHandler)
 
 	// Resource owner password credentials grant type
 	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
@@ -132,7 +132,7 @@ func fositeFactory() OAuth2Provider {
 		Store:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
-	f.TokenEndpointHandlers.Add("owner", ownerHandler)
+	f.TokenEndpointHandlers.Append(ownerHandler)
 
 	// Refresh grant type
 	refreshHandler := &refresh.RefreshTokenGrantHandler{
@@ -141,7 +141,7 @@ func fositeFactory() OAuth2Provider {
 		Store:                store,
 		AccessTokenLifespan:  accessTokenLifespan,
 	}
-	f.TokenEndpointHandlers.Add("refresh", refreshHandler)
+	f.TokenEndpointHandlers.Append(refreshHandler)
 
 	return f
 }
@@ -165,13 +165,22 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 	ctx := NewContext()
 
 	if typeof(*selectedStrategy) == "strategy.JWTStrategy" {
-		// JWT
-		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
-			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+		claims := &jwt.Claims{
+			Issuer:         "fosite.my-application.com",
+			Subject:        "peter@foobar.com",
+			Audience:       "*.my-application.com",
+			ExpiresAt:      time.Now().Add(time.Hour * 6),
+			IssuedAt:       time.Now(),
+			NotValidBefore: time.Now(),
+		}
+
+		header := &jwt.Header{
+			Extra: make(map[string]interface{}),
+		}
 
 		mySessionData := strategy.JWTSession{
-			JWTClaimsCtx: *claims,
-			JWTHeaders:   make(map[string]interface{}),
+			TokenClaims: claims,
+			TokenHeader: header,
 		}
 
 		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
@@ -239,12 +248,22 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 
 	if typeof(*selectedStrategy) == "strategy.JWTStrategy" {
 		// JWT
-		claims, _ := jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
-			time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+		claims := &jwt.Claims{
+			Issuer:         "fosite.my-application.com",
+			Subject:        "peter@foobar.com",
+			Audience:       "*.my-application.com",
+			ExpiresAt:      time.Now().Add(time.Hour * 6),
+			IssuedAt:       time.Now(),
+			NotValidBefore: time.Now(),
+		}
+
+		header := &jwt.Header{
+			Extra: make(map[string]interface{}),
+		}
 
 		mySessionData := strategy.JWTSession{
-			JWTClaimsCtx: *claims,
-			JWTHeaders:   make(map[string]interface{}),
+			TokenClaims: claims,
+			TokenHeader: header,
 		}
 
 		response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, &mySessionData)

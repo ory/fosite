@@ -1,6 +1,10 @@
 package fosite_test
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite"
@@ -9,9 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/vektra/errors"
 	"golang.org/x/net/context"
-	"net/http"
-	"net/url"
-	"testing"
 )
 
 // Should pass
@@ -169,7 +170,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
-				"response_type": {"code"},
+				"response_type": {"code foo"},
 				"state":         {"strong-state"},
 				"scope":         {DefaultRequiredScopeName + " foo bar"},
 			},
@@ -188,7 +189,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		},
 		{
 			desc: "should pass",
-			conf: &Fosite{Store: store, AllowHybridFlow: true},
+			conf: &Fosite{Store: store, EnableHybridAuthorizationFlow: true},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},

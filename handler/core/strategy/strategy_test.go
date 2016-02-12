@@ -7,24 +7,31 @@ import (
 
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
-	"github.com/ory-am/fosite/enigma"
-	"github.com/ory-am/fosite/enigma/jwthelper"
+	hmac "github.com/ory-am/fosite/enigma/hmac"
+	jwt "github.com/ory-am/fosite/enigma/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
 var s = HMACSHAStrategy{
-	Enigma: &enigma.HMACSHAEnigma{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
+	Enigma: &hmac.Enigma{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
 }
 
 var j = &JWTStrategy{
-	Enigma: &enigma.JWTEnigma{
-		PrivateKey: []byte(enigma.TestCertificates[0][1]),
-		PublicKey:  []byte(enigma.TestCertificates[1][1]),
+	Enigma: &jwt.Enigma{
+		PrivateKey: []byte(jwt.TestCertificates[0][1]),
+		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
 }
 
-var claims, claimsErr = jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
-	time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+var claims = &jwt.Claims{
+	Issuer:         "fosite",
+	Subject:        "peter",
+	Audience:       "group0",
+	ExpiresAt:      time.Now().Add(time.Hour),
+	IssuedAt:       time.Now(),
+	NotValidBefore: time.Now(),
+	Extra:          make(map[string]interface{}),
+}
 
 var r = &fosite.Request{
 	Client: &client.SecureClient{
@@ -32,8 +39,10 @@ var r = &fosite.Request{
 	},
 
 	Session: &JWTSession{
-		JWTClaimsCtx: *claims,
-		JWTHeaders:   make(map[string]interface{}),
+		TokenClaims: claims,
+		TokenHeader: &jwt.Header{
+			Extra: make(map[string]interface{}),
+		},
 	},
 }
 
@@ -66,11 +75,11 @@ func TestAccessToken(t *testing.T) {
 	r.Session = oldSession
 
 	// Invalid
-	oldClaims := r.Session.(*JWTSession).JWTClaimsCtx
-	r.Session.(*JWTSession).JWTClaimsCtx = nil
+	oldClaims := r.Session.(*JWTSession).TokenClaims
+	r.Session.(*JWTSession).TokenClaims = nil
 	token, signature, err = j.GenerateAccessToken(nil, nil, r)
 	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).JWTClaimsCtx = oldClaims
+	r.Session.(*JWTSession).TokenClaims = oldClaims
 }
 
 func TestRefreshToken(t *testing.T) {
@@ -102,11 +111,11 @@ func TestRefreshToken(t *testing.T) {
 	r.Session = oldSession
 
 	// Invalid
-	oldClaims := r.Session.(*JWTSession).JWTClaimsCtx
-	r.Session.(*JWTSession).JWTClaimsCtx = nil
+	oldClaims := r.Session.(*JWTSession).TokenClaims
+	r.Session.(*JWTSession).TokenClaims = nil
 	token, signature, err = j.GenerateRefreshToken(nil, nil, r)
 	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).JWTClaimsCtx = oldClaims
+	r.Session.(*JWTSession).TokenClaims = oldClaims
 }
 
 func TestGenerateAuthorizeCode(t *testing.T) {
@@ -138,9 +147,9 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 	r.Session = oldSession
 
 	// Invalid
-	oldClaims := r.Session.(*JWTSession).JWTClaimsCtx
-	r.Session.(*JWTSession).JWTClaimsCtx = nil
+	oldClaims := r.Session.(*JWTSession).TokenClaims
+	r.Session.(*JWTSession).TokenClaims = nil
 	token, signature, err = j.GenerateAuthorizeCode(nil, nil, r)
 	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).JWTClaimsCtx = oldClaims
+	r.Session.(*JWTSession).TokenClaims = oldClaims
 }

@@ -9,13 +9,13 @@ import (
 )
 
 var claims = &Claims{
-	Subject:   "peter",
-	IssuedAt:  time.Now().Round(time.Second),
-	Issuer:    "fosite",
+	Subject:        "peter",
+	IssuedAt:       time.Now().Round(time.Second),
+	Issuer:         "fosite",
 	NotValidBefore: time.Now().Round(time.Second),
-	Audience:  "tests",
-	ExpiresAt: time.Now().Add(time.Hour).Round(time.Second),
-	ID:        "abcdef",
+	Audience:       "tests",
+	ExpiresAt:      time.Now().Add(time.Hour).Round(time.Second),
+	ID:             "abcdef",
 	Extra: map[string]interface{}{
 		"foo": "bar",
 		"baz": "bar",

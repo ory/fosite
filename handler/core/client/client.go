@@ -1,14 +1,13 @@
 package client
 
 import (
-	"github.com/go-errors/errors"
+	"net/http"
+	"time"
+
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
+	"github.com/ory-am/fosite/handler/core/common"
 	"golang.org/x/net/context"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type ClientCredentialsGrantHandler struct {
@@ -26,7 +25,7 @@ type ClientCredentialsGrantHandler struct {
 func (c *ClientCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.Context, r *http.Request, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
-	if request.GetGrantType() != "client_credentials" {
+	if !request.GetGrantTypes().Exact("client_credentials") {
 		return nil
 	}
 
@@ -42,24 +41,9 @@ func (c *ClientCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.C
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.3
 func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request fosite.AccessRequester, response fosite.AccessResponder) error {
-	if request.GetGrantType() != "client_credentials" {
+	if !request.GetGrantTypes().Exact("client_credentials") {
 		return nil
 	}
 
-	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, r, request)
-	if err != nil {
-		return errors.New(fosite.ErrServerError)
-	} else if err := c.Store.CreateAccessTokenSession(signature, request); err != nil {
-		return errors.New(fosite.ErrServerError)
-	}
-
-	response.SetAccessToken(token)
-	response.SetTokenType("bearer")
-	response.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
-	response.SetExtra("scope", strings.Join(request.GetGrantedScopes(), " "))
-
-	// "A refresh token SHOULD NOT be included."
-	// -> we won't issue one
-
-	return nil
+	return common.IssueAccessToken(ctx, c.AccessTokenStrategy, c.Store, c.AccessTokenLifespan, r, request, response)
 }

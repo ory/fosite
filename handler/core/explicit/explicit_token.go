@@ -2,7 +2,6 @@ package explicit
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(ctx context.Context, r *http.Request, request AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
-	if request.GetGrantType() != "authorization_code" {
+	if !request.GetGrantTypes().Exact("authorization_code") {
 		return nil
 	}
 
@@ -27,7 +26,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(ctx con
 		return errors.New(ErrInvalidRequest)
 	}
 
-	authorizeRequest, err := c.Store.GetAuthorizeCodeSession(signature, request.GetSession())
+	authorizeRequest, err := c.Store.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
 	if err == pkg.ErrNotFound {
 		return errors.New(ErrInvalidRequest)
 	} else if err != nil {
@@ -78,8 +77,20 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(ctx con
 func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
-	if requester.GetGrantType() != "authorization_code" {
+	if !requester.GetGrantTypes().Exact("authorization_code") {
 		return nil
+	}
+
+	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(req.PostForm.Get("code"), ctx, req, requester)
+	if err != nil {
+		return errors.New(ErrInvalidRequest)
+	}
+
+	accessRequest, err := c.Store.GetAuthorizeCodeSession(ctx, signature, nil)
+	if err != nil {
+		// The signature has already been verified both cryptographically and with lookup. If lookup fails here
+		// it is due to some internal error.
+		return errors.New(ErrServerError)
 	}
 
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester)
@@ -92,29 +103,13 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 		return errors.New(ErrServerError)
 	}
 
-	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(req.PostForm.Get("code"), ctx, req, requester)
-	if err != nil {
-		return errors.New(ErrInvalidRequest)
-	}
-
-	accessRequest, err := c.Store.GetAuthorizeCodeSession(signature, nil)
-	if err != nil {
-		// The signature has already been verified both cryptographically and with lookup. If lookup fails here
-		// it is due to some internal error.
-		return errors.New(ErrServerError)
-	}
-
-	if err := c.Store.CreateAccessTokenSession(accessSignature, requester); err != nil {
-		return errors.New(ErrServerError)
-	} else if err := c.Store.CreateRefreshTokenSession(refreshSignature, requester); err != nil {
-		return errors.New(ErrServerError)
-	} else if err := c.Store.DeleteAuthorizeCodeSession(signature); err != nil {
+	if err := c.Store.PersistAuthorizeCodeGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
 		return errors.New(ErrServerError)
 	}
 
 	responder.SetAccessToken(access)
 	responder.SetTokenType("bearer")
-	responder.SetExtra("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
+	responder.SetExpiresIn(c.AccessTokenLifespan / time.Second)
 	responder.SetExtra("refresh_token", refresh)
 	responder.SetExtra("state", accessRequest.GetRequestForm().Get("state"))
 	responder.SetExtra("scope", strings.Join(requester.GetGrantedScopes(), " "))

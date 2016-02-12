@@ -32,14 +32,14 @@ func (_m *MockAccessRequester) EXPECT() *_MockAccessRequesterRecorder {
 	return _m.recorder
 }
 
-func (_m *MockAccessRequester) DidHandleGrantType() bool {
-	ret := _m.ctrl.Call(_m, "DidHandleGrantType")
+func (_m *MockAccessRequester) DidHandleGrantTypes() bool {
+	ret := _m.ctrl.Call(_m, "DidHandleGrantTypes")
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-func (_mr *_MockAccessRequesterRecorder) DidHandleGrantType() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DidHandleGrantType")
+func (_mr *_MockAccessRequesterRecorder) DidHandleGrantTypes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DidHandleGrantTypes")
 }
 
 func (_m *MockAccessRequester) GetClient() client.Client {
@@ -52,14 +52,14 @@ func (_mr *_MockAccessRequesterRecorder) GetClient() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetClient")
 }
 
-func (_m *MockAccessRequester) GetGrantType() string {
-	ret := _m.ctrl.Call(_m, "GetGrantType")
-	ret0, _ := ret[0].(string)
+func (_m *MockAccessRequester) GetGrantTypes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetGrantTypes")
+	ret0, _ := ret[0].(fosite.Arguments)
 	return ret0
 }
 
-func (_mr *_MockAccessRequesterRecorder) GetGrantType() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantType")
+func (_mr *_MockAccessRequesterRecorder) GetGrantTypes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantTypes")
 }
 
 func (_m *MockAccessRequester) GetGrantedScopes() fosite.Arguments {

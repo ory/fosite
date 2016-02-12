@@ -1,14 +1,15 @@
 package client
 
 import (
+	"net/http"
+	"testing"
+	"time"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"testing"
-	"time"
 )
 
 func TestValidateTokenEndpointRequest(t *testing.T) {
@@ -30,12 +31,12 @@ func TestValidateTokenEndpointRequest(t *testing.T) {
 	}{
 		{
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("")
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{""})
 			},
 		},
 		{
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("client_credentials")
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
 				areq.EXPECT().SetGrantTypeHandled("client_credentials")
 			},
 		},
@@ -51,8 +52,8 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockClientCredentialsGrantStorage(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
-	areq := internal.NewMockAccessRequester(ctrl)
-	aresp := internal.NewMockAccessResponder(ctrl)
+	areq := fosite.NewAccessRequest(nil)
+	aresp := fosite.NewAccessResponse()
 	defer ctrl.Finish()
 
 	h := ClientCredentialsGrantHandler{
@@ -67,35 +68,15 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	}{
 		{
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("")
+				areq.GrantTypes = fosite.Arguments{""}
 			},
 		},
 		{
 			mock: func() {
-				areq.EXPECT().GetGrantType().Return("client_credentials")
-				chgen.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", errors.New(""))
-			},
-			expectErr: fosite.ErrServerError,
-		},
-		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("client_credentials")
-				chgen.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
-				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any()).Return(errors.New(""))
-			},
-			expectErr: fosite.ErrServerError,
-		},
-		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("client_credentials")
-				chgen.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("tokenfoo.bar", "", nil)
-				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any()).Return(nil)
+				areq.GrantTypes = fosite.Arguments{"client_credentials"}
 
-				areq.EXPECT().GetGrantedScopes()
-				aresp.EXPECT().SetAccessToken("tokenfoo.bar")
-				aresp.EXPECT().SetTokenType("bearer")
-				aresp.EXPECT().SetExtra("expires_in", gomock.Any())
-				aresp.EXPECT().SetExtra("scope", gomock.Any())
+				chgen.EXPECT().GenerateAccessToken(nil, gomock.Any(), areq).Return("tokenfoo.bar", "bar", nil)
+				store.EXPECT().CreateAccessTokenSession(nil, gomock.Any()).Return(nil)
 			},
 		},
 	} {

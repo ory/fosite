@@ -4,9 +4,10 @@ import (
 	"strings"
 	"testing"
 
+	"time"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"time"
 )
 
 var header = &Header{
@@ -67,7 +68,6 @@ func TestGenerateJWT(t *testing.T) {
 	token, sig, err := j.Generate(claims, header)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, token)
-	t.Logf("%s", token)
 
 	sig, err = j.Validate(token)
 	require.Nil(t, err, "%s", err)
