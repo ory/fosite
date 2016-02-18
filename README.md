@@ -141,7 +141,7 @@ To see a full list of available versions check [gopkg.in/ory-am/fosite.v0](https
 Right now, there is only an unstable release versioned as the v0 branch:
 
 ```
-go get gopkg.in/ory-am/fosite.v0/...
+go get gopkg.in/ory-am/fosite.v0
 ```
 
 **Before you read ahead.**
@@ -518,7 +518,7 @@ You can find a complete list of handlers inside the [handler directory](handler)
 You need git and golang installed on your system.
 
 ```
-go get github.com/ory-am/fosite/... -d
+go get github.com/ory-am/fosite -d
 cd $GOPATH/src/ github.com/ory-am/fosite
 git status
 git remote add myfork <url-to-your-fork>
