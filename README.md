@@ -7,6 +7,7 @@ attack scenarios, keeping your application safe when that hacker penetrates or l
 
 [![Build Status](https://travis-ci.org/ory-am/fosite.svg?branch=master)](https://travis-ci.org/ory-am/fosite?branch=master)
 [![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github&foo)](https://coveralls.io/github/ory-am/fosite?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/ory-am/fosite)](https://goreportcard.com/report/ory-am/fosite)
 
 Be aware that `go get github.com/ory-am/fosite` will give you the master branch, which is and always will be *nightly*.
 Once releases roll out, you will be able to fetch a specific [fosite API version through gopkg.in](#installation).
