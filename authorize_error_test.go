@@ -53,7 +53,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 			mock: func() {
 				req.EXPECT().IsRedirectURIValid().Return(false)
 				rw.EXPECT().Header().Return(header)
-				rw.EXPECT().WriteHeader(http.StatusOK)
+				rw.EXPECT().WriteHeader(http.StatusBadRequest)
 				rw.EXPECT().Write(gomock.Any())
 			},
 			checkHeader: func(k int) {

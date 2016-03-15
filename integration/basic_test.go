@@ -2,19 +2,11 @@ package integration_test
 
 import (
 	"net/http"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMain(m *testing.M) {
-
-	retCode := m.Run()
-
-	os.Exit(retCode)
-}
 
 func TestBasic(t *testing.T) {
 	f := newFosite()

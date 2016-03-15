@@ -7,19 +7,19 @@ import (
 	"github.com/ory-am/fosite/handler/core/client"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
-"golang.org/x/oauth2/clientcredentials"
-"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2/clientcredentials"
+	"github.com/stretchr/testify/require"
 )
 
-func TestClientCredentialsFlow(t *testing.T) {
+func TestResourceOwnerPasswordCredentialsGrant(t *testing.T) {
 	for _, strategy := range []core.AccessTokenStrategy{
 		hmacStrategy,
 	} {
-		runClientCredentialsFlowTest(t, strategy)
+		runResourceOwnerPasswordCredentialsGrantTest(t, strategy)
 	}
 }
 
-func runClientCredentialsFlowTest(t *testing.T, strategy core.AccessTokenStrategy) {
+func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy core.AccessTokenStrategy) {
 	f := newFosite()
 	ts := mockServer(t, f, nil)
 	defer ts.Close()
