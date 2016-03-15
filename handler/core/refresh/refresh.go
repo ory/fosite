@@ -12,15 +12,15 @@ import (
 )
 
 type RefreshTokenGrantHandler struct {
-	AccessTokenStrategy core.AccessTokenStrategy
+	AccessTokenStrategy      core.AccessTokenStrategy
 
-	RefreshTokenStrategy core.RefreshTokenStrategy
+	RefreshTokenStrategy     core.RefreshTokenStrategy
 
-	// Store is used to persist session data across requests.
-	Store RefreshTokenGrantStorage
+	// RefreshTokenGrantStorage is used to persist session data across requests.
+	RefreshTokenGrantStorage RefreshTokenGrantStorage
 
 	// AccessTokenLifespan defines the lifetime of an access token.
-	AccessTokenLifespan time.Duration
+	AccessTokenLifespan      time.Duration
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
@@ -28,7 +28,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
 	if !request.GetGrantTypes().Exact("refresh_token") {
-		return nil
+		return errors.New(fosite.ErrUnknownRequest)
 	}
 
 	// The authorization server MUST ... validate the refresh token.
@@ -37,11 +37,16 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.New(fosite.ErrInvalidRequest)
 	}
 
-	accessRequest, err := c.Store.GetRefreshTokenSession(ctx, signature, nil)
+	accessRequest, err := c.RefreshTokenGrantStorage.GetRefreshTokenSession(ctx, signature, nil)
 	if err == pkg.ErrNotFound {
 		return errors.New(fosite.ErrInvalidRequest)
 	} else if err != nil {
 		return errors.New(fosite.ErrServerError)
+	}
+
+	request.SetScopes(accessRequest.GetScopes())
+	for _, scope := range accessRequest.GetGrantedScopes() {
+		request.GrantScope(scope)
 	}
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
@@ -54,7 +59,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-6
 func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().Exact("refresh_token") {
-		return nil
+		return errors.New(fosite.ErrUnknownRequest)
 	}
 
 	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, req.PostForm.Get("refresh_token"), req, requester)
@@ -72,7 +77,7 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		return errors.New(fosite.ErrServerError)
 	}
 
-	if err := c.Store.PersistRefreshTokenGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
+	if err := c.RefreshTokenGrantStorage.PersistRefreshTokenGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 

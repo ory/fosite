@@ -11,8 +11,10 @@ import (
 	"github.com/ory-am/fosite/enigma/hmac"
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core/strategy"
+	idstrat "github.com/ory-am/fosite/handler/oidc/strategy"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	"github.com/ory-am/fosite/enigma/jwt"
 )
 
 var fositeStore = &store.Store{
@@ -33,6 +35,7 @@ var fositeStore = &store.Store{
 	Implicit:       map[string]fosite.Requester{},
 	AccessTokens:   map[string]fosite.Requester{},
 	RefreshTokens:  map[string]fosite.Requester{},
+	IDSessions: map[string]fosite.Requester{},
 }
 
 var accessTokenLifespan = time.Hour
@@ -63,6 +66,13 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 		Scopes:       []string{"fosite"},
 		TokenURL:     ts.URL + "/token",
 	}
+}
+
+var idTokenStrategy = &idstrat.JWTStrategy{
+	Enigma:&jwt.Enigma{
+		PrivateKey: []byte(jwt.TestCertificates[0][1]),
+		PublicKey:  []byte(jwt.TestCertificates[1][1]),
+	},
 }
 
 var hmacStrategy = &strategy.HMACSHAStrategy{

@@ -27,7 +27,7 @@ func TestNewAccessResponse(t *testing.T) {
 		{
 			mock:      func() {},
 			handlers:  TokenEndpointHandlers{},
-			expectErr: ErrUnsupportedGrantType,
+			expectErr: ErrServerError,
 		},
 		{
 			mock: func() {
@@ -41,7 +41,7 @@ func TestNewAccessResponse(t *testing.T) {
 				handler.EXPECT().PopulateTokenEndpointResponse(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers:  TokenEndpointHandlers{handler},
-			expectErr: ErrUnsupportedGrantType,
+			expectErr: ErrServerError,
 		},
 		{
 			mock: func() {
@@ -50,7 +50,7 @@ func TestNewAccessResponse(t *testing.T) {
 				}).Return(nil)
 			},
 			handlers:  TokenEndpointHandlers{handler},
-			expectErr: ErrUnsupportedGrantType,
+			expectErr: ErrServerError,
 		},
 		{
 			mock: func() {

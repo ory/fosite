@@ -14,8 +14,7 @@ type OpenIDConnectExplicitHandler struct {
 	// OpenIDConnectRequestStorage is the storage for open id connect sessions.
 	OpenIDConnectRequestStorage OpenIDConnectRequestStorage
 
-	// OpenIDConnectTokenStrategy is the strategy for generating id tokens.
-	OpenIDConnectTokenStrategy OpenIDConnectTokenStrategy
+	IDTokenHandleHelper
 }
 
 func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
@@ -23,19 +22,25 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return nil
 	}
 
-	session, ok := ar.GetSession().(*strategy.IDTokenSession)
+	session, ok := ar.GetSession().(strategy.IDTokenContainer)
 	if !ok {
 		return errors.New(ErrServerError)
 	}
 
+	nonce := ar.GetRequestForm().Get("nonce")
 	// OPTIONAL. String value used to associate a Client session with an ID Token, and to mitigate replay attacks.
 	// Although optional, this is considered good practice and therefore enforced.
-	if ar.GetRequestForm().Get("nonce") == "" {
-		return errors.New(ErrInvalidRequest)
+	if len(nonce) < MinParameterEntropy {
+		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
+		return errors.New(ErrInsufficientEntropy)
 	}
 
-	session.JWTClaims.AddExtra("nonce", ar.GetRequestForm().Get("nonce"))
-	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(nil, resp.GetID()); err != nil {
+	if len(resp.GetCode()) < 1 {
+		return errors.New(ErrMisconfiguration)
+	}
+
+	session.GetIDTokenClaims().AddExtra("nonce", nonce)
+	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar); err != nil {
 		return errors.New(ErrServerError)
 	}
 

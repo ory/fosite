@@ -1,4 +1,4 @@
-package common
+package core_test
 
 import (
 	"net/http"
@@ -11,6 +11,7 @@ import (
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	. "github.com/ory-am/fosite/handler/core"
 )
 
 func TestIssueAccessToken(t *testing.T) {
@@ -21,6 +22,12 @@ func TestIssueAccessToken(t *testing.T) {
 	accessStore := internal.NewMockAccessTokenStorage(ctrl)
 	httpReq := &http.Request{}
 	defer ctrl.Finish()
+
+	helper := HandleHelper{
+		AccessTokenStorage:               accessStore,
+		AccessTokenStrategy: accessStrat,
+		AccessTokenLifespan: time.Hour,
+	}
 
 	for k, c := range []struct {
 		mock func()
@@ -48,7 +55,7 @@ func TestIssueAccessToken(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := IssueAccessToken(nil, accessStrat, accessStore, time.Hour, httpReq, areq, aresp)
+		err := helper.IssueAccessToken(nil, httpReq, areq, aresp)
 		require.Equal(t, err == nil, c.err == nil)
 		if c.err != nil {
 			assert.EqualError(t, err, c.err.Error(), "Case %d", k)

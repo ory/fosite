@@ -16,7 +16,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !request.GetGrantTypes().Exact("authorization_code") {
-		return nil
+		return errors.New(ErrUnknownRequest)
 	}
 
 	// The authorization server MUST verify that the authorization code is valid
@@ -25,7 +25,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 		return errors.New(ErrInvalidRequest)
 	}
 
-	authorizeRequest, err := c.Store.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
+	authorizeRequest, err := c.AuthorizeCodeGrantStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
 	if err == pkg.ErrNotFound {
 		return errors.New(ErrInvalidRequest)
 	} else if err != nil {
@@ -76,7 +76,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) PopulateTokenEndpointResponse(ctx co
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !requester.GetGrantTypes().Exact("authorization_code") {
-		return nil
+		return errors.New(ErrUnknownRequest)
 	}
 
 	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, req.PostForm.Get("code"), req, requester)
@@ -94,7 +94,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) PopulateTokenEndpointResponse(ctx co
 		return errors.New(ErrServerError)
 	}
 
-	if err := c.Store.PersistAuthorizeCodeGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
+	if err := c.AuthorizeCodeGrantStorage.PersistAuthorizeCodeGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
 		return errors.New(ErrServerError)
 	}
 

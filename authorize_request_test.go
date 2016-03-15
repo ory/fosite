@@ -20,7 +20,7 @@ func TestAuthorizeRequest(t *testing.T) {
 		isRedirValid bool
 	}{
 		{
-			ar:           &AuthorizeRequest{},
+			ar:           NewAuthorizeRequest(),
 			isRedirValid: false,
 		},
 		{

@@ -3,8 +3,11 @@ package fosite
 import (
 	"net/http"
 
+	"github.com/go-errors/errors"
 	"golang.org/x/net/context"
 )
+
+var ErrUnknownRequest = errors.New("The handler is not responsible for this request.")
 
 type AuthorizeEndpointHandler interface {
 	// HandleAuthorizeRequest handles an authorize endpoint request. To extend the handler's capabilities, the http request
@@ -22,14 +25,11 @@ type AuthorizeEndpointHandler interface {
 }
 
 type TokenEndpointHandler interface {
-	// PopulateTokenEndpointResponse handles an authorize request. To extend the handler's capabilities, the http request
-	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
-	// the authorize request, he must return nil and NOT modify session nor responder neither requester.
-	//
+	// PopulateTokenEndpointResponse is responsible for setting return values and should only be executed if
+	// the handler's HandleTokenEndpointRequest did not return ErrUnknownRequest.
 	PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error
 
-	// HandleTokenEndpointRequest
-	// If the handler feels that he is not responsible for the authorize request, he must return nil and NOT modify
-	// session nor responder neither requester.
+	// HandleTokenEndpointRequest handles an authorize request. If the handler is not responsible for handling
+	// the request, this method should return ErrUnknownRequest and otherwise handle the request.
 	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester) error
 }

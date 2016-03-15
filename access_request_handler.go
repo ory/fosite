@@ -40,10 +40,6 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return accessRequest, errors.New(ErrInvalidRequest)
 	}
 
-	if f.RequiredScope == "" {
-		f.RequiredScope = DefaultRequiredScopeName
-	}
-
 	if err := r.ParseForm(); err != nil {
 		return accessRequest, errors.New(ErrInvalidRequest)
 	}
@@ -76,16 +72,25 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 	accessRequest.Client = client
 
+	var found bool = false
 	for _, loader := range f.TokenEndpointHandlers {
-		if err := loader.HandleTokenEndpointRequest(ctx, r, accessRequest); err != nil {
-			return accessRequest, err
+		if err := loader.HandleTokenEndpointRequest(ctx, r, accessRequest); err == nil {
+			found = true
+		} else if errors.Is(err, ErrUnknownRequest) {
+			// do nothing
+		} else if err != nil {
+			return accessRequest, errors.New(err)
 		}
 	}
 
-	if !accessRequest.GetScopes().Has(f.RequiredScope) {
+	if !found {
+		return nil, ErrUnsupportedGrantType
+	}
+
+	if !accessRequest.GetScopes().Has(f.GetMandatoryScope()) {
 		return accessRequest, errors.New(ErrInvalidScope)
 	}
 
-	accessRequest.GrantScope(f.RequiredScope)
+	accessRequest.GrantScope(f.GetMandatoryScope())
 	return accessRequest, nil
 }

@@ -17,7 +17,7 @@ import (
 
 func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockImplicitGrantStorage(ctrl)
+	store := internal.NewMockAccessTokenStorage(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 	defer ctrl.Finish()
@@ -26,7 +26,7 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 	httpreq := &http.Request{Form: url.Values{}}
 
 	h := AuthorizeImplicitGrantTypeHandler{
-		Store:               store,
+		AccessTokenStorage:               store,
 		AccessTokenStrategy: chgen,
 		AccessTokenLifespan: time.Hour,
 	}
@@ -53,7 +53,7 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 			description: "should fail because persistance failed",
 			setup: func() {
 				chgen.EXPECT().GenerateAccessToken(nil, httpreq, areq).AnyTimes().Return("access.ats", "ats", nil)
-				store.EXPECT().CreateImplicitAccessTokenSession(nil, "ats", areq).Return(errors.New(""))
+				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -63,10 +63,10 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 				areq.State = "state"
 				areq.GrantedScopes = fosite.Arguments{"scope"}
 
-				store.EXPECT().CreateImplicitAccessTokenSession(nil, "ats", areq).AnyTimes().Return(nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).AnyTimes().Return(nil)
 
 				aresp.EXPECT().AddFragment("access_token", "access.ats")
-				aresp.EXPECT().AddFragment("expires_in", strconv.Itoa(int(h.AccessTokenLifespan / time.Second)))
+				aresp.EXPECT().AddFragment("expires_in", strconv.Itoa(int(h.AccessTokenLifespan/time.Second)))
 				aresp.EXPECT().AddFragment("token_type", "bearer")
 				aresp.EXPECT().AddFragment("state", "state")
 				aresp.EXPECT().AddFragment("scope", "scope")

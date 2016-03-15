@@ -5,12 +5,13 @@ import (
 	"net/url"
 	"testing"
 
+	"strings"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-"strings"
 )
 
 func TestHandleAuthorizeEndpointRequest(t *testing.T) {
@@ -24,7 +25,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	httpreq := &http.Request{Form: url.Values{}}
 
 	h := AuthorizeExplicitGrantTypeHandler{
-		Store: store,
+		AuthorizeCodeGrantStorage: store,
 		AuthorizeCodeStrategy: chgen,
 	}
 	for k, c := range []struct {

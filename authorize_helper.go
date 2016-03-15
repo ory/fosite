@@ -6,7 +6,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/go-errors/errors"
-	. "github.com/ory-am/fosite/client"
+	"github.com/ory-am/fosite/client"
 )
 
 // GetRedirectURIFromRequestValues extracts the redirect_uri from values but does not do any sort of validation.
@@ -57,7 +57,7 @@ func GetRedirectURIFromRequestValues(values url.Values) (string, error) {
 //     particular end-user authorization and validates this redirect URI
 //     with the redirect URI passed to the token's endpoint, such an
 //     attack is detected (see Section 5.2.4.5).
-func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.URL, error) {
+func MatchRedirectURIWithClientRedirectURIs(rawurl string, client client.Client) (*url.URL, error) {
 	if rawurl == "" && len(client.GetRedirectURIs()) == 1 {
 		if redirectURIFromClient, err := url.Parse(client.GetRedirectURIs()[0]); err == nil && IsValidRedirectURI(redirectURIFromClient) {
 			// If no redirect_uri was given and the client has exactly one valid redirect_uri registered, use that instead

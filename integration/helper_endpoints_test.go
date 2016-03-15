@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/go-errors/errors"
 	fosite "github.com/ory-am/fosite"
 	"github.com/stretchr/testify/assert"
 )
@@ -25,7 +26,9 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session int
 
 		ar, err := oauth2.NewAuthorizeRequest(ctx, req)
 		if err != nil {
-			t.Logf("Request %s failed because %s", ar, err)
+			t.Logf("Access request failed because %s.", err.Error())
+			t.Logf("Request: %s.", ar)
+			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}
@@ -35,7 +38,9 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session int
 
 		response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, session)
 		if err != nil {
-			t.Logf("Response %s failed because %s", ar, err)
+			t.Logf("Access request failed because %s.", err.Error())
+			t.Logf("Request: %s.", ar)
+			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}
@@ -73,14 +78,18 @@ func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw ht
 
 		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
 		if err != nil {
-			t.Logf("Access request %s failed because %s", accessRequest, err.Error())
+			t.Logf("Access request failed because %s.", err.Error())
+			t.Logf("Request: %s.", accessRequest)
+			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
 			oauth2.WriteAccessError(rw, accessRequest, err)
 			return
 		}
 
 		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
 		if err != nil {
-			t.Logf("Access resonse %s failed because %s\n", accessRequest, err.Error())
+			t.Logf("Access request failed because %s.", err.Error())
+			t.Logf("Request: %s.", accessRequest)
+			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
 			oauth2.WriteAccessError(rw, accessRequest, err)
 			return
 		}

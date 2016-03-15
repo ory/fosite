@@ -10,6 +10,8 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/ory-am/fosite/handler/core"
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
@@ -20,18 +22,21 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	h := ClientCredentialsGrantHandler{
-		Store:               store,
-		AccessTokenStrategy: chgen,
-		AccessTokenLifespan: time.Hour,
+		core.HandleHelper{
+			AccessTokenStorage:               store,
+			AccessTokenStrategy: chgen,
+			AccessTokenLifespan: time.Hour,
+		},
 	}
 	for k, c := range []struct {
 		description string
-		mock      func()
-		req       *http.Request
-		expectErr error
+		mock        func()
+		req         *http.Request
+		expectErr   error
 	}{
 		{
-			description: "should pass because not responsible",
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
 			mock: func() {
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{""})
 			},
@@ -59,18 +64,21 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	defer ctrl.Finish()
 
 	h := ClientCredentialsGrantHandler{
-		Store:               store,
-		AccessTokenStrategy: chgen,
-		AccessTokenLifespan: time.Hour,
+		core.HandleHelper{
+			AccessTokenStorage:               store,
+			AccessTokenStrategy: chgen,
+			AccessTokenLifespan: time.Hour,
+		},
 	}
 	for k, c := range []struct {
 		description string
-		mock      func()
-		req       *http.Request
-		expectErr error
+		mock        func()
+		req         *http.Request
+		expectErr   error
 	}{
 		{
-			description: "should pass because not responsible",
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
 			mock: func() {
 				areq.GrantTypes = fosite.Arguments{""}
 			},

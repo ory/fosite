@@ -10,10 +10,6 @@ import (
 )
 
 func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
-	if c.RequiredScope == "" {
-		c.RequiredScope = DefaultRequiredScopeName
-	}
-
 	request := &AuthorizeRequest{
 		ResponseTypes:        Arguments{},
 		HandledResponseTypes: Arguments{},
@@ -64,9 +60,7 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	// https://tools.ietf.org/html/rfc6819#section-4.4.1.8
 	// The "state" parameter should not	be guessable
 	state := r.Form.Get("state")
-	if state == "" {
-		return request, errors.New(ErrInvalidState)
-	} else if len(state) < minStateLength {
+	if len(state) < MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
 		return request, errors.New(ErrInvalidState)
 	}
@@ -74,10 +68,11 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 
 	// Remove empty items from arrays
 	request.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
-	if !request.Scopes.Has(c.RequiredScope) {
+
+	if !request.Scopes.Has(c.GetMandatoryScope()) {
 		return request, errors.New(ErrInvalidScope)
 	}
-	request.GrantScope(c.RequiredScope)
+	request.GrantScope(c.GetMandatoryScope())
 
 	return request, nil
 }

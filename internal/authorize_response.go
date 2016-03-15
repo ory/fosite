@@ -4,10 +4,9 @@
 package internal
 
 import (
+	gomock "github.com/golang/mock/gomock"
 	http "net/http"
 	url "net/url"
-
-	gomock "github.com/golang/mock/gomock"
 )
 
 // Mock of AuthorizeResponder interface
@@ -55,6 +54,16 @@ func (_mr *_MockAuthorizeResponderRecorder) AddQuery(arg0, arg1 interface{}) *go
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddQuery", arg0, arg1)
 }
 
+func (_m *MockAuthorizeResponder) GetCode() string {
+	ret := _m.ctrl.Call(_m, "GetCode")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeResponderRecorder) GetCode() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetCode")
+}
+
 func (_m *MockAuthorizeResponder) GetFragment() url.Values {
 	ret := _m.ctrl.Call(_m, "GetFragment")
 	ret0, _ := ret[0].(url.Values)
@@ -75,16 +84,6 @@ func (_mr *_MockAuthorizeResponderRecorder) GetHeader() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetHeader")
 }
 
-func (_m *MockAuthorizeResponder) GetID() string {
-	ret := _m.ctrl.Call(_m, "GetID")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-func (_mr *_MockAuthorizeResponderRecorder) GetID() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetID")
-}
-
 func (_m *MockAuthorizeResponder) GetQuery() url.Values {
 	ret := _m.ctrl.Call(_m, "GetQuery")
 	ret0, _ := ret[0].(url.Values)
@@ -93,12 +92,4 @@ func (_m *MockAuthorizeResponder) GetQuery() url.Values {
 
 func (_mr *_MockAuthorizeResponderRecorder) GetQuery() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetQuery")
-}
-
-func (_m *MockAuthorizeResponder) SetID(_param0 string) {
-	_m.ctrl.Call(_m, "SetID", _param0)
-}
-
-func (_mr *_MockAuthorizeResponderRecorder) SetID(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetID", arg0)
 }

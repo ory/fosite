@@ -29,7 +29,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := AuthorizeExplicitGrantTypeHandler{
-		Store: store,
+		AuthorizeCodeGrantStorage: store,
 		AuthorizeCodeStrategy: auch,
 		AccessTokenStrategy:   ach,
 		RefreshTokenStrategy:  rch,
@@ -40,7 +40,8 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 		expectErr   error
 	}{
 		{
-			description: "should pass because not responsible for handling the grant type",
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"123"}
 			},
@@ -112,7 +113,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := AuthorizeExplicitGrantTypeHandler{
-		Store: store,
+		AuthorizeCodeGrantStorage: store,
 		AuthorizeCodeStrategy: ach,
 	}
 	for k, c := range []struct {
@@ -121,7 +122,8 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		expectErr   error
 	}{
 		{
-			description: "should pass because not responsible for handling the grant type",
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"12345678"} // grant_type REQUIRED. Value MUST be set to "authorization_code".
 			},
@@ -172,7 +174,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should fail because expired",
 			setup: func() {
-				httpreq.PostForm.Add(				"redirect_uri", "request-redir")
+				httpreq.PostForm.Add("redirect_uri", "request-redir")
 				authreq.RequestedAt = time.Now().Add(-time.Hour * 24)
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -187,7 +189,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should pass (2)",
 			setup: func() {
-				httpreq.PostForm = url.Values{"code": []string{"foo.bar"}     }
+				httpreq.PostForm = url.Values{"code": []string{"foo.bar"}}
 				authreq.Form.Del("redirect_uri")
 				authreq.RequestedAt = time.Now().Add(time.Hour)
 			},

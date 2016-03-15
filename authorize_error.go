@@ -1,8 +1,8 @@
 package fosite
 
 import (
-	"net/http"
 	"encoding/json"
+	"net/http"
 )
 
 func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {

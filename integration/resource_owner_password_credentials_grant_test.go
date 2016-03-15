@@ -6,9 +6,9 @@ import (
 	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/handler/core/client"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	"github.com/stretchr/testify/require"
 )
 
 func TestResourceOwnerPasswordCredentialsGrant(t *testing.T) {
@@ -39,9 +39,11 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy core.Ac
 			description: "should fail because unknown client",
 			setup: func() {
 				f.TokenEndpointHandlers.Append(&client.ClientCredentialsGrantHandler{
-					AccessTokenStrategy: strategy,
-					Store:               fositeStore,
-					AccessTokenLifespan: accessTokenLifespan,
+					HandleHelper: core.HandleHelper{
+						AccessTokenStrategy: strategy,
+						AccessTokenStorage:               fositeStore,
+						AccessTokenLifespan: accessTokenLifespan,
+					},
 				})
 
 				oauthClient = &clientcredentials.Config{
@@ -51,7 +53,7 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy core.Ac
 					TokenURL:     ts.URL + "/token",
 				}
 			},
-			err:         true,
+			err: true,
 		},
 		{
 			description: "should fail because unknown client",
@@ -63,7 +65,7 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy core.Ac
 					TokenURL:     ts.URL + "/token",
 				}
 			},
-			err:         true,
+			err: true,
 		},
 		{
 			description: "should fail because unknown client",
@@ -75,7 +77,7 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy core.Ac
 					TokenURL:     ts.URL + "/token",
 				}
 			},
-			err:         true,
+			err: true,
 		},
 		{
 			description: "should pass",

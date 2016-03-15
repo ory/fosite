@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	"github.com/ory-am/fosite/handler/core"
-	"github.com/stretchr/testify/assert"
-	"golang.org/x/oauth2"
-	"github.com/stretchr/testify/require"
 	"github.com/ory-am/fosite/handler/core/owner"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
+
 )
 
 func TestClientCredentialsGrabt(t *testing.T) {
@@ -40,12 +41,15 @@ func runClientCredentialsGrantTest(t *testing.T, strategy core.AccessTokenStrate
 			description: "should fail because unknown client",
 			setup: func() {
 				f.TokenEndpointHandlers.Append(&owner.ResourceOwnerPasswordCredentialsGrantHandler{
-					AccessTokenStrategy: strategy,
-					Store:               fositeStore,
-					AccessTokenLifespan: accessTokenLifespan,
+					HandleHelper: core.HandleHelper{
+						AccessTokenStrategy: strategy,
+						AccessTokenStorage: fositeStore,
+						AccessTokenLifespan: accessTokenLifespan,
+					},
+					ResourceOwnerPasswordCredentialsGrantStorage:               fositeStore,
 				})
 			},
-			err:         true,
+			err: true,
 		},
 		{
 			description: "should fail because user does not exist",
@@ -53,7 +57,7 @@ func runClientCredentialsGrantTest(t *testing.T, strategy core.AccessTokenStrate
 				username = "not-existent"
 				password = "wrong"
 			},
-			err:         true,
+			err: true,
 		},
 		{
 			description: "should fail because wrong credentials",
@@ -61,7 +65,7 @@ func runClientCredentialsGrantTest(t *testing.T, strategy core.AccessTokenStrate
 				username = "peter"
 				password = "wrong"
 			},
-			err:         true,
+			err: true,
 		},
 		{
 			description: "should pass",

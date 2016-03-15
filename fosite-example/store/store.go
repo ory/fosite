@@ -16,6 +16,7 @@ type UserRelation struct {
 type Store struct {
 	Clients        map[string]*client.SecureClient
 	AuthorizeCodes map[string]fosite.Requester
+	IDSessions     map[string]fosite.Requester
 	AccessTokens   map[string]fosite.Requester
 	Implicit       map[string]fosite.Requester
 	RefreshTokens  map[string]fosite.Requester
@@ -26,12 +27,32 @@ func NewStore() *Store {
 	return &Store{
 		Clients:        make(map[string]*client.SecureClient),
 		AuthorizeCodes: make(map[string]fosite.Requester),
+		IDSessions: make(map[string]fosite.Requester),
 		AccessTokens:   make(map[string]fosite.Requester),
 		Implicit:       make(map[string]fosite.Requester),
 		RefreshTokens:  make(map[string]fosite.Requester),
 		Users:          make(map[string]UserRelation),
 	}
 
+}
+
+func (s *Store) CreateOpenIDConnectSession(_ context.Context, authorizeCode string, requester fosite.Requester) error {
+	s.IDSessions[authorizeCode] = requester
+	return nil
+
+}
+
+func (s *Store) GetOpenIDConnectSession(_ context.Context, authorizeCode string, requester fosite.Requester) (fosite.Requester, error) {
+	cl, ok := s.IDSessions[authorizeCode]
+	if !ok {
+		return nil, pkg.ErrNotFound
+	}
+	return cl, nil
+}
+
+func (s *Store) DeleteOpenIDConnectSession(_ context.Context, authorizeCode string) error {
+	delete(s.IDSessions, authorizeCode)
+	return nil
 }
 
 func (s *Store) GetClient(id string) (client.Client, error) {
@@ -134,4 +155,3 @@ func (s *Store) PersistRefreshTokenGrantSession(ctx context.Context, originalRef
 
 	return nil
 }
-

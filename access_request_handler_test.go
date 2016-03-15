@@ -160,7 +160,7 @@ func TestNewAccessRequest(t *testing.T) {
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester) {
-					a.SetScopes([]string{DefaultRequiredScopeName})
+					a.SetScopes([]string{DefaultMandatoryScope})
 				}).Return(nil)
 			},
 			handlers: TokenEndpointHandlers{handler},

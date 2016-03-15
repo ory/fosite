@@ -2,30 +2,29 @@ package integration_test
 
 import (
 	"testing"
-
 	"net/http"
 	"time"
-
-	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
+	oidcexp "github.com/ory-am/fosite/handler/oidc/explicit"
+	"github.com/ory-am/fosite/handler/oidc"
+	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/enigma/jwt"
 )
 
-func TestAuthorizeCodeGrant(t *testing.T) {
-	for _, strategy := range []core.AccessTokenStrategy{
-		hmacStrategy,
-	} {
-		runAuthorizeCodeGrantTest(t, strategy)
+func TestOpenIDConnectExplicit(t *testing.T) {
+	session := &strategy.IDTokenSession{
+		JWTClaims: &jwt.Claims{},
+		JWTHeader: &jwt.Header{},
 	}
-}
-
-func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 	f := newFosite()
-	ts := mockServer(t, f, nil)
+	ts := mockServer(t, f, session)
+
 	defer ts.Close()
 
+	strategy := hmacStrategy
 	oauthClient := newOAuth2Client(ts)
 	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
 
@@ -36,40 +35,36 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 		authStatusCode int
 	}{
 		{
-			description: "should fail because handler not registered",
-			setup: func() {
-				oauthClient.ClientID = "1234"
-			},
-			authStatusCode: http.StatusBadRequest,
-		},
-		{
-			description: "should fail (and redirect) because handler not registered",
-			setup: func() {
-				oauthClient = newOAuth2Client(ts)
-			},
-			authStatusCode: http.StatusNotAcceptable,
-		},
-		{
 			description: "should pass",
 			setup: func() {
 				state = "12345678901234567890"
+				oauthClient.Scopes = []string{"fosite", "openid"}
 				handler := &explicit.AuthorizeExplicitGrantTypeHandler{
-					AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
-					RefreshTokenStrategy:  strategy.(core.RefreshTokenStrategy),
-					AuthorizeCodeStrategy: strategy.(core.AuthorizeCodeStrategy),
+					AccessTokenStrategy:   strategy,
+					RefreshTokenStrategy:  strategy,
+					AuthorizeCodeStrategy: strategy,
 					AuthorizeCodeGrantStorage:               fositeStore,
 					AuthCodeLifespan:    time.Minute,
 					AccessTokenLifespan: time.Hour,
 				}
 				f.AuthorizeEndpointHandlers.Append(handler)
 				f.TokenEndpointHandlers.Append(handler)
+
+				idcHandler := &oidcexp.OpenIDConnectExplicitHandler{
+					OpenIDConnectRequestStorage: fositeStore,
+					IDTokenHandleHelper: oidc.IDTokenHandleHelper{
+						IDTokenStrategy: idTokenStrategy,
+					},
+				}
+				f.AuthorizeEndpointHandlers.Append(idcHandler)
+				f.TokenEndpointHandlers.Append(idcHandler)
 			},
 			authStatusCode: http.StatusOK,
 		},
 	} {
 		c.setup()
 
-		resp, err := http.Get(oauthClient.AuthCodeURL(state))
+		resp, err := http.Get(oauthClient.AuthCodeURL(state) + "&nonce=1234567890")
 		require.Nil(t, err)
 		require.Equal(t, c.authStatusCode, resp.StatusCode, "(%d) %s", k, c.description)
 
@@ -78,6 +73,7 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 			token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
 			require.Nil(t, err, "(%d) %s", k, c.description)
 			require.NotEmpty(t, token.AccessToken, "(%d) %s", k, c.description)
+			require.NotEmpty(t, token.Extra("id_token"), "(%d) %s", k, c.description)
 
 			httpClient := oauthClient.Client(oauth2.NoContext, token)
 			resp, err := httpClient.Get(ts.URL + "/info")

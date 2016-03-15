@@ -23,6 +23,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	"github.com/ory-am/fosite/handler/core"
 )
 
 var store = &exampleStore.Store{
@@ -103,7 +104,7 @@ func fositeFactory() OAuth2Provider {
 		AccessTokenStrategy:   selectedStrategy,
 		RefreshTokenStrategy:  selectedStrategy,
 		AuthorizeCodeStrategy: selectedStrategy,
-		Store:               store,
+		AuthorizeCodeGrantStorage:               store,
 		AuthCodeLifespan:    time.Minute * 10,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
@@ -113,24 +114,29 @@ func fositeFactory() OAuth2Provider {
 	// Implicit grant type
 	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
 		AccessTokenStrategy: selectedStrategy,
-		Store:               store,
+		AccessTokenStorage:               store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
 	f.AuthorizeEndpointHandlers.Append(implicitHandler)
 
 	// Client credentials grant type
 	clientHandler := &coreclient.ClientCredentialsGrantHandler{
-		AccessTokenStrategy: selectedStrategy,
-		Store:               store,
-		AccessTokenLifespan: accessTokenLifespan,
+		HandleHelper: core.HandleHelper{
+			AccessTokenStrategy: selectedStrategy,
+			AccessTokenStorage:               store,
+			AccessTokenLifespan: accessTokenLifespan,
+		},
 	}
 	f.TokenEndpointHandlers.Append(clientHandler)
 
 	// Resource owner password credentials grant type
 	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
-		AccessTokenStrategy: selectedStrategy,
-		Store:               store,
-		AccessTokenLifespan: accessTokenLifespan,
+		HandleHelper: core.HandleHelper{
+			AccessTokenStrategy: selectedStrategy,
+			AccessTokenStorage:               store,
+			AccessTokenLifespan: accessTokenLifespan,
+		},
+		ResourceOwnerPasswordCredentialsGrantStorage:               store,
 	}
 	f.TokenEndpointHandlers.Append(ownerHandler)
 
@@ -138,7 +144,7 @@ func fositeFactory() OAuth2Provider {
 	refreshHandler := &refresh.RefreshTokenGrantHandler{
 		AccessTokenStrategy:  selectedStrategy,
 		RefreshTokenStrategy: selectedStrategy,
-		Store:                store,
+		RefreshTokenGrantStorage:                store,
 		AccessTokenLifespan:  accessTokenLifespan,
 	}
 	f.TokenEndpointHandlers.Append(refreshHandler)

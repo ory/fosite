@@ -7,26 +7,22 @@ import (
 
 // AuthorizeResponse is an implementation of AuthorizeResponder
 type AuthorizeResponse struct {
-	ID       string
 	Header   http.Header
 	Query    url.Values
 	Fragment url.Values
+	code string
 }
 
 func NewAuthorizeResponse() *AuthorizeResponse {
 	return &AuthorizeResponse{
-		Header: http.Header{},
-		Query: url.Values{},
+		Header:   http.Header{},
+		Query:    url.Values{},
 		Fragment: url.Values{},
 	}
 }
 
-func (a *AuthorizeResponse) SetID(id string) {
-	a.ID = id
-}
-
-func (a *AuthorizeResponse) GetID() string {
-	return a.ID
+func (a *AuthorizeResponse) GetCode() string {
+	return a.code
 }
 
 func (a *AuthorizeResponse) GetHeader() http.Header {
@@ -46,9 +42,15 @@ func (a *AuthorizeResponse) GetFragment() url.Values {
 }
 
 func (a *AuthorizeResponse) AddQuery(key, value string) {
+	if key == "code" {
+		a.code = value
+	}
 	a.Query.Add(key, value)
 }
 
 func (a *AuthorizeResponse) AddFragment(key, value string) {
+	if key == "code" {
+		a.code = value
+	}
 	a.Fragment.Add(key, value)
 }

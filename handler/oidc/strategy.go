@@ -3,10 +3,10 @@ package oidc
 import (
 	"net/http"
 
-	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"golang.org/x/net/context"
+	"github.com/ory-am/fosite"
 )
 
 type OpenIDConnectTokenStrategy interface {
-	GenerateIDToken(ctx context.Context, req *http.Request, session *strategy.IDTokenSession) (token string, err error)
+	GenerateIDToken(ctx context.Context, r *http.Request, requester fosite.Requester) (token string, err error)
 }

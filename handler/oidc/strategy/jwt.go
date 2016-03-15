@@ -12,6 +12,7 @@ import (
 type IDTokenContainer interface {
 	// GetJWTClaims returns the claims
 	GetIDTokenClaims() *enigma.Claims
+
 	// GetJWTHeaderContext returns the header
 	GetIDTokenHeader() *enigma.Header
 }
@@ -20,6 +21,14 @@ type IDTokenContainer interface {
 type IDTokenSession struct {
 	JWTClaims *enigma.Claims
 	JWTHeader *enigma.Header
+}
+
+func (t *IDTokenSession) GetIDTokenHeader() *enigma.Header {
+	return t.JWTHeader
+}
+
+func (t *IDTokenSession) GetIDTokenClaims() *enigma.Claims {
+	return t.JWTClaims
 }
 
 // JWTStrategy : Strategy container

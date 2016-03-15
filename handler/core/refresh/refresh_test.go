@@ -25,7 +25,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := RefreshTokenGrantHandler{
-		Store:                store,
+		RefreshTokenGrantStorage:                store,
 		RefreshTokenStrategy: chgen,
 		AccessTokenLifespan:  time.Hour,
 	}
@@ -35,7 +35,8 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		expectErr   error
 	}{
 		{
-			description: "should pass because not responsible for handling the response type",
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"123"}
 			},
@@ -98,7 +99,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 
 	areq.Client = &client.SecureClient{}
 	h := RefreshTokenGrantHandler{
-		Store:                store,
+		RefreshTokenGrantStorage:                store,
 		RefreshTokenStrategy: rcts,
 		AccessTokenStrategy:  acts,
 		AccessTokenLifespan:  time.Hour,
@@ -109,7 +110,8 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 		expectErr   error
 	}{
 		{
-			description: "should pass because not responsible for handling the response type",
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"313"}
 			},

@@ -5,6 +5,8 @@ package internal
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	fosite "github.com/ory-am/fosite"
+	context "golang.org/x/net/context"
 )
 
 // Mock of OpenIDConnectRequestStorage interface
@@ -28,32 +30,33 @@ func (_m *MockOpenIDConnectRequestStorage) EXPECT() *_MockOpenIDConnectRequestSt
 	return _m.recorder
 }
 
-func (_m *MockOpenIDConnectRequestStorage) CreateOpenIDConnectSession(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "CreateOpenIDConnectSession", _param0)
+func (_m *MockOpenIDConnectRequestStorage) CreateOpenIDConnectSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) error {
+	ret := _m.ctrl.Call(_m, "CreateOpenIDConnectSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockOpenIDConnectRequestStorageRecorder) CreateOpenIDConnectSession(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateOpenIDConnectSession", arg0)
+func (_mr *_MockOpenIDConnectRequestStorageRecorder) CreateOpenIDConnectSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateOpenIDConnectSession", arg0, arg1, arg2)
 }
 
-func (_m *MockOpenIDConnectRequestStorage) DeleteOpenIDConnectSession(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "DeleteOpenIDConnectSession", _param0)
+func (_m *MockOpenIDConnectRequestStorage) DeleteOpenIDConnectSession(_param0 context.Context, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "DeleteOpenIDConnectSession", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockOpenIDConnectRequestStorageRecorder) DeleteOpenIDConnectSession(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteOpenIDConnectSession", arg0)
+func (_mr *_MockOpenIDConnectRequestStorageRecorder) DeleteOpenIDConnectSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteOpenIDConnectSession", arg0, arg1)
 }
 
-func (_m *MockOpenIDConnectRequestStorage) IsOpenIDConnectSession(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "IsOpenIDConnectSession", _param0)
-	ret0, _ := ret[0].(error)
-	return ret0
+func (_m *MockOpenIDConnectRequestStorage) GetOpenIDConnectSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) (fosite.Requester, error) {
+	ret := _m.ctrl.Call(_m, "GetOpenIDConnectSession", _param0, _param1, _param2)
+	ret0, _ := ret[0].(fosite.Requester)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-func (_mr *_MockOpenIDConnectRequestStorageRecorder) IsOpenIDConnectSession(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "IsOpenIDConnectSession", arg0)
+func (_mr *_MockOpenIDConnectRequestStorageRecorder) GetOpenIDConnectSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetOpenIDConnectSession", arg0, arg1, arg2)
 }

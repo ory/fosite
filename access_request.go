@@ -11,13 +11,13 @@ type AccessRequest struct {
 }
 
 func NewAccessRequest(session interface{}) *AccessRequest {
-	return &AccessRequest{
-		Request: Request{
-			Scopes:      Arguments{},
-			Session:     session,
-			RequestedAt: time.Now(),
-		},
+	r := &AccessRequest{
+		GrantTypes :      Arguments{},
+		HandledGrantType: Arguments{},
+		Request: *NewRequest(),
 	}
+	r.Session = session
+	return r
 }
 
 func (a *AccessRequest) GetGrantTypes() Arguments {

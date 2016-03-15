@@ -8,7 +8,7 @@ import (
 )
 
 func TestAccessRequest(t *testing.T) {
-	ar := &AccessRequest{}
+	ar := NewAccessRequest(nil)
 	ar.GrantTypes = Arguments{"foobar"}
 	ar.Client = &client.SecureClient{}
 	ar.GrantScope("foo")
