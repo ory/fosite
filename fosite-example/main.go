@@ -26,7 +26,7 @@ import (
 )
 
 var store = &exampleStore.Store{
-	Clients: map[string]client.Client{
+	Clients: map[string]*client.SecureClient{
 		"my-client": &client.SecureClient{
 			ID:           "my-client",
 			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"

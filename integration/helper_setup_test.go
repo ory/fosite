@@ -16,7 +16,7 @@ import (
 )
 
 var fositeStore = &store.Store{
-	Clients: map[string]client.Client{
+	Clients: map[string]*client.SecureClient{
 		"my-client": &client.SecureClient{
 			ID:           "my-client",
 			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
@@ -74,7 +74,6 @@ var hmacStrategy = &strategy.HMACSHAStrategy{
 func newFosite() *fosite.Fosite {
 	f := fosite.NewFosite(fositeStore)
 	f.AuthorizeEndpointHandlers = fosite.AuthorizeEndpointHandlers{}
-
 	f.TokenEndpointHandlers = fosite.TokenEndpointHandlers{}
 	return f
 }
@@ -84,6 +83,7 @@ func mockServer(t *testing.T, f fosite.OAuth2Provider, session interface{}) *htt
 	router.HandleFunc("/auth", authEndpointHandler(t, f, session))
 	router.HandleFunc("/token", tokenEndpointHandler(t, f))
 	router.HandleFunc("/callback", authCallbackHandler(t))
+	router.HandleFunc("/info", tokenInfoHandler(t, f, session))
 	ts := httptest.NewServer(router)
 	return ts
 }

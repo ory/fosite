@@ -14,7 +14,7 @@ type UserRelation struct {
 }
 
 type Store struct {
-	Clients        map[string]client.Client
+	Clients        map[string]*client.SecureClient
 	AuthorizeCodes map[string]fosite.Requester
 	AccessTokens   map[string]fosite.Requester
 	Implicit       map[string]fosite.Requester
@@ -24,7 +24,7 @@ type Store struct {
 
 func NewStore() *Store {
 	return &Store{
-		Clients:        make(map[string]client.Client),
+		Clients:        make(map[string]*client.SecureClient),
 		AuthorizeCodes: make(map[string]fosite.Requester),
 		AccessTokens:   make(map[string]fosite.Requester),
 		Implicit:       make(map[string]fosite.Requester),

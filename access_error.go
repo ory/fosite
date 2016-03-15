@@ -16,10 +16,6 @@ func (c *Fosite) WriteAccessError(rw http.ResponseWriter, requester AccessReques
 		return
 	}
 
-	rw.WriteHeader(http.StatusBadRequest)
-	if rfcerr.Name == errServerErrorName {
-		rw.WriteHeader(http.StatusInternalServerError)
-	}
-
+	rw.WriteHeader(rfcerr.StatusCode)
 	rw.Write(js)
 }

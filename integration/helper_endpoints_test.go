@@ -8,6 +8,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
+		token := req.Header.Get("Authorization")
+		t.Logf("Got bearer token in header: %s", token)
+		if token == "" {
+			rw.WriteHeader(http.StatusNotAcceptable)
+		}
+		rw.WriteHeader(http.StatusNoContent)
+	}
+}
+
 func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
@@ -45,6 +56,7 @@ func authCallbackHandler(t *testing.T) func(rw http.ResponseWriter, req *http.Re
 			rw.Write([]byte("code: ok"))
 		}
 		if q.Get("error") != "" {
+			rw.WriteHeader(http.StatusNotAcceptable)
 			rw.Write([]byte("error: " + q.Get("error")))
 		}
 
@@ -74,10 +86,5 @@ func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw ht
 		}
 
 		oauth2.WriteAccessResponse(rw, accessRequest, response)
-	}
-}
-
-func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw http.ResponseWriter, req *http.Request) {
-	return func(rw http.ResponseWriter, req *http.Request) {
 	}
 }

@@ -25,7 +25,7 @@ const minimumEntropy = 32
 // the secrets (client and global) should each have at least 16 characters making it harder to guess them
 const minimumSecretLength = 32
 
-var b64 = base64.StdEncoding.WithPadding(base64.NoPadding)
+var b64 = base64.URLEncoding.WithPadding(base64.NoPadding)
 
 // Generate generates a token and a matching signature or returns an error.
 // This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets.

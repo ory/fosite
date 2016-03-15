@@ -10,15 +10,15 @@ import (
 	"github.com/ory-am/fosite/handler/core/owner"
 )
 
-func TestClientCredentialsFlow(t *testing.T) {
+func TestClientCredentialsGrabt(t *testing.T) {
 	for _, strategy := range []core.AccessTokenStrategy{
 		hmacStrategy,
 	} {
-		runClientCredentialsFlowTest(t, strategy)
+		runClientCredentialsGrantTest(t, strategy)
 	}
 }
 
-func runClientCredentialsFlowTest(t *testing.T, strategy core.AccessTokenStrategy) {
+func runClientCredentialsGrantTest(t *testing.T, strategy core.AccessTokenStrategy) {
 	f := newFosite()
 	ts := mockServer(t, f, nil)
 	defer ts.Close()
