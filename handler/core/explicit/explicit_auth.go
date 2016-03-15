@@ -30,9 +30,9 @@ type AuthorizeExplicitGrantTypeHandler struct {
 
 func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
-	if ar.GetResponseTypes().Exact("code") {
+	if !ar.GetResponseTypes().Exact("code") {
 		return nil
 	}
 
-	return IssueAuthorizeCode(c.AuthorizeCodeStrategy, c.Store, ctx, req, ar, resp)
+	return IssueAuthorizeCode(ctx, c.AuthorizeCodeStrategy, c.Store, req, ar, resp)
 }

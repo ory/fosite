@@ -8,5 +8,5 @@ import (
 )
 
 type OpenIDConnectTokenStrategy interface {
-	GenerateIDToken(ctx context.Context, req *http.Request, session strategy.IDTokenSession) (token string, err error)
+	GenerateIDToken(ctx context.Context, req *http.Request, session *strategy.IDTokenSession) (token string, err error)
 }

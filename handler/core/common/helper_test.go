@@ -35,14 +35,14 @@ func TestIssueAccessToken(t *testing.T) {
 		{
 			mock: func() {
 				accessStrat.EXPECT().GenerateAccessToken(nil, httpReq, areq).Return("token", "signature", nil)
-				accessStore.EXPECT().CreateAccessTokenSession("signature", areq).Return(errors.New(""))
+				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", areq).Return(errors.New(""))
 			},
 			err: fosite.ErrServerError,
 		},
 		{
 			mock: func() {
 				accessStrat.EXPECT().GenerateAccessToken(nil, httpReq, areq).Return("token", "signature", nil)
-				accessStore.EXPECT().CreateAccessTokenSession("signature", areq).Return(nil)
+				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", areq).Return(nil)
 			},
 			err: nil,
 		},

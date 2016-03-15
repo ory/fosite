@@ -27,5 +27,5 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		return nil
 	}
 
-	return IssueImplicitAccessToken(c.AccessTokenStrategy, c.Store, c.AccessTokenLifespan, ctx, req, ar, resp)
+	return IssueImplicitAccessToken(ctx, c.AccessTokenStrategy, c.Store, c.AccessTokenLifespan, req, ar, resp)
 }

@@ -150,46 +150,8 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			expectedError: ErrInvalidScope,
 		},
 		{
-			desc: "should not pass because hybrid flow is not active",
-			conf: &Fosite{Store: store},
-			query: url.Values{
-				"redirect_uri":  {"https://foo.bar/cb"},
-				"client_id":     {"1234"},
-				"response_type": {"code token"},
-				"state":         {"strong-state"},
-				"scope":         {DefaultRequiredScopeName + " foo bar"},
-			},
-			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
-			},
-			expectedError: ErrInvalidRequest,
-		},
-		{
-			desc: "should not pass because hybrid flow is not active",
-			conf: &Fosite{Store: store},
-			query: url.Values{
-				"redirect_uri":  {"https://foo.bar/cb"},
-				"client_id":     {"1234"},
-				"response_type": {"code foo"},
-				"state":         {"strong-state"},
-				"scope":         {DefaultRequiredScopeName + " foo bar"},
-			},
-			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
-			},
-			expect: &AuthorizeRequest{
-				RedirectURI:   redir,
-				ResponseTypes: []string{"code"},
-				State:         "strong-state",
-				Request: Request{
-					Scopes: []string{DefaultRequiredScopeName, "foo", "bar"},
-					Client: &SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}},
-				},
-			},
-		},
-		{
 			desc: "should pass",
-			conf: &Fosite{Store: store, EnableHybridAuthorizationFlow: true},
+			conf: &Fosite{Store: store},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},

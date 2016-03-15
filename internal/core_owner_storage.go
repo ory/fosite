@@ -30,14 +30,14 @@ func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) EXPECT() *_MockResou
 	return _m.recorder
 }
 
-func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) Authenticate(_param0 string, _param1 string) error {
-	ret := _m.ctrl.Call(_m, "Authenticate", _param0, _param1)
+func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) Authenticate(_param0 context.Context, _param1 string, _param2 string) error {
+	ret := _m.ctrl.Call(_m, "Authenticate", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) Authenticate(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "Authenticate", arg0, arg1)
+func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) Authenticate(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Authenticate", arg0, arg1, arg2)
 }
 
 func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) CreateAccessTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) error {

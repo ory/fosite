@@ -1,8 +1,11 @@
 package owner
 
-import "github.com/ory-am/fosite/handler/core"
+import (
+	"github.com/ory-am/fosite/handler/core"
+	"golang.org/x/net/context"
+)
 
 type ResourceOwnerPasswordCredentialsGrantStorage interface {
-	Authenticate(name string, secret string) error
+	Authenticate(ctx context.Context, name string, secret string) error
 	core.AccessTokenStorage
 }

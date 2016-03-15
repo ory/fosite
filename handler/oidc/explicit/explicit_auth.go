@@ -34,8 +34,8 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.New(ErrInvalidRequest)
 	}
 
-	session.JWTClaims.AddExtra("nonce") = ar.GetRequestForm().Get("nonce")
-	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(resp.GetID()); err != nil {
+	session.JWTClaims.AddExtra("nonce", ar.GetRequestForm().Get("nonce"))
+	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(nil, resp.GetID()); err != nil {
 		return errors.New(ErrServerError)
 	}
 

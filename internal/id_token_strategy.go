@@ -4,10 +4,11 @@
 package internal
 
 import (
+	http "net/http"
+
 	gomock "github.com/golang/mock/gomock"
 	strategy "github.com/ory-am/fosite/handler/oidc/strategy"
 	context "golang.org/x/net/context"
-	http "net/http"
 )
 
 // Mock of OpenIDConnectTokenStrategy interface
@@ -31,7 +32,7 @@ func (_m *MockOpenIDConnectTokenStrategy) EXPECT() *_MockOpenIDConnectTokenStrat
 	return _m.recorder
 }
 
-func (_m *MockOpenIDConnectTokenStrategy) GenerateIDToken(_param0 context.Context, _param1 *http.Request, _param2 strategy.IDTokenSession) (string, error) {
+func (_m *MockOpenIDConnectTokenStrategy) GenerateIDToken(_param0 context.Context, _param1 *http.Request, _param2 *strategy.IDTokenSession) (string, error) {
 	ret := _m.ctrl.Call(_m, "GenerateIDToken", _param0, _param1, _param2)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)

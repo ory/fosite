@@ -22,7 +22,7 @@ type ClientCredentialsGrantHandler struct {
 }
 
 // ValidateTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
-func (c *ClientCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.Context, r *http.Request, request fosite.AccessRequester) error {
+func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Context, r *http.Request, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
 	if !request.GetGrantTypes().Exact("client_credentials") {
@@ -34,13 +34,11 @@ func (c *ClientCredentialsGrantHandler) ValidateTokenEndpointRequest(_ context.C
 	// in https://tools.ietf.org/html/rfc6749#section-3.2.1
 
 	// There's nothing else to do. All other security considerations are for the client side.
-
-	request.SetGrantTypeHandled("client_credentials")
 	return nil
 }
 
-// HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.3
-func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request fosite.AccessRequester, response fosite.AccessResponder) error {
+// PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.4.3
+func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, r *http.Request, request fosite.AccessRequester, response fosite.AccessResponder) error {
 	if !request.GetGrantTypes().Exact("client_credentials") {
 		return nil
 	}

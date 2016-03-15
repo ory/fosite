@@ -23,8 +23,8 @@ type RefreshTokenGrantHandler struct {
 	AccessTokenLifespan time.Duration
 }
 
-// ValidateTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
-func (c *RefreshTokenGrantHandler) ValidateTokenEndpointRequest(ctx context.Context, req *http.Request, request fosite.AccessRequester) error {
+// HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
+func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
 	if !request.GetGrantTypes().Exact("refresh_token") {
@@ -32,7 +32,7 @@ func (c *RefreshTokenGrantHandler) ValidateTokenEndpointRequest(ctx context.Cont
 	}
 
 	// The authorization server MUST ... validate the refresh token.
-	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(req.Form.Get("refresh_token"), ctx, req, request)
+	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, req.PostForm.Get("refresh_token"), req, request)
 	if err != nil {
 		return errors.New(fosite.ErrInvalidRequest)
 	}
@@ -48,28 +48,26 @@ func (c *RefreshTokenGrantHandler) ValidateTokenEndpointRequest(ctx context.Cont
 	if accessRequest.GetClient().GetID() != request.GetClient().GetID() {
 		return errors.New(fosite.ErrInvalidRequest)
 	}
-
-	request.SetGrantTypeHandled("refresh_token")
 	return nil
 }
 
-// HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
-func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+// PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-6
+func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().Exact("refresh_token") {
 		return nil
 	}
 
-	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(req.PostForm.Get("refresh_token"), ctx, req, requester)
+	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, req.PostForm.Get("refresh_token"), req, requester)
 	if err != nil {
 		return errors.New(fosite.ErrInvalidRequest)
 	}
 
-	refreshToken, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, req, requester)
+	accessToken, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester)
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 
-	accessToken, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester)
+	refreshToken, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, req, requester)
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
 	}

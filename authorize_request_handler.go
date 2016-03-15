@@ -55,14 +55,7 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	// values, where the order of values does not matter (e.g., response
 	// type "a b" is the same as "b a").  The meaning of such composite
 	// response types is defined by their respective specifications.
-	responseTypes := removeEmpty(strings.Split(r.Form.Get("response_type"), " "))
-
-	// Enable support of multiple response types. This is for example required by OpenID Connect.
-	if !c.EnableHybridAuthorizationFlow && len(responseTypes) > 1 {
-		return request, errors.New(ErrInvalidRequest)
-	}
-
-	request.ResponseTypes = responseTypes
+	request.ResponseTypes = removeEmpty(strings.Split(r.Form.Get("response_type"), " "))
 
 	// rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
 	// The "state" parameter should be used to link the authorization
@@ -74,7 +67,7 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	if state == "" {
 		return request, errors.New(ErrInvalidState)
 	} else if len(state) < minStateLength {
-		// We're assuming that using less then 6 characters for the state can not be considered "unguessable"
+		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
 		return request, errors.New(ErrInvalidState)
 	}
 	request.State = state

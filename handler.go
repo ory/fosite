@@ -22,14 +22,14 @@ type AuthorizeEndpointHandler interface {
 }
 
 type TokenEndpointHandler interface {
-	// HandleAuthorizeRequest handles an authorize request. To extend the handler's capabilities, the http request
+	// PopulateTokenEndpointResponse handles an authorize request. To extend the handler's capabilities, the http request
 	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
 	// the authorize request, he must return nil and NOT modify session nor responder neither requester.
 	//
-	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error
+	PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error
 
-	// ValidateTokenEndpointRequest
+	// HandleTokenEndpointRequest
 	// If the handler feels that he is not responsible for the authorize request, he must return nil and NOT modify
 	// session nor responder neither requester.
-	ValidateTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester) error
+	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester) error
 }

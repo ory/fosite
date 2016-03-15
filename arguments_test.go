@@ -95,7 +95,7 @@ func TestArgumentsHas(t *testing.T) {
 	}
 }
 
-func TestArgumentsIs(t *testing.T) {
+func TestArgumentsMatches(t *testing.T) {
 	for k, c := range []struct {
 		args   Arguments
 		is     []string
@@ -124,12 +124,12 @@ func TestArgumentsIs(t *testing.T) {
 		{
 			args:   Arguments{"foo", "bar"},
 			is:     []string{"foo"},
-			expect: true,
+			expect: false,
 		},
 		{
 			args:   Arguments{"foo", "bar"},
 			is:     []string{"bar"},
-			expect: true,
+			expect: false,
 		},
 		{
 			args:   Arguments{"foo", "bar"},
@@ -142,7 +142,7 @@ func TestArgumentsIs(t *testing.T) {
 			expect: false,
 		},
 	} {
-		assert.Equal(t, c.expect, c.args.Is(c.is...), "%d", k)
+		assert.Equal(t, c.expect, c.args.Matches(c.is...), "%d", k)
 		t.Logf("Passed test case %d", k)
 	}
 }

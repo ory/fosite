@@ -13,6 +13,14 @@ type AuthorizeResponse struct {
 	Fragment url.Values
 }
 
+func NewAuthorizeResponse() *AuthorizeResponse {
+	return &AuthorizeResponse{
+		Header: http.Header{},
+		Query: url.Values{},
+		Fragment: url.Values{},
+	}
+}
+
 func (a *AuthorizeResponse) SetID(id string) {
 	a.ID = id
 }

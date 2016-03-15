@@ -6,6 +6,7 @@ package internal
 import (
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
+	context "golang.org/x/net/context"
 )
 
 // Mock of ImplicitGrantStorage interface
@@ -29,12 +30,12 @@ func (_m *MockImplicitGrantStorage) EXPECT() *_MockImplicitGrantStorageRecorder 
 	return _m.recorder
 }
 
-func (_m *MockImplicitGrantStorage) CreateImplicitAccessTokenSession(_param0 string, _param1 fosite.Requester) error {
-	ret := _m.ctrl.Call(_m, "CreateImplicitAccessTokenSession", _param0, _param1)
+func (_m *MockImplicitGrantStorage) CreateImplicitAccessTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) error {
+	ret := _m.ctrl.Call(_m, "CreateImplicitAccessTokenSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockImplicitGrantStorageRecorder) CreateImplicitAccessTokenSession(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateImplicitAccessTokenSession", arg0, arg1)
+func (_mr *_MockImplicitGrantStorageRecorder) CreateImplicitAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateImplicitAccessTokenSession", arg0, arg1, arg2)
 }

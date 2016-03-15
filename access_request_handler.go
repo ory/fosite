@@ -77,13 +77,9 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	accessRequest.Client = client
 
 	for _, loader := range f.TokenEndpointHandlers {
-		if err := loader.ValidateTokenEndpointRequest(ctx, r, accessRequest); err != nil {
+		if err := loader.HandleTokenEndpointRequest(ctx, r, accessRequest); err != nil {
 			return accessRequest, err
 		}
-	}
-
-	if !accessRequest.DidHandleGrantTypes() {
-		return accessRequest, errors.New(ErrUnsupportedGrantType)
 	}
 
 	if !accessRequest.GetScopes().Has(f.RequiredScope) {

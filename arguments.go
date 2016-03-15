@@ -4,7 +4,7 @@ import "strings"
 
 type Arguments []string
 
-func (r Arguments) Is(items ...string) bool {
+func (r Arguments) Matches(items ...string) bool {
 	found := make(map[string]bool)
 	for _, item := range items {
 		if !StringInSlice(item, r) {
@@ -13,7 +13,7 @@ func (r Arguments) Is(items ...string) bool {
 		found[item] = true
 	}
 
-	return len(found) != len(r) && len(r) != len(items)
+	return len(found) == len(r) && len(r) == len(items)
 }
 
 func (r Arguments) Has(items ...string) bool {

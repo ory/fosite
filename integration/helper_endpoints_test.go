@@ -1,16 +1,16 @@
-package fosite_test
+package integration_test
 
 import (
 	"net/http"
 	"testing"
 
-	. "github.com/ory-am/fosite"
+	fosite "github.com/ory-am/fosite"
 	"github.com/stretchr/testify/assert"
 )
 
-func authEndpoint(t *testing.T, oauth2 OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
+func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
-		ctx := NewContext()
+		ctx := fosite.NewContext()
 
 		ar, err := oauth2.NewAuthorizeRequest(ctx, req)
 		if err != nil {
@@ -33,7 +33,7 @@ func authEndpoint(t *testing.T, oauth2 OAuth2Provider, session interface{}) func
 	}
 }
 
-func cbEndpoint(t *testing.T) func(rw http.ResponseWriter, req *http.Request) {
+func authCallbackHandler(t *testing.T) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		q := req.URL.Query()
 		if q.Get("code") == "" && q.Get("error") == "" {
@@ -51,10 +51,10 @@ func cbEndpoint(t *testing.T) func(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func tokenEndpoint(t *testing.T, oauth2 OAuth2Provider) func(rw http.ResponseWriter, req *http.Request) {
+func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		req.ParseForm()
-		ctx := NewContext()
+		ctx := fosite.NewContext()
 		var mySessionData struct {
 			Foo string
 		}
@@ -74,5 +74,10 @@ func tokenEndpoint(t *testing.T, oauth2 OAuth2Provider) func(rw http.ResponseWri
 		}
 
 		oauth2.WriteAccessResponse(rw, accessRequest, response)
+	}
+}
+
+func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
 	}
 }

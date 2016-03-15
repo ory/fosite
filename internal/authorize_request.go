@@ -4,11 +4,12 @@
 package internal
 
 import (
+	url "net/url"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	client "github.com/ory-am/fosite/client"
-	url "net/url"
-	time "time"
 )
 
 // Mock of AuthorizeRequester interface

@@ -2,7 +2,6 @@ package explicit
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/go-errors/errors"
@@ -11,9 +10,9 @@ import (
 	"golang.org/x/net/context"
 )
 
-// implements
+// HandleTokenEndpointRequest implements
 // * https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything)
-func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(ctx context.Context, r *http.Request, request AccessRequester) error {
+func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !request.GetGrantTypes().Exact("authorization_code") {
@@ -21,7 +20,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(ctx con
 	}
 
 	// The authorization server MUST verify that the authorization code is valid
-	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(r.PostForm.Get("code"), ctx, r, request)
+	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, r.PostForm.Get("code"), r, request)
 	if err != nil {
 		return errors.New(ErrInvalidRequest)
 	}
@@ -69,28 +68,20 @@ func (c *AuthorizeExplicitGrantTypeHandler) ValidateTokenEndpointRequest(ctx con
 	// credentials (or assigned other authentication requirements), the
 	// client MUST authenticate with the authorization server as described
 	// in Section 3.2.1.
-	request.SetGrantTypeHandled("authorization_code")
 	request.SetSession(authorizeRequest.GetSession())
 	return nil
 }
 
-func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error {
+func (c *AuthorizeExplicitGrantTypeHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !requester.GetGrantTypes().Exact("authorization_code") {
 		return nil
 	}
 
-	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(req.PostForm.Get("code"), ctx, req, requester)
+	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, req.PostForm.Get("code"), req, requester)
 	if err != nil {
 		return errors.New(ErrInvalidRequest)
-	}
-
-	accessRequest, err := c.Store.GetAuthorizeCodeSession(ctx, signature, nil)
-	if err != nil {
-		// The signature has already been verified both cryptographically and with lookup. If lookup fails here
-		// it is due to some internal error.
-		return errors.New(ErrServerError)
 	}
 
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester)
@@ -111,7 +102,6 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	responder.SetTokenType("bearer")
 	responder.SetExpiresIn(c.AccessTokenLifespan / time.Second)
 	responder.SetExtra("refresh_token", refresh)
-	responder.SetExtra("state", accessRequest.GetRequestForm().Get("state"))
-	responder.SetExtra("scope", strings.Join(requester.GetGrantedScopes(), " "))
+	responder.SetScopes(requester.GetGrantedScopes())
 	return nil
 }

@@ -10,7 +10,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func IssueAuthorizeCode(authorizeCodeStrategy core.AuthorizeCodeStrategy, store AuthorizeCodeGrantStorage, ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+func IssueAuthorizeCode(ctx context.Context, authorizeCodeStrategy core.AuthorizeCodeStrategy, store AuthorizeCodeGrantStorage, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
 	code, signature, err := authorizeCodeStrategy.GenerateAuthorizeCode(ctx, req, ar)
 	if err != nil {
 		return errors.New(ErrServerError)

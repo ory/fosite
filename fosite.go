@@ -36,8 +36,4 @@ type Fosite struct {
 	AuthorizeEndpointHandlers AuthorizeEndpointHandlers
 	TokenEndpointHandlers     TokenEndpointHandlers
 	Hasher                    hash.Hasher
-
-	// EnableHybridAuthorizationFlow sets if the hybrid flow should be allowed.
-	// More: http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth
-	EnableHybridAuthorizationFlow bool
 }

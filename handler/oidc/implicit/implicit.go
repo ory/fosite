@@ -26,15 +26,15 @@ type OpenIDConnectImplicitHandler struct {
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
-	if !(ar.GetScopes().Has("openid") && (ar.GetResponseTypes().Is("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
+	if !(ar.GetScopes().Has("openid") && (ar.GetResponseTypes().Matches("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
 		return nil
 	}
 
 	if ar.GetResponseTypes().Has("token") {
-		if err := implicit.IssueImplicitAccessToken(c.AccessTokenStrategy, c.ImplicitGrantStorage, c.AccessTokenLifespan, ctx, req, ar, resp); err != nil {
+		if err := implicit.IssueImplicitAccessToken(ctx, c.AccessTokenStrategy, c.ImplicitGrantStorage, c.AccessTokenLifespan, req, ar, resp); err != nil {
 			return err
 		}
 	}
 
-	return common.IssueIDToken(c.OpenIDConnectTokenStrategy, ctx, req, ar, resp)
+	return common.IssueImplicitIDToken(ctx, c.OpenIDConnectTokenStrategy, req, ar, resp)
 }

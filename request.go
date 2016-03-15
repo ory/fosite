@@ -12,9 +12,17 @@ type Request struct {
 	RequestedAt   time.Time
 	Client        client.Client
 	Scopes        Arguments
-	GrantedScopes []string
+	GrantedScopes Arguments
 	Form          url.Values
 	Session       interface{}
+}
+
+func NewRequest() *Request {
+	return &Request{
+		Client: &client.SecureClient{},
+		Scopes: Arguments{},
+		Form:   url.Values{},
+	}
 }
 
 func (a *Request) GetRequestForm() url.Values {
@@ -38,7 +46,7 @@ func (a *Request) SetScopes(s Arguments) {
 }
 
 func (a *Request) GetGrantedScopes() Arguments {
-	return Arguments(a.GrantedScopes)
+	return a.GrantedScopes
 }
 
 func (a *Request) GrantScope(scope string) {

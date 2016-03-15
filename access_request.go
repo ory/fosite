@@ -20,19 +20,6 @@ func NewAccessRequest(session interface{}) *AccessRequest {
 	}
 }
 
-func (a *AccessRequest) DidHandleGrantTypes() bool {
-	for _, grantType := range a.GrantTypes {
-		if !StringInSlice(grantType, a.HandledGrantType) {
-			return false
-		}
-	}
-	return true
-}
-
-func (a *AccessRequest) SetGrantTypeHandled(name string) {
-	a.HandledGrantType = append(a.HandledGrantType, name)
-}
-
 func (a *AccessRequest) GetGrantTypes() Arguments {
 	return a.GrantTypes
 }

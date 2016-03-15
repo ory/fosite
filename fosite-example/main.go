@@ -13,7 +13,7 @@ import (
 	"github.com/ory-am/fosite/client"
 	hmac "github.com/ory-am/fosite/enigma/hmac"
 	jwt "github.com/ory-am/fosite/enigma/jwt"
-	"github.com/ory-am/fosite/fosite-example/internal"
+	"github.com/ory-am/fosite/fosite-example/store"
 	coreclient "github.com/ory-am/fosite/handler/core/client"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/implicit"
@@ -25,7 +25,7 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-var store = &internal.Store{
+var store = &store.Store{
 	Clients: map[string]client.Client{
 		"my-client": &client.SecureClient{
 			ID:           "my-client",
@@ -33,7 +33,7 @@ var store = &internal.Store{
 			RedirectURIs: []string{"http://localhost:3846/callback"},
 		},
 	},
-	Users: map[string]internal.UserRelation{
+	Users: map[string]store.UserRelation{
 		"peter": {
 			Username: "peter",
 			Password: "foobar",

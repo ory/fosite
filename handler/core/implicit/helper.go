@@ -12,12 +12,12 @@ import (
 	"golang.org/x/net/context"
 )
 
-func IssueImplicitAccessToken(accessTokenStrategy core.AccessTokenStrategy, store ImplicitGrantStorage, accessTokenLifespan time.Duration, ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+func IssueImplicitAccessToken(ctx context.Context, accessTokenStrategy core.AccessTokenStrategy, store ImplicitGrantStorage, accessTokenLifespan time.Duration, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
 	// Generate the code
 	token, signature, err := accessTokenStrategy.GenerateAccessToken(ctx, req, ar)
 	if err != nil {
 		return errors.New(ErrServerError)
-	} else if err := store.CreateImplicitAccessTokenSession(signature, ar); err != nil {
+	} else if err := store.CreateImplicitAccessTokenSession(ctx, signature, ar); err != nil {
 		return errors.New(ErrServerError)
 	}
 

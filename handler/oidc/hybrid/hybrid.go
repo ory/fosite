@@ -36,18 +36,18 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
-	if !(ar.GetResponseTypes().Is("token", "id_token", "code") || ar.GetResponseTypes().Is("token", "id_token") || ar.GetResponseTypes().Is("token", "code")) {
+	if !(ar.GetResponseTypes().Matches("token", "id_token", "code") || ar.GetResponseTypes().Matches("token", "id_token") || ar.GetResponseTypes().Matches("token", "code")) {
 		return nil
 	}
 
 	if ar.GetResponseTypes().Has("code") {
-		if err := explicit.IssueAuthorizeCode(c.AuthorizeCodeStrategy, c.ExplicitAuthorizeGrantStorage, ctx, req, ar, resp); err != nil {
+		if err := explicit.IssueAuthorizeCode(ctx, c.AuthorizeCodeStrategy, c.ExplicitAuthorizeGrantStorage, req, ar, resp); err != nil {
 			return err
 		}
 	}
 
 	if ar.GetResponseTypes().Has("token") {
-		if err := implicit.IssueImplicitAccessToken(c.AccessTokenStrategy, c.ImplicitAuthorizeGrantStorage, c.AccessTokenLifespan, ctx, req, ar, resp); err != nil {
+		if err := implicit.IssueImplicitAccessToken(ctx, c.AccessTokenStrategy, c.ImplicitAuthorizeGrantStorage, c.AccessTokenLifespan, req, ar, resp); err != nil {
 			return err
 		}
 	}
@@ -56,5 +56,5 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
-	return common.IssueIDToken(c.OpenIDConnectTokenStrategy, ctx, req, ar, resp)
+	return common.IssueImplicitIDToken(ctx, c.OpenIDConnectTokenStrategy, req, ar, resp)
 }

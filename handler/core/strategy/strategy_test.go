@@ -52,7 +52,7 @@ func TestAccessToken(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-	validate, err := s.ValidateAccessToken(token, nil, nil, r)
+	validate, err := s.ValidateAccessToken(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -63,7 +63,7 @@ func TestAccessToken(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-	validate, err = j.ValidateAccessToken(token, nil, nil, r)
+	validate, err = j.ValidateAccessToken(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -88,7 +88,7 @@ func TestRefreshToken(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-	validate, err := s.ValidateRefreshToken(token, nil, nil, r)
+	validate, err := s.ValidateRefreshToken(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -99,7 +99,7 @@ func TestRefreshToken(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-	validate, err = j.ValidateRefreshToken(token, nil, nil, r)
+	validate, err = j.ValidateRefreshToken(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -124,7 +124,7 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-	validate, err := s.ValidateAuthorizeCode(token, nil, nil, r)
+	validate, err := s.ValidateAuthorizeCode(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -135,7 +135,7 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-	validate, err = j.ValidateAuthorizeCode(token, nil, nil, r)
+	validate, err = j.ValidateAuthorizeCode(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 

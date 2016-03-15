@@ -1,6 +1,9 @@
 package fosite
 
-import "github.com/go-errors/errors"
+import (
+	"github.com/go-errors/errors"
+	"net/http"
+)
 
 var (
 	ErrInvalidRequest          = errors.New("The request is missing a required parameter, includes an invalid parameter value, includes a parameter more than once, or is otherwise malformed")
@@ -35,6 +38,7 @@ type RFC6749Error struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Hint        string `json:"-"`
+	StatusCode  int `json:"statusCode"`
 }
 
 func ErrorToRFC6749Error(err error) *RFC6749Error {
@@ -44,6 +48,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 			Name:        errInvalidError,
 			Description: "The error is unrecognizable.",
 			Hint:        err.Error(),
+			StatusCode: http.StatusInternalServerError,
 		}
 	}
 	if errors.Is(ge, ErrInvalidRequest) {
@@ -51,63 +56,75 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 			Name:        errInvalidRequestName,
 			Description: ge.Error(),
 			Hint:        "Make sure that the various parameters are correct, be aware of case sensitivity and trim your parameters. Make sure that the client you are using has exactly whitelisted the redirect_uri you specified.",
+			StatusCode: http.StatusBadRequest,
 		}
 	} else if errors.Is(ge, ErrUnauthorizedClient) {
 		return &RFC6749Error{
 			Name:        errUnauthorizedClientName,
 			Description: ge.Error(),
 			Hint:        "Make sure that client id and secret are correctly specified and that the client exists.",
+			StatusCode: http.StatusUnauthorized,
 		}
 	} else if errors.Is(ge, ErrAccessDenied) {
 		return &RFC6749Error{
 			Name:        errAccessDeniedName,
 			Description: ge.Error(),
 			Hint:        "Make sure that the request you are making is valid. Maybe the credential or request parameters you are using are limited in scope or otherwise restricted.",
+			StatusCode: http.StatusForbidden,
 		}
 	} else if errors.Is(ge, ErrUnsupportedResponseType) {
 		return &RFC6749Error{
 			Name:        errUnsupportedResponseTypeName,
 			Description: ge.Error(),
+			StatusCode: http.StatusBadRequest,
 		}
 	} else if errors.Is(ge, ErrInvalidScope) {
 		return &RFC6749Error{
 			Name:        errInvalidScopeName,
 			Description: ge.Error(),
+			StatusCode: http.StatusBadRequest,
 		}
 	} else if errors.Is(ge, ErrServerError) {
 		return &RFC6749Error{
 			Name:        errServerErrorName,
 			Description: ge.Error(),
+			StatusCode: http.StatusInternalServerError,
 		}
 	} else if errors.Is(ge, ErrTemporarilyUnavailable) {
 		return &RFC6749Error{
 			Name:        errTemporarilyUnavailableName,
 			Description: ge.Error(),
+			StatusCode: http.StatusServiceUnavailable,
 		}
 	} else if errors.Is(ge, ErrUnsupportedGrantType) {
 		return &RFC6749Error{
 			Name:        errUnsupportedGrantTypeName,
 			Description: ge.Error(),
+			StatusCode: http.StatusBadRequest,
 		}
 	} else if errors.Is(ge, ErrInvalidGrant) {
 		return &RFC6749Error{
 			Name:        errInvalidGrantName,
 			Description: ge.Error(),
+			StatusCode: http.StatusBadRequest,
 		}
 	} else if errors.Is(ge, ErrInvalidClient) {
 		return &RFC6749Error{
 			Name:        errInvalidClientName,
 			Description: ge.Error(),
+			StatusCode: http.StatusBadRequest,
 		}
 	} else if errors.Is(ge, ErrInvalidState) {
 		return &RFC6749Error{
 			Name:        errInvalidState,
 			Description: ge.Error(),
+			StatusCode: http.StatusBadRequest,
 		}
 	}
 	return &RFC6749Error{
 		Name:        errInvalidError,
 		Description: "The error is unrecognizable.",
 		Hint:        ge.Error(),
+		StatusCode: http.StatusInternalServerError,
 	}
 }

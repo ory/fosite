@@ -46,7 +46,7 @@ func (h JWTStrategy) GenerateAccessToken(_ context.Context, _ *http.Request, req
 	return "", "", errors.New("Session must be of type JWTSession")
 }
 
-func (h JWTStrategy) ValidateAccessToken(token string, _ context.Context, _ *http.Request, requester fosite.Requester) (signature string, err error) {
+func (h JWTStrategy) ValidateAccessToken(_ context.Context, token string, _ *http.Request, requester fosite.Requester) (signature string, err error) {
 	return h.Enigma.Validate(token)
 }
 
@@ -60,7 +60,7 @@ func (h JWTStrategy) GenerateRefreshToken(_ context.Context, _ *http.Request, re
 	return "", "", errors.New("Session must be of type JWTSession")
 }
 
-func (h JWTStrategy) ValidateRefreshToken(token string, _ context.Context, _ *http.Request, requester fosite.Requester) (signature string, err error) {
+func (h JWTStrategy) ValidateRefreshToken(_ context.Context, token string, _ *http.Request, requester fosite.Requester) (signature string, err error) {
 	return h.Enigma.Validate(token)
 }
 
@@ -74,6 +74,6 @@ func (h JWTStrategy) GenerateAuthorizeCode(_ context.Context, _ *http.Request, r
 	return "", "", errors.New("Session must be of type JWTSession")
 }
 
-func (h JWTStrategy) ValidateAuthorizeCode(token string, _ context.Context, _ *http.Request, requester fosite.Requester) (signature string, err error) {
+func (h JWTStrategy) ValidateAuthorizeCode(_ context.Context, token string, _ *http.Request, requester fosite.Requester) (signature string, err error) {
 	return h.Enigma.Validate(token)
 }

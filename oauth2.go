@@ -11,6 +11,8 @@ import (
 
 var DefaultRequiredScopeName = "fosite"
 
+const minStateLength = 8
+
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
 // Check fosite.Fosite for an implementation of this interface.
 type OAuth2Provider interface {
@@ -138,12 +140,6 @@ type Requester interface {
 type AccessRequester interface {
 	// GetGrantType returns the requests grant type.
 	GetGrantTypes() (grantTypes Arguments)
-
-	// SetGrantTypeHandled marks a grant type as handled indicating that the response type is supported.
-	SetGrantTypeHandled(grantType string)
-
-	// DidHandleGrantType returns if the requested grant type has been handled correctly.
-	DidHandleGrantTypes() (didHandle bool)
 
 	Requester
 }

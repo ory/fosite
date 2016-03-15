@@ -2,17 +2,22 @@ package fosite
 
 import (
 	"net/http"
-
-	"github.com/ory-am/common/pkg"
+	"encoding/json"
 )
-
-const minStateLength = 8
 
 func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 	rfcerr := ErrorToRFC6749Error(err)
 
 	if !ar.IsRedirectURIValid() {
-		pkg.WriteIndentJSON(rw, rfcerr)
+		js, err := json.MarshalIndent(rfcerr, "", "\t")
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(rfcerr.StatusCode)
+		rw.Write(js)
 		return
 	}
 
