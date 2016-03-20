@@ -1,8 +1,6 @@
 package fosite
 
 import (
-	"net/http"
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

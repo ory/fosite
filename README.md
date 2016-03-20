@@ -561,6 +561,7 @@ mockgen -package internal -destination internal/id_token_strategy.go github.com/
 ```sh
 mockgen -package internal -destination internal/authorize_handler.go github.com/ory-am/fosite AuthorizeEndpointHandler
 mockgen -package internal -destination internal/token_handler.go github.com/ory-am/fosite TokenEndpointHandler
+mockgen -package internal -destination internal/validator.go github.com/ory-am/fosite AuthorizedRequestValidator
 ```
 
 **Create stateful "context" mocks**

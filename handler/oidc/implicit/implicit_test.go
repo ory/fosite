@@ -1,22 +1,22 @@
 package implicit
 
 import (
-	"github.com/golang/mock/gomock"
-	"github.com/ory-am/fosite/internal"
-	"testing"
-	"net/url"
-	"net/http"
-	"github.com/ory-am/fosite"
-	"github.com/stretchr/testify/assert"
 	"github.com/go-errors/errors"
-	"github.com/ory-am/fosite/handler/oidc/strategy"
-	"github.com/ory-am/fosite/enigma/jwt"
-	"time"
-	oauthStrat "github.com/ory-am/fosite/handler/core/strategy"
+	"github.com/golang/mock/gomock"
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma/hmac"
+	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core/implicit"
+	oauthStrat "github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/ory-am/fosite/handler/oidc"
+	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/internal"
+	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/url"
+	"testing"
+	"time"
 )
 
 var idStrategy = &strategy.JWTStrategy{
@@ -44,7 +44,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 		AuthorizeImplicitGrantTypeHandler: implicit.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenLifespan: time.Hour,
 			AccessTokenStrategy: hmacStrategy,
-			AccessTokenStorage: store.NewStore(),
+			AccessTokenStorage:  store.NewStore(),
 		},
 		IDTokenHandleHelper: oidc.IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
@@ -57,7 +57,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	}{
 		{
 			description: "should not do anything because request requirements are not met",
-			setup: func() {},
+			setup:       func() {},
 		},
 		{
 			description: "should not do anything because request requirements are not met",
@@ -88,11 +88,12 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should pass when no access token issuer ovverride was given",
+			description: "should pass",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
 				areq.Scopes = fosite.Arguments{"openid"}
 				aresp.EXPECT().AddFragment("id_token", gomock.Any())
+				aresp.EXPECT().AddFragment("access_token", gomock.Any())
 				aresp.EXPECT().AddFragment(gomock.Any(), gomock.Any()).AnyTimes()
 			},
 		},
