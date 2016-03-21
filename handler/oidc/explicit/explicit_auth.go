@@ -14,7 +14,7 @@ type OpenIDConnectExplicitHandler struct {
 	// OpenIDConnectRequestStorage is the storage for open id connect sessions.
 	OpenIDConnectRequestStorage OpenIDConnectRequestStorage
 
-	IDTokenHandleHelper
+	*IDTokenHandleHelper
 }
 
 func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {

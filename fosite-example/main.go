@@ -99,6 +99,12 @@ func fositeFactory() OAuth2Provider {
 	f := NewFosite(store)
 	accessTokenLifespan := time.Hour
 
+	oauth2HandleHelper := &core.HandleHelper{
+		AccessTokenStrategy: selectedStrategy,
+		AccessTokenStorage:               store,
+		AccessTokenLifespan: accessTokenLifespan,
+	}
+
 	// Let's enable the explicit authorize code grant!
 	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
 		AccessTokenStrategy:   selectedStrategy,
@@ -121,21 +127,13 @@ func fositeFactory() OAuth2Provider {
 
 	// Client credentials grant type
 	clientHandler := &coreclient.ClientCredentialsGrantHandler{
-		HandleHelper: core.HandleHelper{
-			AccessTokenStrategy: selectedStrategy,
-			AccessTokenStorage:               store,
-			AccessTokenLifespan: accessTokenLifespan,
-		},
+		HandleHelper: oauth2HandleHelper,
 	}
 	f.TokenEndpointHandlers.Append(clientHandler)
 
 	// Resource owner password credentials grant type
 	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
-		HandleHelper: core.HandleHelper{
-			AccessTokenStrategy: selectedStrategy,
-			AccessTokenStorage:               store,
-			AccessTokenLifespan: accessTokenLifespan,
-		},
+		HandleHelper: oauth2HandleHelper,
 		ResourceOwnerPasswordCredentialsGrantStorage:               store,
 	}
 	f.TokenEndpointHandlers.Append(ownerHandler)

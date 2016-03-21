@@ -128,7 +128,7 @@ func TestArgumentsMatches(t *testing.T) {
 		},
 		{
 			args:   Arguments{"foo", "bar"},
-			is:     []string{"bar"},
+			is:     []string{"bar", "bar"},
 			expect: false,
 		},
 		{

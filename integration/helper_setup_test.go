@@ -83,8 +83,6 @@ var hmacStrategy = &strategy.HMACSHAStrategy{
 
 func newFosite() *fosite.Fosite {
 	f := fosite.NewFosite(fositeStore)
-	f.AuthorizeEndpointHandlers = fosite.AuthorizeEndpointHandlers{}
-	f.TokenEndpointHandlers = fosite.TokenEndpointHandlers{}
 	return f
 }
 

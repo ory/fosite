@@ -33,7 +33,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 
 	h := &OpenIDConnectExplicitHandler{
 		OpenIDConnectRequestStorage: store,
-		IDTokenHandleHelper: oidc.IDTokenHandleHelper{
+		IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
 			IDTokenStrategy: j,
 		},
 	}

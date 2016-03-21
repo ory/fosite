@@ -41,12 +41,12 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	httpreq := &http.Request{Form: url.Values{}}
 
 	h := OpenIDConnectImplicitHandler{
-		AuthorizeImplicitGrantTypeHandler: implicit.AuthorizeImplicitGrantTypeHandler{
+		AuthorizeImplicitGrantTypeHandler: &implicit.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenLifespan: time.Hour,
 			AccessTokenStrategy: hmacStrategy,
 			AccessTokenStorage:  store.NewStore(),
 		},
-		IDTokenHandleHelper: oidc.IDTokenHandleHelper{
+		IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
 		},
 	}
@@ -92,6 +92,16 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
 				areq.Scopes = fosite.Arguments{"openid"}
+				aresp.EXPECT().AddFragment("id_token", gomock.Any())
+				aresp.EXPECT().AddFragment("access_token", gomock.Any())
+				aresp.EXPECT().AddFragment(gomock.Any(), gomock.Any()).AnyTimes()
+			},
+		},
+		{
+			description: "should pass",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{"id_token", "token"}
+				areq.Scopes = fosite.Arguments{"fosite", "openid"}
 				aresp.EXPECT().AddFragment("id_token", gomock.Any())
 				aresp.EXPECT().AddFragment("access_token", gomock.Any())
 				aresp.EXPECT().AddFragment(gomock.Any(), gomock.Any()).AnyTimes()

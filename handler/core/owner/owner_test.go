@@ -25,7 +25,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
 		ResourceOwnerPasswordCredentialsGrantStorage:               store,
-		HandleHelper: core.HandleHelper{
+		HandleHelper: &core.HandleHelper{
 			AccessTokenStorage:               store,
 			AccessTokenLifespan: time.Hour,
 		},
@@ -85,7 +85,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
 		ResourceOwnerPasswordCredentialsGrantStorage:               store,
-		HandleHelper: core.HandleHelper{
+		HandleHelper: &core.HandleHelper{
 			AccessTokenStorage:               store,
 			AccessTokenStrategy: chgen,
 			AccessTokenLifespan: time.Hour,

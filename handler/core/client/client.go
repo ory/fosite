@@ -9,7 +9,7 @@ import (
 )
 
 type ClientCredentialsGrantHandler struct {
-	core.HandleHelper
+	*core.HandleHelper
 }
 
 // ValidateTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2

@@ -40,6 +40,10 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 	}
 	f.AuthorizeEndpointHandlers.Append(handler)
 	f.TokenEndpointHandlers.Append(handler)
+	f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+		AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
+		AccessTokenStorage: fositeStore,
+	})
 
 	state := "1234567890"
 	for k, c := range []struct {

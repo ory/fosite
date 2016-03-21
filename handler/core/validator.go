@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/context"
 	"net/http"
 	"strings"
+	"github.com/go-errors/errors"
 )
 
 type CoreValidator struct {
@@ -15,19 +16,21 @@ type CoreValidator struct {
 func (c *CoreValidator) ValidateRequest(ctx context.Context, req *http.Request, accessRequest fosite.AccessRequester) error {
 	auth :=  req.Header.Get("Authorization")
 	split := strings.SplitN(auth, " ", 2)
-	if (len(split) != 2 || split[0] != "Bearer") {
-		return fosite.ErrUnknownRequest
+	if (len(split) != 2 || !strings.EqualFold(split[0], "bearer")) {
+		return errors.New(fosite.ErrUnknownRequest)
 	}
 
 	token := split[1]
-	sig, err := c.AccessTokenStrategy.ValidateAccessToken(ctx, token, accessRequest)
+	sig, err := c.AccessTokenStrategy.ValidateAccessToken(ctx, token, req, accessRequest)
 	if err != nil {
-		return err
+		return errors.New(fosite.ErrRequestUnauthorized)
 	}
 
-	if _, err := c.AccessTokenStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession()); err != nil {
-		return err
+	origreq, err := c.AccessTokenStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession())
+	if err != nil {
+		return errors.New(fosite.ErrRequestUnauthorized)
 	}
 
+	accessRequest.Merge(origreq)
 	return nil
 }

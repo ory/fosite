@@ -11,11 +11,15 @@ import (
 
 func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
-		token := req.Header.Get("Authorization")
-		t.Logf("Got bearer token in header: %s", token)
-		if token == "" {
-			rw.WriteHeader(http.StatusNotAcceptable)
+		ctx := fosite.NewContext()
+		if _, err := oauth2.ValidateRequestAuthorization(ctx, req, session); err != nil {
+			rfcerr := fosite.ErrorToRFC6749Error(err)
+			t.Logf("Info request failed because %s.", err.Error())
+			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
+			http.Error(rw, rfcerr.Description, rfcerr.StatusCode)
+			return
 		}
+
 		rw.WriteHeader(http.StatusNoContent)
 	}
 }

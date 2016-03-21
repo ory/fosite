@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"time"
 	"github.com/ory-am/fosite/handler/core/explicit"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 	oidcexp "github.com/ory-am/fosite/handler/oidc/explicit"
 	"github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/handler/core"
 )
 
 func TestOpenIDConnectExplicit(t *testing.T) {
@@ -52,12 +52,16 @@ func TestOpenIDConnectExplicit(t *testing.T) {
 
 				idcHandler := &oidcexp.OpenIDConnectExplicitHandler{
 					OpenIDConnectRequestStorage: fositeStore,
-					IDTokenHandleHelper: oidc.IDTokenHandleHelper{
+					IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
 						IDTokenStrategy: idTokenStrategy,
 					},
 				}
 				f.AuthorizeEndpointHandlers.Append(idcHandler)
 				f.TokenEndpointHandlers.Append(idcHandler)
+				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+					AccessTokenStrategy:   hmacStrategy,
+					AccessTokenStorage: fositeStore,
+				})
 			},
 			authStatusCode: http.StatusOK,
 		},
@@ -69,16 +73,10 @@ func TestOpenIDConnectExplicit(t *testing.T) {
 		require.Equal(t, c.authStatusCode, resp.StatusCode, "(%d) %s", k, c.description)
 
 		if resp.StatusCode == http.StatusOK {
-
 			token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
 			require.Nil(t, err, "(%d) %s", k, c.description)
 			require.NotEmpty(t, token.AccessToken, "(%d) %s", k, c.description)
 			require.NotEmpty(t, token.Extra("id_token"), "(%d) %s", k, c.description)
-
-			httpClient := oauthClient.Client(oauth2.NoContext, token)
-			resp, err := httpClient.Get(ts.URL + "/info")
-			require.Nil(t, err, "(%d) %s", k, c.description)
-			assert.Equal(t, http.StatusNoContent, resp.StatusCode, "(%d) %s", k, c.description)
 		}
 		t.Logf("Passed test case (%d) %s", k, c.description)
 	}

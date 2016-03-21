@@ -142,6 +142,8 @@ type Requester interface {
 
 	// GetRequestForm returns the request's form input.
 	GetRequestForm() url.Values
+
+	Merge(requester Requester)
 }
 
 // AccessRequester is a token endpoint's request context.

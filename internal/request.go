@@ -4,12 +4,11 @@
 package internal
 
 import (
-	url "net/url"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	client "github.com/ory-am/fosite/client"
+	url "net/url"
+	time "time"
 )
 
 // Mock of Requester interface
@@ -99,6 +98,14 @@ func (_m *MockRequester) GrantScope(_param0 string) {
 
 func (_mr *_MockRequesterRecorder) GrantScope(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GrantScope", arg0)
+}
+
+func (_m *MockRequester) Merge(_param0 fosite.Requester) {
+	_m.ctrl.Call(_m, "Merge", _param0)
+}
+
+func (_mr *_MockRequesterRecorder) Merge(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Merge", arg0)
 }
 
 func (_m *MockRequester) SetScopes(_param0 fosite.Arguments) {

@@ -8,12 +8,13 @@ import (
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/oidc"
 	"golang.org/x/net/context"
+	"github.com/go-errors/errors"
 )
 
 type OpenIDConnectHybridHandler struct {
-	implicit.AuthorizeImplicitGrantTypeHandler
-	explicit.AuthorizeExplicitGrantTypeHandler
-	oidc.IDTokenHandleHelper
+	*implicit.AuthorizeImplicitGrantTypeHandler
+	*explicit.AuthorizeExplicitGrantTypeHandler
+	*oidc.IDTokenHandleHelper
 }
 
 func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
@@ -26,20 +27,36 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	if ar.GetResponseTypes().Has("code") {
-		if err := c.IssueAuthorizeCode(ctx, req, ar, resp); err != nil {
-			return err
+		code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, req, ar)
+		if err != nil {
+			return errors.New(ErrServerError)
 		}
+
+		if err := c.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
+			return errors.New(ErrServerError)
+		}
+
+		resp.AddFragment("code", code)
+		resp.AddFragment("state", ar.GetState())
+		ar.SetResponseTypeHandled("code")
 	}
 
 	if ar.GetResponseTypes().Has("token") {
 		if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
-			return err
+			return errors.New(err)
 		}
+		ar.SetResponseTypeHandled("token")
 	}
 
 	if !ar.GetScopes().Has("openid") {
 		return nil
 	}
 
-	return c.IssueImplicitIDToken(ctx, req, ar, resp)
+	err := c.IssueImplicitIDToken(ctx, req, ar, resp)
+	if err != nil {
+		return errors.New(err)
+	}
+
+	ar.SetResponseTypeHandled("id_token")
+	return nil
 }

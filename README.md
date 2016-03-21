@@ -1,6 +1,6 @@
 # ![Fosite security first OAuth2 framework](fosite.png)
 
-**The security first OAuth2 framework for [Google's Go Language](https://golang.org).**
+**The security first OAuth2 & OpenID Connect framework for [Google's Go Language](https://golang.org).**
 Built simple, powerful and extensible. This library implements peer-reviewed [IETF RFC6749](https://tools.ietf.org/html/rfc6749),
 counterfeits weaknesses covered in peer-reviewed [IETF RFC6819](https://tools.ietf.org/html/rfc6819) and countermeasures various database
 attack scenarios, keeping your application safe when that hacker penetrates or leaks your database.
@@ -573,6 +573,10 @@ mockgen -package internal -destination internal/access_response.go github.com/or
 mockgen -package internal -destination internal/authorize_request.go github.com/ory-am/fosite AuthorizeRequester
 mockgen -package internal -destination internal/authorize_response.go github.com/ory-am/fosite AuthorizeResponder
 ```
+
+## Known Limitations and Issues
+
+* Validator handler receives empty Request object
 
 ## Hall of Fame
 

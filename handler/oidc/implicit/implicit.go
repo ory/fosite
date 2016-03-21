@@ -6,14 +6,12 @@ import (
 	. "github.com/ory-am/fosite/handler/oidc"
 	"golang.org/x/net/context"
 	"github.com/ory-am/fosite/handler/core/implicit"
+	"github.com/go-errors/errors"
 )
 
 type OpenIDConnectImplicitHandler struct {
-	// OpenIDConnectTokenStrategy is the strategy for generating id tokens.
-	OpenIDConnectTokenStrategy OpenIDConnectTokenStrategy
-
-	implicit.AuthorizeImplicitGrantTypeHandler
-	IDTokenHandleHelper
+	*implicit.AuthorizeImplicitGrantTypeHandler
+	*IDTokenHandleHelper
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
@@ -23,9 +21,16 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 
 	if ar.GetResponseTypes().Has("token") {
 		if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
-			return err
+			return errors.New(err)
 		}
+		ar.SetResponseTypeHandled("token")
 	}
 
-	return c.IssueImplicitIDToken(ctx, req, ar, resp)
+	err := c.IssueImplicitIDToken(ctx, req, ar, resp)
+	if err != nil {
+		return errors.New(err)
+	}
+
+	ar.SetResponseTypeHandled("id_token")
+	return nil
 }

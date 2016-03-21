@@ -24,8 +24,7 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 
 	request.Form = r.Form
-
-	client, err := c.Store.GetClient(r.Form.Get("client_id"))
+	client, err := c.Store.GetClient(request.GetRequestForm().Get("client_id"))
 	if err != nil {
 		return request, errors.New(ErrInvalidClient)
 	}

@@ -41,12 +41,16 @@ func runClientCredentialsGrantTest(t *testing.T, strategy core.AccessTokenStrate
 			description: "should fail because unknown client",
 			setup: func() {
 				f.TokenEndpointHandlers.Append(&owner.ResourceOwnerPasswordCredentialsGrantHandler{
-					HandleHelper: core.HandleHelper{
+					HandleHelper: &core.HandleHelper{
 						AccessTokenStrategy: strategy,
 						AccessTokenStorage: fositeStore,
 						AccessTokenLifespan: accessTokenLifespan,
 					},
 					ResourceOwnerPasswordCredentialsGrantStorage:               fositeStore,
+				})
+				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+					AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
+					AccessTokenStorage: fositeStore,
 				})
 			},
 			err: true,

@@ -40,12 +40,12 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	areq := fosite.NewAuthorizeRequest()
 	httpreq := &http.Request{Form: url.Values{}}
 	h := OpenIDConnectHybridHandler{
-		AuthorizeImplicitGrantTypeHandler: implicit.AuthorizeImplicitGrantTypeHandler{
+		AuthorizeImplicitGrantTypeHandler: &implicit.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenLifespan: time.Hour,
 			AccessTokenStrategy: hmacStrategy,
 			AccessTokenStorage: store.NewStore(),
 		},
-		IDTokenHandleHelper: oidc.IDTokenHandleHelper{
+		IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
 		},
 	}

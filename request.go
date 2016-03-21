@@ -60,3 +60,20 @@ func (a *Request) SetSession(session interface{}) {
 func (a *Request) GetSession() interface{} {
 	return a.Session
 }
+
+
+func (a *Request) Merge(request Requester) {
+	for _, scope := range request.GetScopes() {
+		a.Scopes = append(a.Scopes, scope)
+	}
+	for _, scope := range request.GetGrantedScopes() {
+		a.GrantedScopes = append(a.GrantedScopes, scope)
+	}
+	a.RequestedAt = request.GetRequestedAt()
+	a.Client = request.GetClient()
+	a.Session = request.GetSession()
+
+	for k, v := range request.GetRequestForm() {
+		a.Form[k] = v
+	}
+}
