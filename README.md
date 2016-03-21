@@ -188,9 +188,9 @@ explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
     AccessTokenStrategy:   hmacStrategy,
     RefreshTokenStrategy:  hmacStrategy,
     AuthorizeCodeStrategy: hmacStrategy,
-    Store:               store,
-    AuthCodeLifespan:    time.Minute * 10,
-    AccessTokenLifespan: accessTokenLifespan,
+    Store:                 store,
+    AuthCodeLifespan:      time.Minute * 10,
+    AccessTokenLifespan:   accessTokenLifespan,
 }
 
 // Please note that order matters!
@@ -213,6 +213,8 @@ You can find a complete list of handlers inside the [handler directory](handler)
   [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3)
 * `github.com/ory-am/fosite/handler/core/token/client.TokenClientCredentialsEndpointHandler` implements the
   [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4)
+
+There are also [OpenID Connect Handlers available](handler/oidc).
 
 ## Develop fosite
 
