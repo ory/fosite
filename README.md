@@ -27,22 +27,20 @@ During development, we reviewed the following open specifications:
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-  - [Motivation](#motivation)
-  - [Example](#example)
-  - [A word on quality](#a-word-on-quality)
-  - [A word on security](#a-word-on-security)
-  - [A word on extensibility](#a-word-on-extensibility)
-  - [Usage](#usage)
-    - [Installation](#installation)
-    - [Exemplary Server Implementation](#exemplary-server-implementation)
-    - [Exemplary [Authorization Endpoint](https://tools.ietf.org/html/rfc6749#section-3.1)](#exemplary-authorization-endpointhttpstoolsietforghtmlrfc6749section-31)
-- [Please log in](#please-log-in)
-    - [Exemplary [Token Endpoint](https://tools.ietf.org/html/rfc6749#section-3.2)](#exemplary-token-endpointhttpstoolsietforghtmlrfc6749section-32)
-    - [Exemplary Storage Implementation](#exemplary-storage-implementation)
-    - [Extensible handlers](#extensible-handlers)
-  - [Develop fosite](#develop-fosite)
-    - [Useful commands](#useful-commands)
-  - [Hall of Fame](#hall-of-fame)
+- [Motivation](#motivation)
+- [Example](#example)
+- [A word on quality](#a-word-on-quality)
+- [A word on security](#a-word-on-security)
+- [A word on extensibility](#a-word-on-extensibility)
+- [Usage](#usage)
+  - [Installation](#installation)
+- [Examples](#examples)
+  - [Exemplary Storage Implementation](#exemplary-storage-implementation)
+  - [Extensible handlers](#extensible-handlers)
+- [Develop fosite](#develop-fosite)
+  - [Useful commands](#useful-commands)
+- [Known Limitations and Issues](#known-limitations-and-issues)
+- [Hall of Fame](#hall-of-fame)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -148,9 +146,11 @@ Right now, there is only an unstable release versioned as the v0 branch:
 go get gopkg.in/ory-am/fosite.v0
 ```
 
-**Before you read ahead.**
+## Examples
+
 Take a look at these real-life implementations:
-* [Tests](integration/)
+* [Integration tests](integration/)
+* [Request validation](integration/helper_endpoints_test.go) (check `func tokenInfoHandler`)
 * [Fully functional example app with all OpenID Connect and OAuth2 flows enabled](fosite-example/main.go)
 
 ### Exemplary Storage Implementation
