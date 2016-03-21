@@ -20,8 +20,8 @@ var (
 	ErrInvalidGrant            = errors.New("The provided authorization grant (e.g., authorization code, resource owner credentials) or refresh token is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client")
 	ErrInvalidClient           = errors.New("Client authentication failed (e.g., unknown client, no client authentication included, or unsupported authentication method)")
 	ErrInvalidState            = errors.Errorf("The state is missing or has less than %d characters and is therefore considered too weak", MinParameterEntropy)
-	ErrInsufficientEntropy = errors.Errorf("The request used a security parameter (e.g., anti-replay, anti-csrf) with insufficient entropy (minimum of %d characters)", MinParameterEntropy)
-	ErrMisconfiguration = errors.New("The request failed because of a misconfiguration")
+	ErrInsufficientEntropy     = errors.Errorf("The request used a security parameter (e.g., anti-replay, anti-csrf) with insufficient entropy (minimum of %d characters)", MinParameterEntropy)
+	ErrMisconfiguration        = errors.New("The request failed because of a misconfiguration")
 )
 
 const (
@@ -37,8 +37,8 @@ const (
 	errInvalidClientName           = "invalid_client"
 	errInvalidError                = "invalid_error"
 	errInvalidState                = "invalid_state"
-	errMisconfiguration                = "misconfiguration"
-	errInsufficientEntropy                = "insufficient_entropy"
+	errMisconfiguration            = "misconfiguration"
+	errInsufficientEntropy         = "insufficient_entropy"
 )
 
 type RFC6749Error struct {

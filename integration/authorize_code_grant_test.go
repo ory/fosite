@@ -54,18 +54,18 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 				handler := &explicit.AuthorizeExplicitGrantTypeHandler{
-					AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
-					RefreshTokenStrategy:  strategy.(core.RefreshTokenStrategy),
-					AuthorizeCodeStrategy: strategy.(core.AuthorizeCodeStrategy),
-					AuthorizeCodeGrantStorage:               fositeStore,
-					AuthCodeLifespan:    time.Minute,
-					AccessTokenLifespan: time.Hour,
+					AccessTokenStrategy:       strategy.(core.AccessTokenStrategy),
+					RefreshTokenStrategy:      strategy.(core.RefreshTokenStrategy),
+					AuthorizeCodeStrategy:     strategy.(core.AuthorizeCodeStrategy),
+					AuthorizeCodeGrantStorage: fositeStore,
+					AuthCodeLifespan:          time.Minute,
+					AccessTokenLifespan:       time.Hour,
 				}
 				f.AuthorizeEndpointHandlers.Append(handler)
 				f.TokenEndpointHandlers.Append(handler)
 				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-					AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage: fositeStore,
+					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
+					AccessTokenStorage:  fositeStore,
 				})
 			},
 			authStatusCode: http.StatusOK,

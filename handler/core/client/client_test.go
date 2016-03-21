@@ -23,7 +23,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 
 	h := ClientCredentialsGrantHandler{
 		&core.HandleHelper{
-			AccessTokenStorage:               store,
+			AccessTokenStorage:  store,
 			AccessTokenStrategy: chgen,
 			AccessTokenLifespan: time.Hour,
 		},
@@ -65,7 +65,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 
 	h := ClientCredentialsGrantHandler{
 		&core.HandleHelper{
-			AccessTokenStorage:               store,
+			AccessTokenStorage:  store,
 			AccessTokenStrategy: chgen,
 			AccessTokenLifespan: time.Hour,
 		},

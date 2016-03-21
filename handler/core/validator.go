@@ -1,11 +1,12 @@
 package core
 
 import (
-	"github.com/ory-am/fosite"
-	"golang.org/x/net/context"
 	"net/http"
 	"strings"
+
 	"github.com/go-errors/errors"
+	"github.com/ory-am/fosite"
+	"golang.org/x/net/context"
 )
 
 type CoreValidator struct {
@@ -14,9 +15,9 @@ type CoreValidator struct {
 }
 
 func (c *CoreValidator) ValidateRequest(ctx context.Context, req *http.Request, accessRequest fosite.AccessRequester) error {
-	auth :=  req.Header.Get("Authorization")
+	auth := req.Header.Get("Authorization")
 	split := strings.SplitN(auth, " ", 2)
-	if (len(split) != 2 || !strings.EqualFold(split[0], "bearer")) {
+	if len(split) != 2 || !strings.EqualFold(split[0], "bearer") {
 		return errors.New(fosite.ErrUnknownRequest)
 	}
 

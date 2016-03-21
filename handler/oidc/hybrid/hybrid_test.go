@@ -1,22 +1,23 @@
 package hybrid
 
 import (
-	"github.com/golang/mock/gomock"
-	"github.com/ory-am/fosite/internal"
-	"testing"
-	"net/url"
 	"net/http"
-	"github.com/ory-am/fosite"
-	"github.com/stretchr/testify/assert"
-	"github.com/go-errors/errors"
-	"github.com/ory-am/fosite/handler/oidc/strategy"
-	"github.com/ory-am/fosite/enigma/jwt"
-	oauthStrat "github.com/ory-am/fosite/handler/core/strategy"
+	"net/url"
+	"testing"
 	"time"
+
+	"github.com/go-errors/errors"
+	"github.com/golang/mock/gomock"
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma/hmac"
-	"github.com/ory-am/fosite/handler/core/implicit"
+	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/fosite-example/store"
+	"github.com/ory-am/fosite/handler/core/implicit"
+	oauthStrat "github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/ory-am/fosite/handler/oidc"
+	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 var idStrategy = &strategy.JWTStrategy{
@@ -43,20 +44,20 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 		AuthorizeImplicitGrantTypeHandler: &implicit.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenLifespan: time.Hour,
 			AccessTokenStrategy: hmacStrategy,
-			AccessTokenStorage: store.NewStore(),
+			AccessTokenStorage:  store.NewStore(),
 		},
 		IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
 		},
 	}
-	for k,c := range []struct {
+	for k, c := range []struct {
 		description string
 		setup       func()
 		expectErr   error
 	}{
 		{
 			description: "should not do anything because not a hybrid request",
-			setup: func() {},
+			setup:       func() {},
 		},
 		{
 			description: "should not do anything because not a hybrid request",

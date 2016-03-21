@@ -1,17 +1,18 @@
 package explicit
 
 import (
-	"github.com/golang/mock/gomock"
-	"github.com/ory-am/fosite/internal"
-	"testing"
-	"net/url"
 	"net/http"
+	"net/url"
+	"testing"
+
+	"github.com/go-errors/errors"
+	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/enigma/jwt"
-	"github.com/ory-am/fosite/handler/oidc/strategy"
-	"github.com/stretchr/testify/assert"
-	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite/handler/oidc"
+	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 var j = &strategy.JWTStrategy{
@@ -26,7 +27,6 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 	defer ctrl.Finish()
-
 
 	areq := fosite.NewAuthorizeRequest()
 	httpreq := &http.Request{Form: url.Values{}}
@@ -68,7 +68,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.Session = &strategy.IDTokenSession{
 					IDClaims: &jwt.Claims{},
-					IDToken: &jwt.Header{},
+					IDToken:  &jwt.Header{},
 				}
 			},
 			expectErr: fosite.ErrInsufficientEntropy,

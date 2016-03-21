@@ -1,33 +1,34 @@
 package integration_test
 
 import (
-	"testing"
+	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
 	"time"
+
+	"github.com/go-errors/errors"
+	"github.com/ory-am/fosite/handler/core/explicit"
+	"github.com/ory-am/fosite/handler/core/implicit"
+	"github.com/ory-am/fosite/handler/oidc"
+	"github.com/ory-am/fosite/handler/oidc/hybrid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
-	"github.com/go-errors/errors"
-	"net/url"
-	"strconv"
-	"github.com/ory-am/fosite/handler/core/implicit"
-	"strings"
-	"sync"
-	"fmt"
-	"github.com/ory-am/fosite/handler/core/explicit"
-	"github.com/ory-am/fosite/handler/oidc"
-	"github.com/ory-am/fosite/handler/oidc/hybrid"
 
-	idimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
 	"github.com/ory-am/fosite/enigma/jwt"
-	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/handler/core"
+	idimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
+	"github.com/ory-am/fosite/handler/oidc/strategy"
 )
 
 func TestOIDCImplicitGrants(t *testing.T) {
 	session := &strategy.IDTokenSession{
 		IDClaims: &jwt.Claims{},
-		IDToken: &jwt.Header{},
+		IDToken:  &jwt.Header{},
 	}
 	f := newFosite()
 	ts := mockServer(t, f, session)
@@ -37,19 +38,19 @@ func TestOIDCImplicitGrants(t *testing.T) {
 	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
 
 	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
-		AccessTokenStrategy:   hmacStrategy,
-		RefreshTokenStrategy:  hmacStrategy,
-		AuthorizeCodeStrategy: hmacStrategy,
-		AuthorizeCodeGrantStorage:               fositeStore,
-		AuthCodeLifespan:    time.Minute,
-		AccessTokenLifespan: time.Hour,
+		AccessTokenStrategy:       hmacStrategy,
+		RefreshTokenStrategy:      hmacStrategy,
+		AuthorizeCodeStrategy:     hmacStrategy,
+		AuthorizeCodeGrantStorage: fositeStore,
+		AuthCodeLifespan:          time.Minute,
+		AccessTokenLifespan:       time.Hour,
 	}
 	f.AuthorizeEndpointHandlers.Append(explicitHandler)
 	f.TokenEndpointHandlers.Append(explicitHandler)
 
 	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStrategy:   hmacStrategy,
-		AccessTokenStorage:               fositeStore,
+		AccessTokenStrategy: hmacStrategy,
+		AccessTokenStorage:  fositeStore,
 		AccessTokenLifespan: time.Hour,
 	}
 	f.AuthorizeEndpointHandlers.Append(implicitHandler)
@@ -68,8 +69,8 @@ func TestOIDCImplicitGrants(t *testing.T) {
 		},
 	})
 	f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-		AccessTokenStrategy:   hmacStrategy,
-		AccessTokenStorage: fositeStore,
+		AccessTokenStrategy: hmacStrategy,
+		AccessTokenStorage:  fositeStore,
 	})
 
 	var state = "12345678901234567890"
@@ -82,7 +83,7 @@ func TestOIDCImplicitGrants(t *testing.T) {
 		hasCode      bool
 	}{
 		{
-			description: "should pass without id token",
+			description:  "should pass without id token",
 			responseType: "token",
 			setup: func() {
 				oauthClient.Scopes = []string{f.MandatoryScope}
@@ -91,8 +92,8 @@ func TestOIDCImplicitGrants(t *testing.T) {
 		{
 
 			responseType: "id_token%20token",
-			nonce: "1111111111111111",
-			description: "should pass id token (id_token token)",
+			nonce:        "1111111111111111",
+			description:  "should pass id token (id_token token)",
 			setup: func() {
 				oauthClient.Scopes = []string{f.MandatoryScope, "openid"}
 			},
@@ -101,12 +102,12 @@ func TestOIDCImplicitGrants(t *testing.T) {
 		{
 
 			responseType: "token%20id_token%20code",
-			nonce: "1111111111111111",
-			description: "should pass id token (id_token token)",
+			nonce:        "1111111111111111",
+			description:  "should pass id token (id_token token)",
 			setup: func() {
 			},
 			hasToken: true,
-			hasCode: true,
+			hasCode:  true,
 		},
 	} {
 		c.setup()
@@ -121,7 +122,7 @@ func TestOIDCImplicitGrants(t *testing.T) {
 			wg.Done()
 		}()
 
-		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type=" + c.responseType, -1) + "&nonce=" + c.nonce
+		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type="+c.responseType, -1) + "&nonce=" + c.nonce
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				callbackURL = req.URL

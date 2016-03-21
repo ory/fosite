@@ -30,9 +30,9 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 
 	h := AuthorizeExplicitGrantTypeHandler{
 		AuthorizeCodeGrantStorage: store,
-		AuthorizeCodeStrategy: auch,
-		AccessTokenStrategy:   ach,
-		RefreshTokenStrategy:  rch,
+		AuthorizeCodeStrategy:     auch,
+		AccessTokenStrategy:       ach,
+		RefreshTokenStrategy:      rch,
 	}
 	for k, c := range []struct {
 		description string
@@ -114,7 +114,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 
 	h := AuthorizeExplicitGrantTypeHandler{
 		AuthorizeCodeGrantStorage: store,
-		AuthorizeCodeStrategy: ach,
+		AuthorizeCodeStrategy:     ach,
 	}
 	for k, c := range []struct {
 		description string

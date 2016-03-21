@@ -3,12 +3,12 @@ package hybrid
 import (
 	"net/http"
 
+	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/oidc"
 	"golang.org/x/net/context"
-	"github.com/go-errors/errors"
 )
 
 type OpenIDConnectHybridHandler struct {

@@ -26,7 +26,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 
 	h := AuthorizeExplicitGrantTypeHandler{
 		AuthorizeCodeGrantStorage: store,
-		AuthorizeCodeStrategy: chgen,
+		AuthorizeCodeStrategy:     chgen,
 	}
 	for k, c := range []struct {
 		description string

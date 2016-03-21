@@ -2,8 +2,8 @@ package oidc
 
 import (
 	"github.com/ory-am/common/pkg"
-	"golang.org/x/net/context"
 	"github.com/ory-am/fosite"
+	"golang.org/x/net/context"
 )
 
 var ErrNoSessionFound = pkg.ErrNotFound

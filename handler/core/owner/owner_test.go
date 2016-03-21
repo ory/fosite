@@ -10,9 +10,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"github.com/ory-am/fosite/handler/core"
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
@@ -24,9 +24,9 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
-		ResourceOwnerPasswordCredentialsGrantStorage:               store,
+		ResourceOwnerPasswordCredentialsGrantStorage: store,
 		HandleHelper: &core.HandleHelper{
-			AccessTokenStorage:               store,
+			AccessTokenStorage:  store,
 			AccessTokenLifespan: time.Hour,
 		},
 	}
@@ -84,9 +84,9 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
-		ResourceOwnerPasswordCredentialsGrantStorage:               store,
+		ResourceOwnerPasswordCredentialsGrantStorage: store,
 		HandleHelper: &core.HandleHelper{
-			AccessTokenStorage:               store,
+			AccessTokenStorage:  store,
 			AccessTokenStrategy: chgen,
 			AccessTokenLifespan: time.Hour,
 		},

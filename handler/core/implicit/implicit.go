@@ -4,12 +4,13 @@ import (
 	"net/http"
 	"time"
 
+	"strconv"
+	"strings"
+
+	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
-	"strconv"
-	"strings"
-	"github.com/go-errors/errors"
 )
 
 // AuthorizeImplicitGrantTypeHandler is a response handler for the Authorize Code grant using the implicit grant type
@@ -18,7 +19,7 @@ type AuthorizeImplicitGrantTypeHandler struct {
 	AccessTokenStrategy core.AccessTokenStrategy
 
 	// ImplicitGrantStorage is used to persist session data across requests.
-	AccessTokenStorage  core.AccessTokenStorage
+	AccessTokenStorage core.AccessTokenStorage
 
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration

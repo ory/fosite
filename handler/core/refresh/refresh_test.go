@@ -25,9 +25,9 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := RefreshTokenGrantHandler{
-		RefreshTokenGrantStorage:                store,
-		RefreshTokenStrategy: chgen,
-		AccessTokenLifespan:  time.Hour,
+		RefreshTokenGrantStorage: store,
+		RefreshTokenStrategy:     chgen,
+		AccessTokenLifespan:      time.Hour,
 	}
 	for k, c := range []struct {
 		description string
@@ -99,10 +99,10 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 
 	areq.Client = &client.SecureClient{}
 	h := RefreshTokenGrantHandler{
-		RefreshTokenGrantStorage:                store,
-		RefreshTokenStrategy: rcts,
-		AccessTokenStrategy:  acts,
-		AccessTokenLifespan:  time.Hour,
+		RefreshTokenGrantStorage: store,
+		RefreshTokenStrategy:     rcts,
+		AccessTokenStrategy:      acts,
+		AccessTokenLifespan:      time.Hour,
 	}
 	for k, c := range []struct {
 		description string

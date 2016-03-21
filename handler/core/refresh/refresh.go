@@ -12,15 +12,15 @@ import (
 )
 
 type RefreshTokenGrantHandler struct {
-	AccessTokenStrategy      core.AccessTokenStrategy
+	AccessTokenStrategy core.AccessTokenStrategy
 
-	RefreshTokenStrategy     core.RefreshTokenStrategy
+	RefreshTokenStrategy core.RefreshTokenStrategy
 
 	// RefreshTokenGrantStorage is used to persist session data across requests.
 	RefreshTokenGrantStorage RefreshTokenGrantStorage
 
 	// AccessTokenLifespan defines the lifetime of an access token.
-	AccessTokenLifespan      time.Duration
+	AccessTokenLifespan time.Duration
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6

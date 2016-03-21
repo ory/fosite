@@ -1,15 +1,16 @@
 package fosite_test
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"testing"
 	"golang.org/x/net/context"
 )
 
@@ -30,39 +31,39 @@ func TestValidateRequestAuthorization(t *testing.T) {
 		{
 			description: "should fail",
 			scopes:      []string{},
-			setup:       func() {
+			setup: func() {
 			},
-			expectErr:   ErrRequestUnauthorized,
+			expectErr: ErrRequestUnauthorized,
 		},
 		{
 			description: "should fail",
 			scopes:      []string{"foo"},
-			setup:       func() {
+			setup: func() {
 				f.AuthorizedRequestValidators = AuthorizedRequestValidators{validator}
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Return(ErrUnknownRequest)
 			},
-			expectErr:   ErrRequestUnauthorized,
+			expectErr: ErrRequestUnauthorized,
 		},
 		{
 			description: "should fail",
 			scopes:      []string{"foo"},
-			setup:       func() {
+			setup: func() {
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Return(ErrInvalidClient)
 			},
-			expectErr:   ErrInvalidClient,
+			expectErr: ErrInvalidClient,
 		},
 		{
 			description: "should fail",
-			setup:       func() {
+			setup: func() {
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
 					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
 				}).Return(nil)
 			},
-			expectErr:   ErrRequestForbidden,
+			expectErr: ErrRequestForbidden,
 		},
 		{
 			description: "should pass",
-			setup:       func() {
+			setup: func() {
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
 					accessRequest.(*AccessRequest).GrantedScopes = []string{f.MandatoryScope}
 				}).Return(nil)
@@ -71,7 +72,7 @@ func TestValidateRequestAuthorization(t *testing.T) {
 		{
 			description: "should pass",
 			scopes:      []string{"bar"},
-			setup:       func() {
+			setup: func() {
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
 					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
 				}).Return(nil)

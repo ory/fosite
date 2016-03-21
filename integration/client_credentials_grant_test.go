@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
-
 )
 
 func TestClientCredentialsGrabt(t *testing.T) {
@@ -43,14 +42,14 @@ func runClientCredentialsGrantTest(t *testing.T, strategy core.AccessTokenStrate
 				f.TokenEndpointHandlers.Append(&owner.ResourceOwnerPasswordCredentialsGrantHandler{
 					HandleHelper: &core.HandleHelper{
 						AccessTokenStrategy: strategy,
-						AccessTokenStorage: fositeStore,
+						AccessTokenStorage:  fositeStore,
 						AccessTokenLifespan: accessTokenLifespan,
 					},
-					ResourceOwnerPasswordCredentialsGrantStorage:               fositeStore,
+					ResourceOwnerPasswordCredentialsGrantStorage: fositeStore,
 				})
 				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-					AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage: fositeStore,
+					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
+					AccessTokenStorage:  fositeStore,
 				})
 			},
 			err: true,

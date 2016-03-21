@@ -2,10 +2,11 @@ package client
 
 import (
 	"net/http"
+
 	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite"
-	"golang.org/x/net/context"
 	"github.com/ory-am/fosite/handler/core"
+	"golang.org/x/net/context"
 )
 
 type ClientCredentialsGrantHandler struct {

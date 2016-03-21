@@ -27,7 +27,7 @@ func NewStore() *Store {
 	return &Store{
 		Clients:        make(map[string]*client.SecureClient),
 		AuthorizeCodes: make(map[string]fosite.Requester),
-		IDSessions: make(map[string]fosite.Requester),
+		IDSessions:     make(map[string]fosite.Requester),
 		AccessTokens:   make(map[string]fosite.Requester),
 		Implicit:       make(map[string]fosite.Requester),
 		RefreshTokens:  make(map[string]fosite.Requester),

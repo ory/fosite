@@ -61,7 +61,6 @@ func (a *Request) GetSession() interface{} {
 	return a.Session
 }
 
-
 func (a *Request) Merge(request Requester) {
 	for _, scope := range request.GetScopes() {
 		a.Scopes = append(a.Scopes, scope)

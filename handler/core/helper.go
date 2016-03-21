@@ -12,7 +12,7 @@ import (
 
 type HandleHelper struct {
 	AccessTokenStrategy AccessTokenStrategy
-	AccessTokenStorage AccessTokenStorage
+	AccessTokenStorage  AccessTokenStorage
 	AccessTokenLifespan time.Duration
 }
 

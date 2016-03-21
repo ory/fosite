@@ -1,23 +1,24 @@
 package integration_test
 
 import (
-	"testing"
 	"net/http"
+	"testing"
 	"time"
-	"github.com/ory-am/fosite/handler/core/explicit"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
-	oidcexp "github.com/ory-am/fosite/handler/oidc/explicit"
-	"github.com/ory-am/fosite/handler/oidc"
-	"github.com/ory-am/fosite/handler/oidc/strategy"
+
 	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/handler/core"
+	"github.com/ory-am/fosite/handler/core/explicit"
+	"github.com/ory-am/fosite/handler/oidc"
+	oidcexp "github.com/ory-am/fosite/handler/oidc/explicit"
+	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
 
 func TestOpenIDConnectExplicit(t *testing.T) {
 	session := &strategy.IDTokenSession{
 		IDClaims: &jwt.Claims{},
-		IDToken: &jwt.Header{},
+		IDToken:  &jwt.Header{},
 	}
 	f := newFosite()
 	ts := mockServer(t, f, session)
@@ -40,12 +41,12 @@ func TestOpenIDConnectExplicit(t *testing.T) {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"fosite", "openid"}
 				handler := &explicit.AuthorizeExplicitGrantTypeHandler{
-					AccessTokenStrategy:   strategy,
-					RefreshTokenStrategy:  strategy,
-					AuthorizeCodeStrategy: strategy,
-					AuthorizeCodeGrantStorage:               fositeStore,
-					AuthCodeLifespan:    time.Minute,
-					AccessTokenLifespan: time.Hour,
+					AccessTokenStrategy:       strategy,
+					RefreshTokenStrategy:      strategy,
+					AuthorizeCodeStrategy:     strategy,
+					AuthorizeCodeGrantStorage: fositeStore,
+					AuthCodeLifespan:          time.Minute,
+					AccessTokenLifespan:       time.Hour,
 				}
 				f.AuthorizeEndpointHandlers.Append(handler)
 				f.TokenEndpointHandlers.Append(handler)
@@ -59,8 +60,8 @@ func TestOpenIDConnectExplicit(t *testing.T) {
 				f.AuthorizeEndpointHandlers.Append(idcHandler)
 				f.TokenEndpointHandlers.Append(idcHandler)
 				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-					AccessTokenStrategy:   hmacStrategy,
-					AccessTokenStorage: fositeStore,
+					AccessTokenStrategy: hmacStrategy,
+					AccessTokenStorage:  fositeStore,
 				})
 			},
 			authStatusCode: http.StatusOK,

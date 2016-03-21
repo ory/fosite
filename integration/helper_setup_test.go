@@ -9,17 +9,17 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/enigma/hmac"
+	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core/strategy"
 	idstrat "github.com/ory-am/fosite/handler/oidc/strategy"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	"github.com/ory-am/fosite/enigma/jwt"
 )
 
 var fositeStore = &store.Store{
 	Clients: map[string]*client.SecureClient{
-		"my-client": &client.SecureClient{
+		"my-client": {
 			ID:           "my-client",
 			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 			RedirectURIs: []string{"http://localhost:3846/callback"},
@@ -35,7 +35,7 @@ var fositeStore = &store.Store{
 	Implicit:       map[string]fosite.Requester{},
 	AccessTokens:   map[string]fosite.Requester{},
 	RefreshTokens:  map[string]fosite.Requester{},
-	IDSessions: map[string]fosite.Requester{},
+	IDSessions:     map[string]fosite.Requester{},
 }
 
 var accessTokenLifespan = time.Hour
@@ -69,7 +69,7 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 }
 
 var idTokenStrategy = &idstrat.JWTStrategy{
-	Enigma:&jwt.Enigma{
+	Enigma: &jwt.Enigma{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},

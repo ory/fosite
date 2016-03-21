@@ -1,22 +1,23 @@
 package explicit
 
 import (
-	"github.com/golang/mock/gomock"
+	"net/http"
 	"net/url"
 	"testing"
-	"github.com/ory-am/fosite/internal"
-	"github.com/ory-am/fosite"
-	"net/http"
-	"github.com/stretchr/testify/assert"
+
 	"github.com/go-errors/errors"
+	"github.com/golang/mock/gomock"
+	"github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
-	"github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/internal"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
-	h := &OpenIDConnectExplicitHandler{	}
-		assert.True(t, errors.Is(h.HandleTokenEndpointRequest(nil, nil, nil), fosite.ErrUnknownRequest))
+	h := &OpenIDConnectExplicitHandler{}
+	assert.True(t, errors.Is(h.HandleTokenEndpointRequest(nil, nil, nil), fosite.ErrUnknownRequest))
 }
 
 func TestPopulateTokenEndpointResponse(t *testing.T) {
@@ -24,7 +25,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
 	defer ctrl.Finish()
 
-	session := &strategy.IDTokenSession{		IDClaims: &jwt.Claims{},		IDToken: &jwt.Header{}	}
+	session := &strategy.IDTokenSession{IDClaims: &jwt.Claims{}, IDToken: &jwt.Header{}}
 	aresp := fosite.NewAccessResponse()
 	areq := fosite.NewAccessRequest(session)
 	httpreq := &http.Request{PostForm: url.Values{}}
@@ -42,8 +43,8 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	}{
 		{
 			description: "should fail because invalid response type",
-			setup: func() {},
-			expectErr: fosite.ErrUnknownRequest,
+			setup:       func() {},
+			expectErr:   fosite.ErrUnknownRequest,
 		},
 		{
 			description: "should fail because lookup returns not found",

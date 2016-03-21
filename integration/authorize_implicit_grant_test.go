@@ -1,20 +1,21 @@
 package integration_test
 
 import (
-	"testing"
+	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
 	"time"
+
+	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite/handler/core"
+	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
-	"github.com/go-errors/errors"
-	"net/url"
-	"strconv"
-	"github.com/ory-am/fosite/handler/core/implicit"
-	"strings"
-	"sync"
-	"fmt"
 )
 
 func TestAuthorizeImplicitGrant(t *testing.T) {
@@ -44,14 +45,14 @@ func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 				handler := &implicit.AuthorizeImplicitGrantTypeHandler{
-					AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage:               fositeStore,
+					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
+					AccessTokenStorage:  fositeStore,
 					AccessTokenLifespan: time.Hour,
 				}
 				f.AuthorizeEndpointHandlers.Append(handler)
 				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-					AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage: fositeStore,
+					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
+					AccessTokenStorage:  fositeStore,
 				})
 			},
 			authStatusCode: http.StatusOK,

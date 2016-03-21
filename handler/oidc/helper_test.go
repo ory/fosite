@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
@@ -29,9 +30,9 @@ func TestGenerateIDToken(t *testing.T) {
 	ar := fosite.NewAccessRequest(nil)
 	sess := &strategy.IDTokenSession{
 		IDClaims: &jwt.Claims{},
-		IDToken: &jwt.Header{},
+		IDToken:  &jwt.Header{},
 	}
-	h := &IDTokenHandleHelper{		IDTokenStrategy: chgen	}
+	h := &IDTokenHandleHelper{IDTokenStrategy: chgen}
 
 	for k, c := range []struct {
 		description string
@@ -94,7 +95,7 @@ func TestIssueExplicitToken(t *testing.T) {
 	ar.SetSession(&strategy.IDTokenSession{IDClaims: &jwt.Claims{}, IDToken: &jwt.Header{}})
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
-	h := &IDTokenHandleHelper{		IDTokenStrategy: strat	}
+	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 	err := h.IssueExplicitIDToken(nil, httpreq, ar, resp)
 	assert.Nil(t, err, "%s", err)
 }
@@ -110,7 +111,7 @@ func TestIssueImplicitToken(t *testing.T) {
 	ar.SetSession(&strategy.IDTokenSession{IDClaims: &jwt.Claims{}, IDToken: &jwt.Header{}})
 
 	resp.EXPECT().AddFragment("id_token", gomock.Any())
-	h := &IDTokenHandleHelper{		IDTokenStrategy: strat	}
+	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 	err := h.IssueImplicitIDToken(nil, httpreq, ar, resp)
 	assert.Nil(t, err, "%s", err)
 }

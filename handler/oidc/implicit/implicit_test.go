@@ -1,6 +1,11 @@
 package implicit
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+	"time"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
@@ -13,10 +18,6 @@ import (
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"testing"
-	"time"
 )
 
 var idStrategy = &strategy.JWTStrategy{

@@ -1,10 +1,11 @@
 package strategy
 
 import (
-	"github.com/ory-am/fosite/enigma/jwt"
-	"github.com/ory-am/fosite"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/enigma/jwt"
+	"github.com/stretchr/testify/assert"
 )
 
 var j = &JWTStrategy{
@@ -17,7 +18,7 @@ var j = &JWTStrategy{
 func TestGenerateIDToken(t *testing.T) {
 	req := fosite.NewAccessRequest(&IDTokenSession{
 		IDClaims: &jwt.Claims{},
-		IDToken: &jwt.Header{},
+		IDToken:  &jwt.Header{},
 	})
 	token, err := j.GenerateIDToken(nil, nil, req)
 	assert.Nil(t, err)

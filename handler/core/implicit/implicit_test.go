@@ -26,7 +26,7 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 	httpreq := &http.Request{Form: url.Values{}}
 
 	h := AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStorage:               store,
+		AccessTokenStorage:  store,
 		AccessTokenStrategy: chgen,
 		AccessTokenLifespan: time.Hour,
 	}

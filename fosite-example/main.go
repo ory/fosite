@@ -14,28 +14,28 @@ import (
 	"github.com/ory-am/fosite/enigma/hmac"
 	"github.com/ory-am/fosite/enigma/jwt"
 	exampleStore "github.com/ory-am/fosite/fosite-example/store"
+	"github.com/ory-am/fosite/handler/core"
 	coreclient "github.com/ory-am/fosite/handler/core/client"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/implicit"
-	oidcexplicit "github.com/ory-am/fosite/handler/oidc/explicit"
-	oidcimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
 	"github.com/ory-am/fosite/handler/core/owner"
 	"github.com/ory-am/fosite/handler/core/refresh"
 	"github.com/ory-am/fosite/handler/core/strategy"
+	"github.com/ory-am/fosite/handler/oidc"
+	oidcexplicit "github.com/ory-am/fosite/handler/oidc/explicit"
+	"github.com/ory-am/fosite/handler/oidc/hybrid"
+	oidcimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
 	oidcstrategy "github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/parnurzeal/gorequest"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	"github.com/ory-am/fosite/handler/core"
-	"github.com/ory-am/fosite/handler/oidc/hybrid"
-	"github.com/ory-am/fosite/handler/oidc"
 )
 
 // This is an exemplary storage instance. We will add a client and a user to it so we can use these later on.
 var store = &exampleStore.Store{
 	IDSessions: make(map[string]Requester),
 	Clients: map[string]*client.SecureClient{
-		"my-client": &client.SecureClient{
+		"my-client": {
 			ID:           "my-client",
 			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 			RedirectURIs: []string{"http://localhost:3846/callback"},
@@ -82,7 +82,6 @@ var hmacStrategy = &strategy.HMACSHAStrategy{
 	},
 }
 
-
 // You can decide if you want to use HMAC or JWT or another strategy for generating authorize codes and access / refresh tokens
 // The JWT strategy is mandatory for issuing ID Tokens (OpenID Connect)
 //
@@ -103,7 +102,6 @@ var idtokenStrategy = &oidcstrategy.JWTStrategy{
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
 }
-
 
 // Change below to change the signing method (hmacStrategy or jwtStrategy)
 var selectedStrategy = hmacStrategy
@@ -162,18 +160,18 @@ func fositeFactory() OAuth2Provider {
 	// Most handlers are composable. This little helper is used by some of the handlers below.
 	oauth2HandleHelper := &core.HandleHelper{
 		AccessTokenStrategy: selectedStrategy,
-		AccessTokenStorage:               store,
+		AccessTokenStorage:  store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
 
 	// This handler is responsible for the authorization code grant flow
 	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
-		AccessTokenStrategy:   selectedStrategy,
-		RefreshTokenStrategy:  selectedStrategy,
-		AuthorizeCodeStrategy: selectedStrategy,
-		AuthorizeCodeGrantStorage:               store,
-		AuthCodeLifespan:    time.Minute * 10,
-		AccessTokenLifespan: accessTokenLifespan,
+		AccessTokenStrategy:       selectedStrategy,
+		RefreshTokenStrategy:      selectedStrategy,
+		AuthorizeCodeStrategy:     selectedStrategy,
+		AuthorizeCodeGrantStorage: store,
+		AuthCodeLifespan:          time.Minute * 10,
+		AccessTokenLifespan:       accessTokenLifespan,
 	}
 	// In order to "activate" the handler, we need to add it to fosite
 	f.AuthorizeEndpointHandlers.Append(explicitHandler)
@@ -186,7 +184,7 @@ func fositeFactory() OAuth2Provider {
 	// but instead returns the access token directly via an url fragment.
 	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
 		AccessTokenStrategy: selectedStrategy,
-		AccessTokenStorage:               store,
+		AccessTokenStorage:  store,
 		AccessTokenLifespan: accessTokenLifespan,
 	}
 	f.AuthorizeEndpointHandlers.Append(implicitHandler)
@@ -202,28 +200,28 @@ func fositeFactory() OAuth2Provider {
 	// is a flow which should not be used but could be useful in legacy environments. It uses a
 	// user's credentials (username, password) to issue an access token.
 	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
-		HandleHelper: oauth2HandleHelper,
-		ResourceOwnerPasswordCredentialsGrantStorage:               store,
+		HandleHelper:                                 oauth2HandleHelper,
+		ResourceOwnerPasswordCredentialsGrantStorage: store,
 	}
 	f.TokenEndpointHandlers.Append(ownerHandler)
 
 	// This handler is responsible for the refresh token grant. This type is used when you want to exchange
 	// a refresh token for a new refresh token and a new access token.
 	refreshHandler := &refresh.RefreshTokenGrantHandler{
-		AccessTokenStrategy:  selectedStrategy,
-		RefreshTokenStrategy: selectedStrategy,
-		RefreshTokenGrantStorage:                store,
-		AccessTokenLifespan:  accessTokenLifespan,
+		AccessTokenStrategy:      selectedStrategy,
+		RefreshTokenStrategy:     selectedStrategy,
+		RefreshTokenGrantStorage: store,
+		AccessTokenLifespan:      accessTokenLifespan,
 	}
 	f.TokenEndpointHandlers.Append(refreshHandler)
 
 	// This helper is similar to oauth2HandleHelper but for OpenID Connect handlers.
-	oidcHelper := &oidc.IDTokenHandleHelper{IDTokenStrategy: idtokenStrategy        }
+	oidcHelper := &oidc.IDTokenHandleHelper{IDTokenStrategy: idtokenStrategy}
 
 	// The OpenID Connect Authorize Code Flow.
 	oidcExplicit := &oidcexplicit.OpenIDConnectExplicitHandler{
 		OpenIDConnectRequestStorage: store,
-		IDTokenHandleHelper: oidcHelper,
+		IDTokenHandleHelper:         oidcHelper,
 	}
 	f.AuthorizeEndpointHandlers.Append(oidcExplicit)
 	// Because this handler both handles `/auth` and `/token` endpoint requests, we need to add him to
@@ -232,14 +230,14 @@ func fositeFactory() OAuth2Provider {
 
 	// The OpenID Connect Implicit Flow.
 	oidcImplicit := &oidcimplicit.OpenIDConnectImplicitHandler{
-		IDTokenHandleHelper: oidcHelper,
+		IDTokenHandleHelper:               oidcHelper,
 		AuthorizeImplicitGrantTypeHandler: implicitHandler,
 	}
 	f.AuthorizeEndpointHandlers.Append(oidcImplicit)
 
 	// The OpenID Connect Hybrid Flow.
 	oidcHybrid := &hybrid.OpenIDConnectHybridHandler{
-		IDTokenHandleHelper: oidcHelper,
+		IDTokenHandleHelper:               oidcHelper,
 		AuthorizeExplicitGrantTypeHandler: explicitHandler,
 		AuthorizeImplicitGrantTypeHandler: implicitHandler,
 	}
@@ -247,8 +245,8 @@ func fositeFactory() OAuth2Provider {
 
 	// Add a request validator for Access Tokens to fosite
 	f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-		AccessTokenStrategy:   hmacStrategy,
-		AccessTokenStorage: store,
+		AccessTokenStrategy: hmacStrategy,
+		AccessTokenStorage:  store,
 	})
 
 	return f
@@ -389,7 +387,7 @@ func homeHandler(rw http.ResponseWriter, req *http.Request) {
 				<a href="%s">Make an invalid request</a>
 			</li>
 		</ul>`,
-		clientConf.AuthCodeURL("some-random-state-foobar") + "&nonce=some-random-nonce",
+		clientConf.AuthCodeURL("some-random-state-foobar")+"&nonce=some-random-nonce",
 		"http://localhost:3846/auth?client_id=my-client&redirect_uri=http%3A%2F%2Flocalhost%3A3846%2Fcallback&response_type=token%20id_token&scope=fosite%20openid&state=some-random-state-foobar&nonce=some-random-nonce",
 		clientConf.AuthCodeURL("some-random-state-foobar"),
 		"/auth?client_id=my-client&scope=fosite&response_type=123&redirect_uri=http://localhost:3846/callback",
@@ -460,7 +458,7 @@ func callbackHandler(rw http.ResponseWriter, req *http.Request) {
 			</li>
 		</ul>`,
 		token.AccessToken,
-		"?refresh=" + url.QueryEscape(token.RefreshToken),
+		"?refresh="+url.QueryEscape(token.RefreshToken),
 		token.RefreshToken,
 		token,
 	)))

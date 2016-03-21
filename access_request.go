@@ -12,9 +12,9 @@ type AccessRequest struct {
 
 func NewAccessRequest(session interface{}) *AccessRequest {
 	r := &AccessRequest{
-		GrantTypes :      Arguments{},
+		GrantTypes:       Arguments{},
 		HandledGrantType: Arguments{},
-		Request: *NewRequest(),
+		Request:          *NewRequest(),
 	}
 	r.Session = session
 	return r

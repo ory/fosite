@@ -1,13 +1,14 @@
 package core
 
 import (
+	"net/http"
 	"testing"
+
+	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"github.com/go-errors/errors"
 )
 
 func TestValidateRequest(t *testing.T) {
@@ -19,7 +20,7 @@ func TestValidateRequest(t *testing.T) {
 
 	v := &CoreValidator{
 		AccessTokenStrategy: chgen,
-		AccessTokenStorage: store,
+		AccessTokenStorage:  store,
 	}
 	httpreq := &http.Request{Header: http.Header{}}
 
@@ -31,7 +32,7 @@ func TestValidateRequest(t *testing.T) {
 		{
 			description: "should fail because no authorization header set",
 			expectErr:   fosite.ErrUnknownRequest,
-			setup: func() {},
+			setup:       func() {},
 		},
 		{
 			description: "should fail because no bearer token set",
@@ -46,7 +47,7 @@ func TestValidateRequest(t *testing.T) {
 				httpreq.Header.Set("Authorization", "bearer 1234")
 				chgen.EXPECT().ValidateAccessToken(nil, "1234", httpreq, areq).Return("", errors.New(""))
 			},
-			expectErr:   fosite.ErrRequestUnauthorized,
+			expectErr: fosite.ErrRequestUnauthorized,
 		},
 		{
 			description: "should fail because retrieval fails",
@@ -54,7 +55,7 @@ func TestValidateRequest(t *testing.T) {
 				chgen.EXPECT().ValidateAccessToken(nil, "1234", httpreq, areq).Return("asdf", nil)
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
 			},
-			expectErr:   fosite.ErrRequestUnauthorized,
+			expectErr: fosite.ErrRequestUnauthorized,
 		},
 		{
 			description: "should pass",

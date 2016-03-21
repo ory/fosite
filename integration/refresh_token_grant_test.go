@@ -31,18 +31,18 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
 
 	handler := &explicit.AuthorizeExplicitGrantTypeHandler{
-		AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
-		RefreshTokenStrategy:  strategy.(core.RefreshTokenStrategy),
-		AuthorizeCodeStrategy: strategy.(core.AuthorizeCodeStrategy),
-		AuthorizeCodeGrantStorage:               fositeStore,
-		AuthCodeLifespan:    time.Minute,
-		AccessTokenLifespan: time.Second,
+		AccessTokenStrategy:       strategy.(core.AccessTokenStrategy),
+		RefreshTokenStrategy:      strategy.(core.RefreshTokenStrategy),
+		AuthorizeCodeStrategy:     strategy.(core.AuthorizeCodeStrategy),
+		AuthorizeCodeGrantStorage: fositeStore,
+		AuthCodeLifespan:          time.Minute,
+		AccessTokenLifespan:       time.Second,
 	}
 	f.AuthorizeEndpointHandlers.Append(handler)
 	f.TokenEndpointHandlers.Append(handler)
 	f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-		AccessTokenStrategy:   strategy.(core.AccessTokenStrategy),
-		AccessTokenStorage: fositeStore,
+		AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
+		AccessTokenStorage:  fositeStore,
 	})
 
 	state := "1234567890"
@@ -60,10 +60,10 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 			description: "should pass",
 			setup: func() {
 				handler := &refresh.RefreshTokenGrantHandler{
-					AccessTokenStrategy:  strategy.(core.AccessTokenStrategy),
-					RefreshTokenStrategy: strategy.(core.RefreshTokenStrategy),
-					RefreshTokenGrantStorage:                fositeStore,
-					AccessTokenLifespan:  time.Second,
+					AccessTokenStrategy:      strategy.(core.AccessTokenStrategy),
+					RefreshTokenStrategy:     strategy.(core.RefreshTokenStrategy),
+					RefreshTokenGrantStorage: fositeStore,
+					AccessTokenLifespan:      time.Second,
 				}
 				f.TokenEndpointHandlers.Append(handler)
 			},
