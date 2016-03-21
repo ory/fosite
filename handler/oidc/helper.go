@@ -22,7 +22,7 @@ func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, netr *http.Re
 		return "", errors.New(ErrInsufficientEntropy)
 	}
 
-	session, ok := fosr.GetSession().(*strategy.IDTokenSession)
+	session, ok := fosr.GetSession().(strategy.IDTokenContainer)
 	if !ok {
 		return "", errors.New(ErrMisconfiguration)
 	}
@@ -32,7 +32,7 @@ func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, netr *http.Re
 		return "", errors.New(ErrServerError)
 	}
 
-	session.JWTClaims.AddExtra("nonce", nonce)
+	session.GetIDTokenClaims().AddExtra("nonce", nonce)
 	fosr.GrantScope("openid")
 	return token, nil
 }

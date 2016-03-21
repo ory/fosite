@@ -19,16 +19,16 @@ type JWTSessionContainer interface {
 
 // JWTSession : Container for the JWT session
 type JWTSession struct {
-	TokenClaims *enigma.Claims
-	TokenHeader *enigma.Header
+	JWTClaims *enigma.Claims
+	JWTHeader *enigma.Header
 }
 
 func (j *JWTSession) GetTokenClaims() *enigma.Claims {
-	return j.TokenClaims
+	return j.JWTClaims
 }
 
 func (j *JWTSession) GetTokenHeader() *enigma.Header {
-	return j.TokenHeader
+	return j.JWTHeader
 }
 
 // JWTStrategy : Strategy container

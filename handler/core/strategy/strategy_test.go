@@ -39,8 +39,8 @@ var r = &fosite.Request{
 	},
 
 	Session: &JWTSession{
-		TokenClaims: claims,
-		TokenHeader: &jwt.Header{
+		JWTClaims: claims,
+		JWTHeader: &jwt.Header{
 			Extra: make(map[string]interface{}),
 		},
 	},
@@ -75,11 +75,11 @@ func TestAccessToken(t *testing.T) {
 	r.Session = oldSession
 
 	// Invalid
-	oldClaims := r.Session.(*JWTSession).TokenClaims
-	r.Session.(*JWTSession).TokenClaims = nil
+	oldClaims := r.Session.(*JWTSession).JWTClaims
+	r.Session.(*JWTSession).JWTClaims = nil
 	token, signature, err = j.GenerateAccessToken(nil, nil, r)
 	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).TokenClaims = oldClaims
+	r.Session.(*JWTSession).JWTClaims = oldClaims
 }
 
 func TestRefreshToken(t *testing.T) {
@@ -111,11 +111,11 @@ func TestRefreshToken(t *testing.T) {
 	r.Session = oldSession
 
 	// Invalid
-	oldClaims := r.Session.(*JWTSession).TokenClaims
-	r.Session.(*JWTSession).TokenClaims = nil
+	oldClaims := r.Session.(*JWTSession).JWTClaims
+	r.Session.(*JWTSession).JWTClaims = nil
 	token, signature, err = j.GenerateRefreshToken(nil, nil, r)
 	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).TokenClaims = oldClaims
+	r.Session.(*JWTSession).JWTClaims = oldClaims
 }
 
 func TestGenerateAuthorizeCode(t *testing.T) {
@@ -147,9 +147,9 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 	r.Session = oldSession
 
 	// Invalid
-	oldClaims := r.Session.(*JWTSession).TokenClaims
-	r.Session.(*JWTSession).TokenClaims = nil
+	oldClaims := r.Session.(*JWTSession).JWTClaims
+	r.Session.(*JWTSession).JWTClaims = nil
 	token, signature, err = j.GenerateAuthorizeCode(nil, nil, r)
 	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).TokenClaims = oldClaims
+	r.Session.(*JWTSession).JWTClaims = oldClaims
 }

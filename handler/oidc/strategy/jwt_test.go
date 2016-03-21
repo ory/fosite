@@ -16,8 +16,8 @@ var j = &JWTStrategy{
 
 func TestGenerateIDToken(t *testing.T) {
 	req := fosite.NewAccessRequest(&IDTokenSession{
-		JWTClaims: &jwt.Claims{},
-		JWTHeader: &jwt.Header{},
+		IDClaims: &jwt.Claims{},
+		IDToken: &jwt.Header{},
 	})
 	token, err := j.GenerateIDToken(nil, nil, req)
 	assert.Nil(t, err)

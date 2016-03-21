@@ -19,19 +19,18 @@ type IDTokenContainer interface {
 
 // IDTokenSession is a session container for the id token
 type IDTokenSession struct {
-	JWTClaims *enigma.Claims
-	JWTHeader *enigma.Header
+	IDClaims *enigma.Claims
+	IDToken  *enigma.Header
 }
 
 func (t *IDTokenSession) GetIDTokenHeader() *enigma.Header {
-	return t.JWTHeader
+	return t.IDToken
 }
 
 func (t *IDTokenSession) GetIDTokenClaims() *enigma.Claims {
-	return t.JWTClaims
+	return t.IDClaims
 }
 
-// JWTStrategy : Strategy container
 type JWTStrategy struct {
 	Enigma *enigma.Enigma
 }

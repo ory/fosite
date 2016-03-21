@@ -39,7 +39,6 @@ func NewStore() *Store {
 func (s *Store) CreateOpenIDConnectSession(_ context.Context, authorizeCode string, requester fosite.Requester) error {
 	s.IDSessions[authorizeCode] = requester
 	return nil
-
 }
 
 func (s *Store) GetOpenIDConnectSession(_ context.Context, authorizeCode string, requester fosite.Requester) (fosite.Requester, error) {
