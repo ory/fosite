@@ -1,12 +1,10 @@
 package integration_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -61,26 +59,15 @@ func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 		c.setup()
 
 		var callbackURL *url.URL
-		var wg sync.WaitGroup
-		wg.Add(1)
-
-		go func() {
-			<-time.After(time.Second * 2)
-			fmt.Println("Request timeout")
-			wg.Done()
-		}()
-
 		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type=token", -1)
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				callbackURL = req.URL
-				wg.Done()
 				return errors.New("Dont follow redirects")
 			},
 		}
 		resp, err := client.Get(authURL)
 		require.NotNil(t, err)
-		wg.Wait()
 
 		if resp.StatusCode == http.StatusOK {
 			fragment, err := url.ParseQuery(callbackURL.Fragment)

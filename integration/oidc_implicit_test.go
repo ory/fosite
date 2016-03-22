@@ -1,12 +1,10 @@
 package integration_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -113,26 +111,15 @@ func TestOIDCImplicitGrants(t *testing.T) {
 		c.setup()
 
 		var callbackURL *url.URL
-		var wg sync.WaitGroup
-		wg.Add(1)
-
-		go func() {
-			<-time.After(time.Second * 2)
-			fmt.Println("Request timeout")
-			wg.Done()
-		}()
-
 		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type="+c.responseType, -1) + "&nonce=" + c.nonce
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				callbackURL = req.URL
-				wg.Done()
 				return errors.New("Dont follow redirects")
 			},
 		}
 		resp, err := client.Get(authURL)
 		require.NotNil(t, err, "(%d) %s", k, c.description)
-		wg.Wait()
 
 		t.Logf("Response: %s", callbackURL.String())
 		fragment, err := url.ParseQuery(callbackURL.Fragment)
