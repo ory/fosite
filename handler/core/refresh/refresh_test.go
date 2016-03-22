@@ -15,164 +15,156 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateTokenEndpointRequest(t *testing.T) {
+func TestHandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockRefreshTokenGrantStorage(ctrl)
 	chgen := internal.NewMockRefreshTokenStrategy(ctrl)
-	areq := internal.NewMockAccessRequester(ctrl)
 	defer ctrl.Finish()
 
+	areq := fosite.NewAccessRequest(nil)
+	httpreq := &http.Request{PostForm: url.Values{}}
+
 	h := RefreshTokenGrantHandler{
-		Store:                store,
-		RefreshTokenStrategy: chgen,
-		AccessTokenLifespan:  time.Hour,
+		RefreshTokenGrantStorage: store,
+		RefreshTokenStrategy:     chgen,
+		AccessTokenLifespan:      time.Hour,
 	}
 	for k, c := range []struct {
-		mock      func()
-		req       *http.Request
-		expectErr error
+		description string
+		setup       func()
+		expectErr   error
 	}{
 		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("")
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{"123"}
 			},
 		},
 		{
-			req: &http.Request{PostForm: url.Values{}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("refresh_token")
-				chgen.EXPECT().ValidateRefreshToken("", gomock.Any(), gomock.Any(), gomock.Any()).Return("", errors.New(""))
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
-			req: &http.Request{PostForm: url.Values{}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("refresh_token")
-				chgen.EXPECT().ValidateRefreshToken("", gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
-				store.EXPECT().GetRefreshTokenSession("signature", gomock.Any()).Return(nil, pkg.ErrNotFound)
+			description: "should fail because token does not validate",
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{"refresh_token"}
+				httpreq.PostForm.Add("refresh_token", "some.refreshtokensig")
+				chgen.EXPECT().ValidateRefreshToken(nil, "some.refreshtokensig", httpreq, areq).Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
-			req: &http.Request{PostForm: url.Values{}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("refresh_token")
-				chgen.EXPECT().ValidateRefreshToken("", gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
-				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any()).Return(nil, errors.New(""))
+			description: "should fail because token can't be found",
+			setup: func() {
+				chgen.EXPECT().ValidateRefreshToken(nil, "some.refreshtokensig", httpreq, areq).AnyTimes().Return("refreshtokensig", nil)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, pkg.ErrNotFound)
+			},
+			expectErr: fosite.ErrInvalidRequest,
+		},
+		{
+			description: "should fail because token lookup failed",
+			setup: func() {
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
-			req: &http.Request{PostForm: url.Values{}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("refresh_token")
-				areq.EXPECT().GetClient().Return(&client.SecureClient{ID: "foo"})
-				chgen.EXPECT().ValidateRefreshToken("", gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
-				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any()).Return(&fosite.Request{Client: &client.SecureClient{ID: ""}}, nil)
+			description: "should fail because client mismatches",
+			setup: func() {
+				areq.Client = &client.SecureClient{ID: "foo"}
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &client.SecureClient{ID: ""}}, nil)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
-			req: &http.Request{PostForm: url.Values{}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("refresh_token")
-				areq.EXPECT().GetClient().Return(&client.SecureClient{ID: "foo"})
-				chgen.EXPECT().ValidateRefreshToken("", gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
-				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any()).Return(&fosite.Request{Client: &client.SecureClient{ID: "foo"}}, nil)
-				areq.EXPECT().SetGrantTypeHandled("refresh_token")
+			description: "should pass",
+			setup: func() {
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &client.SecureClient{ID: "foo"}}, nil)
 			},
 		},
 	} {
-		c.mock()
-		err := h.ValidateTokenEndpointRequest(nil, c.req, areq)
-		assert.True(t, errors.Is(c.expectErr, err), "%d\n%s\n%s", k, err, c.expectErr)
+		c.setup()
+		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
+		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }
 
-func TestHandleTokenEndpointRequest(t *testing.T) {
+func TestPopulateTokenEndpointResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockRefreshTokenGrantStorage(ctrl)
 	rcts := internal.NewMockRefreshTokenStrategy(ctrl)
 	acts := internal.NewMockAccessTokenStrategy(ctrl)
-	areq := internal.NewMockAccessRequester(ctrl)
+	areq := fosite.NewAccessRequest(nil)
 	aresp := internal.NewMockAccessResponder(ctrl)
-	//mockcl := internal.NewMockClient(ctrl)
+	httpreq := &http.Request{PostForm: url.Values{}}
 	defer ctrl.Finish()
 
-	areq.EXPECT().GetClient().AnyTimes().Return(&client.SecureClient{})
-
+	areq.Client = &client.SecureClient{}
 	h := RefreshTokenGrantHandler{
-		Store:                store,
-		RefreshTokenStrategy: rcts,
-		AccessTokenStrategy:  acts,
-		AccessTokenLifespan:  time.Hour,
+		RefreshTokenGrantStorage: store,
+		RefreshTokenStrategy:     rcts,
+		AccessTokenStrategy:      acts,
+		AccessTokenLifespan:      time.Hour,
 	}
 	for k, c := range []struct {
-		mock      func()
-		req       *http.Request
-		expectErr error
+		description string
+		setup       func()
+		expectErr   error
 	}{
 		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("")
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{"313"}
 			},
 		},
 		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("refresh_token")
-				acts.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", errors.New(""))
+			description: "should fail because validation fails",
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{"refresh_token"}
+				httpreq.PostForm.Add("refresh_token", "foo.reftokensig")
+				rcts.EXPECT().ValidateRefreshToken(nil, "foo.reftokensig", httpreq, areq).Return("", errors.New(""))
 			},
-			expectErr: fosite.ErrServerError,
+			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
-			req: &http.Request{PostForm: url.Values{}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("refresh_token")
-				acts.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "access", nil)
-				rcts.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "refresh", nil)
-				store.EXPECT().CreateAccessTokenSession("access", gomock.Any()).Return(nil)
-				store.EXPECT().CreateRefreshTokenSession("refresh", gomock.Any()).Return(errors.New(""))
-			},
-			expectErr: fosite.ErrServerError,
-		},
-		{
-			req: &http.Request{PostForm: url.Values{}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("refresh_token")
-				acts.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "access", nil)
-				rcts.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "refresh", nil)
-				rcts.EXPECT().ValidateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
-				store.EXPECT().CreateAccessTokenSession("access", gomock.Any()).Return(nil)
-				store.EXPECT().CreateRefreshTokenSession("refresh", gomock.Any()).Return(nil)
-				store.EXPECT().DeleteRefreshTokenSession(gomock.Any()).Return(errors.New(""))
+			description: "should fail because access token generation fails",
+			setup: func() {
+				rcts.EXPECT().ValidateRefreshToken(nil, "foo.reftokensig", httpreq, areq).AnyTimes().Return("reftokensig", nil)
+				acts.EXPECT().GenerateAccessToken(nil, httpreq, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
-			req: &http.Request{PostForm: url.Values{}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("refresh_token")
-				acts.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("access.token", "access", nil)
-				rcts.EXPECT().GenerateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("refresh.token", "refresh", nil)
-				rcts.EXPECT().ValidateRefreshToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("signature", nil)
-				store.EXPECT().CreateAccessTokenSession("access", gomock.Any()).Return(nil)
-				store.EXPECT().CreateRefreshTokenSession("refresh", gomock.Any()).Return(nil)
-				store.EXPECT().DeleteRefreshTokenSession(gomock.Any()).Return(nil)
+			description: "should fail because access token generation fails",
+			setup: func() {
+				acts.EXPECT().GenerateAccessToken(nil, httpreq, areq).AnyTimes().Return("access.atsig", "atsig", nil)
+				rcts.EXPECT().GenerateRefreshToken(nil, httpreq, areq).Return("", "", errors.New(""))
+			},
+			expectErr: fosite.ErrServerError,
+		},
+		{
+			description: "should fail because persisting fails",
+			setup: func() {
+				rcts.EXPECT().GenerateRefreshToken(nil, httpreq, areq).AnyTimes().Return("refresh.resig", "resig", nil)
+				store.EXPECT().PersistRefreshTokenGrantSession(nil, "reftokensig", "atsig", "resig", areq).Return(errors.New(""))
+			},
+			expectErr: fosite.ErrServerError,
+		},
+		{
+			description: "should pass",
+			setup: func() {
+				store.EXPECT().PersistRefreshTokenGrantSession(nil, "reftokensig", "atsig", "resig", areq).AnyTimes().Return(nil)
 
-				aresp.EXPECT().SetAccessToken("access.token")
+				aresp.EXPECT().SetAccessToken("access.atsig")
 				aresp.EXPECT().SetTokenType("bearer")
-				aresp.EXPECT().SetExtra("expires_in", gomock.Any())
-				aresp.EXPECT().SetExtra("scope", gomock.Any())
-				aresp.EXPECT().SetExtra("refresh_token", "refresh.token")
-				areq.EXPECT().GetGrantedScopes()
+				aresp.EXPECT().SetExpiresIn(gomock.Any())
+				aresp.EXPECT().SetScopes(gomock.Any())
+				aresp.EXPECT().SetExtra("refresh_token", "refresh.resig")
 			},
 		},
 	} {
-		c.mock()
-		err := h.HandleTokenEndpointRequest(nil, c.req, areq, aresp)
-		assert.True(t, errors.Is(c.expectErr, err), "%d\n%s\n%s", k, err, c.expectErr)
+		c.setup()
+		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
+		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }

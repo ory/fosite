@@ -1,11 +1,12 @@
 package fosite
 
 import (
-	. "github.com/ory-am/fosite/client"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/url"
 	"testing"
+
+	"github.com/ory-am/fosite/client"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsLocalhost(t *testing.T) {
@@ -64,40 +65,40 @@ func TestGetRedirectURI(t *testing.T) {
 // of pre-registered redirect URIs (see Section 5.2.3.5).
 func TestDoesClientWhiteListRedirect(t *testing.T) {
 	for k, c := range []struct {
-		client   Client
+		client   client.Client
 		url      string
 		isError  bool
 		expected string
 	}{
 		{
-			client:  &SecureClient{RedirectURIs: []string{""}},
+			client:  &client.SecureClient{RedirectURIs: []string{""}},
 			url:     "https://foo.com/cb",
 			isError: true,
 		},
 		{
-			client:  &SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
+			client:  &client.SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
 			url:     "https://foo.com/cb",
 			isError: true,
 		},
 		{
-			client:   &SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
+			client:   &client.SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
 			url:      "",
 			isError:  false,
 			expected: "https://bar.com/cb",
 		},
 		{
-			client:  &SecureClient{RedirectURIs: []string{""}},
+			client:  &client.SecureClient{RedirectURIs: []string{""}},
 			url:     "",
 			isError: true,
 		},
 		{
-			client:   &SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
+			client:   &client.SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
 			url:      "https://bar.com/cb",
 			isError:  false,
 			expected: "https://bar.com/cb",
 		},
 		{
-			client:  &SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
+			client:  &client.SecureClient{RedirectURIs: []string{"https://bar.com/cb"}},
 			url:     "https://bar.com/cb123",
 			isError: true,
 		},

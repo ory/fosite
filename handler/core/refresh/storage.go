@@ -1,8 +1,12 @@
 package refresh
 
-import "github.com/ory-am/fosite/handler/core"
+import (
+	"github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/handler/core"
+	"golang.org/x/net/context"
+)
 
 type RefreshTokenGrantStorage interface {
-	core.AccessTokenStorage
 	core.RefreshTokenStorage
+	PersistRefreshTokenGrantSession(ctx context.Context, requestRefreshSignature, accessSignature, refreshSignature string, request fosite.Requester) error
 }

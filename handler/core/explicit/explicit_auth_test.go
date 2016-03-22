@@ -1,78 +1,81 @@
 package explicit
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+
+	"strings"
+
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"testing"
 )
 
 func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockAuthorizeCodeGrantStorage(ctrl)
 	chgen := internal.NewMockAuthorizeCodeStrategy(ctrl)
-	areq := internal.NewMockAuthorizeRequester(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 	defer ctrl.Finish()
 
+	areq := fosite.NewAuthorizeRequest()
+	httpreq := &http.Request{Form: url.Values{}}
+
 	h := AuthorizeExplicitGrantTypeHandler{
-		Store: store,
-		AuthorizeCodeStrategy: chgen,
+		AuthorizeCodeGrantStorage: store,
+		AuthorizeCodeStrategy:     chgen,
 	}
 	for k, c := range []struct {
-		mock      func()
-		req       *http.Request
-		expectErr error
+		description string
+		setup       func()
+		expectErr   error
 	}{
 		{
-			mock: func() {
-				areq.EXPECT().GetResponseTypes().Return(fosite.Arguments{})
+			description: "should pass because not responsible for handling an empty response type",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{""}
 			},
 		},
 		{
-			mock: func() {
-				areq.EXPECT().GetResponseTypes().Return(fosite.Arguments{"foo"})
+			description: "should pass because not responsible for handling an invalid response type",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{"foo"}
 			},
 		},
 		{
-			mock: func() {
-				areq.EXPECT().GetResponseTypes().Return(fosite.Arguments{"code"})
-				chgen.EXPECT().GenerateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", fosite.ErrServerError)
-			},
-			expectErr: fosite.ErrServerError,
-		},
-		{
-			req: &http.Request{Form: url.Values{"redirect_uri": {"foobar"}}},
-			mock: func() {
-				areq.EXPECT().GetResponseTypes().Return(fosite.Arguments{"code"})
-				chgen.EXPECT().GenerateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil)
-				store.EXPECT().CreateAuthorizeCodeSession(gomock.Any(), gomock.Any()).Return(fosite.ErrTemporarilyUnavailable)
+			description: "should fail because authorize code generation failed",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{"code"}
+				chgen.EXPECT().GenerateAuthorizeCode(nil, httpreq, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
-			req: &http.Request{Form: url.Values{"redirect_uri": {"foobar"}}},
-			mock: func() {
-				areq.EXPECT().GetResponseTypes().Return(fosite.Arguments{"code"})
-				chgen.EXPECT().GenerateAuthorizeCode(gomock.Any(), gomock.Any(), gomock.Any()).Return("foo.bar", "bar", nil)
-				store.EXPECT().CreateAuthorizeCodeSession("bar", gomock.Any()).Return(nil)
-
-				aresp.EXPECT().AddQuery("code", "foo.bar")
-				aresp.EXPECT().AddQuery("scope", gomock.Any())
-				aresp.EXPECT().AddQuery("state", gomock.Any())
-				areq.EXPECT().SetResponseTypeHandled("code")
-				areq.EXPECT().GetGrantedScopes()
-				areq.EXPECT().GetState()
+			description: "should fail because could not presist authorize code session",
+			setup: func() {
+				chgen.EXPECT().GenerateAuthorizeCode(nil, httpreq, areq).AnyTimes().Return("someauthcode.authsig", "authsig", nil)
+				store.EXPECT().CreateAuthorizeCodeSession(nil, "authsig", areq).Return(errors.New(""))
+			},
+			expectErr: fosite.ErrServerError,
+		},
+		{
+			description: "should pass",
+			setup: func() {
+				areq.GrantedScopes = fosite.Arguments{"a", "b"}
+				areq.State = "superstate"
+				store.EXPECT().CreateAuthorizeCodeSession(nil, "authsig", areq).Return(nil)
+				aresp.EXPECT().AddQuery("code", "someauthcode.authsig")
+				aresp.EXPECT().AddQuery("scope", strings.Join(areq.GrantedScopes, " "))
+				aresp.EXPECT().AddQuery("state", areq.State)
 			},
 		},
 	} {
-		c.mock()
-		err := h.HandleAuthorizeEndpointRequest(nil, c.req, areq, aresp)
-		assert.True(t, errors.Is(c.expectErr, err), "%d\n%s\n%s", k, err, c.expectErr)
+		c.setup()
+		err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
+		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }

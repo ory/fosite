@@ -1,9 +1,10 @@
 package fosite_test
 
 import (
+	"testing"
+
 	. "github.com/ory-am/fosite"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestAccessResponse(t *testing.T) {

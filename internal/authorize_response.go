@@ -4,9 +4,10 @@
 package internal
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	http "net/http"
 	url "net/url"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // Mock of AuthorizeResponder interface
@@ -52,6 +53,16 @@ func (_m *MockAuthorizeResponder) AddQuery(_param0 string, _param1 string) {
 
 func (_mr *_MockAuthorizeResponderRecorder) AddQuery(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddQuery", arg0, arg1)
+}
+
+func (_m *MockAuthorizeResponder) GetCode() string {
+	ret := _m.ctrl.Call(_m, "GetCode")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeResponderRecorder) GetCode() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetCode")
 }
 
 func (_m *MockAuthorizeResponder) GetFragment() url.Values {

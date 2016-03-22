@@ -7,24 +7,31 @@ import (
 
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/client"
-	"github.com/ory-am/fosite/enigma"
-	"github.com/ory-am/fosite/enigma/jwthelper"
+	hmac "github.com/ory-am/fosite/enigma/hmac"
+	jwt "github.com/ory-am/fosite/enigma/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
 var s = HMACSHAStrategy{
-	Enigma: &enigma.HMACSHAEnigma{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
+	Enigma: &hmac.Enigma{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
 }
 
 var j = &JWTStrategy{
-	Enigma: &enigma.JWTEnigma{
-		PrivateKey: []byte(enigma.TestCertificates[0][1]),
-		PublicKey:  []byte(enigma.TestCertificates[1][1]),
+	Enigma: &jwt.Enigma{
+		PrivateKey: []byte(jwt.TestCertificates[0][1]),
+		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
 }
 
-var claims, claimsErr = jwthelper.NewClaimsContext("fosite", "peter", "group0", "",
-	time.Now().Add(time.Hour), time.Now(), time.Now(), make(map[string]interface{}))
+var claims = &jwt.Claims{
+	Issuer:         "fosite",
+	Subject:        "peter",
+	Audience:       "group0",
+	ExpiresAt:      time.Now().Add(time.Hour),
+	IssuedAt:       time.Now(),
+	NotValidBefore: time.Now(),
+	Extra:          make(map[string]interface{}),
+}
 
 var r = &fosite.Request{
 	Client: &client.SecureClient{
@@ -32,8 +39,10 @@ var r = &fosite.Request{
 	},
 
 	Session: &JWTSession{
-		JWTClaimsCtx: *claims,
-		JWTHeaders:   make(map[string]interface{}),
+		JWTClaims: claims,
+		JWTHeader: &jwt.Header{
+			Extra: make(map[string]interface{}),
+		},
 	},
 }
 
@@ -43,7 +52,7 @@ func TestAccessToken(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-	validate, err := s.ValidateAccessToken(token, nil, nil, r)
+	validate, err := s.ValidateAccessToken(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -54,7 +63,7 @@ func TestAccessToken(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-	validate, err = j.ValidateAccessToken(token, nil, nil, r)
+	validate, err = j.ValidateAccessToken(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -66,11 +75,11 @@ func TestAccessToken(t *testing.T) {
 	r.Session = oldSession
 
 	// Invalid
-	oldClaims := r.Session.(*JWTSession).JWTClaimsCtx
-	r.Session.(*JWTSession).JWTClaimsCtx = nil
+	oldClaims := r.Session.(*JWTSession).JWTClaims
+	r.Session.(*JWTSession).JWTClaims = nil
 	token, signature, err = j.GenerateAccessToken(nil, nil, r)
 	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).JWTClaimsCtx = oldClaims
+	r.Session.(*JWTSession).JWTClaims = oldClaims
 }
 
 func TestRefreshToken(t *testing.T) {
@@ -79,7 +88,7 @@ func TestRefreshToken(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-	validate, err := s.ValidateRefreshToken(token, nil, nil, r)
+	validate, err := s.ValidateRefreshToken(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -90,7 +99,7 @@ func TestRefreshToken(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-	validate, err = j.ValidateRefreshToken(token, nil, nil, r)
+	validate, err = j.ValidateRefreshToken(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -102,11 +111,11 @@ func TestRefreshToken(t *testing.T) {
 	r.Session = oldSession
 
 	// Invalid
-	oldClaims := r.Session.(*JWTSession).JWTClaimsCtx
-	r.Session.(*JWTSession).JWTClaimsCtx = nil
+	oldClaims := r.Session.(*JWTSession).JWTClaims
+	r.Session.(*JWTSession).JWTClaims = nil
 	token, signature, err = j.GenerateRefreshToken(nil, nil, r)
 	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).JWTClaimsCtx = oldClaims
+	r.Session.(*JWTSession).JWTClaims = oldClaims
 }
 
 func TestGenerateAuthorizeCode(t *testing.T) {
@@ -115,7 +124,7 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-	validate, err := s.ValidateAuthorizeCode(token, nil, nil, r)
+	validate, err := s.ValidateAuthorizeCode(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -126,7 +135,7 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-	validate, err = j.ValidateAuthorizeCode(token, nil, nil, r)
+	validate, err = j.ValidateAuthorizeCode(nil, token, nil, r)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 
@@ -138,9 +147,9 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 	r.Session = oldSession
 
 	// Invalid
-	oldClaims := r.Session.(*JWTSession).JWTClaimsCtx
-	r.Session.(*JWTSession).JWTClaimsCtx = nil
+	oldClaims := r.Session.(*JWTSession).JWTClaims
+	r.Session.(*JWTSession).JWTClaims = nil
 	token, signature, err = j.GenerateAuthorizeCode(nil, nil, r)
 	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).JWTClaimsCtx = oldClaims
+	r.Session.(*JWTSession).JWTClaims = oldClaims
 }

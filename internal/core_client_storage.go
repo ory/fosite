@@ -6,6 +6,7 @@ package internal
 import (
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
+	context "golang.org/x/net/context"
 )
 
 // Mock of ClientCredentialsGrantStorage interface
@@ -29,33 +30,53 @@ func (_m *MockClientCredentialsGrantStorage) EXPECT() *_MockClientCredentialsGra
 	return _m.recorder
 }
 
-func (_m *MockClientCredentialsGrantStorage) CreateAccessTokenSession(_param0 string, _param1 fosite.Requester) error {
-	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1)
+func (_m *MockClientCredentialsGrantStorage) Commit() error {
+	ret := _m.ctrl.Call(_m, "Commit")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockClientCredentialsGrantStorageRecorder) CreateAccessTokenSession(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1)
+func (_mr *_MockClientCredentialsGrantStorageRecorder) Commit() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Commit")
 }
 
-func (_m *MockClientCredentialsGrantStorage) DeleteAccessTokenSession(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "DeleteAccessTokenSession", _param0)
+func (_m *MockClientCredentialsGrantStorage) CreateAccessTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) error {
+	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockClientCredentialsGrantStorageRecorder) DeleteAccessTokenSession(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAccessTokenSession", arg0)
+func (_mr *_MockClientCredentialsGrantStorageRecorder) CreateAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1, arg2)
 }
 
-func (_m *MockClientCredentialsGrantStorage) GetAccessTokenSession(_param0 string, _param1 interface{}) (fosite.Requester, error) {
-	ret := _m.ctrl.Call(_m, "GetAccessTokenSession", _param0, _param1)
+func (_m *MockClientCredentialsGrantStorage) DeleteAccessTokenSession(_param0 context.Context, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "DeleteAccessTokenSession", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockClientCredentialsGrantStorageRecorder) DeleteAccessTokenSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAccessTokenSession", arg0, arg1)
+}
+
+func (_m *MockClientCredentialsGrantStorage) GetAccessTokenSession(_param0 context.Context, _param1 string, _param2 interface{}) (fosite.Requester, error) {
+	ret := _m.ctrl.Call(_m, "GetAccessTokenSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(fosite.Requester)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-func (_mr *_MockClientCredentialsGrantStorageRecorder) GetAccessTokenSession(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAccessTokenSession", arg0, arg1)
+func (_mr *_MockClientCredentialsGrantStorageRecorder) GetAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAccessTokenSession", arg0, arg1, arg2)
+}
+
+func (_m *MockClientCredentialsGrantStorage) Rollback() error {
+	ret := _m.ctrl.Call(_m, "Rollback")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockClientCredentialsGrantStorageRecorder) Rollback() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Rollback")
 }

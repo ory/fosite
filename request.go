@@ -1,9 +1,10 @@
 package fosite
 
 import (
-	"github.com/ory-am/fosite/client"
 	"net/url"
 	"time"
+
+	"github.com/ory-am/fosite/client"
 )
 
 // Request is an implementation of Requester
@@ -11,9 +12,17 @@ type Request struct {
 	RequestedAt   time.Time
 	Client        client.Client
 	Scopes        Arguments
-	GrantedScopes []string
+	GrantedScopes Arguments
 	Form          url.Values
 	Session       interface{}
+}
+
+func NewRequest() *Request {
+	return &Request{
+		Client: &client.SecureClient{},
+		Scopes: Arguments{},
+		Form:   url.Values{},
+	}
 }
 
 func (a *Request) GetRequestForm() url.Values {
@@ -37,7 +46,7 @@ func (a *Request) SetScopes(s Arguments) {
 }
 
 func (a *Request) GetGrantedScopes() Arguments {
-	return Arguments(a.GrantedScopes)
+	return a.GrantedScopes
 }
 
 func (a *Request) GrantScope(scope string) {
@@ -50,4 +59,20 @@ func (a *Request) SetSession(session interface{}) {
 
 func (a *Request) GetSession() interface{} {
 	return a.Session
+}
+
+func (a *Request) Merge(request Requester) {
+	for _, scope := range request.GetScopes() {
+		a.Scopes = append(a.Scopes, scope)
+	}
+	for _, scope := range request.GetGrantedScopes() {
+		a.GrantedScopes = append(a.GrantedScopes, scope)
+	}
+	a.RequestedAt = request.GetRequestedAt()
+	a.Client = request.GetClient()
+	a.Session = request.GetSession()
+
+	for k, v := range request.GetRequestForm() {
+		a.Form[k] = v
+	}
 }

@@ -1,141 +1,120 @@
 package owner
 
 import (
-	"github.com/go-errors/errors"
-	"github.com/golang/mock/gomock"
-	"github.com/ory-am/common/pkg"
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/internal"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/go-errors/errors"
+	"github.com/golang/mock/gomock"
+	"github.com/ory-am/common/pkg"
+	"github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/handler/core"
+	"github.com/ory-am/fosite/internal"
+	"github.com/stretchr/testify/assert"
 )
-
-func TestValidateTokenEndpointRequest(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	store := internal.NewMockResourceOwnerPasswordCredentialsGrantStorage(ctrl)
-	areq := internal.NewMockAccessRequester(ctrl)
-	defer ctrl.Finish()
-
-	h := ResourceOwnerPasswordCredentialsGrantHandler{
-		Store:               store,
-		AccessTokenLifespan: time.Hour,
-	}
-	for k, c := range []struct {
-		mock      func()
-		req       *http.Request
-		expectErr error
-	}{
-		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("")
-			},
-		},
-		{
-			req: &http.Request{PostForm: url.Values{"username": {"peter"}}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
-			req: &http.Request{PostForm: url.Values{"password": {"pan"}}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
-			req: &http.Request{PostForm: url.Values{"username": {"peter"}, "password": {"pan"}}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-				store.EXPECT().DoCredentialsAuthenticate("peter", "pan").Return(pkg.ErrNotFound)
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
-			req: &http.Request{PostForm: url.Values{"username": {"peter"}, "password": {"pan"}}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-				store.EXPECT().DoCredentialsAuthenticate("peter", "pan").Return(errors.New(""))
-			},
-			expectErr: fosite.ErrServerError,
-		},
-		{
-			req: &http.Request{PostForm: url.Values{"username": {"peter"}, "password": {"pan"}}},
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-				store.EXPECT().DoCredentialsAuthenticate("peter", "pan").Return(nil)
-				areq.EXPECT().GetRequestForm().Return(url.Values{})
-				areq.EXPECT().SetGrantTypeHandled("password")
-			},
-		},
-	} {
-		c.mock()
-		err := h.ValidateTokenEndpointRequest(nil, c.req, areq)
-		assert.True(t, errors.Is(c.expectErr, err), "%d\n%s\n%s", k, err, c.expectErr)
-		t.Logf("Passed test case %d", k)
-	}
-}
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockResourceOwnerPasswordCredentialsGrantStorage(ctrl)
-	chgen := internal.NewMockAccessTokenStrategy(ctrl)
-	areq := internal.NewMockAccessRequester(ctrl)
-	aresp := internal.NewMockAccessResponder(ctrl)
-	//mockcl := internal.NewMockClient(ctrl)
 	defer ctrl.Finish()
 
+	areq := fosite.NewAccessRequest(nil)
+	httpreq := &http.Request{PostForm: url.Values{}}
+
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
-		Store:               store,
-		AccessTokenStrategy: chgen,
-		AccessTokenLifespan: time.Hour,
+		ResourceOwnerPasswordCredentialsGrantStorage: store,
+		HandleHelper: &core.HandleHelper{
+			AccessTokenStorage:  store,
+			AccessTokenLifespan: time.Hour,
+		},
 	}
 	for k, c := range []struct {
-		mock      func()
-		req       *http.Request
-		expectErr error
+		description string
+		setup       func()
+		expectErr   error
 	}{
 		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("")
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{"123"}
 			},
 		},
 		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-				chgen.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", errors.New(""))
+			description: "should fail because because invalid credentials",
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{"password"}
+				httpreq.PostForm.Set("username", "peter")
+				httpreq.PostForm.Set("password", "pan")
+				store.EXPECT().Authenticate(nil, "peter", "pan").Return(pkg.ErrNotFound)
+			},
+			expectErr: fosite.ErrInvalidRequest,
+		},
+		{
+			description: "should fail because because error on lookup",
+			setup: func() {
+				store.EXPECT().Authenticate(nil, "peter", "pan").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-				chgen.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "foo", nil)
-				store.EXPECT().CreateAccessTokenSession("foo", gomock.Any()).Return(errors.New(""))
-			},
-			expectErr: fosite.ErrServerError,
-		},
-		{
-			mock: func() {
-				areq.EXPECT().GetGrantType().Return("password")
-				chgen.EXPECT().GenerateAccessToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("foo.bar", "", nil)
-				store.EXPECT().CreateAccessTokenSession(gomock.Any(), gomock.Any()).Return(nil)
-
-				aresp.EXPECT().SetAccessToken("foo.bar")
-				aresp.EXPECT().SetTokenType("bearer")
-				aresp.EXPECT().SetExtra("expires_in", gomock.Any())
-				aresp.EXPECT().SetExtra("scope", gomock.Any())
-				areq.EXPECT().GetGrantedScopes()
+			description: "should pass",
+			setup: func() {
+				store.EXPECT().Authenticate(nil, "peter", "pan").Return(nil)
 			},
 		},
 	} {
-		c.mock()
-		err := h.HandleTokenEndpointRequest(nil, c.req, areq, aresp)
-		assert.True(t, errors.Is(c.expectErr, err), "%d\n%s\n%s", k, err, c.expectErr)
+		c.setup()
+		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
+		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		t.Logf("Passed test case %d", k)
+	}
+}
+
+func TestPopulateTokenEndpointResponse(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	store := internal.NewMockResourceOwnerPasswordCredentialsGrantStorage(ctrl)
+	chgen := internal.NewMockAccessTokenStrategy(ctrl)
+	aresp := fosite.NewAccessResponse()
+	defer ctrl.Finish()
+
+	areq := fosite.NewAccessRequest(nil)
+	httpreq := &http.Request{PostForm: url.Values{}}
+
+	h := ResourceOwnerPasswordCredentialsGrantHandler{
+		ResourceOwnerPasswordCredentialsGrantStorage: store,
+		HandleHelper: &core.HandleHelper{
+			AccessTokenStorage:  store,
+			AccessTokenStrategy: chgen,
+			AccessTokenLifespan: time.Hour,
+		},
+	}
+	for k, c := range []struct {
+		description string
+		setup       func()
+		expectErr   error
+	}{
+		{
+			description: "should fail because not responsible",
+			expectErr:   fosite.ErrUnknownRequest,
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{""}
+			},
+		},
+		{
+			description: "should pass",
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{"password"}
+				chgen.EXPECT().GenerateAccessToken(nil, httpreq, areq).Return("tokenfoo.bar", "bar", nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
+			},
+		},
+	} {
+		c.setup()
+		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
+		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }

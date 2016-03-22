@@ -4,11 +4,12 @@
 package internal
 
 import (
+	url "net/url"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	client "github.com/ory-am/fosite/client"
-	url "net/url"
-	time "time"
 )
 
 // Mock of AuthorizeRequester interface
@@ -148,6 +149,14 @@ func (_m *MockAuthorizeRequester) IsRedirectURIValid() bool {
 
 func (_mr *_MockAuthorizeRequesterRecorder) IsRedirectURIValid() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "IsRedirectURIValid")
+}
+
+func (_m *MockAuthorizeRequester) Merge(_param0 fosite.Requester) {
+	_m.ctrl.Call(_m, "Merge", _param0)
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) Merge(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Merge", arg0)
 }
 
 func (_m *MockAuthorizeRequester) SetResponseTypeHandled(_param0 string) {

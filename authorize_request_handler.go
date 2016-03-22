@@ -1,18 +1,15 @@
 package fosite
 
 import (
-	"github.com/go-errors/errors"
-	"golang.org/x/net/context"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/go-errors/errors"
+	"golang.org/x/net/context"
 )
 
 func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
-	if c.RequiredScope == "" {
-		c.RequiredScope = DefaultRequiredScopeName
-	}
-
 	request := &AuthorizeRequest{
 		ResponseTypes:        Arguments{},
 		HandledResponseTypes: Arguments{},
@@ -27,8 +24,7 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 
 	request.Form = r.Form
-
-	client, err := c.Store.GetClient(r.Form.Get("client_id"))
+	client, err := c.Store.GetClient(request.GetRequestForm().Get("client_id"))
 	if err != nil {
 		return request, errors.New(ErrInvalidClient)
 	}
@@ -54,14 +50,7 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	// values, where the order of values does not matter (e.g., response
 	// type "a b" is the same as "b a").  The meaning of such composite
 	// response types is defined by their respective specifications.
-	responseTypes := removeEmpty(strings.Split(r.Form.Get("response_type"), " "))
-
-	// Allow or deny http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth
-	if !c.AllowHybridFlow && len(responseTypes) > 1 {
-		return request, errors.New(ErrInvalidRequest)
-	}
-
-	request.ResponseTypes = responseTypes
+	request.ResponseTypes = removeEmpty(strings.Split(r.Form.Get("response_type"), " "))
 
 	// rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
 	// The "state" parameter should be used to link the authorization
@@ -70,20 +59,19 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	// https://tools.ietf.org/html/rfc6819#section-4.4.1.8
 	// The "state" parameter should not	be guessable
 	state := r.Form.Get("state")
-	if state == "" {
-		return request, errors.New(ErrInvalidState)
-	} else if len(state) < minStateLength {
-		// We're assuming that using less then 6 characters for the state can not be considered "unguessable"
+	if len(state) < MinParameterEntropy {
+		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
 		return request, errors.New(ErrInvalidState)
 	}
 	request.State = state
 
 	// Remove empty items from arrays
 	request.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
-	if !request.Scopes.Has(c.RequiredScope) {
+
+	if !request.Scopes.Has(c.GetMandatoryScope()) {
 		return request, errors.New(ErrInvalidScope)
 	}
-	request.GrantScope(c.RequiredScope)
+	request.GrantScope(c.GetMandatoryScope())
 
 	return request, nil
 }

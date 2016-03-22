@@ -4,11 +4,12 @@
 package internal
 
 import (
+	url "net/url"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	client "github.com/ory-am/fosite/client"
-	url "net/url"
-	time "time"
 )
 
 // Mock of AccessRequester interface
@@ -32,16 +33,6 @@ func (_m *MockAccessRequester) EXPECT() *_MockAccessRequesterRecorder {
 	return _m.recorder
 }
 
-func (_m *MockAccessRequester) DidHandleGrantType() bool {
-	ret := _m.ctrl.Call(_m, "DidHandleGrantType")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-func (_mr *_MockAccessRequesterRecorder) DidHandleGrantType() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DidHandleGrantType")
-}
-
 func (_m *MockAccessRequester) GetClient() client.Client {
 	ret := _m.ctrl.Call(_m, "GetClient")
 	ret0, _ := ret[0].(client.Client)
@@ -52,14 +43,14 @@ func (_mr *_MockAccessRequesterRecorder) GetClient() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetClient")
 }
 
-func (_m *MockAccessRequester) GetGrantType() string {
-	ret := _m.ctrl.Call(_m, "GetGrantType")
-	ret0, _ := ret[0].(string)
+func (_m *MockAccessRequester) GetGrantTypes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetGrantTypes")
+	ret0, _ := ret[0].(fosite.Arguments)
 	return ret0
 }
 
-func (_mr *_MockAccessRequesterRecorder) GetGrantType() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantType")
+func (_mr *_MockAccessRequesterRecorder) GetGrantTypes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantTypes")
 }
 
 func (_m *MockAccessRequester) GetGrantedScopes() fosite.Arguments {
@@ -120,12 +111,12 @@ func (_mr *_MockAccessRequesterRecorder) GrantScope(arg0 interface{}) *gomock.Ca
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GrantScope", arg0)
 }
 
-func (_m *MockAccessRequester) SetGrantTypeHandled(_param0 string) {
-	_m.ctrl.Call(_m, "SetGrantTypeHandled", _param0)
+func (_m *MockAccessRequester) Merge(_param0 fosite.Requester) {
+	_m.ctrl.Call(_m, "Merge", _param0)
 }
 
-func (_mr *_MockAccessRequesterRecorder) SetGrantTypeHandled(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetGrantTypeHandled", arg0)
+func (_mr *_MockAccessRequesterRecorder) Merge(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "Merge", arg0)
 }
 
 func (_m *MockAccessRequester) SetScopes(_param0 fosite.Arguments) {

@@ -1,13 +1,14 @@
 package fosite_test
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"testing"
 )
 
 // Test for
@@ -52,7 +53,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 			mock: func() {
 				req.EXPECT().IsRedirectURIValid().Return(false)
 				rw.EXPECT().Header().Return(header)
-				rw.EXPECT().WriteHeader(http.StatusOK)
+				rw.EXPECT().WriteHeader(http.StatusBadRequest)
 				rw.EXPECT().Write(gomock.Any())
 			},
 			checkHeader: func(k int) {
@@ -64,11 +65,12 @@ func TestWriteAuthorizeError(t *testing.T) {
 			mock: func() {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(purls[0])
+				req.EXPECT().GetState().Return("foostate")
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(k int) {
-				a, _ := url.Parse("https://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed")
+				a, _ := url.Parse("https://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&state=foostate")
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b, "%d", k)
 			},
@@ -78,11 +80,12 @@ func TestWriteAuthorizeError(t *testing.T) {
 			mock: func() {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(purls[1])
+				req.EXPECT().GetState().Return("foostate")
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(k int) {
-				a, _ := url.Parse("https://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&foo=bar")
+				a, _ := url.Parse("https://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&foo=bar&state=foostate")
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b, "%d", k)
 			},

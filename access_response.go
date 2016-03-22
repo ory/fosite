@@ -1,5 +1,11 @@
 package fosite
 
+import (
+	"strconv"
+	"strings"
+	"time"
+)
+
 func NewAccessResponse() AccessResponder {
 	return &AccessResponse{
 		Extra: map[string]interface{}{},
@@ -10,6 +16,14 @@ type AccessResponse struct {
 	Extra       map[string]interface{}
 	AccessToken string
 	TokenType   string
+}
+
+func (a *AccessResponse) SetScopes(scopes Arguments) {
+	a.SetExtra("scope", strings.Join(scopes, " "))
+}
+
+func (a *AccessResponse) SetExpiresIn(expiresIn time.Duration) {
+	a.SetExtra("expires_in", strconv.Itoa(int(expiresIn)))
 }
 
 func (a *AccessResponse) SetExtra(key string, value interface{}) {

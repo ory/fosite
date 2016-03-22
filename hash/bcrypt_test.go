@@ -1,9 +1,10 @@
 package hash
 
 import (
+	"testing"
+
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestHash(t *testing.T) {

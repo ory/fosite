@@ -14,6 +14,15 @@ type AuthorizeRequest struct {
 	Request
 }
 
+func NewAuthorizeRequest() *AuthorizeRequest {
+	return &AuthorizeRequest{
+		ResponseTypes:        Arguments{},
+		RedirectURI:          &url.URL{},
+		HandledResponseTypes: Arguments{},
+		Request:              *NewRequest(),
+	}
+}
+
 func (d *AuthorizeRequest) IsRedirectURIValid() bool {
 	if d.GetRedirectURI() == nil {
 		return false

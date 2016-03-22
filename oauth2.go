@@ -9,7 +9,9 @@ import (
 	"golang.org/x/net/context"
 )
 
-var DefaultRequiredScopeName = "fosite"
+var DefaultMandatoryScope = "fosite"
+
+const MinParameterEntropy = 8
 
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
 // Check fosite.Fosite for an implementation of this interface.
@@ -102,6 +104,14 @@ type OAuth2Provider interface {
 	// The following specs must be considered in any implementation of this method:
 	// https://tools.ietf.org/html/rfc6749#section-5.1
 	WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder)
+
+	// ValidateRequestAuthorization returns nil if the http request contains a valid access token or an error if not.
+	// If the token is valid, ValidateRequestAuthorization will return the access request object.
+	ValidateRequestAuthorization(ctx context.Context, req *http.Request, session interface{}, scope ...string) (AccessRequester, error)
+
+	// GetMandatoryScope returns the mandatory scope. Fosite enforces the usage of at least one scope. Returns a
+	// default value if no scope was set.
+	GetMandatoryScope() string
 }
 
 // Requester is an abstract interface for handling requests in Fosite.
@@ -132,18 +142,14 @@ type Requester interface {
 
 	// GetRequestForm returns the request's form input.
 	GetRequestForm() url.Values
+
+	Merge(requester Requester)
 }
 
 // AccessRequester is a token endpoint's request context.
 type AccessRequester interface {
 	// GetGrantType returns the requests grant type.
-	GetGrantType() (grantType string)
-
-	// SetGrantTypeHandled marks a grant type as handled indicating that the response type is supported.
-	SetGrantTypeHandled(grantType string)
-
-	// DidHandleGrantType returns if the requested grant type has been handled correctly.
-	DidHandleGrantType() (didHandle bool)
+	GetGrantTypes() (grantTypes Arguments)
 
 	Requester
 }
@@ -181,6 +187,10 @@ type AccessResponder interface {
 	// GetExtra returns a key's value.
 	GetExtra(key string) interface{}
 
+	SetExpiresIn(time.Duration)
+
+	SetScopes(scopes Arguments)
+
 	// SetAccessToken sets the responses mandatory access token.
 	SetAccessToken(token string)
 
@@ -199,6 +209,9 @@ type AccessResponder interface {
 
 // AuthorizeResponder is an authorization endpoint's response.
 type AuthorizeResponder interface {
+	// GetCode returns the response's authorize code if set.
+	GetCode() string
+
 	// GetHeader returns the response's header
 	GetHeader() (header http.Header)
 

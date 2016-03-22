@@ -1,17 +1,18 @@
 package fosite_test
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite"
-	. "github.com/ory-am/fosite/client"
+	"github.com/ory-am/fosite/client"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/vektra/errors"
 	"golang.org/x/net/context"
-	"net/http"
-	"net/url"
-	"testing"
 )
 
 // Should pass
@@ -74,7 +75,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidRequest,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"invalid"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&client.SecureClient{RedirectURIs: []string{"invalid"}}, nil)
 			},
 		},
 		/* redirect client mismatch */
@@ -87,7 +88,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidRequest,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"invalid"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&client.SecureClient{RedirectURIs: []string{"invalid"}}, nil)
 			},
 		},
 		/* redirect client mismatch */
@@ -100,7 +101,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidRequest,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"invalid"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&client.SecureClient{RedirectURIs: []string{"invalid"}}, nil)
 			},
 		},
 		/* no state */
@@ -114,7 +115,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidState,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&client.SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 		},
 		/* short state */
@@ -129,7 +130,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidState,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&client.SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 		},
 		/* success case */
@@ -144,68 +145,30 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				"scope":         {"foo bar"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&client.SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 			expectedError: ErrInvalidScope,
 		},
 		{
-			desc: "should not pass because hybrid flow is not active",
-			conf: &Fosite{Store: store},
-			query: url.Values{
-				"redirect_uri":  {"https://foo.bar/cb"},
-				"client_id":     {"1234"},
-				"response_type": {"code token"},
-				"state":         {"strong-state"},
-				"scope":         {DefaultRequiredScopeName + " foo bar"},
-			},
-			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
-			},
-			expectedError: ErrInvalidRequest,
-		},
-		{
-			desc: "should not pass because hybrid flow is not active",
-			conf: &Fosite{Store: store},
-			query: url.Values{
-				"redirect_uri":  {"https://foo.bar/cb"},
-				"client_id":     {"1234"},
-				"response_type": {"code"},
-				"state":         {"strong-state"},
-				"scope":         {DefaultRequiredScopeName + " foo bar"},
-			},
-			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
-			},
-			expect: &AuthorizeRequest{
-				RedirectURI:   redir,
-				ResponseTypes: []string{"code"},
-				State:         "strong-state",
-				Request: Request{
-					Scopes: []string{DefaultRequiredScopeName, "foo", "bar"},
-					Client: &SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}},
-				},
-			},
-		},
-		{
 			desc: "should pass",
-			conf: &Fosite{Store: store, AllowHybridFlow: true},
+			conf: &Fosite{Store: store},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
 				"response_type": {"code token"},
 				"state":         {"strong-state"},
-				"scope":         {DefaultRequiredScopeName + " foo bar"},
+				"scope":         {DefaultMandatoryScope + " foo bar"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient("1234").Return(&client.SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 			expect: &AuthorizeRequest{
 				RedirectURI:   redir,
 				ResponseTypes: []string{"code", "token"},
 				State:         "strong-state",
 				Request: Request{
-					Client: &SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}},
-					Scopes: []string{DefaultRequiredScopeName, "foo", "bar"},
+					Client: &client.SecureClient{RedirectURIs: []string{"https://foo.bar/cb"}},
+					Scopes: []string{DefaultMandatoryScope, "foo", "bar"},
 				},
 			},
 		},

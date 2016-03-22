@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (c *Fosite) WriteAccessError(rw http.ResponseWriter, requester AccessRequester, err error) {
+func (c *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 	rfcerr := ErrorToRFC6749Error(err)
@@ -16,10 +16,6 @@ func (c *Fosite) WriteAccessError(rw http.ResponseWriter, requester AccessReques
 		return
 	}
 
-	rw.WriteHeader(http.StatusBadRequest)
-	if rfcerr.Name == errServerErrorName {
-		rw.WriteHeader(http.StatusInternalServerError)
-	}
-
+	rw.WriteHeader(rfcerr.StatusCode)
 	rw.Write(js)
 }

@@ -4,10 +4,11 @@
 package internal
 
 import (
+	http "net/http"
+
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	context "golang.org/x/net/context"
-	http "net/http"
 )
 
 // Mock of RefreshTokenStrategy interface
@@ -43,7 +44,7 @@ func (_mr *_MockRefreshTokenStrategyRecorder) GenerateRefreshToken(arg0, arg1, a
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GenerateRefreshToken", arg0, arg1, arg2)
 }
 
-func (_m *MockRefreshTokenStrategy) ValidateRefreshToken(_param0 string, _param1 context.Context, _param2 *http.Request, _param3 fosite.Requester) (string, error) {
+func (_m *MockRefreshTokenStrategy) ValidateRefreshToken(_param0 context.Context, _param1 string, _param2 *http.Request, _param3 fosite.Requester) (string, error) {
 	ret := _m.ctrl.Call(_m, "ValidateRefreshToken", _param0, _param1, _param2, _param3)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
