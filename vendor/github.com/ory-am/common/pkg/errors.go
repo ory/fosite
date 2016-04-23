@@ -1,8 +1,9 @@
 package pkg
 
 import (
-	"github.com/go-errors/errors"
 	"net/http"
+
+	"github.com/go-errors/errors"
 )
 
 var (

@@ -21,7 +21,7 @@ func (c *CoreValidator) ValidateRequest(ctx context.Context, req *http.Request, 
 		return errors.New(fosite.ErrUnknownRequest)
 	}
 
-	return c.ValidateAccessToken(ctx, req, accessRequest, split[1])
+	return c.ValidateToken(ctx, req, accessRequest, split[1])
 }
 
 func (c *CoreValidator) ValidateToken(ctx context.Context, req *http.Request, accessRequest fosite.AccessRequester, token string) error {
