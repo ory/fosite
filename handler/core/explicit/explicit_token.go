@@ -20,7 +20,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	}
 
 	// The authorization server MUST verify that the authorization code is valid
-	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, r.PostForm.Get("code"), r, request)
+	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, r.PostForm.Get("code"))
 	if err != nil {
 		return errors.New(ErrInvalidRequest)
 	}
@@ -79,17 +79,17 @@ func (c *AuthorizeExplicitGrantTypeHandler) PopulateTokenEndpointResponse(ctx co
 		return errors.New(ErrUnknownRequest)
 	}
 
-	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, req.PostForm.Get("code"), req, requester)
+	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, req.PostForm.Get("code"))
 	if err != nil {
 		return errors.New(ErrInvalidRequest)
 	}
 
-	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester)
+	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
 		return errors.New(ErrServerError)
 	}
 
-	refresh, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, req, requester)
+	refresh, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 	if err != nil {
 		return errors.New(ErrServerError)
 	}

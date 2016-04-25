@@ -4,8 +4,6 @@
 package internal
 
 import (
-	http "net/http"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	context "golang.org/x/net/context"
@@ -32,25 +30,25 @@ func (_m *MockAuthorizeCodeStrategy) EXPECT() *_MockAuthorizeCodeStrategyRecorde
 	return _m.recorder
 }
 
-func (_m *MockAuthorizeCodeStrategy) GenerateAuthorizeCode(_param0 context.Context, _param1 *http.Request, _param2 fosite.Requester) (string, string, error) {
-	ret := _m.ctrl.Call(_m, "GenerateAuthorizeCode", _param0, _param1, _param2)
+func (_m *MockAuthorizeCodeStrategy) GenerateAuthorizeCode(_param0 context.Context, _param1 fosite.Requester) (string, string, error) {
+	ret := _m.ctrl.Call(_m, "GenerateAuthorizeCode", _param0, _param1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-func (_mr *_MockAuthorizeCodeStrategyRecorder) GenerateAuthorizeCode(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GenerateAuthorizeCode", arg0, arg1, arg2)
+func (_mr *_MockAuthorizeCodeStrategyRecorder) GenerateAuthorizeCode(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GenerateAuthorizeCode", arg0, arg1)
 }
 
-func (_m *MockAuthorizeCodeStrategy) ValidateAuthorizeCode(_param0 context.Context, _param1 string, _param2 *http.Request, _param3 fosite.Requester) (string, error) {
-	ret := _m.ctrl.Call(_m, "ValidateAuthorizeCode", _param0, _param1, _param2, _param3)
+func (_m *MockAuthorizeCodeStrategy) ValidateAuthorizeCode(_param0 context.Context, _param1 fosite.Requester, _param2 string) (string, error) {
+	ret := _m.ctrl.Call(_m, "ValidateAuthorizeCode", _param0, _param1, _param2)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-func (_mr *_MockAuthorizeCodeStrategyRecorder) ValidateAuthorizeCode(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "ValidateAuthorizeCode", arg0, arg1, arg2, arg3)
+func (_mr *_MockAuthorizeCodeStrategyRecorder) ValidateAuthorizeCode(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "ValidateAuthorizeCode", arg0, arg1, arg2)
 }

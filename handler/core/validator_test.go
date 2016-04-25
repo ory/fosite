@@ -45,14 +45,14 @@ func TestValidateRequest(t *testing.T) {
 			description: "should fail because validator fails",
 			setup: func() {
 				httpreq.Header.Set("Authorization", "bearer 1234")
-				chgen.EXPECT().ValidateAccessToken(nil, "1234", httpreq, areq).Return("", errors.New(""))
+				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrRequestUnauthorized,
 		},
 		{
 			description: "should fail because retrieval fails",
 			setup: func() {
-				chgen.EXPECT().ValidateAccessToken(nil, "1234", httpreq, areq).Return("asdf", nil)
+				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return("asdf", nil)
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrRequestUnauthorized,
@@ -60,7 +60,7 @@ func TestValidateRequest(t *testing.T) {
 		{
 			description: "should pass",
 			setup: func() {
-				chgen.EXPECT().ValidateAccessToken(nil, "1234", httpreq, areq).Return("asdf", nil)
+				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return("asdf", nil)
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).Return(areq, nil)
 			},
 		},

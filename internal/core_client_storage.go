@@ -30,16 +30,6 @@ func (_m *MockClientCredentialsGrantStorage) EXPECT() *_MockClientCredentialsGra
 	return _m.recorder
 }
 
-func (_m *MockClientCredentialsGrantStorage) Commit() error {
-	ret := _m.ctrl.Call(_m, "Commit")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (_mr *_MockClientCredentialsGrantStorageRecorder) Commit() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "Commit")
-}
-
 func (_m *MockClientCredentialsGrantStorage) CreateAccessTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) error {
 	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
@@ -69,14 +59,4 @@ func (_m *MockClientCredentialsGrantStorage) GetAccessTokenSession(_param0 conte
 
 func (_mr *_MockClientCredentialsGrantStorageRecorder) GetAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAccessTokenSession", arg0, arg1, arg2)
-}
-
-func (_m *MockClientCredentialsGrantStorage) Rollback() error {
-	ret := _m.ctrl.Call(_m, "Rollback")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (_mr *_MockClientCredentialsGrantStorageRecorder) Rollback() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "Rollback")
 }

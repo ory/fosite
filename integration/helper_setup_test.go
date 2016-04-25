@@ -7,7 +7,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/enigma/hmac"
 	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/fosite-example/store"
@@ -18,7 +17,7 @@ import (
 )
 
 var fositeStore = &store.Store{
-	Clients: map[string]*client.SecureClient{
+	Clients: map[string]*fosite.DefaultClient{
 		"my-client": {
 			ID:           "my-client",
 			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"

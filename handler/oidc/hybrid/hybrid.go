@@ -27,7 +27,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	if ar.GetResponseTypes().Has("code") {
-		code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, req, ar)
+		code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 		if err != nil {
 			return errors.New(ErrServerError)
 		}

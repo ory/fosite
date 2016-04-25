@@ -88,7 +88,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			mock: func() {
 				areq.GrantTypes = fosite.Arguments{"client_credentials"}
 
-				chgen.EXPECT().GenerateAccessToken(nil, gomock.Any(), areq).Return("tokenfoo.bar", "bar", nil)
+				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
 			},
 		},

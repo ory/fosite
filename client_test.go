@@ -1,4 +1,4 @@
-package client
+package fosite
 
 import (
 	"testing"
@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSecureClient(t *testing.T) {
-	sc := &SecureClient{
+func TestDefaultClient(t *testing.T) {
+	sc := &DefaultClient{
 		ID:           "1",
 		Secret:       []byte("foobar-"),
 		RedirectURIs: []string{"foo", "bar"},
