@@ -32,7 +32,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	// The authorization server MUST ... validate the refresh token.
-	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, req.PostForm.Get("refresh_token"), req, request)
+	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, request, req.PostForm.Get("refresh_token"))
 	if err != nil {
 		return errors.New(fosite.ErrInvalidRequest)
 	}
@@ -62,17 +62,17 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		return errors.New(fosite.ErrUnknownRequest)
 	}
 
-	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, req.PostForm.Get("refresh_token"), req, requester)
+	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, requester, req.PostForm.Get("refresh_token"))
 	if err != nil {
 		return errors.New(fosite.ErrInvalidRequest)
 	}
 
-	accessToken, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, requester)
+	accessToken, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 
-	refreshToken, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, req, requester)
+	refreshToken, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
 	}

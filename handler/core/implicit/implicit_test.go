@@ -45,14 +45,14 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 			description: "should fail because access token generation failed",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"token"}
-				chgen.EXPECT().GenerateAccessToken(nil, httpreq, areq).Return("", "", errors.New(""))
+				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should fail because persistance failed",
 			setup: func() {
-				chgen.EXPECT().GenerateAccessToken(nil, httpreq, areq).AnyTimes().Return("access.ats", "ats", nil)
+				chgen.EXPECT().GenerateAccessToken(nil, areq).AnyTimes().Return("access.ats", "ats", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,

@@ -21,11 +21,11 @@ func (c *CoreValidator) ValidateRequest(ctx context.Context, req *http.Request, 
 		return errors.New(fosite.ErrUnknownRequest)
 	}
 
-	return c.ValidateToken(ctx, req, accessRequest, split[1])
+	return c.ValidateToken(ctx, accessRequest, split[1])
 }
 
-func (c *CoreValidator) ValidateToken(ctx context.Context, req *http.Request, accessRequest fosite.AccessRequester, token string) error {
-	sig, err := c.AccessTokenStrategy.ValidateAccessToken(ctx, token, req, accessRequest)
+func (c *CoreValidator) ValidateToken(ctx context.Context, accessRequest fosite.AccessRequester, token string) error {
+	sig, err := c.AccessTokenStrategy.ValidateAccessToken(ctx, accessRequest, token)
 	if err != nil {
 		return errors.New(fosite.ErrRequestUnauthorized)
 	}

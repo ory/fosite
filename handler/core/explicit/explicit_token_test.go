@@ -51,7 +51,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
 				httpreq.PostForm.Add("code", "authcode")
-				auch.EXPECT().ValidateAuthorizeCode(nil, "authcode", httpreq, areq).Return("", errors.New(""))
+				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
@@ -60,23 +60,23 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
 				httpreq.PostForm.Add("code", "authcode")
-				auch.EXPECT().ValidateAuthorizeCode(nil, "authcode", httpreq, areq).AnyTimes().Return("authsig", nil)
-				ach.EXPECT().GenerateAccessToken(nil, httpreq, areq).Return("", "", errors.New("error"))
+				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").AnyTimes().Return("authsig", nil)
+				ach.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New("error"))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should fail because refresh token generation failed",
 			setup: func() {
-				ach.EXPECT().GenerateAccessToken(nil, httpreq, areq).AnyTimes().Return("access.ats", "ats", nil)
-				rch.EXPECT().GenerateRefreshToken(nil, httpreq, areq).Return("", "", errors.New("error"))
+				ach.EXPECT().GenerateAccessToken(nil, areq).AnyTimes().Return("access.ats", "ats", nil)
+				rch.EXPECT().GenerateRefreshToken(nil, areq).Return("", "", errors.New("error"))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should fail because persisting failed",
 			setup: func() {
-				rch.EXPECT().GenerateRefreshToken(nil, httpreq, areq).AnyTimes().Return("refresh.rts", "rts", nil)
+				rch.EXPECT().GenerateRefreshToken(nil, areq).AnyTimes().Return("refresh.rts", "rts", nil)
 				store.EXPECT().PersistAuthorizeCodeGrantSession(nil, "authsig", "ats", "rts", areq).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
@@ -133,14 +133,14 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"} // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				httpreq.PostForm = url.Values{"code": {"foo.bar"}}
-				ach.EXPECT().ValidateAuthorizeCode(nil, "foo.bar", httpreq, areq).Return("", errors.New(""))
+				ach.EXPECT().ValidateAuthorizeCode(nil, areq, "foo.bar").Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should fail because authcode could not be retrieved (1)",
 			setup: func() {
-				ach.EXPECT().ValidateAuthorizeCode(nil, "foo.bar", httpreq, areq).AnyTimes().Return("bar", nil)
+				ach.EXPECT().ValidateAuthorizeCode(nil, areq, "foo.bar").AnyTimes().Return("bar", nil)
 				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).Return(nil, pkg.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,

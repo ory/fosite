@@ -46,14 +46,14 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"refresh_token"}
 				httpreq.PostForm.Add("refresh_token", "some.refreshtokensig")
-				chgen.EXPECT().ValidateRefreshToken(nil, "some.refreshtokensig", httpreq, areq).Return("", errors.New(""))
+				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should fail because token can't be found",
 			setup: func() {
-				chgen.EXPECT().ValidateRefreshToken(nil, "some.refreshtokensig", httpreq, areq).AnyTimes().Return("refreshtokensig", nil)
+				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").AnyTimes().Return("refreshtokensig", nil)
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, pkg.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -121,30 +121,30 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"refresh_token"}
 				httpreq.PostForm.Add("refresh_token", "foo.reftokensig")
-				rcts.EXPECT().ValidateRefreshToken(nil, "foo.reftokensig", httpreq, areq).Return("", errors.New(""))
+				rcts.EXPECT().ValidateRefreshToken(nil, areq, "foo.reftokensig").Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should fail because access token generation fails",
 			setup: func() {
-				rcts.EXPECT().ValidateRefreshToken(nil, "foo.reftokensig", httpreq, areq).AnyTimes().Return("reftokensig", nil)
-				acts.EXPECT().GenerateAccessToken(nil, httpreq, areq).Return("", "", errors.New(""))
+				rcts.EXPECT().ValidateRefreshToken(nil, areq, "foo.reftokensig").AnyTimes().Return("reftokensig", nil)
+				acts.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should fail because access token generation fails",
 			setup: func() {
-				acts.EXPECT().GenerateAccessToken(nil, httpreq, areq).AnyTimes().Return("access.atsig", "atsig", nil)
-				rcts.EXPECT().GenerateRefreshToken(nil, httpreq, areq).Return("", "", errors.New(""))
+				acts.EXPECT().GenerateAccessToken(nil, areq).AnyTimes().Return("access.atsig", "atsig", nil)
+				rcts.EXPECT().GenerateRefreshToken(nil, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should fail because persisting fails",
 			setup: func() {
-				rcts.EXPECT().GenerateRefreshToken(nil, httpreq, areq).AnyTimes().Return("refresh.resig", "resig", nil)
+				rcts.EXPECT().GenerateRefreshToken(nil, areq).AnyTimes().Return("refresh.resig", "resig", nil)
 				store.EXPECT().PersistRefreshTokenGrantSession(nil, "reftokensig", "atsig", "resig", areq).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,

@@ -107,7 +107,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
-				chgen.EXPECT().GenerateAccessToken(nil, httpreq, areq).Return("tokenfoo.bar", "bar", nil)
+				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
 			},
 		},
