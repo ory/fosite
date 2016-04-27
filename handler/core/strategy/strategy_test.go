@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/client"
 	hmac "github.com/ory-am/fosite/enigma/hmac"
 	jwt "github.com/ory-am/fosite/enigma/jwt"
 	"github.com/stretchr/testify/assert"
@@ -34,7 +33,7 @@ var claims = &jwt.Claims{
 }
 
 var r = &fosite.Request{
-	Client: &client.SecureClient{
+	Client: &fosite.DefaultClient{
 		Secret: []byte("foobarfoobarfoobarfoobar"),
 	},
 

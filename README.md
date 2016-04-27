@@ -231,9 +231,8 @@ go test ./...
 Simple, right? Now you are ready to go! Make sure to run `go test ./...` often, detecting problems with your code
 rather sooner than later.
 
-### Useful commands
+### Refresh mock objects
 
-**Create storage mocks**
 ```sh
 mockgen -package internal -destination internal/storage.go github.com/ory-am/fosite Storage
 mockgen -package internal -destination internal/authorize_code_storage.go github.com/ory-am/fosite/handler/core AuthorizeCodeStorage
@@ -245,26 +244,17 @@ mockgen -package internal -destination internal/core_implicit_storage.go github.
 mockgen -package internal -destination internal/core_owner_storage.go github.com/ory-am/fosite/handler/core/owner ResourceOwnerPasswordCredentialsGrantStorage
 mockgen -package internal -destination internal/core_refresh_storage.go github.com/ory-am/fosite/handler/core/refresh RefreshTokenGrantStorage
 mockgen -package internal -destination internal/oidc_id_token_storage.go github.com/ory-am/fosite/handler/oidc OpenIDConnectRequestStorage
-```
 
-**Create strategy mocks**
-```sh
 mockgen -package internal -destination internal/access_token_strategy.go github.com/ory-am/fosite/handler/core AccessTokenStrategy
 mockgen -package internal -destination internal/refresh_token_strategy.go github.com/ory-am/fosite/handler/core RefreshTokenStrategy
 mockgen -package internal -destination internal/authorize_code_strategy.go github.com/ory-am/fosite/handler/core AuthorizeCodeStrategy
 mockgen -package internal -destination internal/id_token_strategy.go github.com/ory-am/fosite/handler/oidc OpenIDConnectTokenStrategy
-```
 
-**Create handler mocks**
-```sh
 mockgen -package internal -destination internal/authorize_handler.go github.com/ory-am/fosite AuthorizeEndpointHandler
 mockgen -package internal -destination internal/token_handler.go github.com/ory-am/fosite TokenEndpointHandler
 mockgen -package internal -destination internal/validator.go github.com/ory-am/fosite AuthorizedRequestValidator
-```
 
-**Create stateful "context" mocks**
-```sh
-mockgen -package internal -destination internal/client.go github.com/ory-am/fosite/client Client
+mockgen -package internal -destination internal/client.go github.com/ory-am/fosite Client
 mockgen -package internal -destination internal/request.go github.com/ory-am/fosite Requester
 mockgen -package internal -destination internal/access_request.go github.com/ory-am/fosite AccessRequester
 mockgen -package internal -destination internal/access_response.go github.com/ory-am/fosite AccessResponder

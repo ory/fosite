@@ -1,4 +1,4 @@
-package client
+package fosite
 
 // Client represents a client or an app.
 type Client interface {
@@ -12,21 +12,21 @@ type Client interface {
 	GetRedirectURIs() []string
 }
 
-// SecureClient is a simple default implementation of the Client interface.
-type SecureClient struct {
+// DefaultClient is a simple default implementation of the Client interface.
+type DefaultClient struct {
 	ID           string   `json:"id"`
 	Secret       []byte   `json:"secret"`
 	RedirectURIs []string `json:"redirectURIs"`
 }
 
-func (c *SecureClient) GetID() string {
+func (c *DefaultClient) GetID() string {
 	return c.ID
 }
 
-func (c *SecureClient) GetRedirectURIs() []string {
+func (c *DefaultClient) GetRedirectURIs() []string {
 	return c.RedirectURIs
 }
 
-func (c *SecureClient) GetHashedSecret() []byte {
+func (c *DefaultClient) GetHashedSecret() []byte {
 	return c.Secret
 }

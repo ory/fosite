@@ -4,7 +4,6 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/client"
 	"golang.org/x/net/context"
 )
 
@@ -14,7 +13,7 @@ type UserRelation struct {
 }
 
 type Store struct {
-	Clients        map[string]*client.SecureClient
+	Clients        map[string]*fosite.DefaultClient
 	AuthorizeCodes map[string]fosite.Requester
 	IDSessions     map[string]fosite.Requester
 	AccessTokens   map[string]fosite.Requester
@@ -25,7 +24,7 @@ type Store struct {
 
 func NewStore() *Store {
 	return &Store{
-		Clients:        make(map[string]*client.SecureClient),
+		Clients:        make(map[string]*fosite.DefaultClient),
 		AuthorizeCodes: make(map[string]fosite.Requester),
 		IDSessions:     make(map[string]fosite.Requester),
 		AccessTokens:   make(map[string]fosite.Requester),
@@ -54,7 +53,7 @@ func (s *Store) DeleteOpenIDConnectSession(_ context.Context, authorizeCode stri
 	return nil
 }
 
-func (s *Store) GetClient(id string) (client.Client, error) {
+func (s *Store) GetClient(id string) (fosite.Client, error) {
 	cl, ok := s.Clients[id]
 	if !ok {
 		return nil, pkg.ErrNotFound

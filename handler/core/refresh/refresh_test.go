@@ -10,7 +10,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -68,15 +67,15 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should fail because client mismatches",
 			setup: func() {
-				areq.Client = &client.SecureClient{ID: "foo"}
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &client.SecureClient{ID: ""}}, nil)
+				areq.Client = &fosite.DefaultClient{ID: "foo"}
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &fosite.DefaultClient{ID: ""}}, nil)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &client.SecureClient{ID: "foo"}}, nil)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &fosite.DefaultClient{ID: "foo"}}, nil)
 			},
 		},
 	} {
@@ -97,7 +96,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	httpreq := &http.Request{PostForm: url.Values{}}
 	defer ctrl.Finish()
 
-	areq.Client = &client.SecureClient{}
+	areq.Client = &fosite.DefaultClient{}
 	h := RefreshTokenGrantHandler{
 		RefreshTokenGrantStorage: store,
 		RefreshTokenStrategy:     rcts,

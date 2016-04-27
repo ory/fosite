@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/enigma/hmac"
 	"github.com/ory-am/fosite/enigma/jwt"
 	exampleStore "github.com/ory-am/fosite/fosite-example/store"
@@ -34,7 +33,7 @@ import (
 // This is an exemplary storage instance. We will add a client and a user to it so we can use these later on.
 var store = &exampleStore.Store{
 	IDSessions: make(map[string]Requester),
-	Clients: map[string]*client.SecureClient{
+	Clients: map[string]*DefaultClient{
 		"my-client": {
 			ID:           "my-client",
 			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"

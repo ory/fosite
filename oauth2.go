@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/ory-am/fosite/client"
 	"golang.org/x/net/context"
 )
 
@@ -120,7 +119,7 @@ type Requester interface {
 	GetRequestedAt() (requestedAt time.Time)
 
 	// GetClient returns the requests client.
-	GetClient() (client client.Client)
+	GetClient() (client Client)
 
 	// GetScopes returns the request's scopes.
 	GetScopes() (scopes Arguments)

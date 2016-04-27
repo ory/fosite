@@ -10,7 +10,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/client"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 )
@@ -157,9 +156,9 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			setup: func() {
 				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).AnyTimes().Return(authreq, nil)
 
-				areq.Client = &client.SecureClient{ID: "foo"}
+				areq.Client = &fosite.DefaultClient{ID: "foo"}
 				authreq.Scopes = fosite.Arguments{"a", "b"}
-				authreq.Client = &client.SecureClient{ID: "bar"}
+				authreq.Client = &fosite.DefaultClient{ID: "bar"}
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
@@ -167,7 +166,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because redirect uri not provided",
 			setup: func() {
 				authreq.Form.Add("redirect_uri", "request-redir")
-				authreq.Client = &client.SecureClient{ID: "foo"}
+				authreq.Client = &fosite.DefaultClient{ID: "foo"}
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
