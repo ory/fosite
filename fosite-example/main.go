@@ -120,7 +120,7 @@ func newSession(user string) *session {
 	return &session{
 		User: user,
 		JWTSession: &strategy.JWTSession{
-			JWTClaims: &jwt.Claims{
+			JWTClaims: &jwt.JWTClaims{
 				Issuer:         "fosite.my-application.com",
 				Subject:        user,
 				Audience:       "*.my-application.com",
@@ -133,7 +133,7 @@ func newSession(user string) *session {
 			},
 		},
 		IDTokenSession: &oidcstrategy.IDTokenSession{
-			IDClaims: &jwt.Claims{
+			IDClaims: &jwt.JWTClaims{
 				Issuer:         "fosite.my-application.com",
 				Subject:        user,
 				Audience:       "*.my-application.com",

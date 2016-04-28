@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var claims = &Claims{
+var claims = &JWTClaims{
 	Subject:        "peter",
 	IssuedAt:       time.Now().Round(time.Second),
 	Issuer:         "fosite",
@@ -23,19 +23,19 @@ var claims = &Claims{
 }
 
 func TestClaimsToMapSetsID(t *testing.T) {
-	assert.NotEmpty(t, (&Claims{}).ToMap()["jti"])
+	assert.NotEmpty(t, (&JWTClaims{}).ToMap()["jti"])
 }
 
 func TestClaimsToFromMap(t *testing.T) {
-	fromMap := ClaimsFromMap(claims.ToMap())
+	fromMap := JWTClaimsFromMap(claims.ToMap())
 	assert.Equal(t, claims, fromMap)
 }
 
 func TestAssert(t *testing.T) {
-	assert.False(t, (&Claims{ExpiresAt: time.Now().Add(time.Hour)}).AssertExpired())
-	assert.True(t, (&Claims{ExpiresAt: time.Now().Add(-time.Hour)}).AssertExpired())
-	assert.True(t, (&Claims{NotValidBefore: time.Now().Add(time.Hour)}).AssertNotYetValid())
-	assert.False(t, (&Claims{NotValidBefore: time.Now().Add(-time.Hour)}).AssertNotYetValid())
+	assert.False(t, (&JWTClaims{ExpiresAt: time.Now().Add(time.Hour)}).IsExpired())
+	assert.True(t, (&JWTClaims{ExpiresAt: time.Now().Add(-time.Hour)}).IsExpired())
+	assert.True(t, (&JWTClaims{NotValidBefore: time.Now().Add(time.Hour)}).IsNotYetValid())
+	assert.False(t, (&JWTClaims{NotValidBefore: time.Now().Add(-time.Hour)}).IsNotYetValid())
 }
 
 func TestClaimsToMap(t *testing.T) {

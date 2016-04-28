@@ -25,7 +25,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
 	defer ctrl.Finish()
 
-	session := &strategy.IDTokenSession{IDClaims: &jwt.Claims{}, IDToken: &jwt.Header{}}
+	session := &strategy.IDTokenSession{IDClaims: &jwt.JWTClaims{}, IDToken: &jwt.Header{}}
 	aresp := fosite.NewAccessResponse()
 	areq := fosite.NewAccessRequest(session)
 	httpreq := &http.Request{PostForm: url.Values{}}

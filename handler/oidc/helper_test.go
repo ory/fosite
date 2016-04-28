@@ -29,7 +29,7 @@ func TestGenerateIDToken(t *testing.T) {
 	httpreq := &http.Request{Form: url.Values{}}
 	ar := fosite.NewAccessRequest(nil)
 	sess := &strategy.IDTokenSession{
-		IDClaims: &jwt.Claims{},
+		IDClaims: &jwt.JWTClaims{},
 		IDToken:  &jwt.Header{},
 	}
 	h := &IDTokenHandleHelper{IDTokenStrategy: chgen}
@@ -92,7 +92,7 @@ func TestIssueExplicitToken(t *testing.T) {
 	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&strategy.IDTokenSession{IDClaims: &jwt.Claims{}, IDToken: &jwt.Header{}})
+	ar.SetSession(&strategy.IDTokenSession{IDClaims: &jwt.JWTClaims{}, IDToken: &jwt.Header{}})
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
@@ -108,7 +108,7 @@ func TestIssueImplicitToken(t *testing.T) {
 	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&strategy.IDTokenSession{IDClaims: &jwt.Claims{}, IDToken: &jwt.Header{}})
+	ar.SetSession(&strategy.IDTokenSession{IDClaims: &jwt.JWTClaims{}, IDToken: &jwt.Header{}})
 
 	resp.EXPECT().AddFragment("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}

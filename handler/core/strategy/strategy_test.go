@@ -22,7 +22,7 @@ var j = &JWTStrategy{
 	},
 }
 
-var claims = &jwt.Claims{
+var claims = &jwt.JWTClaims{
 	Issuer:         "fosite",
 	Subject:        "peter",
 	Audience:       "group0",

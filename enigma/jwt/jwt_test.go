@@ -56,7 +56,7 @@ func TestLoadCertificate(t *testing.T) {
 }
 
 func TestGenerateJWT(t *testing.T) {
-	claims := &Claims{
+	claims := &JWTClaims{
 		ExpiresAt: time.Now().Add(time.Hour),
 	}
 
@@ -98,7 +98,7 @@ func TestGenerateJWT(t *testing.T) {
 	j.PrivateKey = []byte(TestCertificates[0][1])
 
 	// Lets validate the exp claim
-	claims = &Claims{}
+	claims = &JWTClaims{}
 
 	token, sig, err = j.Generate(claims, header)
 	require.Nil(t, err, "%s", err)
@@ -109,7 +109,7 @@ func TestGenerateJWT(t *testing.T) {
 	require.NotNil(t, err, "%s", err)
 
 	// Lets validate the nbf claim
-	claims = &Claims{}
+	claims = &JWTClaims{}
 
 	token, sig, err = j.Generate(claims, header)
 	require.Nil(t, err, "%s", err)

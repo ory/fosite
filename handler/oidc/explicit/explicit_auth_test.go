@@ -67,7 +67,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should fail because no nonce set",
 			setup: func() {
 				areq.Session = &strategy.IDTokenSession{
-					IDClaims: &jwt.Claims{},
+					IDClaims: &jwt.JWTClaims{},
 					IDToken:  &jwt.Header{},
 				}
 			},

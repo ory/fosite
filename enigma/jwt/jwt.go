@@ -82,7 +82,7 @@ func LoadCertificate(path string) ([]byte, error) {
 }
 
 // Generate generates a new authorize code or returns an error. set secret
-func (j *Enigma) Generate(claims *Claims, header *Header) (string, string, error) {
+func (j *Enigma) Generate(claims Mapper, header Mapper) (string, string, error) {
 	if header == nil || claims == nil {
 		return "", "", errors.New("Either claims or header is nil.")
 	}
@@ -97,7 +97,6 @@ func (j *Enigma) Generate(claims *Claims, header *Header) (string, string, error
 	}
 
 	var sig, sstr string
-
 	if sstr, err = token.SigningString(); err != nil {
 		return "", "", err
 	}
@@ -131,16 +130,11 @@ func (j *Enigma) Validate(token string) (string, error) {
 	}
 
 	// make sure we can work with the data
-	claimsContext := ClaimsFromMap(parsedToken.Claims)
+	claimsContext := JWTClaimsFromMap(parsedToken.Claims)
 
-	if claimsContext.AssertExpired() {
+	if !claimsContext.IsValid() {
 		parsedToken.Valid = false
 		return "", errors.Errorf("Token expired at %v", claimsContext.ExpiresAt)
-	}
-
-	if claimsContext.AssertNotYetValid() {
-		parsedToken.Valid = false
-		return "", errors.Errorf("Token validates in the future: %v", claimsContext.NotValidBefore)
 	}
 
 	return split[2], nil

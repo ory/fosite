@@ -10,7 +10,7 @@ import (
 
 type JWTSessionContainer interface {
 	// GetTokenClaims returns the claims
-	GetTokenClaims() *enigma.Claims
+	GetTokenClaims() *enigma.JWTClaims
 
 	// GetTokenHeader returns the header
 	GetTokenHeader() *enigma.Header
@@ -18,11 +18,11 @@ type JWTSessionContainer interface {
 
 // JWTSession : Container for the JWT session
 type JWTSession struct {
-	JWTClaims *enigma.Claims
+	JWTClaims *enigma.JWTClaims
 	JWTHeader *enigma.Header
 }
 
-func (j *JWTSession) GetTokenClaims() *enigma.Claims {
+func (j *JWTSession) GetTokenClaims() *enigma.JWTClaims {
 	return j.JWTClaims
 }
 

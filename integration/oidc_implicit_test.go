@@ -25,7 +25,7 @@ import (
 
 func TestOIDCImplicitGrants(t *testing.T) {
 	session := &strategy.IDTokenSession{
-		IDClaims: &jwt.Claims{},
+		IDClaims: &jwt.JWTClaims{},
 		IDToken:  &jwt.Header{},
 	}
 	f := newFosite()
