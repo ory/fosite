@@ -7,11 +7,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma/hmac"
-	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core/strategy"
 	idstrat "github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -67,15 +67,15 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 	}
 }
 
-var idTokenStrategy = &idstrat.JWTStrategy{
-	Enigma: &jwt.Enigma{
+var idTokenStrategy = &idstrat.DefaultStrategy{
+	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
 }
 
 var hmacStrategy = &strategy.HMACSHAStrategy{
-	Enigma: &hmac.Enigma{
+	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }

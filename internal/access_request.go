@@ -4,11 +4,10 @@
 package internal
 
 import (
-	url "net/url"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
+	url "net/url"
+	time "time"
 )
 
 // Mock of AccessRequester interface

@@ -8,15 +8,15 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
-var j = &strategy.JWTStrategy{
-	Enigma: &jwt.Enigma{
+var j = &strategy.DefaultStrategy{
+	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
@@ -56,33 +56,9 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because session is not set",
-			setup: func() {
-				areq.ResponseTypes = fosite.Arguments{"code"}
-				areq.Scopes = fosite.Arguments{"openid"}
-			},
-			expectErr: fosite.ErrServerError,
-		},
-		{
-			description: "should fail because no nonce set",
-			setup: func() {
-				areq.Session = &strategy.IDTokenSession{
-					IDClaims: &jwt.Claims{},
-					IDToken:  &jwt.Header{},
-				}
-			},
-			expectErr: fosite.ErrInsufficientEntropy,
-		},
-		{
-			description: "should fail because nonce to short",
-			setup: func() {
-				areq.Form.Set("nonce", "1")
-			},
-			expectErr: fosite.ErrInsufficientEntropy,
-		},
-		{
 			description: "should fail because no code set",
 			setup: func() {
+				areq.Scopes = fosite.Arguments{"openid"}
 				areq.Form.Set("nonce", "11111111111111111111111111111")
 				aresp.EXPECT().GetCode().Return("")
 			},

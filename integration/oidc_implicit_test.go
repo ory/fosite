@@ -17,16 +17,18 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
-	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/handler/core"
 	idimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/token/jwt"
 )
 
 func TestOIDCImplicitGrants(t *testing.T) {
-	session := &strategy.IDTokenSession{
-		IDClaims: &jwt.Claims{},
-		IDToken:  &jwt.Header{},
+	session := &strategy.DefaultSession{
+		Claims:  &jwt.IDTokenClaims{
+			Subject: "peter",
+		},
+		Headers: &jwt.Headers{},
 	}
 	f := newFosite()
 	ts := mockServer(t, f, session)
@@ -102,8 +104,7 @@ func TestOIDCImplicitGrants(t *testing.T) {
 			responseType: "token%20id_token%20code",
 			nonce:        "1111111111111111",
 			description:  "should pass id token (id_token token)",
-			setup: func() {
-			},
+			setup: func() {},
 			hasToken: true,
 			hasCode:  true,
 		},

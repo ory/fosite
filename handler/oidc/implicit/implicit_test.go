@@ -9,26 +9,26 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma/hmac"
-	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	oauthStrat "github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
-var idStrategy = &strategy.JWTStrategy{
-	Enigma: &jwt.Enigma{
+var idStrategy = &strategy.DefaultStrategy{
+	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
 }
 
 var hmacStrategy = &oauthStrat.HMACSHAStrategy{
-	Enigma: &hmac.Enigma{
+	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }

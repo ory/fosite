@@ -7,12 +7,16 @@ import (
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	. "github.com/ory-am/fosite/handler/oidc"
+	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/net/context"
 )
 
 type OpenIDConnectImplicitHandler struct {
 	*implicit.AuthorizeImplicitGrantTypeHandler
 	*IDTokenHandleHelper
+
+	RS256JWTStrategy *jwt.RS256JWTStrategy
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
@@ -27,8 +31,19 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		ar.SetResponseTypeHandled("token")
 	}
 
-	err := c.IssueImplicitIDToken(ctx, req, ar, resp)
+	hash, err := c.RS256JWTStrategy.Hash([]byte(resp.GetFragment().Get("access_token")))
 	if err != nil {
+		return err
+	}
+
+	sess, ok := ar.GetSession().(strategy.Session)
+	if !ok {
+		return errors.New("Session must be of type strategy.Session")
+	}
+
+	claims := sess.IDTokenClaims()
+	claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
+	if err = c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.New(err)
 	}
 

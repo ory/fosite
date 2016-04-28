@@ -5,20 +5,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/oidc"
 	oidcexp "github.com/ory-am/fosite/handler/oidc/explicit"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 )
 
 func TestOpenIDConnectExplicit(t *testing.T) {
-	session := &strategy.IDTokenSession{
-		IDClaims: &jwt.Claims{},
-		IDToken:  &jwt.Header{},
+	session := &strategy.DefaultSession{
+		Claims:  &jwt.IDTokenClaims{
+			Subject: "peter",
+		},
+		Headers: &jwt.Headers{},
 	}
 	f := newFosite()
 	ts := mockServer(t, f, session)
