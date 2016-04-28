@@ -9,13 +9,13 @@ import (
 )
 
 var claims = &JWTClaims{
-	Subject:        "peter",
-	IssuedAt:       time.Now().Round(time.Second),
-	Issuer:         "fosite",
-	NotValidBefore: time.Now().Round(time.Second),
-	Audience:       "tests",
-	ExpiresAt:      time.Now().Add(time.Hour).Round(time.Second),
-	ID:             "abcdef",
+	Subject:   "peter",
+	IssuedAt:  time.Now().Round(time.Second),
+	Issuer:    "fosite",
+	NotBefore: time.Now().Round(time.Second),
+	Audience:  "tests",
+	ExpiresAt: time.Now().Add(time.Hour).Round(time.Second),
+	JTI:       "abcdef",
 	Extra: map[string]interface{}{
 		"foo": "bar",
 		"baz": "bar",
@@ -34,8 +34,8 @@ func TestClaimsToFromMap(t *testing.T) {
 func TestAssert(t *testing.T) {
 	assert.False(t, (&JWTClaims{ExpiresAt: time.Now().Add(time.Hour)}).IsExpired())
 	assert.True(t, (&JWTClaims{ExpiresAt: time.Now().Add(-time.Hour)}).IsExpired())
-	assert.True(t, (&JWTClaims{NotValidBefore: time.Now().Add(time.Hour)}).IsNotYetValid())
-	assert.False(t, (&JWTClaims{NotValidBefore: time.Now().Add(-time.Hour)}).IsNotYetValid())
+	assert.True(t, (&JWTClaims{NotBefore: time.Now().Add(time.Hour)}).IsNotYetValid())
+	assert.False(t, (&JWTClaims{NotBefore: time.Now().Add(-time.Hour)}).IsNotYetValid())
 }
 
 func TestClaimsToMap(t *testing.T) {
@@ -43,10 +43,10 @@ func TestClaimsToMap(t *testing.T) {
 		"sub": claims.Subject,
 		"iat": claims.IssuedAt.Unix(),
 		"iss": claims.Issuer,
-		"nbf": claims.NotValidBefore.Unix(),
+		"nbf": claims.NotBefore.Unix(),
 		"aud": claims.Audience,
 		"exp": claims.ExpiresAt.Unix(),
-		"jti": claims.ID,
+		"jti": claims.JTI,
 		"foo": claims.Extra["foo"],
 		"baz": claims.Extra["baz"],
 	}, claims.ToMap())

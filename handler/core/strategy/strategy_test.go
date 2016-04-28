@@ -23,13 +23,13 @@ var j = &JWTStrategy{
 }
 
 var claims = &jwt.JWTClaims{
-	Issuer:         "fosite",
-	Subject:        "peter",
-	Audience:       "group0",
-	ExpiresAt:      time.Now().Add(time.Hour),
-	IssuedAt:       time.Now(),
-	NotValidBefore: time.Now(),
-	Extra:          make(map[string]interface{}),
+	Issuer:    "fosite",
+	Subject:   "peter",
+	Audience:  "group0",
+	ExpiresAt: time.Now().Add(time.Hour),
+	IssuedAt:  time.Now(),
+	NotBefore: time.Now(),
+	Extra:     make(map[string]interface{}),
 }
 
 var r = &fosite.Request{

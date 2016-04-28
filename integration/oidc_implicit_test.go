@@ -25,8 +25,8 @@ import (
 
 func TestOIDCImplicitGrants(t *testing.T) {
 	session := &strategy.IDTokenSession{
-		IDClaims: &jwt.JWTClaims{},
-		IDToken:  &jwt.Header{},
+		IDTokenClaims: &strategy.IDTokenClaims{},
+		Header:        &jwt.Header{},
 	}
 	f := newFosite()
 	ts := mockServer(t, f, session)

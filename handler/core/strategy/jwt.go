@@ -16,7 +16,7 @@ type JWTSessionContainer interface {
 	GetTokenHeader() *jwt.Header
 }
 
-// JWTSession : Container for the JWT session
+// JWTSession Container for the JWT session
 type JWTSession struct {
 	JWTClaims *jwt.JWTClaims
 	JWTHeader *jwt.Header

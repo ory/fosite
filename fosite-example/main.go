@@ -121,27 +121,26 @@ func newSession(user string) *session {
 		User: user,
 		JWTSession: &strategy.JWTSession{
 			JWTClaims: &jwt.JWTClaims{
-				Issuer:         "fosite.my-application.com",
-				Subject:        user,
-				Audience:       "*.my-application.com",
-				ExpiresAt:      time.Now().Add(time.Hour * 6),
-				IssuedAt:       time.Now(),
-				NotValidBefore: time.Now(),
+				Issuer:    "fosite.my-application.com",
+				Subject:   user,
+				Audience:  "*.my-application.com",
+				ExpiresAt: time.Now().Add(time.Hour * 6),
+				IssuedAt:  time.Now(),
+				NotBefore: time.Now(),
 			},
 			JWTHeader: &jwt.Header{
 				Extra: make(map[string]interface{}),
 			},
 		},
 		IDTokenSession: &oidcstrategy.IDTokenSession{
-			IDClaims: &jwt.JWTClaims{
-				Issuer:         "fosite.my-application.com",
-				Subject:        user,
-				Audience:       "*.my-application.com",
-				ExpiresAt:      time.Now().Add(time.Hour * 6),
-				IssuedAt:       time.Now(),
-				NotValidBefore: time.Now(),
+			IDTokenClaims: &oidcstrategy.IDTokenClaims{
+				Issuer:    "fosite.my-application.com",
+				Subject:   user,
+				Audience:  "*.my-application.com",
+				ExpiresAt: time.Now().Add(time.Hour * 6),
+				IssuedAt:  time.Now(),
 			},
-			IDToken: &jwt.Header{
+			Header: &jwt.Header{
 				Extra: make(map[string]interface{}),
 			},
 		},

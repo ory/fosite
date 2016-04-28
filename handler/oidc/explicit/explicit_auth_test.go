@@ -67,8 +67,8 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should fail because no nonce set",
 			setup: func() {
 				areq.Session = &strategy.IDTokenSession{
-					IDClaims: &jwt.JWTClaims{},
-					IDToken:  &jwt.Header{},
+					IDTokenClaims: &strategy.IDTokenClaims{},
+					Header:        &jwt.Header{},
 				}
 			},
 			expectErr: fosite.ErrInsufficientEntropy,

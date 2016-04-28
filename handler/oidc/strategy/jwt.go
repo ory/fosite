@@ -4,6 +4,8 @@ import (
 	"errors"
 	"net/http"
 
+	"time"
+
 	"github.com/ory-am/fosite"
 	enigma "github.com/ory-am/fosite/enigma/jwt"
 	"golang.org/x/net/context"
@@ -14,21 +16,67 @@ type IDTokenContainer interface {
 	GetIDTokenClaims() enigma.Mapper
 
 	// GetJWTHeaderContext returns the header
-	GetIDTokenHeader()  enigma.Mapper
+	GetIDTokenHeader() enigma.Mapper
 }
 
 // IDTokenSession is a session container for the id token
 type IDTokenSession struct {
-	IDClaims *enigma.JWTClaims
-	IDToken  *enigma.Header
+	*IDTokenClaims
+	Header *enigma.Header
 }
 
-func (t *IDTokenSession) GetIDTokenHeader()  enigma.Mapper {
-	return t.IDToken
+func IDClaimsFromMap(m map[string]interface{}) *IDTokenClaims {
+	return &IDTokenClaims{
+		Subject:   enigma.ToString(m["sub"]),
+		IssuedAt:  enigma.ToTime(m["iat"]),
+		Issuer:    enigma.ToString(m["iss"]),
+		Audience:  enigma.ToString(m["aud"]),
+		ExpiresAt: enigma.ToTime(m["exp"]),
+		Extra:     enigma.Filter(m, "sub", "iss", "iat", "aud", "exp"),
+	}
 }
 
-func (t *IDTokenSession) GetIDTokenClaims()  enigma.Mapper {
-	return t.IDClaims
+type IDTokenClaims struct {
+	Issuer          string
+	Subject         string
+	Audience        string
+	Nonce           string
+	ExpiresAt       time.Time
+	IssuedAt        time.Time
+	AuthTime        time.Time
+	AccessTokenHash string
+	CodeHash        string
+	Extra           map[string]interface{}
+}
+
+func (c *IDTokenClaims) ToMap() map[string]interface{} {
+	var ret = enigma.Copy(c.Extra)
+	ret["sub"] = c.Subject
+	ret["iss"] = c.Issuer
+	ret["aud"] = c.Audience
+	ret["nonce"] = c.Nonce
+	ret["auth_time"] = c.AuthTime
+	ret["at_hash"] = c.AccessTokenHash
+	ret["c_hash"] = c.CodeHash
+	ret["iat"] = c.IssuedAt.Unix()
+	ret["exp"] = c.ExpiresAt.Unix()
+	return ret
+
+}
+
+func (c *IDTokenClaims) Add(key string, value interface{}) {
+	if c.Extra == nil {
+		c.Extra = make(map[string]interface{})
+	}
+	c.Extra[key] = value
+}
+
+func (t *IDTokenSession) GetIDTokenHeader() enigma.Mapper {
+	return t.Header
+}
+
+func (t *IDTokenSession) GetIDTokenClaims() enigma.Mapper {
+	return t.IDTokenClaims
 }
 
 type JWTStrategy struct {
