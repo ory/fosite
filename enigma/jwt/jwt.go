@@ -110,16 +110,11 @@ func (j *Enigma) Generate(claims Mapper, header Mapper) (string, string, error) 
 
 // Validate : Validates a token and returns its signature or an error if the token is not valid.
 func (j *Enigma) Validate(token string) (string, error) {
-	split := strings.Split(token, ".")
-	if len(split) != 3 {
-		return "", errors.New("Header, body and signature must all be set")
-	}
-
 	if _, err := j.Decode(token); err != nil {
 		return "", err
 	}
 
-	return split[2], nil
+	return j.GetSignature(token)
 }
 
 func (j *Enigma) Decode(token string) (*jwt.Token, error) {
@@ -138,6 +133,14 @@ func (j *Enigma) Decode(token string) (*jwt.Token, error) {
 	}
 
 	return parsedToken, err
+}
+
+func (j *Enigma) GetSignature(token string) (string, error) {
+	split := strings.Split(token, ".")
+	if len(split) != 3 {
+		return "", errors.New("Header, body and signature must all be set")
+	}
+	return split[2], nil
 }
 
 func assign(a, b map[string]interface{}) map[string]interface{} {
