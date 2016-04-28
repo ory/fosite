@@ -39,7 +39,7 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.New(ErrMisconfiguration)
 	}
 
-	session.GetIDTokenClaims().AddExtra("nonce", nonce)
+	session.GetIDTokenClaims().Add("nonce", nonce)
 	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar); err != nil {
 		return errors.New(ErrServerError)
 	}

@@ -6,6 +6,7 @@ import (
 
 type Mapper interface {
 	ToMap() map[string]interface{}
+	Add(key string, value interface{})
 }
 
 func toString(i interface{}) string {

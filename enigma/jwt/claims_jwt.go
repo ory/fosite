@@ -36,7 +36,7 @@ func (c *JWTClaims) ToMap() map[string]interface{} {
 	return ret
 }
 
-func (c *JWTClaims) AddExtra(key string, value interface{}) {
+func (c *JWTClaims) Add(key string, value interface{}) {
 	if c.Extra == nil {
 		c.Extra = make(map[string]interface{})
 	}
@@ -74,11 +74,6 @@ func (c *JWTClaims) IsExpired() bool {
 // IsNotYetValid maskes sure that the JWT is not used before valid date.
 func (c *JWTClaims) IsNotYetValid() bool {
 	return c.NotValidBefore.After(time.Now())
-}
-
-// IsValid checks if JWT is expired.
-func (c *JWTClaims) IsValid() bool {
-	return !(c.IsExpired() && c.IsNotYetValid())
 }
 
 // String marshals the claims and returns them as a string representation.

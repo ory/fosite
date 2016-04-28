@@ -4,35 +4,35 @@ import (
 	"errors"
 
 	"github.com/ory-am/fosite"
-	enigma "github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/enigma/jwt"
 	"golang.org/x/net/context"
 )
 
 type JWTSessionContainer interface {
 	// GetTokenClaims returns the claims
-	GetTokenClaims() *enigma.JWTClaims
+	GetTokenClaims() *jwt.JWTClaims
 
 	// GetTokenHeader returns the header
-	GetTokenHeader() *enigma.Header
+	GetTokenHeader() *jwt.Header
 }
 
 // JWTSession : Container for the JWT session
 type JWTSession struct {
-	JWTClaims *enigma.JWTClaims
-	JWTHeader *enigma.Header
+	JWTClaims *jwt.JWTClaims
+	JWTHeader *jwt.Header
 }
 
-func (j *JWTSession) GetTokenClaims() *enigma.JWTClaims {
+func (j *JWTSession) GetTokenClaims() *jwt.JWTClaims {
 	return j.JWTClaims
 }
 
-func (j *JWTSession) GetTokenHeader() *enigma.Header {
+func (j *JWTSession) GetTokenHeader() *jwt.Header {
 	return j.JWTHeader
 }
 
 // JWTStrategy : Strategy container
 type JWTStrategy struct {
-	Enigma *enigma.Enigma
+	Enigma *jwt.Enigma
 }
 
 func (h JWTStrategy) GenerateAccessToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {

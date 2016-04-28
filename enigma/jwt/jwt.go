@@ -115,6 +115,14 @@ func (j *Enigma) Validate(token string) (string, error) {
 		return "", errors.New("Header, body and signature must all be set")
 	}
 
+	if _, err := j.Decode(token); err != nil {
+		return "", err
+	}
+
+	return split[2], nil
+}
+
+func (j *Enigma) Decode(token string) (*jwt.Token, error) {
 	// Parse the token.
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
@@ -124,20 +132,12 @@ func (j *Enigma) Validate(token string) (string, error) {
 	})
 
 	if err != nil {
-		return "", errors.Errorf("Couldn't parse token: %v", err)
+		return nil, errors.Errorf("Couldn't parse token: %v", err)
 	} else if !parsedToken.Valid {
-		return "", errors.Errorf("Token is invalid")
+		return nil, errors.Errorf("Token is invalid")
 	}
 
-	// make sure we can work with the data
-	claimsContext := JWTClaimsFromMap(parsedToken.Claims)
-
-	if !claimsContext.IsValid() {
-		parsedToken.Valid = false
-		return "", errors.Errorf("Token expired at %v", claimsContext.ExpiresAt)
-	}
-
-	return split[2], nil
+	return parsedToken, err
 }
 
 func assign(a, b map[string]interface{}) map[string]interface{} {

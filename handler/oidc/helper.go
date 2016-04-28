@@ -32,7 +32,7 @@ func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, netr *http.Re
 		return "", errors.New(ErrServerError)
 	}
 
-	session.GetIDTokenClaims().AddExtra("nonce", nonce)
+	session.GetIDTokenClaims().Add("nonce", nonce)
 	fosr.GrantScope("openid")
 	return token, nil
 }

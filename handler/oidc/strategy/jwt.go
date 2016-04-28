@@ -11,10 +11,10 @@ import (
 
 type IDTokenContainer interface {
 	// GetJWTClaims returns the claims
-	GetIDTokenClaims() *enigma.JWTClaims
+	GetIDTokenClaims() enigma.Mapper
 
 	// GetJWTHeaderContext returns the header
-	GetIDTokenHeader() *enigma.Header
+	GetIDTokenHeader()  enigma.Mapper
 }
 
 // IDTokenSession is a session container for the id token
@@ -23,11 +23,11 @@ type IDTokenSession struct {
 	IDToken  *enigma.Header
 }
 
-func (t *IDTokenSession) GetIDTokenHeader() *enigma.Header {
+func (t *IDTokenSession) GetIDTokenHeader()  enigma.Mapper {
 	return t.IDToken
 }
 
-func (t *IDTokenSession) GetIDTokenClaims() *enigma.JWTClaims {
+func (t *IDTokenSession) GetIDTokenClaims()  enigma.Mapper {
 	return t.IDClaims
 }
 
