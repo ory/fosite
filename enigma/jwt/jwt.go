@@ -11,6 +11,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-errors/errors"
+	"crypto/sha256"
 )
 
 // TestCertificates are certificates used for testing and localhost.
@@ -141,6 +142,20 @@ func (j *Enigma) GetSignature(token string) (string, error) {
 		return "", errors.New("Header, body and signature must all be set")
 	}
 	return split[2], nil
+}
+
+func (c *Enigma) Hash(in []byte) ([]byte, error) {
+	// SigningMethodRS256
+	hash := sha256.New()
+	_, err := hash.Write(in)
+	if err != nil {
+		return []byte{}, errors.New(err)
+	}
+	return hash.Sum([]byte{}), nil
+}
+
+func (c *Enigma) GetSigningMethodLength() int {
+	return jwt.SigningMethodRS256.Hash.Size()
 }
 
 func assign(a, b map[string]interface{}) map[string]interface{} {

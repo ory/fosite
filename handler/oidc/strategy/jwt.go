@@ -83,13 +83,19 @@ type JWTStrategy struct {
 	Enigma *enigma.Enigma
 }
 
-func (h JWTStrategy) GenerateIDToken(_ context.Context, _ *http.Request, requester fosite.Requester) (token string, err error) {
+func (h JWTStrategy) GenerateIDToken(_ context.Context, _ *http.Request, requester fosite.Requester, claims map[string]interface{}) (token string, err error) {
 	if jwtSession, ok := requester.GetSession().(IDTokenContainer); ok {
-		if jwtSession.GetIDTokenClaims() != nil {
-			token, _, err := h.Enigma.Generate(jwtSession.GetIDTokenClaims(), jwtSession.GetIDTokenHeader())
-			return token, err
+		idcs := jwtSession.GetIDTokenClaims()
+		if idcs == nil {
+			return "", errors.New("GetIDTokenClaims must not be nil")
 		}
-		return "", errors.New("GetIDTokenClaims must not be nil")
+
+		for k, v := range claims {
+			idcs.Add(k,v)
+		}
+
+		token, _, err := h.Enigma.Generate(idcs, jwtSession.GetIDTokenHeader())
+		return token, err
 	}
 	return "", errors.New("Session must be of type IDTokenContainer")
 }

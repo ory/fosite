@@ -20,7 +20,7 @@ func TestGenerateIDToken(t *testing.T) {
 		IDTokenClaims: &IDTokenClaims{},
 		Header:        &jwt.Header{},
 	})
-	token, err := j.GenerateIDToken(nil, nil, req)
+	token, err := j.GenerateIDToken(nil, nil, req, map[string]interface{}{"acr": "foo"})
 	assert.Nil(t, err)
 	assert.NotEmpty(t, token)
 }

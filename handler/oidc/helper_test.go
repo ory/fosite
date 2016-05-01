@@ -62,19 +62,19 @@ func TestGenerateIDToken(t *testing.T) {
 			description: "should fail because generator failed",
 			setup: func() {
 				ar.SetSession(sess)
-				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar).Return("", errors.New(""))
+				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar,  gomock.Any()).Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar).AnyTimes().Return("asdf", nil)
+				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar, gomock.Any()).AnyTimes().Return("asdf", nil)
 			},
 		},
 	} {
 		c.setup()
-		token, err := h.generateIDToken(nil, httpreq, ar)
+		token, err := h.generateIDToken(nil, httpreq, ar, map[string]interface{}{"acr": "foo"})
 		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if err == nil {
 			assert.NotEmpty(t, token, "(%d) %s", k, c.description)
@@ -96,7 +96,7 @@ func TestIssueExplicitToken(t *testing.T) {
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueExplicitIDToken(nil, httpreq, ar, resp)
+	err := h.IssueExplicitIDToken(nil, httpreq, ar, resp, map[string]interface{}{})
 	assert.Nil(t, err, "%s", err)
 }
 
@@ -112,6 +112,6 @@ func TestIssueImplicitToken(t *testing.T) {
 
 	resp.EXPECT().AddFragment("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueImplicitIDToken(nil, httpreq, ar, resp)
+	err := h.IssueImplicitIDToken(nil, httpreq, ar, resp, map[string]interface{}{})
 	assert.Nil(t, err, "%s", err)
 }

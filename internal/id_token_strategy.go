@@ -4,11 +4,10 @@
 package internal
 
 import (
-	http "net/http"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	context "golang.org/x/net/context"
+	http "net/http"
 )
 
 // Mock of OpenIDConnectTokenStrategy interface
@@ -32,13 +31,13 @@ func (_m *MockOpenIDConnectTokenStrategy) EXPECT() *_MockOpenIDConnectTokenStrat
 	return _m.recorder
 }
 
-func (_m *MockOpenIDConnectTokenStrategy) GenerateIDToken(_param0 context.Context, _param1 *http.Request, _param2 fosite.Requester) (string, error) {
-	ret := _m.ctrl.Call(_m, "GenerateIDToken", _param0, _param1, _param2)
+func (_m *MockOpenIDConnectTokenStrategy) GenerateIDToken(_param0 context.Context, _param1 *http.Request, _param2 fosite.Requester, _param3 map[string]interface{}) (string, error) {
+	ret := _m.ctrl.Call(_m, "GenerateIDToken", _param0, _param1, _param2, _param3)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-func (_mr *_MockOpenIDConnectTokenStrategyRecorder) GenerateIDToken(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GenerateIDToken", arg0, arg1, arg2)
+func (_mr *_MockOpenIDConnectTokenStrategyRecorder) GenerateIDToken(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GenerateIDToken", arg0, arg1, arg2, arg3)
 }

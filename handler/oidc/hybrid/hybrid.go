@@ -9,15 +9,20 @@ import (
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/oidc"
 	"golang.org/x/net/context"
+	"github.com/ory-am/fosite/enigma/jwt"
 )
 
 type OpenIDConnectHybridHandler struct {
 	*implicit.AuthorizeImplicitGrantTypeHandler
 	*explicit.AuthorizeExplicitGrantTypeHandler
 	*oidc.IDTokenHandleHelper
+
+	Enigma *jwt.Enigma
 }
 
 func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+	var claims = map[string]interface{}{}
+
 	if len(ar.GetResponseTypes()) < 2 {
 		return nil
 	}
@@ -39,6 +44,12 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		resp.AddFragment("code", code)
 		resp.AddFragment("state", ar.GetState())
 		ar.SetResponseTypeHandled("code")
+
+		hash, err := c.Enigma.Hash([]byte(resp.GetFragment().Get("code")))
+		if err != nil {
+			return err
+		}
+		claims["c_hash"] = hash[:c.Enigma.GetSigningMethodLength() / 2]
 	}
 
 	if ar.GetResponseTypes().Has("token") {
@@ -46,13 +57,23 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 			return errors.New(err)
 		}
 		ar.SetResponseTypeHandled("token")
+
+		hash, err := c.Enigma.Hash([]byte(resp.GetFragment().Get("access_token")))
+		if err != nil {
+			return err
+		}
+		claims["at_hash"] = hash[:c.Enigma.GetSigningMethodLength() / 2]
 	}
 
 	if !ar.GetScopes().Has("openid") {
 		return nil
 	}
 
-	err := c.IssueImplicitIDToken(ctx, req, ar, resp)
+	if err := c.IssueImplicitIDToken(ctx, req, ar, resp, claims); err != nil {
+		return errors.New(err)
+	}
+
+	err := c.IssueImplicitIDToken(ctx, req, ar, resp, claims)
 	if err != nil {
 		return errors.New(err)
 	}

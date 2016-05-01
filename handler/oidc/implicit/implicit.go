@@ -8,11 +8,14 @@ import (
 	"github.com/ory-am/fosite/handler/core/implicit"
 	. "github.com/ory-am/fosite/handler/oidc"
 	"golang.org/x/net/context"
+	"github.com/ory-am/fosite/enigma/jwt"
 )
 
 type OpenIDConnectImplicitHandler struct {
 	*implicit.AuthorizeImplicitGrantTypeHandler
 	*IDTokenHandleHelper
+
+	Enigma *jwt.Enigma
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
@@ -27,8 +30,13 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		ar.SetResponseTypeHandled("token")
 	}
 
-	err := c.IssueImplicitIDToken(ctx, req, ar, resp)
+	hash, err := c.Enigma.Hash([]byte(resp.GetFragment().Get("access_token")))
 	if err != nil {
+		return err
+	}
+	if err = c.IssueImplicitIDToken(ctx, req, ar, resp, map[string]interface{}{
+		"at_hash": hash[:c.Enigma.GetSigningMethodLength() / 2],
+	}); err != nil {
 		return errors.New(err)
 	}
 

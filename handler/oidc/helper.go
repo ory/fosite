@@ -13,7 +13,7 @@ type IDTokenHandleHelper struct {
 	IDTokenStrategy OpenIDConnectTokenStrategy
 }
 
-func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, netr *http.Request, fosr Requester) (token string, err error) {
+func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, netr *http.Request, fosr Requester, claims map[string]interface{}) (token string, err error) {
 	nonce := fosr.GetRequestForm().Get("nonce")
 
 	// OPTIONAL. String value used to associate a Client session with an ID Token, and to mitigate replay attacks.
@@ -27,7 +27,7 @@ func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, netr *http.Re
 		return "", errors.New(ErrMisconfiguration)
 	}
 
-	token, err = i.IDTokenStrategy.GenerateIDToken(ctx, netr, fosr)
+	token, err = i.IDTokenStrategy.GenerateIDToken(ctx, netr, fosr, claims)
 	if err != nil {
 		return "", errors.New(ErrServerError)
 	}
@@ -37,8 +37,8 @@ func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, netr *http.Re
 	return token, nil
 }
 
-func (i *IDTokenHandleHelper) IssueImplicitIDToken(ctx context.Context, req *http.Request, ar Requester, resp AuthorizeResponder) error {
-	token, err := i.generateIDToken(ctx, req, ar)
+func (i *IDTokenHandleHelper) IssueImplicitIDToken(ctx context.Context, req *http.Request, ar Requester, resp AuthorizeResponder, claims map[string]interface{}) error {
+	token, err := i.generateIDToken(ctx, req, ar, claims)
 	if err != nil {
 		return errors.New(err)
 	}
@@ -47,8 +47,8 @@ func (i *IDTokenHandleHelper) IssueImplicitIDToken(ctx context.Context, req *htt
 	return nil
 }
 
-func (i *IDTokenHandleHelper) IssueExplicitIDToken(ctx context.Context, req *http.Request, ar Requester, resp AccessResponder) error {
-	token, err := i.generateIDToken(ctx, req, ar)
+func (i *IDTokenHandleHelper) IssueExplicitIDToken(ctx context.Context, req *http.Request, ar Requester, resp AccessResponder, claims map[string]interface{}) error {
+	token, err := i.generateIDToken(ctx, req, ar, claims)
 	if err != nil {
 		return errors.New(err)
 	}
