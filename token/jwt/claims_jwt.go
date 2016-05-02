@@ -7,6 +7,19 @@ import (
 	"github.com/pborman/uuid"
 )
 
+func JWTClaimsFromMap(m map[string]interface{}) *JWTClaims {
+	return &JWTClaims{
+		Subject:   ToString(m["sub"]),
+		IssuedAt:  ToTime(m["iat"]),
+		Issuer:    ToString(m["iss"]),
+		NotBefore: ToTime(m["nbf"]),
+		Audience:  ToString(m["aud"]),
+		ExpiresAt: ToTime(m["exp"]),
+		JTI:       ToString(m["jti"]),
+		Extra:     Filter(m, "sub", "iss", "iat", "nbf", "aud", "exp", "jti"),
+	}
+}
+
 // JWTClaims represent a token's claims.
 type JWTClaims struct {
 	Subject   string
@@ -45,19 +58,6 @@ func (c *JWTClaims) Add(key string, value interface{}) {
 		c.Extra = make(map[string]interface{})
 	}
 	c.Extra[key] = value
-}
-
-func JWTClaimsFromMap(m map[string]interface{}) *JWTClaims {
-	return &JWTClaims{
-		Subject:   ToString(m["sub"]),
-		IssuedAt:  ToTime(m["iat"]),
-		Issuer:    ToString(m["iss"]),
-		NotBefore: ToTime(m["nbf"]),
-		Audience:  ToString(m["aud"]),
-		ExpiresAt: ToTime(m["exp"]),
-		JTI:       ToString(m["jti"]),
-		Extra:     Filter(m, "sub", "iss", "iat", "nbf", "aud", "exp", "jti"),
-	}
 }
 
 // IsExpired checks if JWT is expired.

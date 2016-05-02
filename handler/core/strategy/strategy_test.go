@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/ory-am/fosite"
-	hmac "github.com/ory-am/fosite/enigma/hmac"
-	jwt "github.com/ory-am/fosite/enigma/jwt"
+	hmac "github.com/ory-am/fosite/token/hmac"
+	jwt "github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
 var s = HMACSHAStrategy{
-	Enigma: &hmac.Enigma{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
+	Enigma: &hmac.HMACStrategy{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
 }
 
 var j = &JWTStrategy{

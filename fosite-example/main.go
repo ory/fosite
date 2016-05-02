@@ -10,8 +10,8 @@ import (
 
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma/hmac"
-	"github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory-am/fosite/token/jwt"
 	exampleStore "github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core"
 	coreclient "github.com/ory-am/fosite/handler/core/client"
@@ -76,7 +76,7 @@ var appClientConf = clientcredentials.Config{
 
 // You can decide if you want to use HMAC or JWT or another strategy for generating authorize codes and access / refresh tokens
 var hmacStrategy = &strategy.HMACSHAStrategy{
-	Enigma: &hmac.Enigma{
+	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }
@@ -133,14 +133,14 @@ func newSession(user string) *session {
 			},
 		},
 		IDTokenSession: &oidcstrategy.IDTokenSession{
-			IDTokenClaims: &oidcstrategy.IDTokenClaims{
+			Claims: &jwt.IDTokenClaims{
 				Issuer:    "fosite.my-application.com",
 				Subject:   user,
 				Audience:  "*.my-application.com",
 				ExpiresAt: time.Now().Add(time.Hour * 6),
 				IssuedAt:  time.Now(),
 			},
-			Header: &jwt.Header{
+			Headers: &jwt.Header{
 				Extra: make(map[string]interface{}),
 			},
 		},

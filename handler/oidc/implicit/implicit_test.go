@@ -9,8 +9,8 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma/hmac"
-	"github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	oauthStrat "github.com/ory-am/fosite/handler/core/strategy"
@@ -28,7 +28,7 @@ var idStrategy = &strategy.JWTStrategy{
 }
 
 var hmacStrategy = &oauthStrat.HMACSHAStrategy{
-	Enigma: &hmac.Enigma{
+	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }

@@ -13,23 +13,25 @@ import (
 	"github.com/ory-am/fosite/rand"
 )
 
-// Enigma is responsible for generating and validating challenges.
-type Enigma struct {
+// HMACStrategy is responsible for generating and validating challenges.
+type HMACStrategy struct {
 	AuthCodeEntropy int
 	GlobalSecret    []byte
 }
 
-// key should be at least 256 bit long, making it
-const minimumEntropy = 32
+const (
+	// key should be at least 256 bit long, making it
+	minimumEntropy = 32
 
-// the secrets (client and global) should each have at least 16 characters making it harder to guess them
-const minimumSecretLength = 32
+	// the secrets (client and global) should each have at least 16 characters making it harder to guess them
+	minimumSecretLength = 32
+)
 
 var b64 = base64.URLEncoding.WithPadding(base64.NoPadding)
 
 // Generate generates a token and a matching signature or returns an error.
 // This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets.
-func (c *Enigma) Generate() (string, string, error) {
+func (c *HMACStrategy) Generate() (string, string, error) {
 	if len(c.GlobalSecret) < minimumSecretLength/2 {
 		return "", "", errors.New("Secret is not strong enough")
 	}
@@ -68,7 +70,7 @@ func (c *Enigma) Generate() (string, string, error) {
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
-func (c *Enigma) Validate(token string) (string, error) {
+func (c *HMACStrategy) Validate(token string) (string, error) {
 	split := strings.Split(token, ".")
 	if len(split) != 2 {
 		return "", errors.New("Key and signature must both be set")

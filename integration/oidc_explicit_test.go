@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/oidc"
@@ -17,8 +17,8 @@ import (
 
 func TestOpenIDConnectExplicit(t *testing.T) {
 	session := &strategy.IDTokenSession{
-		IDTokenClaims: &strategy.IDTokenClaims{},
-		Header:        &jwt.Header{},
+		Claims: &jwt.IDTokenClaims{},
+		Headers:        &jwt.Header{},
 	}
 	f := newFosite()
 	ts := mockServer(t, f, session)

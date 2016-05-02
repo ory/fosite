@@ -9,7 +9,7 @@ import (
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/oidc"
 	"golang.org/x/net/context"
-	"github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/token/jwt"
 )
 
 type OpenIDConnectHybridHandler struct {

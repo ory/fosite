@@ -8,7 +8,7 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
@@ -29,8 +29,8 @@ func TestGenerateIDToken(t *testing.T) {
 	httpreq := &http.Request{Form: url.Values{}}
 	ar := fosite.NewAccessRequest(nil)
 	sess := &strategy.IDTokenSession{
-		IDTokenClaims: &strategy.IDTokenClaims{},
-		Header:        &jwt.Header{},
+		Claims: &jwt.IDTokenClaims{},
+		Headers:        &jwt.Header{},
 	}
 	h := &IDTokenHandleHelper{IDTokenStrategy: chgen}
 
@@ -92,7 +92,7 @@ func TestIssueExplicitToken(t *testing.T) {
 	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&strategy.IDTokenSession{IDTokenClaims: &strategy.IDTokenClaims{}, Header: &jwt.Header{}})
+	ar.SetSession(&strategy.IDTokenSession{Claims: &jwt.IDTokenClaims{}, Headers: &jwt.Header{}})
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
@@ -108,7 +108,7 @@ func TestIssueImplicitToken(t *testing.T) {
 	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&strategy.IDTokenSession{IDTokenClaims: &strategy.IDTokenClaims{}, Header: &jwt.Header{}})
+	ar.SetSession(&strategy.IDTokenSession{Claims: &jwt.IDTokenClaims{}, Headers: &jwt.Header{}})
 
 	resp.EXPECT().AddFragment("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}

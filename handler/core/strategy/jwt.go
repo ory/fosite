@@ -4,16 +4,16 @@ import (
 	"errors"
 
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/net/context"
 )
 
 type JWTSessionContainer interface {
-	// GetTokenClaims returns the claims
-	GetTokenClaims() *jwt.JWTClaims
+	// GetJWTClaims returns the claims
+	GetJWTClaims() *jwt.JWTClaims
 
-	// GetTokenHeader returns the header
-	GetTokenHeader() *jwt.Header
+	// GetJWTHeader returns the header
+	GetJWTHeader() *jwt.Header
 }
 
 // JWTSession Container for the JWT session
@@ -22,11 +22,11 @@ type JWTSession struct {
 	JWTHeader *jwt.Header
 }
 
-func (j *JWTSession) GetTokenClaims() *jwt.JWTClaims {
+func (j *JWTSession) GetJWTClaims() *jwt.JWTClaims {
 	return j.JWTClaims
 }
 
-func (j *JWTSession) GetTokenHeader() *jwt.Header {
+func (j *JWTSession) GetJWTHeader() *jwt.Header {
 	return j.JWTHeader
 }
 
@@ -75,8 +75,8 @@ func (h *JWTStrategy) validate(token string) (string, error) {
 
 func (h *JWTStrategy) generate(requester fosite.Requester) (string, string, error) {
 	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); ok {
-		if jwtSession.GetTokenClaims() != nil {
-			return h.Enigma.Generate(jwtSession.GetTokenClaims(), jwtSession.GetTokenHeader())
+		if jwtSession.GetJWTClaims() != nil {
+			return h.Enigma.Generate(jwtSession.GetJWTClaims(), jwtSession.GetJWTHeader())
 		}
 		return "", "", errors.New("GetTokenClaims() must not be nil")
 	}

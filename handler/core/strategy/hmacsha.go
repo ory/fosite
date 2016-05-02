@@ -2,12 +2,12 @@ package strategy
 
 import (
 	"github.com/ory-am/fosite"
-	enigma "github.com/ory-am/fosite/enigma/hmac"
+	enigma "github.com/ory-am/fosite/token/hmac"
 	"golang.org/x/net/context"
 )
 
 type HMACSHAStrategy struct {
-	Enigma *enigma.Enigma
+	Enigma *enigma.HMACStrategy
 }
 
 func (h HMACSHAStrategy) GenerateAccessToken(_ context.Context, _ fosite.Requester) (token string, signature string, err error) {
