@@ -25,3 +25,7 @@ func (h *Header) Add(key string, value interface{}) {
 	}
 	h.Extra[key] = value
 }
+
+func (h *Header) Get(key string) interface{} {
+	return h.Extra[key]
+}

@@ -71,6 +71,10 @@ func (c *IDTokenClaims) Add(key string, value interface{}) {
 	c.Extra[key] = value
 }
 
+func (c *IDTokenClaims) Get(key string) interface{} {
+	return c.ToMap()[key]
+}
+
 func (t *IDTokenSession) GetIDTokenHeader() enigma.Mapper {
 	return t.Header
 }
@@ -92,6 +96,10 @@ func (h JWTStrategy) GenerateIDToken(_ context.Context, _ *http.Request, request
 
 		for k, v := range claims {
 			idcs.Add(k,v)
+		}
+
+		if requester.GetRequestForm().Get("max_age") != "" && idcs.Get("auth_time") == nil {
+			return "", errors.New("auth_time is required when max_age is set")
 		}
 
 		token, _, err := h.Enigma.Generate(idcs, jwtSession.GetIDTokenHeader())

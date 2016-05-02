@@ -36,6 +36,10 @@ func (c *JWTClaims) ToMap() map[string]interface{} {
 	return ret
 }
 
+func (c JWTClaims) Get(key string) interface{} {
+	return c.ToMap()[key]
+}
+
 func (c *JWTClaims) Add(key string, value interface{}) {
 	if c.Extra == nil {
 		c.Extra = make(map[string]interface{})

@@ -7,6 +7,7 @@ import (
 type Mapper interface {
 	ToMap() map[string]interface{}
 	Add(key string, value interface{})
+	Get(key string) interface{}
 }
 
 func ToString(i interface{}) string {
