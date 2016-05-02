@@ -26,7 +26,9 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	defer ctrl.Finish()
 
 	session := &strategy.IDTokenSession{
-		Claims:  &jwt.IDTokenClaims{},
+		Claims:  &jwt.IDTokenClaims{
+			Subject: "peter",
+		},
 		Headers: &jwt.Header{},
 	}
 	aresp := fosite.NewAccessResponse()

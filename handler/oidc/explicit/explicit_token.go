@@ -29,5 +29,5 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return ErrUnknownRequest
 	}
 
-	return c.IssueExplicitIDToken(ctx, req, authorize, responder, map[string]interface{}{})
+	return c.IssueExplicitIDToken(ctx, req, authorize, responder)
 }

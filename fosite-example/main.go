@@ -95,7 +95,7 @@ var jwtStrategy = &strategy.RS256JWTStrategy{
 }
 
 // This strategy is used for issuing OpenID Conenct id tokens
-var idtokenStrategy = &oidcstrategy.JWTStrategy{
+var idtokenStrategy = &oidcstrategy.DefaultIDTokenStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),

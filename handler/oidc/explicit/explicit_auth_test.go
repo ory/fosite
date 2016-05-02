@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var j = &strategy.JWTStrategy{
+var j = &strategy.DefaultIDTokenStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
@@ -56,33 +56,9 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because session is not set",
-			setup: func() {
-				areq.ResponseTypes = fosite.Arguments{"code"}
-				areq.Scopes = fosite.Arguments{"openid"}
-			},
-			expectErr: fosite.ErrServerError,
-		},
-		{
-			description: "should fail because no nonce set",
-			setup: func() {
-				areq.Session = &strategy.IDTokenSession{
-					Claims:  &jwt.IDTokenClaims{},
-					Headers: &jwt.Header{},
-				}
-			},
-			expectErr: fosite.ErrInsufficientEntropy,
-		},
-		{
-			description: "should fail because nonce to short",
-			setup: func() {
-				areq.Form.Set("nonce", "1")
-			},
-			expectErr: fosite.ErrInsufficientEntropy,
-		},
-		{
 			description: "should fail because no code set",
 			setup: func() {
+				areq.Scopes = fosite.Arguments{"openid"}
 				areq.Form.Set("nonce", "11111111111111111111111111111")
 				aresp.EXPECT().GetCode().Return("")
 			},

@@ -25,7 +25,9 @@ import (
 
 func TestOIDCImplicitGrants(t *testing.T) {
 	session := &strategy.IDTokenSession{
-		Claims:  &jwt.IDTokenClaims{},
+		Claims:  &jwt.IDTokenClaims{
+			Subject: "peter",
+		},
 		Headers: &jwt.Header{},
 	}
 	f := newFosite()
@@ -102,8 +104,7 @@ func TestOIDCImplicitGrants(t *testing.T) {
 			responseType: "token%20id_token%20code",
 			nonce:        "1111111111111111",
 			description:  "should pass id token (id_token token)",
-			setup: func() {
-			},
+			setup: func() {},
 			hasToken: true,
 			hasCode:  true,
 		},

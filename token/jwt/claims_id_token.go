@@ -21,8 +21,8 @@ type IDTokenClaims struct {
 	ExpiresAt       time.Time
 	IssuedAt        time.Time
 	AuthTime        time.Time
-	AccessTokenHash string
-	CodeHash        string
+	AccessTokenHash []byte
+	CodeHash        []byte
 	Extra           map[string]interface{}
 }
 
@@ -32,9 +32,9 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 	ret["iss"] = c.Issuer
 	ret["aud"] = c.Audience
 	ret["nonce"] = c.Nonce
-	ret["auth_time"] = c.AuthTime
 	ret["at_hash"] = c.AccessTokenHash
 	ret["c_hash"] = c.CodeHash
+	ret["auth_time"] = c.AuthTime.Unix()
 	ret["iat"] = c.IssuedAt.Unix()
 	ret["exp"] = c.ExpiresAt.Unix()
 	return ret

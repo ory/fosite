@@ -8,5 +8,5 @@ import (
 )
 
 type OpenIDConnectTokenStrategy interface {
-	GenerateIDToken(ctx context.Context, r *http.Request, requester fosite.Requester, claims map[string]interface{}) (token string, err error)
+	GenerateIDToken(ctx context.Context, r *http.Request, requester fosite.Requester) (token string, err error)
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/oidc"
+	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/net/context"
 )
@@ -21,14 +22,21 @@ type OpenIDConnectHybridHandler struct {
 }
 
 func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
-	var claims = map[string]interface{}{}
-
 	if len(ar.GetResponseTypes()) < 2 {
 		return nil
 	}
 
 	if !(ar.GetResponseTypes().Matches("token", "id_token", "code") || ar.GetResponseTypes().Matches("token", "code")) {
 		return nil
+	}
+
+	sess, ok := ar.GetSession().(*strategy.IDTokenSession)
+	if !ok {
+		return errors.New("Session must be of type IDTokenContainer")
+	}
+
+	if sess.Claims == nil {
+		sess.Claims = &jwt.IDTokenClaims{}
 	}
 
 	if ar.GetResponseTypes().Has("code") {
@@ -49,7 +57,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		claims["c_hash"] = hash[:c.Enigma.GetSigningMethodLength()/2]
+		sess.Claims.CodeHash = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
 	if ar.GetResponseTypes().Has("token") {
@@ -62,18 +70,18 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		claims["at_hash"] = hash[:c.Enigma.GetSigningMethodLength()/2]
+		sess.Claims.AccessTokenHash = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
 	if !ar.GetScopes().Has("openid") {
 		return nil
 	}
 
-	if err := c.IssueImplicitIDToken(ctx, req, ar, resp, claims); err != nil {
+	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.New(err)
 	}
 
-	err := c.IssueImplicitIDToken(ctx, req, ar, resp, claims)
+	err := c.IssueImplicitIDToken(ctx, req, ar, resp)
 	if err != nil {
 		return errors.New(err)
 	}

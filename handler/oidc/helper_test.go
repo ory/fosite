@@ -14,12 +14,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var strat = &strategy.JWTStrategy{
+var strat = &strategy.DefaultIDTokenStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
 }
+
+var fooErr = errors.New("foo")
 
 func TestGenerateIDToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -29,7 +31,9 @@ func TestGenerateIDToken(t *testing.T) {
 	httpreq := &http.Request{Form: url.Values{}}
 	ar := fosite.NewAccessRequest(nil)
 	sess := &strategy.IDTokenSession{
-		Claims:  &jwt.IDTokenClaims{},
+		Claims:  &jwt.IDTokenClaims{
+			Subject: "peter",
+		},
 		Headers: &jwt.Header{},
 	}
 	h := &IDTokenHandleHelper{IDTokenStrategy: chgen}
@@ -40,41 +44,23 @@ func TestGenerateIDToken(t *testing.T) {
 		expectErr   error
 	}{
 		{
-			description: "should fail because nonce not set",
-			setup:       func() {},
-			expectErr:   fosite.ErrInsufficientEntropy,
-		},
-		{
-			description: "should fail because nonce too short",
-			setup: func() {
-				ar.Form.Set("nonce", "1")
-			},
-			expectErr: fosite.ErrInsufficientEntropy,
-		},
-		{
-			description: "should fail because session not set",
-			setup: func() {
-				ar.Form.Set("nonce", "11111111111111111111111111111111111")
-			},
-			expectErr: fosite.ErrMisconfiguration,
-		},
-		{
 			description: "should fail because generator failed",
 			setup: func() {
+				ar.Form.Set("nonce", "11111111111111111111111111111111111")
 				ar.SetSession(sess)
-				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar, gomock.Any()).Return("", errors.New(""))
+				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar).Return("", fooErr)
 			},
-			expectErr: fosite.ErrServerError,
+			expectErr: fooErr,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar, gomock.Any()).AnyTimes().Return("asdf", nil)
+				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar).AnyTimes().Return("asdf", nil)
 			},
 		},
 	} {
 		c.setup()
-		token, err := h.generateIDToken(nil, httpreq, ar, map[string]interface{}{"acr": "foo"})
+		token, err := h.generateIDToken(nil, httpreq, ar)
 		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if err == nil {
 			assert.NotEmpty(t, token, "(%d) %s", k, c.description)
@@ -92,11 +78,13 @@ func TestIssueExplicitToken(t *testing.T) {
 	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&strategy.IDTokenSession{Claims: &jwt.IDTokenClaims{}, Headers: &jwt.Header{}})
+	ar.SetSession(&strategy.IDTokenSession{Claims: &jwt.IDTokenClaims{
+		Subject: "peter",
+	}, Headers: &jwt.Header{}})
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueExplicitIDToken(nil, httpreq, ar, resp, map[string]interface{}{})
+	err := h.IssueExplicitIDToken(nil, httpreq, ar, resp)
 	assert.Nil(t, err, "%s", err)
 }
 
@@ -108,10 +96,12 @@ func TestIssueImplicitToken(t *testing.T) {
 	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&strategy.IDTokenSession{Claims: &jwt.IDTokenClaims{}, Headers: &jwt.Header{}})
+	ar.SetSession(&strategy.IDTokenSession{Claims: &jwt.IDTokenClaims{
+		Subject: "peter",
+	}, Headers: &jwt.Header{}})
 
 	resp.EXPECT().AddFragment("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueImplicitIDToken(nil, httpreq, ar, resp, map[string]interface{}{})
+	err := h.IssueImplicitIDToken(nil, httpreq, ar, resp)
 	assert.Nil(t, err, "%s", err)
 }
