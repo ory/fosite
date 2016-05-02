@@ -8,10 +8,10 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/token/jwt"
 	"github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,8 +67,8 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should fail because no nonce set",
 			setup: func() {
 				areq.Session = &strategy.IDTokenSession{
-					Claims: &jwt.IDTokenClaims{},
-					Headers:        &jwt.Header{},
+					Claims:  &jwt.IDTokenClaims{},
+					Headers: &jwt.Header{},
 				}
 			},
 			expectErr: fosite.ErrInsufficientEntropy,

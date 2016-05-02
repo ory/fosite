@@ -43,7 +43,7 @@ func (h JWTStrategy) GenerateIDToken(_ context.Context, _ *http.Request, request
 		}
 
 		for k, v := range claims {
-			idcs.Add(k,v)
+			idcs.Add(k, v)
 		}
 
 		if requester.GetRequestForm().Get("max_age") != "" && idcs.Get("auth_time") == nil {

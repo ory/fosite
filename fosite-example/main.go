@@ -10,8 +10,6 @@ import (
 
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/token/hmac"
-	"github.com/ory-am/fosite/token/jwt"
 	exampleStore "github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core"
 	coreclient "github.com/ory-am/fosite/handler/core/client"
@@ -25,6 +23,8 @@ import (
 	"github.com/ory-am/fosite/handler/oidc/hybrid"
 	oidcimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
 	oidcstrategy "github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/parnurzeal/gorequest"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"

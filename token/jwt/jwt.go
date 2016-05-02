@@ -9,9 +9,10 @@ import (
 	"os"
 	"strings"
 
+	"crypto/sha256"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-errors/errors"
-	"crypto/sha256"
 )
 
 // TestCertificates are certificates used for testing and localhost.

@@ -7,11 +7,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/token/hmac"
-	"github.com/ory-am/fosite/token/jwt"
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core/strategy"
 	idstrat "github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )

@@ -7,8 +7,8 @@ import (
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	. "github.com/ory-am/fosite/handler/oidc"
-	"golang.org/x/net/context"
 	"github.com/ory-am/fosite/token/jwt"
+	"golang.org/x/net/context"
 )
 
 type OpenIDConnectImplicitHandler struct {
@@ -35,7 +35,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return err
 	}
 	if err = c.IssueImplicitIDToken(ctx, req, ar, resp, map[string]interface{}{
-		"at_hash": hash[:c.Enigma.GetSigningMethodLength() / 2],
+		"at_hash": hash[:c.Enigma.GetSigningMethodLength()/2],
 	}); err != nil {
 		return errors.New(err)
 	}

@@ -8,8 +8,8 @@ import (
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/oidc"
-	"golang.org/x/net/context"
 	"github.com/ory-am/fosite/token/jwt"
+	"golang.org/x/net/context"
 )
 
 type OpenIDConnectHybridHandler struct {
@@ -49,7 +49,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		claims["c_hash"] = hash[:c.Enigma.GetSigningMethodLength() / 2]
+		claims["c_hash"] = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
 	if ar.GetResponseTypes().Has("token") {
@@ -62,7 +62,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		claims["at_hash"] = hash[:c.Enigma.GetSigningMethodLength() / 2]
+		claims["at_hash"] = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
 	if !ar.GetScopes().Has("openid") {

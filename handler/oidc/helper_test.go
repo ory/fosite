@@ -8,9 +8,9 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/token/jwt"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,8 +29,8 @@ func TestGenerateIDToken(t *testing.T) {
 	httpreq := &http.Request{Form: url.Values{}}
 	ar := fosite.NewAccessRequest(nil)
 	sess := &strategy.IDTokenSession{
-		Claims: &jwt.IDTokenClaims{},
-		Headers:        &jwt.Header{},
+		Claims:  &jwt.IDTokenClaims{},
+		Headers: &jwt.Header{},
 	}
 	h := &IDTokenHandleHelper{IDTokenStrategy: chgen}
 
@@ -62,7 +62,7 @@ func TestGenerateIDToken(t *testing.T) {
 			description: "should fail because generator failed",
 			setup: func() {
 				ar.SetSession(sess)
-				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar,  gomock.Any()).Return("", errors.New(""))
+				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar, gomock.Any()).Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},

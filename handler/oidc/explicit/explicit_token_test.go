@@ -8,10 +8,10 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/token/jwt"
 	"github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,8 +26,8 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	defer ctrl.Finish()
 
 	session := &strategy.IDTokenSession{
-		Claims: &jwt.IDTokenClaims{},
-		Headers:        &jwt.Header{},
+		Claims:  &jwt.IDTokenClaims{},
+		Headers: &jwt.Header{},
 	}
 	aresp := fosite.NewAccessResponse()
 	areq := fosite.NewAccessRequest(session)

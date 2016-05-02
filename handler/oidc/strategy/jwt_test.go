@@ -17,8 +17,8 @@ var j = &JWTStrategy{
 
 func TestGenerateIDToken(t *testing.T) {
 	req := fosite.NewAccessRequest(&IDTokenSession{
-		Claims: &jwt.IDTokenClaims{},
-		Headers:        &jwt.Header{},
+		Claims:  &jwt.IDTokenClaims{},
+		Headers: &jwt.Header{},
 	})
 	token, err := j.GenerateIDToken(nil, nil, req, map[string]interface{}{"acr": "foo"})
 	assert.Nil(t, err)
