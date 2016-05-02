@@ -17,7 +17,7 @@ type OpenIDConnectHybridHandler struct {
 	*explicit.AuthorizeExplicitGrantTypeHandler
 	*oidc.IDTokenHandleHelper
 
-	Enigma *jwt.Enigma
+	Enigma *jwt.RS256JWTStrategy
 }
 
 func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {

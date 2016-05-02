@@ -87,8 +87,8 @@ var hmacStrategy = &strategy.HMACSHAStrategy{
 // NOTE One thing to keep in mind is that the power of JWT does not mean anything
 // when used as an authorize token, since the authorize token really just should
 // be a random string that is hard to guess.
-var jwtStrategy = &strategy.JWTStrategy{
-	Enigma: &jwt.Enigma{
+var jwtStrategy = &strategy.RS256JWTStrategy{
+	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
@@ -96,7 +96,7 @@ var jwtStrategy = &strategy.JWTStrategy{
 
 // This strategy is used for issuing OpenID Conenct id tokens
 var idtokenStrategy = &oidcstrategy.JWTStrategy{
-	Enigma: &jwt.Enigma{
+	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},

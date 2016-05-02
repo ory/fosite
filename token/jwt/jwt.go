@@ -62,7 +62,7 @@ ODIRe1AuTyHceAbewn8b462yEWKARdpd9AjQW5SIVPfdsz5B6GlYQ5LdYKtznTuy
 }
 
 // Enigma is responsible for generating and validating challenges.
-type Enigma struct {
+type RS256JWTStrategy struct {
 	PrivateKey []byte
 	PublicKey  []byte
 }
@@ -84,7 +84,7 @@ func LoadCertificate(path string) ([]byte, error) {
 }
 
 // Generate generates a new authorize code or returns an error. set secret
-func (j *Enigma) Generate(claims Mapper, header Mapper) (string, string, error) {
+func (j *RS256JWTStrategy) Generate(claims Mapper, header Mapper) (string, string, error) {
 	if header == nil || claims == nil {
 		return "", "", errors.New("Either claims or header is nil.")
 	}
@@ -111,7 +111,7 @@ func (j *Enigma) Generate(claims Mapper, header Mapper) (string, string, error) 
 }
 
 // Validate : Validates a token and returns its signature or an error if the token is not valid.
-func (j *Enigma) Validate(token string) (string, error) {
+func (j *RS256JWTStrategy) Validate(token string) (string, error) {
 	if _, err := j.Decode(token); err != nil {
 		return "", err
 	}
@@ -119,7 +119,7 @@ func (j *Enigma) Validate(token string) (string, error) {
 	return j.GetSignature(token)
 }
 
-func (j *Enigma) Decode(token string) (*jwt.Token, error) {
+func (j *RS256JWTStrategy) Decode(token string) (*jwt.Token, error) {
 	// Parse the token.
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
@@ -137,7 +137,7 @@ func (j *Enigma) Decode(token string) (*jwt.Token, error) {
 	return parsedToken, err
 }
 
-func (j *Enigma) GetSignature(token string) (string, error) {
+func (j *RS256JWTStrategy) GetSignature(token string) (string, error) {
 	split := strings.Split(token, ".")
 	if len(split) != 3 {
 		return "", errors.New("Header, body and signature must all be set")
@@ -145,7 +145,7 @@ func (j *Enigma) GetSignature(token string) (string, error) {
 	return split[2], nil
 }
 
-func (c *Enigma) Hash(in []byte) ([]byte, error) {
+func (c *RS256JWTStrategy) Hash(in []byte) ([]byte, error) {
 	// SigningMethodRS256
 	hash := sha256.New()
 	_, err := hash.Write(in)
@@ -155,7 +155,7 @@ func (c *Enigma) Hash(in []byte) ([]byte, error) {
 	return hash.Sum([]byte{}), nil
 }
 
-func (c *Enigma) GetSigningMethodLength() int {
+func (c *RS256JWTStrategy) GetSigningMethodLength() int {
 	return jwt.SigningMethodRS256.Hash.Size()
 }
 

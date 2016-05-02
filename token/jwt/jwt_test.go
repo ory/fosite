@@ -60,7 +60,7 @@ func TestGenerateJWT(t *testing.T) {
 		ExpiresAt: time.Now().Add(time.Hour),
 	}
 
-	j := Enigma{
+	j := RS256JWTStrategy{
 		PrivateKey: []byte(TestCertificates[0][1]),
 		PublicKey:  []byte(TestCertificates[1][1]),
 	}
@@ -123,7 +123,7 @@ func TestGenerateJWT(t *testing.T) {
 
 func TestValidateSignatureRejectsJWT(t *testing.T) {
 	var err error
-	j := Enigma{
+	j := RS256JWTStrategy{
 		PrivateKey: []byte(TestCertificates[0][1]),
 		PublicKey:  []byte(TestCertificates[1][1]),
 	}

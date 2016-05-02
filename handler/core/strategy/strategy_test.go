@@ -15,8 +15,8 @@ var s = HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
 }
 
-var j = &JWTStrategy{
-	Enigma: &jwt.Enigma{
+var j = &RS256JWTStrategy{
+	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},

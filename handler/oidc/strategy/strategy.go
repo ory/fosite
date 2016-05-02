@@ -32,7 +32,7 @@ func (t *IDTokenSession) GetIDTokenClaims() jwt.Mapper {
 }
 
 type JWTStrategy struct {
-	Enigma *jwt.Enigma
+	*jwt.RS256JWTStrategy
 }
 
 func (h JWTStrategy) GenerateIDToken(_ context.Context, _ *http.Request, requester fosite.Requester, claims map[string]interface{}) (token string, err error) {
@@ -50,7 +50,7 @@ func (h JWTStrategy) GenerateIDToken(_ context.Context, _ *http.Request, request
 			return "", errors.New("auth_time is required when max_age is set")
 		}
 
-		token, _, err := h.Enigma.Generate(idcs, jwtSession.GetIDTokenHeader())
+		token, _, err := h.RS256JWTStrategy.Generate(idcs, jwtSession.GetIDTokenHeader())
 		return token, err
 	}
 	return "", errors.New("Session must be of type IDTokenContainer")
