@@ -64,22 +64,7 @@ func TestAccessToken(t *testing.T) {
 
 	validate, err = j.ValidateAccessToken(nil, r, token)
 	assert.Nil(t, err, "%s", err)
-	assert.Equal(t, signature, validate)
-
-	// Invalid
-	oldSession := r.Session
-	r.Session = nil
-	token, signature, err = j.GenerateAccessToken(nil, r)
-	assert.NotNil(t, err, "%s", err)
-	r.Session = oldSession
-
-	// Invalid
-	oldClaims := r.Session.(*JWTSession).JWTClaims
-	r.Session.(*JWTSession).JWTClaims = nil
-	token, signature, err = j.GenerateAccessToken(nil, r)
-	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).JWTClaims = oldClaims
-}
+	assert.Equal(t, signature, validate)}
 
 func TestRefreshToken(t *testing.T) {
 	// HMAC
@@ -101,20 +86,6 @@ func TestRefreshToken(t *testing.T) {
 	validate, err = j.ValidateRefreshToken(nil, r, token)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
-
-	// Invalid
-	oldSession := r.Session
-	r.Session = nil
-	token, signature, err = j.GenerateRefreshToken(nil, r)
-	assert.NotNil(t, err, "%s", err)
-	r.Session = oldSession
-
-	// Invalid
-	oldClaims := r.Session.(*JWTSession).JWTClaims
-	r.Session.(*JWTSession).JWTClaims = nil
-	token, signature, err = j.GenerateRefreshToken(nil, r)
-	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).JWTClaims = oldClaims
 }
 
 func TestGenerateAuthorizeCode(t *testing.T) {
@@ -137,18 +108,4 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 	validate, err = j.ValidateAuthorizeCode(nil, r, token)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
-
-	// Invalid
-	oldSession := r.Session
-	r.Session = nil
-	token, signature, err = j.GenerateAuthorizeCode(nil, r)
-	assert.NotNil(t, err, "%s", err)
-	r.Session = oldSession
-
-	// Invalid
-	oldClaims := r.Session.(*JWTSession).JWTClaims
-	r.Session.(*JWTSession).JWTClaims = nil
-	token, signature, err = j.GenerateAuthorizeCode(nil, r)
-	assert.NotNil(t, err, "%s", err)
-	r.Session.(*JWTSession).JWTClaims = oldClaims
 }
