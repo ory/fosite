@@ -25,7 +25,7 @@ type DefaultSession struct {
 }
 
 func (s *DefaultSession) IDTokenHeaders() *jwt.Headers {
-	if s.Claims == nil {
+	if s.Headers == nil {
 		s.Headers = &jwt.Headers{}
 	}
 	return s.Headers

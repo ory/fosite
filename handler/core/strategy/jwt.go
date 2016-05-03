@@ -30,8 +30,8 @@ func (j *JWTSession) GetJWTClaims() *jwt.JWTClaims {
 }
 
 func (j *JWTSession) GetJWTHeader() *jwt.Headers {
-	if j.JWTClaims == nil {
-		j.JWTClaims = &jwt.JWTClaims{}
+	if j.JWTHeader == nil {
+		j.JWTHeader = &jwt.Headers{}
 	}
 	return j.JWTHeader
 }
