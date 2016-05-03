@@ -67,7 +67,7 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 	}
 }
 
-var idTokenStrategy = &idstrat.DefaultIDTokenStrategy{
+var idTokenStrategy = &idstrat.DefaultStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),

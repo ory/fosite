@@ -25,11 +25,11 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
 	defer ctrl.Finish()
 
-	session := &strategy.IDTokenSession{
+	session := &strategy.DefaultSession{
 		Claims:  &jwt.IDTokenClaims{
 			Subject: "peter",
 		},
-		Headers: &jwt.Header{},
+		Headers: &jwt.Headers{},
 	}
 	aresp := fosite.NewAccessResponse()
 	areq := fosite.NewAccessRequest(session)

@@ -13,40 +13,56 @@ import (
 
 const defaultExpiryTime = time.Hour
 
-// IDTokenSession is a session container for the id token
-type IDTokenSession struct {
-	Claims  *jwt.IDTokenClaims
-	Headers *jwt.Header
+type Session interface {
+	IDTokenClaims() *jwt.IDTokenClaims
+	IDTokenHeaders() *jwt.Headers
 }
 
-type DefaultIDTokenStrategy struct {
+// IDTokenSession is a session container for the id token
+type DefaultSession struct {
+	Claims  *jwt.IDTokenClaims
+	Headers *jwt.Headers
+}
+
+func (s *DefaultSession) IDTokenHeaders() *jwt.Headers {
+	if s.Claims == nil {
+		s.Headers = &jwt.Headers{}
+	}
+	return s.Headers
+}
+
+func (s *DefaultSession) IDTokenClaims() *jwt.IDTokenClaims {
+	if s.Claims == nil {
+		s.Claims = &jwt.IDTokenClaims{}
+	}
+	return s.Claims
+}
+
+type DefaultStrategy struct {
 	*jwt.RS256JWTStrategy
 
 	Expiry time.Duration
 	Issuer string
 }
 
-func (h DefaultIDTokenStrategy) GenerateIDToken(_ context.Context, _ *http.Request, requester fosite.Requester) (token string, err error) {
+func (h DefaultStrategy) GenerateIDToken(_ context.Context, _ *http.Request, requester fosite.Requester) (token string, err error) {
 	if h.Expiry == 0 {
 		h.Expiry = defaultExpiryTime
 	}
 
-	sess, ok := requester.GetSession().(*IDTokenSession)
+	sess, ok := requester.GetSession().(Session)
 	if !ok {
-		return "", errors.New("Session must be of type IDTokenContainer")
+		return "", errors.New("Session must be of type strategy.Session")
 	}
 
-	if sess.Claims == nil {
-		return "", errors.New("Claims must not be nil")
-	}
-
-	if requester.GetRequestForm().Get("max_age") != "" && (sess.Claims.AuthTime.IsZero() || sess.Claims.AuthTime.After(time.Now())) {
+	claims := sess.IDTokenClaims()
+	if requester.GetRequestForm().Get("max_age") != "" && (claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now())) {
 		return "", errors.New("Authentication time claim is required when max_age is set and can not be in the future")
-	} else if sess.Claims.Subject == "" {
+	} else if claims.Subject == "" {
 		return "", errors.New("Subject claim can not be empty")
-	} else if sess.Claims.ExpiresAt.IsZero() {
-		sess.Claims.ExpiresAt = time.Now().Add(h.Expiry)
-	} else if sess.Claims.ExpiresAt.Before(time.Now()) {
+	} else if claims.ExpiresAt.IsZero() {
+		claims.ExpiresAt = time.Now().Add(h.Expiry)
+	} else if claims.ExpiresAt.Before(time.Now()) {
 		return "", errors.New("Expiry claim can not be in the past")
 	}
 
@@ -58,10 +74,10 @@ func (h DefaultIDTokenStrategy) GenerateIDToken(_ context.Context, _ *http.Reque
 		return "", errors.New(fosite.ErrInsufficientEntropy)
 	}
 
-	sess.Claims.Nonce = nonce
-	sess.Claims.Audience = requester.GetClient().GetID()
-	sess.Claims.IssuedAt = time.Now()
+	claims.Nonce = nonce
+	claims.Audience = requester.GetClient().GetID()
+	claims.IssuedAt = time.Now()
 
-	token, _, err = h.RS256JWTStrategy.Generate(sess.Claims, sess.Headers)
+	token, _, err = h.RS256JWTStrategy.Generate(claims, sess.IDTokenHeaders())
 	return token, err
 }

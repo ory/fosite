@@ -36,16 +36,13 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return err
 	}
 
-	sess, ok := ar.GetSession().(*strategy.IDTokenSession)
+	sess, ok := ar.GetSession().(strategy.Session)
 	if !ok {
-		return errors.New("Session must be of type IDTokenContainer")
+		return errors.New("Session must be of type strategy.Session")
 	}
 
-	if sess.Claims == nil {
-		sess.Claims = &jwt.IDTokenClaims{}
-	}
-
-	sess.Claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
+	claims := sess.IDTokenClaims()
+	claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
 	if err = c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.New(err)
 	}

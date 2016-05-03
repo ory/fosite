@@ -7,7 +7,7 @@ import (
 )
 
 func TestHeaderToMap(t *testing.T) {
-	header := &Header{
+	header := &Headers{
 		Extra: map[string]interface{}{
 			"foo": "bar",
 			"alg": "foo",

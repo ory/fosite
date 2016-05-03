@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var header = &Header{
+var header = &Headers{
 	Extra: map[string]interface{}{
 		"foo": "bar",
 	},

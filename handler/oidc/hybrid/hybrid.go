@@ -30,14 +30,12 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
-	sess, ok := ar.GetSession().(*strategy.IDTokenSession)
+	sess, ok := ar.GetSession().(strategy.Session)
 	if !ok {
-		return errors.New("Session must be of type IDTokenContainer")
+		return errors.New("Session must be of type strategy.Session")
 	}
 
-	if sess.Claims == nil {
-		sess.Claims = &jwt.IDTokenClaims{}
-	}
+	claims := sess.IDTokenClaims()
 
 	if ar.GetResponseTypes().Has("code") {
 		code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
@@ -57,7 +55,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		sess.Claims.CodeHash = hash[:c.Enigma.GetSigningMethodLength()/2]
+		claims.CodeHash = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
 	if ar.GetResponseTypes().Has("token") {
@@ -70,7 +68,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		sess.Claims.AccessTokenHash = hash[:c.Enigma.GetSigningMethodLength()/2]
+		claims.AccessTokenHash = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
 	if !ar.GetScopes().Has("openid") {

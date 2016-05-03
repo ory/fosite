@@ -39,7 +39,7 @@ var r = &fosite.Request{
 
 	Session: &JWTSession{
 		JWTClaims: claims,
-		JWTHeader: &jwt.Header{
+		JWTHeader: &jwt.Headers{
 			Extra: make(map[string]interface{}),
 		},
 	},

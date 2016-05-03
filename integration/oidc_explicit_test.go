@@ -16,11 +16,11 @@ import (
 )
 
 func TestOpenIDConnectExplicit(t *testing.T) {
-	session := &strategy.IDTokenSession{
+	session := &strategy.DefaultSession{
 		Claims:  &jwt.IDTokenClaims{
 			Subject: "peter",
 		},
-		Headers: &jwt.Header{},
+		Headers: &jwt.Headers{},
 	}
 	f := newFosite()
 	ts := mockServer(t, f, session)

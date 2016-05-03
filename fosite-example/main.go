@@ -28,6 +28,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	"os/exec"
 )
 
 // This is an exemplary storage instance. We will add a client and a user to it so we can use these later on.
@@ -95,7 +96,7 @@ var jwtStrategy = &strategy.RS256JWTStrategy{
 }
 
 // This strategy is used for issuing OpenID Conenct id tokens
-var idtokenStrategy = &oidcstrategy.DefaultIDTokenStrategy{
+var idtokenStrategy = &oidcstrategy.DefaultStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
@@ -112,7 +113,7 @@ var selectedStrategy = hmacStrategy
 type session struct {
 	User string
 	*strategy.JWTSession
-	*oidcstrategy.IDTokenSession
+	*oidcstrategy.DefaultSession
 }
 
 // newSession is a helper function for creating a new session
@@ -121,26 +122,25 @@ func newSession(user string) *session {
 		User: user,
 		JWTSession: &strategy.JWTSession{
 			JWTClaims: &jwt.JWTClaims{
-				Issuer:    "fosite.my-application.com",
+				Issuer:    "https://fosite.my-application.com",
 				Subject:   user,
-				Audience:  "*.my-application.com",
+				Audience:  "https://my-client.my-application.com",
 				ExpiresAt: time.Now().Add(time.Hour * 6),
 				IssuedAt:  time.Now(),
-				NotBefore: time.Now(),
 			},
-			JWTHeader: &jwt.Header{
+			JWTHeader: &jwt.Headers{
 				Extra: make(map[string]interface{}),
 			},
 		},
-		IDTokenSession: &oidcstrategy.IDTokenSession{
+		DefaultSession: &oidcstrategy.DefaultSession{
 			Claims: &jwt.IDTokenClaims{
-				Issuer:    "fosite.my-application.com",
+				Issuer:    "https://fosite.my-application.com",
 				Subject:   user,
-				Audience:  "*.my-application.com",
+				Audience:  "https://my-client.my-application.com",
 				ExpiresAt: time.Now().Add(time.Hour * 6),
 				IssuedAt:  time.Now(),
 			},
-			Headers: &jwt.Header{
+			Headers: &jwt.Headers{
 				Extra: make(map[string]interface{}),
 			},
 		},
@@ -263,6 +263,9 @@ func main() {
 	http.HandleFunc("/callback", callbackHandler)
 	http.HandleFunc("/client", clientEndpoint)
 	http.HandleFunc("/owner", ownerEndpoint)
+
+	fmt.Printf("Please open your webbrowser at http://localhost:3846")
+	_ = exec.Command("open", "http://localhost:3846").Run()
 	log.Fatal(http.ListenAndServe(":3846", nil))
 }
 

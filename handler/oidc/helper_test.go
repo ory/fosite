@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var strat = &strategy.DefaultIDTokenStrategy{
+var strat = &strategy.DefaultStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
@@ -30,11 +30,11 @@ func TestGenerateIDToken(t *testing.T) {
 
 	httpreq := &http.Request{Form: url.Values{}}
 	ar := fosite.NewAccessRequest(nil)
-	sess := &strategy.IDTokenSession{
+	sess := &strategy.DefaultSession{
 		Claims:  &jwt.IDTokenClaims{
 			Subject: "peter",
 		},
-		Headers: &jwt.Header{},
+		Headers: &jwt.Headers{},
 	}
 	h := &IDTokenHandleHelper{IDTokenStrategy: chgen}
 
@@ -78,9 +78,9 @@ func TestIssueExplicitToken(t *testing.T) {
 	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&strategy.IDTokenSession{Claims: &jwt.IDTokenClaims{
+	ar.SetSession(&strategy.DefaultSession{Claims: &jwt.IDTokenClaims{
 		Subject: "peter",
-	}, Headers: &jwt.Header{}})
+	}, Headers: &jwt.Headers{}})
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
@@ -96,9 +96,9 @@ func TestIssueImplicitToken(t *testing.T) {
 	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&strategy.IDTokenSession{Claims: &jwt.IDTokenClaims{
+	ar.SetSession(&strategy.DefaultSession{Claims: &jwt.IDTokenClaims{
 		Subject: "peter",
-	}, Headers: &jwt.Header{}})
+	}, Headers: &jwt.Headers{}})
 
 	resp.EXPECT().AddFragment("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}

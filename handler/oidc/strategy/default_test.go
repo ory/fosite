@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var j = &DefaultIDTokenStrategy{
+var j = &DefaultStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
@@ -24,11 +24,11 @@ func TestGenerateIDToken(t *testing.T) {
 	}{
 		{
 			setup: func() {
-				req = fosite.NewAccessRequest(&IDTokenSession{
+				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims:  &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
-					Headers: &jwt.Header{},
+					Headers: &jwt.Headers{},
 				})
 				req.Form.Set("nonce", "some-secure-nonce-state")
 			},
@@ -36,12 +36,12 @@ func TestGenerateIDToken(t *testing.T) {
 		},
 		{
 			setup: func() {
-				req = fosite.NewAccessRequest(&IDTokenSession{
+				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims:  &jwt.IDTokenClaims{
 						Subject: "peter",
 						AuthTime: time.Now(),
 					},
-					Headers: &jwt.Header{},
+					Headers: &jwt.Headers{},
 				})
 				req.Form.Set("nonce", "some-secure-nonce-state")
 				req.Form.Set("max_age", "1234")
@@ -50,12 +50,12 @@ func TestGenerateIDToken(t *testing.T) {
 		},
 		{
 			setup: func() {
-				req = fosite.NewAccessRequest(&IDTokenSession{
+				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims:  &jwt.IDTokenClaims{
 						Subject: "peter",
 						ExpiresAt: time.Now().Add(-time.Hour),
 					},
-					Headers: &jwt.Header{},
+					Headers: &jwt.Headers{},
 				})
 				req.Form.Set("nonce", "some-secure-nonce-state")
 			},
@@ -63,11 +63,11 @@ func TestGenerateIDToken(t *testing.T) {
 		},
 		{
 			setup: func() {
-				req = fosite.NewAccessRequest(&IDTokenSession{
+				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims:  &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
-					Headers: &jwt.Header{},
+					Headers: &jwt.Headers{},
 				})
 				req.Form.Set("nonce", "some-secure-nonce-state")
 				req.Form.Set("max_age", "1234")
@@ -76,9 +76,9 @@ func TestGenerateIDToken(t *testing.T) {
 		},
 		{
 			setup: func() {
-				req = fosite.NewAccessRequest(&IDTokenSession{
+				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims:  &jwt.IDTokenClaims{},
-					Headers: &jwt.Header{},
+					Headers: &jwt.Headers{},
 				})
 				req.Form.Set("nonce", "some-secure-nonce-state")
 			},
@@ -86,11 +86,11 @@ func TestGenerateIDToken(t *testing.T) {
 		},
 		{
 			setup: func() {
-				req = fosite.NewAccessRequest(&IDTokenSession{
+				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims:  &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
-					Headers: &jwt.Header{},
+					Headers: &jwt.Headers{},
 				})
 			},
 			expectErr: true,

@@ -1,11 +1,11 @@
 package jwt
 
 // HeaderContext is the context for a jwt header.
-type Header struct {
+type Headers struct {
 	Extra map[string]interface{}
 }
 
-func (h *Header) ToMap() map[string]interface{} {
+func (h *Headers) ToMap() map[string]interface{} {
 	var filter = map[string]bool{"alg": true, "typ": true}
 	var extra = map[string]interface{}{}
 
@@ -19,13 +19,13 @@ func (h *Header) ToMap() map[string]interface{} {
 	return extra
 }
 
-func (h *Header) Add(key string, value interface{}) {
+func (h *Headers) Add(key string, value interface{}) {
 	if h.Extra == nil {
 		h.Extra = make(map[string]interface{})
 	}
 	h.Extra[key] = value
 }
 
-func (h *Header) Get(key string) interface{} {
+func (h *Headers) Get(key string) interface{} {
 	return h.Extra[key]
 }
