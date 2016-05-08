@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var claims = &JWTClaims{
+var jwtClaims = &JWTClaims{
 	Subject:   "peter",
 	IssuedAt:  time.Now().Round(time.Second),
 	Issuer:    "fosite",
@@ -22,13 +22,18 @@ var claims = &JWTClaims{
 	},
 }
 
+func TestClaimAddGetString(t *testing.T) {
+	jwtClaims.Add("foo", "bar")
+	assert.Equal(t, "bar", jwtClaims.Get("foo"))
+}
+
 func TestClaimsToMapSetsID(t *testing.T) {
 	assert.NotEmpty(t, (&JWTClaims{}).ToMap()["jti"])
 }
 
 func TestClaimsToFromMap(t *testing.T) {
-	fromMap := JWTClaimsFromMap(claims.ToMap())
-	assert.Equal(t, claims, fromMap)
+	fromMap := JWTClaimsFromMap(jwtClaims.ToMap())
+	assert.Equal(t, jwtClaims, fromMap)
 }
 
 func TestAssert(t *testing.T) {
@@ -40,14 +45,14 @@ func TestAssert(t *testing.T) {
 
 func TestClaimsToMap(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{
-		"sub": claims.Subject,
-		"iat": claims.IssuedAt.Unix(),
-		"iss": claims.Issuer,
-		"nbf": claims.NotBefore.Unix(),
-		"aud": claims.Audience,
-		"exp": claims.ExpiresAt.Unix(),
-		"jti": claims.JTI,
-		"foo": claims.Extra["foo"],
-		"baz": claims.Extra["baz"],
-	}, claims.ToMap())
+		"sub": jwtClaims.Subject,
+		"iat": jwtClaims.IssuedAt.Unix(),
+		"iss": jwtClaims.Issuer,
+		"nbf": jwtClaims.NotBefore.Unix(),
+		"aud": jwtClaims.Audience,
+		"exp": jwtClaims.ExpiresAt.Unix(),
+		"jti": jwtClaims.JTI,
+		"foo": jwtClaims.Extra["foo"],
+		"baz": jwtClaims.Extra["baz"],
+	}, jwtClaims.ToMap())
 }

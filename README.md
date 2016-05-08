@@ -12,16 +12,11 @@ includes all flows: code, implicit, hybrid.
 [![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github&foo)](https://coveralls.io/github/ory-am/fosite?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/ory-am/fosite)](https://goreportcard.com/report/ory-am/fosite)
 
-Be aware that `go get github.com/ory-am/fosite` will give you the master branch, which is and always will be *nightly*.
-Once releases roll out, you will be able to fetch a specific [fosite API version through gopkg.in](#installation).
-As of now, no stable `v1` version exists.
-
 During development, we reviewed the following open specifications:
-* [OAuth 2.0 Multiple Response Type Encoding Practices](https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
 * [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
 * [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
+* [OAuth 2.0 Multiple Response Type Encoding Practices](https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
 * [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
-* [OpenID Connect Core 1.0 incorporating errata set 1](openid.net/specs/openid-connect-core-1_0.html)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -38,7 +33,7 @@ During development, we reviewed the following open specifications:
   - [Exemplary Storage Implementation](#exemplary-storage-implementation)
   - [Extensible handlers](#extensible-handlers)
 - [Develop fosite](#develop-fosite)
-  - [Useful commands](#useful-commands)
+  - [Refresh mock objects](#refresh-mock-objects)
 - [Known Limitations and Issues](#known-limitations-and-issues)
 - [Hall of Fame](#hall-of-fame)
 
@@ -137,14 +132,14 @@ There is an API documentation available at [godoc.org/ory-am/fosite](https://god
 ### Installation
 
 You will need [Go](https://golang.org) installed on your machine and it is required that you have set up your
-GOPATH environment variable. Fosite is being shipped through gopkg.in so new updates don't break your code.
-To see a full list of available versions check [gopkg.in/ory-am/fosite.v0](https://gopkg.in/ory-am/fosite.v0).
-
-Right now, there is only an unstable release versioned as the v0 branch:
+GOPATH environment variable.
 
 ```
-go get gopkg.in/ory-am/fosite.v0
+go get github.com/ory-am/fosite
 ```
+
+We recommend to use [Glide](https://github.com/Masterminds/glide) or [Godep](https://github.com/tools/godep), because
+there might be breaking changes in the future.
 
 ## Examples
 

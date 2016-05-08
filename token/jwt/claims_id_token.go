@@ -2,17 +2,6 @@ package jwt
 
 import "time"
 
-func IDClaimsFromMap(m map[string]interface{}) *IDTokenClaims {
-	return &IDTokenClaims{
-		Subject:   ToString(m["sub"]),
-		IssuedAt:  ToTime(m["iat"]),
-		Issuer:    ToString(m["iss"]),
-		Audience:  ToString(m["aud"]),
-		ExpiresAt: ToTime(m["exp"]),
-		Extra:     Filter(m, "sub", "iss", "iat", "aud", "exp"),
-	}
-}
-
 type IDTokenClaims struct {
 	Issuer          string
 	Subject         string

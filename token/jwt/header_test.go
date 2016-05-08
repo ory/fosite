@@ -7,13 +7,9 @@ import (
 )
 
 func TestHeaderToMap(t *testing.T) {
-	header := &Headers{
-		Extra: map[string]interface{}{
-			"foo": "bar",
-			"alg": "foo",
-			"typ": "foo",
-		},
-	}
+	header := &Headers{}
+	header.Add("foo", "bar")
+	assert.Equal(t, "bar", header.Get("foo"))
 	assert.Equal(t, map[string]interface{}{
 		"foo": "bar",
 	}, header.ToMap())

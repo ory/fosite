@@ -13,14 +13,14 @@ import (
 )
 
 type OpenIDConnectImplicitHandler struct {
-	*implicit.AuthorizeImplicitGrantTypeHandler
+	AuthorizeImplicitGrantTypeHandler *implicit.AuthorizeImplicitGrantTypeHandler
 	*IDTokenHandleHelper
 
 	RS256JWTStrategy *jwt.RS256JWTStrategy
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
-	if !(ar.GetScopes().Has("openid") && (ar.GetResponseTypes().Matches("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
+	if !(ar.GetScopes().Has("openid") && (ar.GetResponseTypes().Has("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
 		return nil
 	}
 
@@ -34,26 +34,26 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.New(ErrInvalidGrant)
 	}
 
-	if ar.GetResponseTypes().Has("token") {
-		if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
-			return errors.New(err)
-		}
-		ar.SetResponseTypeHandled("token")
-	}
-
-	hash, err := c.RS256JWTStrategy.Hash([]byte(resp.GetFragment().Get("access_token")))
-	if err != nil {
-		return err
-	}
-
 	sess, ok := ar.GetSession().(strategy.Session)
 	if !ok {
-		return errors.New("Session must be of type strategy.Session")
+		return ErrInvalidSession
 	}
 
 	claims := sess.IDTokenClaims()
-	claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
-	if err = c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
+	if ar.GetResponseTypes().Has("token") {
+		if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
+			return errors.New(err)
+		}
+		ar.SetResponseTypeHandled("token")
+
+		hash, err := c.RS256JWTStrategy.Hash([]byte(resp.GetFragment().Get("access_token")))
+		if err != nil {
+			return err
+		}
+		claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
+	}
+
+	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.New(err)
 	}
 

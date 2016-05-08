@@ -36,18 +36,18 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return errors.New(ErrInvalidGrant)
 	}
 
-	if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errors.New(ErrInvalidGrant)
-	}
-
 	sess, ok := ar.GetSession().(strategy.Session)
 	if !ok {
-		return errors.New("Session must be of type strategy.Session")
+		return errors.New(oidc.ErrInvalidSession)
 	}
 
 	claims := sess.IDTokenClaims()
 
 	if ar.GetResponseTypes().Has("code") {
+		if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
+			return errors.New(ErrInvalidGrant)
+		}
+
 		code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 		if err != nil {
 			return errors.New(ErrServerError)
@@ -69,6 +69,10 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	if ar.GetResponseTypes().Has("token") {
+		if !ar.GetClient().GetGrantTypes().Has("implicit") {
+			return errors.New(ErrInvalidGrant)
+		}
+
 		if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
 			return errors.New(err)
 		}

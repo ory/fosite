@@ -4,10 +4,11 @@
 package internal
 
 import (
+	http "net/http"
+
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	context "golang.org/x/net/context"
-	http "net/http"
 )
 
 // Mock of TokenEndpointHandler interface
