@@ -5,6 +5,12 @@ import (
 	"golang.org/x/net/context"
 )
 
+type CoreStrategy interface {
+	AccessTokenStrategy
+	RefreshTokenStrategy
+	AuthorizeCodeStrategy
+}
+
 type AccessTokenStrategy interface {
 	GenerateAccessToken(ctx context.Context, requester fosite.Requester) (token string, signature string, err error)
 	ValidateAccessToken(ctx context.Context, requester fosite.Requester, token string) (signature string, err error)
