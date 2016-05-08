@@ -46,7 +46,7 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"token"}
 				areq.Client = &fosite.DefaultClient{
-					GrantTypes: fosite.Arguments{"implicit"},
+					GrantTypes:    fosite.Arguments{"implicit"},
 					ResponseTypes: fosite.Arguments{"token"},
 				}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New(""))

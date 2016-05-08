@@ -32,7 +32,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 	if !ar.GetClient().GetResponseTypes().Has("token", "code") {
 		return errors.New(ErrInvalidGrant)
-	} else if ar.GetResponseTypes().Matches("id_token")  && !ar.GetClient().GetResponseTypes().Has("id_token") {
+	} else if ar.GetResponseTypes().Matches("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
 		return errors.New(ErrInvalidGrant)
 	}
 

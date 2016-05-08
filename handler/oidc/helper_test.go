@@ -31,7 +31,7 @@ func TestGenerateIDToken(t *testing.T) {
 	httpreq := &http.Request{Form: url.Values{}}
 	ar := fosite.NewAccessRequest(nil)
 	sess := &strategy.DefaultSession{
-		Claims:  &jwt.IDTokenClaims{
+		Claims: &jwt.IDTokenClaims{
 			Subject: "peter",
 		},
 		Headers: &jwt.Headers{},

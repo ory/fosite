@@ -8,6 +8,8 @@ import (
 	"reflect"
 	"time"
 
+	"os/exec"
+
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	exampleStore "github.com/ory-am/fosite/fosite-example/store"
@@ -28,7 +30,6 @@ import (
 	"github.com/parnurzeal/gorequest"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	"os/exec"
 )
 
 // This is an exemplary storage instance. We will add a client and a user to it so we can use these later on.

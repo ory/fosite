@@ -8,11 +8,11 @@ import (
 
 func TestDefaultClient(t *testing.T) {
 	sc := &DefaultClient{
-		ID:           "1",
-		Secret:       []byte("foobar-"),
-		RedirectURIs: []string{"foo", "bar"},
-		ResponseTypes:[]string{"foo", "bar"},
-		GrantTypes:[]string{"foo", "bar"},
+		ID:            "1",
+		Secret:        []byte("foobar-"),
+		RedirectURIs:  []string{"foo", "bar"},
+		ResponseTypes: []string{"foo", "bar"},
+		GrantTypes:    []string{"foo", "bar"},
 	}
 	assert.Equal(t, sc.ID, sc.GetID())
 	assert.Equal(t, sc.RedirectURIs, sc.GetRedirectURIs())

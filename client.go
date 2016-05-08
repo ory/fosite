@@ -20,10 +20,10 @@ type Client interface {
 
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
-	ID           string   `json:"id"`
+	ID                string   `json:"id"`
 	Name              string   `json:"name"`
-	Secret       []byte   `json:"secret,omitempty"`
-	RedirectURIs []string `json:"redirectURIs"`
+	Secret            []byte   `json:"secret,omitempty"`
+	RedirectURIs      []string `json:"redirectURIs"`
 	GrantTypes        []string `json:"grant_types"`
 	ResponseTypes     []string `json:"response_types"`
 	Owner             string   `json:"owner"`

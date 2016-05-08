@@ -69,7 +69,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because client mismatches",
 			setup: func() {
 				areq.Client = &fosite.DefaultClient{
-					ID: "foo",
+					ID:         "foo",
 					GrantTypes: fosite.Arguments{"refresh_token"},
 				}
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &fosite.DefaultClient{ID: ""}}, nil)
