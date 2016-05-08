@@ -59,6 +59,16 @@ func (_mr *_MockClientRecorder) GetID() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetID")
 }
 
+func (_m *MockClient) GetOwner() string {
+	ret := _m.ctrl.Call(_m, "GetOwner")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+func (_mr *_MockClientRecorder) GetOwner() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetOwner")
+}
+
 func (_m *MockClient) GetRedirectURIs() []string {
 	ret := _m.ctrl.Call(_m, "GetRedirectURIs")
 	ret0, _ := ret[0].([]string)

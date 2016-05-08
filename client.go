@@ -16,6 +16,9 @@ type Client interface {
 
 	// Returns the client's allowed response types.
 	GetResponseTypes() Arguments
+
+	// Returns the client's owner.
+	GetOwner() string
 }
 
 // DefaultClient is a simple default implementation of the Client interface.
@@ -23,7 +26,7 @@ type DefaultClient struct {
 	ID                string   `json:"id"`
 	Name              string   `json:"name"`
 	Secret            []byte   `json:"secret,omitempty"`
-	RedirectURIs      []string `json:"redirectURIs"`
+	RedirectURIs      []string `json:"redirect_uris"`
 	GrantTypes        []string `json:"grant_types"`
 	ResponseTypes     []string `json:"response_types"`
 	Owner             string   `json:"owner"`
@@ -68,4 +71,8 @@ func (c *DefaultClient) GetResponseTypes() Arguments {
 		return Arguments{"code"}
 	}
 	return Arguments(c.ResponseTypes)
+}
+
+func (c *DefaultClient) GetOwner() string {
+	return c.Owner
 }
