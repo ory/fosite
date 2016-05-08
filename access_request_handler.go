@@ -79,7 +79,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		} else if errors.Is(err, ErrUnknownRequest) {
 			// do nothing
 		} else if err != nil {
-			return accessRequest, errors.New(err)
+			return accessRequest, err
 		}
 	}
 

@@ -60,7 +60,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
 				areq.Client = &fosite.DefaultClient{
-					GrantTypes:    fosite.Arguments{"code"},
+					GrantTypes:    fosite.Arguments{"authorization_code"},
 					ResponseTypes: fosite.Arguments{"id_token"},
 				}
 				areq.Form.Set("code", "foobar")
