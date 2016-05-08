@@ -17,7 +17,7 @@ import (
 
 func TestOpenIDConnectExplicit(t *testing.T) {
 	session := &strategy.DefaultSession{
-		Claims:  &jwt.IDTokenClaims{
+		Claims: &jwt.IDTokenClaims{
 			Subject: "peter",
 		},
 		Headers: &jwt.Headers{},

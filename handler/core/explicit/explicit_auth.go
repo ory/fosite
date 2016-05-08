@@ -37,6 +37,10 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		return nil
 	}
 
+	if !ar.GetClient().GetResponseTypes().Has("code") {
+		return errors.New(ErrInvalidGrant)
+	}
+
 	return c.IssueAuthorizeCode(ctx, req, ar, resp)
 }
 

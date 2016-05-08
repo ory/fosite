@@ -3,10 +3,11 @@ package strategy
 import (
 	"testing"
 
+	"time"
+
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
-	"time"
 )
 
 var j = &DefaultStrategy{
@@ -25,7 +26,7 @@ func TestGenerateIDToken(t *testing.T) {
 		{
 			setup: func() {
 				req = fosite.NewAccessRequest(&DefaultSession{
-					Claims:  &jwt.IDTokenClaims{
+					Claims: &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
 					Headers: &jwt.Headers{},
@@ -37,8 +38,8 @@ func TestGenerateIDToken(t *testing.T) {
 		{
 			setup: func() {
 				req = fosite.NewAccessRequest(&DefaultSession{
-					Claims:  &jwt.IDTokenClaims{
-						Subject: "peter",
+					Claims: &jwt.IDTokenClaims{
+						Subject:  "peter",
 						AuthTime: time.Now(),
 					},
 					Headers: &jwt.Headers{},
@@ -51,8 +52,8 @@ func TestGenerateIDToken(t *testing.T) {
 		{
 			setup: func() {
 				req = fosite.NewAccessRequest(&DefaultSession{
-					Claims:  &jwt.IDTokenClaims{
-						Subject: "peter",
+					Claims: &jwt.IDTokenClaims{
+						Subject:   "peter",
 						ExpiresAt: time.Now().Add(-time.Hour),
 					},
 					Headers: &jwt.Headers{},
@@ -64,7 +65,7 @@ func TestGenerateIDToken(t *testing.T) {
 		{
 			setup: func() {
 				req = fosite.NewAccessRequest(&DefaultSession{
-					Claims:  &jwt.IDTokenClaims{
+					Claims: &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
 					Headers: &jwt.Headers{},
@@ -87,7 +88,7 @@ func TestGenerateIDToken(t *testing.T) {
 		{
 			setup: func() {
 				req = fosite.NewAccessRequest(&DefaultSession{
-					Claims:  &jwt.IDTokenClaims{
+					Claims: &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
 					Headers: &jwt.Headers{},

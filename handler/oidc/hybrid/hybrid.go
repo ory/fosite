@@ -30,6 +30,16 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
+	if !ar.GetClient().GetResponseTypes().Has("token", "code") {
+		return errors.New(ErrInvalidGrant)
+	} else if ar.GetResponseTypes().Matches("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
+		return errors.New(ErrInvalidGrant)
+	}
+
+	if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
+		return errors.New(ErrInvalidGrant)
+	}
+
 	sess, ok := ar.GetSession().(strategy.Session)
 	if !ok {
 		return errors.New("Session must be of type strategy.Session")

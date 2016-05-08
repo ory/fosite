@@ -35,5 +35,9 @@ func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		return errors.New(fosite.ErrUnknownRequest)
 	}
 
+	if !request.GetClient().GetGrantTypes().Has("client_credentials") {
+		return errors.New(fosite.ErrInvalidGrant)
+	}
+
 	return c.IssueAccessToken(ctx, r, request, response)
 }

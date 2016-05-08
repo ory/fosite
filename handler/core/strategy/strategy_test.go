@@ -64,7 +64,8 @@ func TestAccessToken(t *testing.T) {
 
 	validate, err = j.ValidateAccessToken(nil, r, token)
 	assert.Nil(t, err, "%s", err)
-	assert.Equal(t, signature, validate)}
+	assert.Equal(t, signature, validate)
+}
 
 func TestRefreshToken(t *testing.T) {
 	// HMAC

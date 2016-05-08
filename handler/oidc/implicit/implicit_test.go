@@ -84,6 +84,10 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
 				areq.Scopes = fosite.Arguments{"openid"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"implicit"},
+					ResponseTypes: fosite.Arguments{"token", "id_token"},
+				}
 				aresp.EXPECT().AddFragment("id_token", gomock.Any())
 				aresp.EXPECT().AddFragment(gomock.Any(), gomock.Any()).AnyTimes()
 			},
@@ -93,6 +97,10 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
 				areq.Scopes = fosite.Arguments{"openid"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"implicit"},
+					ResponseTypes: fosite.Arguments{"token", "id_token"},
+				}
 				aresp.EXPECT().AddFragment("id_token", gomock.Any())
 				aresp.EXPECT().AddFragment("access_token", gomock.Any())
 				aresp.EXPECT().AddFragment(gomock.Any(), gomock.Any()).AnyTimes()

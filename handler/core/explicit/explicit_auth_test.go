@@ -49,6 +49,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should fail because authorize code generation failed",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"code"}
+				areq.Client = &fosite.DefaultClient{ResponseTypes: fosite.Arguments{"code"}}
 				chgen.EXPECT().GenerateAuthorizeCode(nil, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,

@@ -44,6 +44,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because token does not validate",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"refresh_token"}
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"refresh_token"}}
 				httpreq.PostForm.Add("refresh_token", "some.refreshtokensig")
 				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").Return("", errors.New(""))
 			},
@@ -67,7 +68,10 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should fail because client mismatches",
 			setup: func() {
-				areq.Client = &fosite.DefaultClient{ID: "foo"}
+				areq.Client = &fosite.DefaultClient{
+					ID:         "foo",
+					GrantTypes: fosite.Arguments{"refresh_token"},
+				}
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &fosite.DefaultClient{ID: ""}}, nil)
 			},
 			expectErr: fosite.ErrInvalidRequest,

@@ -49,6 +49,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because authcode validation failed",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"authorization_code"}}
 				httpreq.PostForm.Add("code", "authcode")
 				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").Return("", errors.New(""))
 			},

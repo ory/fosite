@@ -25,6 +25,10 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 		return errors.New(fosite.ErrUnknownRequest)
 	}
 
+	if !request.GetClient().GetGrantTypes().Has("password") {
+		return errors.New(fosite.ErrInvalidGrant)
+	}
+
 	username := req.PostForm.Get("username")
 	password := req.PostForm.Get("password")
 	if username == "" || password == "" {

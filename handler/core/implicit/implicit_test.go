@@ -45,6 +45,10 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 			description: "should fail because access token generation failed",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"token"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"implicit"},
+					ResponseTypes: fosite.Arguments{"token"},
+				}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
