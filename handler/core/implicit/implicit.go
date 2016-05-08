@@ -31,6 +31,14 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		return nil
 	}
 
+	if !ar.GetClient().GetResponseTypes().Has("token") {
+		return errors.New(ErrInvalidGrant)
+	}
+
+	if !ar.GetClient().GetGrantTypes().Has("implicit") {
+		return errors.New(ErrInvalidGrant)
+	}
+
 	return c.IssueImplicitAccessToken(ctx, req, ar, resp)
 }
 

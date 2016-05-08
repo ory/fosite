@@ -52,6 +52,9 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should pass because scope openid is not set",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"code"}
+				areq.Client = &fosite.DefaultClient{
+					ResponseTypes: fosite.Arguments{"code", "id_token"},
+				}
 				areq.Scopes = fosite.Arguments{""}
 			},
 		},

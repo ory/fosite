@@ -84,10 +84,19 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			},
 		},
 		{
+			description: "should fail because client not allowed",
+			expectErr:   fosite.ErrInvalidGrant,
+			mock: func() {
+				areq.GrantTypes = fosite.Arguments{"client_credentials"}
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"foo"}}
+			},
+		},
+		{
 			description: "should pass",
 			mock: func() {
 				areq.GrantTypes = fosite.Arguments{"client_credentials"}
 
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"client_credentials"}}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
 			},

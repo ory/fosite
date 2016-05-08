@@ -31,6 +31,10 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.New(fosite.ErrUnknownRequest)
 	}
 
+	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
+		return errors.New(fosite.ErrInvalidGrant)
+	}
+
 	// The authorization server MUST ... validate the refresh token.
 	signature, err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, request, req.PostForm.Get("refresh_token"))
 	if err != nil {

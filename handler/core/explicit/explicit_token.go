@@ -19,6 +19,10 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 		return errors.New(ErrUnknownRequest)
 	}
 
+	if !request.GetClient().GetGrantTypes().Has("authorization_code") {
+		return errors.New(ErrInvalidGrant)
+	}
+
 	// The authorization server MUST verify that the authorization code is valid
 	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, r.PostForm.Get("code"))
 	if err != nil {

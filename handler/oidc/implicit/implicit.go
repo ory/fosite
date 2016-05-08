@@ -24,6 +24,16 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return nil
 	}
 
+	if !ar.GetClient().GetGrantTypes().Has("implicit") {
+		return errors.New(ErrInvalidGrant)
+	}
+
+	if ar.GetResponseTypes().Exact("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
+		return errors.New(ErrInvalidGrant)
+	} else if ar.GetResponseTypes().Matches("token", "id_token") && !ar.GetClient().GetResponseTypes().Has("token", "id_token") {
+		return errors.New(ErrInvalidGrant)
+	}
+
 	if ar.GetResponseTypes().Has("token") {
 		if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
 			return errors.New(err)

@@ -17,7 +17,11 @@ import (
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
 	h := &OpenIDConnectExplicitHandler{}
-	assert.True(t, errors.Is(h.HandleTokenEndpointRequest(nil, nil, nil), fosite.ErrUnknownRequest))
+	areq := fosite.NewAccessRequest(nil)
+	areq.Client = &fosite.DefaultClient{
+		ResponseTypes: fosite.Arguments{"id_token"},
+	}
+	assert.True(t, errors.Is(h.HandleTokenEndpointRequest(nil, nil, areq), fosite.ErrUnknownRequest))
 }
 
 func TestPopulateTokenEndpointResponse(t *testing.T) {
@@ -55,6 +59,10 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because lookup returns not found",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes: fosite.Arguments{"code"},
+					ResponseTypes: fosite.Arguments{"id_token"},
+				}
 				areq.Form.Set("code", "foobar")
 				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(nil, oidc.ErrNoSessionFound)
 			},

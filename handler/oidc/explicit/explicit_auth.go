@@ -21,6 +21,10 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return nil
 	}
 
+	if !ar.GetClient().GetResponseTypes().Has("id_token", "code") {
+		return errors.New(ErrInvalidRequest)
+	}
+
 	if len(resp.GetCode()) == 0 {
 		return errors.New(ErrMisconfiguration)
 	}

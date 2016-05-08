@@ -5,6 +5,7 @@ package internal
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	fosite "github.com/ory-am/fosite"
 )
 
 // Mock of Client interface
@@ -26,6 +27,16 @@ func NewMockClient(ctrl *gomock.Controller) *MockClient {
 
 func (_m *MockClient) EXPECT() *_MockClientRecorder {
 	return _m.recorder
+}
+
+func (_m *MockClient) GetGrantTypes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetGrantTypes")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockClientRecorder) GetGrantTypes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantTypes")
 }
 
 func (_m *MockClient) GetHashedSecret() []byte {
@@ -56,4 +67,14 @@ func (_m *MockClient) GetRedirectURIs() []string {
 
 func (_mr *_MockClientRecorder) GetRedirectURIs() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRedirectURIs")
+}
+
+func (_m *MockClient) GetResponseTypes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetResponseTypes")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockClientRecorder) GetResponseTypes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetResponseTypes")
 }
