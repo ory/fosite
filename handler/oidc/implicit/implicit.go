@@ -16,7 +16,7 @@ type OpenIDConnectImplicitHandler struct {
 	AuthorizeImplicitGrantTypeHandler *implicit.AuthorizeImplicitGrantTypeHandler
 	*IDTokenHandleHelper
 
-	RS256JWTStrategy                  *jwt.RS256JWTStrategy
+	RS256JWTStrategy *jwt.RS256JWTStrategy
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
@@ -34,26 +34,26 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.New(ErrInvalidGrant)
 	}
 
+	sess, ok := ar.GetSession().(strategy.Session)
+	if !ok {
+		return ErrInvalidSession
+	}
+
+	claims := sess.IDTokenClaims()
 	if ar.GetResponseTypes().Has("token") {
 		if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
 			return errors.New(err)
 		}
 		ar.SetResponseTypeHandled("token")
+
+		hash, err := c.RS256JWTStrategy.Hash([]byte(resp.GetFragment().Get("access_token")))
+		if err != nil {
+			return err
+		}
+		claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
 	}
 
-	hash, err := c.RS256JWTStrategy.Hash([]byte(resp.GetFragment().Get("access_token")))
-	if err != nil {
-		return err
-	}
-
-	sess, ok := ar.GetSession().(strategy.Session)
-	if !ok {
-		return errors.New("Session must be of type strategy.Session")
-	}
-
-	claims := sess.IDTokenClaims()
-	claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength() / 2]
-	if err = c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
+	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.New(err)
 	}
 
