@@ -40,6 +40,8 @@ var store = &exampleStore.Store{
 			ID:           "my-client",
 			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 			RedirectURIs: []string{"http://localhost:3846/callback"},
+			ResponseTypes: []string{"id_token", "code", "token"},
+			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 		},
 	},
 	Users: map[string]exampleStore.UserRelation{
