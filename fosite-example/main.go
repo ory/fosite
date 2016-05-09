@@ -37,9 +37,9 @@ var store = &exampleStore.Store{
 	IDSessions: make(map[string]Requester),
 	Clients: map[string]*DefaultClient{
 		"my-client": {
-			ID:           "my-client",
-			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
-			RedirectURIs: []string{"http://localhost:3846/callback"},
+			ID:            "my-client",
+			Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
+			RedirectURIs:  []string{"http://localhost:3846/callback"},
 			ResponseTypes: []string{"id_token", "code", "token"},
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 		},
@@ -393,7 +393,7 @@ func homeHandler(rw http.ResponseWriter, req *http.Request) {
 		</ul>`,
 		clientConf.AuthCodeURL("some-random-state-foobar")+"&nonce=some-random-nonce",
 		"http://localhost:3846/auth?client_id=my-client&redirect_uri=http%3A%2F%2Flocalhost%3A3846%2Fcallback&response_type=token%20id_token&scope=fosite%20openid&state=some-random-state-foobar&nonce=some-random-nonce",
-		clientConf.AuthCodeURL("some-random-state-foobar"),
+		clientConf.AuthCodeURL("some-random-state-foobar")+"&nonce=some-random-nonce",
 		"/auth?client_id=my-client&scope=fosite&response_type=123&redirect_uri=http://localhost:3846/callback",
 	)))
 }
