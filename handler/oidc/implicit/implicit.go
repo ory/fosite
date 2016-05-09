@@ -13,14 +13,14 @@ import (
 )
 
 type OpenIDConnectImplicitHandler struct {
-	*implicit.AuthorizeImplicitGrantTypeHandler
+	AuthorizeImplicitGrantTypeHandler *implicit.AuthorizeImplicitGrantTypeHandler
 	*IDTokenHandleHelper
 
-	RS256JWTStrategy *jwt.RS256JWTStrategy
+	RS256JWTStrategy                  *jwt.RS256JWTStrategy
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
-	if !(ar.GetScopes().Has("openid") && (ar.GetResponseTypes().Matches("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
+	if !(ar.GetScopes().Has("openid") && (ar.GetResponseTypes().Has("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
 		return nil
 	}
 
@@ -35,7 +35,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	if ar.GetResponseTypes().Has("token") {
-		if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
+		if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
 			return errors.New(err)
 		}
 		ar.SetResponseTypeHandled("token")
@@ -52,7 +52,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	claims := sess.IDTokenClaims()
-	claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
+	claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength() / 2]
 	if err = c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.New(err)
 	}

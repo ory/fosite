@@ -80,6 +80,30 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
+			description: "should not do anything because request requirements are not met",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
+				areq.Scopes = fosite.Arguments{"openid"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{},
+					ResponseTypes: fosite.Arguments{},
+				}
+			},
+			expectErr: fosite.ErrInvalidGrant,
+		},
+		{
+			description: "should not do anything because request requirements are not met",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
+				areq.Scopes = fosite.Arguments{"openid"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"implicit"},
+					ResponseTypes: fosite.Arguments{},
+				}
+			},
+			expectErr: fosite.ErrInvalidGrant,
+		},
+		{
 			description: "should pass",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
@@ -88,6 +112,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 					GrantTypes:    fosite.Arguments{"implicit"},
 					ResponseTypes: fosite.Arguments{"token", "id_token"},
 				}
+				aresp.EXPECT().GetFragment().AnyTimes().Return(url.Values{"access_token": []string{"foobartoken"}})
 				aresp.EXPECT().AddFragment("id_token", gomock.Any())
 				aresp.EXPECT().AddFragment(gomock.Any(), gomock.Any()).AnyTimes()
 			},
@@ -117,6 +142,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 	} {
+		c.setup()
 		err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)

@@ -77,6 +77,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 	} {
+		c.setup()
 		err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
