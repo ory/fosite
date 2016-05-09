@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"golang.org/x/net/context"
 )
