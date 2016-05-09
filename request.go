@@ -3,14 +3,12 @@ package fosite
 import (
 	"net/url"
 	"time"
-
-	"github.com/ory-am/fosite/client"
 )
 
 // Request is an implementation of Requester
 type Request struct {
 	RequestedAt   time.Time
-	Client        client.Client
+	Client        Client
 	Scopes        Arguments
 	GrantedScopes Arguments
 	Form          url.Values
@@ -19,7 +17,7 @@ type Request struct {
 
 func NewRequest() *Request {
 	return &Request{
-		Client: &client.SecureClient{},
+		Client: &DefaultClient{},
 		Scopes: Arguments{},
 		Form:   url.Values{},
 	}
@@ -33,7 +31,7 @@ func (a *Request) GetRequestedAt() time.Time {
 	return a.RequestedAt
 }
 
-func (a *Request) GetClient() client.Client {
+func (a *Request) GetClient() Client {
 	return a.Client
 }
 

@@ -8,6 +8,8 @@ import (
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/oidc"
+	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/net/context"
 )
 
@@ -15,6 +17,8 @@ type OpenIDConnectHybridHandler struct {
 	*implicit.AuthorizeImplicitGrantTypeHandler
 	*explicit.AuthorizeExplicitGrantTypeHandler
 	*oidc.IDTokenHandleHelper
+
+	Enigma *jwt.RS256JWTStrategy
 }
 
 func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
@@ -26,8 +30,25 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
+	if !ar.GetClient().GetResponseTypes().Has("token", "code") {
+		return errors.New(ErrInvalidGrant)
+	} else if ar.GetResponseTypes().Matches("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
+		return errors.New(ErrInvalidGrant)
+	}
+
+	sess, ok := ar.GetSession().(strategy.Session)
+	if !ok {
+		return errors.New(oidc.ErrInvalidSession)
+	}
+
+	claims := sess.IDTokenClaims()
+
 	if ar.GetResponseTypes().Has("code") {
-		code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, req, ar)
+		if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
+			return errors.New(ErrInvalidGrant)
+		}
+
+		code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 		if err != nil {
 			return errors.New(ErrServerError)
 		}
@@ -39,17 +60,37 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		resp.AddFragment("code", code)
 		resp.AddFragment("state", ar.GetState())
 		ar.SetResponseTypeHandled("code")
+
+		hash, err := c.Enigma.Hash([]byte(resp.GetFragment().Get("code")))
+		if err != nil {
+			return err
+		}
+		claims.CodeHash = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
 	if ar.GetResponseTypes().Has("token") {
+		if !ar.GetClient().GetGrantTypes().Has("implicit") {
+			return errors.New(ErrInvalidGrant)
+		}
+
 		if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
 			return errors.New(err)
 		}
 		ar.SetResponseTypeHandled("token")
+
+		hash, err := c.Enigma.Hash([]byte(resp.GetFragment().Get("access_token")))
+		if err != nil {
+			return err
+		}
+		claims.AccessTokenHash = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
 	if !ar.GetScopes().Has("openid") {
 		return nil
+	}
+
+	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
+		return errors.New(err)
 	}
 
 	err := c.IssueImplicitIDToken(ctx, req, ar, resp)

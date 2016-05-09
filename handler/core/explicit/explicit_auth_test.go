@@ -49,14 +49,15 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should fail because authorize code generation failed",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"code"}
-				chgen.EXPECT().GenerateAuthorizeCode(nil, httpreq, areq).Return("", "", errors.New(""))
+				areq.Client = &fosite.DefaultClient{ResponseTypes: fosite.Arguments{"code"}}
+				chgen.EXPECT().GenerateAuthorizeCode(nil, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should fail because could not presist authorize code session",
 			setup: func() {
-				chgen.EXPECT().GenerateAuthorizeCode(nil, httpreq, areq).AnyTimes().Return("someauthcode.authsig", "authsig", nil)
+				chgen.EXPECT().GenerateAuthorizeCode(nil, areq).AnyTimes().Return("someauthcode.authsig", "authsig", nil)
 				store.EXPECT().CreateAuthorizeCodeSession(nil, "authsig", areq).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,

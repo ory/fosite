@@ -8,16 +8,20 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/enigma/jwt"
 	"github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
 	h := &OpenIDConnectExplicitHandler{}
-	assert.True(t, errors.Is(h.HandleTokenEndpointRequest(nil, nil, nil), fosite.ErrUnknownRequest))
+	areq := fosite.NewAccessRequest(nil)
+	areq.Client = &fosite.DefaultClient{
+		ResponseTypes: fosite.Arguments{"id_token"},
+	}
+	assert.True(t, errors.Is(h.HandleTokenEndpointRequest(nil, nil, areq), fosite.ErrUnknownRequest))
 }
 
 func TestPopulateTokenEndpointResponse(t *testing.T) {
@@ -25,7 +29,12 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
 	defer ctrl.Finish()
 
-	session := &strategy.IDTokenSession{IDClaims: &jwt.Claims{}, IDToken: &jwt.Header{}}
+	session := &strategy.DefaultSession{
+		Claims: &jwt.IDTokenClaims{
+			Subject: "peter",
+		},
+		Headers: &jwt.Headers{},
+	}
 	aresp := fosite.NewAccessResponse()
 	areq := fosite.NewAccessRequest(session)
 	httpreq := &http.Request{PostForm: url.Values{}}
@@ -50,6 +59,10 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because lookup returns not found",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"authorization_code"},
+					ResponseTypes: fosite.Arguments{"id_token"},
+				}
 				areq.Form.Set("code", "foobar")
 				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(nil, oidc.ErrNoSessionFound)
 			},

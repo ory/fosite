@@ -29,5 +29,13 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return ErrUnknownRequest
 	}
 
+	if !requester.GetClient().GetGrantTypes().Has("authorization_code") {
+		return errors.New(ErrInvalidGrant)
+	}
+
+	if !requester.GetClient().GetResponseTypes().Has("id_token") {
+		return errors.New(ErrInvalidGrant)
+	}
+
 	return c.IssueExplicitIDToken(ctx, req, authorize, responder)
 }

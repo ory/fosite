@@ -6,14 +6,13 @@ import (
 	"time"
 
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/client"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRequest(t *testing.T) {
 	r := &Request{
 		RequestedAt:   time.Now(),
-		Client:        &client.SecureClient{},
+		Client:        &DefaultClient{},
 		Scopes:        Arguments{},
 		GrantedScopes: []string{},
 		Form:          url.Values{"foo": []string{"bar"}},

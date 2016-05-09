@@ -21,17 +21,20 @@ func (c *CoreValidator) ValidateRequest(ctx context.Context, req *http.Request, 
 		return errors.New(fosite.ErrUnknownRequest)
 	}
 
-	token := split[1]
-	sig, err := c.AccessTokenStrategy.ValidateAccessToken(ctx, token, req, accessRequest)
+	return c.ValidateToken(ctx, accessRequest, split[1])
+}
+
+func (c *CoreValidator) ValidateToken(ctx context.Context, accessRequest fosite.AccessRequester, token string) error {
+	sig, err := c.AccessTokenStrategy.ValidateAccessToken(ctx, accessRequest, token)
 	if err != nil {
 		return errors.New(fosite.ErrRequestUnauthorized)
 	}
 
-	origreq, err := c.AccessTokenStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession())
+	or, err := c.AccessTokenStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession())
 	if err != nil {
 		return errors.New(fosite.ErrRequestUnauthorized)
 	}
 
-	accessRequest.Merge(origreq)
+	accessRequest.Merge(or)
 	return nil
 }
