@@ -1,7 +1,6 @@
 package jwt
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/pborman/uuid"
@@ -68,13 +67,4 @@ func (c *JWTClaims) IsExpired() bool {
 // IsNotYetValid maskes sure that the JWT is not used before valid date.
 func (c *JWTClaims) IsNotYetValid() bool {
 	return c.NotBefore.After(time.Now())
-}
-
-// String marshals the claims and returns them as a string representation.
-func (c JWTClaims) String() (string, error) {
-	result, err := json.Marshal(c.ToMap())
-	if err != nil {
-		return "", err
-	}
-	return string(result), nil
 }

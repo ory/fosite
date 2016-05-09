@@ -16,6 +16,17 @@ var header = &Headers{
 	},
 }
 
+func TestHash(t *testing.T) {
+	j := RS256JWTStrategy{
+		PrivateKey: []byte(TestCertificates[0][1]),
+		PublicKey:  []byte(TestCertificates[1][1]),
+	}
+	in := []byte("foo")
+	out, err := j.Hash(in)
+	assert.Nil(t, err)
+	assert.NotEqual(t, in, out)
+}
+
 func TestAssign(t *testing.T) {
 	for k, c := range [][]map[string]interface{}{
 		{
