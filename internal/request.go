@@ -9,7 +9,6 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
-	client "github.com/ory-am/fosite/client"
 )
 
 // Mock of Requester interface
@@ -33,9 +32,9 @@ func (_m *MockRequester) EXPECT() *_MockRequesterRecorder {
 	return _m.recorder
 }
 
-func (_m *MockRequester) GetClient() client.Client {
+func (_m *MockRequester) GetClient() fosite.Client {
 	ret := _m.ctrl.Call(_m, "GetClient")
-	ret0, _ := ret[0].(client.Client)
+	ret0, _ := ret[0].(fosite.Client)
 	return ret0
 }
 

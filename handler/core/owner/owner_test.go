@@ -46,6 +46,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because because invalid credentials",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}}
 				httpreq.PostForm.Set("username", "peter")
 				httpreq.PostForm.Set("password", "pan")
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(pkg.ErrNotFound)
@@ -107,7 +108,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
-				chgen.EXPECT().GenerateAccessToken(nil, httpreq, areq).Return("tokenfoo.bar", "bar", nil)
+				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
 			},
 		},

@@ -2,78 +2,90 @@ package strategy
 
 import (
 	"errors"
-	"net/http"
 
 	"github.com/ory-am/fosite"
-	enigma "github.com/ory-am/fosite/enigma/jwt"
+	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/net/context"
 )
 
 type JWTSessionContainer interface {
-	// GetTokenClaims returns the claims
-	GetTokenClaims() *enigma.Claims
+	// GetJWTClaims returns the claims.
+	GetJWTClaims() *jwt.JWTClaims
 
-	// GetTokenHeader returns the header
-	GetTokenHeader() *enigma.Header
+	// GetJWTHeader returns the header.
+	GetJWTHeader() *jwt.Headers
 }
 
-// JWTSession : Container for the JWT session
+// JWTSession Container for the JWT session.
 type JWTSession struct {
-	JWTClaims *enigma.Claims
-	JWTHeader *enigma.Header
+	JWTClaims *jwt.JWTClaims
+	JWTHeader *jwt.Headers
 }
 
-func (j *JWTSession) GetTokenClaims() *enigma.Claims {
+func (j *JWTSession) GetJWTClaims() *jwt.JWTClaims {
+	if j.JWTClaims == nil {
+		j.JWTClaims = &jwt.JWTClaims{}
+	}
 	return j.JWTClaims
 }
 
-func (j *JWTSession) GetTokenHeader() *enigma.Header {
+func (j *JWTSession) GetJWTHeader() *jwt.Headers {
+	if j.JWTHeader == nil {
+		j.JWTHeader = &jwt.Headers{}
+	}
 	return j.JWTHeader
 }
 
-// JWTStrategy : Strategy container
-type JWTStrategy struct {
-	Enigma *enigma.Enigma
+// RS256JWTStrategy is a JWT RS256 strategy.
+type RS256JWTStrategy struct {
+	*jwt.RS256JWTStrategy
 }
 
-func (h JWTStrategy) GenerateAccessToken(_ context.Context, _ *http.Request, requester fosite.Requester) (token string, signature string, err error) {
+func (h *RS256JWTStrategy) GenerateAccessToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
+	return h.generate(requester)
+}
+
+func (h *RS256JWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Requester, token string) (signature string, err error) {
+	return h.validate(token)
+}
+
+func (h *RS256JWTStrategy) GenerateRefreshToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
+	return h.generate(requester)
+}
+
+func (h *RS256JWTStrategy) ValidateRefreshToken(_ context.Context, _ fosite.Requester, token string) (signature string, err error) {
+	return h.validate(token)
+}
+
+func (h *RS256JWTStrategy) GenerateAuthorizeCode(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
+	return h.generate(requester)
+}
+
+func (h *RS256JWTStrategy) ValidateAuthorizeCode(_ context.Context, requester fosite.Requester, token string) (signature string, err error) {
+	return h.validate(token)
+}
+
+func (h *RS256JWTStrategy) validate(token string) (string, error) {
+	t, err := h.RS256JWTStrategy.Decode(token)
+	if err != nil {
+		return "", err
+	}
+
+	claims := jwt.JWTClaimsFromMap(t.Claims)
+	if claims.IsNotYetValid() || claims.IsExpired() {
+		return "", errors.New("Token claims did not validate")
+	}
+
+	return h.RS256JWTStrategy.GetSignature(token)
+}
+
+func (h *RS256JWTStrategy) generate(requester fosite.Requester) (string, string, error) {
 	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); ok {
-		if jwtSession.GetTokenClaims() != nil {
-			return h.Enigma.Generate(jwtSession.GetTokenClaims(), jwtSession.GetTokenHeader())
+		if jwtSession.GetJWTClaims() != nil {
+			return h.RS256JWTStrategy.Generate(jwtSession.GetJWTClaims(), jwtSession.GetJWTHeader())
 		}
 		return "", "", errors.New("GetTokenClaims() must not be nil")
 	}
 	return "", "", errors.New("Session must be of type JWTSession")
-}
 
-func (h JWTStrategy) ValidateAccessToken(_ context.Context, token string, _ *http.Request, _ fosite.Requester) (signature string, err error) {
-	return h.Enigma.Validate(token)
-}
-
-func (h JWTStrategy) GenerateRefreshToken(_ context.Context, _ *http.Request, requester fosite.Requester) (token string, signature string, err error) {
-	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); ok {
-		if jwtSession.GetTokenClaims() != nil {
-			return h.Enigma.Generate(jwtSession.GetTokenClaims(), jwtSession.GetTokenHeader())
-		}
-		return "", "", errors.New("GetTokenClaims() must not be nil")
-	}
-	return "", "", errors.New("Session must be of type JWTSession")
-}
-
-func (h JWTStrategy) ValidateRefreshToken(_ context.Context, token string, _ *http.Request, _ fosite.Requester) (signature string, err error) {
-	return h.Enigma.Validate(token)
-}
-
-func (h JWTStrategy) GenerateAuthorizeCode(_ context.Context, _ *http.Request, requester fosite.Requester) (token string, signature string, err error) {
-	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); ok {
-		if jwtSession.GetTokenClaims() != nil {
-			return h.Enigma.Generate(jwtSession.GetTokenClaims(), jwtSession.GetTokenHeader())
-		}
-		return "", "", errors.New("GetTokenClaims() must not be nil")
-	}
-	return "", "", errors.New("Session must be of type JWTSession")
-}
-
-func (h JWTStrategy) ValidateAuthorizeCode(_ context.Context, token string, _ *http.Request, requester fosite.Requester) (signature string, err error) {
-	return h.Enigma.Validate(token)
 }

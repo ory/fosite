@@ -5,6 +5,12 @@ import (
 	"golang.org/x/net/context"
 )
 
+type CoreStorage interface {
+	AuthorizeCodeStorage
+	AccessTokenStorage
+	RefreshTokenStorage
+}
+
 type AuthorizeCodeStorage interface {
 	CreateAuthorizeCodeSession(ctx context.Context, code string, request fosite.Requester) (err error)
 

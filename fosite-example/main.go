@@ -8,11 +8,10 @@ import (
 	"reflect"
 	"time"
 
+	"os/exec"
+
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/client"
-	"github.com/ory-am/fosite/enigma/hmac"
-	"github.com/ory-am/fosite/enigma/jwt"
 	exampleStore "github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core"
 	coreclient "github.com/ory-am/fosite/handler/core/client"
@@ -26,6 +25,8 @@ import (
 	"github.com/ory-am/fosite/handler/oidc/hybrid"
 	oidcimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
 	oidcstrategy "github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/parnurzeal/gorequest"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
@@ -34,11 +35,13 @@ import (
 // This is an exemplary storage instance. We will add a client and a user to it so we can use these later on.
 var store = &exampleStore.Store{
 	IDSessions: make(map[string]Requester),
-	Clients: map[string]*client.SecureClient{
+	Clients: map[string]*DefaultClient{
 		"my-client": {
-			ID:           "my-client",
-			Secret:       []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
-			RedirectURIs: []string{"http://localhost:3846/callback"},
+			ID:            "my-client",
+			Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
+			RedirectURIs:  []string{"http://localhost:3846/callback"},
+			ResponseTypes: []string{"id_token", "code", "token"},
+			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 		},
 	},
 	Users: map[string]exampleStore.UserRelation{
@@ -77,7 +80,7 @@ var appClientConf = clientcredentials.Config{
 
 // You can decide if you want to use HMAC or JWT or another strategy for generating authorize codes and access / refresh tokens
 var hmacStrategy = &strategy.HMACSHAStrategy{
-	Enigma: &hmac.Enigma{
+	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 }
@@ -88,16 +91,16 @@ var hmacStrategy = &strategy.HMACSHAStrategy{
 // NOTE One thing to keep in mind is that the power of JWT does not mean anything
 // when used as an authorize token, since the authorize token really just should
 // be a random string that is hard to guess.
-var jwtStrategy = &strategy.JWTStrategy{
-	Enigma: &jwt.Enigma{
+var jwtStrategy = &strategy.RS256JWTStrategy{
+	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
 }
 
 // This strategy is used for issuing OpenID Conenct id tokens
-var idtokenStrategy = &oidcstrategy.JWTStrategy{
-	Enigma: &jwt.Enigma{
+var idtokenStrategy = &oidcstrategy.DefaultStrategy{
+	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: []byte(jwt.TestCertificates[0][1]),
 		PublicKey:  []byte(jwt.TestCertificates[1][1]),
 	},
@@ -113,7 +116,7 @@ var selectedStrategy = hmacStrategy
 type session struct {
 	User string
 	*strategy.JWTSession
-	*oidcstrategy.IDTokenSession
+	*oidcstrategy.DefaultSession
 }
 
 // newSession is a helper function for creating a new session
@@ -121,28 +124,26 @@ func newSession(user string) *session {
 	return &session{
 		User: user,
 		JWTSession: &strategy.JWTSession{
-			JWTClaims: &jwt.Claims{
-				Issuer:         "fosite.my-application.com",
-				Subject:        user,
-				Audience:       "*.my-application.com",
-				ExpiresAt:      time.Now().Add(time.Hour * 6),
-				IssuedAt:       time.Now(),
-				NotValidBefore: time.Now(),
+			JWTClaims: &jwt.JWTClaims{
+				Issuer:    "https://fosite.my-application.com",
+				Subject:   user,
+				Audience:  "https://my-client.my-application.com",
+				ExpiresAt: time.Now().Add(time.Hour * 6),
+				IssuedAt:  time.Now(),
 			},
-			JWTHeader: &jwt.Header{
+			JWTHeader: &jwt.Headers{
 				Extra: make(map[string]interface{}),
 			},
 		},
-		IDTokenSession: &oidcstrategy.IDTokenSession{
-			IDClaims: &jwt.Claims{
-				Issuer:         "fosite.my-application.com",
-				Subject:        user,
-				Audience:       "*.my-application.com",
-				ExpiresAt:      time.Now().Add(time.Hour * 6),
-				IssuedAt:       time.Now(),
-				NotValidBefore: time.Now(),
+		DefaultSession: &oidcstrategy.DefaultSession{
+			Claims: &jwt.IDTokenClaims{
+				Issuer:    "https://fosite.my-application.com",
+				Subject:   user,
+				Audience:  "https://my-client.my-application.com",
+				ExpiresAt: time.Now().Add(time.Hour * 6),
+				IssuedAt:  time.Now(),
 			},
-			IDToken: &jwt.Header{
+			Headers: &jwt.Headers{
 				Extra: make(map[string]interface{}),
 			},
 		},
@@ -265,6 +266,9 @@ func main() {
 	http.HandleFunc("/callback", callbackHandler)
 	http.HandleFunc("/client", clientEndpoint)
 	http.HandleFunc("/owner", ownerEndpoint)
+
+	fmt.Printf("Please open your webbrowser at http://localhost:3846")
+	_ = exec.Command("open", "http://localhost:3846").Run()
 	log.Fatal(http.ListenAndServe(":3846", nil))
 }
 
@@ -389,7 +393,7 @@ func homeHandler(rw http.ResponseWriter, req *http.Request) {
 		</ul>`,
 		clientConf.AuthCodeURL("some-random-state-foobar")+"&nonce=some-random-nonce",
 		"http://localhost:3846/auth?client_id=my-client&redirect_uri=http%3A%2F%2Flocalhost%3A3846%2Fcallback&response_type=token%20id_token&scope=fosite%20openid&state=some-random-state-foobar&nonce=some-random-nonce",
-		clientConf.AuthCodeURL("some-random-state-foobar"),
+		clientConf.AuthCodeURL("some-random-state-foobar")+"&nonce=some-random-nonce",
 		"/auth?client_id=my-client&scope=fosite&response_type=123&redirect_uri=http://localhost:3846/callback",
 	)))
 }

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory-am/fosite/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,7 +32,7 @@ func TestAuthorizeRequest(t *testing.T) {
 			ar: &AuthorizeRequest{
 				RedirectURI: urlparse("https://foobar"),
 				Request: Request{
-					Client: &client.SecureClient{RedirectURIs: []string{""}},
+					Client: &DefaultClient{RedirectURIs: []string{""}},
 				},
 			},
 			isRedirValid: false,
@@ -41,7 +40,7 @@ func TestAuthorizeRequest(t *testing.T) {
 		{
 			ar: &AuthorizeRequest{
 				Request: Request{
-					Client: &client.SecureClient{RedirectURIs: []string{""}},
+					Client: &DefaultClient{RedirectURIs: []string{""}},
 				},
 				RedirectURI: urlparse(""),
 			},
@@ -50,7 +49,7 @@ func TestAuthorizeRequest(t *testing.T) {
 		{
 			ar: &AuthorizeRequest{
 				Request: Request{
-					Client: &client.SecureClient{RedirectURIs: []string{""}},
+					Client: &DefaultClient{RedirectURIs: []string{""}},
 				},
 				RedirectURI: urlparse(""),
 			},
@@ -60,7 +59,7 @@ func TestAuthorizeRequest(t *testing.T) {
 			ar: &AuthorizeRequest{
 				RedirectURI: urlparse("https://foobar.com#123"),
 				Request: Request{
-					Client: &client.SecureClient{RedirectURIs: []string{"https://foobar.com#123"}},
+					Client: &DefaultClient{RedirectURIs: []string{"https://foobar.com#123"}},
 				},
 			},
 			isRedirValid: false,
@@ -68,7 +67,7 @@ func TestAuthorizeRequest(t *testing.T) {
 		{
 			ar: &AuthorizeRequest{
 				Request: Request{
-					Client: &client.SecureClient{RedirectURIs: []string{"https://foobar.com"}},
+					Client: &DefaultClient{RedirectURIs: []string{"https://foobar.com"}},
 				},
 				RedirectURI: urlparse("https://foobar.com#123"),
 			},
@@ -77,7 +76,7 @@ func TestAuthorizeRequest(t *testing.T) {
 		{
 			ar: &AuthorizeRequest{
 				Request: Request{
-					Client:      &client.SecureClient{RedirectURIs: []string{"https://foobar.com/cb"}},
+					Client:      &DefaultClient{RedirectURIs: []string{"https://foobar.com/cb"}},
 					RequestedAt: time.Now(),
 					Scopes:      []string{"foo", "bar"},
 				},

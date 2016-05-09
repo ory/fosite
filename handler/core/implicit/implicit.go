@@ -31,12 +31,20 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		return nil
 	}
 
+	if !ar.GetClient().GetResponseTypes().Has("token") {
+		return errors.New(ErrInvalidGrant)
+	}
+
+	if !ar.GetClient().GetGrantTypes().Has("implicit") {
+		return errors.New(ErrInvalidGrant)
+	}
+
 	return c.IssueImplicitAccessToken(ctx, req, ar, resp)
 }
 
 func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
 	// Generate the code
-	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, req, ar)
+	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, ar)
 	if err != nil {
 		return errors.New(ErrServerError)
 	} else if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar); err != nil {
