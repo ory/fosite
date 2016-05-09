@@ -1,0 +1,71 @@
+{
+	"ImportPath": "github.com/ory-am/fosite",
+	"GoVersion": "go1.6",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.10.0",
+			"Rev": "4b6ea7319e214d98c938f12692336f7ca9348d6b"
+		},
+		{
+			"ImportPath": "github.com/asaskevich/govalidator",
+			"Comment": "v2-51-g9699ab6",
+			"Rev": "9699ab6b38bee2e02cd3fe8b99ecf67665395c96"
+		},
+		{
+			"ImportPath": "github.com/davecgh/go-spew/spew",
+			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
+		},
+		{
+			"ImportPath": "github.com/go-errors/errors",
+			"Rev": "a41850380601eeb43f4350f7d17c6bbd8944aaf8"
+		},
+		{
+			"ImportPath": "github.com/golang/mock/gomock",
+			"Rev": "bd3c8e81be01eef76d4b503f5e687d2d1354d2d9"
+		},
+		{
+			"ImportPath": "github.com/oleiade/reflections",
+			"Comment": "0.1.2-2-g632977f",
+			"Rev": "632977f98cd34d217c4b57d0840ec188b3d3dcaf"
+		},
+		{
+			"ImportPath": "github.com/ory-am/common/pkg",
+			"Rev": "930cc805232909c38f2e68310b1e21f71b056d59"
+		},
+		{
+			"ImportPath": "github.com/pmezard/go-difflib/difflib",
+			"Rev": "792786c7400a136282c1664665ae0a8db921c6c2"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/assert",
+			"Comment": "v1.1.3-2-g9f9027f",
+			"Rev": "9f9027faeb0dad515336ed2f28317f9f8f527ab4"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/require",
+			"Comment": "v1.1.3-2-g9f9027f",
+			"Rev": "9f9027faeb0dad515336ed2f28317f9f8f527ab4"
+		},
+		{
+			"ImportPath": "github.com/vektra/errors",
+			"Rev": "c64d83aba85aa4392895aadeefabbd24e89f3580"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/bcrypt",
+			"Rev": "1f22c0103821b9390939b6776727195525381532"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/blowfish",
+			"Rev": "1f22c0103821b9390939b6776727195525381532"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "6acef71eb69611914f7a30939ea9f6e194c78172"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "50c6bc5e4292a1d4e65c6e9be5f53be28bcbe28e"
+		}
+	]
+}
