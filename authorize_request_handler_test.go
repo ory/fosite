@@ -10,8 +10,8 @@ import (
 	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
-	"github.com/vektra/errors"
 	"golang.org/x/net/context"
+	"github.com/go-errors/errors"
 )
 
 // Should pass
