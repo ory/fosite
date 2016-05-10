@@ -13,6 +13,7 @@ matrix:
 
 install:
   - go get github.com/axw/gocov/gocov github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/Masterminds/glide
+  - go get -t ./...
 
 script:
   - go vet -x $(go list ./... | grep -v /internal/ | grep -v /vendor/)
