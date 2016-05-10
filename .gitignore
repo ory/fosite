@@ -4,3 +4,4 @@
 *.log
 *.exe
 cover.out
+vendor/

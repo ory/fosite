@@ -12,15 +12,10 @@ matrix:
     - go: 1.4
 
 install:
-  - go get github.com/axw/gocov/gocov
-  - go get github.com/mattn/goveralls
-  - go get golang.org/x/tools/cmd/cover
-  # - go get github.com/golang/lint/golint
-  - go get github.com/pierrre/gotestcover
-  - go get -t ./...
+  - go get github.com/axw/gocov/gocov github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/Masterminds/glide
 
 script:
   - go vet -x $(go list ./... | grep -v /internal/ | grep -v /vendor/)
-  # - golint .
-  - gotestcover -coverprofile="cover.out" -race -covermode="count" ./...
+  - glide install
+  - gotestcover -coverprofile="cover.out" -race -covermode="count" $(go list ./... | grep -v /vendor/)
   - goveralls -coverprofile="cover.out"
