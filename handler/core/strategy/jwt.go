@@ -1,11 +1,10 @@
 package strategy
 
 import (
-	"errors"
-
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/net/context"
+	"github.com/go-errors/errors"
 )
 
 type JWTSessionContainer interface {

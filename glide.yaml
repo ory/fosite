@@ -1,0 +1,22 @@
+package: github.com/ory-am/fosite
+import:
+- package: github.com/asaskevich/govalidator
+- package: github.com/dgrijalva/jwt-go
+- package: github.com/go-errors/errors
+- package: github.com/golang/mock
+  subpackages:
+  - gomock
+- package: github.com/ory-am/common
+  subpackages:
+  - pkg
+- package: github.com/parnurzeal/gorequest
+- package: github.com/pborman/uuid
+- package: golang.org/x/crypto
+  subpackages:
+  - bcrypt
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: golang.org/x/oauth2
+  subpackages:
+  - clientcredentials
