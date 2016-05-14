@@ -1,5 +1,13 @@
 package fosite
 
+import "strings"
+
+// Scopes is a list of scopes.
+type Scopes interface {
+	// Fulfill returns true if requestScope is fulfilled by the scope list.
+	Fulfill(requestScope string) bool
+}
+
 // Client represents a client or an app.
 type Client interface {
 	// GetID returns the client ID.
@@ -19,6 +27,9 @@ type Client interface {
 
 	// Returns the client's owner.
 	GetOwner() string
+
+	// Returns the scopes this client was granted.
+	GetGrantedScopes() Scopes
 }
 
 // DefaultClient is a simple default implementation of the Client interface.
@@ -29,12 +40,47 @@ type DefaultClient struct {
 	RedirectURIs      []string `json:"redirect_uris"`
 	GrantTypes        []string `json:"grant_types"`
 	ResponseTypes     []string `json:"response_types"`
+	GrantedScopes     []string `json:"granted_scopes"`
 	Owner             string   `json:"owner"`
 	PolicyURI         string   `json:"policy_uri"`
 	TermsOfServiceURI string   `json:"tos_uri"`
 	ClientURI         string   `json:"client_uri"`
 	LogoURI           string   `json:"logo_uri"`
 	Contacts          []string `json:"contacts"`
+}
+
+type DefaultScopes struct {
+	Scopes []string
+}
+
+func (s *DefaultScopes) Fulfill(requestScope string) bool {
+	for _, scope := range s.Scopes {
+		// foo == foo -> true
+		if scope == requestScope {
+			return true
+		}
+
+		// picture.read > picture -> false (scope picture includes read, write, ...)
+		if len(scope) > len(requestScope) {
+			break
+		}
+
+		needles := strings.Split(requestScope, ".")
+		haystack := strings.Split(scope, ".")
+		haystackLen := len(haystack) - 1
+		for k, needle := range needles {
+			if haystackLen < k {
+				return true
+			}
+
+			current := haystack[k]
+			if current != needle {
+				break
+			}
+		}
+	}
+
+	return false
 }
 
 func (c *DefaultClient) GetID() string {
@@ -47,6 +93,12 @@ func (c *DefaultClient) GetRedirectURIs() []string {
 
 func (c *DefaultClient) GetHashedSecret() []byte {
 	return c.Secret
+}
+
+func (c *DefaultClient) GetGrantedScopes() Scopes {
+	return &DefaultScopes{
+		Scopes: c.GrantedScopes,
+	}
 }
 
 func (c *DefaultClient) GetGrantTypes() Arguments {
