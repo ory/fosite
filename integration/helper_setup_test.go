@@ -10,6 +10,7 @@ import (
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core/strategy"
 	idstrat "github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/internal"
 	"github.com/ory-am/fosite/token/hmac"
 	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/oauth2"
@@ -71,8 +72,7 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 
 var idTokenStrategy = &idstrat.DefaultStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: []byte(jwt.TestCertificates[0][1]),
-		PublicKey:  []byte(jwt.TestCertificates[1][1]),
+		PrivateKey: internal.MustRSAKey(),
 	},
 }
 
