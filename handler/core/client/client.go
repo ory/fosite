@@ -21,6 +21,13 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 		return errors.New(fosite.ErrUnknownRequest)
 	}
 
+	client := request.GetClient()
+	for _, scope := range request.GetScopes() {
+		if client.GetGrantedScopes().Fulfill(scope) {
+			request.GrantScope(scope)
+		}
+	}
+
 	// The client MUST authenticate with the authorization server as described in Section 3.2.1.
 	// This requirement is already fulfilled because fosite requries all token requests to be authenticated as described
 	// in https://tools.ietf.org/html/rfc6749#section-3.2.1

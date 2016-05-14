@@ -14,6 +14,7 @@ import (
 	oauthStrat "github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/internal"
 	"github.com/ory-am/fosite/token/hmac"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
@@ -21,8 +22,7 @@ import (
 
 var idStrategy = &strategy.DefaultStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: []byte(jwt.TestCertificates[0][1]),
-		PublicKey:  []byte(jwt.TestCertificates[1][1]),
+		PrivateKey: internal.MustRSAKey(),
 	},
 }
 

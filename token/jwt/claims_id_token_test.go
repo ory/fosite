@@ -33,16 +33,16 @@ func TestIDTokenAssert(t *testing.T) {
 
 func TestIDTokenClaimsToMap(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{
-		"sub": idTokenClaims.Subject,
-		"iat": idTokenClaims.IssuedAt.Unix(),
-		"iss": idTokenClaims.Issuer,
-		"aud": idTokenClaims.Audience,
-		"nonce": idTokenClaims.Nonce,
-		"exp": idTokenClaims.ExpiresAt.Unix(),
-		"foo": idTokenClaims.Extra["foo"],
-		"baz": idTokenClaims.Extra["baz"],
-		"at_hash": idTokenClaims.AccessTokenHash,
-		"c_hash": idTokenClaims.CodeHash,
+		"sub":       idTokenClaims.Subject,
+		"iat":       idTokenClaims.IssuedAt.Unix(),
+		"iss":       idTokenClaims.Issuer,
+		"aud":       idTokenClaims.Audience,
+		"nonce":     idTokenClaims.Nonce,
+		"exp":       idTokenClaims.ExpiresAt.Unix(),
+		"foo":       idTokenClaims.Extra["foo"],
+		"baz":       idTokenClaims.Extra["baz"],
+		"at_hash":   idTokenClaims.AccessTokenHash,
+		"c_hash":    idTokenClaims.CodeHash,
 		"auth_time": idTokenClaims.AuthTime.Unix(),
 	}, idTokenClaims.ToMap())
 }

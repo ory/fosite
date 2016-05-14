@@ -45,6 +45,13 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			description: "should pass",
 			mock: func() {
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
+				areq.EXPECT().GetScopes().Return([]string{"foo", "bar", "baz.bar"})
+				areq.EXPECT().GrantScope("foo")
+				areq.EXPECT().GrantScope("baz.bar")
+				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
+					GrantTypes: fosite.Arguments{"client_credentials"},
+					GrantedScopes: []string{"foo", "baz"},
+				})
 			},
 		},
 	} {

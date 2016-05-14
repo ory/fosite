@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/ory-am/fosite"
-	hmac "github.com/ory-am/fosite/token/hmac"
-	jwt "github.com/ory-am/fosite/token/jwt"
+	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,8 +18,7 @@ var s = HMACSHAStrategy{
 
 var j = &RS256JWTStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: []byte(jwt.TestCertificates[0][1]),
-		PublicKey:  []byte(jwt.TestCertificates[1][1]),
+		PrivateKey: internal.MustRSAKey(),
 	},
 }
 
