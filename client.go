@@ -5,7 +5,7 @@ import "strings"
 // Scopes is a list of scopes.
 type Scopes interface {
 	// Fulfill returns true if requestScope is fulfilled by the scope list.
-	Fulfill(requestScope string) bool
+	Grant(requestScope string) bool
 }
 
 // Client represents a client or an app.
@@ -53,7 +53,7 @@ type DefaultScopes struct {
 	Scopes []string
 }
 
-func (s *DefaultScopes) Fulfill(requestScope string) bool {
+func (s *DefaultScopes) Grant(requestScope string) bool {
 	for _, scope := range s.Scopes {
 		// foo == foo -> true
 		if scope == requestScope {
@@ -62,7 +62,7 @@ func (s *DefaultScopes) Fulfill(requestScope string) bool {
 
 		// picture.read > picture -> false (scope picture includes read, write, ...)
 		if len(scope) > len(requestScope) {
-			break
+			continue
 		}
 
 		needles := strings.Split(requestScope, ".")
@@ -75,7 +75,7 @@ func (s *DefaultScopes) Fulfill(requestScope string) bool {
 
 			current := haystack[k]
 			if current != needle {
-				break
+				continue
 			}
 		}
 	}

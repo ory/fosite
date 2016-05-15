@@ -20,20 +20,27 @@ func TestDefaultClient(t *testing.T) {
 	assert.EqualValues(t, sc.ResponseTypes, sc.GetResponseTypes())
 	assert.EqualValues(t, sc.GrantTypes, sc.GetGrantTypes())
 
-	assert.False(t, sc.GetGrantedScopes().Fulfill("foo.bar.baz"))
-	assert.False(t, sc.GetGrantedScopes().Fulfill("foo.bar"))
-	assert.False(t, sc.GetGrantedScopes().Fulfill("foo"))
+	assert.False(t, sc.GetGrantedScopes().Grant("foo.bar.baz"))
+	assert.False(t, sc.GetGrantedScopes().Grant("foo.bar"))
+	assert.False(t, sc.GetGrantedScopes().Grant("foo"))
 
-	sc.GrantedScopes = []string{"foo.bar", "bar.baz"}
-	assert.True(t, sc.GetGrantedScopes().Fulfill("foo.bar.baz"))
-	assert.True(t, sc.GetGrantedScopes().Fulfill("foo.bar"))
-	assert.False(t, sc.GetGrantedScopes().Fulfill("foo"))
+	sc.GrantedScopes = []string{"foo.bar", "bar.baz", "baz.baz.1", "baz.baz.2", "baz.baz.3", "baz.baz.baz"}
+	assert.True(t, sc.GetGrantedScopes().Grant("foo.bar.baz"))
+	assert.True(t, sc.GetGrantedScopes().Grant("baz.baz.baz"))
+	assert.True(t, sc.GetGrantedScopes().Grant("foo.bar"))
+	assert.False(t, sc.GetGrantedScopes().Grant("foo"))
 
-	assert.True(t, sc.GetGrantedScopes().Fulfill("bar.baz"))
-	assert.True(t, sc.GetGrantedScopes().Fulfill("bar.baz.zad"))
-	assert.False(t, sc.GetGrantedScopes().Fulfill("bar"))
+	assert.True(t, sc.GetGrantedScopes().Grant("bar.baz"))
+	assert.True(t, sc.GetGrantedScopes().Grant("bar.baz.zad"))
+	assert.False(t, sc.GetGrantedScopes().Grant("bar"))
 
-	assert.False(t, sc.GetGrantedScopes().Fulfill("baz"))
+	assert.False(t, sc.GetGrantedScopes().Grant("baz"))
+
+	sc.GrantedScopes = []string{"fosite.keys.create", "fosite.keys.get", "fosite.keys.delete", "fosite.keys.update"}
+	assert.True(t, sc.GetGrantedScopes().Grant("fosite.keys.delete"))
+	assert.True(t, sc.GetGrantedScopes().Grant("fosite.keys.get"))
+	assert.True(t, sc.GetGrantedScopes().Grant("fosite.keys.get"))
+	assert.True(t, sc.GetGrantedScopes().Grant("fosite.keys.update"))
 
 	sc.GrantTypes = []string{}
 	sc.ResponseTypes = []string{}
