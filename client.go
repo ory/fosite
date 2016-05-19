@@ -34,19 +34,19 @@ type Client interface {
 
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
-	ID                string   `json:"id"`
-	Name              string   `json:"name"`
-	Secret            []byte   `json:"secret,omitempty"`
-	RedirectURIs      []string `json:"redirect_uris"`
-	GrantTypes        []string `json:"grant_types"`
-	ResponseTypes     []string `json:"response_types"`
-	GrantedScopes     []string `json:"granted_scopes"`
-	Owner             string   `json:"owner"`
-	PolicyURI         string   `json:"policy_uri"`
-	TermsOfServiceURI string   `json:"tos_uri"`
-	ClientURI         string   `json:"client_uri"`
-	LogoURI           string   `json:"logo_uri"`
-	Contacts          []string `json:"contacts"`
+	ID                string   `json:"id" gorethink:"id"`
+	Name              string   `json:"name" gorethink:"name"`
+	Secret            []byte   `json:"secret,omitempty" gorethink:"secret"`
+	RedirectURIs      []string `json:"redirect_uris" gorethink:"redirect_uris"`
+	GrantTypes        []string `json:"grant_types" gorethink:"grant_types"`
+	ResponseTypes     []string `json:"response_types" gorethink:"response_types"`
+	GrantedScopes     []string `json:"granted_scopes" gorethink:"granted_scopes"`
+	Owner             string   `json:"owner" gorethink:"owner"`
+	PolicyURI         string   `json:"policy_uri" gorethink:"policy_uri"`
+	TermsOfServiceURI string   `json:"tos_uri" gorethink:"tos_uri"`
+	ClientURI         string   `json:"client_uri" gorethink:"client_uri"`
+	LogoURI           string   `json:"logo_uri" gorethink:"logo_uri"`
+	Contacts          []string `json:"contacts" gorethink:"contacts"`
 }
 
 type DefaultScopes struct {
