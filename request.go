@@ -7,12 +7,12 @@ import (
 
 // Request is an implementation of Requester
 type Request struct {
-	RequestedAt   time.Time
-	Client        Client
-	Scopes        Arguments
-	GrantedScopes Arguments
-	Form          url.Values
-	Session       interface{}
+	RequestedAt   time.Time   `json:"requestedAt" gorethink:"requestedAt"`
+	Client        Client      `json:"client" gorethink:"client"`
+	Scopes        Arguments   `json:"scopes" gorethink:"scopes"`
+	GrantedScopes Arguments   `json:"grantedScopes" gorethink:"grantedScopes"`
+	Form          url.Values  `json:"form" gorethink:"form"`
+	Session       interface{} `json:"session" gorethink:"session"`
 }
 
 func NewRequest() *Request {

@@ -6,10 +6,10 @@ import (
 
 // AuthorizeRequest is an implementation of AuthorizeRequester
 type AuthorizeRequest struct {
-	ResponseTypes        Arguments
-	RedirectURI          *url.URL
-	State                string
-	HandledResponseTypes Arguments
+	ResponseTypes        Arguments `json:"responseTypes" gorethink:"responseTypes"`
+	RedirectURI          *url.URL  `json:"redirectUri" gorethink:"redirectUri"`
+	State                string    `json:"state" gorethink:"state"`
+	HandledResponseTypes Arguments `json:"handledResponseTypes" gorethink:"handledResponseTypes"`
 
 	Request
 }

@@ -5,13 +5,13 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
-	"github.com/go-errors/errors"
 )
 
 // Should pass
