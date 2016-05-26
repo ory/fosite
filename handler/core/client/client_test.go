@@ -49,7 +49,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GrantScope("foo")
 				areq.EXPECT().GrantScope("baz.bar")
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
-					GrantTypes: fosite.Arguments{"client_credentials"},
+					GrantTypes:    fosite.Arguments{"client_credentials"},
 					GrantedScopes: []string{"foo", "baz"},
 				})
 			},

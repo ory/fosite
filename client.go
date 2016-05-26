@@ -35,8 +35,8 @@ type Client interface {
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
 	ID                string   `json:"id" gorethink:"id"`
-	Name              string   `json:"name" gorethink:"name"`
-	Secret            []byte   `json:"secret,omitempty" gorethink:"secret"`
+	Name              string   `json:"client_name" gorethink:"client_name"`
+	Secret            []byte   `json:"client_secret,omitempty" gorethink:"client_secret"`
 	RedirectURIs      []string `json:"redirect_uris" gorethink:"redirect_uris"`
 	GrantTypes        []string `json:"grant_types" gorethink:"grant_types"`
 	ResponseTypes     []string `json:"response_types" gorethink:"response_types"`
