@@ -1,12 +1,11 @@
 package oidc
 
 import (
-	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"golang.org/x/net/context"
 )
 
-var ErrNoSessionFound = pkg.ErrNotFound
+var ErrNoSessionFound = fosite.ErrNotFound
 
 type OpenIDConnectRequestStorage interface {
 	// CreateOpenIDConnectSession creates an open id connect session

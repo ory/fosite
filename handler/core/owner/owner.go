@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/go-errors/errors"
-	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
@@ -33,7 +32,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	password := req.PostForm.Get("password")
 	if username == "" || password == "" {
 		return errors.New(fosite.ErrInvalidRequest)
-	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); err == pkg.ErrNotFound {
+	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Is(err, fosite.ErrNotFound) {
 		return errors.New(fosite.ErrInvalidRequest)
 	} else if err != nil {
 		return errors.New(fosite.ErrServerError)

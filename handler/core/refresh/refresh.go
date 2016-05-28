@@ -5,22 +5,21 @@ import (
 	"time"
 
 	"github.com/go-errors/errors"
-	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
 	"golang.org/x/net/context"
 )
 
 type RefreshTokenGrantHandler struct {
-	AccessTokenStrategy core.AccessTokenStrategy
+	AccessTokenStrategy      core.AccessTokenStrategy
 
-	RefreshTokenStrategy core.RefreshTokenStrategy
+	RefreshTokenStrategy     core.RefreshTokenStrategy
 
 	// RefreshTokenGrantStorage is used to persist session data across requests.
 	RefreshTokenGrantStorage RefreshTokenGrantStorage
 
 	// AccessTokenLifespan defines the lifetime of an access token.
-	AccessTokenLifespan time.Duration
+	AccessTokenLifespan      time.Duration
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
@@ -42,7 +41,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	accessRequest, err := c.RefreshTokenGrantStorage.GetRefreshTokenSession(ctx, signature, nil)
-	if err == pkg.ErrNotFound {
+	if errors.Is(err, fosite.ErrNotFound) {
 		return errors.New(fosite.ErrInvalidRequest)
 	} else if err != nil {
 		return errors.New(fosite.ErrServerError)

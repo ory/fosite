@@ -22,6 +22,7 @@ var (
 	ErrInvalidState            = errors.Errorf("The state is missing or has less than %d characters and is therefore considered too weak", MinParameterEntropy)
 	ErrInsufficientEntropy     = errors.Errorf("The request used a security parameter (e.g., anti-replay, anti-csrf) with insufficient entropy (minimum of %d characters)", MinParameterEntropy)
 	ErrMisconfiguration        = errors.New("The request failed because of a misconfiguration")
+	ErrNotFound		   = errors.New("Could not find the requested resource(s)")
 )
 
 const (

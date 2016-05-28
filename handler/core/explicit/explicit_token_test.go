@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
-	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
@@ -141,7 +140,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because authcode could not be retrieved (1)",
 			setup: func() {
 				ach.EXPECT().ValidateAuthorizeCode(nil, areq, "foo.bar").AnyTimes().Return("bar", nil)
-				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).Return(nil, pkg.ErrNotFound)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).Return(nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},

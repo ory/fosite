@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
-	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +53,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because token can't be found",
 			setup: func() {
 				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").AnyTimes().Return("refreshtokensig", nil)
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, pkg.ErrNotFound)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},

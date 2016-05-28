@@ -2,7 +2,6 @@ package store
 
 import (
 	"github.com/go-errors/errors"
-	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"golang.org/x/net/context"
 )
@@ -43,7 +42,7 @@ func (s *Store) CreateOpenIDConnectSession(_ context.Context, authorizeCode stri
 func (s *Store) GetOpenIDConnectSession(_ context.Context, authorizeCode string, requester fosite.Requester) (fosite.Requester, error) {
 	cl, ok := s.IDSessions[authorizeCode]
 	if !ok {
-		return nil, pkg.ErrNotFound
+		return nil, fosite.ErrNotFound
 	}
 	return cl, nil
 }
@@ -56,7 +55,7 @@ func (s *Store) DeleteOpenIDConnectSession(_ context.Context, authorizeCode stri
 func (s *Store) GetClient(id string) (fosite.Client, error) {
 	cl, ok := s.Clients[id]
 	if !ok {
-		return nil, pkg.ErrNotFound
+		return nil, fosite.ErrNotFound
 	}
 	return cl, nil
 }
@@ -69,7 +68,7 @@ func (s *Store) CreateAuthorizeCodeSession(_ context.Context, code string, req f
 func (s *Store) GetAuthorizeCodeSession(_ context.Context, code string, _ interface{}) (fosite.Requester, error) {
 	rel, ok := s.AuthorizeCodes[code]
 	if !ok {
-		return nil, pkg.ErrNotFound
+		return nil, fosite.ErrNotFound
 	}
 	return rel, nil
 }
@@ -87,7 +86,7 @@ func (s *Store) CreateAccessTokenSession(_ context.Context, signature string, re
 func (s *Store) GetAccessTokenSession(_ context.Context, signature string, _ interface{}) (fosite.Requester, error) {
 	rel, ok := s.AccessTokens[signature]
 	if !ok {
-		return nil, pkg.ErrNotFound
+		return nil, fosite.ErrNotFound
 	}
 	return rel, nil
 }
@@ -105,7 +104,7 @@ func (s *Store) CreateRefreshTokenSession(_ context.Context, signature string, r
 func (s *Store) GetRefreshTokenSession(_ context.Context, signature string, _ interface{}) (fosite.Requester, error) {
 	rel, ok := s.RefreshTokens[signature]
 	if !ok {
-		return nil, pkg.ErrNotFound
+		return nil, fosite.ErrNotFound
 	}
 	return rel, nil
 }
@@ -123,7 +122,7 @@ func (s *Store) CreateImplicitAccessTokenSession(_ context.Context, code string,
 func (s *Store) Authenticate(_ context.Context, name string, secret string) error {
 	rel, ok := s.Users[name]
 	if !ok {
-		return pkg.ErrNotFound
+		return fosite.ErrNotFound
 	}
 	if rel.Password != secret {
 		return errors.New("Invalid credentials")

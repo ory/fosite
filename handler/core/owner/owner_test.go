@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
-	"github.com/ory-am/common/pkg"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/internal"
@@ -49,7 +48,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}}
 				httpreq.PostForm.Set("username", "peter")
 				httpreq.PostForm.Set("password", "pan")
-				store.EXPECT().Authenticate(nil, "peter", "pan").Return(pkg.ErrNotFound)
+				store.EXPECT().Authenticate(nil, "peter", "pan").Return(fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
