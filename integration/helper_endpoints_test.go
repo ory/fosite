@@ -37,6 +37,10 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session int
 			return
 		}
 
+		if ar.GetScopes().Has("offline") {
+			ar.GrantScope("offline")
+		}
+
 		// Normally, this would be the place where you would check if the user is logged in and gives his consent.
 		// For this test, let's assume that the user exists, is logged in, and gives his consent...
 

@@ -25,6 +25,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 
 	areq := fosite.NewAccessRequest(nil)
 	httpreq := &http.Request{PostForm: url.Values{}}
+	authreq := fosite.NewAuthorizeRequest()
 
 	h := AuthorizeExplicitGrantTypeHandler{
 		AuthorizeCodeGrantStorage: store,
@@ -48,18 +49,27 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because authcode validation failed",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
-				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"authorization_code"}}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes: fosite.Arguments{"authorization_code"},
+				}
 				httpreq.PostForm.Add("code", "authcode")
 				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
+			description: "should fail because lookup failed",
+			setup: func() {
+				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").AnyTimes().Return("authsig", nil)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).Return(nil, fosite.ErrNotFound)
+			},
+			expectErr: fosite.ErrServerError,
+		},
+		{
 			description: "should fail because access token generation failed",
 			setup: func() {
-				areq.GrantTypes = fosite.Arguments{"authorization_code"}
-				httpreq.PostForm.Add("code", "authcode")
-				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").AnyTimes().Return("authsig", nil)
+				authreq.GrantedScopes = []string{"offline"}
+				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).AnyTimes().Return(authreq, nil)
 				ach.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New("error"))
 			},
 			expectErr: fosite.ErrServerError,

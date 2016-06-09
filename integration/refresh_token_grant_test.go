@@ -57,7 +57,7 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 			pass:        false,
 		},
 		{
-			description: "should pass",
+			description: "should fail because scope missing",
 			setup: func() {
 				handler := &refresh.RefreshTokenGrantHandler{
 					AccessTokenStrategy:      strategy.(core.AccessTokenStrategy),
@@ -66,6 +66,13 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 					AccessTokenLifespan:      time.Second,
 				}
 				f.TokenEndpointHandlers.Append(handler)
+			},
+			pass: false,
+		},
+		{
+			description: "should pass",
+			setup: func() {
+				oauthClient.Scopes = []string{"fosite", "offline"}
 			},
 			pass: true,
 		},

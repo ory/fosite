@@ -43,6 +43,7 @@ var store = &exampleStore.Store{
 			RedirectURIs:  []string{"http://localhost:3846/callback"},
 			ResponseTypes: []string{"id_token", "code", "token"},
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+			GrantedScopes: []string{"fosite", "offline"},
 		},
 	},
 	Users: map[string]exampleStore.UserRelation{
@@ -64,7 +65,7 @@ var clientConf = goauth.Config{
 	ClientID:     "my-client",
 	ClientSecret: "foobar",
 	RedirectURL:  "http://localhost:3846/callback",
-	Scopes:       []string{"fosite", "openid"},
+	Scopes:       []string{"fosite", "openid", "offline"},
 	Endpoint: goauth.Endpoint{
 		TokenURL: "http://localhost:3846/token",
 		AuthURL:  "http://localhost:3846/auth",
@@ -333,6 +334,11 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 			</form>
 		`))
 		return
+	}
+
+	// we allow issuing of refresh tokens per default
+	if ar.GetScopes().Has("offline") {
+		ar.GrantScope("offline")
 	}
 
 	// Now that the user is authorized, we set up a session:
