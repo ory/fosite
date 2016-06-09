@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/go-errors/errors"
-	"golang.org/x/net/context"
 	"github.com/ory-am/fosite"
+	"golang.org/x/net/context"
 )
 
 // HandleTokenEndpointRequest implements
@@ -87,14 +87,22 @@ func (c *AuthorizeExplicitGrantTypeHandler) PopulateTokenEndpointResponse(ctx co
 		return errors.New(fosite.ErrInvalidRequest)
 	}
 
+	authorizeRequest, err := c.AuthorizeCodeGrantStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
+	if err != nil {
+		return errors.New(fosite.ErrServerError)
+	}
+
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
 		return errors.New(fosite.ErrServerError)
 	}
 
-	refresh, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
-	if err != nil {
-		return errors.New(fosite.ErrServerError)
+	var refresh, refreshSignature string
+	if authorizeRequest.GetGrantedScopes().Has("offline") {
+		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
+		if err != nil {
+			return errors.New(fosite.ErrServerError)
+		}
 	}
 
 	if err := c.AuthorizeCodeGrantStorage.PersistAuthorizeCodeGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
@@ -104,7 +112,10 @@ func (c *AuthorizeExplicitGrantTypeHandler) PopulateTokenEndpointResponse(ctx co
 	responder.SetAccessToken(access)
 	responder.SetTokenType("bearer")
 	responder.SetExpiresIn(c.AccessTokenLifespan / time.Second)
-	responder.SetExtra("refresh_token", refresh)
 	responder.SetScopes(requester.GetGrantedScopes())
+	if refresh != "" {
+		responder.SetExtra("refresh_token", refresh)
+	}
+
 	return nil
 }

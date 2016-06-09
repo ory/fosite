@@ -25,6 +25,7 @@ var fositeStore = &store.Store{
 			RedirectURIs:  []string{"http://localhost:3846/callback"},
 			ResponseTypes: []string{"id_token", "code", "token"},
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+			GrantedScopes: []string{"fosite", "offline"},
 		},
 	},
 	Users: map[string]store.UserRelation{
