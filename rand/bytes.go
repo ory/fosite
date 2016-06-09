@@ -3,6 +3,7 @@ package rand
 import (
 	"crypto/rand"
 	"io"
+
 	"github.com/go-errors/errors"
 )
 

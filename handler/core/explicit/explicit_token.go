@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/go-errors/errors"
-	"golang.org/x/net/context"
 	"github.com/ory-am/fosite"
+	"golang.org/x/net/context"
 )
 
 // HandleTokenEndpointRequest implements
