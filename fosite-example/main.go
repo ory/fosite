@@ -10,6 +10,9 @@ import (
 
 	"os/exec"
 
+	"crypto/rand"
+	"crypto/rsa"
+
 	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	exampleStore "github.com/ory-am/fosite/fosite-example/store"
@@ -25,7 +28,6 @@ import (
 	"github.com/ory-am/fosite/handler/oidc/hybrid"
 	oidcimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
 	oidcstrategy "github.com/ory-am/fosite/handler/oidc/strategy"
-	"github.com/ory-am/fosite/internal"
 	"github.com/ory-am/fosite/token/hmac"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/parnurzeal/gorequest"
@@ -95,14 +97,14 @@ var hmacStrategy = &strategy.HMACSHAStrategy{
 // be a random string that is hard to guess.
 var jwtStrategy = &strategy.RS256JWTStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
+		PrivateKey: mustRSAKey(),
 	},
 }
 
 // This strategy is used for issuing OpenID Conenct id tokens
 var idtokenStrategy = &oidcstrategy.DefaultStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
+		PrivateKey: mustRSAKey(),
 	},
 }
 
@@ -517,4 +519,12 @@ func ownerEndpoint(rw http.ResponseWriter, req *http.Request) {
 
 func typeof(v interface{}) string {
 	return reflect.TypeOf(v).String()
+}
+
+func mustRSAKey() *rsa.PrivateKey {
+	key, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		panic(err)
+	}
+	return key
 }
