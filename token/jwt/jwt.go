@@ -5,12 +5,10 @@ package jwt
 import (
 	"fmt"
 	"strings"
-
 	"crypto/sha256"
-
 	"crypto/rsa"
 
-	"github.com/dgrijalva/jwt-go"
+	"gopkg.in/dgrijalva/jwt-go.v2"
 	"github.com/go-errors/errors"
 )
 
