@@ -62,7 +62,10 @@ of code.
 You can run this minimalistic example by doing
 
 ```
-go get github.com/ory-am/fosite/fosite-example
+go get github.com/Masterminds/glide
+go get -d github.com/ory-am/fosite
+cd $GOPATH/src/github.com/ory-am/fosite
+glide install
 go install github.com/ory-am/fosite/fosite-example
 fosite-example
 ```
@@ -142,7 +145,7 @@ You will need [Go](https://golang.org) installed on your machine and it is requi
 GOPATH environment variable.
 
 ```
-go get github.com/ory-am/fosite
+go get -d github.com/ory-am/fosite
 ```
 
 We recommend to use [Glide](https://github.com/Masterminds/glide) or [Godep](https://github.com/tools/godep), because
@@ -223,8 +226,8 @@ There are also [OpenID Connect Handlers available](handler/oidc).
 You need git and golang installed on your system.
 
 ```
-go get github.com/ory-am/fosite -d
-cd $GOPATH/src/ github.com/ory-am/fosite
+go get -d github.com/ory-am/fosite
+cd $GOPATH/src/github.com/ory-am/fosite
 git status
 git remote add myfork <url-to-your-fork>
 go test ./...
