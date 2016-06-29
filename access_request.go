@@ -1,11 +1,8 @@
 package fosite
 
-import "time"
-
 type AccessRequest struct {
 	GrantTypes       Arguments `json:"grantTypes" gorethink:"grantTypes"`
 	HandledGrantType Arguments `json:"handledGrantType" gorethink:"handledGrantType"`
-	RequestedAt      time.Time `json:"requestedAt" gorethink:"requestedAt"`
 
 	Request
 }
