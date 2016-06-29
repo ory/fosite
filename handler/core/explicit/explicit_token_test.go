@@ -101,7 +101,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 				aresp.EXPECT().SetTokenType("bearer")
 				aresp.EXPECT().SetExtra("refresh_token", "refresh.rts")
 				aresp.EXPECT().SetExpiresIn(gomock.Any())
-				aresp.EXPECT().SetScopes(areq.GrantedScopes)
+				aresp.EXPECT().SetScopes(gomock.Eq(areq.GrantedScopes))
 			},
 		},
 	} {
