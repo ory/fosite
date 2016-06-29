@@ -3,9 +3,9 @@ package client
 import (
 	"net/http"
 
-	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -18,7 +18,7 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
 	if !request.GetGrantTypes().Exact("client_credentials") {
-		return errors.New(fosite.ErrUnknownRequest)
+		return errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
 
 	client := request.GetClient()
@@ -39,11 +39,11 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.4.3
 func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, r *http.Request, request fosite.AccessRequester, response fosite.AccessResponder) error {
 	if !request.GetGrantTypes().Exact("client_credentials") {
-		return errors.New(fosite.ErrUnknownRequest)
+		return errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("client_credentials") {
-		return errors.New(fosite.ErrInvalidGrant)
+		return errors.Wrap(fosite.ErrInvalidGrant, "")
 	}
 
 	return c.IssueAccessToken(ctx, r, request, response)

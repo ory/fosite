@@ -3,9 +3,9 @@ package owner
 import (
 	"net/http"
 
-	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -21,21 +21,21 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	// grant_type REQUIRED.
 	// Value MUST be set to "password".
 	if !request.GetGrantTypes().Exact("password") {
-		return errors.New(fosite.ErrUnknownRequest)
+		return errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("password") {
-		return errors.New(fosite.ErrInvalidGrant)
+		return errors.Wrap(fosite.ErrInvalidGrant, "")
 	}
 
 	username := req.PostForm.Get("username")
 	password := req.PostForm.Get("password")
 	if username == "" || password == "" {
-		return errors.New(fosite.ErrInvalidRequest)
-	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Is(err, fosite.ErrNotFound) {
-		return errors.New(fosite.ErrInvalidRequest)
+		return errors.Wrap(fosite.ErrInvalidRequest, "")
+	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
+		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	} else if err != nil {
-		return errors.New(fosite.ErrServerError)
+		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	// Credentials must not be passed around, potentially leaking to the database!
@@ -46,7 +46,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.3.3
 func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().Exact("password") {
-		return errors.New(fosite.ErrUnknownRequest)
+		return errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
 
 	return c.IssueAccessToken(ctx, req, requester, responder)

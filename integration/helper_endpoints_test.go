@@ -4,10 +4,20 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/go-errors/errors"
-	fosite "github.com/ory-am/fosite"
+	"github.com/ory-am/fosite"
+	hst "github.com/ory-am/fosite/handler/core/strategy"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
+
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
+type mySessionData struct {
+	Foo string
+	*hst.HMACSession
+}
 
 func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
@@ -15,7 +25,7 @@ func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interf
 		if _, err := oauth2.ValidateRequestAuthorization(ctx, req, session); err != nil {
 			rfcerr := fosite.ErrorToRFC6749Error(err)
 			t.Logf("Info request failed because %s.", err.Error())
-			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
+			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
 			http.Error(rw, rfcerr.Description, rfcerr.StatusCode)
 			return
 		}
@@ -32,7 +42,7 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session int
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", ar)
-			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
+			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}
@@ -48,7 +58,7 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session int
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", ar)
-			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
+			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}
@@ -80,15 +90,14 @@ func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw ht
 	return func(rw http.ResponseWriter, req *http.Request) {
 		req.ParseForm()
 		ctx := fosite.NewContext()
-		var mySessionData struct {
-			Foo string
-		}
 
-		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData)
+		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData{
+			HMACSession: &hst.HMACSession{},
+		})
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)
-			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
+			t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
 			oauth2.WriteAccessError(rw, accessRequest, err)
 			return
 		}
@@ -97,7 +106,7 @@ func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw ht
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)
-			t.Logf("Stack: %s.", err.(*errors.Error).ErrorStack())
+			t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
 			oauth2.WriteAccessError(rw, accessRequest, err)
 			return
 		}

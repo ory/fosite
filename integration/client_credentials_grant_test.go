@@ -5,6 +5,7 @@ import (
 
 	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/handler/core/owner"
+	hst "github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
@@ -20,7 +21,9 @@ func TestClientCredentialsGrabt(t *testing.T) {
 
 func runClientCredentialsGrantTest(t *testing.T, strategy core.AccessTokenStrategy) {
 	f := newFosite()
-	ts := mockServer(t, f, nil)
+	ts := mockServer(t, f, &mySessionData{
+		HMACSession: new(hst.HMACSession),
+	})
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)

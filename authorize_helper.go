@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/go-errors/errors"
+	"github.com/pkg/errors"
 )
 
 // GetRedirectURIFromRequestValues extracts the redirect_uri from values but does not do any sort of validation.
@@ -21,7 +21,7 @@ func GetRedirectURIFromRequestValues(values url.Values) (string, error) {
 	// The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component
 	redirectURI, err := url.QueryUnescape(values.Get("redirect_uri"))
 	if err != nil {
-		return "", errors.Wrap(ErrInvalidRequest, 0)
+		return "", errors.Wrap(ErrInvalidRequest, "redirect_uri parameter malformed or missing")
 	}
 	return redirectURI, nil
 }
@@ -71,7 +71,7 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 		}
 	}
 
-	return nil, errors.New(ErrInvalidRequest)
+	return nil, errors.Wrap(ErrInvalidRequest, "redirect_uri parameter does not match with registered client redirect urls")
 }
 
 // IsValidRedirectURI validates a redirect_uri as specified in:

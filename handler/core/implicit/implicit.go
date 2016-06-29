@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -32,11 +32,11 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("token") {
-		return errors.New(ErrInvalidGrant)
+		return errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errors.New(ErrInvalidGrant)
+		return errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	return c.IssueImplicitAccessToken(ctx, req, ar, resp)
@@ -46,9 +46,9 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	// Generate the code
 	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, ar)
 	if err != nil {
-		return errors.New(ErrServerError)
+		return errors.Wrap(ErrServerError, err.Error())
 	} else if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar); err != nil {
-		return errors.New(ErrServerError)
+		return errors.Wrap(ErrServerError, err.Error())
 	}
 
 	resp.AddFragment("access_token", token)

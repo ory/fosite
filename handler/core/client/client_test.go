@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory-am/fosite/handler/core"
@@ -57,7 +57,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	} {
 		c.mock()
 		err := h.HandleTokenEndpointRequest(nil, c.req, areq)
-		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }
@@ -111,7 +111,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	} {
 		c.mock()
 		err := h.PopulateTokenEndpointResponse(nil, c.req, areq, aresp)
-		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-errors/errors"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -37,15 +37,12 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
-		return accessRequest, errors.New(ErrInvalidRequest)
-	}
-
-	if err := r.ParseForm(); err != nil {
-		return accessRequest, errors.New(ErrInvalidRequest)
+		return accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP method is not POST")
+	} else if err := r.ParseForm(); err != nil {
+		return accessRequest, errors.Wrap(ErrInvalidRequest, err.Error())
 	}
 
 	accessRequest.Form = r.PostForm
-
 	if session == nil {
 		return accessRequest, errors.New("Session must not be nil")
 	}
@@ -53,22 +50,22 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	accessRequest.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
 	accessRequest.GrantTypes = removeEmpty(strings.Split(r.Form.Get("grant_type"), " "))
 	if len(accessRequest.GrantTypes) < 1 {
-		return accessRequest, errors.New(ErrInvalidRequest)
+		return accessRequest, errors.Wrap(ErrInvalidRequest, "No grant type given")
 	}
 
 	clientID, clientSecret, ok := r.BasicAuth()
 	if !ok {
-		return accessRequest, errors.New(ErrInvalidRequest)
+		return accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP Authorization header missing or invalid")
 	}
 
 	client, err := f.Store.GetClient(clientID)
 	if err != nil {
-		return accessRequest, errors.New(ErrInvalidClient)
+		return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
 	}
 
 	// Enforce client authentication
 	if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-		return accessRequest, errors.New(ErrInvalidClient)
+		return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
 	}
 	accessRequest.Client = client
 
@@ -76,7 +73,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	for _, loader := range f.TokenEndpointHandlers {
 		if err := loader.HandleTokenEndpointRequest(ctx, r, accessRequest); err == nil {
 			found = true
-		} else if errors.Is(err, ErrUnknownRequest) {
+		} else if errors.Cause(err) == ErrUnknownRequest {
 			// do nothing
 		} else if err != nil {
 			return accessRequest, err
@@ -84,11 +81,11 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	if !found {
-		return nil, ErrUnsupportedGrantType
+		return nil, errors.Wrap(ErrInvalidRequest, "")
 	}
 
 	if !accessRequest.GetScopes().Has(f.GetMandatoryScope()) {
-		return accessRequest, errors.New(ErrInvalidScope)
+		return accessRequest, errors.Wrap(ErrInvalidScope, "")
 	}
 
 	accessRequest.GrantScope(f.GetMandatoryScope())

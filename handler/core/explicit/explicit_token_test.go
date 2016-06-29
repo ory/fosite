@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,30 +46,31 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because authcode validation failed",
+			description: "should fail because authcode not found",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes: fosite.Arguments{"authorization_code"},
 				}
 				httpreq.PostForm.Add("code", "authcode")
-				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").Return("", errors.New(""))
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
-			description: "should fail because lookup failed",
-			setup: func() {
-				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").AnyTimes().Return("authsig", nil)
+				auch.EXPECT().AuthorizeCodeSignature("authcode").AnyTimes().Return("authsig")
 				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).Return(nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
+			description: "should fail because validation failed",
+			setup: func() {
+				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).AnyTimes().Return(authreq, nil)
+				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").Return(errors.New(""))
+			},
+			expectErr: fosite.ErrInvalidRequest,
+		},
+		{
 			description: "should fail because access token generation failed",
 			setup: func() {
 				authreq.GrantedScopes = []string{"offline"}
-				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).AnyTimes().Return(authreq, nil)
+				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").AnyTimes().Return(nil)
 				ach.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New("error"))
 			},
 			expectErr: fosite.ErrServerError,
@@ -106,7 +107,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	} {
 		c.setup()
 		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
-		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }
@@ -138,33 +139,27 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because authcode validation failed",
+			description: "should fail because authcode could not be retrieved (1)",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"} // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				httpreq.PostForm = url.Values{"code": {"foo.bar"}}
-				ach.EXPECT().ValidateAuthorizeCode(nil, areq, "foo.bar").Return("", errors.New(""))
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
-			description: "should fail because authcode could not be retrieved (1)",
-			setup: func() {
-				ach.EXPECT().ValidateAuthorizeCode(nil, areq, "foo.bar").AnyTimes().Return("bar", nil)
+				ach.EXPECT().AuthorizeCodeSignature("foo.bar").AnyTimes().Return("bar")
 				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).Return(nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
-			description: "should fail because authcode could not be retrieved (2)",
+			description: "should fail because authcode validation failed",
 			setup: func() {
-				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).Return(nil, errors.New(""))
+				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).AnyTimes().Return(authreq, nil)
+				ach.EXPECT().ValidateAuthorizeCode(nil, areq, "foo.bar").Return(errors.New(""))
 			},
-			expectErr: fosite.ErrServerError,
+			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should fail because client mismatch",
 			setup: func() {
-				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).AnyTimes().Return(authreq, nil)
+				ach.EXPECT().ValidateAuthorizeCode(nil, areq, "foo.bar").AnyTimes().Return(nil)
 
 				areq.Client = &fosite.DefaultClient{ID: "foo"}
 				authreq.Scopes = fosite.Arguments{"a", "b"}
@@ -206,7 +201,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	} {
 		c.setup()
 		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
-		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }

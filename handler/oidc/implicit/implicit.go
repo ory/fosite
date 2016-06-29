@@ -3,12 +3,12 @@ package implicit
 import (
 	"net/http"
 
-	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	. "github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/token/jwt"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -25,13 +25,13 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errors.New(ErrInvalidGrant)
+		return errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	if ar.GetResponseTypes().Exact("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.New(ErrInvalidGrant)
+		return errors.Wrap(ErrInvalidGrant, "")
 	} else if ar.GetResponseTypes().Matches("token", "id_token") && !ar.GetClient().GetResponseTypes().Has("token", "id_token") {
-		return errors.New(ErrInvalidGrant)
+		return errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	sess, ok := ar.GetSession().(strategy.Session)
@@ -42,19 +42,20 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	claims := sess.IDTokenClaims()
 	if ar.GetResponseTypes().Has("token") {
 		if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
-			return errors.New(err)
+			return errors.Wrap(err, err.Error())
 		}
-		ar.SetResponseTypeHandled("token")
 
+		ar.SetResponseTypeHandled("token")
 		hash, err := c.RS256JWTStrategy.Hash([]byte(resp.GetFragment().Get("access_token")))
 		if err != nil {
 			return err
 		}
+
 		claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
 	}
 
 	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
-		return errors.New(err)
+		return errors.Wrap(err, err.Error())
 	}
 
 	ar.SetResponseTypeHandled("id_token")

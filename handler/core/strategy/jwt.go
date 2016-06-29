@@ -1,43 +1,38 @@
 package strategy
 
 import (
-	"github.com/go-errors/errors"
+	"strings"
+
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
-
-type JWTSessionContainer interface {
-	// GetJWTClaims returns the claims.
-	GetJWTClaims() *jwt.JWTClaims
-
-	// GetJWTHeader returns the header.
-	GetJWTHeader() *jwt.Headers
-}
-
-// JWTSession Container for the JWT session.
-type JWTSession struct {
-	JWTClaims *jwt.JWTClaims
-	JWTHeader *jwt.Headers
-}
-
-func (j *JWTSession) GetJWTClaims() *jwt.JWTClaims {
-	if j.JWTClaims == nil {
-		j.JWTClaims = &jwt.JWTClaims{}
-	}
-	return j.JWTClaims
-}
-
-func (j *JWTSession) GetJWTHeader() *jwt.Headers {
-	if j.JWTHeader == nil {
-		j.JWTHeader = &jwt.Headers{}
-	}
-	return j.JWTHeader
-}
 
 // RS256JWTStrategy is a JWT RS256 strategy.
 type RS256JWTStrategy struct {
 	*jwt.RS256JWTStrategy
+}
+
+func (h RS256JWTStrategy) signature(token string) string {
+	split := strings.Split(token, ".")
+	if len(split) != 3 {
+		return ""
+	}
+
+	return split[2]
+}
+
+func (h RS256JWTStrategy) AccessTokenSignature(token string) string {
+	return h.signature(token)
+}
+
+func (h RS256JWTStrategy) RefreshTokenSignature(token string) string {
+	return h.signature(token)
+}
+
+func (h RS256JWTStrategy) AuthorizeCodeSignature(token string) string {
+	return h.signature(token)
 }
 
 func (h *RS256JWTStrategy) GenerateAccessToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
@@ -79,12 +74,11 @@ func (h *RS256JWTStrategy) validate(token string) (string, error) {
 }
 
 func (h *RS256JWTStrategy) generate(requester fosite.Requester) (string, string, error) {
-	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); ok {
-		if jwtSession.GetJWTClaims() != nil {
-			return h.RS256JWTStrategy.Generate(jwtSession.GetJWTClaims(), jwtSession.GetJWTHeader())
-		}
+	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); !ok {
+		return "", "", errors.New("Session must be of type JWTSessionContainer")
+	} else if jwtSession.GetJWTClaims() == nil {
 		return "", "", errors.New("GetTokenClaims() must not be nil")
+	} else {
+		return h.RS256JWTStrategy.Generate(jwtSession.GetJWTClaims(), jwtSession.GetJWTHeader())
 	}
-	return "", "", errors.New("Session must be of type JWTSession")
-
 }

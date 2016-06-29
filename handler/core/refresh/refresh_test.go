@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,29 +40,23 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because token does not validate",
+			description: "should fail because lookup failed",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"refresh_token"}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"refresh_token"}}
 				httpreq.PostForm.Add("refresh_token", "some.refreshtokensig")
-				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").Return("", errors.New(""))
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
-			description: "should fail because token can't be found",
-			setup: func() {
-				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").AnyTimes().Return("refreshtokensig", nil)
+				chgen.EXPECT().RefreshTokenSignature("some.refreshtokensig").AnyTimes().Return("refreshtokensig")
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
-			description: "should fail because token lookup failed",
+			description: "should fail because validation failed",
 			setup: func() {
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, errors.New(""))
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{}, nil)
+				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").Return(errors.New(""))
 			},
-			expectErr: fosite.ErrServerError,
+			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should fail because client mismatches",
@@ -72,6 +66,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 					GrantTypes: fosite.Arguments{"refresh_token"},
 				}
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &fosite.DefaultClient{ID: ""}}, nil)
+				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").AnyTimes().Return(nil)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
@@ -84,7 +79,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	} {
 		c.setup()
 		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
-		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }
@@ -119,18 +114,11 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because validation fails",
+			description: "should fail because access token generation fails",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"refresh_token"}
 				httpreq.PostForm.Add("refresh_token", "foo.reftokensig")
-				rcts.EXPECT().ValidateRefreshToken(nil, areq, "foo.reftokensig").Return("", errors.New(""))
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
-			description: "should fail because access token generation fails",
-			setup: func() {
-				rcts.EXPECT().ValidateRefreshToken(nil, areq, "foo.reftokensig").AnyTimes().Return("reftokensig", nil)
+				rcts.EXPECT().RefreshTokenSignature("foo.reftokensig").AnyTimes().Return("reftokensig")
 				acts.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
@@ -166,7 +154,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	} {
 		c.setup()
 		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
-		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
 }

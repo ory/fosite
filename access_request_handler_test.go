@@ -7,11 +7,11 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/internal"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 )
@@ -182,12 +182,10 @@ func TestNewAccessRequest(t *testing.T) {
 		ctx := NewContext()
 		fosite.TokenEndpointHandlers = c.handlers
 		ar, err := fosite.NewAccessRequest(ctx, r, &struct{}{})
-		is := errors.Is(c.expectErr, err)
-		assert.True(t, is, "%d\nwant: %s \ngot: %s", k, c.expectErr, err)
-		if !is {
-			t.Logf("Error occured: %s", err.(*errors.Error).ErrorStack())
-		}
-		if err == nil {
+		assert.True(t, errors.Cause(err) == c.expectErr, "%d\nwant: %s \ngot: %s", k, c.expectErr, err)
+		if err != nil {
+			t.Logf("Error occured: %v", err)
+		} else {
 			pkg.AssertObjectKeysEqual(t, c.expect, ar, "GrantTypes", "Client")
 			assert.NotNil(t, ar.GetRequestedAt())
 		}

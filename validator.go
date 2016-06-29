@@ -3,7 +3,7 @@ package fosite
 import (
 	"net/http"
 
-	"github.com/go-errors/errors"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -15,17 +15,17 @@ func (f *Fosite) ValidateRequestAuthorization(ctx context.Context, req *http.Req
 	var found bool = false
 	ar := NewAccessRequest(session)
 	for _, validator := range f.AuthorizedRequestValidators {
-		if err := validator.ValidateRequest(ctx, req, ar); errors.Is(err, ErrUnknownRequest) {
+		if err := errors.Cause(validator.ValidateRequest(ctx, req, ar)); err == ErrUnknownRequest {
 			// Nothing to do
 		} else if err != nil {
-			return nil, errors.New(err)
+			return nil, errors.Wrap(err, "")
 		} else {
 			found = true
 		}
 	}
 
 	if !found {
-		return nil, errors.New(ErrRequestUnauthorized)
+		return nil, errors.Wrap(ErrRequestUnauthorized, "")
 	}
 
 	if len(scopes) == 0 {
@@ -33,7 +33,7 @@ func (f *Fosite) ValidateRequestAuthorization(ctx context.Context, req *http.Req
 	}
 
 	if !ar.GetGrantedScopes().Has(scopes...) {
-		return nil, errors.New(ErrRequestForbidden)
+		return nil, errors.Wrap(ErrRequestForbidden, "one or more scopes missing")
 	}
 
 	return ar, nil

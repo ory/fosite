@@ -8,6 +8,7 @@ import (
 
 	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/handler/core/explicit"
+	hst "github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
@@ -23,7 +24,9 @@ func TestAuthorizeCodeGrant(t *testing.T) {
 
 func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 	f := newFosite()
-	ts := mockServer(t, f, nil)
+	ts := mockServer(t, f, &mySessionData{
+		HMACSession: new(hst.HMACSession),
+	})
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
@@ -78,7 +81,6 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 		require.Equal(t, c.authStatusCode, resp.StatusCode, "(%d) %s", k, c.description)
 
 		if resp.StatusCode == http.StatusOK {
-
 			token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
 			require.Nil(t, err, "(%d) %s", k, c.description)
 			require.NotEmpty(t, token.AccessToken, "(%d) %s", k, c.description)

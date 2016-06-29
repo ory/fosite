@@ -30,6 +30,16 @@ func (_m *MockAuthorizeCodeStrategy) EXPECT() *_MockAuthorizeCodeStrategyRecorde
 	return _m.recorder
 }
 
+func (_m *MockAuthorizeCodeStrategy) AuthorizeCodeSignature(_param0 string) string {
+	ret := _m.ctrl.Call(_m, "AuthorizeCodeSignature", _param0)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeCodeStrategyRecorder) AuthorizeCodeSignature(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AuthorizeCodeSignature", arg0)
+}
+
 func (_m *MockAuthorizeCodeStrategy) GenerateAuthorizeCode(_param0 context.Context, _param1 fosite.Requester) (string, string, error) {
 	ret := _m.ctrl.Call(_m, "GenerateAuthorizeCode", _param0, _param1)
 	ret0, _ := ret[0].(string)
@@ -42,11 +52,10 @@ func (_mr *_MockAuthorizeCodeStrategyRecorder) GenerateAuthorizeCode(arg0, arg1 
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GenerateAuthorizeCode", arg0, arg1)
 }
 
-func (_m *MockAuthorizeCodeStrategy) ValidateAuthorizeCode(_param0 context.Context, _param1 fosite.Requester, _param2 string) (string, error) {
+func (_m *MockAuthorizeCodeStrategy) ValidateAuthorizeCode(_param0 context.Context, _param1 fosite.Requester, _param2 string) error {
 	ret := _m.ctrl.Call(_m, "ValidateAuthorizeCode", _param0, _param1, _param2)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 func (_mr *_MockAuthorizeCodeStrategyRecorder) ValidateAuthorizeCode(arg0, arg1, arg2 interface{}) *gomock.Call {

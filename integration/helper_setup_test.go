@@ -47,7 +47,7 @@ var refreshTokenLifespan = time.Hour
 
 var idTokenLifespan = time.Hour
 
-var accessCodeLifespan = time.Minute
+var authCodeLifespan = time.Minute
 
 func newOAuth2Client(ts *httptest.Server) *oauth2.Config {
 	return &oauth2.Config{
@@ -81,6 +81,8 @@ var hmacStrategy = &strategy.HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
+	AccessTokenLifespan:   accessTokenLifespan,
+	AuthorizeCodeLifespan: authCodeLifespan,
 }
 
 func newFosite() *fosite.Fosite {

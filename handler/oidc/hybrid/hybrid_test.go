@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/fosite-example/store"
@@ -18,6 +17,7 @@ import (
 	"github.com/ory-am/fosite/internal"
 	"github.com/ory-am/fosite/token/hmac"
 	"github.com/ory-am/fosite/token/jwt"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,6 +31,26 @@ var hmacStrategy = &oauthStrat.HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
+}
+
+type defaultSession struct {
+	Claims  *jwt.IDTokenClaims
+	Headers *jwt.Headers
+	*oauthStrat.HMACSession
+}
+
+func (s *defaultSession) IDTokenHeaders() *jwt.Headers {
+	if s.Headers == nil {
+		s.Headers = &jwt.Headers{}
+	}
+	return s.Headers
+}
+
+func (s *defaultSession) IDTokenClaims() *jwt.IDTokenClaims {
+	if s.Claims == nil {
+		s.Claims = &jwt.IDTokenClaims{}
+	}
+	return s.Claims
 }
 
 func TestHandleAuthorizeEndpointRequest(t *testing.T) {
@@ -93,11 +113,12 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 					GrantTypes:    fosite.Arguments{"implicit"},
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
 				}
-				areq.Session = &strategy.DefaultSession{
+				areq.Session = &defaultSession{
 					Claims: &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
-					Headers: &jwt.Headers{},
+					Headers:     &jwt.Headers{},
+					HMACSession: &oauthStrat.HMACSession{},
 				}
 			},
 			expectErr: fosite.ErrInvalidGrant,
@@ -139,7 +160,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	} {
 		c.setup()
 		err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
-		assert.True(t, errors.Is(c.expectErr, err), "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 		if c.check != nil {
 			c.check()

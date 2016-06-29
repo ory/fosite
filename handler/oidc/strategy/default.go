@@ -5,9 +5,10 @@ import (
 
 	"time"
 
-	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/ory-am/fosite/token/jwt"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -22,6 +23,7 @@ type Session interface {
 type DefaultSession struct {
 	Claims  *jwt.IDTokenClaims
 	Headers *jwt.Headers
+	*strategy.HMACSession
 }
 
 func (s *DefaultSession) IDTokenHeaders() *jwt.Headers {
@@ -71,7 +73,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, _ *http.Request, req
 	// Although optional, this is considered good practice and therefore enforced.
 	if len(nonce) < fosite.MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
-		return "", errors.New(fosite.ErrInsufficientEntropy)
+		return "", errors.Wrap(fosite.ErrInsufficientEntropy, "")
 	}
 
 	claims.Nonce = nonce

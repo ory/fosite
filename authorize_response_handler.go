@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/go-errors/errors"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -23,7 +23,7 @@ func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar A
 	}
 
 	if !ar.DidHandleAllResponseTypes() {
-		return nil, errors.New(ErrUnsupportedResponseType)
+		return nil, errors.Wrap(ErrUnsupportedResponseType, "")
 	}
 
 	return resp, nil

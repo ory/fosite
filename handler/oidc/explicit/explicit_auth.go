@@ -3,9 +3,9 @@ package explicit
 import (
 	"net/http"
 
-	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/handler/oidc"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -22,15 +22,15 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("id_token", "code") {
-		return errors.New(ErrInvalidRequest)
+		return errors.Wrap(ErrInvalidRequest, "")
 	}
 
 	if len(resp.GetCode()) == 0 {
-		return errors.New(ErrMisconfiguration)
+		return errors.Wrap(ErrMisconfiguration, "")
 	}
 
 	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar); err != nil {
-		return errors.New(ErrServerError)
+		return errors.Wrap(ErrServerError, err.Error())
 	}
 
 	return nil

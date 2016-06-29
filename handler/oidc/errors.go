@@ -1,6 +1,6 @@
 package oidc
 
-import "github.com/go-errors/errors"
+import "github.com/pkg/errors"
 
 var (
 	ErrInvalidSession = errors.New("Session type mismatch")

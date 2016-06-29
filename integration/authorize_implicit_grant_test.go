@@ -8,9 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/handler/core/implicit"
+	hst "github.com/ory-am/fosite/handler/core/strategy"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
@@ -26,7 +27,9 @@ func TestAuthorizeImplicitGrant(t *testing.T) {
 
 func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 	f := newFosite()
-	ts := mockServer(t, f, nil)
+	ts := mockServer(t, f, &mySessionData{
+		HMACSession: new(hst.HMACSession),
+	})
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)

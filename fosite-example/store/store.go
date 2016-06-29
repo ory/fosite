@@ -1,8 +1,8 @@
 package store
 
 import (
-	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -135,6 +135,8 @@ func (s *Store) PersistAuthorizeCodeGrantSession(ctx context.Context, authorizeC
 		return err
 	} else if err := s.CreateAccessTokenSession(ctx, accessSignature, request); err != nil {
 		return err
+	} else if refreshSignature == "" {
+		return nil
 	} else if err := s.CreateRefreshTokenSession(ctx, refreshSignature, request); err != nil {
 		return err
 	}

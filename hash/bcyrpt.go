@@ -1,7 +1,7 @@
 package hash
 
 import (
-	"github.com/go-errors/errors"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -13,14 +13,14 @@ type BCrypt struct {
 func (b *BCrypt) Hash(data []byte) ([]byte, error) {
 	s, err := bcrypt.GenerateFromPassword(data, b.WorkFactor)
 	if err != nil {
-		return nil, errors.New(err)
+		return nil, errors.Wrap(err, "")
 	}
 	return s, nil
 }
 
 func (b *BCrypt) Compare(hash, data []byte) error {
 	if err := bcrypt.CompareHashAndPassword(hash, data); err != nil {
-		return errors.New(err)
+		return errors.Wrap(err, "")
 	}
 	return nil
 }

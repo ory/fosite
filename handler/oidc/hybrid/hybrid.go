@@ -3,13 +3,13 @@ package hybrid
 import (
 	"net/http"
 
-	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core/explicit"
 	"github.com/ory-am/fosite/handler/core/implicit"
 	"github.com/ory-am/fosite/handler/oidc"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/token/jwt"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -31,30 +31,28 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("token", "code") {
-		return errors.New(ErrInvalidGrant)
+		return errors.Wrap(ErrInvalidGrant, "")
 	} else if ar.GetResponseTypes().Matches("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.New(ErrInvalidGrant)
+		return errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	sess, ok := ar.GetSession().(strategy.Session)
 	if !ok {
-		return errors.New(oidc.ErrInvalidSession)
+		return errors.Wrap(oidc.ErrInvalidSession, "")
 	}
 
 	claims := sess.IDTokenClaims()
 
 	if ar.GetResponseTypes().Has("code") {
 		if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
-			return errors.New(ErrInvalidGrant)
+			return errors.Wrap(ErrInvalidGrant, "")
 		}
 
 		code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 		if err != nil {
-			return errors.New(ErrServerError)
-		}
-
-		if err := c.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
-			return errors.New(ErrServerError)
+			return errors.Wrap(ErrServerError, err.Error())
+		} else if err := c.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
+			return errors.Wrap(ErrServerError, err.Error())
 		}
 
 		resp.AddFragment("code", code)
@@ -70,11 +68,9 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 	if ar.GetResponseTypes().Has("token") {
 		if !ar.GetClient().GetGrantTypes().Has("implicit") {
-			return errors.New(ErrInvalidGrant)
-		}
-
-		if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
-			return errors.New(err)
+			return errors.Wrap(ErrInvalidGrant, "")
+		} else if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
+			return errors.Wrap(err, err.Error())
 		}
 		ar.SetResponseTypeHandled("token")
 
@@ -90,12 +86,9 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
-		return errors.New(err)
-	}
-
-	err := c.IssueImplicitIDToken(ctx, req, ar, resp)
-	if err != nil {
-		return errors.New(err)
+		return errors.Wrap(err, err.Error())
+	} else if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
+		return errors.Wrap(err, err.Error())
 	}
 
 	ar.SetResponseTypeHandled("id_token")

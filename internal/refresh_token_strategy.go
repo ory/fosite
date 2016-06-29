@@ -42,11 +42,20 @@ func (_mr *_MockRefreshTokenStrategyRecorder) GenerateRefreshToken(arg0, arg1 in
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GenerateRefreshToken", arg0, arg1)
 }
 
-func (_m *MockRefreshTokenStrategy) ValidateRefreshToken(_param0 context.Context, _param1 fosite.Requester, _param2 string) (string, error) {
-	ret := _m.ctrl.Call(_m, "ValidateRefreshToken", _param0, _param1, _param2)
+func (_m *MockRefreshTokenStrategy) RefreshTokenSignature(_param0 string) string {
+	ret := _m.ctrl.Call(_m, "RefreshTokenSignature", _param0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
+}
+
+func (_mr *_MockRefreshTokenStrategyRecorder) RefreshTokenSignature(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RefreshTokenSignature", arg0)
+}
+
+func (_m *MockRefreshTokenStrategy) ValidateRefreshToken(_param0 context.Context, _param1 fosite.Requester, _param2 string) error {
+	ret := _m.ctrl.Call(_m, "ValidateRefreshToken", _param0, _param1, _param2)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 func (_mr *_MockRefreshTokenStrategyRecorder) ValidateRefreshToken(arg0, arg1, arg2 interface{}) *gomock.Call {

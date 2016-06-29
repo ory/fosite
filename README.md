@@ -177,16 +177,20 @@ Let's take the explicit authorize handler. He is responsible for handling the
 If you want to enable the handler able to handle this workflow, you can do this:
 
 ```go
+var accessTokenLifespan = time.Hour
+var authorizeCodeLifespan = time.Minute * 10
+
 var hmacStrategy = &strategy.HMACSHAStrategy{
 	Enigma: &enigma.Enigma{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
+	AccessTokenLifespan: accessTokenLifespan,
+	AuthorizeCodeLifespan: authorizeCodeLifespan,
 }
 
 // var store = ...
 
-f := NewFosite(store)
-accessTokenLifespan := time.Hour
+var f = NewFosite(store)
 
 // Let's enable the explicit authorize code grant!
 explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
@@ -194,7 +198,7 @@ explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
     RefreshTokenStrategy:  hmacStrategy,
     AuthorizeCodeStrategy: hmacStrategy,
     Store:                 store,
-    AuthCodeLifespan:      time.Minute * 10,
+    AuthCodeLifespan:      authorizeCodeLifespan,
     AccessTokenLifespan:   accessTokenLifespan,
 }
 

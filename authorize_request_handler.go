@@ -3,9 +3,8 @@ package fosite
 import (
 	"net/http"
 	"strings"
-	"time"
 
-	"github.com/go-errors/errors"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -13,35 +12,32 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	request := &AuthorizeRequest{
 		ResponseTypes:        Arguments{},
 		HandledResponseTypes: Arguments{},
-		Request: Request{
-			Scopes:      Arguments{},
-			RequestedAt: time.Now(),
-		},
+		Request:              *NewRequest(),
 	}
 
 	if err := r.ParseForm(); err != nil {
-		return request, errors.New(ErrInvalidRequest)
+		return request, errors.Wrap(ErrInvalidRequest, err.Error())
 	}
 
 	request.Form = r.Form
 	client, err := c.Store.GetClient(request.GetRequestForm().Get("client_id"))
 	if err != nil {
-		return request, errors.New(ErrInvalidClient)
+		return request, errors.Wrap(ErrInvalidClient, "")
 	}
 	request.Client = client
 
 	// Fetch redirect URI from request
 	rawRedirURI, err := GetRedirectURIFromRequestValues(r.Form)
 	if err != nil {
-		return request, errors.New(ErrInvalidRequest)
+		return request, errors.Wrap(ErrInvalidRequest, err.Error())
 	}
 
 	// Validate redirect uri
 	redirectURI, err := MatchRedirectURIWithClientRedirectURIs(rawRedirURI, client)
 	if err != nil {
-		return request, errors.New(ErrInvalidRequest)
+		return request, errors.Wrap(ErrInvalidRequest, err.Error())
 	} else if !IsValidRedirectURI(redirectURI) {
-		return request, errors.New(ErrInvalidRequest)
+		return request, errors.Wrap(ErrInvalidRequest, "not a valid redirect uri")
 	}
 	request.RedirectURI = redirectURI
 
@@ -61,7 +57,7 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	state := r.Form.Get("state")
 	if len(state) < MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
-		return request, errors.New(ErrInvalidState)
+		return request, errors.Wrapf(ErrInvalidState, "state length must at least be %d characters long", MinParameterEntropy)
 	}
 	request.State = state
 
@@ -69,7 +65,7 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	request.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
 
 	if !request.Scopes.Has(c.GetMandatoryScope()) {
-		return request, errors.New(ErrInvalidScope)
+		return request, errors.Wrap(ErrInvalidScope, "mandatory scope is missing")
 	}
 	request.GrantScope(c.GetMandatoryScope())
 

@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite/rand"
+	"github.com/pkg/errors"
 )
 
 // HMACStrategy is responsible for generating and validating challenges.
@@ -49,7 +49,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	// by the authorization server.
 	key, err := rand.RandomBytes(c.AuthCodeEntropy)
 	if err != nil {
-		return "", "", errors.New(err)
+		return "", "", errors.Wrap(err, "")
 	}
 
 	if len(key) < c.AuthCodeEntropy {
@@ -60,7 +60,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	mac := hmac.New(sha256.New, useSecret)
 	_, err = mac.Write(key)
 	if err != nil {
-		return "", "", errors.New(err)
+		return "", "", errors.Wrap(err, "")
 	}
 
 	signature := mac.Sum([]byte{})
@@ -70,39 +70,49 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
-func (c *HMACStrategy) Validate(token string) (string, error) {
+func (c *HMACStrategy) Validate(token string) error {
 	split := strings.Split(token, ".")
 	if len(split) != 2 {
-		return "", errors.New("Key and signature must both be set")
+		return errors.New("Key and signature must both be set")
 	}
 
 	key := split[0]
 	signature := split[1]
 	if key == "" || signature == "" {
-		return "", errors.New("Key and signature must both be set")
+		return errors.New("Key and signature must both be set")
 	}
 
 	decodedSignature, err := b64.DecodeString(signature)
 	if err != nil {
-		return "", err
+		return errors.Wrap(err, "")
 	}
 
 	decodedKey, err := b64.DecodeString(key)
 	if err != nil {
-		return "", err
+		return errors.Wrap(err, "")
 	}
 
 	useSecret := append([]byte{}, c.GlobalSecret...)
 	mac := hmac.New(sha256.New, useSecret)
 	_, err = mac.Write(decodedKey)
 	if err != nil {
-		return "", errors.New(err)
+		return errors.Wrap(err, "")
 	}
 
 	if !hmac.Equal(decodedSignature, mac.Sum([]byte{})) {
 		// Hash is invalid
-		return "", errors.New("Key and signature do not match")
+		return errors.New("Key and signature do not match")
 	}
 
-	return signature, nil
+	return nil
+}
+
+func (c *HMACStrategy) Signature(token string) string {
+	split := strings.Split(token, ".")
+
+	if len(split) != 2 {
+		return ""
+	}
+
+	return split[1]
 }

@@ -6,9 +6,9 @@ import (
 
 	"strings"
 
-	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -38,7 +38,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("code") {
-		return errors.New(ErrInvalidGrant)
+		return errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	return c.IssueAuthorizeCode(ctx, req, ar, resp)
@@ -47,11 +47,11 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 func (c *AuthorizeExplicitGrantTypeHandler) IssueAuthorizeCode(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
 	code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 	if err != nil {
-		return errors.New(ErrServerError)
+		return errors.Wrap(ErrServerError, err.Error())
 	}
 
 	if err := c.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
-		return errors.New(ErrServerError)
+		return errors.Wrap(ErrServerError, err.Error())
 	}
 
 	resp.AddQuery("code", code)

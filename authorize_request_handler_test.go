@@ -5,11 +5,11 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/go-errors/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/common/pkg"
 	. "github.com/ory-am/fosite"
 	. "github.com/ory-am/fosite/internal"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 )
@@ -184,7 +184,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		ar, err := c.conf.NewAuthorizeRequest(context.Background(), c.r)
 		assert.Equal(t, c.expectedError == nil, err == nil, "%d: %s\n%s", k, c.desc, err)
 		if c.expectedError != nil {
-			assert.Equal(t, err.Error(), c.expectedError.Error(), "%d: %s\n%s", k, c.desc, err)
+			assert.Equal(t, errors.Cause(err), c.expectedError, "%d: %s\n%s", k, c.desc, err)
 		} else {
 			pkg.AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "Scopes", "Client", "RedirectURI", "State")
 			assert.NotNil(t, ar.GetRequestedAt())

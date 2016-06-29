@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-errors/errors"
 	"github.com/ory-am/fosite"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -15,24 +15,25 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !request.GetGrantTypes().Exact("authorization_code") {
-		return errors.New(fosite.ErrUnknownRequest)
+		return errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errors.New(fosite.ErrInvalidGrant)
+		return errors.Wrap(fosite.ErrInvalidGrant, "")
+	}
+
+	code := r.PostForm.Get("code")
+	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
+	authorizeRequest, err := c.AuthorizeCodeGrantStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
+	if errors.Cause(err) == fosite.ErrNotFound {
+		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
+	} else if err != nil {
+		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	// The authorization server MUST verify that the authorization code is valid
-	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, r.PostForm.Get("code"))
-	if err != nil {
-		return errors.New(fosite.ErrInvalidRequest)
-	}
-
-	authorizeRequest, err := c.AuthorizeCodeGrantStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
-	if errors.Is(err, fosite.ErrNotFound) {
-		return errors.New(fosite.ErrInvalidRequest)
-	} else if err != nil {
-		return errors.New(fosite.ErrServerError)
+	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
+		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	}
 
 	// Override scopes
@@ -42,7 +43,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,
 	if authorizeRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.New(fosite.ErrInvalidRequest)
+		return errors.Wrap(fosite.ErrInvalidRequest, "")
 	}
 
 	// ensure that the "redirect_uri" parameter is present if the
@@ -51,19 +52,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	// their values are identical.
 	forcedRedirectURI := authorizeRequest.GetRequestForm().Get("redirect_uri")
 	if forcedRedirectURI != "" && forcedRedirectURI != r.PostForm.Get("redirect_uri") {
-		return errors.New(fosite.ErrInvalidRequest)
-	}
-
-	// If no lifespan has been set, reset to default lifespan
-	if c.AuthCodeLifespan <= 0 {
-		c.AuthCodeLifespan = authCodeDefaultLifespan
-	}
-
-	// https://tools.ietf.org/html/rfc6819#section-5.1.5.3]
-	// A short expiration time for tokens is a means of protection against
-	// the following threats: replay, token leak, online guessing
-	if authorizeRequest.GetRequestedAt().Add(c.AuthCodeLifespan).Before(time.Now()) {
-		return errors.New(fosite.ErrInvalidRequest)
+		return errors.Wrap(fosite.ErrInvalidRequest, "")
 	}
 
 	// Checking of POST client_id skipped, because:
@@ -79,34 +68,33 @@ func (c *AuthorizeExplicitGrantTypeHandler) PopulateTokenEndpointResponse(ctx co
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !requester.GetGrantTypes().Exact("authorization_code") {
-		return errors.New(fosite.ErrUnknownRequest)
+		return errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
 
-	signature, err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, req.PostForm.Get("code"))
-	if err != nil {
-		return errors.New(fosite.ErrInvalidRequest)
-	}
-
+	code := req.PostForm.Get("code")
+	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.AuthorizeCodeGrantStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {
-		return errors.New(fosite.ErrServerError)
+		return errors.Wrap(fosite.ErrServerError, err.Error())
+	} else if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
+		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	}
 
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
-		return errors.New(fosite.ErrServerError)
+		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	var refresh, refreshSignature string
 	if authorizeRequest.GetGrantedScopes().Has("offline") {
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
-			return errors.New(fosite.ErrServerError)
+			return errors.Wrap(fosite.ErrServerError, err.Error())
 		}
 	}
 
 	if err := c.AuthorizeCodeGrantStorage.PersistAuthorizeCodeGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
-		return errors.New(fosite.ErrServerError)
+		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	responder.SetAccessToken(access)

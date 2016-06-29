@@ -3,7 +3,7 @@ package fosite
 import (
 	"net/http"
 
-	"github.com/go-errors/errors"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -13,14 +13,14 @@ func (f *Fosite) NewAccessResponse(ctx context.Context, req *http.Request, reque
 
 	response := NewAccessResponse()
 	for _, tk = range f.TokenEndpointHandlers {
-		if err = tk.PopulateTokenEndpointResponse(ctx, req, requester, response); errors.Is(err, ErrUnknownRequest) {
+		if err = tk.PopulateTokenEndpointResponse(ctx, req, requester, response); errors.Cause(err) == ErrUnknownRequest {
 		} else if err != nil {
-			return nil, errors.Wrap(err, 1)
+			return nil, err
 		}
 	}
 
 	if response.GetAccessToken() == "" || response.GetTokenType() == "" {
-		return nil, ErrServerError
+		return nil, errors.Wrap(ErrServerError, "Access token or token type not set")
 	}
 
 	return response, nil

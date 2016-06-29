@@ -17,9 +17,10 @@ type Request struct {
 
 func NewRequest() *Request {
 	return &Request{
-		Client: &DefaultClient{},
-		Scopes: Arguments{},
-		Form:   url.Values{},
+		Client:      &DefaultClient{},
+		Scopes:      Arguments{},
+		Form:        url.Values{},
+		RequestedAt: time.Now(),
 	}
 }
 

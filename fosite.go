@@ -1,6 +1,9 @@
 package fosite
 
-import "github.com/ory-am/fosite/hash"
+import (
+	"github.com/Sirupsen/logrus"
+	"github.com/ory-am/fosite/hash"
+)
 
 // AuthorizeEndpointHandlers is a list of AuthorizeEndpointHandler
 type AuthorizeEndpointHandlers []AuthorizeEndpointHandler
@@ -35,6 +38,7 @@ func NewFosite(store Storage) *Fosite {
 		TokenEndpointHandlers:       TokenEndpointHandlers{},
 		AuthorizedRequestValidators: AuthorizedRequestValidators{},
 		Hasher: &hash.BCrypt{WorkFactor: 12},
+		Logger: &logrus.Logger{},
 	}
 }
 
@@ -46,4 +50,5 @@ type Fosite struct {
 	TokenEndpointHandlers       TokenEndpointHandlers
 	AuthorizedRequestValidators AuthorizedRequestValidators
 	Hasher                      hash.Hasher
+	Logger                      logrus.StdLogger
 }

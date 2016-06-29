@@ -13,7 +13,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 
-	"github.com/go-errors/errors"
 	. "github.com/ory-am/fosite"
 	exampleStore "github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core"
@@ -31,6 +30,7 @@ import (
 	"github.com/ory-am/fosite/token/hmac"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/parnurzeal/gorequest"
+	"github.com/pkg/errors"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -87,6 +87,8 @@ var hmacStrategy = &strategy.HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
+	AccessTokenLifespan: time.Hour,
+	AuthorizeCodeLifespan: time.Hour,
 }
 
 // You can decide if you want to use HMAC or JWT or another strategy for generating authorize codes and access / refresh tokens
@@ -121,6 +123,10 @@ type session struct {
 	*oidcstrategy.DefaultSession
 }
 
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
 // newSession is a helper function for creating a new session
 func newSession(user string) *session {
 	return &session{
@@ -148,6 +154,7 @@ func newSession(user string) *session {
 			Headers: &jwt.Headers{
 				Extra: make(map[string]interface{}),
 			},
+			HMACSession: &strategy.HMACSession{},
 		},
 	}
 }
@@ -269,6 +276,8 @@ func main() {
 	http.HandleFunc("/client", clientEndpoint)
 	http.HandleFunc("/owner", ownerEndpoint)
 
+	http.HandleFunc("/protected-api", validateEndpoint)
+
 	fmt.Printf("Please open your webbrowser at http://localhost:3846")
 	_ = exec.Command("open", "http://localhost:3846").Run()
 	log.Fatal(http.ListenAndServe(":3846", nil))
@@ -289,7 +298,7 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 	// * invalid redirect
 	// * ...
 	if err != nil {
-		log.Printf("Error occurred in NewAccessRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+		log.Printf("Error occurred in NewAccessRequest: %s\nStack: \n%s", err, err.(stackTracer).StackTrace())
 		oauth2.WriteAccessError(rw, accessRequest, err)
 		return
 	}
@@ -298,7 +307,7 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 	// and aggregate the result in response.
 	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
 	if err != nil {
-		log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+		log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(stackTracer).StackTrace())
 		oauth2.WriteAccessError(rw, accessRequest, err)
 		return
 	}
@@ -317,7 +326,7 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 	// It will analyze the request and extract important information like scopes, response type and others.
 	ar, err := oauth2.NewAuthorizeRequest(ctx, req)
 	if err != nil {
-		log.Printf("Error occurred in NewAuthorizeRequest: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+		log.Printf("Error occurred in NewAuthorizeRequest: %s\nStack: \n%s", err, err.(stackTracer).StackTrace())
 		oauth2.WriteAuthorizeError(rw, ar, err)
 		return
 	}
@@ -346,6 +355,21 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 	// Now that the user is authorized, we set up a session:
 	mySessionData := newSession("peter")
 
+	// When using the HMACSHA strategy you must use something that implements the HMACSessionContainer.
+	// It brings you the power of overriding the default values.
+	//
+	// mySessionData.HMACSession = &strategy.HMACSession{
+	//	AccessTokenExpiry: time.Now().Add(time.Day),
+	//	AuthorizeCodeExpiry: time.Now().Add(time.Day),
+	// }
+	//
+
+	// If you're using the JWT strategy, there's currently no distinction between access token and authorize code claims.
+	// Therefore, you both access token and authorize code will have the same "exp" claim. If this is something you
+	// need let us know on github.
+	//
+	// mySessionData.JWTClaims.ExpiresAt = time.Now().Add(time.Day)
+
 	// It's also wise to check the requested scopes, e.g.:
 	// if authorizeRequest.GetScopes().Has("admin") {
 	//     http.Error(rw, "you're not allowed to do that", http.StatusForbidden)
@@ -362,13 +386,35 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 	// * invalid redirect
 	// * ...
 	if err != nil {
-		log.Printf("Error occurred in NewAuthorizeResponse: %s\nStack: \n%s", err, err.(*errors.Error).ErrorStack())
+		log.Printf("Error occurred in NewAuthorizeResponse: %s\nStack: \n%s", err, err.(stackTracer).StackTrace())
 		oauth2.WriteAuthorizeError(rw, ar, err)
 		return
 	}
 
 	// Last but not least, send the response!
 	oauth2.WriteAuthorizeResponse(rw, ar, response)
+}
+
+func validateEndpoint(rw http.ResponseWriter, req *http.Request) {
+	ctx := NewContext()
+	req.Header.Add("Authorization", "bearer " + req.URL.Query().Get("token"))
+	mySessionData := newSession("peter")
+
+	ar, err := oauth2.ValidateRequestAuthorization(ctx, req, mySessionData, "fosite")
+	if err != nil {
+		fmt.Fprintf(rw, "<h1>An error occurred!</h1>%s", err.Error())
+		return
+	}
+
+	fmt.Fprintf(rw, `<h1>Request authorized!</h1>
+<ul>
+	<li>Client: %s</li>
+	<li>Granted scopes: %v</li>
+	<li>Requested scopes: %v</li>
+	<li>Session data: %v, %v</li>
+	<li>Requested at: %s</li>
+</ul>
+`, ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetScopes(), mySessionData, mySessionData.HMACSession, ar.GetRequestedAt())
 }
 
 // *****************************************************************************
@@ -456,7 +502,7 @@ func callbackHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.Write([]byte(fmt.Sprintf(`<p>Cool! You are now a proud token owner.<br>
 		<ul>
 			<li>
-				Access token:<br>
+				Access token (click to make <a href="%s">authorized call</a>):<br>
 				<code>%s</code>
 			</li>
 			<li>
@@ -468,6 +514,7 @@ func callbackHandler(rw http.ResponseWriter, req *http.Request) {
 				<code>%s</code>
 			</li>
 		</ul>`,
+		"/protected-api?token=" + token.AccessToken,
 		token.AccessToken,
 		"?refresh="+url.QueryEscape(token.RefreshToken),
 		token.RefreshToken,

@@ -26,12 +26,14 @@ func TestGenerate(t *testing.T) {
 	require.NotEmpty(t, signature)
 	t.Logf("Token: %s\n Signature: %s", token, signature)
 
-	validateSignature, err := cg.Validate(token)
+	err = cg.Validate(token)
 	require.Nil(t, err, "%s", err)
+
+	validateSignature := cg.Signature(token)
 	assert.Equal(t, signature, validateSignature)
 
 	cg.GlobalSecret = []byte("baz")
-	_, err = cg.Validate(token)
+	err = cg.Validate(token)
 	require.NotNil(t, err, "%s", err)
 }
 
@@ -47,7 +49,7 @@ func TestValidateSignatureRejects(t *testing.T) {
 		"foo.",
 		".foo",
 	} {
-		_, err = cg.Validate(c)
+		err = cg.Validate(c)
 		assert.NotNil(t, err, "%s", err)
 		t.Logf("Passed test case %d", k)
 	}

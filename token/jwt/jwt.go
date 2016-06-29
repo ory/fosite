@@ -3,13 +3,13 @@
 package jwt
 
 import (
+	"crypto/rsa"
+	"crypto/sha256"
 	"fmt"
 	"strings"
-	"crypto/sha256"
-	"crypto/rsa"
 
+	"github.com/pkg/errors"
 	"gopkg.in/dgrijalva/jwt-go.v2"
-	"github.com/go-errors/errors"
 )
 
 // Enigma is responsible for generating and validating challenges.
@@ -30,11 +30,11 @@ func (j *RS256JWTStrategy) Generate(claims Mapper, header Mapper) (string, strin
 	var sig, sstr string
 	var err error
 	if sstr, err = token.SigningString(); err != nil {
-		return "", "", errors.New(err)
+		return "", "", errors.Wrap(err, "")
 	}
 
 	if sig, err = token.Method.Sign(sstr, j.PrivateKey); err != nil {
-		return "", "", errors.New(err)
+		return "", "", errors.Wrap(err, "")
 	}
 
 	return fmt.Sprintf("%s.%s", sstr, sig), sig, nil
@@ -43,7 +43,7 @@ func (j *RS256JWTStrategy) Generate(claims Mapper, header Mapper) (string, strin
 // Validate : Validates a token and returns its signature or an error if the token is not valid.
 func (j *RS256JWTStrategy) Validate(token string) (string, error) {
 	if _, err := j.Decode(token); err != nil {
-		return "", errors.New(err)
+		return "", errors.Wrap(err, "")
 	}
 
 	return j.GetSignature(token)
@@ -80,7 +80,7 @@ func (c *RS256JWTStrategy) Hash(in []byte) ([]byte, error) {
 	hash := sha256.New()
 	_, err := hash.Write(in)
 	if err != nil {
-		return []byte{}, errors.New(err)
+		return []byte{}, errors.Wrap(err, "")
 	}
 	return hash.Sum([]byte{}), nil
 }

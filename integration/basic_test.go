@@ -4,13 +4,16 @@ import (
 	"net/http"
 	"testing"
 
+	hst "github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestBasic(t *testing.T) {
 	f := newFosite()
-	ts := mockServer(t, f, nil)
+	ts := mockServer(t, f, &mySessionData{
+		HMACSession: new(hst.HMACSession),
+	})
 	defer ts.Close()
 
 	client := newOAuth2Client(ts)
