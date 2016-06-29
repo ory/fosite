@@ -176,21 +176,6 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
-			description: "should fail because expired",
-			setup: func() {
-				httpreq.PostForm.Add("redirect_uri", "request-redir")
-				authreq.RequestedAt = time.Now().Add(-time.Hour * 24)
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
-			description: "should pass (1)",
-			setup: func() {
-				authreq.RequestedAt = time.Now().Add(-time.Hour * 24)
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
 			description: "should pass (2)",
 			setup: func() {
 				httpreq.PostForm = url.Values{"code": []string{"foo.bar"}}
