@@ -16,7 +16,7 @@ install:
    - go get -t -d ./...
 
 script:
-  - go vet -x $(go list ./... | grep -v /internal/ | grep -v /vendor/)
+  # - go vet -x $(go list ./... | grep -v /internal/ | grep -v /vendor/)
   # - golint .
   - gotestcover -coverprofile="cover.out" -race -covermode="count" ./...
   - goveralls -coverprofile="cover.out"
