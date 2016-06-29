@@ -4,11 +4,10 @@
 package internal
 
 import (
-	http "net/http"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	context "golang.org/x/net/context"
+	http "net/http"
 )
 
 // Mock of AuthorizeEndpointHandler interface
@@ -32,10 +31,11 @@ func (_m *MockAuthorizeEndpointHandler) EXPECT() *_MockAuthorizeEndpointHandlerR
 	return _m.recorder
 }
 
-func (_m *MockAuthorizeEndpointHandler) HandleAuthorizeEndpointRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AuthorizeRequester, _param3 fosite.AuthorizeResponder) error {
+func (_m *MockAuthorizeEndpointHandler) HandleAuthorizeEndpointRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AuthorizeRequester, _param3 fosite.AuthorizeResponder) (context.Context, error) {
 	ret := _m.ctrl.Call(_m, "HandleAuthorizeEndpointRequest", _param0, _param1, _param2, _param3)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(context.Context)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 func (_mr *_MockAuthorizeEndpointHandlerRecorder) HandleAuthorizeEndpointRequest(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {

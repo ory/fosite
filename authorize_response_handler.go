@@ -8,7 +8,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar AuthorizeRequester, session interface{}) (AuthorizeResponder, error) {
+func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar AuthorizeRequester, session interface{}) (context.Context, AuthorizeResponder, error) {
 	var resp = &AuthorizeResponse{
 		Header:   http.Header{},
 		Query:    url.Values{},
@@ -17,14 +17,15 @@ func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar A
 
 	ar.SetSession(session)
 	for _, h := range o.AuthorizeEndpointHandlers {
-		if err := h.HandleAuthorizeEndpointRequest(ctx, r, ar, resp); err != nil {
-			return nil, err
+		ctx, err := h.HandleAuthorizeEndpointRequest(ctx, r, ar, resp)
+		if err != nil {
+			return ctx, nil, err
 		}
 	}
 
 	if !ar.DidHandleAllResponseTypes() {
-		return nil, errors.Wrap(ErrUnsupportedResponseType, "")
+		return ctx, nil, errors.Wrap(ErrUnsupportedResponseType, "")
 	}
 
-	return resp, nil
+	return ctx, resp, nil
 }

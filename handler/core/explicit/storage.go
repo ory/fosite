@@ -9,5 +9,9 @@ import (
 type AuthorizeCodeGrantStorage interface {
 	core.AuthorizeCodeStorage
 
-	PersistAuthorizeCodeGrantSession(ctx context.Context, authorizeCode, accessSignature, refreshSignature string, request fosite.Requester) error
+	PersistAuthorizeCodeGrantSession(
+		ctx context.Context,
+		authorizeCode, accessSignature, refreshSignature string,
+		request fosite.Requester,
+	) (context.Context, error)
 }

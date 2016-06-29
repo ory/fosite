@@ -291,7 +291,7 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 	mySessionData := newSession("")
 
 	// This will create an access request object and iterate through the registered TokenEndpointHandlers to validate the request.
-	accessRequest, err := oauth2.NewAccessRequest(ctx, req, mySessionData)
+	ctx, accessRequest, err := oauth2.NewAccessRequest(ctx, req, mySessionData)
 
 	// Catch any errors, e.g.:
 	// * unknown client
@@ -305,7 +305,7 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 
 	// Next we create a response for the access request. Again, we iterate through the TokenEndpointHandlers
 	// and aggregate the result in response.
-	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
+	ctx, response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
 	if err != nil {
 		log.Printf("Error occurred in NewAccessResponse: %s\nStack: \n%s", err, err.(stackTracer).StackTrace())
 		oauth2.WriteAccessError(rw, accessRequest, err)
@@ -379,7 +379,7 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 	// Now we need to get a response. This is the place where the AuthorizeEndpointHandlers kick in and start processing the request.
 	// NewAuthorizeResponse is capable of running multiple response type handlers which in turn enables this library
 	// to support open id connect.
-	response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, mySessionData)
+	ctx, response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, mySessionData)
 
 	// Catch any errors, e.g.:
 	// * unknown client

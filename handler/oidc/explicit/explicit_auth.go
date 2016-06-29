@@ -16,22 +16,23 @@ type OpenIDConnectExplicitHandler struct {
 	*IDTokenHandleHelper
 }
 
-func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) (context.Context, error) {
 	if !(ar.GetScopes().Has("openid") && ar.GetResponseTypes().Exact("code")) {
-		return nil
+		return ctx, nil
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("id_token", "code") {
-		return errors.Wrap(ErrInvalidClient, "client is not allowed to use rseponse type id_token and code")
+		return ctx, errors.Wrap(ErrInvalidClient, "client is not allowed to use rseponse type id_token and code")
 	}
 
 	if len(resp.GetCode()) == 0 {
-		return errors.Wrap(ErrMisconfiguration, "code is not set")
+		return ctx, errors.Wrap(ErrMisconfiguration, "code is not set")
 	}
 
-	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar); err != nil {
-		return errors.Wrap(ErrServerError, err.Error())
+	var err error
+	if ctx, err = c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar); err != nil {
+		return ctx, errors.Wrap(ErrServerError, err.Error())
 	}
 
-	return nil
+	return ctx, nil
 }

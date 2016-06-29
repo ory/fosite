@@ -42,20 +42,20 @@ func TestIssueAccessToken(t *testing.T) {
 		{
 			mock: func() {
 				accessStrat.EXPECT().GenerateAccessToken(nil, areq).Return("token", "signature", nil)
-				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", areq).Return(errors.New(""))
+				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", areq).Return(nil, errors.New(""))
 			},
 			err: errors.New(""),
 		},
 		{
 			mock: func() {
 				accessStrat.EXPECT().GenerateAccessToken(nil, areq).Return("token", "signature", nil)
-				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", areq).Return(nil)
+				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", areq).Return(nil, nil)
 			},
 			err: nil,
 		},
 	} {
 		c.mock()
-		err := helper.IssueAccessToken(nil, httpReq, areq, aresp)
+		_, err := helper.IssueAccessToken(nil, httpReq, areq, aresp)
 		require.Equal(t, err == nil, c.err == nil)
 		if c.err != nil {
 			assert.EqualError(t, err, c.err.Error(), "Case %d", k)

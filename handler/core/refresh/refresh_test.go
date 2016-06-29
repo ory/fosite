@@ -46,14 +46,14 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"refresh_token"}}
 				httpreq.PostForm.Add("refresh_token", "some.refreshtokensig")
 				chgen.EXPECT().RefreshTokenSignature("some.refreshtokensig").AnyTimes().Return("refreshtokensig")
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, fosite.ErrNotFound)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should fail because validation failed",
 			setup: func() {
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{}, nil)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, &fosite.Request{}, nil)
 				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -65,7 +65,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 					ID:         "foo",
 					GrantTypes: fosite.Arguments{"refresh_token"},
 				}
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &fosite.DefaultClient{ID: ""}}, nil)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, &fosite.Request{Client: &fosite.DefaultClient{ID: ""}}, nil)
 				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").AnyTimes().Return(nil)
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -73,12 +73,12 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should pass",
 			setup: func() {
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &fosite.DefaultClient{ID: "foo"}}, nil)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, &fosite.Request{Client: &fosite.DefaultClient{ID: "foo"}}, nil)
 			},
 		},
 	} {
 		c.setup()
-		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
+		_, err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
@@ -135,14 +135,14 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because persisting fails",
 			setup: func() {
 				rcts.EXPECT().GenerateRefreshToken(nil, areq).AnyTimes().Return("refresh.resig", "resig", nil)
-				store.EXPECT().PersistRefreshTokenGrantSession(nil, "reftokensig", "atsig", "resig", areq).Return(errors.New(""))
+				store.EXPECT().PersistRefreshTokenGrantSession(nil, "reftokensig", "atsig", "resig", areq).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				store.EXPECT().PersistRefreshTokenGrantSession(nil, "reftokensig", "atsig", "resig", areq).AnyTimes().Return(nil)
+				store.EXPECT().PersistRefreshTokenGrantSession(nil, "reftokensig", "atsig", "resig", areq).AnyTimes().Return(nil, nil)
 
 				aresp.EXPECT().SetAccessToken("access.atsig")
 				aresp.EXPECT().SetTokenType("bearer")
@@ -153,7 +153,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
+		_, err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

@@ -6,5 +6,9 @@ import (
 )
 
 type ImplicitGrantStorage interface {
-	CreateImplicitAccessTokenSession(ctx context.Context, token string, request fosite.Requester) (err error)
+	CreateImplicitAccessTokenSession(
+		ctx context.Context,
+		token string,
+		request fosite.Requester,
+	) (context.Context, error)
 }

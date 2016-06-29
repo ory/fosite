@@ -54,14 +54,14 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 				}
 				httpreq.PostForm.Add("code", "authcode")
 				auch.EXPECT().AuthorizeCodeSignature("authcode").AnyTimes().Return("authsig")
-				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).Return(nil, fosite.ErrNotFound)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).Return(nil, nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should fail because validation failed",
 			setup: func() {
-				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).AnyTimes().Return(authreq, nil)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).AnyTimes().Return(nil, authreq, nil)
 				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -87,7 +87,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because persisting failed",
 			setup: func() {
 				rch.EXPECT().GenerateRefreshToken(nil, areq).AnyTimes().Return("refresh.rts", "rts", nil)
-				store.EXPECT().PersistAuthorizeCodeGrantSession(nil, "authsig", "ats", "rts", areq).Return(errors.New(""))
+				store.EXPECT().PersistAuthorizeCodeGrantSession(nil, "authsig", "ats", "rts", areq).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -95,7 +95,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				areq.GrantedScopes = fosite.Arguments{"foo", "offline"}
-				store.EXPECT().PersistAuthorizeCodeGrantSession(nil, "authsig", "ats", "rts", areq).Return(nil)
+				store.EXPECT().PersistAuthorizeCodeGrantSession(nil, "authsig", "ats", "rts", areq).Return(nil, nil)
 
 				aresp.EXPECT().SetAccessToken("access.ats")
 				aresp.EXPECT().SetTokenType("bearer")
@@ -106,7 +106,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
+		_, err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
@@ -144,14 +144,14 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"} // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				httpreq.PostForm = url.Values{"code": {"foo.bar"}}
 				ach.EXPECT().AuthorizeCodeSignature("foo.bar").AnyTimes().Return("bar")
-				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).Return(nil, fosite.ErrNotFound)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).Return(nil, nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should fail because authcode validation failed",
 			setup: func() {
-				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).AnyTimes().Return(authreq, nil)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).AnyTimes().Return(nil, authreq, nil)
 				ach.EXPECT().ValidateAuthorizeCode(nil, areq, "foo.bar").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -185,7 +185,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
+		_, err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

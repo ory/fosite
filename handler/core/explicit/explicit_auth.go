@@ -31,32 +31,33 @@ type AuthorizeExplicitGrantTypeHandler struct {
 	AccessTokenLifespan time.Duration
 }
 
-func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) (context.Context, error) {
 	// This let's us define multiple response types, for example open id connect's id_token
 	if !ar.GetResponseTypes().Exact("code") {
-		return nil
+		return ctx, nil
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("code") {
-		return errors.Wrap(ErrInvalidGrant, "")
+		return ctx, errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	return c.IssueAuthorizeCode(ctx, req, ar, resp)
 }
 
-func (c *AuthorizeExplicitGrantTypeHandler) IssueAuthorizeCode(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+func (c *AuthorizeExplicitGrantTypeHandler) IssueAuthorizeCode(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) (context.Context, error) {
 	code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 	if err != nil {
-		return errors.Wrap(ErrServerError, err.Error())
+		return ctx, errors.Wrap(ErrServerError, err.Error())
 	}
 
-	if err := c.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
-		return errors.Wrap(ErrServerError, err.Error())
+	ctx, err = c.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar)
+	if err != nil {
+		return ctx, errors.Wrap(ErrServerError, err.Error())
 	}
 
 	resp.AddQuery("code", code)
 	resp.AddQuery("state", ar.GetState())
 	resp.AddQuery("scope", strings.Join(ar.GetGrantedScopes(), " "))
 	ar.SetResponseTypeHandled("code")
-	return nil
+	return ctx, nil
 }

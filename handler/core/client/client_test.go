@@ -56,7 +56,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := h.HandleTokenEndpointRequest(nil, c.req, areq)
+		_, err := h.HandleTokenEndpointRequest(nil, c.req, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
@@ -105,12 +105,12 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"client_credentials"}}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
-				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil, nil)
 			},
 		},
 	} {
 		c.mock()
-		err := h.PopulateTokenEndpointResponse(nil, c.req, areq, aresp)
+		_, err := h.PopulateTokenEndpointResponse(nil, c.req, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

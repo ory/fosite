@@ -33,61 +33,62 @@ import (
 //   credentials (or assigned other authentication requirements), the
 //   client MUST authenticate with the authorization server as described
 //   in Section 3.2.1.
-func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session interface{}) (AccessRequester, error) {
+func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session interface{}) (context.Context, AccessRequester, error) {
 	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
-		return accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP method is not POST")
+		return ctx, accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP method is not POST")
 	} else if err := r.ParseForm(); err != nil {
-		return accessRequest, errors.Wrap(ErrInvalidRequest, err.Error())
+		return ctx, accessRequest, errors.Wrap(ErrInvalidRequest, err.Error())
 	}
 
 	accessRequest.Form = r.PostForm
 	if session == nil {
-		return accessRequest, errors.New("Session must not be nil")
+		return ctx, accessRequest, errors.New("Session must not be nil")
 	}
 
 	accessRequest.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
 	accessRequest.GrantTypes = removeEmpty(strings.Split(r.Form.Get("grant_type"), " "))
 	if len(accessRequest.GrantTypes) < 1 {
-		return accessRequest, errors.Wrap(ErrInvalidRequest, "No grant type given")
+		return ctx, accessRequest, errors.Wrap(ErrInvalidRequest, "No grant type given")
 	}
 
 	clientID, clientSecret, ok := r.BasicAuth()
 	if !ok {
-		return accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP Authorization header missing or invalid")
+		return ctx, accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP Authorization header missing or invalid")
 	}
 
 	client, err := f.Store.GetClient(clientID)
 	if err != nil {
-		return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
+		return ctx, accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
 	}
 
 	// Enforce client authentication
 	if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-		return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
+		return ctx, accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
 	}
 	accessRequest.Client = client
 
 	var found bool = false
 	for _, loader := range f.TokenEndpointHandlers {
-		if err := loader.HandleTokenEndpointRequest(ctx, r, accessRequest); err == nil {
+		ctx, err = loader.HandleTokenEndpointRequest(ctx, r, accessRequest)
+		if err == nil {
 			found = true
 		} else if errors.Cause(err) == ErrUnknownRequest {
 			// do nothing
 		} else if err != nil {
-			return accessRequest, err
+			return ctx, accessRequest, err
 		}
 	}
 
 	if !found {
-		return nil, errors.Wrap(ErrInvalidRequest, "")
+		return ctx, nil, errors.Wrap(ErrInvalidRequest, "")
 	}
 
 	if !accessRequest.GetScopes().Has(f.GetMandatoryScope()) {
-		return accessRequest, errors.Wrap(ErrInvalidScope, "")
+		return ctx, accessRequest, errors.Wrap(ErrInvalidScope, "")
 	}
 
 	accessRequest.GrantScope(f.GetMandatoryScope())
-	return accessRequest, nil
+	return ctx, accessRequest, nil
 }

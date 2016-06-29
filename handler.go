@@ -21,15 +21,15 @@ type AuthorizeEndpointHandler interface {
 	//   authorization code as described by Section 4.1.1, "token" for
 	//   requesting an access token (implicit grant) as described by
 	//   Section 4.2.1, or a registered extension value as described by Section 8.4.
-	HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, requester AuthorizeRequester, responder AuthorizeResponder) error
+	HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, requester AuthorizeRequester, responder AuthorizeResponder) (context.Context, error)
 }
 
 type TokenEndpointHandler interface {
 	// PopulateTokenEndpointResponse is responsible for setting return values and should only be executed if
 	// the handler's HandleTokenEndpointRequest did not return ErrUnknownRequest.
-	PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error
+	PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) (context.Context, error)
 
 	// HandleTokenEndpointRequest handles an authorize request. If the handler is not responsible for handling
 	// the request, this method should return ErrUnknownRequest and otherwise handle the request.
-	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester) error
+	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester) (context.Context, error)
 }

@@ -21,7 +21,8 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	areq.Client = &fosite.DefaultClient{
 		ResponseTypes: fosite.Arguments{"id_token"},
 	}
-	assert.True(t, errors.Cause(h.HandleTokenEndpointRequest(nil, nil, areq)) == fosite.ErrUnknownRequest)
+	_, err := h.HandleTokenEndpointRequest(nil, nil, areq)
+	assert.True(t, errors.Cause(err) == fosite.ErrUnknownRequest)
 }
 
 func TestPopulateTokenEndpointResponse(t *testing.T) {
@@ -64,7 +65,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 					ResponseTypes: fosite.Arguments{"id_token"},
 				}
 				areq.Form.Set("code", "foobar")
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(nil, oidc.ErrNoSessionFound)
+				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(nil, nil, oidc.ErrNoSessionFound)
 			},
 			expectErr: fosite.ErrUnknownRequest,
 		},
@@ -72,7 +73,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because lookup fails",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(nil, errors.New(""))
+				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(nil, nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -80,7 +81,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because missing scope in original request",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(fosite.NewAuthorizeRequest(), nil)
+				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(nil, fosite.NewAuthorizeRequest(), nil)
 			},
 			expectErr: fosite.ErrUnknownRequest,
 		},
@@ -91,12 +92,12 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 				r.Session = areq.Session
 				r.Scopes = fosite.Arguments{"openid"}
 				r.Form.Set("nonce", "1111111111111111")
-				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).AnyTimes().Return(r, nil)
+				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).AnyTimes().Return(nil, r, nil)
 			},
 		},
 	} {
 		c.setup()
-		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
+		_, err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

@@ -70,19 +70,19 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should fail because lookup fails",
 			setup: func() {
 				aresp.EXPECT().GetCode().AnyTimes().Return("codeexample")
-				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", areq).Return(errors.New(""))
+				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", areq).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", areq).AnyTimes().Return(nil)
+				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", areq).AnyTimes().Return(nil, nil)
 			},
 		},
 	} {
 		c.setup()
-		err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
+		_, err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

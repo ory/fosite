@@ -46,14 +46,14 @@ func TestValidateRequest(t *testing.T) {
 			setup: func() {
 				httpreq.Header.Set("Authorization", "bearer 1234")
 				chgen.EXPECT().AccessTokenSignature("1234").AnyTimes().Return("asdf")
-				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
+				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).Return(nil, nil, errors.New(""))
 			},
 			expectErr: fosite.ErrRequestUnauthorized,
 		},
 		{
 			description: "should fail because validation fails",
 			setup: func() {
-				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).AnyTimes().Return(areq, nil)
+				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).AnyTimes().Return(nil, areq, nil)
 				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrRequestUnauthorized,
@@ -66,7 +66,7 @@ func TestValidateRequest(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := v.ValidateRequest(nil, httpreq, areq)
+		_, err := v.ValidateRequest(nil, httpreq, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

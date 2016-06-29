@@ -58,7 +58,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should fail because could not presist authorize code session",
 			setup: func() {
 				chgen.EXPECT().GenerateAuthorizeCode(nil, areq).AnyTimes().Return("someauthcode.authsig", "authsig", nil)
-				store.EXPECT().CreateAuthorizeCodeSession(nil, "authsig", areq).Return(errors.New(""))
+				store.EXPECT().CreateAuthorizeCodeSession(nil, "authsig", areq).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -67,7 +67,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.GrantedScopes = fosite.Arguments{"a", "b"}
 				areq.State = "superstate"
-				store.EXPECT().CreateAuthorizeCodeSession(nil, "authsig", areq).Return(nil)
+				store.EXPECT().CreateAuthorizeCodeSession(nil, "authsig", areq).Return(nil, nil)
 				aresp.EXPECT().AddQuery("code", "someauthcode.authsig")
 				aresp.EXPECT().AddQuery("scope", strings.Join(areq.GrantedScopes, " "))
 				aresp.EXPECT().AddQuery("state", areq.State)
@@ -75,7 +75,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
+		_, err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

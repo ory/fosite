@@ -6,6 +6,11 @@ import (
 )
 
 type ResourceOwnerPasswordCredentialsGrantStorage interface {
-	Authenticate(ctx context.Context, name string, secret string) error
 	core.AccessTokenStorage
+
+	Authenticate(
+		ctx context.Context,
+		name string,
+		secret string,
+	) (context.Context, error)
 }

@@ -8,5 +8,10 @@ import (
 
 type RefreshTokenGrantStorage interface {
 	core.RefreshTokenStorage
-	PersistRefreshTokenGrantSession(ctx context.Context, requestRefreshSignature, accessSignature, refreshSignature string, request fosite.Requester) error
+
+	PersistRefreshTokenGrantSession(
+		ctx context.Context,
+		requestRefreshSignature, accessSignature, refreshSignature string,
+		request fosite.Requester,
+	) (context.Context, error)
 }
