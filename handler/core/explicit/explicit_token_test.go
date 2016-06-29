@@ -94,7 +94,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 		{
 			description: "should pass",
 			setup: func() {
-				areq.GrantedScopes = fosite.Arguments{"foo"}
+				areq.GrantedScopes = fosite.Arguments{"foo", "offline"}
 				store.EXPECT().PersistAuthorizeCodeGrantSession(nil, "authsig", "ats", "rts", areq).Return(nil)
 
 				aresp.EXPECT().SetAccessToken("access.ats")
