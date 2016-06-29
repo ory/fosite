@@ -85,6 +85,10 @@ func (c *AuthorizeExplicitGrantTypeHandler) PopulateTokenEndpointResponse(ctx co
 		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
+	for _, scope := range authorizeRequest.GetGrantedScopes() {
+		requester.GrantScope(scope)
+	}
+
 	var refresh, refreshSignature string
 	if authorizeRequest.GetGrantedScopes().Has("offline") {
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)

@@ -38,7 +38,7 @@ func (a *Request) GetClient() Client {
 }
 
 func (a *Request) GetScopes() Arguments {
-	return Unique(a.Scopes)
+	return a.Scopes
 }
 
 func (a *Request) SetScopes(s Arguments) {
@@ -46,10 +46,15 @@ func (a *Request) SetScopes(s Arguments) {
 }
 
 func (a *Request) GetGrantedScopes() Arguments {
-	return Unique(a.GrantedScopes)
+	return a.GrantedScopes
 }
 
 func (a *Request) GrantScope(scope string) {
+	for _, has := range a.GrantedScopes {
+		if scope == has {
+			return
+		}
+	}
 	a.GrantedScopes = append(a.GrantedScopes, scope)
 }
 
@@ -75,21 +80,4 @@ func (a *Request) Merge(request Requester) {
 	for k, v := range request.GetRequestForm() {
 		a.Form[k] = v
 	}
-}
-
-func Unique(col []string) Arguments {
-	m := map[string]struct{}{}
-	for _, v := range col {
-		if _, ok := m[v]; !ok {
-			m[v] = struct{}{}
-		}
-	}
-	list := make([]string, len(m))
-
-	i := 0
-	for v := range m {
-		list[i] = v
-		i++
-	}
-	return Arguments(list)
 }
