@@ -22,11 +22,11 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("id_token", "code") {
-		return errors.Wrap(ErrInvalidRequest, "")
+		return errors.Wrap(ErrInvalidClient, "client is not allowed to use rseponse type id_token and code")
 	}
 
 	if len(resp.GetCode()) == 0 {
-		return errors.Wrap(ErrMisconfiguration, "")
+		return errors.Wrap(ErrMisconfiguration, "code is not set")
 	}
 
 	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar); err != nil {

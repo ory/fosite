@@ -19,6 +19,7 @@ func NewRequest() *Request {
 	return &Request{
 		Client:      &DefaultClient{},
 		Scopes:      Arguments{},
+		GrantedScopes:      Arguments{},
 		Form:        url.Values{},
 		RequestedAt: time.Now(),
 	}
@@ -37,7 +38,7 @@ func (a *Request) GetClient() Client {
 }
 
 func (a *Request) GetScopes() Arguments {
-	return unique(a.Scopes)
+	return Unique(a.Scopes)
 }
 
 func (a *Request) SetScopes(s Arguments) {
@@ -45,7 +46,7 @@ func (a *Request) SetScopes(s Arguments) {
 }
 
 func (a *Request) GetGrantedScopes() Arguments {
-	return unique(a.GrantedScopes)
+	return Unique(a.GrantedScopes)
 }
 
 func (a *Request) GrantScope(scope string) {
@@ -76,7 +77,7 @@ func (a *Request) Merge(request Requester) {
 	}
 }
 
-func unique(col []string) []string {
+func Unique(col []string) Arguments {
 	m := map[string]struct{}{}
 	for _, v := range col {
 		if _, ok := m[v]; !ok {
@@ -90,5 +91,5 @@ func unique(col []string) []string {
 		list[i] = v
 		i++
 	}
-	return list
+	return Arguments(list)
 }
