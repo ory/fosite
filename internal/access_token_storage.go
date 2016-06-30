@@ -30,31 +30,34 @@ func (_m *MockAccessTokenStorage) EXPECT() *_MockAccessTokenStorageRecorder {
 	return _m.recorder
 }
 
-func (_m *MockAccessTokenStorage) CreateAccessTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) error {
+func (_m *MockAccessTokenStorage) CreateAccessTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) (context.Context, error) {
 	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1, _param2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(context.Context)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 func (_mr *_MockAccessTokenStorageRecorder) CreateAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1, arg2)
 }
 
-func (_m *MockAccessTokenStorage) DeleteAccessTokenSession(_param0 context.Context, _param1 string) error {
+func (_m *MockAccessTokenStorage) DeleteAccessTokenSession(_param0 context.Context, _param1 string) (context.Context, error) {
 	ret := _m.ctrl.Call(_m, "DeleteAccessTokenSession", _param0, _param1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(context.Context)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 func (_mr *_MockAccessTokenStorageRecorder) DeleteAccessTokenSession(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAccessTokenSession", arg0, arg1)
 }
 
-func (_m *MockAccessTokenStorage) GetAccessTokenSession(_param0 context.Context, _param1 string, _param2 interface{}) (fosite.Requester, error) {
+func (_m *MockAccessTokenStorage) GetAccessTokenSession(_param0 context.Context, _param1 string, _param2 interface{}) (context.Context, fosite.Requester, error) {
 	ret := _m.ctrl.Call(_m, "GetAccessTokenSession", _param0, _param1, _param2)
-	ret0, _ := ret[0].(fosite.Requester)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(context.Context)
+	ret1, _ := ret[1].(fosite.Requester)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 func (_mr *_MockAccessTokenStorageRecorder) GetAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {

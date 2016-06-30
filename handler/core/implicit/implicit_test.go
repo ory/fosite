@@ -57,7 +57,7 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 			description: "should fail because persistance failed",
 			setup: func() {
 				chgen.EXPECT().GenerateAccessToken(nil, areq).AnyTimes().Return("access.ats", "ats", nil)
-				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).Return(errors.New(""))
+				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -67,7 +67,7 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 				areq.State = "state"
 				areq.GrantedScopes = fosite.Arguments{"scope"}
 
-				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).AnyTimes().Return(nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).AnyTimes().Return(nil, nil)
 
 				aresp.EXPECT().AddFragment("access_token", "access.ats")
 				aresp.EXPECT().AddFragment("expires_in", strconv.Itoa(int(h.AccessTokenLifespan/time.Second)))
@@ -79,7 +79,7 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
+		_, err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

@@ -9,33 +9,33 @@ import (
 	"golang.org/x/net/context"
 )
 
-func (c *OpenIDConnectExplicitHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request AccessRequester) error {
-	return ErrUnknownRequest
+func (c *OpenIDConnectExplicitHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request AccessRequester) (context.Context, error) {
+	return ctx, ErrUnknownRequest
 }
 
-func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error {
+func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) (context.Context, error) {
 	if !requester.GetGrantTypes().Exact("authorization_code") {
-		return errors.Wrap(ErrUnknownRequest, "")
+		return ctx, errors.Wrap(ErrUnknownRequest, "")
 	}
 
-	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, requester.GetRequestForm().Get("code"), requester)
+	ctx, authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, requester.GetRequestForm().Get("code"), requester)
 	if err == oidc.ErrNoSessionFound {
-		return errors.Wrap(ErrUnknownRequest, err.Error())
+		return ctx, errors.Wrap(ErrUnknownRequest, err.Error())
 	} else if err != nil {
-		return errors.Wrap(ErrServerError, err.Error())
+		return ctx, errors.Wrap(ErrServerError, err.Error())
 	}
 
 	if !authorize.GetScopes().Has("openid") {
-		return errors.Wrap(ErrUnknownRequest, "")
+		return ctx, errors.Wrap(ErrUnknownRequest, "")
 	}
 
 	if !requester.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errors.Wrap(ErrInvalidGrant, "")
+		return ctx, errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	if !requester.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.Wrap(ErrInvalidGrant, "")
+		return ctx, errors.Wrap(ErrInvalidGrant, "")
 	}
 
-	return c.IssueExplicitIDToken(ctx, req, authorize, responder)
+	return ctx, c.IssueExplicitIDToken(ctx, req, authorize, responder)
 }

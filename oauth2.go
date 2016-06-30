@@ -45,7 +45,7 @@ type OAuth2Provider interface {
 	//	 If an authorization request is missing the "response_type" parameter,
 	//	 or if the response type is not understood, the authorization server
 	//	 MUST return an error response as described in Section 4.1.2.1.
-	NewAuthorizeResponse(ctx context.Context, req *http.Request, requester AuthorizeRequester, session interface{}) (AuthorizeResponder, error)
+	NewAuthorizeResponse(ctx context.Context, req *http.Request, requester AuthorizeRequester, session interface{}) (context.Context, AuthorizeResponder, error)
 
 	// WriteAuthorizeError returns the error codes to the redirection endpoint or shows the error to the user, if no valid
 	// redirect uri was given. Implements rfc6749#section-4.1.2.1
@@ -84,13 +84,13 @@ type OAuth2Provider interface {
 	// * https://tools.ietf.org/html/rfc6749#section-3.2.1 (everything)
 	//
 	// Furthermore the registered handlers should implement their specs accordingly.
-	NewAccessRequest(ctx context.Context, req *http.Request, session interface{}) (AccessRequester, error)
+	NewAccessRequest(ctx context.Context, req *http.Request, session interface{}) (context.Context, AccessRequester, error)
 
 	// NewAccessResponse creates a new access response and validates that access_token and token_type are set.
 	//
 	// The following specs must be considered in any implementation of this method:
 	// https://tools.ietf.org/html/rfc6749#section-5.1
-	NewAccessResponse(ctx context.Context, req *http.Request, requester AccessRequester) (AccessResponder, error)
+	NewAccessResponse(ctx context.Context, req *http.Request, requester AccessRequester) (context.Context, AccessResponder, error)
 
 	// WriteAccessError writes an access request error response.
 	//

@@ -40,7 +40,7 @@ func TestValidateRequestAuthorization(t *testing.T) {
 			scopes:      []string{"foo"},
 			setup: func() {
 				f.AuthorizedRequestValidators = AuthorizedRequestValidators{validator}
-				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Return(ErrUnknownRequest)
+				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Return(nil, ErrUnknownRequest)
 			},
 			expectErr: ErrRequestUnauthorized,
 		},
@@ -48,7 +48,7 @@ func TestValidateRequestAuthorization(t *testing.T) {
 			description: "should fail",
 			scopes:      []string{"foo"},
 			setup: func() {
-				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Return(ErrInvalidClient)
+				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Return(nil, ErrInvalidClient)
 			},
 			expectErr: ErrInvalidClient,
 		},
@@ -57,7 +57,7 @@ func TestValidateRequestAuthorization(t *testing.T) {
 			setup: func() {
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
 					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
-				}).Return(nil)
+				}).Return(nil, nil)
 			},
 			expectErr: ErrRequestForbidden,
 		},
@@ -66,7 +66,7 @@ func TestValidateRequestAuthorization(t *testing.T) {
 			setup: func() {
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
 					accessRequest.(*AccessRequest).GrantedScopes = []string{f.MandatoryScope}
-				}).Return(nil)
+				}).Return(nil, nil)
 			},
 		},
 		{
@@ -75,7 +75,7 @@ func TestValidateRequestAuthorization(t *testing.T) {
 			setup: func() {
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
 					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
-				}).Return(nil)
+				}).Return(nil, nil)
 			},
 		},
 	} {

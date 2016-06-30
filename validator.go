@@ -8,14 +8,18 @@ import (
 )
 
 type AuthorizedRequestValidator interface {
-	ValidateRequest(ctx context.Context, req *http.Request, accessRequest AccessRequester) error
+	ValidateRequest(ctx context.Context, req *http.Request, accessRequest AccessRequester) (context.Context, error)
 }
 
 func (f *Fosite) ValidateRequestAuthorization(ctx context.Context, req *http.Request, session interface{}, scopes ...string) (AccessRequester, error) {
-	var found bool = false
+	var (
+		found bool = false
+		err   error
+	)
 	ar := NewAccessRequest(session)
 	for _, validator := range f.AuthorizedRequestValidators {
-		if err := errors.Cause(validator.ValidateRequest(ctx, req, ar)); err == ErrUnknownRequest {
+		ctx, err = validator.ValidateRequest(ctx, req, ar)
+		if err := errors.Cause(err); err == ErrUnknownRequest {
 			// Nothing to do
 		} else if err != nil {
 			return nil, errors.Wrap(err, "")

@@ -30,10 +30,11 @@ func (_m *MockImplicitGrantStorage) EXPECT() *_MockImplicitGrantStorageRecorder 
 	return _m.recorder
 }
 
-func (_m *MockImplicitGrantStorage) CreateImplicitAccessTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) error {
+func (_m *MockImplicitGrantStorage) CreateImplicitAccessTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) (context.Context, error) {
 	ret := _m.ctrl.Call(_m, "CreateImplicitAccessTokenSession", _param0, _param1, _param2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(context.Context)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 func (_mr *_MockImplicitGrantStorageRecorder) CreateImplicitAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {

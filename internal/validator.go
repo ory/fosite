@@ -4,11 +4,10 @@
 package internal
 
 import (
-	http "net/http"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
 	context "golang.org/x/net/context"
+	http "net/http"
 )
 
 // Mock of AuthorizedRequestValidator interface
@@ -32,10 +31,11 @@ func (_m *MockAuthorizedRequestValidator) EXPECT() *_MockAuthorizedRequestValida
 	return _m.recorder
 }
 
-func (_m *MockAuthorizedRequestValidator) ValidateRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AccessRequester) error {
+func (_m *MockAuthorizedRequestValidator) ValidateRequest(_param0 context.Context, _param1 *http.Request, _param2 fosite.AccessRequester) (context.Context, error) {
 	ret := _m.ctrl.Call(_m, "ValidateRequest", _param0, _param1, _param2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(context.Context)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 func (_mr *_MockAuthorizedRequestValidatorRecorder) ValidateRequest(arg0, arg1, arg2 interface{}) *gomock.Call {

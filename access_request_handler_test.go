@@ -124,7 +124,7 @@ func TestNewAccessRequest(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
-				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, ErrServerError)
 			},
 			handlers: TokenEndpointHandlers{handler},
 		},
@@ -142,7 +142,7 @@ func TestNewAccessRequest(t *testing.T) {
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester) {
 					a.SetScopes([]string{"asdfasdf"})
-				}).Return(nil)
+				}).Return(nil, nil)
 			},
 			handlers:  TokenEndpointHandlers{handler},
 			expectErr: ErrInvalidScope,
@@ -161,7 +161,7 @@ func TestNewAccessRequest(t *testing.T) {
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester) {
 					a.SetScopes([]string{DefaultMandatoryScope})
-				}).Return(nil)
+				}).Return(nil, nil)
 			},
 			handlers: TokenEndpointHandlers{handler},
 			expect: &AccessRequest{
@@ -181,7 +181,7 @@ func TestNewAccessRequest(t *testing.T) {
 		c.mock()
 		ctx := NewContext()
 		fosite.TokenEndpointHandlers = c.handlers
-		ar, err := fosite.NewAccessRequest(ctx, r, &struct{}{})
+		_, ar, err := fosite.NewAccessRequest(ctx, r, &struct{}{})
 		assert.True(t, errors.Cause(err) == c.expectErr, "%d\nwant: %s \ngot: %s", k, c.expectErr, err)
 		if err != nil {
 			t.Logf("Error occured: %v", err)

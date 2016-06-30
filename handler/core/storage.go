@@ -12,25 +12,58 @@ type CoreStorage interface {
 }
 
 type AuthorizeCodeStorage interface {
-	CreateAuthorizeCodeSession(ctx context.Context, code string, request fosite.Requester) (err error)
+	CreateAuthorizeCodeSession(
+		ctx context.Context,
+		code string,
+		request fosite.Requester,
+	) (context.Context, error)
 
-	GetAuthorizeCodeSession(ctx context.Context, code string, session interface{}) (request fosite.Requester, err error)
+	GetAuthorizeCodeSession(
+		ctx context.Context,
+		code string,
+		session interface{},
+	) (context.Context, fosite.Requester, error)
 
-	DeleteAuthorizeCodeSession(ctx context.Context, code string) (err error)
+	DeleteAuthorizeCodeSession(
+		ctx context.Context,
+		code string,
+	) (context.Context, error)
 }
 
 type AccessTokenStorage interface {
-	CreateAccessTokenSession(ctx context.Context, signature string, request fosite.Requester) (err error)
+	CreateAccessTokenSession(
+		ctx context.Context,
+		signature string,
+		request fosite.Requester,
+	) (context.Context, error)
 
-	GetAccessTokenSession(ctx context.Context, signature string, session interface{}) (request fosite.Requester, err error)
+	GetAccessTokenSession(
+		ctx context.Context,
+		signature string,
+		session interface{},
+	) (context.Context, fosite.Requester, error)
 
-	DeleteAccessTokenSession(ctx context.Context, signature string) (err error)
+	DeleteAccessTokenSession(
+		ctx context.Context,
+		signature string,
+	) (context.Context, error)
 }
 
 type RefreshTokenStorage interface {
-	CreateRefreshTokenSession(ctx context.Context, signature string, request fosite.Requester) (err error)
+	CreateRefreshTokenSession(
+		ctx context.Context,
+		signature string,
+		request fosite.Requester,
+	) (context.Context, error)
 
-	GetRefreshTokenSession(ctx context.Context, signature string, session interface{}) (request fosite.Requester, err error)
+	GetRefreshTokenSession(
+		ctx context.Context,
+		signature string,
+		session interface{},
+	) (context.Context, fosite.Requester, error)
 
-	DeleteRefreshTokenSession(ctx context.Context, signature string) (err error)
+	DeleteRefreshTokenSession(
+		ctx context.Context,
+		signature string,
+	) (context.Context, error)
 }

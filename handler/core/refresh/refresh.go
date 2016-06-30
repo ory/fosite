@@ -23,29 +23,29 @@ type RefreshTokenGrantHandler struct {
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
-func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, request fosite.AccessRequester) error {
+func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, request fosite.AccessRequester) (context.Context, error) {
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
 	if !request.GetGrantTypes().Exact("refresh_token") {
-		return errors.Wrap(fosite.ErrUnknownRequest, "")
+		return ctx, errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return ctx, errors.Wrap(fosite.ErrInvalidGrant, "")
 	}
 
 	refresh := req.PostForm.Get("refresh_token")
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(refresh)
-	accessRequest, err := c.RefreshTokenGrantStorage.GetRefreshTokenSession(ctx, signature, nil)
+	ctx, accessRequest, err := c.RefreshTokenGrantStorage.GetRefreshTokenSession(ctx, signature, nil)
 	if errors.Cause(err) == fosite.ErrNotFound {
-		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
+		return ctx, errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	} else if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return ctx, errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	// The authorization server MUST ... validate the refresh token.
 	if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, request, refresh); err != nil {
-		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
+		return ctx, errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	}
 
 	request.SetScopes(accessRequest.GetScopes())
@@ -55,30 +55,30 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
 	if accessRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.Wrap(fosite.ErrInvalidRequest, "")
+		return ctx, errors.Wrap(fosite.ErrInvalidRequest, "")
 	}
-	return nil
+	return ctx, nil
 }
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-6
-func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) (context.Context, error) {
 	if !requester.GetGrantTypes().Exact("refresh_token") {
-		return errors.Wrap(fosite.ErrUnknownRequest, "")
+		return ctx, errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
 
 	accessToken, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return ctx, errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	refreshToken, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 	if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return ctx, errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(req.PostForm.Get("refresh_token"))
-	if err := c.RefreshTokenGrantStorage.PersistRefreshTokenGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+	if ctx, err = c.RefreshTokenGrantStorage.PersistRefreshTokenGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
+		return ctx, errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	responder.SetAccessToken(accessToken)
@@ -86,5 +86,5 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	responder.SetExpiresIn(c.AccessTokenLifespan / time.Second)
 	responder.SetScopes(requester.GetGrantedScopes())
 	responder.SetExtra("refresh_token", refreshToken)
-	return nil
+	return ctx, nil
 }

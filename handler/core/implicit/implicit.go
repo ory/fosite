@@ -25,30 +25,30 @@ type AuthorizeImplicitGrantTypeHandler struct {
 	AccessTokenLifespan time.Duration
 }
 
-func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) (context.Context, error) {
 	// This let's us define multiple response types, for example open id connect's id_token
 	if !ar.GetResponseTypes().Exact("token") {
-		return nil
+		return ctx, nil
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("token") {
-		return errors.Wrap(ErrInvalidGrant, "")
+		return ctx, errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errors.Wrap(ErrInvalidGrant, "")
+		return ctx, errors.Wrap(ErrInvalidGrant, "")
 	}
 
 	return c.IssueImplicitAccessToken(ctx, req, ar, resp)
 }
 
-func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) (context.Context, error) {
 	// Generate the code
 	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, ar)
 	if err != nil {
-		return errors.Wrap(ErrServerError, err.Error())
-	} else if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar); err != nil {
-		return errors.Wrap(ErrServerError, err.Error())
+		return ctx, errors.Wrap(ErrServerError, err.Error())
+	} else if ctx, err = c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar); err != nil {
+		return ctx, errors.Wrap(ErrServerError, err.Error())
 	}
 
 	resp.AddFragment("access_token", token)
@@ -58,5 +58,5 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	resp.AddFragment("scope", strings.Join(ar.GetGrantedScopes(), "+"))
 	ar.SetResponseTypeHandled("token")
 
-	return nil
+	return ctx, nil
 }

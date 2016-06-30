@@ -48,26 +48,26 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}}
 				httpreq.PostForm.Set("username", "peter")
 				httpreq.PostForm.Set("password", "pan")
-				store.EXPECT().Authenticate(nil, "peter", "pan").Return(fosite.ErrNotFound)
+				store.EXPECT().Authenticate(nil, "peter", "pan").Return(nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should fail because because error on lookup",
 			setup: func() {
-				store.EXPECT().Authenticate(nil, "peter", "pan").Return(errors.New(""))
+				store.EXPECT().Authenticate(nil, "peter", "pan").Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				store.EXPECT().Authenticate(nil, "peter", "pan").Return(nil)
+				store.EXPECT().Authenticate(nil, "peter", "pan").Return(nil, nil)
 			},
 		},
 	} {
 		c.setup()
-		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
+		_, err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
@@ -108,12 +108,12 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
-				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil, nil)
 			},
 		},
 	} {
 		c.setup()
-		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
+		_, err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
