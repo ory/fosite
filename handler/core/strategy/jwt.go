@@ -39,7 +39,7 @@ func (h *RS256JWTStrategy) GenerateAccessToken(_ context.Context, requester fosi
 	return h.generate(requester)
 }
 
-func (h *RS256JWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Requester, token string) (signature string, err error) {
+func (h *RS256JWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Requester, token string) error {
 	return h.validate(token)
 }
 
@@ -47,7 +47,7 @@ func (h *RS256JWTStrategy) GenerateRefreshToken(_ context.Context, requester fos
 	return h.generate(requester)
 }
 
-func (h *RS256JWTStrategy) ValidateRefreshToken(_ context.Context, _ fosite.Requester, token string) (signature string, err error) {
+func (h *RS256JWTStrategy) ValidateRefreshToken(_ context.Context, _ fosite.Requester, token string) error {
 	return h.validate(token)
 }
 
@@ -55,22 +55,22 @@ func (h *RS256JWTStrategy) GenerateAuthorizeCode(_ context.Context, requester fo
 	return h.generate(requester)
 }
 
-func (h *RS256JWTStrategy) ValidateAuthorizeCode(_ context.Context, requester fosite.Requester, token string) (signature string, err error) {
+func (h *RS256JWTStrategy) ValidateAuthorizeCode(_ context.Context, requester fosite.Requester, token string) error {
 	return h.validate(token)
 }
 
-func (h *RS256JWTStrategy) validate(token string) (string, error) {
+func (h *RS256JWTStrategy) validate(token string) error {
 	t, err := h.RS256JWTStrategy.Decode(token)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	claims := jwt.JWTClaimsFromMap(t.Claims)
 	if claims.IsNotYetValid() || claims.IsExpired() {
-		return "", errors.New("Token claims did not validate")
+		return errors.New("Token claims did not validate")
 	}
 
-	return h.RS256JWTStrategy.GetSignature(token)
+	return nil
 }
 
 func (h *RS256JWTStrategy) generate(requester fosite.Requester) (string, string, error) {

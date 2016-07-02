@@ -75,7 +75,8 @@ func TestAccessToken(t *testing.T) {
 		assert.Nil(t, err, "%s", err)
 		assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-		validate, err := j.ValidateAccessToken(nil, &c.r, token)
+		validate := j.signature(token)
+		err = j.ValidateAccessToken(nil, &c.r, token)
 		if c.pass {
 			assert.Nil(t, err, "%s", err)
 			assert.Equal(t, signature, validate)
@@ -90,7 +91,8 @@ func TestRefreshToken(t *testing.T) {
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-	validate, err := j.ValidateRefreshToken(nil, &jwtValidCase, token)
+	validate := j.signature(token)
+	err = j.ValidateRefreshToken(nil, &jwtValidCase, token)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 }
@@ -113,7 +115,8 @@ func TestGenerateAuthorizeCode(t *testing.T) {
 		assert.Nil(t, err, "%s", err)
 		assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-		validate, err := j.ValidateAuthorizeCode(nil, &c.r, token)
+		validate := j.signature(token)
+		err = j.ValidateAuthorizeCode(nil, &c.r, token)
 		if c.pass {
 			assert.Nil(t, err, "%s", err)
 			assert.Equal(t, signature, validate)
