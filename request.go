@@ -17,11 +17,11 @@ type Request struct {
 
 func NewRequest() *Request {
 	return &Request{
-		Client:      &DefaultClient{},
-		Scopes:      Arguments{},
-		GrantedScopes:      Arguments{},
-		Form:        url.Values{},
-		RequestedAt: time.Now(),
+		Client:        &DefaultClient{},
+		Scopes:        Arguments{},
+		GrantedScopes: Arguments{},
+		Form:          url.Values{},
+		RequestedAt:   time.Now(),
 	}
 }
 

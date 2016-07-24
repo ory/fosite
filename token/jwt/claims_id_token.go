@@ -21,9 +21,18 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 	ret["iss"] = c.Issuer
 	ret["aud"] = c.Audience
 	ret["nonce"] = c.Nonce
-	ret["at_hash"] = c.AccessTokenHash
-	ret["c_hash"] = c.CodeHash
-	ret["auth_time"] = c.AuthTime.Unix()
+
+	if len(c.AccessTokenHash) > 0 {
+		ret["at_hash"] = c.AccessTokenHash
+	}
+
+	if len(c.CodeHash) > 0 {
+		ret["c_hash"] = c.CodeHash
+	}
+
+	if !c.AuthTime.IsZero() {
+		ret["auth_time"] = c.AuthTime.Unix()
+	}
 	ret["iat"] = c.IssuedAt.Unix()
 	ret["exp"] = c.ExpiresAt.Unix()
 	return ret

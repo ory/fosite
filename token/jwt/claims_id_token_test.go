@@ -9,11 +9,14 @@ import (
 )
 
 var idTokenClaims = &IDTokenClaims{
-	Subject:   "peter",
-	IssuedAt:  time.Now().Round(time.Second),
-	Issuer:    "fosite",
-	Audience:  "tests",
-	ExpiresAt: time.Now().Add(time.Hour).Round(time.Second),
+	Subject:         "peter",
+	IssuedAt:        time.Now().Round(time.Second),
+	Issuer:          "fosite",
+	Audience:        "tests",
+	ExpiresAt:       time.Now().Add(time.Hour).Round(time.Second),
+	AuthTime:        time.Now(),
+	AccessTokenHash: []byte("foobar"),
+	CodeHash:        []byte("barfoo"),
 	Extra: map[string]interface{}{
 		"foo": "bar",
 		"baz": "bar",

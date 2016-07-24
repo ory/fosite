@@ -87,7 +87,7 @@ var hmacStrategy = &strategy.HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
-	AccessTokenLifespan: time.Hour,
+	AccessTokenLifespan:   time.Hour,
 	AuthorizeCodeLifespan: time.Hour,
 }
 
@@ -397,7 +397,7 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 
 func validateEndpoint(rw http.ResponseWriter, req *http.Request) {
 	ctx := NewContext()
-	req.Header.Add("Authorization", "bearer " + req.URL.Query().Get("token"))
+	req.Header.Add("Authorization", "bearer "+req.URL.Query().Get("token"))
 	mySessionData := newSession("peter")
 
 	ar, err := oauth2.ValidateRequestAuthorization(ctx, req, mySessionData, "fosite")
@@ -514,7 +514,7 @@ func callbackHandler(rw http.ResponseWriter, req *http.Request) {
 				<code>%s</code>
 			</li>
 		</ul>`,
-		"/protected-api?token=" + token.AccessToken,
+		"/protected-api?token="+token.AccessToken,
 		token.AccessToken,
 		"?refresh="+url.QueryEscape(token.RefreshToken),
 		token.RefreshToken,
