@@ -28,8 +28,12 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 		return errors.Wrap(fosite.ErrInvalidGrant, "")
 	}
 
-	username := req.PostForm.Get("username")
-	password := req.PostForm.Get("password")
+	username, password, ok := req.BasicAuth()
+	if !ok {
+		username = req.PostForm.Get("username")
+		password = req.PostForm.Get("password")
+	}
+
 	if username == "" || password == "" {
 		return errors.Wrap(fosite.ErrInvalidRequest, "")
 	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
