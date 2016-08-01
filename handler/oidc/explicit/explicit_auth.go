@@ -33,5 +33,7 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.Wrap(ErrServerError, err.Error())
 	}
 
+	// there is no need to check for https, because it has already been checked by core.explicit
+
 	return nil
 }

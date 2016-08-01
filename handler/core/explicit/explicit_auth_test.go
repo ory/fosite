@@ -46,10 +46,18 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because authorize code generation failed",
+			description: "should fail because redirect uri is not https",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"code"}
 				areq.Client = &fosite.DefaultClient{ResponseTypes: fosite.Arguments{"code"}}
+				areq.RedirectURI, _ = url.Parse("http://asdf.de/cb")
+			},
+			expectErr: fosite.ErrInvalidRequest,
+		},
+		{
+			description: "should fail because authorize code generation failed",
+			setup: func() {
+				areq.RedirectURI, _ = url.Parse("https://foobar.com/cb")
 				chgen.EXPECT().GenerateAuthorizeCode(nil, areq).Return("", "", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,

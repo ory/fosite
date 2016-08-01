@@ -41,6 +41,10 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		return errors.Wrap(ErrInvalidGrant, "")
 	}
 
+	if !IsRedirectURISecure(ar.GetRedirectURI()) {
+		return errors.Wrap(ErrInvalidRequest, "")
+	}
+
 	return c.IssueAuthorizeCode(ctx, req, ar, resp)
 }
 
