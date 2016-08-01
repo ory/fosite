@@ -58,6 +58,9 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.Wrap(err, err.Error())
 	}
 
+	// there is no need to check for https, because implicit flow does not require https
+	// https://tools.ietf.org/html/rfc6819#section-4.4.2
+
 	ar.SetResponseTypeHandled("id_token")
 	return nil
 }

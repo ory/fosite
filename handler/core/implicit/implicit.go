@@ -39,6 +39,9 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		return errors.Wrap(ErrInvalidGrant, "")
 	}
 
+	// there is no need to check for https, because implicit flow does not require https
+	// https://tools.ietf.org/html/rfc6819#section-4.4.2
+
 	return c.IssueImplicitAccessToken(ctx, req, ar, resp)
 }
 
