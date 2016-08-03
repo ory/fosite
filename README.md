@@ -115,9 +115,6 @@ Additionally, we added these safeguards:
  using a global secret.
   This is what a token can look like:
   `/tgBeUhWlAT8tM8Bhmnx+Amf8rOYOUhrDi3pGzmjP7c=.BiV/Yhma+5moTP46anxMT6cWW8gz5R5vpC9RbpwSDdM=`
-* **Enforging scopes:** By default, you always need to include the `fosite` scope or fosite will not execute the request
-  properly. Obviously, you can change the scope to `basic` or `core` but be aware that you should use scopes if you use
-  OAuth2.
 
 Sections below [Section 5](https://tools.ietf.org/html/rfc6819#section-5)
 that are not covered in the list above should be reviewed by you. If you think that a specific section should be something
