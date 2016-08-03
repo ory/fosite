@@ -169,6 +169,8 @@ Instantiating fosite by hand can be painful. Therefore we created a few convenie
 In this very basic example, we will instantiate fosite with all OpenID Connect and OAuth2 handlers enabled. Please refer
 to the [example app](fosite-example/main.go) for more details.
 
+This might look like a lot of code but it actually sets up a full-blown OAuth2 and OpenID Connect example.
+
 ```go
 import "github.com/ory-am/fosite"
 import "github.com/ory-am/fosite/compose"
@@ -194,7 +196,7 @@ var oauth2Provider = compose.ComposeAllEnabled(config *Config, storage, secret, 
 
 // The session will be persisted by the store and made available when e.g. validating tokens or handling token endpoint requests.
 // The default OAuth2 and OpenID Connect handlers require the session to implement a few methods. Apart from that, the 
-// sessino struct can be anything you want it to be.
+// session struct can be anything you want it to be.
 type session struct {
 	UserID string
 	Foobar int
@@ -206,9 +208,8 @@ type session struct {
 	*oidcStrat.DefaultSession
 }
 
-
-// The authorize endpoint is usually at "https://mydomain.com/oauth2/auth"
-func authEndpoint(rw http.ResponseWriter, req *http.Request) {
+// The authorize endpoint is usually at "https://mydomain.com/oauth2/auth".
+func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// This context will be passed to all methods. It doesn't fulfill a real purpose in the standard library but could be used
 	// to abort database lookups or similar things.
 	ctx := NewContext()
@@ -262,7 +263,7 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 }
 
 // The token endpoint is usually at "https://mydomain.com/oauth2/token"
-func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
+func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	ctx := NewContext()
 	mySessionData := &session{}
 
@@ -291,7 +292,7 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 	// The client has a valid access token now
 }
 
-func someResourceEndpoint(rw http.ResponseWriter, req *http.Request) {
+func someResourceProviderHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	ctx := NewContext()
 	mySessionData := &session{}
 	requiredScope := "blogposts.create"
@@ -301,7 +302,7 @@ func someResourceEndpoint(rw http.ResponseWriter, req *http.Request) {
 		// ...
 	}
 	
-	// you have now access to for example:
+	// if now error occurred the token + scope is valid and you have access to:
 	// ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetScopes(), mySessionData.UserID, ar.GetRequestedAt(), ...
 }
 ```
