@@ -400,7 +400,7 @@ func validateEndpoint(rw http.ResponseWriter, req *http.Request) {
 	req.Header.Add("Authorization", "bearer "+req.URL.Query().Get("token"))
 	mySessionData := newSession("peter")
 
-	ar, err := oauth2.ValidateRequestAuthorization(ctx, req, mySessionData, "fosite")
+	ar, err := oauth2.Validate(ctx, req, mySessionData, "fosite")
 	if err != nil {
 		fmt.Fprintf(rw, "<h1>An error occurred!</h1>%s", err.Error())
 		return

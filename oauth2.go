@@ -10,6 +10,8 @@ import (
 
 const MinParameterEntropy = 8
 
+type TokenType int
+
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
 // Check fosite.Fosite for an implementation of this interface.
 type OAuth2Provider interface {
@@ -102,9 +104,9 @@ type OAuth2Provider interface {
 	// https://tools.ietf.org/html/rfc6749#section-5.1
 	WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder)
 
-	// ValidateRequestAuthorization returns nil if the http request contains a valid access token or an error if not.
-	// If the token is valid, ValidateRequestAuthorization will return the access request object.
-	ValidateRequestAuthorization(ctx context.Context, req *http.Request, session interface{}, scope ...string) (AccessRequester, error)
+	// Validate validates a token. Popular validators include authorize code, id token, access token and refresh token.
+	// Returns an error if validation failed.
+	Validate(ctx context.Context, token string, tokenType TokenType, session interface{}, scope ...string) (AccessRequester, error)
 }
 
 // Requester is an abstract interface for handling requests in Fosite.

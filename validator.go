@@ -11,7 +11,7 @@ type AuthorizedRequestValidator interface {
 	ValidateRequest(ctx context.Context, req *http.Request, accessRequest AccessRequester) error
 }
 
-func (f *Fosite) ValidateRequestAuthorization(ctx context.Context, req *http.Request, session interface{}, scopes ...string) (AccessRequester, error) {
+func (f *Fosite) Validate(ctx context.Context, req *http.Request, session interface{}, scopes ...string) (AccessRequester, error) {
 	var found bool = false
 	ar := NewAccessRequest(session)
 	for _, validator := range f.AuthorizedRequestValidators {

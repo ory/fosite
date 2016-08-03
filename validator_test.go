@@ -14,7 +14,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func TestValidateRequestAuthorization(t *testing.T) {
+func TestValidate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	validator := internal.NewMockAuthorizedRequestValidator(ctrl)
 	defer ctrl.Finish()
@@ -81,7 +81,7 @@ func TestValidateRequestAuthorization(t *testing.T) {
 		},
 	} {
 		c.setup()
-		_, err := f.ValidateRequestAuthorization(nil, httpreq, nil, c.scopes...)
+		_, err := f.Validate(nil, httpreq, nil, c.scopes...)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
