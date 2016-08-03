@@ -16,7 +16,7 @@ const authCodeDefaultLifespan = time.Hour / 2
 
 // AuthorizeExplicitGrantTypeHandler is a response handler for the Authorize Code grant using the explicit grant type
 // as defined in https://tools.ietf.org/html/rfc6749#section-4.1
-type AuthorizeExplicitGrantTypeHandler struct {
+type AuthorizeExplicitGrantHandler struct {
 	AccessTokenStrategy   core.AccessTokenStrategy
 	RefreshTokenStrategy  core.RefreshTokenStrategy
 	AuthorizeCodeStrategy core.AuthorizeCodeStrategy
@@ -31,7 +31,7 @@ type AuthorizeExplicitGrantTypeHandler struct {
 	AccessTokenLifespan time.Duration
 }
 
-func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
 	if !ar.GetResponseTypes().Exact("code") {
 		return nil
@@ -48,7 +48,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 	return c.IssueAuthorizeCode(ctx, req, ar, resp)
 }
 
-func (c *AuthorizeExplicitGrantTypeHandler) IssueAuthorizeCode(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
+func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
 	code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 	if err != nil {
 		return errors.Wrap(ErrServerError, err.Error())

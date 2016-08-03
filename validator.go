@@ -2,6 +2,7 @@ package fosite
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -11,10 +12,20 @@ type TokenValidator interface {
 	ValidateToken(ctx context.Context, token string, tokenType TokenType, accessRequest AccessRequester) error
 }
 
+func AccessTokenFromRequest(req *http.Request) string {
+	auth := req.Header.Get("Authorization")
+	split := strings.SplitN(auth, " ", 2)
+	if len(split) != 2 || !strings.EqualFold(split[0], "bearer") {
+		return ""
+	}
+
+	return split[1]
+}
+
 func (f *Fosite) ValidateToken(ctx context.Context, token string, tokenType TokenType, session interface{}, scopes ...string) (AccessRequester, error) {
 	var found bool = false
 	ar := NewAccessRequest(session)
-	for _, validator := range f.Validators {
+	for _, validator := range f.TokenValidators {
 		if err := errors.Cause(validator.ValidateToken(ctx, token, tokenType, ar)); err == ErrUnknownRequest {
 			// Nothing to do
 		} else if err != nil {
@@ -27,8 +38,12 @@ func (f *Fosite) ValidateToken(ctx context.Context, token string, tokenType Toke
 	if !found {
 		return nil, errors.Wrap(ErrRequestUnauthorized, "")
 	}
-	if !ar.GetGrantedScopes().Has(scopes...) {
-		return nil, errors.Wrap(ErrRequestForbidden, "one or more scopes missing")
+
+	var granted = DefaultScopes(ar.GetGrantedScopes())
+	for _, scope := range scopes {
+		if !granted.Grants(scope) {
+			return nil, errors.Wrap(ErrRequestForbidden, "one or more scopes missing")
+		}
 	}
 
 	return ar, nil

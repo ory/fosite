@@ -4,17 +4,16 @@ import (
 	"testing"
 
 	"net/http"
-	"time"
 
+	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/core"
-	"github.com/ory-am/fosite/handler/core/explicit"
 	hst "github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 )
 
-func TestAuthorizeCodeGrant(t *testing.T) {
+func TestAuthorizeCodeFlow(t *testing.T) {
 	for _, strategy := range []core.AccessTokenStrategy{
 		hmacStrategy,
 	} {
@@ -23,7 +22,7 @@ func TestAuthorizeCodeGrant(t *testing.T) {
 }
 
 func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
-	f := newFosite()
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2AuthorizeExplicitFactory)
 	ts := mockServer(t, f, &mySessionData{
 		HMACSession: new(hst.HMACSession),
 	})
@@ -39,37 +38,10 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 		authStatusCode int
 	}{
 		{
-			description: "should fail because handler not registered",
-			setup: func() {
-				oauthClient.ClientID = "1234"
-			},
-			authStatusCode: http.StatusBadRequest,
-		},
-		{
-			description: "should fail (and redirect) because handler not registered",
-			setup: func() {
-				oauthClient = newOAuth2Client(ts)
-			},
-			authStatusCode: http.StatusNotAcceptable,
-		},
-		{
 			description: "should pass",
 			setup: func() {
+				oauthClient = newOAuth2Client(ts)
 				state = "12345678901234567890"
-				handler := &explicit.AuthorizeExplicitGrantTypeHandler{
-					AccessTokenStrategy:       strategy.(core.AccessTokenStrategy),
-					RefreshTokenStrategy:      strategy.(core.RefreshTokenStrategy),
-					AuthorizeCodeStrategy:     strategy.(core.AuthorizeCodeStrategy),
-					AuthorizeCodeGrantStorage: fositeStore,
-					AuthCodeLifespan:          time.Minute,
-					AccessTokenLifespan:       time.Hour,
-				}
-				f.AuthorizeEndpointHandlers.Append(handler)
-				f.TokenEndpointHandlers.Append(handler)
-				f.Validators.Append(&core.CoreValidator{
-					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage:  fositeStore,
-				})
 			},
 			authStatusCode: http.StatusOK,
 		},

@@ -31,7 +31,34 @@ func NewStore() *Store {
 		RefreshTokens:  make(map[string]fosite.Requester),
 		Users:          make(map[string]UserRelation),
 	}
+}
 
+func NewExampleStore() *Store {
+	return &Store{
+		IDSessions: make(map[string]fosite.Requester),
+		Clients: map[string]*fosite.DefaultClient{
+			"my-client": {
+				ID:            "my-client",
+				Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
+				RedirectURIs:  []string{"http://localhost:3846/callback"},
+				ResponseTypes: []string{"id_token", "code", "token"},
+				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+				GrantedScopes: []string{"fosite", "photos", "offline"},
+			},
+		},
+		Users: map[string]UserRelation{
+			"peter": {
+				// This store simply checks for equality, a real storage implementation would obviously use
+				// a hashing algorithm for encrypting the user password.
+				Username: "peter",
+				Password: "secret",
+			},
+		},
+		AuthorizeCodes: map[string]fosite.Requester{},
+		Implicit:       map[string]fosite.Requester{},
+		AccessTokens:   map[string]fosite.Requester{},
+		RefreshTokens:  map[string]fosite.Requester{},
+	}
 }
 
 func (s *Store) CreateOpenIDConnectSession(_ context.Context, authorizeCode string, requester fosite.Requester) error {

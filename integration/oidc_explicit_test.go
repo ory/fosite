@@ -3,31 +3,30 @@ package integration_test
 import (
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/ory-am/fosite/handler/core"
-	"github.com/ory-am/fosite/handler/core/explicit"
-	"github.com/ory-am/fosite/handler/oidc"
-	oidcexp "github.com/ory-am/fosite/handler/oidc/explicit"
+	"fmt"
+
+	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/internal"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 )
 
-func TestOpenIDConnectExplicit(t *testing.T) {
-	session := &strategy.DefaultSession{
-		Claims: &jwt.IDTokenClaims{
-			Subject: "peter",
+func TestOpenIDConnectExplicitFlow(t *testing.T) {
+	session := &defaultSession{
+		DefaultSession: &strategy.DefaultSession{
+			Claims: &jwt.IDTokenClaims{
+				Subject: "peter",
+			},
+			Headers: &jwt.Headers{},
 		},
-		Headers: &jwt.Headers{},
 	}
-	f := newFosite()
+	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())
 	ts := mockServer(t, f, session)
 
 	defer ts.Close()
-
-	strategy := hmacStrategy
 	oauthClient := newOAuth2Client(ts)
 	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
 
@@ -41,30 +40,7 @@ func TestOpenIDConnectExplicit(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				state = "12345678901234567890"
-				oauthClient.Scopes = []string{"fosite", "openid"}
-				handler := &explicit.AuthorizeExplicitGrantTypeHandler{
-					AccessTokenStrategy:       strategy,
-					RefreshTokenStrategy:      strategy,
-					AuthorizeCodeStrategy:     strategy,
-					AuthorizeCodeGrantStorage: fositeStore,
-					AuthCodeLifespan:          time.Minute,
-					AccessTokenLifespan:       time.Hour,
-				}
-				f.AuthorizeEndpointHandlers.Append(handler)
-				f.TokenEndpointHandlers.Append(handler)
-
-				idcHandler := &oidcexp.OpenIDConnectExplicitHandler{
-					OpenIDConnectRequestStorage: fositeStore,
-					IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
-						IDTokenStrategy: idTokenStrategy,
-					},
-				}
-				f.AuthorizeEndpointHandlers.Append(idcHandler)
-				f.TokenEndpointHandlers.Append(idcHandler)
-				f.Validators.Append(&core.CoreValidator{
-					AccessTokenStrategy: hmacStrategy,
-					AccessTokenStorage:  fositeStore,
-				})
+				oauthClient.Scopes = []string{"openid"}
 			},
 			authStatusCode: http.StatusOK,
 		},
@@ -77,6 +53,7 @@ func TestOpenIDConnectExplicit(t *testing.T) {
 
 		if resp.StatusCode == http.StatusOK {
 			token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
+			fmt.Printf("after exchange: %s\n\n", fositeStore.AuthorizeCodes)
 			require.Nil(t, err, "(%d) %s", k, c.description)
 			require.NotEmpty(t, token.AccessToken, "(%d) %s", k, c.description)
 			require.NotEmpty(t, token.Extra("id_token"), "(%d) %s", k, c.description)

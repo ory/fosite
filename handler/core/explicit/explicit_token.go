@@ -11,7 +11,7 @@ import (
 
 // HandleTokenEndpointRequest implements
 // * https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything)
-func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request fosite.AccessRequester) error {
+func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !request.GetGrantTypes().Exact("authorization_code") {
@@ -37,7 +37,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	}
 
 	// Override scopes
-	request.SetScopes(authorizeRequest.GetScopes())
+	request.SetRequestedScopes(authorizeRequest.GetRequestedScopes())
 
 	// The authorization server MUST ensure that the authorization code was issued to the authenticated
 	// confidential client, or if the client is public, ensure that the
@@ -64,7 +64,7 @@ func (c *AuthorizeExplicitGrantTypeHandler) HandleTokenEndpointRequest(ctx conte
 	return nil
 }
 
-func (c *AuthorizeExplicitGrantTypeHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !requester.GetGrantTypes().Exact("authorization_code") {

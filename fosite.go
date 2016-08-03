@@ -1,6 +1,8 @@
 package fosite
 
 import (
+	"reflect"
+
 	"github.com/Sirupsen/logrus"
 	"github.com/ory-am/fosite/hash"
 )
@@ -8,37 +10,43 @@ import (
 // AuthorizeEndpointHandlers is a list of AuthorizeEndpointHandler
 type AuthorizeEndpointHandlers []AuthorizeEndpointHandler
 
-// Add adds an AuthorizeEndpointHandler to this list
+// Add adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
 func (a *AuthorizeEndpointHandlers) Append(h AuthorizeEndpointHandler) {
+	for _, this := range *a {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
 	*a = append(*a, h)
 }
 
 // TokenEndpointHandlers is a list of TokenEndpointHandler
 type TokenEndpointHandlers []TokenEndpointHandler
 
-// Add adds an TokenEndpointHandler to this list
+// Add adds an TokenEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
 func (t *TokenEndpointHandlers) Append(h TokenEndpointHandler) {
-	*t = append(*t, h)
-}
-
-// AuthorizedRequestValidators is a list of AuthorizedRequestValidator
-type AuthorizedRequestValidators []TokenValidator
-
-// Add adds an AccessTokenValidator to this list
-func (t *AuthorizedRequestValidators) Append(h TokenValidator) {
-	*t = append(*t, h)
-}
-
-// NewFosite returns a new OAuth2Provider implementation
-func NewFosite(store Storage) *Fosite {
-	return &Fosite{
-		Store:                       store,
-		AuthorizeEndpointHandlers:   AuthorizeEndpointHandlers{},
-		TokenEndpointHandlers:       TokenEndpointHandlers{},
-		Validators: AuthorizedRequestValidators{},
-		Hasher: &hash.BCrypt{WorkFactor: 12},
-		Logger: &logrus.Logger{},
+	for _, this := range *t {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
 	}
+
+	*t = append(*t, h)
+}
+
+// TokenValidators is a list of TokenValidator
+type TokenValidators []TokenValidator
+
+// Add adds an AccessTokenValidator to this list. Ignores duplicates based on reflect.TypeOf.
+func (t *TokenValidators) Append(h TokenValidator) {
+	for _, this := range *t {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*t = append(*t, h)
 }
 
 // Fosite implements OAuth2Provider.
@@ -46,7 +54,7 @@ type Fosite struct {
 	Store                     Storage
 	AuthorizeEndpointHandlers AuthorizeEndpointHandlers
 	TokenEndpointHandlers     TokenEndpointHandlers
-	Validators                AuthorizedRequestValidators
+	TokenValidators           TokenValidators
 	Hasher                    hash.Hasher
 	Logger                    logrus.StdLogger
 }

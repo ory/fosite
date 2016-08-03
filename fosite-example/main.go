@@ -1,33 +1,20 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
-	"reflect"
+	"os/exec"
 	"time"
 
-	"os/exec"
-
-	"crypto/rand"
-	"crypto/rsa"
-
 	. "github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/compose"
 	exampleStore "github.com/ory-am/fosite/fosite-example/store"
-	"github.com/ory-am/fosite/handler/core"
-	coreclient "github.com/ory-am/fosite/handler/core/client"
-	"github.com/ory-am/fosite/handler/core/explicit"
-	"github.com/ory-am/fosite/handler/core/implicit"
-	"github.com/ory-am/fosite/handler/core/owner"
-	"github.com/ory-am/fosite/handler/core/refresh"
 	"github.com/ory-am/fosite/handler/core/strategy"
-	"github.com/ory-am/fosite/handler/oidc"
-	oidcexplicit "github.com/ory-am/fosite/handler/oidc/explicit"
-	"github.com/ory-am/fosite/handler/oidc/hybrid"
-	oidcimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
 	oidcstrategy "github.com/ory-am/fosite/handler/oidc/strategy"
-	"github.com/ory-am/fosite/token/hmac"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/parnurzeal/gorequest"
 	"github.com/pkg/errors"
@@ -36,38 +23,44 @@ import (
 )
 
 // This is an exemplary storage instance. We will add a client and a user to it so we can use these later on.
-var store = &exampleStore.Store{
-	IDSessions: make(map[string]Requester),
-	Clients: map[string]*DefaultClient{
-		"my-client": {
-			ID:            "my-client",
-			Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
-			RedirectURIs:  []string{"http://localhost:3846/callback"},
-			ResponseTypes: []string{"id_token", "code", "token"},
-			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
-			GrantedScopes: []string{"fosite", "offline"},
-		},
-	},
-	Users: map[string]exampleStore.UserRelation{
-		"peter": {
-			// This store simply checks for equality, a real storage implementation would obviously use
-			// a hashing algorithm for encrypting the user password.
-			Username: "peter",
-			Password: "foobar",
-		},
-	},
-	AuthorizeCodes: map[string]Requester{},
-	Implicit:       map[string]Requester{},
-	AccessTokens:   map[string]Requester{},
-	RefreshTokens:  map[string]Requester{},
+var store = exampleStore.NewExampleStore()
+
+var config = new(compose.Config)
+
+// Because we are using oauth2 and open connect id, we use this little helper to combine the two in one
+// variable.
+var strat = compose.CommonStrategy{
+	// alternatively you could use OAuth2Strategy: compose.NewOAuth2JWTStrategy(mustRSAKey())
+	CoreStrategy: compose.NewOAuth2HMACStrategy(config, []byte("some-super-cool-secret-that-nobody-knows")),
+
+	// open id connect strategy
+	OpenIDConnectTokenStrategy: compose.NewOpenIDConnectStrategy(mustRSAKey()),
 }
+
+var oauth2 = compose.Compose(
+	config,
+	store,
+	strat,
+
+	// enabled handlers
+	compose.OAuth2AuthorizeExplicitFactory,
+	compose.OAuth2AuthorizeImplicitFactory,
+	compose.OAuth2ClientCredentialsGrantFactory,
+	compose.OAuth2RefreshTokenGrantFactory,
+	compose.OAuth2ResourceOwnerPasswordCredentialsFactory,
+
+	// be aware that open id connect factories need to be added after oauth2 factories to work properly.
+	compose.OpenIDConnectExplicit,
+	compose.OpenIDConnectImplicit,
+	compose.OpenIDConnectHybrid,
+)
 
 // A valid oauth2 client (check the store) that additionally requests an OpenID Connect id token
 var clientConf = goauth.Config{
 	ClientID:     "my-client",
 	ClientSecret: "foobar",
 	RedirectURL:  "http://localhost:3846/callback",
-	Scopes:       []string{"fosite", "openid", "offline"},
+	Scopes:       []string{"photos", "openid", "offline"},
 	Endpoint: goauth.Endpoint{
 		TokenURL: "http://localhost:3846/token",
 		AuthURL:  "http://localhost:3846/auth",
@@ -82,192 +75,19 @@ var appClientConf = clientcredentials.Config{
 	TokenURL:     "http://localhost:3846/token",
 }
 
-// You can decide if you want to use HMAC or JWT or another strategy for generating authorize codes and access / refresh tokens
-var hmacStrategy = &strategy.HMACSHAStrategy{
-	Enigma: &hmac.HMACStrategy{
-		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
-	},
-	AccessTokenLifespan:   time.Hour,
-	AuthorizeCodeLifespan: time.Hour,
-}
-
-// You can decide if you want to use HMAC or JWT or another strategy for generating authorize codes and access / refresh tokens
-// The JWT strategy is mandatory for issuing ID Tokens (OpenID Connect)
-//
-// NOTE One thing to keep in mind is that the power of JWT does not mean anything
-// when used as an authorize token, since the authorize token really just should
-// be a random string that is hard to guess.
-var jwtStrategy = &strategy.RS256JWTStrategy{
-	RS256JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: mustRSAKey(),
-	},
-}
-
-// This strategy is used for issuing OpenID Conenct id tokens
-var idtokenStrategy = &oidcstrategy.DefaultStrategy{
-	RS256JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: mustRSAKey(),
-	},
-}
-
-// Change below to change the signing method (hmacStrategy or jwtStrategy)
-var selectedStrategy = hmacStrategy
-
 // A session is passed from the `/auth` to the `/token` endpoint. You probably want to store data like: "Who made the request",
 // "What organization does that person belong to" and so on.
 // For our use case, the session will meet the requirements imposed by JWT access tokens, HMAC access tokens and OpenID Connect
 // ID Tokens plus a custom field
 type session struct {
 	User string
+	*strategy.HMACSession
 	*strategy.JWTSession
 	*oidcstrategy.DefaultSession
 }
 
-type stackTracer interface {
-	StackTrace() errors.StackTrace
-}
-
-// newSession is a helper function for creating a new session
-func newSession(user string) *session {
-	return &session{
-		User: user,
-		JWTSession: &strategy.JWTSession{
-			JWTClaims: &jwt.JWTClaims{
-				Issuer:    "https://fosite.my-application.com",
-				Subject:   user,
-				Audience:  "https://my-client.my-application.com",
-				ExpiresAt: time.Now().Add(time.Hour * 6),
-				IssuedAt:  time.Now(),
-			},
-			JWTHeader: &jwt.Headers{
-				Extra: make(map[string]interface{}),
-			},
-		},
-		DefaultSession: &oidcstrategy.DefaultSession{
-			Claims: &jwt.IDTokenClaims{
-				Issuer:    "https://fosite.my-application.com",
-				Subject:   user,
-				Audience:  "https://my-client.my-application.com",
-				ExpiresAt: time.Now().Add(time.Hour * 6),
-				IssuedAt:  time.Now(),
-			},
-			Headers: &jwt.Headers{
-				Extra: make(map[string]interface{}),
-			},
-			HMACSession: &strategy.HMACSession{},
-		},
-	}
-}
-
-// fositeFactory creates a new Fosite instance with all features enabled
-func fositeFactory() OAuth2Provider {
-	// Instantiate a new fosite instance
-	f := NewFosite(store)
-
-	// Set the default access token lifespan to one hour
-	accessTokenLifespan := time.Hour
-
-	// Most handlers are composable. This little helper is used by some of the handlers below.
-	oauth2HandleHelper := &core.HandleHelper{
-		AccessTokenStrategy: selectedStrategy,
-		AccessTokenStorage:  store,
-		AccessTokenLifespan: accessTokenLifespan,
-	}
-
-	// This handler is responsible for the authorization code grant flow
-	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
-		AccessTokenStrategy:       selectedStrategy,
-		RefreshTokenStrategy:      selectedStrategy,
-		AuthorizeCodeStrategy:     selectedStrategy,
-		AuthorizeCodeGrantStorage: store,
-		AuthCodeLifespan:          time.Minute * 10,
-		AccessTokenLifespan:       accessTokenLifespan,
-	}
-	// In order to "activate" the handler, we need to add it to fosite
-	f.AuthorizeEndpointHandlers.Append(explicitHandler)
-
-	// Because this handler both handles `/auth` and `/token` endpoint requests, we need to add him to
-	// both registries.
-	f.TokenEndpointHandlers.Append(explicitHandler)
-
-	// This handler is responsible for the implicit flow. The implicit flow does not return an authorize code
-	// but instead returns the access token directly via an url fragment.
-	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStrategy: selectedStrategy,
-		AccessTokenStorage:  store,
-		AccessTokenLifespan: accessTokenLifespan,
-	}
-	f.AuthorizeEndpointHandlers.Append(implicitHandler)
-
-	// This handler is responsible for the client credentials flow. This flow is used when you want to
-	// authorize a client instead of an user.
-	clientHandler := &coreclient.ClientCredentialsGrantHandler{
-		HandleHelper: oauth2HandleHelper,
-	}
-	f.TokenEndpointHandlers.Append(clientHandler)
-
-	// This handler is responsible for the resource owner password credentials grant. In general, this
-	// is a flow which should not be used but could be useful in legacy environments. It uses a
-	// user's credentials (username, password) to issue an access token.
-	ownerHandler := &owner.ResourceOwnerPasswordCredentialsGrantHandler{
-		HandleHelper:                                 oauth2HandleHelper,
-		ResourceOwnerPasswordCredentialsGrantStorage: store,
-	}
-	f.TokenEndpointHandlers.Append(ownerHandler)
-
-	// This handler is responsible for the refresh token grant. This type is used when you want to exchange
-	// a refresh token for a new refresh token and a new access token.
-	refreshHandler := &refresh.RefreshTokenGrantHandler{
-		AccessTokenStrategy:      selectedStrategy,
-		RefreshTokenStrategy:     selectedStrategy,
-		RefreshTokenGrantStorage: store,
-		AccessTokenLifespan:      accessTokenLifespan,
-	}
-	f.TokenEndpointHandlers.Append(refreshHandler)
-
-	// This helper is similar to oauth2HandleHelper but for OpenID Connect handlers.
-	oidcHelper := &oidc.IDTokenHandleHelper{IDTokenStrategy: idtokenStrategy}
-
-	// The OpenID Connect Authorize Code Flow.
-	oidcExplicit := &oidcexplicit.OpenIDConnectExplicitHandler{
-		OpenIDConnectRequestStorage: store,
-		IDTokenHandleHelper:         oidcHelper,
-	}
-	f.AuthorizeEndpointHandlers.Append(oidcExplicit)
-	// Because this handler both handles `/auth` and `/token` endpoint requests, we need to add him to
-	// both registries.
-	f.TokenEndpointHandlers.Append(oidcExplicit)
-
-	// The OpenID Connect Implicit Flow.
-	oidcImplicit := &oidcimplicit.OpenIDConnectImplicitHandler{
-		IDTokenHandleHelper:               oidcHelper,
-		AuthorizeImplicitGrantTypeHandler: implicitHandler,
-	}
-	f.AuthorizeEndpointHandlers.Append(oidcImplicit)
-
-	// The OpenID Connect Hybrid Flow.
-	oidcHybrid := &hybrid.OpenIDConnectHybridHandler{
-		IDTokenHandleHelper:               oidcHelper,
-		AuthorizeExplicitGrantTypeHandler: explicitHandler,
-		AuthorizeImplicitGrantTypeHandler: implicitHandler,
-	}
-	f.AuthorizeEndpointHandlers.Append(oidcHybrid)
-
-	// Add a request validator for Access Tokens to fosite
-	f.Validators.Append(&core.CoreValidator{
-		AccessTokenStrategy: hmacStrategy,
-		AccessTokenStorage:  store,
-	})
-
-	return f
-}
-
-// This is our fosite instance
-var oauth2 = fositeFactory()
-
 func main() {
 	// Set up some endpoints. You could also use gorilla/mux or any other router.
-
 	http.HandleFunc("/auth", authEndpoint)
 	http.HandleFunc("/token", tokenEndpoint)
 
@@ -348,8 +168,11 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// we allow issuing of refresh tokens per default
-	if ar.GetScopes().Has("offline") {
+	if ar.GetRequestedScopes().Has("offline") {
 		ar.GrantScope("offline")
+	}
+	if ar.GetRequestedScopes().Has("photos") {
+		ar.GrantScope("photos")
 	}
 
 	// Now that the user is authorized, we set up a session:
@@ -397,10 +220,9 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 
 func validateEndpoint(rw http.ResponseWriter, req *http.Request) {
 	ctx := NewContext()
-	req.Header.Add("Authorization", "bearer "+req.URL.Query().Get("token"))
 	mySessionData := newSession("peter")
 
-	ar, err := oauth2.Validate(ctx, req, mySessionData, "fosite")
+	ar, err := oauth2.ValidateToken(ctx, req.URL.Query().Get("token"), AccessToken, mySessionData, "photos", "photos.create")
 	if err != nil {
 		fmt.Fprintf(rw, "<h1>An error occurred!</h1>%s", err.Error())
 		return
@@ -411,10 +233,10 @@ func validateEndpoint(rw http.ResponseWriter, req *http.Request) {
 	<li>Client: %s</li>
 	<li>Granted scopes: %v</li>
 	<li>Requested scopes: %v</li>
-	<li>Session data: %v, %v</li>
+	<li>Session data: %v</li>
 	<li>Requested at: %s</li>
 </ul>
-`, ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetScopes(), mySessionData, mySessionData.HMACSession, ar.GetRequestedAt())
+`, ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetRequestedScopes(), mySessionData, ar.GetRequestedAt())
 }
 
 // *****************************************************************************
@@ -540,10 +362,10 @@ func ownerEndpoint(rw http.ResponseWriter, req *http.Request) {
 		rw.Write([]byte(`<form method="post">
 			<ul>
 				<li>
-					<input type="text" name="username" placeholder="username"/> <small>try peter</small>
+					<input type="text" name="username" placeholder="username"/> <small>try "peter"</small>
 				</li>
 				<li>
-					<input type="password" name="password" placeholder="password"/> <small>try foobar</small><br>
+					<input type="password" name="password" placeholder="password"/> <small>try "secret"</small><br>
 				</li>
 				<li>
 					<input type="submit" />
@@ -564,9 +386,7 @@ func ownerEndpoint(rw http.ResponseWriter, req *http.Request) {
 	rw.Write([]byte(`<p><a href="/">Go back</a></p>`))
 }
 
-func typeof(v interface{}) string {
-	return reflect.TypeOf(v).String()
-}
+// a few simple helpers
 
 func mustRSAKey() *rsa.PrivateKey {
 	key, err := rsa.GenerateKey(rand.Reader, 1024)
@@ -574,4 +394,43 @@ func mustRSAKey() *rsa.PrivateKey {
 		panic(err)
 	}
 	return key
+}
+
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
+// newSession is a helper function for creating a new session
+func newSession(user string) *session {
+	return &session{
+		User: user,
+		HMACSession: &strategy.HMACSession{
+			AccessTokenExpiry: time.Now().Add(time.Minute * 30),
+		},
+		// The JWTSession will not be used unless the OAuth2 JWT strategy is being used instead of HMAC
+		JWTSession: &strategy.JWTSession{
+			JWTClaims: &jwt.JWTClaims{
+				Issuer:    "https://fosite.my-application.com",
+				Subject:   user,
+				Audience:  "https://my-client.my-application.com",
+				ExpiresAt: time.Now().Add(time.Hour * 6),
+				IssuedAt:  time.Now(),
+			},
+			JWTHeader: &jwt.Headers{
+				Extra: make(map[string]interface{}),
+			},
+		},
+		DefaultSession: &oidcstrategy.DefaultSession{
+			Claims: &jwt.IDTokenClaims{
+				Issuer:    "https://fosite.my-application.com",
+				Subject:   user,
+				Audience:  "https://my-client.my-application.com",
+				ExpiresAt: time.Now().Add(time.Hour * 6),
+				IssuedAt:  time.Now(),
+			},
+			Headers: &jwt.Headers{
+				Extra: make(map[string]interface{}),
+			},
+		},
+	}
 }

@@ -27,7 +27,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	httpreq := &http.Request{PostForm: url.Values{}}
 	authreq := fosite.NewAuthorizeRequest()
 
-	h := AuthorizeExplicitGrantTypeHandler{
+	h := AuthorizeExplicitGrantHandler{
 		AuthorizeCodeGrantStorage: store,
 		AuthorizeCodeStrategy:     auch,
 		AccessTokenStrategy:       ach,
@@ -122,7 +122,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	areq := fosite.NewAccessRequest(nil)
 	httpreq := &http.Request{PostForm: url.Values{}}
 
-	h := AuthorizeExplicitGrantTypeHandler{
+	h := AuthorizeExplicitGrantHandler{
 		AuthorizeCodeGrantStorage: store,
 		AuthorizeCodeStrategy:     ach,
 	}

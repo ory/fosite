@@ -8,70 +8,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory-am/fosite/handler/core/explicit"
-	"github.com/ory-am/fosite/handler/core/implicit"
-	"github.com/ory-am/fosite/handler/oidc"
-	"github.com/ory-am/fosite/handler/oidc/hybrid"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
-	"github.com/ory-am/fosite/handler/core"
-	idimplicit "github.com/ory-am/fosite/handler/oidc/implicit"
+	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/internal"
 	"github.com/ory-am/fosite/token/jwt"
 )
 
-func TestOIDCImplicitGrants(t *testing.T) {
-	session := &strategy.DefaultSession{
-		Claims: &jwt.IDTokenClaims{
-			Subject: "peter",
+func TestOIDCImplicitFlow(t *testing.T) {
+	session := &defaultSession{
+		DefaultSession: &strategy.DefaultSession{
+			Claims: &jwt.IDTokenClaims{
+				Subject: "peter",
+			},
+			Headers: &jwt.Headers{},
 		},
-		Headers: &jwt.Headers{},
 	}
-	f := newFosite()
+	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
 	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
-
-	explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
-		AccessTokenStrategy:       hmacStrategy,
-		RefreshTokenStrategy:      hmacStrategy,
-		AuthorizeCodeStrategy:     hmacStrategy,
-		AuthorizeCodeGrantStorage: fositeStore,
-		AuthCodeLifespan:          time.Minute,
-		AccessTokenLifespan:       time.Hour,
-	}
-	f.AuthorizeEndpointHandlers.Append(explicitHandler)
-	f.TokenEndpointHandlers.Append(explicitHandler)
-
-	implicitHandler := &implicit.AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStrategy: hmacStrategy,
-		AccessTokenStorage:  fositeStore,
-		AccessTokenLifespan: time.Hour,
-	}
-	f.AuthorizeEndpointHandlers.Append(implicitHandler)
-
-	f.AuthorizeEndpointHandlers.Append(&idimplicit.OpenIDConnectImplicitHandler{
-		AuthorizeImplicitGrantTypeHandler: implicitHandler,
-		IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
-			IDTokenStrategy: idTokenStrategy,
-		},
-	})
-	f.AuthorizeEndpointHandlers.Append(&hybrid.OpenIDConnectHybridHandler{
-		AuthorizeImplicitGrantTypeHandler: implicitHandler,
-		AuthorizeExplicitGrantTypeHandler: explicitHandler,
-		IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
-			IDTokenStrategy: idTokenStrategy,
-		},
-	})
-	f.Validators.Append(&core.CoreValidator{
-		AccessTokenStrategy: hmacStrategy,
-		AccessTokenStorage:  fositeStore,
-	})
 
 	var state = "12345678901234567890"
 	for k, c := range []struct {

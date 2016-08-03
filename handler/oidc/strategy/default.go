@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -23,7 +22,6 @@ type Session interface {
 type DefaultSession struct {
 	Claims  *jwt.IDTokenClaims
 	Headers *jwt.Headers
-	*strategy.HMACSession
 }
 
 func (s *DefaultSession) IDTokenHeaders() *jwt.Headers {

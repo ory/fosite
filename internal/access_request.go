@@ -4,11 +4,10 @@
 package internal
 
 import (
-	url "net/url"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
+	url "net/url"
+	time "time"
 )
 
 // Mock of AccessRequester interface
@@ -30,6 +29,14 @@ func NewMockAccessRequester(ctrl *gomock.Controller) *MockAccessRequester {
 
 func (_m *MockAccessRequester) EXPECT() *_MockAccessRequesterRecorder {
 	return _m.recorder
+}
+
+func (_m *MockAccessRequester) AppendRequestedScope(_param0 string) {
+	_m.ctrl.Call(_m, "AppendRequestedScope", _param0)
+}
+
+func (_mr *_MockAccessRequesterRecorder) AppendRequestedScope(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AppendRequestedScope", arg0)
 }
 
 func (_m *MockAccessRequester) GetClient() fosite.Client {
@@ -82,14 +89,14 @@ func (_mr *_MockAccessRequesterRecorder) GetRequestedAt() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedAt")
 }
 
-func (_m *MockAccessRequester) GetScopes() fosite.Arguments {
-	ret := _m.ctrl.Call(_m, "GetScopes")
+func (_m *MockAccessRequester) GetRequestedScopes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetRequestedScopes")
 	ret0, _ := ret[0].(fosite.Arguments)
 	return ret0
 }
 
-func (_mr *_MockAccessRequesterRecorder) GetScopes() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetScopes")
+func (_mr *_MockAccessRequesterRecorder) GetRequestedScopes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedScopes")
 }
 
 func (_m *MockAccessRequester) GetSession() interface{} {
@@ -118,12 +125,12 @@ func (_mr *_MockAccessRequesterRecorder) Merge(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Merge", arg0)
 }
 
-func (_m *MockAccessRequester) SetScopes(_param0 fosite.Arguments) {
-	_m.ctrl.Call(_m, "SetScopes", _param0)
+func (_m *MockAccessRequester) SetRequestedScopes(_param0 fosite.Arguments) {
+	_m.ctrl.Call(_m, "SetRequestedScopes", _param0)
 }
 
-func (_mr *_MockAccessRequesterRecorder) SetScopes(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetScopes", arg0)
+func (_mr *_MockAccessRequesterRecorder) SetRequestedScopes(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetRequestedScopes", arg0)
 }
 
 func (_m *MockAccessRequester) SetSession(_param0 interface{}) {

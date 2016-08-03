@@ -7,36 +7,40 @@ attack scenarios, keeping your application safe when that hacker penetrates or l
 implemented according to [OpenID Connect Core 1.0 incorporating errata set 1](openid.net/specs/openid-connect-core-1_0.html) and
 includes all flows: code, implicit, hybrid.
 
+This library considered and implemented:
+* [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
+* [OAuth 2.0 Multiple Response Type Encoding Practices](https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
+* [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819) (partially)
+* [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html) (partially)
 
 [![Build Status](https://travis-ci.org/ory-am/fosite.svg?branch=master)](https://travis-ci.org/ory-am/fosite?branch=master)
 [![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github&foo)](https://coveralls.io/github/ory-am/fosite?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/ory-am/fosite)](https://goreportcard.com/report/ory-am/fosite)
 
-During development, we reviewed the following open specifications:
-* [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
-* [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
-* [OAuth 2.0 Multiple Response Type Encoding Practices](https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
-* [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
+OAuth2 and OpenID Connect are difficult protocols. If you want quick wins, we strongly encourage you to look at [Hydra](https://github.com/ory-am/hydra).
+Hydra is a secure, high performance, cloud native OAuth2 and OpenID Connect service that integrates with every authentication method
+imaginable and is built on top of Fosite.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Motivation](#motivation)
-- [API Stability](#api-stability)
-- [Example](#example)
-- [A word on quality](#a-word-on-quality)
-- [A word on security](#a-word-on-security)
-- [A word on extensibility](#a-word-on-extensibility)
-- [Usage](#usage)
+  - [Motivation](#motivation)
+  - [API Stability](#api-stability)
+  - [Example](#example)
+  - [A word on quality](#a-word-on-quality)
+  - [A word on security](#a-word-on-security)
+  - [A word on extensibility](#a-word-on-extensibility)
   - [Installation](#installation)
-- [Examples](#examples)
-  - [Exemplary Storage Implementation](#exemplary-storage-implementation)
-  - [Extensible handlers](#extensible-handlers)
-- [Develop fosite](#develop-fosite)
-  - [Refresh mock objects](#refresh-mock-objects)
-- [Known Limitations and Issues](#known-limitations-and-issues)
-- [Hall of Fame](#hall-of-fame)
+  - [Documentation](#documentation)
+    - [Scopes](#scopes)
+    - [Quickstart](#quickstart)
+    - [Code Examples](#code-examples)
+    - [Exemplary Storage Implementation](#exemplary-storage-implementation)
+    - [Extensible handlers](#extensible-handlers)
+  - [Contribute](#contribute)
+    - [Refresh mock objects](#refresh-mock-objects)
+  - [Hall of Fame](#hall-of-fame)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -132,11 +136,7 @@ have been validated against the OAuth2 specs beforehand.
 You can easily extend Fosite's capabilities. For example, if you want to provide OpenID Connect on top of your
 OAuth2 stack, that's no problem. Or custom assertions, what ever you like and as long as it is secure. ;)
 
-## Usage
-
-There is an API documentation available at [godoc.org/ory-am/fosite](https://godoc.org/github.com/ory-am/fosite).
-
-### Installation
+## Installation
 
 You will need [Go](https://golang.org) installed on your machine and it is required that you have set up your
 GOPATH environment variable.
@@ -145,71 +145,186 @@ GOPATH environment variable.
 go get -d github.com/ory-am/fosite
 ```
 
-We recommend to use [Glide](https://github.com/Masterminds/glide) or [Godep](https://github.com/tools/godep), because
-there might be breaking changes in the future.
+We recommend to use [Glide](https://github.com/Masterminds/glide) or [Godep](https://github.com/tools/godep) to
+mitigate compatibility breaks that come with new api versions.
 
-## Examples
+## Documentation
 
-Take a look at these real-life implementations:
-* [Integration tests](integration/)
-* [Request validation](integration/helper_endpoints_test.go) (check `func tokenInfoHandler`)
-* [Fully functional example app with all OpenID Connect and OAuth2 flows enabled](fosite-example/main.go)
+There is an API documentation available at [godoc.org/ory-am/fosite](https://godoc.org/github.com/ory-am/fosite).
+
+### Scopes
+
+Before we skip ahead, it is important to note how scopes are being used in fosite.
+The general pattern can be abstracted as `<scope>.<sub-scope>.<sub-sub-scope>.<sub-sub-...>`. Every level ("subset")
+contains all sublevels, too. For example:
+
+* `blogposts` grants scopes `blogposts.create`, `blogposts.delete`, `blockposts.read`, `blohposts.own.read`.
+* `blogposts.create` does not grant `blogposts.delete` nor `blogposts.read` nor `blogposts.own.read`.
+* `blogposts.own.read` does not grant `blogposts.create`.
+* `blogposts.own` grants `blogposts.own.read` but not `blogposts.create`.
+
+### Quickstart
+
+Instantiating fosite by hand can be painful. Therefore we created a few convenience helpers available through the [compose package](/compose).
+In this very basic example, we will instantiate fosite with all OpenID Connect and OAuth2 handlers enabled. Please refer
+to the [example app](fosite-example/main.go) for more details.
+
+```go
+import "github.com/ory-am/fosite"
+import "github.com/ory-am/fosite/compose"
+import "github.com/ory-am/fosite/fosite-example/store"
+
+// This is the exemplary storage that contains:
+// * an OAuth2 Client with id "my-client" and secret "foobar" capable of all oauth2 and open id connect grant and response types.
+// * a User for the resource owner password credentials grant type with usename "peter" and password "secret".
+//
+// You will most likely replace this with your own logic once you set up a real world application.
+var storage = store.NewExampleStore()
+
+// This secret is being used to sign access and refresh tokens as well as authorize codes.
+var secret = []byte{"my super secret password"}
+
+// check the api docs of compose.Config for further configuration options
+var config = compose.Config {
+  	AccessTokenLifespan: time.Minute * 30,
+  	// ...
+}
+
+var oauth2Provider = compose.ComposeAllEnabled(config *Config, storage, secret, privateKey)
+
+// The session will be persisted by the store and made available when e.g. validating tokens or handling token endpoint requests.
+// The default OAuth2 and OpenID Connect handlers require the session to implement a few methods. Apart from that, the 
+// sessino struct can be anything you want it to be.
+type session struct {
+	UserID string
+	Foobar int
+	
+	// this is used in the OAuth2 handlers. You can set per-session expiry times here, for example.
+	*oauth2Strat.HMACSession
+	
+	// this is used by the OpenID connect handlers. You can set custom id token headers and claims.
+	*oidcStrat.DefaultSession
+}
+
+
+// The authorize endpoint is usually at "https://mydomain.com/oauth2/auth"
+func authEndpoint(rw http.ResponseWriter, req *http.Request) {
+	// This context will be passed to all methods. It doesn't fulfill a real purpose in the standard library but could be used
+	// to abort database lookups or similar things.
+	ctx := NewContext()
+
+	// Let's create an AuthorizeRequest object!
+	// It will analyze the request and extract important information like scopes, response type and others.
+	ar, err := oauth2.NewAuthorizeRequest(ctx, req)
+	if err != nil {
+		oauth2.WriteAuthorizeError(rw, ar, err)
+		return
+	}
+	
+	// Normally, this would be the place where you would check if the user is logged in and gives his consent.
+	// We're simplifying things and just checking if the request includes a valid username and password
+	if req.Form.Get("username") != "peter" {
+		rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+		rw.Write([]byte(`<h1>Login page</h1>`))
+		rw.Write([]byte(`
+			<p>Howdy! This is the log in page. For this example, it is enough to supply the username.</p>
+			<form method="post">
+				<input type="text" name="username" /> <small>try peter</small><br>
+				<input type="submit">
+			</form>
+		`))
+		return
+	}
+
+	// Now that the user is authorized, we set up a session. When validating / looking up tokens, we additionally get
+	// the session. You can store anything you want in it.
+	mySessionData := &session{
+		UserID: req.Form.Get("username")
+	}
+
+	// It's also wise to check the requested scopes, e.g.:
+	// if authorizeRequest.GetScopes().Has("admin") {
+	//     http.Error(rw, "you're not allowed to do that", http.StatusForbidden)
+	//     return
+	// }
+
+	// Now we need to get a response. This is the place where the AuthorizeEndpointHandlers kick in and start processing the request.
+	// NewAuthorizeResponse is capable of running multiple response type handlers which in turn enables this library
+	// to support open id connect.
+	response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, mySessionData)
+	if err != nil {
+		oauth2.WriteAuthorizeError(rw, ar, err)
+		return
+	}
+
+	// Awesome, now we redirect back to the client redirect uri and pass along an authorize code
+	oauth2.WriteAuthorizeResponse(rw, ar, response)
+}
+
+// The token endpoint is usually at "https://mydomain.com/oauth2/token"
+func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
+	ctx := NewContext()
+	mySessionData := &session{}
+
+	// This will create an access request object and iterate through the registered TokenEndpointHandlers to validate the request.
+	accessRequest, err := oauth2.NewAccessRequest(ctx, req, mySessionData)
+	if err != nil {
+		oauth2.WriteAccessError(rw, accessRequest, err)
+		return
+	}
+	
+	if mySessionData.UserID == "super-admin-guy" {
+		// do something...
+	}
+
+	// Next we create a response for the access request. Again, we iterate through the TokenEndpointHandlers
+	// and aggregate the result in response.
+	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
+	if err != nil {
+		oauth2.WriteAccessError(rw, accessRequest, err)
+		return
+	}
+
+	// All done, send the response.
+	oauth2.WriteAccessResponse(rw, accessRequest, response)
+
+	// The client has a valid access token now
+}
+
+func someResourceEndpoint(rw http.ResponseWriter, req *http.Request) {
+	ctx := NewContext()
+	mySessionData := &session{}
+	requiredScope := "blogposts.create"
+
+	ar, err := oauth2.ValidateToken(ctx, fosite.AccessTokenFromRequest(req), mySessionData, requiredScope)
+	if err != nil {
+		// ...
+	}
+	
+	// you have now access to for example:
+	// ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetScopes(), mySessionData.UserID, ar.GetRequestedAt(), ...
+}
+```
+
+### Code Examples
+
+Fosite provides integration tests as well as a http server example:
+
+* Fosite ships with an example app that runs in your browser: [Example app](fosite-example/main.go).
+* If you want to check out how to enable specific handlers, check out the [integration tests](integration/).
+
+If you have working examples yourself, please share them with us!
 
 ### Exemplary Storage Implementation
 
-Fosite does not ship a storage implementation yet. To get fosite running, you need to implement `github.com/ory-am/fosite.Storage`.
-Additionally, most of the token / authorize endpoint handlers require a dedicated store implementation as well. You could however use one struct
-to implement all the signatures.
-
-You can find a working store implementation at [fosite-example/internal/store.go](fosite-example/internal/store.go).
+Fosite does not ship a storage implementation. This is intended, because requirements vary with every environment.
+You can find a reference implementation at [fosite-example/internal/store.go](fosite-example/internal/store.go).
+This storage fulfills requirements from all OAuth2 and OpenID Conenct handlers.
 
 ### Extensible handlers
 
-You can replace the Token and Authorize endpoint logic by modifying `Fosite.TokenEndpointHandlers` and
-`Fosite.AuthorizeEndpointHandlers`.
-
-Let's take the explicit authorize handler. He is responsible for handling the
-[authorize code workflow](https://aaronparecki.com/articles/2012/07/29/1/oauth2-simplified#web-server-apps).
-
-If you want to enable the handler able to handle this workflow, you can do this:
-
-```go
-var accessTokenLifespan = time.Hour
-var authorizeCodeLifespan = time.Minute * 10
-
-var hmacStrategy = &strategy.HMACSHAStrategy{
-	Enigma: &enigma.Enigma{
-		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
-	},
-	AccessTokenLifespan: accessTokenLifespan,
-	AuthorizeCodeLifespan: authorizeCodeLifespan,
-}
-
-// var store = ...
-
-var f = NewFosite(store)
-
-// Let's enable the explicit authorize code grant!
-explicitHandler := &explicit.AuthorizeExplicitGrantTypeHandler{
-    AccessTokenStrategy:   hmacStrategy,
-    RefreshTokenStrategy:  hmacStrategy,
-    AuthorizeCodeStrategy: hmacStrategy,
-    Store:                 store,
-    AuthCodeLifespan:      authorizeCodeLifespan,
-    AccessTokenLifespan:   accessTokenLifespan,
-}
-
-// Please note that order matters!
-f.AuthorizeEndpointHandlers.Append(explicitHandler)
-f.TokenEndpointHandlers.Append(explicitHandler)
-```
-
-As you probably noticed, there are two types of handlers, one for the [authorization */auth* endpoint](https://tools.ietf.org/html/rfc6749#section-3.1) and one for the [token
-*/token* endpoint](https://tools.ietf.org/html/rfc6749#section-3.2). The `AuthorizeExplicitEndpointHandler` implements
-API requirements for both endpoints, while, for example, the `AuthorizeImplicitEndpointHandler` only implements
-the `AuthorizeEndpointHandler` API.
-
-You can find a complete list of handlers inside the [handler directory](handler). A short list is documented here:
+OAuth2 is a framework. Fosite mimics this behaviour by enabling you to replace existing or create new OAuth2 handlers.
+Of course, fosite ships handlers for all OAuth2 and OpenID Connect flows as listed below:
 
 * `github.com/ory-am/fosite/handler/core/explicit.AuthorizeExplicitEndpointHandler` implements the
   [Authorization Code Grant](https://tools.ietf.org/html/rfc6749#section-4.1)
@@ -219,10 +334,11 @@ You can find a complete list of handlers inside the [handler directory](handler)
   [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3)
 * `github.com/ory-am/fosite/handler/core/token/client.TokenClientCredentialsEndpointHandler` implements the
   [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4)
+* There are also [OpenID Connect Handlers available](handler/oidc).
 
-There are also [OpenID Connect Handlers available](handler/oidc).
+This section is missing documentation and we welcome any contributions in that direction.
 
-## Develop fosite
+## Contribute
 
 You need git and golang installed on your system.
 
@@ -235,15 +351,11 @@ go test ./...
 ```
 
 Simple, right? Now you are ready to go! Make sure to run `go test ./...` often, detecting problems with your code
-rather sooner than later.
+rather sooner than later. Please read [CONTRIBUTE.md] before creating pull requests and issues.
 
 ### Refresh mock objects
 
 Run `./generate-mocks.sh` in fosite's root directory or run the contents of [generate-mocks.sh] in a shell.
-
-## Known Limitations and Issues
-
-* Validator handler receives empty Request object
 
 ## Hall of Fame
 

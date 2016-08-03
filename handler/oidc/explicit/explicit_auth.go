@@ -17,7 +17,7 @@ type OpenIDConnectExplicitHandler struct {
 }
 
 func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
-	if !(ar.GetScopes().Has("openid") && ar.GetResponseTypes().Exact("code")) {
+	if !(ar.GetRequestedScopes().Has("openid") && ar.GetResponseTypes().Exact("code")) {
 		return nil
 	}
 

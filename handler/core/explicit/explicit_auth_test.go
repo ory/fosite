@@ -24,7 +24,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	areq := fosite.NewAuthorizeRequest()
 	httpreq := &http.Request{Form: url.Values{}}
 
-	h := AuthorizeExplicitGrantTypeHandler{
+	h := AuthorizeExplicitGrantHandler{
 		AuthorizeCodeGrantStorage: store,
 		AuthorizeCodeStrategy:     chgen,
 	}

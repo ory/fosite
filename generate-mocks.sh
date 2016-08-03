@@ -1,6 +1,8 @@
 #!/bin/bash
 
 mockgen -package internal -destination internal/storage.go github.com/ory-am/fosite Storage
+mockgen -package internal -destination internal/core_storage.go github.com/ory-am/fosite/handler/core CoreStorage
+mockgen -package internal -destination internal/core_strategy.go github.com/ory-am/fosite/handler/core CoreStrategy
 mockgen -package internal -destination internal/authorize_code_storage.go github.com/ory-am/fosite/handler/core AuthorizeCodeStorage
 mockgen -package internal -destination internal/access_token_storage.go github.com/ory-am/fosite/handler/core AccessTokenStorage
 mockgen -package internal -destination internal/refresh_token_strategy.go github.com/ory-am/fosite/handler/core RefreshTokenStorage
@@ -16,7 +18,7 @@ mockgen -package internal -destination internal/authorize_code_strategy.go githu
 mockgen -package internal -destination internal/id_token_strategy.go github.com/ory-am/fosite/handler/oidc OpenIDConnectTokenStrategy
 mockgen -package internal -destination internal/authorize_handler.go github.com/ory-am/fosite AuthorizeEndpointHandler
 mockgen -package internal -destination internal/token_handler.go github.com/ory-am/fosite TokenEndpointHandler
-mockgen -package internal -destination internal/validator.go github.com/ory-am/fosite AuthorizedRequestValidator
+mockgen -package internal -destination internal/validator.go github.com/ory-am/fosite TokenValidator
 mockgen -package internal -destination internal/client.go github.com/ory-am/fosite Client
 mockgen -package internal -destination internal/request.go github.com/ory-am/fosite Requester
 mockgen -package internal -destination internal/access_request.go github.com/ory-am/fosite AccessRequester

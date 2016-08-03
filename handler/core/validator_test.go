@@ -11,16 +11,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateRequest(t *testing.T) {
+func TestValidateToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockAccessTokenStorage(ctrl)
-	chgen := internal.NewMockAccessTokenStrategy(ctrl)
+	store := internal.NewMockCoreStorage(ctrl)
+	chgen := internal.NewMockCoreStrategy(ctrl)
 	areq := fosite.NewAccessRequest(nil)
 	defer ctrl.Finish()
 
 	v := &CoreValidator{
-		AccessTokenStrategy: chgen,
-		AccessTokenStorage:  store,
+		CoreStrategy: chgen,
+		CoreStorage:  store,
 	}
 	httpreq := &http.Request{Header: http.Header{}}
 
@@ -30,16 +30,13 @@ func TestValidateRequest(t *testing.T) {
 		expectErr   error
 	}{
 		{
-			description: "should fail because no authorization header set",
-			expectErr:   fosite.ErrUnknownRequest,
-			setup:       func() {},
-		},
-		{
 			description: "should fail because no bearer token set",
-			expectErr:   fosite.ErrUnknownRequest,
 			setup: func() {
 				httpreq.Header.Set("Authorization", "bearer")
+				chgen.EXPECT().AccessTokenSignature("").Return("")
+				store.EXPECT().GetAccessTokenSession(nil, "", nil).Return(nil, errors.New(""))
 			},
+			expectErr: fosite.ErrRequestUnauthorized,
 		},
 		{
 			description: "should fail because retrieval fails",
@@ -66,7 +63,7 @@ func TestValidateRequest(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := v.ValidateRequest(nil, httpreq, areq)
+		err := v.ValidateToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

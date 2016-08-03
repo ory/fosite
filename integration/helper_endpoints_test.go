@@ -22,7 +22,7 @@ type mySessionData struct {
 func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
-		if _, err := oauth2.Validate(ctx, req, session); err != nil {
+		if _, err := oauth2.ValidateToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session); err != nil {
 			rfcerr := fosite.ErrorToRFC6749Error(err)
 			t.Logf("Info request failed because %s.", err.Error())
 			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
@@ -47,7 +47,7 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session int
 			return
 		}
 
-		if ar.GetScopes().Has("offline") {
+		if ar.GetRequestedScopes().Has("offline") {
 			ar.GrantScope("offline")
 		}
 

@@ -22,8 +22,8 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 	}
 
 	client := request.GetClient()
-	for _, scope := range request.GetScopes() {
-		if client.GetGrantedScopes().Grant(scope) {
+	for _, scope := range request.GetRequestedScopes() {
+		if client.GetGrantedScopes().Grants(scope) {
 			request.GrantScope(scope)
 		}
 	}

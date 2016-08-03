@@ -25,7 +25,7 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return errors.Wrap(ErrServerError, err.Error())
 	}
 
-	if !authorize.GetScopes().Has("openid") {
+	if !authorize.GetRequestedScopes().Has("openid") {
 		return errors.Wrap(ErrUnknownRequest, "")
 	}
 

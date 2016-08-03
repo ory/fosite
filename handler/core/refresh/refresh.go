@@ -48,7 +48,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	}
 
-	request.SetScopes(accessRequest.GetScopes())
+	request.SetRequestedScopes(accessRequest.GetRequestedScopes())
 	for _, scope := range accessRequest.GetGrantedScopes() {
 		request.GrantScope(scope)
 	}

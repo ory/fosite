@@ -37,12 +37,23 @@ func (a *Request) GetClient() Client {
 	return a.Client
 }
 
-func (a *Request) GetScopes() Arguments {
+func (a *Request) GetRequestedScopes() Arguments {
 	return a.Scopes
 }
 
-func (a *Request) SetScopes(s Arguments) {
-	a.Scopes = s
+func (a *Request) SetRequestedScopes(s Arguments) {
+	for _, scope := range s {
+		a.AppendRequestedScope(scope)
+	}
+}
+
+func (a *Request) AppendRequestedScope(scope string) {
+	for _, has := range a.Scopes {
+		if scope == has {
+			return
+		}
+	}
+	a.Scopes = append(a.Scopes, scope)
 }
 
 func (a *Request) GetGrantedScopes() Arguments {
@@ -67,11 +78,11 @@ func (a *Request) GetSession() interface{} {
 }
 
 func (a *Request) Merge(request Requester) {
-	for _, scope := range request.GetScopes() {
-		a.Scopes = append(a.Scopes, scope)
+	for _, scope := range request.GetRequestedScopes() {
+		a.AppendRequestedScope(scope)
 	}
 	for _, scope := range request.GetGrantedScopes() {
-		a.GrantedScopes = append(a.GrantedScopes, scope)
+		a.GrantScope(scope)
 	}
 	a.RequestedAt = request.GetRequestedAt()
 	a.Client = request.GetClient()

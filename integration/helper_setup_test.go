@@ -9,10 +9,8 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/fosite-example/store"
 	"github.com/ory-am/fosite/handler/core/strategy"
-	idstrat "github.com/ory-am/fosite/handler/oidc/strategy"
-	"github.com/ory-am/fosite/internal"
+	oidcs "github.com/ory-am/fosite/handler/oidc/strategy"
 	"github.com/ory-am/fosite/token/hmac"
-	"github.com/ory-am/fosite/token/jwt"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -25,13 +23,13 @@ var fositeStore = &store.Store{
 			RedirectURIs:  []string{"http://localhost:3846/callback"},
 			ResponseTypes: []string{"id_token", "code", "token"},
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
-			GrantedScopes: []string{"fosite", "offline"},
+			GrantedScopes: []string{"fosite", "offline", "openid"},
 		},
 	},
 	Users: map[string]store.UserRelation{
 		"peter": {
 			Username: "peter",
-			Password: "foobar",
+			Password: "secret",
 		},
 	},
 	AuthorizeCodes: map[string]fosite.Requester{},
@@ -41,11 +39,12 @@ var fositeStore = &store.Store{
 	IDSessions:     map[string]fosite.Requester{},
 }
 
+type defaultSession struct {
+	*oidcs.DefaultSession
+	*strategy.HMACSession
+}
+
 var accessTokenLifespan = time.Hour
-
-var refreshTokenLifespan = time.Hour
-
-var idTokenLifespan = time.Hour
 
 var authCodeLifespan = time.Minute
 
@@ -71,23 +70,12 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 	}
 }
 
-var idTokenStrategy = &idstrat.DefaultStrategy{
-	RS256JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
-	},
-}
-
 var hmacStrategy = &strategy.HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 	AccessTokenLifespan:   accessTokenLifespan,
 	AuthorizeCodeLifespan: authCodeLifespan,
-}
-
-func newFosite() *fosite.Fosite {
-	f := fosite.NewFosite(fositeStore)
-	return f
 }
 
 func mockServer(t *testing.T, f fosite.OAuth2Provider, session interface{}) *httptest.Server {

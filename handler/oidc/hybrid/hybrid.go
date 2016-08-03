@@ -14,9 +14,9 @@ import (
 )
 
 type OpenIDConnectHybridHandler struct {
-	*implicit.AuthorizeImplicitGrantTypeHandler
-	*explicit.AuthorizeExplicitGrantTypeHandler
-	*oidc.IDTokenHandleHelper
+	AuthorizeImplicitGrantTypeHandler *implicit.AuthorizeImplicitGrantTypeHandler
+	AuthorizeExplicitGrantHandler     *explicit.AuthorizeExplicitGrantHandler
+	IDTokenHandleHelper               *oidc.IDTokenHandleHelper
 
 	Enigma *jwt.RS256JWTStrategy
 }
@@ -42,16 +42,15 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	claims := sess.IDTokenClaims()
-
 	if ar.GetResponseTypes().Has("code") {
 		if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
 			return errors.Wrap(ErrInvalidGrant, "")
 		}
 
-		code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
+		code, signature, err := c.AuthorizeExplicitGrantHandler.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 		if err != nil {
 			return errors.Wrap(ErrServerError, err.Error())
-		} else if err := c.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
+		} else if err := c.AuthorizeExplicitGrantHandler.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
 			return errors.Wrap(ErrServerError, err.Error())
 		}
 
@@ -69,7 +68,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	if ar.GetResponseTypes().Has("token") {
 		if !ar.GetClient().GetGrantTypes().Has("implicit") {
 			return errors.Wrap(ErrInvalidGrant, "")
-		} else if err := c.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
+		} else if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
 			return errors.Wrap(err, err.Error())
 		}
 		ar.SetResponseTypeHandled("token")
@@ -81,13 +80,13 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		claims.AccessTokenHash = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
-	if !ar.GetScopes().Has("openid") {
+	if !ar.GetRequestedScopes().Has("openid") {
 		return nil
 	}
 
-	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
+	if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.Wrap(err, err.Error())
-	} else if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
+	} else if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.Wrap(err, err.Error())
 	}
 

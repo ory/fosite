@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/core"
-	"github.com/ory-am/fosite/handler/core/implicit"
 	hst "github.com/ory-am/fosite/handler/core/strategy"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +17,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func TestAuthorizeImplicitGrant(t *testing.T) {
+func TestAuthorizeImplicitFlow(t *testing.T) {
 	for _, strategy := range []core.AccessTokenStrategy{
 		hmacStrategy,
 	} {
@@ -26,7 +26,7 @@ func TestAuthorizeImplicitGrant(t *testing.T) {
 }
 
 func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
-	f := newFosite()
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2AuthorizeImplicitFactory)
 	ts := mockServer(t, f, &mySessionData{
 		HMACSession: new(hst.HMACSession),
 	})
@@ -45,16 +45,6 @@ func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 			description: "should pass",
 			setup: func() {
 				state = "12345678901234567890"
-				handler := &implicit.AuthorizeImplicitGrantTypeHandler{
-					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage:  fositeStore,
-					AccessTokenLifespan: time.Hour,
-				}
-				f.AuthorizeEndpointHandlers.Append(handler)
-				f.Validators.Append(&core.CoreValidator{
-					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage:  fositeStore,
-				})
 			},
 			authStatusCode: http.StatusOK,
 		},

@@ -91,15 +91,15 @@ func TestAuthorizeRequest(t *testing.T) {
 		assert.Equal(t, c.ar.RedirectURI, c.ar.GetRedirectURI(), "%d", k)
 		assert.Equal(t, c.ar.RequestedAt, c.ar.GetRequestedAt(), "%d", k)
 		assert.Equal(t, c.ar.ResponseTypes, c.ar.GetResponseTypes(), "%d", k)
-		assert.Equal(t, c.ar.Scopes, c.ar.GetScopes(), "%d", k)
+		assert.Equal(t, c.ar.Scopes, c.ar.GetRequestedScopes(), "%d", k)
 		assert.Equal(t, c.ar.State, c.ar.GetState(), "%d", k)
 		assert.Equal(t, c.isRedirValid, c.ar.IsRedirectURIValid(), "%d", k)
 
 		c.ar.GrantScope("foo")
 		c.ar.SetSession(&struct{}{})
-		c.ar.SetScopes([]string{"foo"})
+		c.ar.SetRequestedScopes([]string{"foo"})
 		assert.True(t, c.ar.GetGrantedScopes().Has("foo"))
-		assert.True(t, c.ar.GetScopes().Has("foo"))
+		assert.True(t, c.ar.GetRequestedScopes().Has("foo"))
 		assert.Equal(t, &struct{}{}, c.ar.GetSession())
 	}
 }

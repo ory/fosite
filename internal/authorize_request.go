@@ -4,11 +4,10 @@
 package internal
 
 import (
-	url "net/url"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
+	url "net/url"
+	time "time"
 )
 
 // Mock of AuthorizeRequester interface
@@ -30,6 +29,14 @@ func NewMockAuthorizeRequester(ctrl *gomock.Controller) *MockAuthorizeRequester 
 
 func (_m *MockAuthorizeRequester) EXPECT() *_MockAuthorizeRequesterRecorder {
 	return _m.recorder
+}
+
+func (_m *MockAuthorizeRequester) AppendRequestedScope(_param0 string) {
+	_m.ctrl.Call(_m, "AppendRequestedScope", _param0)
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) AppendRequestedScope(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AppendRequestedScope", arg0)
 }
 
 func (_m *MockAuthorizeRequester) DidHandleAllResponseTypes() bool {
@@ -92,6 +99,16 @@ func (_mr *_MockAuthorizeRequesterRecorder) GetRequestedAt() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedAt")
 }
 
+func (_m *MockAuthorizeRequester) GetRequestedScopes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetRequestedScopes")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) GetRequestedScopes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedScopes")
+}
+
 func (_m *MockAuthorizeRequester) GetResponseTypes() fosite.Arguments {
 	ret := _m.ctrl.Call(_m, "GetResponseTypes")
 	ret0, _ := ret[0].(fosite.Arguments)
@@ -100,16 +117,6 @@ func (_m *MockAuthorizeRequester) GetResponseTypes() fosite.Arguments {
 
 func (_mr *_MockAuthorizeRequesterRecorder) GetResponseTypes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetResponseTypes")
-}
-
-func (_m *MockAuthorizeRequester) GetScopes() fosite.Arguments {
-	ret := _m.ctrl.Call(_m, "GetScopes")
-	ret0, _ := ret[0].(fosite.Arguments)
-	return ret0
-}
-
-func (_mr *_MockAuthorizeRequesterRecorder) GetScopes() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetScopes")
 }
 
 func (_m *MockAuthorizeRequester) GetSession() interface{} {
@@ -158,20 +165,20 @@ func (_mr *_MockAuthorizeRequesterRecorder) Merge(arg0 interface{}) *gomock.Call
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Merge", arg0)
 }
 
+func (_m *MockAuthorizeRequester) SetRequestedScopes(_param0 fosite.Arguments) {
+	_m.ctrl.Call(_m, "SetRequestedScopes", _param0)
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) SetRequestedScopes(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetRequestedScopes", arg0)
+}
+
 func (_m *MockAuthorizeRequester) SetResponseTypeHandled(_param0 string) {
 	_m.ctrl.Call(_m, "SetResponseTypeHandled", _param0)
 }
 
 func (_mr *_MockAuthorizeRequesterRecorder) SetResponseTypeHandled(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetResponseTypeHandled", arg0)
-}
-
-func (_m *MockAuthorizeRequester) SetScopes(_param0 fosite.Arguments) {
-	_m.ctrl.Call(_m, "SetScopes", _param0)
-}
-
-func (_mr *_MockAuthorizeRequesterRecorder) SetScopes(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetScopes", arg0)
 }
 
 func (_m *MockAuthorizeRequester) SetSession(_param0 interface{}) {

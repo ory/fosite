@@ -4,8 +4,14 @@ import "strings"
 
 // Scopes is a list of scopes.
 type Scopes interface {
-	// Fulfill returns true if requestScope is fulfilled by the scope list.
-	Grant(requestScope string) bool
+	// Grants returns true if requestScope is fulfilled by the scope list.
+	Grants(requestScope string) bool
+
+	// Append appends a scope to the list if it wasn't added already.
+	Append(scope string)
+
+	// All returns all scopes.
+	All() Arguments
 }
 
 // Client represents a client or an app.
@@ -49,12 +55,23 @@ type DefaultClient struct {
 	Contacts          []string `json:"contacts" gorethink:"contacts"`
 }
 
-type DefaultScopes struct {
-	Scopes []string
+type DefaultScopes Arguments
+
+func (s DefaultScopes) Append(scope string) {
+	for _, this := range s {
+		if this == scope {
+			return
+		}
+	}
+	s = append(s, scope)
 }
 
-func (s *DefaultScopes) Grant(requestScope string) bool {
-	for _, scope := range s.Scopes {
+func (s DefaultScopes) All() Arguments {
+	return Arguments(s)
+}
+
+func (s DefaultScopes) Grants(requestScope string) bool {
+	for _, scope := range s {
 		// foo == foo -> true
 		if scope == requestScope {
 			return true
@@ -96,9 +113,7 @@ func (c *DefaultClient) GetHashedSecret() []byte {
 }
 
 func (c *DefaultClient) GetGrantedScopes() Scopes {
-	return &DefaultScopes{
-		Scopes: c.GrantedScopes,
-	}
+	return DefaultScopes(c.GrantedScopes)
 }
 
 func (c *DefaultClient) GetGrantTypes() Arguments {
