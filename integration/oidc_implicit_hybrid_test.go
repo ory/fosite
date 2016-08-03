@@ -86,7 +86,7 @@ func TestOIDCImplicitGrants(t *testing.T) {
 			description:  "should pass without id token",
 			responseType: "token",
 			setup: func() {
-				oauthClient.Scopes = []string{f.MandatoryScope}
+				oauthClient.Scopes = []string{"fosite"}
 			},
 		},
 		{
@@ -95,7 +95,7 @@ func TestOIDCImplicitGrants(t *testing.T) {
 			nonce:        "1111111111111111",
 			description:  "should pass id token (id_token token)",
 			setup: func() {
-				oauthClient.Scopes = []string{f.MandatoryScope, "openid"}
+				oauthClient.Scopes = []string{"fosite", "openid"}
 			},
 			hasToken: true,
 		},

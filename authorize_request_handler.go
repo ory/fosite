@@ -63,11 +63,5 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 
 	// Remove empty items from arrays
 	request.Scopes = removeEmpty(strings.Split(r.Form.Get("scope"), " "))
-
-	if !request.Scopes.Has(c.GetMandatoryScope()) {
-		return request, errors.Wrap(ErrInvalidScope, "mandatory scope is missing")
-	}
-	request.GrantScope(c.GetMandatoryScope())
-
 	return request, nil
 }

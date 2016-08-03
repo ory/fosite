@@ -8,8 +8,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-var DefaultMandatoryScope = "fosite"
-
 const MinParameterEntropy = 8
 
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
@@ -107,10 +105,6 @@ type OAuth2Provider interface {
 	// ValidateRequestAuthorization returns nil if the http request contains a valid access token or an error if not.
 	// If the token is valid, ValidateRequestAuthorization will return the access request object.
 	ValidateRequestAuthorization(ctx context.Context, req *http.Request, session interface{}, scope ...string) (AccessRequester, error)
-
-	// GetMandatoryScope returns the mandatory scope. Fosite enforces the usage of at least one scope. Returns a
-	// default value if no scope was set.
-	GetMandatoryScope() string
 }
 
 // Requester is an abstract interface for handling requests in Fosite.

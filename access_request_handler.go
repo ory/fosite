@@ -83,11 +83,5 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	if !found {
 		return nil, errors.Wrap(ErrInvalidRequest, "")
 	}
-
-	if !accessRequest.GetScopes().Has(f.GetMandatoryScope()) {
-		return accessRequest, errors.Wrap(ErrInvalidScope, "")
-	}
-
-	accessRequest.GrantScope(f.GetMandatoryScope())
 	return accessRequest, nil
 }

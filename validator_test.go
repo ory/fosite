@@ -54,6 +54,7 @@ func TestValidateRequestAuthorization(t *testing.T) {
 		},
 		{
 			description: "should fail",
+			scopes:      []string{"foo"},
 			setup: func() {
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
 					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
@@ -65,7 +66,7 @@ func TestValidateRequestAuthorization(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
-					accessRequest.(*AccessRequest).GrantedScopes = []string{f.MandatoryScope}
+					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
 				}).Return(nil)
 			},
 		},

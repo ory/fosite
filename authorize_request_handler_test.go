@@ -139,24 +139,9 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
-				"response_type": {"code"},
-				"state":         {"strong-state"},
-				"scope":         {"foo bar"},
-			},
-			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
-			},
-			expectedError: ErrInvalidScope,
-		},
-		{
-			desc: "should pass",
-			conf: &Fosite{Store: store},
-			query: url.Values{
-				"redirect_uri":  {"https://foo.bar/cb"},
-				"client_id":     {"1234"},
 				"response_type": {"code token"},
 				"state":         {"strong-state"},
-				"scope":         {DefaultMandatoryScope + " foo bar"},
+				"scope":         {"foo bar"},
 			},
 			mock: func() {
 				store.EXPECT().GetClient("1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
@@ -167,7 +152,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				State:         "strong-state",
 				Request: Request{
 					Client: &DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}},
-					Scopes: []string{DefaultMandatoryScope, "foo", "bar"},
+					Scopes: []string{"foo", "bar"},
 				},
 			},
 		},

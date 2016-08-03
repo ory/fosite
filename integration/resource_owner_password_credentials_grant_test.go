@@ -75,18 +75,6 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy core.Ac
 			err: true,
 		},
 		{
-			description: "should fail because unknown client",
-			setup: func() {
-				oauthClient = &clientcredentials.Config{
-					ClientID:     "my-client",
-					ClientSecret: "foobar",
-					Scopes:       []string{""},
-					TokenURL:     ts.URL + "/token",
-				}
-			},
-			err: true,
-		},
-		{
 			description: "should pass",
 			setup: func() {
 				oauthClient = newOAuth2AppClient(ts)

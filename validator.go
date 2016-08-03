@@ -27,11 +27,6 @@ func (f *Fosite) ValidateRequestAuthorization(ctx context.Context, req *http.Req
 	if !found {
 		return nil, errors.Wrap(ErrRequestUnauthorized, "")
 	}
-
-	if len(scopes) == 0 {
-		scopes = append(scopes, f.GetMandatoryScope())
-	}
-
 	if !ar.GetGrantedScopes().Has(scopes...) {
 		return nil, errors.Wrap(ErrRequestForbidden, "one or more scopes missing")
 	}

@@ -33,7 +33,6 @@ func (t *AuthorizedRequestValidators) Append(h AuthorizedRequestValidator) {
 func NewFosite(store Storage) *Fosite {
 	return &Fosite{
 		Store:                       store,
-		MandatoryScope:              DefaultMandatoryScope,
 		AuthorizeEndpointHandlers:   AuthorizeEndpointHandlers{},
 		TokenEndpointHandlers:       TokenEndpointHandlers{},
 		AuthorizedRequestValidators: AuthorizedRequestValidators{},
@@ -44,7 +43,6 @@ func NewFosite(store Storage) *Fosite {
 
 // Fosite implements OAuth2Provider.
 type Fosite struct {
-	MandatoryScope              string
 	Store                       Storage
 	AuthorizeEndpointHandlers   AuthorizeEndpointHandlers
 	TokenEndpointHandlers       TokenEndpointHandlers
