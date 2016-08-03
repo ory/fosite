@@ -1,5 +1,9 @@
 # ![Fosite security first OAuth2 framework](fosite.png)
 
+[![Build Status](https://travis-ci.org/ory-am/fosite.svg?branch=master)](https://travis-ci.org/ory-am/fosite?branch=master)
+[![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github&foo)](https://coveralls.io/github/ory-am/fosite?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/ory-am/fosite)](https://goreportcard.com/report/ory-am/fosite)
+
 **The security first OAuth2 & OpenID Connect framework for [Google's Go Language](https://golang.org).**
 Built simple, powerful and extensible. This library implements peer-reviewed [IETF RFC6749](https://tools.ietf.org/html/rfc6749),
 counterfeits weaknesses covered in peer-reviewed [IETF RFC6819](https://tools.ietf.org/html/rfc6819) and countermeasures various database
@@ -12,10 +16,6 @@ This library considered and implemented:
 * [OAuth 2.0 Multiple Response Type Encoding Practices](https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
 * [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819) (partially)
 * [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html) (partially)
-
-[![Build Status](https://travis-ci.org/ory-am/fosite.svg?branch=master)](https://travis-ci.org/ory-am/fosite?branch=master)
-[![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github&foo)](https://coveralls.io/github/ory-am/fosite?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/ory-am/fosite)](https://goreportcard.com/report/ory-am/fosite)
 
 OAuth2 and OpenID Connect are difficult protocols. If you want quick wins, we strongly encourage you to look at [Hydra](https://github.com/ory-am/hydra).
 Hydra is a secure, high performance, cloud native OAuth2 and OpenID Connect service that integrates with every authentication method
