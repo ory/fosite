@@ -66,7 +66,7 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 				}
 				f.AuthorizeEndpointHandlers.Append(handler)
 				f.TokenEndpointHandlers.Append(handler)
-				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+				f.Validators.Append(&core.CoreValidator{
 					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
 					AccessTokenStorage:  fositeStore,
 				})

@@ -68,7 +68,7 @@ func TestOIDCImplicitGrants(t *testing.T) {
 			IDTokenStrategy: idTokenStrategy,
 		},
 	})
-	f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+	f.Validators.Append(&core.CoreValidator{
 		AccessTokenStrategy: hmacStrategy,
 		AccessTokenStorage:  fositeStore,
 	})

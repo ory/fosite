@@ -50,7 +50,7 @@ func runClientCredentialsGrantTest(t *testing.T, strategy core.AccessTokenStrate
 					},
 					ResourceOwnerPasswordCredentialsGrantStorage: fositeStore,
 				})
-				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+				f.Validators.Append(&core.CoreValidator{
 					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
 					AccessTokenStorage:  fositeStore,
 				})

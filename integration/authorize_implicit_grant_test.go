@@ -51,7 +51,7 @@ func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 					AccessTokenLifespan: time.Hour,
 				}
 				f.AuthorizeEndpointHandlers.Append(handler)
-				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+				f.Validators.Append(&core.CoreValidator{
 					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
 					AccessTokenStorage:  fositeStore,
 				})

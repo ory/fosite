@@ -48,7 +48,7 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy core.Ac
 						AccessTokenLifespan: accessTokenLifespan,
 					},
 				})
-				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+				f.Validators.Append(&core.CoreValidator{
 					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
 					AccessTokenStorage:  fositeStore,
 				})

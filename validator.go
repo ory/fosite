@@ -7,15 +7,15 @@ import (
 	"golang.org/x/net/context"
 )
 
-type AuthorizedRequestValidator interface {
-	ValidateRequest(ctx context.Context, req *http.Request, accessRequest AccessRequester) error
+type TokenValidator interface {
+	ValidateToken(ctx context.Context, token string, tokenType TokenType, accessRequest AccessRequester) error
 }
 
-func (f *Fosite) Validate(ctx context.Context, req *http.Request, session interface{}, scopes ...string) (AccessRequester, error) {
+func (f *Fosite) ValidateToken(ctx context.Context, token string, tokenType TokenType, session interface{}, scopes ...string) (AccessRequester, error) {
 	var found bool = false
 	ar := NewAccessRequest(session)
-	for _, validator := range f.AuthorizedRequestValidators {
-		if err := errors.Cause(validator.ValidateRequest(ctx, req, ar)); err == ErrUnknownRequest {
+	for _, validator := range f.Validators {
+		if err := errors.Cause(validator.ValidateToken(ctx, token, tokenType, ar)); err == ErrUnknownRequest {
 			// Nothing to do
 		} else if err != nil {
 			return nil, errors.Wrap(err, "")

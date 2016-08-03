@@ -254,7 +254,7 @@ func fositeFactory() OAuth2Provider {
 	f.AuthorizeEndpointHandlers.Append(oidcHybrid)
 
 	// Add a request validator for Access Tokens to fosite
-	f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+	f.Validators.Append(&core.CoreValidator{
 		AccessTokenStrategy: hmacStrategy,
 		AccessTokenStorage:  store,
 	})

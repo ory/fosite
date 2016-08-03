@@ -61,7 +61,7 @@ func TestOpenIDConnectExplicit(t *testing.T) {
 				}
 				f.AuthorizeEndpointHandlers.Append(idcHandler)
 				f.TokenEndpointHandlers.Append(idcHandler)
-				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
+				f.Validators.Append(&core.CoreValidator{
 					AccessTokenStrategy: hmacStrategy,
 					AccessTokenStorage:  fositeStore,
 				})

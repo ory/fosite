@@ -39,7 +39,7 @@ func TestValidate(t *testing.T) {
 			description: "should fail",
 			scopes:      []string{"foo"},
 			setup: func() {
-				f.AuthorizedRequestValidators = AuthorizedRequestValidators{validator}
+				f.Validators = AuthorizedRequestValidators{validator}
 				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Return(ErrUnknownRequest)
 			},
 			expectErr: ErrRequestUnauthorized,
@@ -81,7 +81,7 @@ func TestValidate(t *testing.T) {
 		},
 	} {
 		c.setup()
-		_, err := f.Validate(nil, httpreq, nil, c.scopes...)
+		_, err := f.ValidateToken(nil, httpreq, nil, c.scopes...)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

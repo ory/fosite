@@ -14,9 +14,9 @@ import (
 func TestNewFosite(t *testing.T) {
 	f := NewFosite(store.NewStore())
 	assert.NotNil(t, f.Store)
-	assert.NotNil(t, f.AuthorizedRequestValidators)
+	assert.NotNil(t, f.Validators)
 	assert.NotNil(t, f.TokenEndpointHandlers)
-	assert.NotNil(t, f.AuthorizedRequestValidators)
+	assert.NotNil(t, f.Validators)
 }
 
 func TestAuthorizeEndpointHandlers(t *testing.T) {

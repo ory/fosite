@@ -22,10 +22,10 @@ func (t *TokenEndpointHandlers) Append(h TokenEndpointHandler) {
 }
 
 // AuthorizedRequestValidators is a list of AuthorizedRequestValidator
-type AuthorizedRequestValidators []AuthorizedRequestValidator
+type AuthorizedRequestValidators []TokenValidator
 
 // Add adds an AccessTokenValidator to this list
-func (t *AuthorizedRequestValidators) Append(h AuthorizedRequestValidator) {
+func (t *AuthorizedRequestValidators) Append(h TokenValidator) {
 	*t = append(*t, h)
 }
 
@@ -35,7 +35,7 @@ func NewFosite(store Storage) *Fosite {
 		Store:                       store,
 		AuthorizeEndpointHandlers:   AuthorizeEndpointHandlers{},
 		TokenEndpointHandlers:       TokenEndpointHandlers{},
-		AuthorizedRequestValidators: AuthorizedRequestValidators{},
+		Validators: AuthorizedRequestValidators{},
 		Hasher: &hash.BCrypt{WorkFactor: 12},
 		Logger: &logrus.Logger{},
 	}
@@ -43,10 +43,10 @@ func NewFosite(store Storage) *Fosite {
 
 // Fosite implements OAuth2Provider.
 type Fosite struct {
-	Store                       Storage
-	AuthorizeEndpointHandlers   AuthorizeEndpointHandlers
-	TokenEndpointHandlers       TokenEndpointHandlers
-	AuthorizedRequestValidators AuthorizedRequestValidators
-	Hasher                      hash.Hasher
-	Logger                      logrus.StdLogger
+	Store                     Storage
+	AuthorizeEndpointHandlers AuthorizeEndpointHandlers
+	TokenEndpointHandlers     TokenEndpointHandlers
+	Validators                AuthorizedRequestValidators
+	Hasher                    hash.Hasher
+	Logger                    logrus.StdLogger
 }
