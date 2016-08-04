@@ -4,9 +4,7 @@
 Built simple, powerful and extensible. This library implements peer-reviewed [IETF RFC6749](https://tools.ietf.org/html/rfc6749),
 counterfeits weaknesses covered in peer-reviewed [IETF RFC6819](https://tools.ietf.org/html/rfc6819) and countermeasures various database
 attack scenarios, keeping your application safe when that hacker penetrates or leaks your database. OpenID Connect is
-implemented according to [OpenID Connect Core 1.0 incorporating errata set 1](openid.net/specs/openid-connect-core-1_0.html) and
-includes all flows: code, implicit, hybrid.
-
+implemented according to [OpenID Connect Core 1.0 incorporating errata set 1](openid.net/specs/openid-connect-core-1_0.html) and includes all flows: code, implicit, hybrid.
 
 [![Build Status](https://travis-ci.org/ory-am/fosite.svg?branch=master)](https://travis-ci.org/ory-am/fosite?branch=master)
 [![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github&foo)](https://coveralls.io/github/ory-am/fosite?branch=master)
@@ -23,7 +21,6 @@ During development, we reviewed the following open specifications:
 **Table of Contents**
 
 - [Motivation](#motivation)
-- [API Stability](#api-stability)
 - [Example](#example)
 - [A word on quality](#a-word-on-quality)
 - [A word on security](#a-word-on-security)
@@ -45,12 +42,6 @@ During development, we reviewed the following open specifications:
 Fosite was written because our OAuth2 and OpenID Connect service [**Hydra**](https://github.com/ory-am/hydra)
 required a secure and extensible OAuth2 library. We had to realize that nothing matching our requirements
 was out there, so we decided to build it ourselves.
-
-## API Stability
-
-The core public API is almost stable as most changes will only touch the inner workings.
-
-We strongly encourage vendoring fosite using [glide](https://glide.sh) or comparable tools.
 
 ## Example
 
