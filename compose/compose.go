@@ -38,6 +38,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, handlers
 		TokenValidators:           fosite.TokenValidators{},
 		Hasher:                    &hash.BCrypt{WorkFactor: config.GetHashCost()},
 		Logger:                    &logrus.Logger{},
+		ScopeStrategy:             fosite.HierarchicScopeStrategy,
 	}
 
 	for _, h := range handlers {

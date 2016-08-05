@@ -9,7 +9,7 @@ import (
 )
 
 type TokenValidator interface {
-	ValidateToken(ctx context.Context, token string, tokenType TokenType, accessRequest AccessRequester) error
+	ValidateToken(ctx context.Context, token string, tokenType TokenType, accessRequest AccessRequester, scopes []string) error
 }
 
 func AccessTokenFromRequest(req *http.Request) string {
@@ -24,9 +24,10 @@ func AccessTokenFromRequest(req *http.Request) string {
 
 func (f *Fosite) ValidateToken(ctx context.Context, token string, tokenType TokenType, session interface{}, scopes ...string) (AccessRequester, error) {
 	var found bool = false
+
 	ar := NewAccessRequest(session)
 	for _, validator := range f.TokenValidators {
-		if err := errors.Cause(validator.ValidateToken(ctx, token, tokenType, ar)); err == ErrUnknownRequest {
+		if err := errors.Cause(validator.ValidateToken(ctx, token, tokenType, ar, scopes)); err == ErrUnknownRequest {
 			// Nothing to do
 		} else if err != nil {
 			return nil, errors.Wrap(err, "")
@@ -37,13 +38,6 @@ func (f *Fosite) ValidateToken(ctx context.Context, token string, tokenType Toke
 
 	if !found {
 		return nil, errors.Wrap(ErrRequestUnauthorized, "")
-	}
-
-	var granted = DefaultScopes(ar.GetGrantedScopes())
-	for _, scope := range scopes {
-		if !granted.Grants(scope) {
-			return nil, errors.Wrap(ErrRequestForbidden, "one or more scopes missing")
-		}
 	}
 
 	return ar, nil

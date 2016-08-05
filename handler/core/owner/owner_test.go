@@ -28,6 +28,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			AccessTokenStorage:  store,
 			AccessTokenLifespan: time.Hour,
 		},
+		ScopeStrategy: fosite.HierarchicScopeStrategy,
 	}
 	for k, c := range []struct {
 		description string

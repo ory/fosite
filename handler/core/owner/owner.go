@@ -13,6 +13,8 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 	// ResourceOwnerPasswordCredentialsGrantStorage is used to persist session data across requests.
 	ResourceOwnerPasswordCredentialsGrantStorage ResourceOwnerPasswordCredentialsGrantStorage
 
+	ScopeStrategy fosite.ScopeStrategy
+
 	*core.HandleHelper
 }
 
@@ -36,6 +38,13 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	} else if err != nil {
 		return errors.Wrap(fosite.ErrServerError, err.Error())
+	}
+
+	client := request.GetClient()
+	for _, scope := range request.GetRequestedScopes() {
+		if !c.ScopeStrategy(client.GetScopes(), scope) {
+			return errors.Wrap(fosite.ErrInvalidScope, "")
+		}
 	}
 
 	// Credentials must not be passed around, potentially leaking to the database!

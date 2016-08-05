@@ -57,4 +57,5 @@ type Fosite struct {
 	TokenValidators           TokenValidators
 	Hasher                    hash.Hasher
 	Logger                    logrus.StdLogger
+	ScopeStrategy             ScopeStrategy
 }

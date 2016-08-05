@@ -49,6 +49,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 		IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
 		},
+		ScopeStrategy: fosite.HierarchicScopeStrategy,
 	}
 	for k, c := range []struct {
 		description string
@@ -87,6 +88,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{},
 					ResponseTypes: fosite.Arguments{},
+					Scopes:        []string{"openid", "fosite"},
 				}
 			},
 			expectErr: fosite.ErrInvalidGrant,
@@ -99,6 +101,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"implicit"},
 					ResponseTypes: fosite.Arguments{},
+					Scopes:        []string{"openid", "fosite"},
 				}
 			},
 			expectErr: fosite.ErrInvalidGrant,
@@ -111,6 +114,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"implicit"},
 					ResponseTypes: fosite.Arguments{"token", "id_token"},
+					Scopes:        []string{"openid", "fosite"},
 				}
 			},
 			expectErr: oidc.ErrInvalidSession,

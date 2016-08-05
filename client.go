@@ -1,19 +1,5 @@
 package fosite
 
-import "strings"
-
-// Scopes is a list of scopes.
-type Scopes interface {
-	// Grants returns true if requestScope is fulfilled by the scope list.
-	Grants(requestScope string) bool
-
-	// Append appends a scope to the list if it wasn't added already.
-	Append(scope string)
-
-	// All returns all scopes.
-	All() Arguments
-}
-
 // Client represents a client or an app.
 type Client interface {
 	// GetID returns the client ID.
@@ -34,8 +20,8 @@ type Client interface {
 	// Returns the client's owner.
 	GetOwner() string
 
-	// Returns the scopes this client was granted.
-	GetGrantedScopes() Scopes
+	// Returns the scopes this client is allowed to request.
+	GetScopes() Arguments
 }
 
 // DefaultClient is a simple default implementation of the Client interface.
@@ -46,58 +32,13 @@ type DefaultClient struct {
 	RedirectURIs      []string `json:"redirect_uris" gorethink:"redirect_uris"`
 	GrantTypes        []string `json:"grant_types" gorethink:"grant_types"`
 	ResponseTypes     []string `json:"response_types" gorethink:"response_types"`
-	GrantedScopes     []string `json:"granted_scopes" gorethink:"granted_scopes"`
+	Scopes            []string `json:"scopes" gorethink:"scopes"`
 	Owner             string   `json:"owner" gorethink:"owner"`
 	PolicyURI         string   `json:"policy_uri" gorethink:"policy_uri"`
 	TermsOfServiceURI string   `json:"tos_uri" gorethink:"tos_uri"`
 	ClientURI         string   `json:"client_uri" gorethink:"client_uri"`
 	LogoURI           string   `json:"logo_uri" gorethink:"logo_uri"`
 	Contacts          []string `json:"contacts" gorethink:"contacts"`
-}
-
-type DefaultScopes Arguments
-
-func (s DefaultScopes) Append(scope string) {
-	for _, this := range s {
-		if this == scope {
-			return
-		}
-	}
-	s = append(s, scope)
-}
-
-func (s DefaultScopes) All() Arguments {
-	return Arguments(s)
-}
-
-func (s DefaultScopes) Grants(requestScope string) bool {
-	for _, scope := range s {
-		// foo == foo -> true
-		if scope == requestScope {
-			return true
-		}
-
-		// picture.read > picture -> false (scope picture includes read, write, ...)
-		if len(scope) > len(requestScope) {
-			continue
-		}
-
-		needles := strings.Split(requestScope, ".")
-		haystack := strings.Split(scope, ".")
-		haystackLen := len(haystack) - 1
-		for k, needle := range needles {
-			if haystackLen < k {
-				return true
-			}
-
-			current := haystack[k]
-			if current != needle {
-				continue
-			}
-		}
-	}
-
-	return false
 }
 
 func (c *DefaultClient) GetID() string {
@@ -112,8 +53,8 @@ func (c *DefaultClient) GetHashedSecret() []byte {
 	return c.Secret
 }
 
-func (c *DefaultClient) GetGrantedScopes() Scopes {
-	return DefaultScopes(c.GrantedScopes)
+func (c *DefaultClient) GetScopes() Arguments {
+	return c.Scopes
 }
 
 func (c *DefaultClient) GetGrantTypes() Arguments {

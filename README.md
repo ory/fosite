@@ -154,7 +154,7 @@ There is an API documentation available at [godoc.org/ory-am/fosite](https://god
 
 ### Scopes
 
-Before we skip ahead, it is important to note how scopes are being used in fosite.
+Before we skip ahead, it is important to note how scopes are being used in fosite per default.
 The general pattern can be abstracted as `<scope>.<sub-scope>.<sub-sub-scope>.<sub-sub-...>`. Every level ("subset")
 contains all sublevels, too. For example:
 
@@ -163,13 +163,17 @@ contains all sublevels, too. For example:
 * `blogposts.own.read` does not grant `blogposts.create`.
 * `blogposts.own` grants `blogposts.own.read` but not `blogposts.create`.
 
+You can replace the default scope strategy if you need a custom one by implementing `fosite.ScopeStrategy`.
+
 ### Quickstart
 
 Instantiating fosite by hand can be painful. Therefore we created a few convenience helpers available through the [compose package](/compose).
+It is strongly encouraged to use these well tested composers.
+
 In this very basic example, we will instantiate fosite with all OpenID Connect and OAuth2 handlers enabled. Please refer
 to the [example app](fosite-example/main.go) for more details.
 
-This might look like a lot of code but it actually sets up a full-blown OAuth2 and OpenID Connect example.
+This little code snippet sets up a full-blown OAuth2 and OpenID Connect example.
 
 ```go
 import "github.com/ory-am/fosite"

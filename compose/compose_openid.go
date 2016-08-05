@@ -1,6 +1,7 @@
 package compose
 
 import (
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
 	cex "github.com/ory-am/fosite/handler/core/explicit"
 	cim "github.com/ory-am/fosite/handler/core/implicit"
@@ -37,6 +38,7 @@ func OpenIDConnectImplicit(config *Config, storage interface{}, strategy interfa
 				AccessTokenStorage:  storage.(core.AccessTokenStorage),
 				AccessTokenLifespan: config.GetAccessTokenLifespan(),
 			},
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 			IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
 				IDTokenStrategy: strategy.(oidc.OpenIDConnectTokenStrategy),
 			},
@@ -59,6 +61,7 @@ func OpenIDConnectHybrid(config *Config, storage interface{}, strategy interface
 				AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
 				AccessTokenLifespan:       config.GetAccessTokenLifespan(),
 			},
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 			AuthorizeImplicitGrantTypeHandler: &cim.AuthorizeImplicitGrantTypeHandler{
 				AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
 				AccessTokenStorage:  storage.(core.AccessTokenStorage),

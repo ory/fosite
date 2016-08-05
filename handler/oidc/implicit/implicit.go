@@ -15,6 +15,7 @@ import (
 type OpenIDConnectImplicitHandler struct {
 	AuthorizeImplicitGrantTypeHandler *implicit.AuthorizeImplicitGrantTypeHandler
 	*IDTokenHandleHelper
+	ScopeStrategy ScopeStrategy
 
 	RS256JWTStrategy *jwt.RS256JWTStrategy
 }
@@ -32,6 +33,13 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.Wrap(ErrInvalidGrant, "")
 	} else if ar.GetResponseTypes().Matches("token", "id_token") && !ar.GetClient().GetResponseTypes().Has("token", "id_token") {
 		return errors.Wrap(ErrInvalidGrant, "")
+	}
+
+	client := ar.GetClient()
+	for _, scope := range ar.GetRequestedScopes() {
+		if !c.ScopeStrategy(client.GetScopes(), scope) {
+			return errors.Wrap(ErrInvalidScope, "")
+		}
 	}
 
 	sess, ok := ar.GetSession().(strategy.Session)

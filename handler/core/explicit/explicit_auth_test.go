@@ -27,6 +27,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 	h := AuthorizeExplicitGrantHandler{
 		AuthorizeCodeGrantStorage: store,
 		AuthorizeCodeStrategy:     chgen,
+		ScopeStrategy:             fosite.HierarchicScopeStrategy,
 	}
 	for k, c := range []struct {
 		description string

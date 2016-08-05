@@ -23,6 +23,8 @@ type AuthorizeImplicitGrantTypeHandler struct {
 
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration
+
+	ScopeStrategy ScopeStrategy
 }
 
 func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
@@ -37,6 +39,13 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
 		return errors.Wrap(ErrInvalidGrant, "")
+	}
+
+	client := ar.GetClient()
+	for _, scope := range ar.GetRequestedScopes() {
+		if !c.ScopeStrategy(client.GetScopes(), scope) {
+			return errors.Wrap(ErrInvalidScope, "")
+		}
 	}
 
 	// there is no need to check for https, because implicit flow does not require https

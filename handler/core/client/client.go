@@ -11,6 +11,7 @@ import (
 
 type ClientCredentialsGrantHandler struct {
 	*core.HandleHelper
+	ScopeStrategy fosite.ScopeStrategy
 }
 
 // ValidateTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
@@ -23,8 +24,8 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
-		if client.GetGrantedScopes().Grants(scope) {
-			request.GrantScope(scope)
+		if !c.ScopeStrategy(client.GetScopes(), scope) {
+			return errors.Wrap(fosite.ErrInvalidScope, "")
 		}
 	}
 

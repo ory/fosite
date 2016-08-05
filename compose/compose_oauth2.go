@@ -1,6 +1,7 @@
 package compose
 
 import (
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/core"
 	"github.com/ory-am/fosite/handler/core/client"
 	"github.com/ory-am/fosite/handler/core/explicit"
@@ -23,6 +24,7 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 			AuthorizeCodeGrantStorage: storage.(explicit.AuthorizeCodeGrantStorage),
 			AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
 			AccessTokenLifespan:       config.GetAccessTokenLifespan(),
+			ScopeStrategy:             fosite.HierarchicScopeStrategy,
 		},
 		CoreValidator: &core.CoreValidator{
 			CoreStrategy: strategy.(core.CoreStrategy),
@@ -44,6 +46,7 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 				AccessTokenStorage:  storage.(core.AccessTokenStorage),
 				AccessTokenLifespan: config.GetAccessTokenLifespan(),
 			},
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 		CoreValidator: &core.CoreValidator{
 			CoreStrategy: strategy.(core.CoreStrategy),
@@ -83,6 +86,7 @@ func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strateg
 			AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
 			AccessTokenStorage:  storage.(core.AccessTokenStorage),
 			AccessTokenLifespan: config.GetAccessTokenLifespan(),
+			ScopeStrategy:       fosite.HierarchicScopeStrategy,
 		},
 		CoreValidator: &core.CoreValidator{
 			CoreStrategy: strategy.(core.CoreStrategy),
@@ -105,6 +109,7 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 				AccessTokenStorage:  storage.(core.AccessTokenStorage),
 				AccessTokenLifespan: config.GetAccessTokenLifespan(),
 			},
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 		CoreValidator: &core.CoreValidator{
 			CoreStrategy: strategy.(core.CoreStrategy),

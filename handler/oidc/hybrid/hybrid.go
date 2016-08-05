@@ -17,6 +17,7 @@ type OpenIDConnectHybridHandler struct {
 	AuthorizeImplicitGrantTypeHandler *implicit.AuthorizeImplicitGrantTypeHandler
 	AuthorizeExplicitGrantHandler     *explicit.AuthorizeExplicitGrantHandler
 	IDTokenHandleHelper               *oidc.IDTokenHandleHelper
+	ScopeStrategy                     ScopeStrategy
 
 	Enigma *jwt.RS256JWTStrategy
 }
@@ -39,6 +40,13 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	sess, ok := ar.GetSession().(strategy.Session)
 	if !ok {
 		return errors.Wrap(oidc.ErrInvalidSession, "")
+	}
+
+	client := ar.GetClient()
+	for _, scope := range ar.GetRequestedScopes() {
+		if !c.ScopeStrategy(client.GetScopes(), scope) {
+			return errors.Wrap(ErrInvalidScope, "")
+		}
 	}
 
 	claims := sess.IDTokenClaims()

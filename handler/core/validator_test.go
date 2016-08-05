@@ -63,7 +63,7 @@ func TestValidateToken(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := v.ValidateToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq)
+		err := v.ValidateToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq, []string{})
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

@@ -22,11 +22,12 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	h := ClientCredentialsGrantHandler{
-		&core.HandleHelper{
+		HandleHelper: &core.HandleHelper{
 			AccessTokenStorage:  store,
 			AccessTokenStrategy: chgen,
 			AccessTokenLifespan: time.Hour,
 		},
+		ScopeStrategy: fosite.HierarchicScopeStrategy,
 	}
 	for k, c := range []struct {
 		description string
@@ -46,11 +47,9 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 			mock: func() {
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
-				areq.EXPECT().GrantScope("foo")
-				areq.EXPECT().GrantScope("baz.bar")
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
-					GrantTypes:    fosite.Arguments{"client_credentials"},
-					GrantedScopes: []string{"foo", "baz"},
+					GrantTypes: fosite.Arguments{"client_credentials"},
+					Scopes:     []string{"foo", "bar", "baz"},
 				})
 			},
 		},
@@ -71,11 +70,12 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 	defer ctrl.Finish()
 
 	h := ClientCredentialsGrantHandler{
-		&core.HandleHelper{
+		HandleHelper: &core.HandleHelper{
 			AccessTokenStorage:  store,
 			AccessTokenStrategy: chgen,
 			AccessTokenLifespan: time.Hour,
 		},
+		ScopeStrategy: fosite.HierarchicScopeStrategy,
 	}
 	for k, c := range []struct {
 		description string

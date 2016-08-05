@@ -32,6 +32,7 @@ func TestPopulateTokenEndpointResponse(t *testing.T) {
 		AuthorizeCodeStrategy:     auch,
 		AccessTokenStrategy:       ach,
 		RefreshTokenStrategy:      rch,
+		ScopeStrategy:             fosite.HierarchicScopeStrategy,
 	}
 	for k, c := range []struct {
 		description string
@@ -125,6 +126,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	h := AuthorizeExplicitGrantHandler{
 		AuthorizeCodeGrantStorage: store,
 		AuthorizeCodeStrategy:     ach,
+		ScopeStrategy:             fosite.HierarchicScopeStrategy,
 	}
 	for k, c := range []struct {
 		description string

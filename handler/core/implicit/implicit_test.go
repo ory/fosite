@@ -29,6 +29,7 @@ func TestAuthorizeImplicitEndpointHandler(t *testing.T) {
 		AccessTokenStorage:  store,
 		AccessTokenStrategy: chgen,
 		AccessTokenLifespan: time.Hour,
+		ScopeStrategy:       fosite.HierarchicScopeStrategy,
 	}
 	for k, c := range []struct {
 		description string

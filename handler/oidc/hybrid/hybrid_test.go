@@ -76,6 +76,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 		IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
 		},
+		ScopeStrategy: fosite.HierarchicScopeStrategy,
 	}
 	for k, c := range []struct {
 		description string
@@ -100,6 +101,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
+					Scopes:        []string{"openid"},
 				}
 				areq.Scopes = fosite.Arguments{"openid"}
 			},
@@ -112,6 +114,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"implicit"},
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
+					Scopes:        []string{"openid"},
 				}
 				areq.Session = &defaultSession{
 					Claims: &jwt.IDTokenClaims{
@@ -129,6 +132,7 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
+					Scopes:        []string{"openid"},
 				}
 			},
 			expectErr: fosite.ErrInsufficientEntropy,
@@ -137,20 +141,11 @@ func TestHandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should fail because nonce was not set",
 			setup: func() {
 				areq.Form.Add("nonce", "some-foobar-nonce-win")
-				areq.Client = &fosite.DefaultClient{
-					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
-					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
-				}
 			},
 		},
 		{
 			description: "should pass",
-			setup: func() {
-				areq.Client = &fosite.DefaultClient{
-					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
-					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
-				}
-			},
+			setup:       func() {},
 			check: func() {
 				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))
 				assert.NotEmpty(t, aresp.GetFragment().Get("code"))

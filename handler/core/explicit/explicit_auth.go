@@ -29,6 +29,8 @@ type AuthorizeExplicitGrantHandler struct {
 
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration
+
+	ScopeStrategy ScopeStrategy
 }
 
 func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar AuthorizeRequester, resp AuthorizeResponder) error {
@@ -43,6 +45,13 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 
 	if !IsRedirectURISecure(ar.GetRedirectURI()) {
 		return errors.Wrap(ErrInvalidRequest, "")
+	}
+
+	client := ar.GetClient()
+	for _, scope := range ar.GetRequestedScopes() {
+		if !c.ScopeStrategy(client.GetScopes(), scope) {
+			return errors.Wrap(ErrInvalidScope, "")
+		}
 	}
 
 	return c.IssueAuthorizeCode(ctx, req, ar, resp)
