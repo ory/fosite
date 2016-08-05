@@ -12,7 +12,6 @@ id tokens, ...
 * Allowed OAuth2 Client scopes are now being set with `scope` instead of `granted_scopes` when using the DefaultClient.
 * There is now a scope matching strategy that can be replaced.
 * OAuth2 Client scopes are now checked on every grant type.
-* Handler subpackages such as `core/client` or `oidc/explicit` have been merged and moved one level up
 
 ## 0.1.0
 
