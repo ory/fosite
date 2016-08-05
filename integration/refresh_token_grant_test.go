@@ -7,15 +7,14 @@ import (
 	"time"
 
 	"github.com/ory-am/fosite/compose"
-	"github.com/ory-am/fosite/handler/core"
-	hst "github.com/ory-am/fosite/handler/core/strategy"
+	hst "github.com/ory-am/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
+	oauth2 "golang.org/x/oauth2"
 )
 
 func TestRefreshTokenFlow(t *testing.T) {
-	for _, strategy := range []core.AccessTokenStrategy{
+	for _, strategy := range []hst.AccessTokenStrategy{
 		hmacStrategy,
 	} {
 		runRefreshTokenGrantTest(t, strategy)

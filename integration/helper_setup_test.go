@@ -7,11 +7,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/fosite-example/store"
-	"github.com/ory-am/fosite/handler/core/strategy"
-	oidcs "github.com/ory-am/fosite/handler/oidc/strategy"
+	store "github.com/ory-am/fosite/fosite-example/pkg"
+	"github.com/ory-am/fosite/handler/oauth2"
+	"github.com/ory-am/fosite/handler/openid"
 	"github.com/ory-am/fosite/token/hmac"
-	"golang.org/x/oauth2"
+	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
 
@@ -40,21 +40,21 @@ var fositeStore = &store.Store{
 }
 
 type defaultSession struct {
-	*oidcs.DefaultSession
-	*strategy.HMACSession
+	*openid.DefaultSession
+	*oauth2.HMACSession
 }
 
 var accessTokenLifespan = time.Hour
 
 var authCodeLifespan = time.Minute
 
-func newOAuth2Client(ts *httptest.Server) *oauth2.Config {
-	return &oauth2.Config{
+func newOAuth2Client(ts *httptest.Server) *goauth.Config {
+	return &goauth.Config{
 		ClientID:     "my-client",
 		ClientSecret: "foobar",
 		RedirectURL:  ts.URL + "/callback",
 		Scopes:       []string{"fosite"},
-		Endpoint: oauth2.Endpoint{
+		Endpoint: goauth.Endpoint{
 			TokenURL: ts.URL + "/token",
 			AuthURL:  ts.URL + "/auth",
 		},
@@ -70,7 +70,7 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 	}
 }
 
-var hmacStrategy = &strategy.HMACSHAStrategy{
+var hmacStrategy = &oauth2.HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{
 		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},

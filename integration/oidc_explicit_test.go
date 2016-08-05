@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/ory-am/fosite/compose"
-	"github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/handler/openid"
 	"github.com/ory-am/fosite/internal"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ import (
 
 func TestOpenIDConnectExplicitFlow(t *testing.T) {
 	session := &defaultSession{
-		DefaultSession: &strategy.DefaultSession{
+		DefaultSession: &openid.DefaultSession{
 			Claims: &jwt.IDTokenClaims{
 				Subject: "peter",
 			},

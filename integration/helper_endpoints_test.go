@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/ory-am/fosite"
-	hst "github.com/ory-am/fosite/handler/core/strategy"
+	foauth "github.com/ory-am/fosite/handler/oauth2"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +16,7 @@ type stackTracer interface {
 
 type mySessionData struct {
 	Foo string
-	*hst.HMACSession
+	*foauth.HMACSession
 }
 
 func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
@@ -92,7 +92,7 @@ func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw ht
 		ctx := fosite.NewContext()
 
 		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData{
-			HMACSession: &hst.HMACSession{},
+			HMACSession: &foauth.HMACSession{},
 		})
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())

@@ -8,7 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
-	"github.com/ory-am/fosite/fosite-example/store"
+	store "github.com/ory-am/fosite/fosite-example/pkg"
 	"github.com/ory-am/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"

@@ -3,21 +3,19 @@ package compose
 import (
 	"crypto/rsa"
 
-	"github.com/ory-am/fosite/handler/core"
-	"github.com/ory-am/fosite/handler/core/strategy"
-	"github.com/ory-am/fosite/handler/oidc"
-	oidcstrategy "github.com/ory-am/fosite/handler/oidc/strategy"
+	"github.com/ory-am/fosite/handler/oauth2"
+	"github.com/ory-am/fosite/handler/openid"
 	"github.com/ory-am/fosite/token/hmac"
 	"github.com/ory-am/fosite/token/jwt"
 )
 
 type CommonStrategy struct {
-	core.CoreStrategy
-	oidc.OpenIDConnectTokenStrategy
+	oauth2.CoreStrategy
+	openid.OpenIDConnectTokenStrategy
 }
 
-func NewOAuth2HMACStrategy(config *Config, secret []byte) *strategy.HMACSHAStrategy {
-	return &strategy.HMACSHAStrategy{
+func NewOAuth2HMACStrategy(config *Config, secret []byte) *oauth2.HMACSHAStrategy {
+	return &oauth2.HMACSHAStrategy{
 		Enigma: &hmac.HMACStrategy{
 			GlobalSecret: secret,
 		},
@@ -26,16 +24,16 @@ func NewOAuth2HMACStrategy(config *Config, secret []byte) *strategy.HMACSHAStrat
 	}
 }
 
-func NewOAuth2JWTStrategy(key *rsa.PrivateKey) *strategy.RS256JWTStrategy {
-	return &strategy.RS256JWTStrategy{
+func NewOAuth2JWTStrategy(key *rsa.PrivateKey) *oauth2.RS256JWTStrategy {
+	return &oauth2.RS256JWTStrategy{
 		RS256JWTStrategy: &jwt.RS256JWTStrategy{
 			PrivateKey: key,
 		},
 	}
 }
 
-func NewOpenIDConnectStrategy(key *rsa.PrivateKey) *oidcstrategy.DefaultStrategy {
-	return &oidcstrategy.DefaultStrategy{
+func NewOpenIDConnectStrategy(key *rsa.PrivateKey) *openid.DefaultStrategy {
+	return &openid.DefaultStrategy{
 		RS256JWTStrategy: &jwt.RS256JWTStrategy{
 			PrivateKey: key,
 		},

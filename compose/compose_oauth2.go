@@ -2,33 +2,28 @@ package compose
 
 import (
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/handler/core"
-	"github.com/ory-am/fosite/handler/core/client"
-	"github.com/ory-am/fosite/handler/core/explicit"
-	"github.com/ory-am/fosite/handler/core/implicit"
-	"github.com/ory-am/fosite/handler/core/owner"
-	"github.com/ory-am/fosite/handler/core/refresh"
+	"github.com/ory-am/fosite/handler/oauth2"
 )
 
 // OAuth2AuthorizeExplicitFactory creates an OAuth2 authorize code grant ("authorize explicit flow") handler and registers
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
-		*explicit.AuthorizeExplicitGrantHandler
-		*core.CoreValidator
+		*oauth2.AuthorizeExplicitGrantHandler
+		*oauth2.CoreValidator
 	}{
-		AuthorizeExplicitGrantHandler: &explicit.AuthorizeExplicitGrantHandler{
-			AccessTokenStrategy:       strategy.(core.AccessTokenStrategy),
-			RefreshTokenStrategy:      strategy.(core.RefreshTokenStrategy),
-			AuthorizeCodeStrategy:     strategy.(core.AuthorizeCodeStrategy),
-			AuthorizeCodeGrantStorage: storage.(explicit.AuthorizeCodeGrantStorage),
+		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
+			AccessTokenStrategy:       strategy.(oauth2.AccessTokenStrategy),
+			RefreshTokenStrategy:      strategy.(oauth2.RefreshTokenStrategy),
+			AuthorizeCodeStrategy:     strategy.(oauth2.AuthorizeCodeStrategy),
+			AuthorizeCodeGrantStorage: storage.(oauth2.AuthorizeCodeGrantStorage),
 			AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
 			AccessTokenLifespan:       config.GetAccessTokenLifespan(),
 			ScopeStrategy:             fosite.HierarchicScopeStrategy,
 		},
-		CoreValidator: &core.CoreValidator{
-			CoreStrategy: strategy.(core.CoreStrategy),
-			CoreStorage:  storage.(core.CoreStorage),
+		CoreValidator: &oauth2.CoreValidator{
+			CoreStrategy: strategy.(oauth2.CoreStrategy),
+			CoreStorage:  storage.(oauth2.CoreStorage),
 		},
 	}
 }
@@ -37,20 +32,20 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 // an access token, refresh token and authorize code validator.
 func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
-		*client.ClientCredentialsGrantHandler
-		*core.CoreValidator
+		*oauth2.ClientCredentialsGrantHandler
+		*oauth2.CoreValidator
 	}{
-		ClientCredentialsGrantHandler: &client.ClientCredentialsGrantHandler{
-			HandleHelper: &core.HandleHelper{
-				AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-				AccessTokenStorage:  storage.(core.AccessTokenStorage),
+		ClientCredentialsGrantHandler: &oauth2.ClientCredentialsGrantHandler{
+			HandleHelper: &oauth2.HandleHelper{
+				AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
+				AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 				AccessTokenLifespan: config.GetAccessTokenLifespan(),
 			},
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
-		CoreValidator: &core.CoreValidator{
-			CoreStrategy: strategy.(core.CoreStrategy),
-			CoreStorage:  storage.(core.CoreStorage),
+		CoreValidator: &oauth2.CoreValidator{
+			CoreStrategy: strategy.(oauth2.CoreStrategy),
+			CoreStorage:  storage.(oauth2.CoreStorage),
 		},
 	}
 }
@@ -59,18 +54,18 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 // an access token, refresh token and authorize code validator.
 func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
-		*refresh.RefreshTokenGrantHandler
-		*core.CoreValidator
+		*oauth2.RefreshTokenGrantHandler
+		*oauth2.CoreValidator
 	}{
-		RefreshTokenGrantHandler: &refresh.RefreshTokenGrantHandler{
-			AccessTokenStrategy:      strategy.(core.AccessTokenStrategy),
-			RefreshTokenStrategy:     strategy.(core.RefreshTokenStrategy),
-			RefreshTokenGrantStorage: storage.(refresh.RefreshTokenGrantStorage),
+		RefreshTokenGrantHandler: &oauth2.RefreshTokenGrantHandler{
+			AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
+			RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
+			RefreshTokenGrantStorage: storage.(oauth2.RefreshTokenGrantStorage),
 			AccessTokenLifespan:      config.GetAccessTokenLifespan(),
 		},
-		CoreValidator: &core.CoreValidator{
-			CoreStrategy: strategy.(core.CoreStrategy),
-			CoreStorage:  storage.(core.CoreStorage),
+		CoreValidator: &oauth2.CoreValidator{
+			CoreStrategy: strategy.(oauth2.CoreStrategy),
+			CoreStorage:  storage.(oauth2.CoreStorage),
 		},
 	}
 }
@@ -79,18 +74,18 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
-		*implicit.AuthorizeImplicitGrantTypeHandler
-		*core.CoreValidator
+		*oauth2.AuthorizeImplicitGrantTypeHandler
+		*oauth2.CoreValidator
 	}{
-		AuthorizeImplicitGrantTypeHandler: &implicit.AuthorizeImplicitGrantTypeHandler{
-			AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-			AccessTokenStorage:  storage.(core.AccessTokenStorage),
+		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
+			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
+			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 			AccessTokenLifespan: config.GetAccessTokenLifespan(),
 			ScopeStrategy:       fosite.HierarchicScopeStrategy,
 		},
-		CoreValidator: &core.CoreValidator{
-			CoreStrategy: strategy.(core.CoreStrategy),
-			CoreStorage:  storage.(core.CoreStorage),
+		CoreValidator: &oauth2.CoreValidator{
+			CoreStrategy: strategy.(oauth2.CoreStrategy),
+			CoreStorage:  storage.(oauth2.CoreStorage),
 		},
 	}
 }
@@ -99,21 +94,21 @@ func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strateg
 // an access token, refresh token and authorize code validator.
 func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
-		*owner.ResourceOwnerPasswordCredentialsGrantHandler
-		*core.CoreValidator
+		*oauth2.ResourceOwnerPasswordCredentialsGrantHandler
+		*oauth2.CoreValidator
 	}{
-		ResourceOwnerPasswordCredentialsGrantHandler: &owner.ResourceOwnerPasswordCredentialsGrantHandler{
-			ResourceOwnerPasswordCredentialsGrantStorage: storage.(owner.ResourceOwnerPasswordCredentialsGrantStorage),
-			HandleHelper: &core.HandleHelper{
-				AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-				AccessTokenStorage:  storage.(core.AccessTokenStorage),
+		ResourceOwnerPasswordCredentialsGrantHandler: &oauth2.ResourceOwnerPasswordCredentialsGrantHandler{
+			ResourceOwnerPasswordCredentialsGrantStorage: storage.(oauth2.ResourceOwnerPasswordCredentialsGrantStorage),
+			HandleHelper: &oauth2.HandleHelper{
+				AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
+				AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 				AccessTokenLifespan: config.GetAccessTokenLifespan(),
 			},
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
-		CoreValidator: &core.CoreValidator{
-			CoreStrategy: strategy.(core.CoreStrategy),
-			CoreStorage:  storage.(core.CoreStorage),
+		CoreValidator: &oauth2.CoreValidator{
+			CoreStrategy: strategy.(oauth2.CoreStrategy),
+			CoreStorage:  storage.(oauth2.CoreStorage),
 		},
 	}
 }

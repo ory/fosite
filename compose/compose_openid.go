@@ -2,25 +2,20 @@ package compose
 
 import (
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/handler/core"
-	cex "github.com/ory-am/fosite/handler/core/explicit"
-	cim "github.com/ory-am/fosite/handler/core/implicit"
-	"github.com/ory-am/fosite/handler/oidc"
-	"github.com/ory-am/fosite/handler/oidc/explicit"
-	"github.com/ory-am/fosite/handler/oidc/hybrid"
-	"github.com/ory-am/fosite/handler/oidc/implicit"
+	"github.com/ory-am/fosite/handler/oauth2"
+	"github.com/ory-am/fosite/handler/openid"
 )
 
 // OpenIDConnectExplicit creates an OpenID Connect explicit ("authorize code flow") grant handler. You must add this handler
 // *after* you have added an OAuth2 authorize code handler!
 func OpenIDConnectExplicit(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
-		*explicit.OpenIDConnectExplicitHandler
+		*openid.OpenIDConnectExplicitHandler
 	}{
-		OpenIDConnectExplicitHandler: &explicit.OpenIDConnectExplicitHandler{
-			OpenIDConnectRequestStorage: storage.(oidc.OpenIDConnectRequestStorage),
-			IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
-				IDTokenStrategy: strategy.(oidc.OpenIDConnectTokenStrategy),
+		OpenIDConnectExplicitHandler: &openid.OpenIDConnectExplicitHandler{
+			OpenIDConnectRequestStorage: storage.(openid.OpenIDConnectRequestStorage),
+			IDTokenHandleHelper: &openid.IDTokenHandleHelper{
+				IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 			},
 		},
 	}
@@ -30,17 +25,17 @@ func OpenIDConnectExplicit(config *Config, storage interface{}, strategy interfa
 // *after* you have added an OAuth2 authorize implicit handler!
 func OpenIDConnectImplicit(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
-		*implicit.OpenIDConnectImplicitHandler
+		*openid.OpenIDConnectImplicitHandler
 	}{
-		OpenIDConnectImplicitHandler: &implicit.OpenIDConnectImplicitHandler{
-			AuthorizeImplicitGrantTypeHandler: &cim.AuthorizeImplicitGrantTypeHandler{
-				AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-				AccessTokenStorage:  storage.(core.AccessTokenStorage),
+		OpenIDConnectImplicitHandler: &openid.OpenIDConnectImplicitHandler{
+			AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
+				AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
+				AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 				AccessTokenLifespan: config.GetAccessTokenLifespan(),
 			},
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
-			IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
-				IDTokenStrategy: strategy.(oidc.OpenIDConnectTokenStrategy),
+			IDTokenHandleHelper: &openid.IDTokenHandleHelper{
+				IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 			},
 		},
 	}
@@ -50,25 +45,25 @@ func OpenIDConnectImplicit(config *Config, storage interface{}, strategy interfa
 // *after* you have added an OAuth2 authorize code and implicit authorize handler!
 func OpenIDConnectHybrid(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
-		*hybrid.OpenIDConnectHybridHandler
+		*openid.OpenIDConnectHybridHandler
 	}{
-		OpenIDConnectHybridHandler: &hybrid.OpenIDConnectHybridHandler{
-			AuthorizeExplicitGrantHandler: &cex.AuthorizeExplicitGrantHandler{
-				AccessTokenStrategy:       strategy.(core.AccessTokenStrategy),
-				RefreshTokenStrategy:      strategy.(core.RefreshTokenStrategy),
-				AuthorizeCodeStrategy:     strategy.(core.AuthorizeCodeStrategy),
-				AuthorizeCodeGrantStorage: storage.(cex.AuthorizeCodeGrantStorage),
+		OpenIDConnectHybridHandler: &openid.OpenIDConnectHybridHandler{
+			AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
+				AccessTokenStrategy:       strategy.(oauth2.AccessTokenStrategy),
+				RefreshTokenStrategy:      strategy.(oauth2.RefreshTokenStrategy),
+				AuthorizeCodeStrategy:     strategy.(oauth2.AuthorizeCodeStrategy),
+				AuthorizeCodeGrantStorage: storage.(oauth2.AuthorizeCodeGrantStorage),
 				AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
 				AccessTokenLifespan:       config.GetAccessTokenLifespan(),
 			},
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
-			AuthorizeImplicitGrantTypeHandler: &cim.AuthorizeImplicitGrantTypeHandler{
-				AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-				AccessTokenStorage:  storage.(core.AccessTokenStorage),
+			AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
+				AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
+				AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 				AccessTokenLifespan: config.GetAccessTokenLifespan(),
 			},
-			IDTokenHandleHelper: &oidc.IDTokenHandleHelper{
-				IDTokenStrategy: strategy.(oidc.OpenIDConnectTokenStrategy),
+			IDTokenHandleHelper: &openid.IDTokenHandleHelper{
+				IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 			},
 		},
 	}

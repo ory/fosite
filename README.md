@@ -331,15 +331,15 @@ This storage fulfills requirements from all OAuth2 and OpenID Conenct handlers.
 OAuth2 is a framework. Fosite mimics this behaviour by enabling you to replace existing or create new OAuth2 handlers.
 Of course, fosite ships handlers for all OAuth2 and OpenID Connect flows as listed below:
 
-* `github.com/ory-am/fosite/handler/core/explicit.AuthorizeExplicitEndpointHandler` implements the
+* `github.com/ory-am/fosite/handler/oauth2.AuthorizeExplicitEndpointHandler` implements the
   [Authorization Code Grant](https://tools.ietf.org/html/rfc6749#section-4.1)
-* `github.com/ory-am/fosite/handler/core/implicit.AuthorizeImplicitEndpointHandler` implements the
+* `github.com/ory-am/fosite/handler/oauth2.AuthorizeImplicitEndpointHandler` implements the
   [Implicit Grant](https://tools.ietf.org/html/rfc6749#section-4.2)
-* `github.com/ory-am/fosite/handler/core/token/owner.TokenROPasswordCredentialsEndpointHandler` implements the
+* `github.com/ory-am/fosite/handler/oauth2/token.TokenROPasswordCredentialsEndpointHandler` implements the
   [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3)
-* `github.com/ory-am/fosite/handler/core/token/client.TokenClientCredentialsEndpointHandler` implements the
+* `github.com/ory-am/fosite/handler/oauth2/token.TokenClientCredentialsEndpointHandler` implements the
   [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4)
-* There are also [OpenID Connect Handlers available](handler/oidc).
+* There are also [OpenID Connect Handlers available](handler/openid).
 
 This section is missing documentation and we welcome any contributions in that direction.
 
