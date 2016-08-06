@@ -10,7 +10,7 @@ import (
 )
 
 type RefreshTokenGrantHandler struct {
-	AccessTokenStrategy      AccessTokenStrategy
+	AccessTokenStrategy AccessTokenStrategy
 
 	RefreshTokenStrategy RefreshTokenStrategy
 
@@ -18,7 +18,7 @@ type RefreshTokenGrantHandler struct {
 	RefreshTokenGrantStorage RefreshTokenGrantStorage
 
 	// AccessTokenLifespan defines the lifetime of an access token.
-	AccessTokenLifespan      time.Duration
+	AccessTokenLifespan time.Duration
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6

@@ -1,10 +1,11 @@
 package store
 
 import (
-	"github.com/parnurzeal/gorequest"
-	"net/url"
 	"fmt"
 	"net/http"
+	"net/url"
+
+	"github.com/parnurzeal/gorequest"
 	"golang.org/x/oauth2"
 )
 
@@ -72,9 +73,9 @@ func CallbackHandler(c oauth2.Config) func(rw http.ResponseWriter, req *http.Req
 				<code>%s</code>
 			</li>
 		</ul>`,
-			"/protected-api?token=" + token.AccessToken,
+			"/protected-api?token="+token.AccessToken,
 			token.AccessToken,
-			"?refresh=" + url.QueryEscape(token.RefreshToken),
+			"?refresh="+url.QueryEscape(token.RefreshToken),
 			token.RefreshToken,
 			token,
 		)))

@@ -3,12 +3,13 @@ package openid
 import (
 	"net/http"
 
+	"fmt"
+
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"github.com/ory-am/fosite"
-	"fmt"
 )
 
 type OpenIDConnectHybridHandler struct {

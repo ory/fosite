@@ -3,10 +3,11 @@ package oauth2
 import (
 	"net/http"
 
+	"fmt"
+
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"fmt"
 )
 
 type ClientCredentialsGrantHandler struct {

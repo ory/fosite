@@ -22,8 +22,8 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 			ScopeStrategy:             fosite.HierarchicScopeStrategy,
 		},
 		CoreValidator: &oauth2.CoreValidator{
-			CoreStrategy: strategy.(oauth2.CoreStrategy),
-			CoreStorage:  storage.(oauth2.CoreStorage),
+			CoreStrategy:  strategy.(oauth2.CoreStrategy),
+			CoreStorage:   storage.(oauth2.CoreStorage),
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
@@ -45,8 +45,8 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 		CoreValidator: &oauth2.CoreValidator{
-			CoreStrategy: strategy.(oauth2.CoreStrategy),
-			CoreStorage:  storage.(oauth2.CoreStorage),
+			CoreStrategy:  strategy.(oauth2.CoreStrategy),
+			CoreStorage:   storage.(oauth2.CoreStorage),
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
@@ -66,8 +66,8 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 			AccessTokenLifespan:      config.GetAccessTokenLifespan(),
 		},
 		CoreValidator: &oauth2.CoreValidator{
-			CoreStrategy: strategy.(oauth2.CoreStrategy),
-			CoreStorage:  storage.(oauth2.CoreStorage),
+			CoreStrategy:  strategy.(oauth2.CoreStrategy),
+			CoreStorage:   storage.(oauth2.CoreStorage),
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
@@ -87,8 +87,8 @@ func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strateg
 			ScopeStrategy:       fosite.HierarchicScopeStrategy,
 		},
 		CoreValidator: &oauth2.CoreValidator{
-			CoreStrategy: strategy.(oauth2.CoreStrategy),
-			CoreStorage:  storage.(oauth2.CoreStorage),
+			CoreStrategy:  strategy.(oauth2.CoreStrategy),
+			CoreStorage:   storage.(oauth2.CoreStorage),
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
@@ -111,8 +111,8 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 		CoreValidator: &oauth2.CoreValidator{
-			CoreStrategy: strategy.(oauth2.CoreStrategy),
-			CoreStorage:  storage.(oauth2.CoreStorage),
+			CoreStrategy:  strategy.(oauth2.CoreStrategy),
+			CoreStorage:   storage.(oauth2.CoreStorage),
 			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}

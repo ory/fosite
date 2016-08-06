@@ -2,32 +2,33 @@ package oauth2
 
 import (
 	"net/http"
-	"time"
 	"strings"
+	"time"
+
+	"fmt"
 
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"fmt"
 )
 
 // AuthorizeExplicitGrantTypeHandler is a response handler for the Authorize Code grant using the explicit grant type
 // as defined in https://tools.ietf.org/html/rfc6749#section-4.1
 type AuthorizeExplicitGrantHandler struct {
-	AccessTokenStrategy       AccessTokenStrategy
-	RefreshTokenStrategy      RefreshTokenStrategy
-	AuthorizeCodeStrategy     AuthorizeCodeStrategy
+	AccessTokenStrategy   AccessTokenStrategy
+	RefreshTokenStrategy  RefreshTokenStrategy
+	AuthorizeCodeStrategy AuthorizeCodeStrategy
 
 	// AuthorizeCodeGrantStorage is used to persist session data across requests.
 	AuthorizeCodeGrantStorage AuthorizeCodeGrantStorage
 
 	// AuthCodeLifespan defines the lifetime of an authorize code.
-	AuthCodeLifespan          time.Duration
+	AuthCodeLifespan time.Duration
 
 	// AccessTokenLifespan defines the lifetime of an access token.
-	AccessTokenLifespan       time.Duration
+	AccessTokenLifespan time.Duration
 
-	ScopeStrategy             fosite.ScopeStrategy
+	ScopeStrategy fosite.ScopeStrategy
 }
 
 func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {

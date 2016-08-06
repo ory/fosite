@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"golang.org/x/net/context"
 	"github.com/ory-am/fosite"
+	"golang.org/x/net/context"
 )
 
 type HandleHelper struct {

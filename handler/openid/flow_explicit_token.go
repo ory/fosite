@@ -3,9 +3,9 @@ package openid
 import (
 	"net/http"
 
+	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"github.com/ory-am/fosite"
 )
 
 func (c *OpenIDConnectExplicitHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request fosite.AccessRequester) error {

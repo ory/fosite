@@ -2,14 +2,15 @@ package oauth2
 
 import (
 	"net/http"
-	"time"
 	"strconv"
 	"strings"
-	
+	"time"
+
+	"fmt"
+
+	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"github.com/ory-am/fosite"
-	"fmt"
 )
 
 // AuthorizeImplicitGrantTypeHandler is a response handler for the Authorize Code grant using the implicit grant type
@@ -18,12 +19,12 @@ type AuthorizeImplicitGrantTypeHandler struct {
 	AccessTokenStrategy AccessTokenStrategy
 
 	// ImplicitGrantStorage is used to persist session data across requests.
-	AccessTokenStorage  AccessTokenStorage
+	AccessTokenStorage AccessTokenStorage
 
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration
 
-	ScopeStrategy       fosite.ScopeStrategy
+	ScopeStrategy fosite.ScopeStrategy
 }
 
 func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -63,7 +64,7 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	}
 
 	resp.AddFragment("access_token", token)
-	resp.AddFragment("expires_in", strconv.Itoa(int(c.AccessTokenLifespan / time.Second)))
+	resp.AddFragment("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
 	resp.AddFragment("token_type", "bearer")
 	resp.AddFragment("state", ar.GetState())
 	resp.AddFragment("scope", strings.Join(ar.GetGrantedScopes(), "+"))

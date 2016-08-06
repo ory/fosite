@@ -3,17 +3,18 @@ package oauth2
 import (
 	"net/http"
 
+	"fmt"
+
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"fmt"
 )
 
 type ResourceOwnerPasswordCredentialsGrantHandler struct {
 	// ResourceOwnerPasswordCredentialsGrantStorage is used to persist session data across requests.
 	ResourceOwnerPasswordCredentialsGrantStorage ResourceOwnerPasswordCredentialsGrantStorage
 
-	ScopeStrategy                                fosite.ScopeStrategy
+	ScopeStrategy fosite.ScopeStrategy
 
 	*HandleHelper
 }

@@ -12,12 +12,12 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	helpers "github.com/ory-am/fosite/fosite-example/pkg"
+	core "github.com/ory-am/fosite/handler/oauth2"
+	"github.com/ory-am/fosite/handler/openid"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	core "github.com/ory-am/fosite/handler/oauth2"
-	"github.com/ory-am/fosite/handler/openid"
 )
 
 // This is an exemplary storage instance. We will add a client and a user to it so we can use these later on.
@@ -185,10 +185,9 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// we allow issuing of refresh tokens, id tokens and access to "photos" per default
+	// let's see what scopes the user gave consent to
 	for _, scope := range req.PostForm["scopes"] {
 		ar.GrantScope(scope)
-
 	}
 
 	// Now that the user is authorized, we set up a session:
