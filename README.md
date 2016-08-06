@@ -340,7 +340,7 @@ Of course, fosite ships handlers for all OAuth2 and OpenID Connect flows.
  [Refresh Token Grant](https://tools.ietf.org/html/rfc6749#section-6)
 * **[Fosite OpenID Connect Handlers](handler/openid)** implement the
  [Authentication using the Authorization Code Flow](http://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth),
- [Authentication using the Implicit Flow](http://openid.net/specs/openid-connect-core-1_0.html#ImplicitFlowAuth)
+ [Authentication using the Implicit Flow](http://openid.net/specs/openid-connect-core-1_0.html#ImplicitFlowAuth),
  [Authentication using the Hybrid Flow](http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth)
  
 
