@@ -7,20 +7,26 @@ import (
 
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/fosite-example/store"
+	"github.com/ory-am/fosite/compose"
+	store "github.com/ory-am/fosite/fosite-example/pkg"
 	"github.com/ory-am/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 )
 
-func TestValidateRequestAuthorization(t *testing.T) {
+func TestValidate(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	validator := internal.NewMockAuthorizedRequestValidator(ctrl)
+	validator := internal.NewMockTokenValidator(ctrl)
 	defer ctrl.Finish()
 
-	f := NewFosite(store.NewStore())
-	httpreq := &http.Request{Form: url.Values{}}
+	f := compose.ComposeAllEnabled(new(compose.Config), store.NewStore(), []byte{}, nil).(*Fosite)
+	httpreq := &http.Request{
+		Header: http.Header{
+			"Authorization": []string{"bearer some-token"},
+		},
+		Form: url.Values{},
+	}
 
 	for k, c := range []struct {
 		description string
@@ -39,8 +45,8 @@ func TestValidateRequestAuthorization(t *testing.T) {
 			description: "should fail",
 			scopes:      []string{"foo"},
 			setup: func() {
-				f.AuthorizedRequestValidators = AuthorizedRequestValidators{validator}
-				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Return(ErrUnknownRequest)
+				f.TokenValidators = TokenValidators{validator}
+				validator.EXPECT().ValidateToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrUnknownRequest)
 			},
 			expectErr: ErrRequestUnauthorized,
 		},
@@ -48,24 +54,15 @@ func TestValidateRequestAuthorization(t *testing.T) {
 			description: "should fail",
 			scopes:      []string{"foo"},
 			setup: func() {
-				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Return(ErrInvalidClient)
+				validator.EXPECT().ValidateToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrInvalidClient)
 			},
 			expectErr: ErrInvalidClient,
 		},
 		{
-			description: "should fail",
-			setup: func() {
-				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
-					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
-				}).Return(nil)
-			},
-			expectErr: ErrRequestForbidden,
-		},
-		{
 			description: "should pass",
 			setup: func() {
-				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
-					accessRequest.(*AccessRequest).GrantedScopes = []string{f.MandatoryScope}
+				validator.EXPECT().ValidateToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx context.Context, _ string, _ TokenType, accessRequest AccessRequester, _ []string) {
+					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
 				}).Return(nil)
 			},
 		},
@@ -73,14 +70,14 @@ func TestValidateRequestAuthorization(t *testing.T) {
 			description: "should pass",
 			scopes:      []string{"bar"},
 			setup: func() {
-				validator.EXPECT().ValidateRequest(nil, httpreq, gomock.Any()).Do(func(ctx context.Context, req *http.Request, accessRequest AccessRequester) {
+				validator.EXPECT().ValidateToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx context.Context, _ string, _ TokenType, accessRequest AccessRequester, _ []string) {
 					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
 				}).Return(nil)
 			},
 		},
 	} {
 		c.setup()
-		_, err := f.ValidateRequestAuthorization(nil, httpreq, nil, c.scopes...)
+		_, err := f.ValidateToken(nil, AccessTokenFromRequest(httpreq), AccessToken, nil, c.scopes...)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

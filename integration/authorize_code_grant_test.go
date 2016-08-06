@@ -4,18 +4,16 @@ import (
 	"testing"
 
 	"net/http"
-	"time"
 
-	"github.com/ory-am/fosite/handler/core"
-	"github.com/ory-am/fosite/handler/core/explicit"
-	hst "github.com/ory-am/fosite/handler/core/strategy"
+	"github.com/ory-am/fosite/compose"
+	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
+	goauth "golang.org/x/oauth2"
 )
 
-func TestAuthorizeCodeGrant(t *testing.T) {
-	for _, strategy := range []core.AccessTokenStrategy{
+func TestAuthorizeCodeFlow(t *testing.T) {
+	for _, strategy := range []oauth2.AccessTokenStrategy{
 		hmacStrategy,
 	} {
 		runAuthorizeCodeGrantTest(t, strategy)
@@ -23,9 +21,9 @@ func TestAuthorizeCodeGrant(t *testing.T) {
 }
 
 func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
-	f := newFosite()
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2AuthorizeExplicitFactory)
 	ts := mockServer(t, f, &mySessionData{
-		HMACSession: new(hst.HMACSession),
+		HMACSession: new(oauth2.HMACSession),
 	})
 	defer ts.Close()
 
@@ -39,37 +37,10 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 		authStatusCode int
 	}{
 		{
-			description: "should fail because handler not registered",
-			setup: func() {
-				oauthClient.ClientID = "1234"
-			},
-			authStatusCode: http.StatusBadRequest,
-		},
-		{
-			description: "should fail (and redirect) because handler not registered",
-			setup: func() {
-				oauthClient = newOAuth2Client(ts)
-			},
-			authStatusCode: http.StatusNotAcceptable,
-		},
-		{
 			description: "should pass",
 			setup: func() {
+				oauthClient = newOAuth2Client(ts)
 				state = "12345678901234567890"
-				handler := &explicit.AuthorizeExplicitGrantTypeHandler{
-					AccessTokenStrategy:       strategy.(core.AccessTokenStrategy),
-					RefreshTokenStrategy:      strategy.(core.RefreshTokenStrategy),
-					AuthorizeCodeStrategy:     strategy.(core.AuthorizeCodeStrategy),
-					AuthorizeCodeGrantStorage: fositeStore,
-					AuthCodeLifespan:          time.Minute,
-					AccessTokenLifespan:       time.Hour,
-				}
-				f.AuthorizeEndpointHandlers.Append(handler)
-				f.TokenEndpointHandlers.Append(handler)
-				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage:  fositeStore,
-				})
 			},
 			authStatusCode: http.StatusOK,
 		},
@@ -81,11 +52,11 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 		require.Equal(t, c.authStatusCode, resp.StatusCode, "(%d) %s", k, c.description)
 
 		if resp.StatusCode == http.StatusOK {
-			token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
+			token, err := oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
 			require.Nil(t, err, "(%d) %s", k, c.description)
 			require.NotEmpty(t, token.AccessToken, "(%d) %s", k, c.description)
 
-			httpClient := oauthClient.Client(oauth2.NoContext, token)
+			httpClient := oauthClient.Client(goauth.NoContext, token)
 			resp, err := httpClient.Get(ts.URL + "/info")
 			require.Nil(t, err, "(%d) %s", k, c.description)
 			assert.Equal(t, http.StatusNoContent, resp.StatusCode, "(%d) %s", k, c.description)

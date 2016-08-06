@@ -8,9 +8,16 @@ import (
 	"golang.org/x/net/context"
 )
 
-var DefaultMandatoryScope = "fosite"
-
 const MinParameterEntropy = 8
+
+type TokenType string
+
+const (
+	AccessToken   TokenType = "access_token"
+	RefreshToken  TokenType = "refresh_token"
+	AuthorizeCode TokenType = "authorize_code"
+	IDToken       TokenType = "id_token"
+)
 
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
 // Check fosite.Fosite for an implementation of this interface.
@@ -104,13 +111,9 @@ type OAuth2Provider interface {
 	// https://tools.ietf.org/html/rfc6749#section-5.1
 	WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder)
 
-	// ValidateRequestAuthorization returns nil if the http request contains a valid access token or an error if not.
-	// If the token is valid, ValidateRequestAuthorization will return the access request object.
-	ValidateRequestAuthorization(ctx context.Context, req *http.Request, session interface{}, scope ...string) (AccessRequester, error)
-
-	// GetMandatoryScope returns the mandatory scope. Fosite enforces the usage of at least one scope. Returns a
-	// default value if no scope was set.
-	GetMandatoryScope() string
+	// ValidateToken validates a token. Popular validators include authorize code, id token, access token and refresh token.
+	// Returns an error if validation failed.
+	ValidateToken(ctx context.Context, token string, tokenType TokenType, session interface{}, scope ...string) (AccessRequester, error)
 }
 
 // Requester is an abstract interface for handling requests in Fosite.
@@ -121,11 +124,14 @@ type Requester interface {
 	// GetClient returns the requests client.
 	GetClient() (client Client)
 
-	// GetScopes returns the request's scopes.
-	GetScopes() (scopes Arguments)
+	// GetRequestedScopes returns the request's scopes.
+	GetRequestedScopes() (scopes Arguments)
 
-	// SetScopes sets the request's scopes.
-	SetScopes(scopes Arguments)
+	// SetRequestedScopes sets the request's scopes.
+	SetRequestedScopes(scopes Arguments)
+
+	// AppendRequestedScope appends a scope to the request.
+	AppendRequestedScope(scope string)
 
 	// GetGrantScopes returns all granted scopes.
 	GetGrantedScopes() (grantedScopes Arguments)

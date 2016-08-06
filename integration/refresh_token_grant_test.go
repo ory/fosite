@@ -6,17 +6,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory-am/fosite/handler/core"
-	"github.com/ory-am/fosite/handler/core/explicit"
-	"github.com/ory-am/fosite/handler/core/refresh"
-	hst "github.com/ory-am/fosite/handler/core/strategy"
+	"github.com/ory-am/fosite/compose"
+	hst "github.com/ory-am/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
+	oauth2 "golang.org/x/oauth2"
 )
 
-func TestRefreshTokenGrant(t *testing.T) {
-	for _, strategy := range []core.AccessTokenStrategy{
+func TestRefreshTokenFlow(t *testing.T) {
+	for _, strategy := range []hst.AccessTokenStrategy{
 		hmacStrategy,
 	} {
 		runRefreshTokenGrantTest(t, strategy)
@@ -24,53 +22,30 @@ func TestRefreshTokenGrant(t *testing.T) {
 }
 
 func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
-	f := newFosite()
+	f := compose.Compose(
+		new(compose.Config),
+		fositeStore,
+		strategy,
+		compose.OAuth2AuthorizeExplicitFactory,
+		compose.OAuth2RefreshTokenGrantFactory,
+	)
 	ts := mockServer(t, f, &mySessionData{
 		HMACSession: new(hst.HMACSession),
 	})
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
-	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
-
-	handler := &explicit.AuthorizeExplicitGrantTypeHandler{
-		AccessTokenStrategy:       strategy.(core.AccessTokenStrategy),
-		RefreshTokenStrategy:      strategy.(core.RefreshTokenStrategy),
-		AuthorizeCodeStrategy:     strategy.(core.AuthorizeCodeStrategy),
-		AuthorizeCodeGrantStorage: fositeStore,
-		AuthCodeLifespan:          time.Minute,
-		AccessTokenLifespan:       time.Second,
-	}
-	f.AuthorizeEndpointHandlers.Append(handler)
-	f.TokenEndpointHandlers.Append(handler)
-	f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-		AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-		AccessTokenStorage:  fositeStore,
-	})
-
 	state := "1234567890"
+	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
 	for k, c := range []struct {
 		description string
 		setup       func()
 		pass        bool
 	}{
 		{
-			description: "should fail because handler not registered",
+			description: "should fail because scope missing",
 			setup:       func() {},
 			pass:        false,
-		},
-		{
-			description: "should fail because scope missing",
-			setup: func() {
-				handler := &refresh.RefreshTokenGrantHandler{
-					AccessTokenStrategy:      strategy.(core.AccessTokenStrategy),
-					RefreshTokenStrategy:     strategy.(core.RefreshTokenStrategy),
-					RefreshTokenGrantStorage: fositeStore,
-					AccessTokenLifespan:      time.Second,
-				}
-				f.TokenEndpointHandlers.Append(handler)
-			},
-			pass: false,
 		},
 		{
 			description: "should pass",

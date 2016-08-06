@@ -39,16 +39,6 @@ func (_mr *_MockClientRecorder) GetGrantTypes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantTypes")
 }
 
-func (_m *MockClient) GetGrantedScopes() fosite.Scopes {
-	ret := _m.ctrl.Call(_m, "GetGrantedScopes")
-	ret0, _ := ret[0].(fosite.Scopes)
-	return ret0
-}
-
-func (_mr *_MockClientRecorder) GetGrantedScopes() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantedScopes")
-}
-
 func (_m *MockClient) GetHashedSecret() []byte {
 	ret := _m.ctrl.Call(_m, "GetHashedSecret")
 	ret0, _ := ret[0].([]byte)
@@ -97,4 +87,14 @@ func (_m *MockClient) GetResponseTypes() fosite.Arguments {
 
 func (_mr *_MockClientRecorder) GetResponseTypes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetResponseTypes")
+}
+
+func (_m *MockClient) GetScopes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetScopes")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockClientRecorder) GetScopes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetScopes")
 }

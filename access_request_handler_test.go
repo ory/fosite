@@ -13,7 +13,6 @@ import (
 	"github.com/ory-am/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
 )
 
 func TestNewAccessRequest(t *testing.T) {
@@ -140,28 +139,7 @@ func TestNewAccessRequest(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
-				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester) {
-					a.SetScopes([]string{"asdfasdf"})
-				}).Return(nil)
-			},
-			handlers:  TokenEndpointHandlers{handler},
-			expectErr: ErrInvalidScope,
-		},
-		{
-			header: http.Header{
-				"Authorization": {basicAuth("foo", "bar")},
-			},
-			method: "POST",
-			form: url.Values{
-				"grant_type": {"foo"},
-			},
-			mock: func() {
-				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
-				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
-				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(_ context.Context, _ *http.Request, a AccessRequester) {
-					a.SetScopes([]string{DefaultMandatoryScope})
-				}).Return(nil)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: TokenEndpointHandlers{handler},
 			expect: &AccessRequest{

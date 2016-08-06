@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/ory-am/fosite"
-	hst "github.com/ory-am/fosite/handler/core/strategy"
+	foauth "github.com/ory-am/fosite/handler/oauth2"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,13 +16,13 @@ type stackTracer interface {
 
 type mySessionData struct {
 	Foo string
-	*hst.HMACSession
+	*foauth.HMACSession
 }
 
 func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
-		if _, err := oauth2.ValidateRequestAuthorization(ctx, req, session); err != nil {
+		if _, err := oauth2.ValidateToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session); err != nil {
 			rfcerr := fosite.ErrorToRFC6749Error(err)
 			t.Logf("Info request failed because %s.", err.Error())
 			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
@@ -47,8 +47,11 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session int
 			return
 		}
 
-		if ar.GetScopes().Has("offline") {
+		if ar.GetRequestedScopes().Has("offline") {
 			ar.GrantScope("offline")
+		}
+		if ar.GetRequestedScopes().Has("openid") {
+			ar.GrantScope("openid")
 		}
 
 		// Normally, this would be the place where you would check if the user is logged in and gives his consent.
@@ -92,7 +95,7 @@ func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw ht
 		ctx := fosite.NewContext()
 
 		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData{
-			HMACSession: &hst.HMACSession{},
+			HMACSession: &foauth.HMACSession{},
 		})
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())

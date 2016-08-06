@@ -32,6 +32,14 @@ func (_m *MockRequester) EXPECT() *_MockRequesterRecorder {
 	return _m.recorder
 }
 
+func (_m *MockRequester) AppendRequestedScope(_param0 string) {
+	_m.ctrl.Call(_m, "AppendRequestedScope", _param0)
+}
+
+func (_mr *_MockRequesterRecorder) AppendRequestedScope(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AppendRequestedScope", arg0)
+}
+
 func (_m *MockRequester) GetClient() fosite.Client {
 	ret := _m.ctrl.Call(_m, "GetClient")
 	ret0, _ := ret[0].(fosite.Client)
@@ -72,14 +80,14 @@ func (_mr *_MockRequesterRecorder) GetRequestedAt() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedAt")
 }
 
-func (_m *MockRequester) GetScopes() fosite.Arguments {
-	ret := _m.ctrl.Call(_m, "GetScopes")
+func (_m *MockRequester) GetRequestedScopes() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetRequestedScopes")
 	ret0, _ := ret[0].(fosite.Arguments)
 	return ret0
 }
 
-func (_mr *_MockRequesterRecorder) GetScopes() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetScopes")
+func (_mr *_MockRequesterRecorder) GetRequestedScopes() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedScopes")
 }
 
 func (_m *MockRequester) GetSession() interface{} {
@@ -108,12 +116,12 @@ func (_mr *_MockRequesterRecorder) Merge(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Merge", arg0)
 }
 
-func (_m *MockRequester) SetScopes(_param0 fosite.Arguments) {
-	_m.ctrl.Call(_m, "SetScopes", _param0)
+func (_m *MockRequester) SetRequestedScopes(_param0 fosite.Arguments) {
+	_m.ctrl.Call(_m, "SetRequestedScopes", _param0)
 }
 
-func (_mr *_MockRequesterRecorder) SetScopes(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetScopes", arg0)
+func (_mr *_MockRequesterRecorder) SetRequestedScopes(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetRequestedScopes", arg0)
 }
 
 func (_m *MockRequester) SetSession(_param0 interface{}) {

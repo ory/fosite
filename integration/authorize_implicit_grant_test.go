@@ -8,17 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory-am/fosite/handler/core"
-	"github.com/ory-am/fosite/handler/core/implicit"
-	hst "github.com/ory-am/fosite/handler/core/strategy"
+	"github.com/ory-am/fosite/compose"
+	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/oauth2"
+	goauth "golang.org/x/oauth2"
 )
 
-func TestAuthorizeImplicitGrant(t *testing.T) {
-	for _, strategy := range []core.AccessTokenStrategy{
+func TestAuthorizeImplicitFlow(t *testing.T) {
+	for _, strategy := range []oauth2.AccessTokenStrategy{
 		hmacStrategy,
 	} {
 		runTestAuthorizeImplicitGrant(t, strategy)
@@ -26,9 +25,9 @@ func TestAuthorizeImplicitGrant(t *testing.T) {
 }
 
 func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
-	f := newFosite()
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2AuthorizeImplicitFactory)
 	ts := mockServer(t, f, &mySessionData{
-		HMACSession: new(hst.HMACSession),
+		HMACSession: new(oauth2.HMACSession),
 	})
 	defer ts.Close()
 
@@ -45,16 +44,6 @@ func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 			description: "should pass",
 			setup: func() {
 				state = "12345678901234567890"
-				handler := &implicit.AuthorizeImplicitGrantTypeHandler{
-					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage:  fositeStore,
-					AccessTokenLifespan: time.Hour,
-				}
-				f.AuthorizeEndpointHandlers.Append(handler)
-				f.AuthorizedRequestValidators.Append(&core.CoreValidator{
-					AccessTokenStrategy: strategy.(core.AccessTokenStrategy),
-					AccessTokenStorage:  fositeStore,
-				})
 			},
 			authStatusCode: http.StatusOK,
 		},
@@ -77,14 +66,14 @@ func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 			require.Nil(t, err)
 			expires, err := strconv.Atoi(fragment.Get("expires_in"))
 			require.Nil(t, err)
-			token := &oauth2.Token{
+			token := &goauth.Token{
 				AccessToken:  fragment.Get("access_token"),
 				TokenType:    fragment.Get("token_type"),
 				RefreshToken: fragment.Get("refresh_token"),
 				Expiry:       time.Now().Add(time.Duration(expires) * time.Second),
 			}
 
-			httpClient := oauthClient.Client(oauth2.NoContext, token)
+			httpClient := oauthClient.Client(goauth.NoContext, token)
 			resp, err := httpClient.Get(ts.URL + "/info")
 			require.Nil(t, err, "(%d) %s", k, c.description)
 			assert.Equal(t, http.StatusNoContent, resp.StatusCode, "(%d) %s", k, c.description)

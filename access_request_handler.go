@@ -47,7 +47,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return accessRequest, errors.New("Session must not be nil")
 	}
 
-	accessRequest.Scopes = removeEmpty(strings.Split(r.PostForm.Get("scope"), " "))
+	accessRequest.SetRequestedScopes(removeEmpty(strings.Split(r.PostForm.Get("scope"), " ")))
 	accessRequest.GrantTypes = removeEmpty(strings.Split(r.PostForm.Get("grant_type"), " "))
 	if len(accessRequest.GrantTypes) < 1 {
 		return accessRequest, errors.Wrap(ErrInvalidRequest, "No grant type given")
@@ -83,11 +83,5 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	if !found {
 		return nil, errors.Wrap(ErrInvalidRequest, "")
 	}
-
-	if !accessRequest.GetScopes().Has(f.GetMandatoryScope()) {
-		return accessRequest, errors.Wrap(ErrInvalidScope, "")
-	}
-
-	accessRequest.GrantScope(f.GetMandatoryScope())
 	return accessRequest, nil
 }
