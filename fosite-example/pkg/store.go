@@ -1,4 +1,4 @@
-package store
+package pkg
 
 import (
 	"github.com/ory-am/fosite"
