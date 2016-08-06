@@ -1,4 +1,4 @@
-package pkg
+package main
 
 import (
 	"crypto/rand"
@@ -160,27 +160,35 @@ func authEndpoint(rw http.ResponseWriter, req *http.Request) {
 	}
 	// You have now access to authorizeRequest, Code ResponseTypes, Scopes ...
 
+	var requestedScopes string
+	for _, this := range ar.GetRequestedScopes() {
+		requestedScopes += fmt.Sprintf(`<li><input type="checkbox" name="scopes" value="%s">%s</li>`, this, this)
+	}
+
 	// Normally, this would be the place where you would check if the user is logged in and gives his consent.
 	// We're simplifying things and just checking if the request includes a valid username and password
-	if req.Form.Get("username") != "peter" {
+	req.ParseForm()
+	if req.PostForm.Get("username") != "peter" {
 		rw.Header().Set("Content-Type", "text/html; charset=utf-8")
 		rw.Write([]byte(`<h1>Login page</h1>`))
-		rw.Write([]byte(`
+		rw.Write([]byte(fmt.Sprintf(`
 			<p>Howdy! This is the log in page. For this example, it is enough to supply the username.</p>
 			<form method="post">
+				<p>
+					By logging in, you consent to grant these scopes:
+					<ul>%s</ul>
+				</p>
 				<input type="text" name="username" /> <small>try peter</small><br>
 				<input type="submit">
 			</form>
-		`))
+		`, requestedScopes)))
 		return
 	}
 
-	// we allow issuing of refresh tokens per default
-	if ar.GetRequestedScopes().Has("offline") {
-		ar.GrantScope("offline")
-	}
-	if ar.GetRequestedScopes().Has("photos") {
-		ar.GrantScope("photos")
+	// we allow issuing of refresh tokens, id tokens and access to "photos" per default
+	for _, scope := range req.PostForm["scopes"] {
+		ar.GrantScope(scope)
+
 	}
 
 	// Now that the user is authorized, we set up a session:
@@ -230,7 +238,7 @@ func validateEndpoint(rw http.ResponseWriter, req *http.Request) {
 	ctx := fosite.NewContext()
 	mySessionData := newSession("peter")
 
-	ar, err := oauth2.ValidateToken(ctx, req.URL.Query().Get("token"), fosite.AccessToken, mySessionData, "photos", "photos.create")
+	ar, err := oauth2.ValidateToken(ctx, req.URL.Query().Get("token"), fosite.AccessToken, mySessionData)
 	if err != nil {
 		fmt.Fprintf(rw, "<h1>An error occurred!</h1>%s", err.Error())
 		return

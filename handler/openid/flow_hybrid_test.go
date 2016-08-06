@@ -99,7 +99,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
 					Scopes:        []string{"openid"},
 				}
-				areq.Scopes = fosite.Arguments{"openid"}
+				areq.GrantedScopes = fosite.Arguments{"openid"}
 			},
 			expectErr: ErrInvalidSession,
 		},

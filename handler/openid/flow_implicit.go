@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/context"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/oauth2"
+	"fmt"
 )
 
 type OpenIDConnectImplicitHandler struct {
@@ -19,30 +20,30 @@ type OpenIDConnectImplicitHandler struct {
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
-	if !(ar.GetRequestedScopes().Has("openid") && (ar.GetResponseTypes().Has("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
+	if !(ar.GetGrantedScopes().Has("openid") && (ar.GetResponseTypes().Has("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
 		return nil
 	}
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use implicit grant type")
 	}
 
 	if ar.GetResponseTypes().Exact("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use response type id_token")
 	} else if ar.GetResponseTypes().Matches("token", "id_token") && !ar.GetClient().GetResponseTypes().Has("token", "id_token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use response type token and id_token")
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, "")
+			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
 		}
 	}
 
 	sess, ok := ar.GetSession().(Session)
 	if !ok {
-		return ErrInvalidSession
+		return errors.Wrap(ErrInvalidSession, "")
 	}
 
 	claims := sess.IDTokenClaims()

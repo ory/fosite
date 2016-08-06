@@ -30,7 +30,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type refresh_token")
 	}
 
 	refresh := req.PostForm.Get("refresh_token")
@@ -54,7 +54,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
 	if accessRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.Wrap(fosite.ErrInvalidRequest, "")
+		return errors.Wrap(fosite.ErrInvalidRequest, "Client ID mismatch")
 	}
 	return nil
 }

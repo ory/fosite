@@ -60,7 +60,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should not do anything because request requirements are not met",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{}
-				areq.Scopes = fosite.Arguments{"openid"}
+				areq.GrantedScopes = fosite.Arguments{"openid"}
 			},
 		},
 		{

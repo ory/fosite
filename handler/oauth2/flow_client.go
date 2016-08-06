@@ -6,6 +6,7 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"fmt"
 )
 
 type ClientCredentialsGrantHandler struct {
@@ -24,7 +25,7 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, "")
+			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
 		}
 	}
 
@@ -43,7 +44,7 @@ func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("client_credentials") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type client_credentials")
 	}
 
 	return c.IssueAccessToken(ctx, r, request, response)

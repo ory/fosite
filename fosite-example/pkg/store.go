@@ -43,7 +43,7 @@ func NewExampleStore() *Store {
 				RedirectURIs:  []string{"http://localhost:3846/callback"},
 				ResponseTypes: []string{"id_token", "code", "token"},
 				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
-				Scopes:        []string{"fosite", "photos", "offline"},
+				Scopes:        []string{"fosite", "openid", "photos", "offline"},
 			},
 		},
 		Users: map[string]UserRelation{

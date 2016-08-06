@@ -80,14 +80,14 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
 				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(fosite.NewAuthorizeRequest(), nil)
 			},
-			expectErr: fosite.ErrUnknownRequest,
+			expectErr: fosite.ErrMisconfiguration,
 		},
 		{
 			description: "should pass",
 			setup: func() {
 				r := fosite.NewAuthorizeRequest()
 				r.Session = areq.Session
-				r.Scopes = fosite.Arguments{"openid"}
+				r.GrantedScopes = fosite.Arguments{"openid"}
 				r.Form.Set("nonce", "1111111111111111")
 				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).AnyTimes().Return(r, nil)
 			},

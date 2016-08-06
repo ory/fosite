@@ -30,7 +30,7 @@ func (f *Fosite) ValidateToken(ctx context.Context, token string, tokenType Toke
 		if err := errors.Cause(validator.ValidateToken(ctx, token, tokenType, ar, scopes)); err == ErrUnknownRequest {
 			// Nothing to do
 		} else if err != nil {
-			return nil, errors.Wrap(err, "")
+			return nil, errors.Wrap(err, "An error occurred")
 		} else {
 			found = true
 		}

@@ -24,6 +24,7 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 		CoreValidator: &oauth2.CoreValidator{
 			CoreStrategy: strategy.(oauth2.CoreStrategy),
 			CoreStorage:  storage.(oauth2.CoreStorage),
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
 }
@@ -46,6 +47,7 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 		CoreValidator: &oauth2.CoreValidator{
 			CoreStrategy: strategy.(oauth2.CoreStrategy),
 			CoreStorage:  storage.(oauth2.CoreStorage),
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
 }
@@ -66,6 +68,7 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 		CoreValidator: &oauth2.CoreValidator{
 			CoreStrategy: strategy.(oauth2.CoreStrategy),
 			CoreStorage:  storage.(oauth2.CoreStorage),
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
 }
@@ -86,6 +89,7 @@ func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strateg
 		CoreValidator: &oauth2.CoreValidator{
 			CoreStrategy: strategy.(oauth2.CoreStrategy),
 			CoreStorage:  storage.(oauth2.CoreStorage),
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
 }
@@ -109,6 +113,7 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 		CoreValidator: &oauth2.CoreValidator{
 			CoreStrategy: strategy.(oauth2.CoreStrategy),
 			CoreStorage:  storage.(oauth2.CoreStorage),
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
 }

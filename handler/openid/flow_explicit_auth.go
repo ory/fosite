@@ -16,16 +16,16 @@ type OpenIDConnectExplicitHandler struct {
 }
 
 func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
-	if !(ar.GetRequestedScopes().Has("openid") && ar.GetResponseTypes().Exact("code")) {
+	if !(ar.GetGrantedScopes().Has("openid") && ar.GetResponseTypes().Exact("code")) {
 		return nil
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("id_token", "code") {
-		return errors.Wrap(fosite.ErrInvalidClient, "client is not allowed to use rseponse type id_token and code")
+		return errors.Wrap(fosite.ErrInvalidRequest, "The client is not allowed to use response type id_token and code")
 	}
 
 	if len(resp.GetCode()) == 0 {
-		return errors.Wrap(fosite.ErrMisconfiguration, "code is not set")
+		return errors.Wrap(fosite.ErrMisconfiguration, "Authorization code has not been issued yet")
 	}
 
 	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar); err != nil {

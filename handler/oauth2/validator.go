@@ -30,14 +30,16 @@ func (c *CoreValidator) validateAccessToken(ctx context.Context, token string, a
 	sig := c.CoreStrategy.AccessTokenSignature(token)
 	or, err := c.CoreStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession())
 	if err != nil {
+		fmt.Printf("%s", err)
 		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
 	} else if err := c.CoreStrategy.ValidateAccessToken(ctx, or, token); err != nil {
+		fmt.Printf("%s", err)
 		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
 	}
 
 	for _, scope := range scopes {
-		if !c.ScopeStrategy(accessRequest.GetGrantedScopes(), scope) {
-			return errors.Wrap(fosite.ErrRequestForbidden, fmt.Sprintf("scope %s was not granted", scope))
+		if !c.ScopeStrategy(or.GetGrantedScopes(), scope) {
+			return errors.Wrap(fosite.ErrInvalidScope, "")
 		}
 	}
 

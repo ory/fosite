@@ -6,6 +6,7 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"fmt"
 )
 
 type ResourceOwnerPasswordCredentialsGrantHandler struct {
@@ -26,13 +27,13 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("password") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type password")
 	}
 
 	username := req.PostForm.Get("username")
 	password := req.PostForm.Get("password")
 	if username == "" || password == "" {
-		return errors.Wrap(fosite.ErrInvalidRequest, "")
+		return errors.Wrap(fosite.ErrInvalidRequest, "Username or password missing")
 	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	} else if err != nil {
@@ -42,7 +43,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, "")
+			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
 		}
 	}
 

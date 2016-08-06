@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"github.com/ory-am/fosite"
+	"fmt"
 )
 
 // AuthorizeImplicitGrantTypeHandler is a response handler for the Authorize Code grant using the implicit grant type
@@ -32,17 +33,17 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use response type token")
 	}
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type implicit")
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, "")
+			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
 		}
 	}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"github.com/ory-am/fosite"
+	"fmt"
 )
 
 type OpenIDConnectHybridHandler struct {
@@ -29,9 +30,9 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("token", "code") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the code and token response type")
 	} else if ar.GetResponseTypes().Matches("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the id_token response type")
 	}
 
 	sess, ok := ar.GetSession().(Session)
@@ -42,14 +43,14 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, "")
+			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
 		}
 	}
 
 	claims := sess.IDTokenClaims()
 	if ar.GetResponseTypes().Has("code") {
 		if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
-			return errors.Wrap(fosite.ErrInvalidGrant, "")
+			return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the authorization_code grant type")
 		}
 
 		code, signature, err := c.AuthorizeExplicitGrantHandler.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
@@ -72,7 +73,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 	if ar.GetResponseTypes().Has("token") {
 		if !ar.GetClient().GetGrantTypes().Has("implicit") {
-			return errors.Wrap(fosite.ErrInvalidGrant, "")
+			return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the implicit grant type")
 		} else if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
 			return errors.Wrap(err, err.Error())
 		}
@@ -85,7 +86,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		claims.AccessTokenHash = hash[:c.Enigma.GetSigningMethodLength()/2]
 	}
 
-	if !ar.GetRequestedScopes().Has("openid") {
+	if !ar.GetGrantedScopes().Has("openid") {
 		return nil
 	}
 

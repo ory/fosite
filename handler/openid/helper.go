@@ -17,7 +17,6 @@ func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, netr *http.Re
 		return "", err
 	}
 
-	fosr.GrantScope("openid")
 	return token, nil
 }
 

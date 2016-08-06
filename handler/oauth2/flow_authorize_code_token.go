@@ -19,7 +19,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type authorization_code")
 	}
 
 	code := r.PostForm.Get("code")
@@ -43,7 +43,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,
 	if authorizeRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.Wrap(fosite.ErrInvalidRequest, "")
+		return errors.Wrap(fosite.ErrInvalidRequest, "Client ID mismatch")
 	}
 
 	// ensure that the "redirect_uri" parameter is present if the
@@ -52,7 +52,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// their values are identical.
 	forcedRedirectURI := authorizeRequest.GetRequestForm().Get("redirect_uri")
 	if forcedRedirectURI != "" && forcedRedirectURI != r.PostForm.Get("redirect_uri") {
-		return errors.Wrap(fosite.ErrInvalidRequest, "")
+		return errors.Wrap(fosite.ErrInvalidRequest, "Redirect URI mismatch")
 	}
 
 	// Checking of POST client_id skipped, because:
