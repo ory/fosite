@@ -331,17 +331,18 @@ This storage fulfills requirements from all OAuth2 and OpenID Conenct handlers.
 ### Extensible handlers
 
 OAuth2 is a framework. Fosite mimics this behaviour by enabling you to replace existing or create new OAuth2 handlers.
-Of course, fosite ships handlers for all OAuth2 and OpenID Connect flows as listed below:
+Of course, fosite ships handlers for all OAuth2 and OpenID Connect flows.
 
-* `github.com/ory-am/fosite/handler/oauth2.AuthorizeExplicitEndpointHandler` implements the
-  [Authorization Code Grant](https://tools.ietf.org/html/rfc6749#section-4.1)
-* `github.com/ory-am/fosite/handler/oauth2.AuthorizeImplicitEndpointHandler` implements the
-  [Implicit Grant](https://tools.ietf.org/html/rfc6749#section-4.2)
-* `github.com/ory-am/fosite/handler/oauth2/token.TokenROPasswordCredentialsEndpointHandler` implements the
-  [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3)
-* `github.com/ory-am/fosite/handler/oauth2/token.TokenClientCredentialsEndpointHandler` implements the
-  [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4)
-* There are also [OpenID Connect Handlers available](handler/openid).
+* **[Fosite OAuth2 Core Handlers](handler/oauth2)** implement the [Client Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.4),
+ [Resource Owner Password Credentials Grant](https://tools.ietf.org/html/rfc6749#section-4.3),
+ [Implicit Grant](https://tools.ietf.org/html/rfc6749#section-4.2),
+ [Authorization Code Grant](https://tools.ietf.org/html/rfc6749#section-4.1),
+ [Refresh Token Grant](https://tools.ietf.org/html/rfc6749#section-6)
+* **[Fosite OpenID Connect Handlers](handler/openid)** implement the
+ [Authentication using the Authorization Code Flow](http://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth),
+ [Authentication using the Implicit Flow](http://openid.net/specs/openid-connect-core-1_0.html#ImplicitFlowAuth)
+ [Authentication using the Hybrid Flow](http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth)
+ 
 
 This section is missing documentation and we welcome any contributions in that direction.
 
