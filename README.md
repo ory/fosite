@@ -4,6 +4,8 @@
 [![Coverage Status](https://coveralls.io/repos/ory-am/fosite/badge.svg?branch=master&service=github&foo)](https://coveralls.io/github/ory-am/fosite?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/ory-am/fosite)](https://goreportcard.com/report/ory-am/fosite)
 
+[![Join the chat at https://gitter.im/ory-am/fosite](https://badges.gitter.im/ory-am/fosite.svg)](https://gitter.im/ory-am/fosite)
+
 **The security first OAuth2 & OpenID Connect framework for [Google's Go Language](https://golang.org).**
 Built simple, powerful and extensible. This library implements peer-reviewed [IETF RFC6749](https://tools.ietf.org/html/rfc6749),
 counterfeits weaknesses covered in peer-reviewed [IETF RFC6819](https://tools.ietf.org/html/rfc6819) and countermeasures various database
