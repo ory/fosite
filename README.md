@@ -1,5 +1,7 @@
 # ![Fosite security first OAuth2 framework](fosite.png)
 
+[![Join the chat at https://gitter.im/ory-am/fosite](https://badges.gitter.im/ory-am/fosite.svg)](https://gitter.im/ory-am/fosite?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 **The security first OAuth2 & OpenID Connect framework for [Google's Go Language](https://golang.org).**
 Built simple, powerful and extensible. This library implements peer-reviewed [IETF RFC6749](https://tools.ietf.org/html/rfc6749),
 counterfeits weaknesses covered in peer-reviewed [IETF RFC6819](https://tools.ietf.org/html/rfc6819) and countermeasures various database
