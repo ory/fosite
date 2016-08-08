@@ -1,10 +1,23 @@
 hash: 8b62f922bca8a59a41f4cdb8e3bd4508444bc1b9932f71cff3747861294e46a3
-updated: 2016-08-08T14:15:17.509662351+02:00
+updated: 2016-08-08T15:45:40.286188156+02:00
 imports:
+- name: camlistore.org
+  version: 41516af23d58b64efe7712e8be2d3f9fd94fb693
+  subpackages:
+  - pkg/blob
+  - pkg/constants
+  - pkg/googlestorage
+- name: cloud.google.com/go
+  version: f9495dc7d5d062d1b04f594f06347c9a38be96bb
+  subpackages:
+  - compute/metadata
+  - internal
 - name: github.com/asaskevich/govalidator
   version: 7664702784775e51966f0885f5cd27435916517b
 - name: github.com/dgrijalva/jwt-go
   version: 268038b363c7a8d7306b8e35bf77a1fde4b0c402
+- name: github.com/golang/glog
+  version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
 - name: github.com/golang/mock
   version: bd3c8e81be01eef76d4b503f5e687d2d1354d2d9
   subpackages:
@@ -13,6 +26,23 @@ imports:
   version: c3cefd437628a0b7d31b34fe44b3a7a540e98527
   subpackages:
   - proto
+  - proto/testdata
+  - protoc-gen-go/descriptor
+  - ptypes/any
+  - ptypes/duration
+  - ptypes/empty
+  - ptypes/struct
+  - ptypes/timestamp
+  - ptypes/wrappers
+- name: github.com/googleapis/gax-go
+  version: 8b0741b94759890156bc4a00cedd6e4f7cf744de
+- name: github.com/googleapis/proto-client-go
+  version: e5790fe2658ab48a2a8f8bf5247be730d7f844f2
+  subpackages:
+  - api
+  - logging/type_
+  - logging/v2
+  - rpc
 - name: github.com/moul/http2curl
   version: b1479103caacaa39319f75e7f57fc545287fca0d
 - name: github.com/parnurzeal/gorequest
@@ -23,35 +53,121 @@ imports:
   version: 01fa4104b9c248c8945d14d9f128454d5b28d595
 - name: github.com/Sirupsen/logrus
   version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
+- name: go4.org
+  version: 401618586120d672bfd8ddf033bafd1c96c31241
+  subpackages:
+  - readerutil
+  - syncutil/singleflight
 - name: golang.org/x/crypto
   version: e0d166c33c321d0ff863f459a5882096e334f508
   subpackages:
   - bcrypt
   - blowfish
+  - ssh/terminal
 - name: golang.org/x/net
   version: 075e191f18186a8ff2becaf64478e30f4545cdad
   subpackages:
   - context
+  - http2
+  - http2/hpack
+  - internal/timeseries
+  - lex/httplex
   - publicsuffix
+  - trace
 - name: golang.org/x/oauth2
   version: 04e1573abc896e70388bd387a69753c378d46466
   subpackages:
   - clientcredentials
   - internal
+  - jws
+  - jwt
 - name: golang.org/x/sys
   version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
   subpackages:
   - unix
+- name: google.golang.org/api
+  version: 3f131f305a2ae45080e71fdb780128cc92e8745e
+  subpackages:
+  - bigquery/v2
+  - cloudtrace/v1
+  - compute/v1
+  - container/v1
+  - gensupport
+  - googleapi
+  - googleapi/internal/uritemplates
+  - internal
+  - logging/v1beta3
+  - option
+  - pubsub/v1
+  - storage/v1
+  - transport
 - name: google.golang.org/appengine
   version: b4728023490a62e70ba739ff62aa65ffcca84210
   subpackages:
+  - datastore
   - internal
+  - internal/app_identity
   - internal/base
+  - internal/blobstore
+  - internal/capability
+  - internal/channel
   - internal/datastore
+  - internal/image
   - internal/log
+  - internal/modules
   - internal/remote_api
   - internal/urlfetch
+  - log
+  - taskqueue
   - urlfetch
+  - user
+- name: google.golang.org/cloud
+  version: c14fbfa4d259bf20a9a236a19c03a8b05f12b444
+  subpackages:
+  - bigtable/internal/cbtrc
+  - bigtable/internal/option
+  - bigtable/internal/stat
+  - compute/metadata
+  - internal
+  - logging
+  - pubsub
+  - storage
+- name: google.golang.org/genproto
+  version: 9f48fed629f137e474fb7422a911dfad49e2eaae
+  subpackages:
+  - googleapis/api/label
+  - googleapis/api/metric
+  - googleapis/api/monitoredres
+  - googleapis/api/serviceconfig
+  - googleapis/bigtable/admin/v2
+  - googleapis/bigtable/v2
+  - googleapis/datastore/v1beta3
+  - googleapis/longrunning
+  - googleapis/rpc
+  - googleapis/type
+  - protobuf
+- name: google.golang.org/grpc
+  version: 35896af9ad39c1fb1b1cd925fe3621be361e3d81
+  subpackages:
+  - benchmark/grpc_testing
+  - benchmark/stats
+  - codes
+  - credentials
+  - examples/helloworld/helloworld
+  - examples/route_guide/routeguide
+  - grpclog
+  - health/grpc_health_v1
+  - internal
+  - interop/grpc_testing
+  - metadata
+  - naming
+  - reflection/grpc_reflection_v1alpha
+  - stress/grpc_testing
+  - transport
+- name: gopkg.in/airbrake/gobrake.v2
+  version: 31c8ff1fb8b79a6947e6565e9a6df535f98a6b94
+- name: gopkg.in/gemnasium/logrus-airbrake-hook.v2
+  version: 31e6fd4bd5a98d8ee7673d24bc54ec73c31810dd
 testImports:
 - name: github.com/davecgh/go-spew
   version: 2df174808ee097f90d259e432cc04442cf60be21
