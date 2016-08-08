@@ -17,28 +17,18 @@ type Client interface {
 	// Returns the client's allowed response types.
 	GetResponseTypes() Arguments
 
-	// Returns the client's owner.
-	GetOwner() string
-
 	// Returns the scopes this client is allowed to request.
 	GetScopes() Arguments
 }
 
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
-	ID                string   `json:"id" gorethink:"id"`
-	Name              string   `json:"client_name" gorethink:"client_name"`
-	Secret            []byte   `json:"client_secret,omitempty" gorethink:"client_secret"`
-	RedirectURIs      []string `json:"redirect_uris" gorethink:"redirect_uris"`
-	GrantTypes        []string `json:"grant_types" gorethink:"grant_types"`
-	ResponseTypes     []string `json:"response_types" gorethink:"response_types"`
-	Scopes            []string `json:"scopes" gorethink:"scopes"`
-	Owner             string   `json:"owner" gorethink:"owner"`
-	PolicyURI         string   `json:"policy_uri" gorethink:"policy_uri"`
-	TermsOfServiceURI string   `json:"tos_uri" gorethink:"tos_uri"`
-	ClientURI         string   `json:"client_uri" gorethink:"client_uri"`
-	LogoURI           string   `json:"logo_uri" gorethink:"logo_uri"`
-	Contacts          []string `json:"contacts" gorethink:"contacts"`
+	ID                string   `json:"id"`
+	Secret            []byte   `json:"client_secret,omitempty"`
+	RedirectURIs      []string `json:"redirect_uris"`
+	GrantTypes        []string `json:"grant_types"`
+	ResponseTypes     []string `json:"response_types"`
+	Scopes            []string `json:"scopes"`
 }
 
 func (c *DefaultClient) GetID() string {
@@ -79,8 +69,4 @@ func (c *DefaultClient) GetResponseTypes() Arguments {
 		return Arguments{"code"}
 	}
 	return Arguments(c.ResponseTypes)
-}
-
-func (c *DefaultClient) GetOwner() string {
-	return c.Owner
 }
