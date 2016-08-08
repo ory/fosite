@@ -2,6 +2,7 @@ package: github.com/ory-am/fosite
 import:
 - package: github.com/asaskevich/govalidator
 - package: github.com/dgrijalva/jwt-go
+  version: ~2.7.0
 - package: github.com/go-errors/errors
 - package: github.com/golang/mock
   subpackages:

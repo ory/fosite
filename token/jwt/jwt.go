@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"gopkg.in/dgrijalva/jwt-go.v2"
+	"github.com/dgrijalva/jwt-go"
 )
 
 // Enigma is responsible for generating and validating challenges.
