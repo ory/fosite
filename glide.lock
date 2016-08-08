@@ -1,10 +1,10 @@
-hash: 6d94cefa16a96f3c2a7408c2a13982c39a7f04278a5bb10bfc124a51d3274b0c
-updated: 2016-06-20T18:12:37.707505+02:00
+hash: a4e6ff3f483b22d0046fe1013102aa7dcf637f2d313cb68619dd97407578aa0f
+updated: 2016-08-08T11:04:30.0478717+02:00
 imports:
 - name: github.com/asaskevich/govalidator
-  version: df81827fdd59d8b4fb93d8910b286ab7a3919520
+  version: 593d64559f7600f29581a3ee42177f5dbded27a9
 - name: github.com/dgrijalva/jwt-go
-  version: f0777076321ab64f6efc15a82d9d23b98539b943
+  version: 268038b363c7a8d7306b8e35bf77a1fde4b0c402
 - name: github.com/go-errors/errors
   version: a41850380601eeb43f4350f7d17c6bbd8944aaf8
 - name: github.com/golang/mock
@@ -12,7 +12,7 @@ imports:
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
-  version: 0c1f6d65b5a189c2250d10e71a5506f06f9fa0a0
+  version: c3cefd437628a0b7d31b34fe44b3a7a540e98527
   subpackages:
   - proto
 - name: github.com/moul/http2curl
@@ -22,33 +22,53 @@ imports:
   subpackages:
   - pkg
 - name: github.com/parnurzeal/gorequest
-  version: f17fef20c518e688f4edb3eb2af148462ecab3ef
+  version: e213a02fb0082d41e66996deeaab5ae96039d913
 - name: github.com/pborman/uuid
   version: c55201b036063326c5b1b89ccfe45a184973d073
+- name: github.com/pkg/errors
+  version: a22138067af1c4942683050411a841ade67fe1eb
+- name: github.com/Sirupsen/logrus
+  version: a283a10442df8dc09befd873fab202bf8a253d6a
 - name: golang.org/x/crypto
-  version: f3241ce8505855877cc8a9717bd61a0f7c4ea83c
+  version: e0d166c33c321d0ff863f459a5882096e334f508
   subpackages:
   - bcrypt
   - blowfish
 - name: golang.org/x/net
-  version: 8bf2b39827dbadfd566c4fae7a8790d12be8b23c
+  version: 075e191f18186a8ff2becaf64478e30f4545cdad
   subpackages:
   - context
   - publicsuffix
 - name: golang.org/x/oauth2
-  version: 65a8d08c6292395d47053be10b3c5e91960def76
+  version: 04e1573abc896e70388bd387a69753c378d46466
   subpackages:
   - clientcredentials
   - internal
-- name: google.golang.org/appengine
-  version: 7f59a8c76b8594d06044bfe0bcbe475cb2020482
+- name: golang.org/x/sys
+  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
   subpackages:
-  - urlfetch
+  - unix
+- name: google.golang.org/appengine
+  version: b4728023490a62e70ba739ff62aa65ffcca84210
+  subpackages:
   - internal
-  - internal/urlfetch
   - internal/base
   - internal/datastore
+  - internal/log
   - internal/remote_api
-- name: gopkg.in/dgrijalva/jwt-go.v2
-  version: 268038b363c7a8d7306b8e35bf77a1fde4b0c402
-devImports: []
+  - internal/urlfetch
+  - urlfetch
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/stretchr/testify
+  version: d77da356e56a7428ad25149ca77381849a6a5232
+  subpackages:
+  - assert
+  - require
