@@ -1,10 +1,10 @@
-hash: d64dffb9cb61c10b7ea8a378f2a32a7d718fa62236b2ae0ccf4f5ee6632a2784
-updated: 2016-08-08T13:56:33.82138664+02:00
+hash: 8b62f922bca8a59a41f4cdb8e3bd4508444bc1b9932f71cff3747861294e46a3
+updated: 2016-08-08T13:59:44.312274439+02:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 7664702784775e51966f0885f5cd27435916517b
 - name: github.com/dgrijalva/jwt-go
-  version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
+  version: 268038b363c7a8d7306b8e35bf77a1fde4b0c402
 - name: github.com/golang/mock
   version: bd3c8e81be01eef76d4b503f5e687d2d1354d2d9
   subpackages:
@@ -15,18 +15,6 @@ imports:
   - proto
 - name: github.com/moul/http2curl
   version: b1479103caacaa39319f75e7f57fc545287fca0d
-- name: github.com/ory-am/fosite
-  version: c947f0bc3b19bc987fc5eb5c9080b7a82fe183b3
-  subpackages:
-  - compose
-  - fosite-example/pkg
-  - handler/oauth2
-  - handler/openid
-  - hash
-  - internal
-  - rand
-  - token/hmac
-  - token/jwt
 - name: github.com/parnurzeal/gorequest
   version: b64673b971a1742b8ba91f228f1c029632d4b686
 - name: github.com/pborman/uuid

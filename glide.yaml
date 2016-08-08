@@ -5,7 +5,7 @@ import:
 - package: github.com/asaskevich/govalidator
   version: ~4.0.0
 - package: github.com/dgrijalva/jwt-go
-  version: ~3.0.0
+  version: ~2.7.0
 - package: github.com/golang/mock
   subpackages:
   - gomock
