@@ -14,7 +14,6 @@ matrix:
 install:
    - go get github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/Masterminds/glide
    - glide install
-   - go get -t -d  $(go list ./... | grep -v vendor)
 
 script:
   - gotestcover -coverprofile="cover.out" -race -covermode="count" $(go list ./... | grep -v vendor)
