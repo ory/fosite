@@ -1,5 +1,5 @@
 hash: a4e6ff3f483b22d0046fe1013102aa7dcf637f2d313cb68619dd97407578aa0f
-updated: 2016-08-08T13:25:00.564506328+02:00
+updated: 2016-08-08T13:41:52.004276195+02:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 593d64559f7600f29581a3ee42177f5dbded27a9
@@ -51,11 +51,24 @@ imports:
 - name: google.golang.org/appengine
   version: b4728023490a62e70ba739ff62aa65ffcca84210
   subpackages:
-  - urlfetch
   - internal
-  - internal/urlfetch
   - internal/base
   - internal/datastore
   - internal/log
   - internal/remote_api
-devImports: []
+  - internal/urlfetch
+  - urlfetch
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib
+- name: github.com/stretchr/testify
+  version: d77da356e56a7428ad25149ca77381849a6a5232
+  subpackages:
+  - assert
+  - require
