@@ -1,5 +1,5 @@
 hash: 8b62f922bca8a59a41f4cdb8e3bd4508444bc1b9932f71cff3747861294e46a3
-updated: 2016-08-08T21:02:39.327884746+02:00
+updated: 2016-08-08T21:24:47.650768166+02:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 7664702784775e51966f0885f5cd27435916517b
@@ -45,13 +45,13 @@ imports:
 - name: google.golang.org/appengine
   version: b4728023490a62e70ba739ff62aa65ffcca84210
   subpackages:
+  - urlfetch
   - internal
+  - internal/urlfetch
   - internal/base
   - internal/datastore
   - internal/log
   - internal/remote_api
-  - internal/urlfetch
-  - urlfetch
 testImports:
 - name: github.com/davecgh/go-spew
   version: 2df174808ee097f90d259e432cc04442cf60be21
