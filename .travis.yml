@@ -16,5 +16,5 @@ install:
    - glide install
 
 script:
-  - gotestcover -coverprofile="cover.out" -race -covermode="count" $(go list ./... | grep -v vendor)
+  - gotestcover -coverprofile="cover.out" -race -covermode="count" $(godep novendor)
   - goveralls -coverprofile="cover.out"
