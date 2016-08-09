@@ -1,5 +1,5 @@
-hash: 8b62f922bca8a59a41f4cdb8e3bd4508444bc1b9932f71cff3747861294e46a3
-updated: 2016-08-08T21:24:47.650768166+02:00
+hash: e5de37a0f1995a8f09ee0781049d309076038f79986b98e61fcd1c551d0d8d34
+updated: 2016-08-09T08:51:16.305774438+02:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 7664702784775e51966f0885f5cd27435916517b
@@ -13,8 +13,14 @@ imports:
   version: c3cefd437628a0b7d31b34fe44b3a7a540e98527
   subpackages:
   - proto
+- name: github.com/gorilla/mux
+  version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/moul/http2curl
   version: b1479103caacaa39319f75e7f57fc545287fca0d
+- name: github.com/ory-am/common
+  version: 930cc805232909c38f2e68310b1e21f71b056d59
+  subpackages:
+  - pkg
 - name: github.com/parnurzeal/gorequest
   version: b64673b971a1742b8ba91f228f1c029632d4b686
 - name: github.com/pborman/uuid
