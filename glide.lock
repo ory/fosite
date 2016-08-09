@@ -1,5 +1,5 @@
-hash: 55f4d6532cb081f7c2d1dc9a017fdb37761eb668748767304ea4aa12ee158bb5
-updated: 2016-08-09T09:09:31.882549737+02:00
+hash: bfdddfe32cacf648c65b3dd8350e6c748c3ab84e46b47ea4548e0c20fb068034
+updated: 2016-08-09T09:17:29.732545671+02:00
 imports:
 - name: camlistore.org
   version: 41516af23d58b64efe7712e8be2d3f9fd94fb693
@@ -51,10 +51,10 @@ imports:
   version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/moul/http2curl
   version: b1479103caacaa39319f75e7f57fc545287fca0d
+- name: github.com/oleiade/reflections
+  version: ec27669d960a245738b87ffa688dac28fa288c33
 - name: github.com/ory-am/common
-  version: 930cc805232909c38f2e68310b1e21f71b056d59
-  subpackages:
-  - pkg
+  version: d93c852f2d09c219fd058756caf67bbdf8cf4be4
 - name: github.com/parnurzeal/gorequest
   version: b64673b971a1742b8ba91f228f1c029632d4b686
 - name: github.com/pborman/uuid

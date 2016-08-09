@@ -26,12 +26,12 @@ import:
   - clientcredentials
 - package: github.com/gorilla/mux
   version: ~1.1.0
-- package: github.com/ory-am/common
-  subpackages:
-  - pkg
 - package: github.com/gorilla/context
   version: ~1.1.0
 - package: github.com/go-errors/errors
+- package: github.com/oleiade/reflections
+  version: ~0.1.2
+- package: github.com/ory-am/common
 testImport:
 - package: github.com/stretchr/testify
   version: ~1.1.3
