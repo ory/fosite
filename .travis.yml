@@ -19,5 +19,5 @@ install:
    - glide install
 
 script:
-  - gotestcover -coverprofile="cover.out" -race -covermode="count" $(godep novendor)
+  - gotestcover -coverprofile="cover.out" -race -covermode="count" $(glide novendor)
   - goveralls -coverprofile="cover.out"
