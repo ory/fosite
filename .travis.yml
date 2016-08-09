@@ -1,21 +1,16 @@
 language: go
 
 go:
-  - 1.4
   - 1.5
   - 1.6
-  - 1.7
-  - tip
 
-matrix:
-  allow_failures:
-    - go: tip
-    - go: 1.4
+env:
+  - GO15VENDOREXPERIMENT=1
 
 install:
    - go get github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/Masterminds/glide
-   - glide up
+   - glide install
 
 script:
-  - gotestcover -coverprofile="cover.out" -race -covermode="count" ./...
+  - gotestcover -coverprofile="cover.out" -race -covermode="count" $(glide novendor)
   - goveralls -coverprofile="cover.out"
