@@ -1,18 +1,12 @@
 language: go
 
 go:
-  - 1.4
+  - release
   - 1.5
   - 1.6
-  - tip
 
 env:
   - GO15VENDOREXPERIMENT=1
-
-matrix:
-  allow_failures:
-    - go: tip
-    - go: 1.4
 
 install:
    - go get github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/Masterminds/glide
