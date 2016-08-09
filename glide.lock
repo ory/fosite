@@ -1,5 +1,5 @@
-hash: 21661f1e18950e211eb21a2594420d8437fe39b8e1b597ff4ff36af1eabeff45
-updated: 2016-08-09T09:00:53.257793852+02:00
+hash: 55f4d6532cb081f7c2d1dc9a017fdb37761eb668748767304ea4aa12ee158bb5
+updated: 2016-08-09T09:09:31.882549737+02:00
 imports:
 - name: camlistore.org
   version: 41516af23d58b64efe7712e8be2d3f9fd94fb693
@@ -16,6 +16,8 @@ imports:
   version: 7664702784775e51966f0885f5cd27435916517b
 - name: github.com/dgrijalva/jwt-go
   version: 268038b363c7a8d7306b8e35bf77a1fde4b0c402
+- name: github.com/go-errors/errors
+  version: a41850380601eeb43f4350f7d17c6bbd8944aaf8
 - name: github.com/golang/glog
   version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
 - name: github.com/golang/mock
@@ -43,6 +45,8 @@ imports:
   - api
   - logging/type_
   - rpc
+- name: github.com/gorilla/context
+  version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
 - name: github.com/gorilla/mux
   version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/moul/http2curl
