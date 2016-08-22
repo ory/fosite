@@ -5,7 +5,7 @@ import:
 - package: github.com/asaskevich/govalidator
   version: ~4.0.0
 - package: github.com/dgrijalva/jwt-go
-  version: ~2.7.0
+  version: ~3.0.0
 - package: github.com/golang/mock
   subpackages:
   - gomock
@@ -38,3 +38,13 @@ testImport:
   subpackages:
   - assert
   - require
+- package: gopkg.in/gemnasium/logrus-airbrake-hook.v2
+  version: ^2.0.0
+- package: gopkg.in/airbrake/gobrake.v2
+  version: ^2.0.6
+- package: github.com/onsi/ginkgo
+  version: ^1.2.0
+- package: github.com/elazarl/goproxy
+  version: ^1.0.0
+- package: github.com/onsi/gomega
+  version: ^1.0.0

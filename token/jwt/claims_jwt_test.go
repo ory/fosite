@@ -31,26 +31,27 @@ func TestClaimsToMapSetsID(t *testing.T) {
 	assert.NotEmpty(t, (&JWTClaims{}).ToMap()["jti"])
 }
 
-func TestClaimsToFromMap(t *testing.T) {
-	fromMap := JWTClaimsFromMap(jwtClaims.ToMap())
-	assert.Equal(t, jwtClaims, fromMap)
-}
-
 func TestAssert(t *testing.T) {
-	assert.False(t, (&JWTClaims{ExpiresAt: time.Now().Add(time.Hour)}).IsExpired())
-	assert.True(t, (&JWTClaims{ExpiresAt: time.Now().Add(-time.Hour)}).IsExpired())
-	assert.True(t, (&JWTClaims{NotBefore: time.Now().Add(time.Hour)}).IsNotYetValid())
-	assert.False(t, (&JWTClaims{NotBefore: time.Now().Add(-time.Hour)}).IsNotYetValid())
+	assert.Nil(t, (&JWTClaims{ExpiresAt: time.Now().Add(time.Hour)}).
+		ToMapClaims().Valid())
+	assert.NotNil(t, (&JWTClaims{ExpiresAt: time.Now().Add(-2 * time.Hour)}).
+		ToMapClaims().Valid())
+	assert.NotNil(t, (&JWTClaims{NotBefore: time.Now().Add(time.Hour)}).
+		ToMapClaims().Valid())
+	assert.NotNil(t, (&JWTClaims{NotBefore: time.Now().Add(-time.Hour)}).
+		ToMapClaims().Valid())
+	assert.Nil(t, (&JWTClaims{ExpiresAt: time.Now().Add(time.Hour),
+		NotBefore: time.Now().Add(-time.Hour)}).ToMapClaims().Valid())
 }
 
 func TestClaimsToMap(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{
 		"sub": jwtClaims.Subject,
-		"iat": jwtClaims.IssuedAt.Unix(),
+		"iat": float64(jwtClaims.IssuedAt.Unix()),
 		"iss": jwtClaims.Issuer,
-		"nbf": jwtClaims.NotBefore.Unix(),
+		"nbf": float64(jwtClaims.NotBefore.Unix()),
 		"aud": jwtClaims.Audience,
-		"exp": jwtClaims.ExpiresAt.Unix(),
+		"exp": float64(jwtClaims.ExpiresAt.Unix()),
 		"jti": jwtClaims.JTI,
 		"foo": jwtClaims.Extra["foo"],
 		"baz": jwtClaims.Extra["baz"],

@@ -3,21 +3,9 @@ package jwt
 import (
 	"time"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/pborman/uuid"
 )
-
-func JWTClaimsFromMap(m map[string]interface{}) *JWTClaims {
-	return &JWTClaims{
-		Subject:   ToString(m["sub"]),
-		IssuedAt:  ToTime(m["iat"]),
-		Issuer:    ToString(m["iss"]),
-		NotBefore: ToTime(m["nbf"]),
-		Audience:  ToString(m["aud"]),
-		ExpiresAt: ToTime(m["exp"]),
-		JTI:       ToString(m["jti"]),
-		Extra:     Filter(m, "sub", "iss", "iat", "nbf", "aud", "exp", "jti"),
-	}
-}
 
 // JWTClaims represent a token's claims.
 type JWTClaims struct {
@@ -31,6 +19,7 @@ type JWTClaims struct {
 	Extra     map[string]interface{}
 }
 
+// ToMap will transform the headers to a map structure
 func (c *JWTClaims) ToMap() map[string]interface{} {
 	var ret = Copy(c.Extra)
 
@@ -42,16 +31,13 @@ func (c *JWTClaims) ToMap() map[string]interface{} {
 	ret["sub"] = c.Subject
 	ret["iss"] = c.Issuer
 	ret["aud"] = c.Audience
-	ret["iat"] = c.IssuedAt.Unix()
-	ret["nbf"] = c.NotBefore.Unix()
-	ret["exp"] = c.ExpiresAt.Unix()
+	ret["iat"] = float64(c.IssuedAt.Unix())  // jwt-go does not support int64 as datatype
+	ret["nbf"] = float64(c.NotBefore.Unix()) // jwt-go does not support int64 as datatype
+	ret["exp"] = float64(c.ExpiresAt.Unix()) // jwt-go does not support int64 as datatype
 	return ret
 }
 
-func (c JWTClaims) Get(key string) interface{} {
-	return c.ToMap()[key]
-}
-
+// Add will add a key-value pair to the extra field
 func (c *JWTClaims) Add(key string, value interface{}) {
 	if c.Extra == nil {
 		c.Extra = make(map[string]interface{})
@@ -59,12 +45,12 @@ func (c *JWTClaims) Add(key string, value interface{}) {
 	c.Extra[key] = value
 }
 
-// IsExpired checks if JWT is expired.
-func (c *JWTClaims) IsExpired() bool {
-	return c.ExpiresAt.Before(time.Now())
+// Get will get a value from the extra field based on a given key
+func (c JWTClaims) Get(key string) interface{} {
+	return c.ToMap()[key]
 }
 
-// IsNotYetValid maskes sure that the JWT is not used before valid date.
-func (c *JWTClaims) IsNotYetValid() bool {
-	return c.NotBefore.After(time.Now())
+// ToMapClaims will return a jwt-go MapClaims representaion
+func (c JWTClaims) ToMapClaims() jwt.MapClaims {
+	return c.ToMap()
 }

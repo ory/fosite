@@ -63,7 +63,7 @@ func TestGenerateJWT(t *testing.T) {
 		PrivateKey: internal.MustRSAKey(),
 	}
 
-	token, sig, err := j.Generate(claims, header)
+	token, sig, err := j.Generate(claims.ToMapClaims(), header)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, token)
 
@@ -82,27 +82,28 @@ func TestGenerateJWT(t *testing.T) {
 	j.PrivateKey = internal.MustRSAKey()
 
 	// Lets validate the exp claim
-	claims = &JWTClaims{}
-
-	token, sig, err = j.Generate(claims, header)
+	claims = &JWTClaims{
+		ExpiresAt: time.Now().Add(-time.Hour),
+	}
+	token, sig, err = j.Generate(claims.ToMapClaims(), header)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, token)
-	t.Logf("%s.%s", token, sig)
+	//t.Logf("%s.%s", token, sig)
 
 	sig, err = j.Validate(token)
 	require.NotNil(t, err, "%s", err)
 
 	// Lets validate the nbf claim
-	claims = &JWTClaims{}
-
-	token, sig, err = j.Generate(claims, header)
+	claims = &JWTClaims{
+		NotBefore: time.Now().Add(time.Hour),
+	}
+	token, sig, err = j.Generate(claims.ToMapClaims(), header)
 	require.Nil(t, err, "%s", err)
 	require.NotNil(t, token)
-	t.Logf("%s.%s", token, sig)
-
+	//t.Logf("%s.%s", token, sig)
 	sig, err = j.Validate(token)
 	require.NotNil(t, err, "%s", err)
-
+	require.Empty(t, sig, "%s", err)
 }
 
 func TestValidateSignatureRejectsJWT(t *testing.T) {
