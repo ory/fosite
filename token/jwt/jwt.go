@@ -1,4 +1,4 @@
-// Package JWT is able to generate and validate json web tokens.
+// Package jwt is able to generate and validate json web tokens.
 // Follows https://tools.ietf.org/html/draft-ietf-oauth-json-web-token-32
 package jwt
 
@@ -8,23 +8,22 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
 )
 
-// Enigma is responsible for generating and validating challenges.
+// RS256JWTStrategy is responsible for generating and validating JWT challenges
 type RS256JWTStrategy struct {
 	PrivateKey *rsa.PrivateKey
 }
 
 // Generate generates a new authorize code or returns an error. set secret
-func (j *RS256JWTStrategy) Generate(claims Mapper, header Mapper) (string, string, error) {
+func (j *RS256JWTStrategy) Generate(claims jwt.Claims, header Mapper) (string, string, error) {
 	if header == nil || claims == nil {
 		return "", "", errors.New("Either claims or header is nil.")
 	}
 
-	token := jwt.New(jwt.SigningMethodRS256)
-	token.Claims = claims.ToMap()
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	token.Header = assign(token.Header, header.ToMap())
 
 	var sig, sstr string
@@ -40,7 +39,7 @@ func (j *RS256JWTStrategy) Generate(claims Mapper, header Mapper) (string, strin
 	return fmt.Sprintf("%s.%s", sstr, sig), sig, nil
 }
 
-// Validate : Validates a token and returns its signature or an error if the token is not valid.
+// Validate validates a token and returns its signature or an error if the token is not valid.
 func (j *RS256JWTStrategy) Validate(token string) (string, error) {
 	if _, err := j.Decode(token); err != nil {
 		return "", errors.Wrap(err, "")
@@ -49,6 +48,7 @@ func (j *RS256JWTStrategy) Validate(token string) (string, error) {
 	return j.GetSignature(token)
 }
 
+// Decode will decode a JWT token
 func (j *RS256JWTStrategy) Decode(token string) (*jwt.Token, error) {
 	// Parse the token.
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
@@ -67,6 +67,7 @@ func (j *RS256JWTStrategy) Decode(token string) (*jwt.Token, error) {
 	return parsedToken, err
 }
 
+// GetSignature will return the signature of a token
 func (j *RS256JWTStrategy) GetSignature(token string) (string, error) {
 	split := strings.Split(token, ".")
 	if len(split) != 3 {
@@ -75,7 +76,8 @@ func (j *RS256JWTStrategy) GetSignature(token string) (string, error) {
 	return split[2], nil
 }
 
-func (c *RS256JWTStrategy) Hash(in []byte) ([]byte, error) {
+// Hash will return a given hash based on the byte input or an error upon fail
+func (j *RS256JWTStrategy) Hash(in []byte) ([]byte, error) {
 	// SigningMethodRS256
 	hash := sha256.New()
 	_, err := hash.Write(in)
@@ -85,7 +87,8 @@ func (c *RS256JWTStrategy) Hash(in []byte) ([]byte, error) {
 	return hash.Sum([]byte{}), nil
 }
 
-func (c *RS256JWTStrategy) GetSigningMethodLength() int {
+// GetSigningMethodLength will return the length of the signing method
+func (j *RS256JWTStrategy) GetSigningMethodLength() int {
 	return jwt.SigningMethodRS256.Hash.Size()
 }
 

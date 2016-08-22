@@ -92,6 +92,6 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, _ *http.Request, req
 	claims.Audience = requester.GetClient().GetID()
 	claims.IssuedAt = time.Now()
 
-	token, _, err = h.RS256JWTStrategy.Generate(claims, sess.IDTokenHeaders())
+	token, _, err = h.RS256JWTStrategy.Generate(claims.ToMapClaims(), sess.IDTokenHeaders())
 	return token, err
 }

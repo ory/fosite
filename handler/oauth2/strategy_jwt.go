@@ -65,8 +65,8 @@ func (h *RS256JWTStrategy) validate(token string) error {
 		return err
 	}
 
-	claims := jwt.JWTClaimsFromMap(t.Claims)
-	if claims.IsNotYetValid() || claims.IsExpired() {
+	// validate the token
+	if err = t.Claims.Valid(); err != nil {
 		return errors.New("Token claims did not validate")
 	}
 
@@ -79,6 +79,6 @@ func (h *RS256JWTStrategy) generate(requester fosite.Requester) (string, string,
 	} else if jwtSession.GetJWTClaims() == nil {
 		return "", "", errors.New("GetTokenClaims() must not be nil")
 	} else {
-		return h.RS256JWTStrategy.Generate(jwtSession.GetJWTClaims(), jwtSession.GetJWTHeader())
+		return h.RS256JWTStrategy.Generate(jwtSession.GetJWTClaims().ToMapClaims(), jwtSession.GetJWTHeader())
 	}
 }

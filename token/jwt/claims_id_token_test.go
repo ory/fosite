@@ -23,25 +23,21 @@ var idTokenClaims = &IDTokenClaims{
 	},
 }
 
-func TestIDTokenClaimsToMapSetsID(t *testing.T) {
-	assert.NotEmpty(t, (&JWTClaims{}).ToMap()["jti"])
-}
-
 func TestIDTokenAssert(t *testing.T) {
-	assert.False(t, (&JWTClaims{ExpiresAt: time.Now().Add(time.Hour)}).IsExpired())
-	assert.True(t, (&JWTClaims{ExpiresAt: time.Now().Add(-time.Hour)}).IsExpired())
-	assert.True(t, (&JWTClaims{NotBefore: time.Now().Add(time.Hour)}).IsNotYetValid())
-	assert.False(t, (&JWTClaims{NotBefore: time.Now().Add(-time.Hour)}).IsNotYetValid())
+	assert.Nil(t, (&IDTokenClaims{ExpiresAt: time.Now().Add(time.Hour)}).
+		ToMapClaims().Valid())
+	assert.NotNil(t, (&IDTokenClaims{ExpiresAt: time.Now().Add(-time.Hour)}).
+		ToMapClaims().Valid())
 }
 
 func TestIDTokenClaimsToMap(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{
 		"sub":       idTokenClaims.Subject,
-		"iat":       idTokenClaims.IssuedAt.Unix(),
+		"iat":       float64(idTokenClaims.IssuedAt.Unix()),
 		"iss":       idTokenClaims.Issuer,
 		"aud":       idTokenClaims.Audience,
 		"nonce":     idTokenClaims.Nonce,
-		"exp":       idTokenClaims.ExpiresAt.Unix(),
+		"exp":       float64(idTokenClaims.ExpiresAt.Unix()),
 		"foo":       idTokenClaims.Extra["foo"],
 		"baz":       idTokenClaims.Extra["baz"],
 		"at_hash":   idTokenClaims.AccessTokenHash,
