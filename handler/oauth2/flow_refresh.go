@@ -24,7 +24,7 @@ type RefreshTokenGrantHandler struct {
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
 func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
-	// Value MUST be set to "client_credentials".
+	// Value MUST be set to "refresh_token".
 	if !request.GetGrantTypes().Exact("refresh_token") {
 		return errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
