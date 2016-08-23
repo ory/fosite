@@ -33,4 +33,11 @@ func TestHierarchicScopeStrategy(t *testing.T) {
 
 	scopes = []string{"hydra", "openid", "offline"}
 	assert.False(t, strategy(scopes, "foo.bar"))
+	assert.False(t, strategy(scopes, "foo"))
+	assert.True(t, strategy(scopes, "hydra"))
+	assert.True(t, strategy(scopes, "hydra.bar"))
+	assert.True(t, strategy(scopes, "openid"))
+	assert.True(t, strategy(scopes, "openid.baz.bar"))
+	assert.True(t, strategy(scopes, "offline"))
+	assert.True(t, strategy(scopes, "offline.baz.bar.baz"))
 }
