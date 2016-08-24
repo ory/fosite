@@ -26,11 +26,9 @@ func HierarchicScopeStrategy(haystack []string, needle string) bool {
 			}
 
 			current := haystack[k]
-			if current == needle {
-				continue
+			if current != needle {
+				break
 			}
-
-			break
 		}
 	}
 
