@@ -1,8 +1,6 @@
 package oauth2
 
 import (
-	"fmt"
-
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -31,10 +29,8 @@ func (c *CoreValidator) validateAccessToken(ctx context.Context, token string, a
 	sig := c.CoreStrategy.AccessTokenSignature(token)
 	or, err := c.CoreStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession())
 	if err != nil {
-		fmt.Printf("%s", err)
 		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
 	} else if err := c.CoreStrategy.ValidateAccessToken(ctx, or, token); err != nil {
-		fmt.Printf("%s", err)
 		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
 	}
 
