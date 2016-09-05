@@ -1,8 +1,6 @@
 package oauth2
 
 import (
-	"fmt"
-
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
