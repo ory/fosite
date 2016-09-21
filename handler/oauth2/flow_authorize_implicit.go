@@ -67,7 +67,7 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	resp.AddFragment("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
 	resp.AddFragment("token_type", "bearer")
 	resp.AddFragment("state", ar.GetState())
-	resp.AddFragment("scope", strings.Join(ar.GetGrantedScopes(), "+"))
+	resp.AddFragment("scope", strings.Join(ar.GetGrantedScopes(), " "))
 	ar.SetResponseTypeHandled("token")
 
 	return nil
