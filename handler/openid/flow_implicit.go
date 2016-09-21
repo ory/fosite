@@ -10,6 +10,7 @@ import (
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"encoding/base64"
 )
 
 type OpenIDConnectImplicitHandler struct {
@@ -59,7 +60,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 			return err
 		}
 
-		claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
+		claims.AccessTokenHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2])))
 	} else {
 		resp.AddFragment("state", ar.GetState())
 	}

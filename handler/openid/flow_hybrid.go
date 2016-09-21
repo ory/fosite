@@ -10,6 +10,7 @@ import (
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"encoding/base64"
 )
 
 type OpenIDConnectHybridHandler struct {
@@ -69,7 +70,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		claims.CodeHash = hash[:c.Enigma.GetSigningMethodLength()/2]
+		claims.CodeHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2])))
 	}
 
 	if ar.GetResponseTypes().Has("token") {
@@ -84,7 +85,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		claims.AccessTokenHash = hash[:c.Enigma.GetSigningMethodLength()/2]
+		claims.AccessTokenHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2])))
 	}
 
 	if !ar.GetGrantedScopes().Has("openid") {
