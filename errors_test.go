@@ -9,8 +9,8 @@ import (
 )
 
 func TestErrorToRFC6749(t *testing.T) {
-	assert.Equal(t, errInvalidError, ErrorToRFC6749Error(errors.New("")).Name)
-	assert.Equal(t, errInvalidError, ErrorToRFC6749Error(native.New("")).Name)
+	assert.Equal(t, UnknownErrorName, ErrorToRFC6749Error(errors.New("")).Name)
+	assert.Equal(t, UnknownErrorName, ErrorToRFC6749Error(native.New("")).Name)
 
 	assert.Equal(t, errInvalidRequestName, ErrorToRFC6749Error(errors.Wrap(ErrInvalidRequest, "")).Name)
 	assert.Equal(t, errUnauthorizedClientName, ErrorToRFC6749Error(errors.Wrap(ErrUnauthorizedClient, "")).Name)

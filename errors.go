@@ -26,6 +26,8 @@ var (
 )
 
 const (
+	errRequestUnauthorized = "request_unauthorized"
+	errRequestForbidden = "request_forbidden"
 	errInvalidRequestName          = "invalid_request"
 	errUnauthorizedClientName      = "unauthorized_client"
 	errAccessDeniedName            = "acccess_denied"
@@ -36,7 +38,7 @@ const (
 	errUnsupportedGrantTypeName    = "unsupported_grant_type"
 	errInvalidGrantName            = "invalid_grant"
 	errInvalidClientName           = "invalid_client"
-	errInvalidError                = "invalid_error"
+	UnknownErrorName = "unknown_error"
 	errInvalidState                = "invalid_state"
 	errMisconfiguration            = "misconfiguration"
 	errInsufficientEntropy         = "insufficient_entropy"
@@ -52,6 +54,24 @@ type RFC6749Error struct {
 
 func ErrorToRFC6749Error(err error) *RFC6749Error {
 	switch errors.Cause(err) {
+	case ErrRequestUnauthorized: {
+		return &RFC6749Error{
+			Name:        errRequestUnauthorized,
+			Description: ErrInvalidRequest.Error(),
+			Debug:       err.Error(),
+			Hint:        "Check that you provided valid credentials in the right format.",
+			StatusCode:  http.StatusBadRequest,
+		}
+	}
+	case ErrRequestForbidden: {
+		return &RFC6749Error{
+			Name:        errRequestForbidden,
+			Description: ErrInvalidRequest.Error(),
+			Debug:       err.Error(),
+			Hint:        "You are not allowed to perform this action.",
+			StatusCode:  http.StatusBadRequest,
+		}
+	}
 	case ErrInvalidRequest:
 		return &RFC6749Error{
 			Name:        errInvalidRequestName,
@@ -148,7 +168,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 		}
 	default:
 		return &RFC6749Error{
-			Name:        errInvalidError,
+			Name:        UnknownErrorName,
 			Description: "The error is unrecognizable.",
 			Debug:       err.Error(),
 			StatusCode:  http.StatusInternalServerError,

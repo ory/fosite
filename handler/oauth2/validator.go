@@ -29,14 +29,14 @@ func (c *CoreValidator) validateAccessToken(ctx context.Context, token string, a
 	sig := c.CoreStrategy.AccessTokenSignature(token)
 	or, err := c.CoreStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession())
 	if err != nil {
-		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
+		return errors.Wrap(err, fosite.ErrRequestUnauthorized.Error())
 	} else if err := c.CoreStrategy.ValidateAccessToken(ctx, or, token); err != nil {
-		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
+		return errors.Wrap(err, fosite.ErrRequestUnauthorized.Error())
 	}
 
 	for _, scope := range scopes {
 		if !c.ScopeStrategy(or.GetGrantedScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, "")
+			return errors.Wrap(fosite.ErrInvalidScope, fosite.ErrRequestForbidden.Error())
 		}
 	}
 
@@ -47,9 +47,9 @@ func (c *CoreValidator) validateAccessToken(ctx context.Context, token string, a
 func (c *CoreValidator) validateRefreshToken(ctx context.Context, token string, accessRequest fosite.AccessRequester) error {
 	sig := c.CoreStrategy.AccessTokenSignature(token)
 	if or, err := c.CoreStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession()); err != nil {
-		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
+		return errors.Wrap(err, fosite.ErrRequestUnauthorized.Error())
 	} else if err := c.CoreStrategy.ValidateAccessToken(ctx, or, token); err != nil {
-		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
+		return errors.Wrap(err, fosite.ErrRequestUnauthorized.Error())
 	} else {
 		accessRequest.Merge(or)
 	}
@@ -60,9 +60,9 @@ func (c *CoreValidator) validateRefreshToken(ctx context.Context, token string, 
 func (c *CoreValidator) validateAuthorizeCode(ctx context.Context, token string, accessRequest fosite.AccessRequester) error {
 	sig := c.CoreStrategy.AccessTokenSignature(token)
 	if or, err := c.CoreStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession()); err != nil {
-		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
+		return errors.Wrap(err, fosite.ErrRequestUnauthorized.Error())
 	} else if err := c.CoreStrategy.ValidateAccessToken(ctx, or, token); err != nil {
-		return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
+		return errors.Wrap(err, fosite.ErrRequestUnauthorized.Error())
 	} else {
 		accessRequest.Merge(or)
 	}
