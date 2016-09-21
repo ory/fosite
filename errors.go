@@ -39,6 +39,7 @@ const (
 	errInvalidGrantName            = "invalid_grant"
 	errInvalidClientName           = "invalid_client"
 	UnknownErrorName = "unknown_error"
+	errNotFound = "not_found"
 	errInvalidState                = "invalid_state"
 	errMisconfiguration            = "misconfiguration"
 	errInsufficientEntropy         = "insufficient_entropy"
@@ -165,6 +166,13 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 			Description: ErrMisconfiguration.Error(),
 			Debug:       err.Error(),
 			StatusCode:  http.StatusInternalServerError,
+		}
+	case ErrNotFound:
+		return &RFC6749Error{
+			Name:        errNotFound,
+			Description: ErrNotFound.Error(),
+			Debug:       err.Error(),
+			StatusCode:  http.StatusNotFound,
 		}
 	default:
 		return &RFC6749Error{
