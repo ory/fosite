@@ -60,6 +60,8 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		}
 
 		claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
+	} else {
+		resp.AddFragment("state", ar.GetState())
 	}
 
 	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
