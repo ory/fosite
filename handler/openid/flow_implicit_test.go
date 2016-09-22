@@ -48,6 +48,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should not do anything because request requirements are not met",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
+				areq.State = "foostate"
 			},
 		},
 		{
@@ -121,6 +122,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 			check: func() {
 				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))
+				assert.NotEmpty(t, aresp.GetFragment().Get("state"))
 				assert.Empty(t, aresp.GetFragment().Get("access_token"))
 			},
 		},
@@ -131,6 +133,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 			check: func() {
 				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))
+				assert.NotEmpty(t, aresp.GetFragment().Get("state"))
 				assert.NotEmpty(t, aresp.GetFragment().Get("access_token"))
 			},
 		},
@@ -142,6 +145,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 			check: func() {
 				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))
+				assert.NotEmpty(t, aresp.GetFragment().Get("state"))
 				assert.NotEmpty(t, aresp.GetFragment().Get("access_token"))
 			},
 		},

@@ -11,6 +11,7 @@ import (
 
 	"github.com/ory-am/fosite/rand"
 	"github.com/pkg/errors"
+	"github.com/ory-am/fosite"
 )
 
 // HMACStrategy is responsible for generating and validating challenges.
@@ -73,13 +74,13 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 func (c *HMACStrategy) Validate(token string) error {
 	split := strings.Split(token, ".")
 	if len(split) != 2 {
-		return errors.New("Key and signature must both be set")
+		return errors.Wrap(fosite.ErrInvalidTokenFormat, "")
 	}
 
 	key := split[0]
 	signature := split[1]
 	if key == "" || signature == "" {
-		return errors.New("Key and signature must both be set")
+		return errors.Wrap(fosite.ErrInvalidTokenFormat, "")
 	}
 
 	decodedSignature, err := b64.DecodeString(signature)
@@ -101,7 +102,7 @@ func (c *HMACStrategy) Validate(token string) error {
 
 	if !hmac.Equal(decodedSignature, mac.Sum([]byte{})) {
 		// Hash is invalid
-		return errors.New("Key and signature do not match")
+		return  errors.Wrap(fosite.ErrTokenSignatureMismatch, "")
 	}
 
 	return nil

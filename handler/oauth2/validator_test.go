@@ -51,9 +51,9 @@ func TestValidateToken(t *testing.T) {
 			description: "should fail because validation fails",
 			setup: func() {
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).AnyTimes().Return(areq, nil)
-				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errors.New(""))
+				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errors.Wrap(fosite.ErrTokenExpired, ""))
 			},
-			expectErr: fosite.ErrRequestUnauthorized,
+			expectErr: fosite.ErrTokenExpired,
 		},
 		{
 			description: "should pass",

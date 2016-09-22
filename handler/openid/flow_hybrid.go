@@ -10,6 +10,7 @@ import (
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"encoding/base64"
 )
 
 type OpenIDConnectHybridHandler struct {
@@ -62,14 +63,13 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		}
 
 		resp.AddFragment("code", code)
-		resp.AddFragment("state", ar.GetState())
 		ar.SetResponseTypeHandled("code")
 
 		hash, err := c.Enigma.Hash([]byte(resp.GetFragment().Get("code")))
 		if err != nil {
 			return err
 		}
-		claims.CodeHash = hash[:c.Enigma.GetSigningMethodLength()/2]
+		claims.CodeHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2])))
 	}
 
 	if ar.GetResponseTypes().Has("token") {
@@ -84,7 +84,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		claims.AccessTokenHash = hash[:c.Enigma.GetSigningMethodLength()/2]
+		claims.AccessTokenHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2])))
 	}
 
 	if !ar.GetGrantedScopes().Has("openid") {
@@ -93,12 +93,14 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 	if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.Wrap(err, err.Error())
-	} else if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
-		return errors.Wrap(err, err.Error())
 	}
 
 	// there is no need to check for https, because implicit flow does not require https
 	// https://tools.ietf.org/html/rfc6819#section-4.4.2
+
+	if resp.GetFragment().Get("state") == "" {
+		resp.AddFragment("state", ar.GetState())
+	}
 
 	ar.SetResponseTypeHandled("id_token")
 	return nil

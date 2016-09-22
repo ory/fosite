@@ -10,6 +10,7 @@ import (
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"encoding/base64"
 )
 
 type OpenIDConnectImplicitHandler struct {
@@ -22,6 +23,9 @@ type OpenIDConnectImplicitHandler struct {
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	if !(ar.GetGrantedScopes().Has("openid") && (ar.GetResponseTypes().Has("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
+		return nil
+	} else if ar.GetResponseTypes().Has("code") {
+		// hybrid flow
 		return nil
 	}
 
@@ -59,7 +63,9 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 			return err
 		}
 
-		claims.AccessTokenHash = hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]
+		claims.AccessTokenHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2])))
+	} else {
+		resp.AddFragment("state", ar.GetState())
 	}
 
 	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
