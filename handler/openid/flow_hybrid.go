@@ -63,7 +63,6 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		}
 
 		resp.AddFragment("code", code)
-		resp.AddFragment("state", ar.GetState())
 		ar.SetResponseTypeHandled("code")
 
 		hash, err := c.Enigma.Hash([]byte(resp.GetFragment().Get("code")))
@@ -94,12 +93,14 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 	if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
 		return errors.Wrap(err, err.Error())
-	} else if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
-		return errors.Wrap(err, err.Error())
 	}
 
 	// there is no need to check for https, because implicit flow does not require https
 	// https://tools.ietf.org/html/rfc6819#section-4.4.2
+
+	if resp.GetFragment().Get("state") == "" {
+		resp.AddFragment("state", ar.GetState())
+	}
 
 	ar.SetResponseTypeHandled("id_token")
 	return nil

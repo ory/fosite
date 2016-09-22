@@ -24,6 +24,9 @@ type OpenIDConnectImplicitHandler struct {
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	if !(ar.GetGrantedScopes().Has("openid") && (ar.GetResponseTypes().Has("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
 		return nil
+	} else if ar.GetResponseTypes().Has("code") {
+		// hybrid flow
+		return nil
 	}
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
