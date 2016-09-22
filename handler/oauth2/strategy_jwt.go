@@ -5,6 +5,7 @@ import (
 
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
+	jwtx "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
@@ -67,7 +68,31 @@ func (h *RS256JWTStrategy) validate(token string) error {
 
 	// validate the token
 	if err = t.Claims.Valid(); err != nil {
-		return errors.New("Token claims did not validate")
+		if e, ok := err.(*jwtx.ValidationError); ok {
+			switch e.Errors {
+			case jwtx.ValidationErrorMalformed:
+				return errors.Wrap(fosite.ErrInvalidTokenFormat, err.Error())
+			case jwtx.ValidationErrorUnverifiable:
+				return errors.Wrap(fosite.ErrTokenSignatureMismatch, err.Error())
+			case jwtx.ValidationErrorSignatureInvalid:
+				return errors.Wrap(fosite.ErrTokenSignatureMismatch, err.Error())
+			case jwtx.ValidationErrorAudience:
+				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
+			case jwtx.ValidationErrorExpired:
+				return errors.Wrap(fosite.ErrTokenExpired, err.Error())
+			case jwtx.ValidationErrorIssuedAt:
+				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
+			case jwtx.ValidationErrorIssuer :
+				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
+			case jwtx.ValidationErrorNotValidYet:
+				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
+			case jwtx.ValidationErrorId:
+				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
+			case jwtx.ValidationErrorClaimsInvalid :
+				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
+			}
+			return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
+		}
 	}
 
 	return nil
