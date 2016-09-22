@@ -18,7 +18,7 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 	}
 
 	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, requester.GetRequestForm().Get("code"), requester)
-	if err == ErrNoSessionFound {
+	if errors.Cause(err) == ErrNoSessionFound {
 		return errors.Wrap(fosite.ErrUnknownRequest, err.Error())
 	} else if err != nil {
 		return errors.Wrap(fosite.ErrServerError, err.Error())
