@@ -325,7 +325,7 @@ If you have working examples yourself, please share them with us!
 ### Exemplary Storage Implementation
 
 Fosite does not ship a storage implementation. This is intended, because requirements vary with every environment.
-You can find a reference implementation at [fosite-example/internal/store.go](fosite-example/internal/store.go).
+You can find a reference implementation at [fosite-example/pkg/store.go](fosite-example/pkg/store.go).
 This storage fulfills requirements from all OAuth2 and OpenID Conenct handlers.
 
 ### Extensible handlers
