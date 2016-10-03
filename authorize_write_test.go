@@ -79,9 +79,9 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			setup: func() {
 				redir, _ := url.Parse("https://foobar.com/?foo=bar")
 				ar.EXPECT().GetRedirectURI().Return(redir)
-				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}})
+				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}, "scope": {"a b"}})
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
-				resp.EXPECT().GetQuery().Return(url.Values{"bar": {"baz"}})
+				resp.EXPECT().GetQuery().Return(url.Values{"bar": {"b+az"}, "scope": {"a b"}})
 
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
@@ -89,7 +89,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			expect: func() {
 				assert.Equal(t, http.Header{
 					"X-Bar":    {"baz"},
-					"Location": {"https://foobar.com/?bar=baz&foo=bar#bar=baz"},
+					"Location": {"https://foobar.com/?bar=b%2Baz&foo=bar&scope=a%20b#bar=baz&scope=a%20b"},
 				}, header)
 			},
 		},
