@@ -47,15 +47,12 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	}
 
-	request.SetRequestedScopes(accessRequest.GetRequestedScopes())
-	for _, scope := range accessRequest.GetGrantedScopes() {
-		request.GrantScope(scope)
-	}
-
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
 	if accessRequest.GetClient().GetID() != request.GetClient().GetID() {
 		return errors.Wrap(fosite.ErrInvalidRequest, "Client ID mismatch")
 	}
+
+	request.Merge(accessRequest)
 	return nil
 }
 

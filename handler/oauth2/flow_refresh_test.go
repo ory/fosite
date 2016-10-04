@@ -20,6 +20,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	areq := fosite.NewAccessRequest(nil)
+	sess := struct{ Subject string }{ Subject: "othersub" }
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := RefreshTokenGrantHandler{
@@ -31,6 +32,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 		description string
 		setup       func()
 		expectErr   error
+		expect func()
 	}{
 		{
 			description: "should fail because not responsible",
@@ -73,13 +75,30 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should pass",
 			setup: func() {
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &fosite.DefaultClient{ID: "foo"}}, nil)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{
+					Client: &fosite.DefaultClient{ID: "foo"},
+					GrantedScopes: fosite.Arguments{"foo"},
+					Scopes: fosite.Arguments{"foo", "bar"},
+					Session: sess,
+					Form: url.Values{"foo": []string{"bar"}},
+					RequestedAt: time.Now().Round(time.Hour),
+				}, nil)
+			},
+			expect: func() {
+				assert.Equal(t, sess, areq.Session)
+				assert.Equal(t, time.Now().Round(time.Hour), areq.RequestedAt)
+				assert.Equal(t, fosite.Arguments{"foo"}, areq.GrantedScopes)
+				assert.Equal(t, fosite.Arguments{"foo", "bar"}, areq.Scopes)
+				assert.Equal(t, url.Values{"foo": []string{"bar"}}, areq.Form)
 			},
 		},
 	} {
 		c.setup()
 		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		if c.expect != nil {
+			c.expect()
+		}
 		t.Logf("Passed test case %d", k)
 	}
 }
