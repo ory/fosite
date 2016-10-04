@@ -20,7 +20,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	areq := fosite.NewAccessRequest(nil)
-	sess := struct{ Subject string }{ Subject: "othersub" }
+	sess := struct{ Subject string }{Subject: "othersub"}
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := RefreshTokenGrantHandler{
@@ -32,7 +32,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 		description string
 		setup       func()
 		expectErr   error
-		expect func()
+		expect      func()
 	}{
 		{
 			description: "should fail because not responsible",
@@ -76,12 +76,12 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{
-					Client: &fosite.DefaultClient{ID: "foo"},
+					Client:        &fosite.DefaultClient{ID: "foo"},
 					GrantedScopes: fosite.Arguments{"foo"},
-					Scopes: fosite.Arguments{"foo", "bar"},
-					Session: sess,
-					Form: url.Values{"foo": []string{"bar"}},
-					RequestedAt: time.Now().Round(time.Hour),
+					Scopes:        fosite.Arguments{"foo", "bar"},
+					Session:       sess,
+					Form:          url.Values{"foo": []string{"bar"}},
+					RequestedAt:   time.Now().Round(time.Hour),
 				}, nil)
 			},
 			expect: func() {

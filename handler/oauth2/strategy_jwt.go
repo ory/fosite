@@ -3,9 +3,9 @@ package oauth2
 import (
 	"strings"
 
+	jwtx "github.com/dgrijalva/jwt-go"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
-	jwtx "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
@@ -82,13 +82,13 @@ func (h *RS256JWTStrategy) validate(token string) error {
 				return errors.Wrap(fosite.ErrTokenExpired, err.Error())
 			case jwtx.ValidationErrorIssuedAt:
 				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
-			case jwtx.ValidationErrorIssuer :
+			case jwtx.ValidationErrorIssuer:
 				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
 			case jwtx.ValidationErrorNotValidYet:
 				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
 			case jwtx.ValidationErrorId:
 				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
-			case jwtx.ValidationErrorClaimsInvalid :
+			case jwtx.ValidationErrorClaimsInvalid:
 				return errors.Wrap(fosite.ErrTokenClaim, err.Error())
 			}
 			return errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())

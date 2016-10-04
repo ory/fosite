@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/rand"
 	"github.com/pkg/errors"
-	"github.com/ory-am/fosite"
 )
 
 // HMACStrategy is responsible for generating and validating challenges.
@@ -102,7 +102,7 @@ func (c *HMACStrategy) Validate(token string) error {
 
 	if !hmac.Equal(decodedSignature, mac.Sum([]byte{})) {
 		// Hash is invalid
-		return  errors.Wrap(fosite.ErrTokenSignatureMismatch, "")
+		return errors.Wrap(fosite.ErrTokenSignatureMismatch, "")
 	}
 
 	return nil

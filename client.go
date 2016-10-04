@@ -23,12 +23,12 @@ type Client interface {
 
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
-	ID                string   `json:"id"`
-	Secret            []byte   `json:"client_secret,omitempty"`
-	RedirectURIs      []string `json:"redirect_uris"`
-	GrantTypes        []string `json:"grant_types"`
-	ResponseTypes     []string `json:"response_types"`
-	Scopes            []string `json:"scopes"`
+	ID            string   `json:"id"`
+	Secret        []byte   `json:"client_secret,omitempty"`
+	RedirectURIs  []string `json:"redirect_uris"`
+	GrantTypes    []string `json:"grant_types"`
+	ResponseTypes []string `json:"response_types"`
+	Scopes        []string `json:"scopes"`
 }
 
 func (c *DefaultClient) GetID() string {

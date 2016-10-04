@@ -23,16 +23,16 @@ var (
 	ErrInsufficientEntropy     = errors.Errorf("The request used a security parameter (e.g., anti-replay, anti-csrf) with insufficient entropy (minimum of %d characters)", MinParameterEntropy)
 	ErrMisconfiguration        = errors.New("The request failed because of an internal error that is probably caused by misconfiguration")
 	ErrNotFound                = errors.New("Could not find the requested resource(s)")
-	ErrInvalidTokenFormat = errors.New("Invalid token format")
-	ErrTokenSignatureMismatch = errors.New("Token signature mismatch")
-	ErrTokenExpired = errors.New("Token expired")
-	ErrScopeNotGranted = errors.New("The token was not granted the requested scope")
-	ErrTokenClaim = errors.New("The token failed validation due to a claim mismatch")
+	ErrInvalidTokenFormat      = errors.New("Invalid token format")
+	ErrTokenSignatureMismatch  = errors.New("Token signature mismatch")
+	ErrTokenExpired            = errors.New("Token expired")
+	ErrScopeNotGranted         = errors.New("The token was not granted the requested scope")
+	ErrTokenClaim              = errors.New("The token failed validation due to a claim mismatch")
 )
 
 const (
-	errRequestUnauthorized = "request_unauthorized"
-	errRequestForbidden = "request_forbidden"
+	errRequestUnauthorized         = "request_unauthorized"
+	errRequestForbidden            = "request_forbidden"
 	errInvalidRequestName          = "invalid_request"
 	errUnauthorizedClientName      = "unauthorized_client"
 	errAccessDeniedName            = "acccess_denied"
@@ -43,16 +43,16 @@ const (
 	errUnsupportedGrantTypeName    = "unsupported_grant_type"
 	errInvalidGrantName            = "invalid_grant"
 	errInvalidClientName           = "invalid_client"
-	UnknownErrorName = "unknown_error"
-	errNotFound = "not_found"
+	UnknownErrorName               = "unknown_error"
+	errNotFound                    = "not_found"
 	errInvalidState                = "invalid_state"
 	errMisconfiguration            = "misconfiguration"
 	errInsufficientEntropy         = "insufficient_entropy"
-	errInvalidTokenFormat = "invalid_token"
-	errTokenSignatureMismatch = "token_signature_mismatch"
-	errTokenExpired = "token_expired"
-	errScopeNotGranted = "scope_not_granted"
-	errTokenClaim = "token_claim"
+	errInvalidTokenFormat          = "invalid_token"
+	errTokenSignatureMismatch      = "token_signature_mismatch"
+	errTokenExpired                = "token_expired"
+	errScopeNotGranted             = "scope_not_granted"
+	errTokenClaim                  = "token_claim"
 )
 
 type RFC6749Error struct {
@@ -65,69 +65,76 @@ type RFC6749Error struct {
 
 func ErrorToRFC6749Error(err error) *RFC6749Error {
 	switch errors.Cause(err) {
-	case ErrTokenClaim: {
-		return &RFC6749Error{
-			Name:        errTokenClaim,
-			Description: ErrTokenClaim.Error(),
-			Debug:       err.Error(),
-			Hint:        "One or more token claims failed validation.",
-			StatusCode:  http.StatusUnauthorized,
+	case ErrTokenClaim:
+		{
+			return &RFC6749Error{
+				Name:        errTokenClaim,
+				Description: ErrTokenClaim.Error(),
+				Debug:       err.Error(),
+				Hint:        "One or more token claims failed validation.",
+				StatusCode:  http.StatusUnauthorized,
+			}
 		}
-	}
-	case ErrScopeNotGranted: {
-		return &RFC6749Error{
-			Name:        errScopeNotGranted,
-			Description: ErrScopeNotGranted.Error(),
-			Debug:       err.Error(),
-			Hint:        "The resource owner did not grant the requested scope.",
-			StatusCode:  http.StatusForbidden,
+	case ErrScopeNotGranted:
+		{
+			return &RFC6749Error{
+				Name:        errScopeNotGranted,
+				Description: ErrScopeNotGranted.Error(),
+				Debug:       err.Error(),
+				Hint:        "The resource owner did not grant the requested scope.",
+				StatusCode:  http.StatusForbidden,
+			}
 		}
-	}
-	case ErrTokenExpired: {
-		return &RFC6749Error{
-			Name:        errTokenExpired,
-			Description: ErrTokenExpired.Error(),
-			Debug:       err.Error(),
-			Hint:        "The token expired.",
-			StatusCode:  http.StatusUnauthorized,
+	case ErrTokenExpired:
+		{
+			return &RFC6749Error{
+				Name:        errTokenExpired,
+				Description: ErrTokenExpired.Error(),
+				Debug:       err.Error(),
+				Hint:        "The token expired.",
+				StatusCode:  http.StatusUnauthorized,
+			}
 		}
-	}
-	case ErrInvalidTokenFormat: {
-		return &RFC6749Error{
-			Name:        errInvalidTokenFormat,
-			Description: ErrInvalidTokenFormat.Error(),
-			Debug:       err.Error(),
-			Hint:        "Check that you provided a valid token in the right format.",
-			StatusCode:  http.StatusBadRequest,
+	case ErrInvalidTokenFormat:
+		{
+			return &RFC6749Error{
+				Name:        errInvalidTokenFormat,
+				Description: ErrInvalidTokenFormat.Error(),
+				Debug:       err.Error(),
+				Hint:        "Check that you provided a valid token in the right format.",
+				StatusCode:  http.StatusBadRequest,
+			}
 		}
-	}
-	case ErrTokenSignatureMismatch: {
-		return &RFC6749Error{
-			Name:        errTokenSignatureMismatch,
-			Description: ErrTokenSignatureMismatch.Error(),
-			Debug:       err.Error(),
-			Hint:        "Check that you provided  a valid token in the right format.",
-			StatusCode:  http.StatusBadRequest,
+	case ErrTokenSignatureMismatch:
+		{
+			return &RFC6749Error{
+				Name:        errTokenSignatureMismatch,
+				Description: ErrTokenSignatureMismatch.Error(),
+				Debug:       err.Error(),
+				Hint:        "Check that you provided  a valid token in the right format.",
+				StatusCode:  http.StatusBadRequest,
+			}
 		}
-	}
-	case ErrRequestUnauthorized: {
-		return &RFC6749Error{
-			Name:        errRequestUnauthorized,
-			Description: ErrRequestUnauthorized.Error(),
-			Debug:       err.Error(),
-			Hint:        "Check that you provided valid credentials in the right format.",
-			StatusCode:  http.StatusUnauthorized,
+	case ErrRequestUnauthorized:
+		{
+			return &RFC6749Error{
+				Name:        errRequestUnauthorized,
+				Description: ErrRequestUnauthorized.Error(),
+				Debug:       err.Error(),
+				Hint:        "Check that you provided valid credentials in the right format.",
+				StatusCode:  http.StatusUnauthorized,
+			}
 		}
-	}
-	case ErrRequestForbidden: {
-		return &RFC6749Error{
-			Name:        errRequestForbidden,
-			Description: ErrRequestForbidden.Error(),
-			Debug:       err.Error(),
-			Hint:        "You are not allowed to perform this action.",
-			StatusCode:  http.StatusForbidden,
+	case ErrRequestForbidden:
+		{
+			return &RFC6749Error{
+				Name:        errRequestForbidden,
+				Description: ErrRequestForbidden.Error(),
+				Debug:       err.Error(),
+				Hint:        "You are not allowed to perform this action.",
+				StatusCode:  http.StatusForbidden,
+			}
 		}
-	}
 	case ErrInvalidRequest:
 		return &RFC6749Error{
 			Name:        errInvalidRequestName,
