@@ -14,7 +14,8 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 	// ResourceOwnerPasswordCredentialsGrantStorage is used to persist session data across requests.
 	ResourceOwnerPasswordCredentialsGrantStorage ResourceOwnerPasswordCredentialsGrantStorage
 
-	ScopeStrategy fosite.ScopeStrategy
+	RefreshTokenStrategy RefreshTokenStrategy
+	ScopeStrategy        fosite.ScopeStrategy
 
 	*HandleHelper
 }
@@ -59,5 +60,24 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 		return errors.Wrap(fosite.ErrUnknownRequest, "")
 	}
 
-	return c.IssueAccessToken(ctx, req, requester, responder)
+	var refresh, refreshSignature string
+	if requester.GetGrantedScopes().Has("offline") {
+		var err error
+		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
+		if err != nil {
+			return errors.Wrap(fosite.ErrServerError, err.Error())
+		} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester); err != nil {
+			return errors.Wrap(fosite.ErrServerError, err.Error())
+		}
+	}
+
+	if err := c.IssueAccessToken(ctx, req, requester, responder); err != nil {
+		return err
+	}
+
+	if refresh != "" {
+		responder.SetExtra("refresh_token", refresh)
+	}
+
+	return nil
 }

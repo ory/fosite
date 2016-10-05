@@ -131,6 +131,11 @@ func tokenEndpoint(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Grant requested scopes
+	for _, scope := range accessRequest.GetRequestedScopes() {
+		accessRequest.GrantScope(scope)
+	}
+
 	// Next we create a response for the access request. Again, we iterate through the TokenEndpointHandlers
 	// and aggregate the result in response.
 	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
