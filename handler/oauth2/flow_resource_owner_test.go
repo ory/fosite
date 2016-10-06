@@ -79,6 +79,8 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	rtstr := internal.NewMockRefreshTokenStrategy(ctrl)
 	aresp := fosite.NewAccessResponse()
+	mockAT := "accesstoken.foo.bar"
+	mockRT := "refreshtoken.bar.foo"
 	defer ctrl.Finish()
 
 	areq := fosite.NewAccessRequest(nil)
@@ -109,7 +111,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
-				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
+				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
 			},
 		},
@@ -118,9 +120,9 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				areq.GrantScope("offline")
-				rtstr.EXPECT().GenerateRefreshToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
+				rtstr.EXPECT().GenerateRefreshToken(nil, areq).Return(mockRT, "bar", nil)
 				store.EXPECT().CreateRefreshTokenSession(nil, "bar", areq).Return(nil)
-				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
+				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
 			},
 		},
@@ -128,6 +130,15 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		c.setup()
 		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+
+		if err == nil {
+			if areq.GetGrantedScopes().Has("offline") {
+				assert.NotNil(t, aresp.GetExtra("refresh_token"), "(%d) %s", k, c.description)
+			} else {
+				assert.Nil(t, aresp.GetExtra("refresh_token"), "(%d) %s", k, c.description)
+			}
+		}
+
 		t.Logf("Passed test case %d", k)
 	}
 }
