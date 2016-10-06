@@ -55,7 +55,9 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should fail because validation failed",
 			setup: func() {
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{}, nil)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{
+					GrantedScopes:[]string{"offline"},
+				}, nil)
 				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -67,7 +69,10 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 					ID:         "foo",
 					GrantTypes: fosite.Arguments{"refresh_token"},
 				}
-				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{Client: &fosite.DefaultClient{ID: ""}}, nil)
+				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{
+					Client: &fosite.DefaultClient{ID: ""},
+					GrantedScopes:[]string{"offline"},
+				}, nil)
 				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").AnyTimes().Return(nil)
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -77,19 +82,19 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 			setup: func() {
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{
 					Client:        &fosite.DefaultClient{ID: "foo"},
-					GrantedScopes: fosite.Arguments{"foo"},
+					GrantedScopes: fosite.Arguments{"foo", "offline"},
 					Scopes:        fosite.Arguments{"foo", "bar"},
 					Session:       sess,
 					Form:          url.Values{"foo": []string{"bar"}},
-					RequestedAt:   time.Now().Round(time.Hour),
+					RequestedAt:   time.Now().Add(-time.Hour).Round(time.Hour),
 				}, nil)
 			},
 			expect: func() {
 				assert.Equal(t, sess, areq.Session)
-				assert.Equal(t, time.Now().Round(time.Hour), areq.RequestedAt)
-				assert.Equal(t, fosite.Arguments{"foo"}, areq.GrantedScopes)
+				assert.NotEqual(t, time.Now().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
+				assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.GrantedScopes)
 				assert.Equal(t, fosite.Arguments{"foo", "bar"}, areq.Scopes)
-				assert.Equal(t, url.Values{"foo": []string{"bar"}}, areq.Form)
+				assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
 			},
 		},
 	} {

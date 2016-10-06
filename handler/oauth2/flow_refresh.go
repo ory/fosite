@@ -35,11 +35,16 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	refresh := req.PostForm.Get("refresh_token")
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(refresh)
-	accessRequest, err := c.RefreshTokenGrantStorage.GetRefreshTokenSession(ctx, signature, nil)
+	originalRequest, err := c.RefreshTokenGrantStorage.GetRefreshTokenSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	} else if err != nil {
 		return errors.Wrap(fosite.ErrServerError, err.Error())
+	}
+
+	if !originalRequest.GetGrantedScopes().Has("offline") {
+		return errors.Wrap(fosite.ErrScopeNotGranted, "The client is not allowed to use grant type refresh_token")
+
 	}
 
 	// The authorization server MUST ... validate the refresh token.
@@ -48,11 +53,16 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
-	if accessRequest.GetClient().GetID() != request.GetClient().GetID() {
+	if originalRequest.GetClient().GetID() != request.GetClient().GetID() {
 		return errors.Wrap(fosite.ErrInvalidRequest, "Client ID mismatch")
 	}
 
-	request.Merge(accessRequest)
+	request.SetSession(originalRequest.GetSession())
+	request.SetRequestedScopes(originalRequest.GetRequestedScopes())
+	for _, scope := range originalRequest.GetGrantedScopes() {
+		request.GrantScope(scope)
+	}
+
 	return nil
 }
 
