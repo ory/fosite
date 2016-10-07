@@ -99,6 +99,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		description string
 		setup       func()
 		expectErr   error
+		expect      func()
 	}{
 		{
 			description: "should fail because not responsible",
@@ -114,6 +115,9 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
 			},
+			expect: func() {
+				assert.Nil(t, aresp.GetExtra("refresh_token"), "unexpected refresh token")
+			},
 		},
 		{
 			description: "should pass - offline scope",
@@ -125,20 +129,17 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
 			},
+			expect: func() {
+				assert.NotNil(t, aresp.GetExtra("refresh_token"), "expected refresh token")
+			},
 		},
 	} {
 		c.setup()
 		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-
-		if err == nil {
-			if areq.GetGrantedScopes().Has("offline") {
-				assert.NotNil(t, aresp.GetExtra("refresh_token"), "(%d) %s", k, c.description)
-			} else {
-				assert.Nil(t, aresp.GetExtra("refresh_token"), "(%d) %s", k, c.description)
-			}
+		if c.expect != nil {
+			c.expect()
 		}
-
 		t.Logf("Passed test case %d", k)
 	}
 }
