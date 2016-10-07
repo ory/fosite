@@ -77,7 +77,10 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockResourceOwnerPasswordCredentialsGrantStorage(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
+	rtstr := internal.NewMockRefreshTokenStrategy(ctrl)
 	aresp := fosite.NewAccessResponse()
+	mockAT := "accesstoken.foo.bar"
+	mockRT := "refreshtoken.bar.foo"
 	defer ctrl.Finish()
 
 	areq := fosite.NewAccessRequest(nil)
@@ -90,11 +93,13 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			AccessTokenStrategy: chgen,
 			AccessTokenLifespan: time.Hour,
 		},
+		RefreshTokenStrategy: rtstr,
 	}
 	for k, c := range []struct {
 		description string
 		setup       func()
 		expectErr   error
+		expect      func()
 	}{
 		{
 			description: "should fail because not responsible",
@@ -107,14 +112,34 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
-				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
+				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
+			},
+			expect: func() {
+				assert.Nil(t, aresp.GetExtra("refresh_token"), "unexpected refresh token")
+			},
+		},
+		{
+			description: "should pass - offline scope",
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{"password"}
+				areq.GrantScope("offline")
+				rtstr.EXPECT().GenerateRefreshToken(nil, areq).Return(mockRT, "bar", nil)
+				store.EXPECT().CreateRefreshTokenSession(nil, "bar", areq).Return(nil)
+				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
+			},
+			expect: func() {
+				assert.NotNil(t, aresp.GetExtra("refresh_token"), "expected refresh token")
 			},
 		},
 	} {
 		c.setup()
 		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		if c.expect != nil {
+			c.expect()
+		}
 		t.Logf("Passed test case %d", k)
 	}
 }

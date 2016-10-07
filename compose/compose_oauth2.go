@@ -108,7 +108,8 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 				AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 				AccessTokenLifespan: config.GetAccessTokenLifespan(),
 			},
-			ScopeStrategy: fosite.HierarchicScopeStrategy,
+			RefreshTokenStrategy: strategy.(oauth2.RefreshTokenStrategy),
+			ScopeStrategy:        fosite.HierarchicScopeStrategy,
 		},
 		CoreValidator: &oauth2.CoreValidator{
 			CoreStrategy:  strategy.(oauth2.CoreStrategy),

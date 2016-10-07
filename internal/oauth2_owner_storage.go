@@ -50,6 +50,16 @@ func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) CreateAcce
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAccessTokenSession", arg0, arg1, arg2)
 }
 
+func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) CreateRefreshTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) error {
+	ret := _m.ctrl.Call(_m, "CreateRefreshTokenSession", _param0, _param1, _param2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) CreateRefreshTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateRefreshTokenSession", arg0, arg1, arg2)
+}
+
 func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) DeleteAccessTokenSession(_param0 context.Context, _param1 string) error {
 	ret := _m.ctrl.Call(_m, "DeleteAccessTokenSession", _param0, _param1)
 	ret0, _ := ret[0].(error)
@@ -58,6 +68,16 @@ func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) DeleteAccessTokenSes
 
 func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) DeleteAccessTokenSession(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAccessTokenSession", arg0, arg1)
+}
+
+func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) DeleteRefreshTokenSession(_param0 context.Context, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "DeleteRefreshTokenSession", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) DeleteRefreshTokenSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteRefreshTokenSession", arg0, arg1)
 }
 
 func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) GetAccessTokenSession(_param0 context.Context, _param1 string, _param2 interface{}) (fosite.Requester, error) {
@@ -69,4 +89,15 @@ func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) GetAccessTokenSessio
 
 func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) GetAccessTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAccessTokenSession", arg0, arg1, arg2)
+}
+
+func (_m *MockResourceOwnerPasswordCredentialsGrantStorage) GetRefreshTokenSession(_param0 context.Context, _param1 string, _param2 interface{}) (fosite.Requester, error) {
+	ret := _m.ctrl.Call(_m, "GetRefreshTokenSession", _param0, _param1, _param2)
+	ret0, _ := ret[0].(fosite.Requester)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockResourceOwnerPasswordCredentialsGrantStorageRecorder) GetRefreshTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRefreshTokenSession", arg0, arg1, arg2)
 }
