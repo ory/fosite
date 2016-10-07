@@ -167,6 +167,8 @@ contains all sublevels, too. For example:
 
 You can replace the default scope strategy if you need a custom one by implementing `fosite.ScopeStrategy`.
 
+**Note:** To issue refresh tokens with any of the grants, you need to include the `offline` scope in the OAuth2 request.
+
 ### Quickstart
 
 Instantiating fosite by hand can be painful. Therefore we created a few convenience helpers available through the [compose package](/compose).
