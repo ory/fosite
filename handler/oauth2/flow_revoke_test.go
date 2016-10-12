@@ -13,6 +13,7 @@ import (
 func TestRevokeToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockTokenRevocationStorage(ctrl)
+	ar := internal.NewMockAccessRequester(ctrl)
 	defer ctrl.Finish()
 
 	h := TokenRevocationHandler{
@@ -28,27 +29,87 @@ func TestRevokeToken(t *testing.T) {
 		expectErr   error
 	}{
 		{
-			description: "should pass - refresh token first",
+			description: "should pass - refresh token discovery first; refresh token found",
 			expectErr:   nil,
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
 				store.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
+				ar.EXPECT().GetID()
 				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
-				store.EXPECT().AccessTokenSignature(token)
 				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
 			},
 		},
 		{
-			description: "should pass - access token first",
+			description: "should pass - access token discovery first; access token found",
 			expectErr:   nil,
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
 				store.EXPECT().AccessTokenSignature(token)
-				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
-				store.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
+				ar.EXPECT().GetID()
 				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
+				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
+			},
+		},
+		{
+			description: "should pass - refresh token discovery first; refresh token not found",
+			expectErr:   nil,
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.AccessToken
+				store.EXPECT().AccessTokenSignature(token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
+
+				store.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
+				ar.EXPECT().GetID()
+				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
+				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
+			},
+		},
+		{
+			description: "should pass - access token discovery first; access token not found",
+			expectErr:   nil,
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.RefreshToken
+				store.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
+
+				store.EXPECT().AccessTokenSignature(token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
+				ar.EXPECT().GetID()
+				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
+				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
+			},
+		},
+		{
+			description: "should pass - refresh token discovery first; both tokens not found",
+			expectErr:   fosite.ErrNotFound,
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.RefreshToken
+				store.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
+
+				store.EXPECT().AccessTokenSignature(token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
+			},
+		},
+		{
+			description: "should pass - access token discovery first; both tokens not found",
+			expectErr:   fosite.ErrNotFound,
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.AccessToken
+				store.EXPECT().AccessTokenSignature(token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
+
+				store.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 			},
 		},
 	} {
