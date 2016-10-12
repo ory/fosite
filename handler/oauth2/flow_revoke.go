@@ -1,9 +1,8 @@
 package oauth2
 
 import (
-	"golang.org/x/net/context"
-
 	"github.com/ory-am/fosite"
+	"golang.org/x/net/context"
 )
 
 type TokenRevocationHandler struct {
@@ -11,16 +10,28 @@ type TokenRevocationHandler struct {
 }
 
 // RevokeToken implements https://tools.ietf.org/html/rfc7009#section-2.1
+// The token type hint indicates which token type check should be performed first.
 func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, tokenType fosite.TokenType) error {
-	if tokenType == fosite.RefreshToken {
-		signature := r.TokenRevocationStorage.RefreshTokenSignature(token)
-		r.TokenRevocationStorage.DeleteRefreshTokenSession(ctx, signature)
+	revokeFuncs := []func(){
+		func() {
+			// Refresh token
+			signature := r.TokenRevocationStorage.RefreshTokenSignature(token)
+			r.TokenRevocationStorage.RevokeRefreshToken(ctx, signature)
+		},
+		func() {
+			// Access token
+			signature := r.TokenRevocationStorage.AccessTokenSignature(token)
+			r.TokenRevocationStorage.RevokeAccessToken(ctx, signature)
+		},
 	}
 
+	// Token type hinting
 	if tokenType == fosite.AccessToken {
-		signature := r.TokenRevocationStorage.AccessTokenSignature(token)
-		r.TokenRevocationStorage.DeleteAccessTokenSession(ctx, signature)
+		revokeFuncs[0], revokeFuncs[1] = revokeFuncs[1], revokeFuncs[0]
 	}
+
+	revokeFuncs[0]()
+	revokeFuncs[1]()
 
 	return nil
 }

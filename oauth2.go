@@ -125,11 +125,14 @@ type OAuth2Provider interface {
 	//
 	// The following specs must be considered in any implementation of this method:
 	// https://tools.ietf.org/html/rfc7009#section-2.2
-	WriteRevocationResponse(ctx context.Context, rw http.ResponseWriter, err error)
+	WriteRevocationResponse(rw http.ResponseWriter, err error)
 }
 
 // Requester is an abstract interface for handling requests in Fosite.
 type Requester interface {
+	// GetID returns a unique identifier.
+	GetID() string
+
 	// GetRequestedAt returns the time the request was created.
 	GetRequestedAt() (requestedAt time.Time)
 

@@ -28,23 +28,27 @@ func TestRevokeToken(t *testing.T) {
 		expectErr   error
 	}{
 		{
-			description: "should pass - refresh token",
+			description: "should pass - refresh token first",
 			expectErr:   nil,
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
 				store.EXPECT().RefreshTokenSignature(token)
-				store.EXPECT().DeleteRefreshTokenSession(gomock.Any(), gomock.Any())
+				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
+				store.EXPECT().AccessTokenSignature(token)
+				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
 			},
 		},
 		{
-			description: "should pass - access token",
+			description: "should pass - access token first",
 			expectErr:   nil,
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
 				store.EXPECT().AccessTokenSignature(token)
-				store.EXPECT().DeleteAccessTokenSession(gomock.Any(), gomock.Any())
+				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
+				store.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
 			},
 		},
 	} {

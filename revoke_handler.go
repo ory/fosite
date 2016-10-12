@@ -48,19 +48,11 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 
 	r.ParseForm()
 	token := r.PostForm.Get("token")
-
-	var tokenType = TokenType(r.PostForm.Get("token_type_hint"))
-
-	switch tokenType {
-	case AccessToken:
-	case RefreshToken:
-	default:
-		tokenType = RefreshToken
-	}
+	tokenTypeHint := TokenType(r.PostForm.Get("token_type_hint"))
 
 	var found bool
 	for _, loader := range f.RevocationHandlers {
-		if err := loader.RevokeToken(ctx, token, tokenType); err == nil {
+		if err := loader.RevokeToken(ctx, token, tokenTypeHint); err == nil {
 			found = true
 		} else if errors.Cause(err) == ErrUnknownRequest {
 			// do nothing
@@ -86,7 +78,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 // cannot handle such an error in a reasonable way.  Moreover, the
 // purpose of the revocation request, invalidating the particular token,
 // is already achieved.
-func (f *Fosite) WriteRevocationResponse(ctx context.Context, rw http.ResponseWriter, err error) {
+func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 	switch err {
 	case ErrInvalidRequest:
 		fallthrough
