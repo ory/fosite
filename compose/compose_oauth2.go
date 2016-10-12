@@ -118,3 +118,21 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 		},
 	}
 }
+
+// OAuth2TokenRevocationFactory creates an OAuth2 token revocation handler and registers
+// an access token, refresh token and authorize code validator.
+func OAuth2TokenRevocationFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
+	return &struct {
+		*oauth2.TokenRevocationHandler
+		*oauth2.CoreValidator
+	}{
+		TokenRevocationHandler: &oauth2.TokenRevocationHandler{
+			TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		},
+		CoreValidator: &oauth2.CoreValidator{
+			CoreStrategy:  strategy.(oauth2.CoreStrategy),
+			CoreStorage:   storage.(oauth2.CoreStorage),
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
+		},
+	}
+}

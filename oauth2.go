@@ -114,6 +114,18 @@ type OAuth2Provider interface {
 	// ValidateToken validates a token. Popular validators include authorize code, id token, access token and refresh token.
 	// Returns an error if validation failed.
 	ValidateToken(ctx context.Context, token string, tokenType TokenType, session interface{}, scope ...string) (AccessRequester, error)
+
+	// NewRevocationRequest handles incoming token revocation requests and validates various parameters.
+	//
+	// The following specs must be considered in any implementation of this method:
+	// https://tools.ietf.org/html/rfc7009#section-2.1
+	NewRevocationRequest(ctx context.Context, r *http.Request) error
+
+	// WriteRevocationResponse writes the revoke response.
+	//
+	// The following specs must be considered in any implementation of this method:
+	// https://tools.ietf.org/html/rfc7009#section-2.2
+	WriteRevocationResponse(ctx context.Context, rw http.ResponseWriter, err error)
 }
 
 // Requester is an abstract interface for handling requests in Fosite.

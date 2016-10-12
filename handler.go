@@ -33,3 +33,8 @@ type TokenEndpointHandler interface {
 	// the request, this method should return ErrUnknownRequest and otherwise handle the request.
 	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester) error
 }
+
+type RevocationHandler interface {
+	// RevokeToken handles access and refresh token revocation.
+	RevokeToken(ctx context.Context, token string, tokenType TokenType) error
+}

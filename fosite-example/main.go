@@ -46,6 +46,7 @@ var oauth2 = compose.Compose(
 	compose.OAuth2ClientCredentialsGrantFactory,
 	compose.OAuth2RefreshTokenGrantFactory,
 	compose.OAuth2ResourceOwnerPasswordCredentialsFactory,
+	compose.OAuth2TokenRevocationFactory,
 
 	// be aware that open id connect factories need to be added after oauth2 factories to work properly.
 	compose.OpenIDConnectExplicit,
@@ -102,6 +103,9 @@ func main() {
 
 	// validate tokens
 	http.HandleFunc("/protected-api", validateEndpoint)
+
+	// revoke tokens
+	http.HandleFunc("/revoke", revokeEndpoint)
 
 	// the oauth2 callback endpoint
 	http.HandleFunc("/callback", helpers.CallbackHandler(clientConf))
@@ -257,6 +261,17 @@ func validateEndpoint(rw http.ResponseWriter, req *http.Request) {
 	<li>Requested at: %s</li>
 </ul>
 `, ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetRequestedScopes(), mySessionData, ar.GetRequestedAt())
+}
+
+func revokeEndpoint(rw http.ResponseWriter, req *http.Request) {
+	// This context will be passed to all methods.
+	ctx := fosite.NewContext()
+
+	// This will accept the token revocation request and validate various parameters.
+	err := oauth2.NewRevocationRequest(ctx, req)
+
+	// All done, send the response.
+	oauth2.WriteRevocationResponse(ctx, rw, err)
 }
 
 // a few simple helpers

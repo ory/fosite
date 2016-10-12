@@ -36,6 +36,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, handlers
 		AuthorizeEndpointHandlers: fosite.AuthorizeEndpointHandlers{},
 		TokenEndpointHandlers:     fosite.TokenEndpointHandlers{},
 		TokenValidators:           fosite.TokenValidators{},
+		RevocationHandlers:        fosite.RevocationHandlers{},
 		Hasher:                    &hash.BCrypt{WorkFactor: config.GetHashCost()},
 		Logger:                    &logrus.Logger{},
 		ScopeStrategy:             fosite.HierarchicScopeStrategy,
@@ -51,6 +52,9 @@ func Compose(config *Config, storage interface{}, strategy interface{}, handlers
 		}
 		if tv, ok := res.(fosite.TokenValidator); ok {
 			f.TokenValidators.Append(tv)
+		}
+		if rh, ok := res.(fosite.RevocationHandler); ok {
+			f.RevocationHandlers.Append(rh)
 		}
 	}
 

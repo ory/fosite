@@ -49,12 +49,27 @@ func (t *TokenValidators) Append(h TokenValidator) {
 	*t = append(*t, h)
 }
 
+// RevocationHandlers is a list of RevocationHandler
+type RevocationHandlers []RevocationHandler
+
+// Add adds an RevocationHandler to this list. Ignores duplicates based on reflect.TypeOf.
+func (t *RevocationHandlers) Append(h RevocationHandler) {
+	for _, this := range *t {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*t = append(*t, h)
+}
+
 // Fosite implements OAuth2Provider.
 type Fosite struct {
 	Store                     Storage
 	AuthorizeEndpointHandlers AuthorizeEndpointHandlers
 	TokenEndpointHandlers     TokenEndpointHandlers
 	TokenValidators           TokenValidators
+	RevocationHandlers        RevocationHandlers
 	Hasher                    hash.Hasher
 	Logger                    logrus.StdLogger
 	ScopeStrategy             ScopeStrategy
