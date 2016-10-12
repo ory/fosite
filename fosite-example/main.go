@@ -242,7 +242,7 @@ func validateEndpoint(rw http.ResponseWriter, req *http.Request) {
 	ctx := fosite.NewContext()
 	mySessionData := newSession("peter")
 
-	ar, err := oauth2.ValidateToken(ctx, req.URL.Query().Get("token"), fosite.AccessToken, mySessionData)
+	ar, err := oauth2.IntrospectToken(ctx, req.URL.Query().Get("token"), fosite.AccessToken, mySessionData)
 	if err != nil {
 		fmt.Fprintf(rw, "<h1>An error occurred!</h1>%s", err.Error())
 		return
