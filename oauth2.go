@@ -114,7 +114,13 @@ type OAuth2Provider interface {
 	// ValidateToken validates a token. Popular validators include authorize code, id token, access token and refresh token.
 	// Returns an error if validation failed.
 	ValidateToken(ctx context.Context, token string, tokenType TokenType, session interface{}, scope ...string) (AccessRequester, error)
+
+	NewIntrospectionRequest(ctx context.Context, ) (IntrospectionResponse, error)
+
+	WriteIntrospectionResponse(ctx context.Context, r IntrospectionResponse)
 }
+
+type IntrospectionResponse interface {}
 
 // Requester is an abstract interface for handling requests in Fosite.
 type Requester interface {
