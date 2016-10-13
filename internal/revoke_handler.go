@@ -4,10 +4,9 @@
 package internal
 
 import (
-	context "golang.org/x/net/context"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
+	context "golang.org/x/net/context"
 )
 
 // Mock of RevocationHandler interface
@@ -31,8 +30,8 @@ func (_m *MockRevocationHandler) EXPECT() *_MockRevocationHandlerRecorder {
 	return _m.recorder
 }
 
-func (_m *MockRevocationHandler) RevokeToken(ctx context.Context, token string, tokenType fosite.TokenType) error {
-	ret := _m.ctrl.Call(_m, "RevokeToken", ctx, token, tokenType)
+func (_m *MockRevocationHandler) RevokeToken(_param0 context.Context, _param1 string, _param2 fosite.TokenType) error {
+	ret := _m.ctrl.Call(_m, "RevokeToken", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }

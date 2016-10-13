@@ -20,7 +20,6 @@ type Request struct {
 
 func NewRequest() *Request {
 	return &Request{
-		ID:            uuid.New(),
 		Client:        &DefaultClient{},
 		Scopes:        Arguments{},
 		GrantedScopes: Arguments{},
@@ -30,6 +29,9 @@ func NewRequest() *Request {
 }
 
 func (a *Request) GetID() string {
+	if a.ID == "" {
+		a.ID = uuid.New()
+	}
 	return a.ID
 }
 

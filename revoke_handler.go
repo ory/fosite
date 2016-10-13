@@ -9,8 +9,10 @@ import (
 	"golang.org/x/net/context"
 )
 
-// Implements
-// * https://tools.ietf.org/html/rfc7009#section-2.1
+// NewRevocationRequest handles incoming token revocation requests and
+// validates various parameters as specified in:
+// https://tools.ietf.org/html/rfc7009#section-2.1
+//
 // The authorization server first validates the client credentials (in
 // case of a confidential client) and then verifies whether the token
 // was issued to the client making the revocation request.  If this
@@ -68,8 +70,9 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 	return nil
 }
 
-// Implements
-// * https://tools.ietf.org/html/rfc7009#section-2.2
+// WriteRevocationResponse writes a token revocation response as specified in:
+// https://tools.ietf.org/html/rfc7009#section-2.2
+//
 // The authorization server responds with HTTP status code 200 if the
 // token has been revoked successfully or if the client submitted an
 // invalid token.

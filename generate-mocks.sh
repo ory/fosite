@@ -18,6 +18,7 @@ mockgen -package internal -destination internal/refresh_token_strategy.go github
 mockgen -package internal -destination internal/authorize_code_strategy.go github.com/ory-am/fosite/handler/oauth2 AuthorizeCodeStrategy
 mockgen -package internal -destination internal/id_token_strategy.go github.com/ory-am/fosite/handler/openid OpenIDConnectTokenStrategy
 mockgen -package internal -destination internal/authorize_handler.go github.com/ory-am/fosite AuthorizeEndpointHandler
+mockgen -package internal -destination internal/revoke_handler.go github.com/ory-am/fosite RevocationHandler
 mockgen -package internal -destination internal/token_handler.go github.com/ory-am/fosite TokenEndpointHandler
 mockgen -package internal -destination internal/validator.go github.com/ory-am/fosite TokenValidator
 mockgen -package internal -destination internal/client.go github.com/ory-am/fosite Client

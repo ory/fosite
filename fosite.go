@@ -10,7 +10,7 @@ import (
 // AuthorizeEndpointHandlers is a list of AuthorizeEndpointHandler
 type AuthorizeEndpointHandlers []AuthorizeEndpointHandler
 
-// Add adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+// Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
 func (a *AuthorizeEndpointHandlers) Append(h AuthorizeEndpointHandler) {
 	for _, this := range *a {
 		if reflect.TypeOf(this) == reflect.TypeOf(h) {
@@ -24,7 +24,7 @@ func (a *AuthorizeEndpointHandlers) Append(h AuthorizeEndpointHandler) {
 // TokenEndpointHandlers is a list of TokenEndpointHandler
 type TokenEndpointHandlers []TokenEndpointHandler
 
-// Add adds an TokenEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+// Append adds an TokenEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
 func (t *TokenEndpointHandlers) Append(h TokenEndpointHandler) {
 	for _, this := range *t {
 		if reflect.TypeOf(this) == reflect.TypeOf(h) {
@@ -38,7 +38,7 @@ func (t *TokenEndpointHandlers) Append(h TokenEndpointHandler) {
 // TokenValidators is a list of TokenValidator
 type TokenValidators []TokenValidator
 
-// Add adds an AccessTokenValidator to this list. Ignores duplicates based on reflect.TypeOf.
+// Append adds an AccessTokenValidator to this list. Ignores duplicates based on reflect.TypeOf.
 func (t *TokenValidators) Append(h TokenValidator) {
 	for _, this := range *t {
 		if reflect.TypeOf(this) == reflect.TypeOf(h) {
@@ -52,7 +52,7 @@ func (t *TokenValidators) Append(h TokenValidator) {
 // RevocationHandlers is a list of RevocationHandler
 type RevocationHandlers []RevocationHandler
 
-// Add adds an RevocationHandler to this list. Ignores duplicates based on reflect.TypeOf.
+// Append adds an RevocationHandler to this list. Ignores duplicates based on reflect.TypeOf.
 func (t *RevocationHandlers) Append(h RevocationHandler) {
 	for _, this := range *t {
 		if reflect.TypeOf(this) == reflect.TypeOf(h) {

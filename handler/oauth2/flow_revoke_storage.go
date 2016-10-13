@@ -4,13 +4,16 @@ import (
 	"golang.org/x/net/context"
 )
 
+// TokenRevocationStorage provides the storage implementation
+// as specified in: https://tools.ietf.org/html/rfc7009
 type TokenRevocationStorage interface {
 	RefreshTokenStrategy
 	RefreshTokenStorage
 	AccessTokenStrategy
 	AccessTokenStorage
 
-	// * https://tools.ietf.org/html/rfc7009#section-2.1
+	// RevokeRefreshToken revokes a refresh token as specified in:
+	// https://tools.ietf.org/html/rfc7009#section-2.1
 	// If the particular
 	// token is a refresh token and the authorization server supports the
 	// revocation of access tokens, then the authorization server SHOULD
@@ -18,7 +21,8 @@ type TokenRevocationStorage interface {
 	// grant (see Implementation Note).
 	RevokeRefreshToken(ctx context.Context, requestID string)
 
-	// * https://tools.ietf.org/html/rfc7009#section-2.1
+	// RevokeAccessToken revokes an access token as specified in:
+	// https://tools.ietf.org/html/rfc7009#section-2.1
 	// If the token passed to the request
 	// is an access token, the server MAY revoke the respective refresh
 	// token as well.

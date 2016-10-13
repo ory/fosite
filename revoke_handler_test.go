@@ -164,11 +164,6 @@ func TestNewRevocationRequest(t *testing.T) {
 		assert.True(t, errors.Cause(err) == c.expectErr, "%d\nwant: %s \ngot: %s", k, c.expectErr, err)
 		if err != nil {
 			t.Logf("Error occured: %v", err)
-		} else {
-			// todo http header codes??
-
-			// pkg.AssertObjectKeysEqual(t, c.expect, ar, "GrantTypes", "Client")
-			// assert.NotNil(t, ar.GetRequestedAt())
 		}
 		t.Logf("Passed test case %d", k)
 	}
