@@ -124,5 +124,7 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 func OAuth2TokenRevocationFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.TokenRevocationHandler{
 		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
 	}
 }

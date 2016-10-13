@@ -7,9 +7,7 @@ import (
 // TokenRevocationStorage provides the storage implementation
 // as specified in: https://tools.ietf.org/html/rfc7009
 type TokenRevocationStorage interface {
-	RefreshTokenStrategy
 	RefreshTokenStorage
-	AccessTokenStrategy
 	AccessTokenStorage
 
 	// RevokeRefreshToken revokes a refresh token as specified in:

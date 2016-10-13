@@ -30,16 +30,6 @@ func (_m *MockTokenRevocationStorage) EXPECT() *_MockTokenRevocationStorageRecor
 	return _m.recorder
 }
 
-func (_m *MockTokenRevocationStorage) AccessTokenSignature(_param0 string) string {
-	ret := _m.ctrl.Call(_m, "AccessTokenSignature", _param0)
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-func (_mr *_MockTokenRevocationStorageRecorder) AccessTokenSignature(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "AccessTokenSignature", arg0)
-}
-
 func (_m *MockTokenRevocationStorage) CreateAccessTokenSession(_param0 context.Context, _param1 string, _param2 fosite.Requester) error {
 	ret := _m.ctrl.Call(_m, "CreateAccessTokenSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(error)
@@ -80,30 +70,6 @@ func (_mr *_MockTokenRevocationStorageRecorder) DeleteRefreshTokenSession(arg0, 
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteRefreshTokenSession", arg0, arg1)
 }
 
-func (_m *MockTokenRevocationStorage) GenerateAccessToken(_param0 context.Context, _param1 fosite.Requester) (string, string, error) {
-	ret := _m.ctrl.Call(_m, "GenerateAccessToken", _param0, _param1)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-func (_mr *_MockTokenRevocationStorageRecorder) GenerateAccessToken(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GenerateAccessToken", arg0, arg1)
-}
-
-func (_m *MockTokenRevocationStorage) GenerateRefreshToken(_param0 context.Context, _param1 fosite.Requester) (string, string, error) {
-	ret := _m.ctrl.Call(_m, "GenerateRefreshToken", _param0, _param1)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-func (_mr *_MockTokenRevocationStorageRecorder) GenerateRefreshToken(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GenerateRefreshToken", arg0, arg1)
-}
-
 func (_m *MockTokenRevocationStorage) GetAccessTokenSession(_param0 context.Context, _param1 string, _param2 interface{}) (fosite.Requester, error) {
 	ret := _m.ctrl.Call(_m, "GetAccessTokenSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(fosite.Requester)
@@ -126,16 +92,6 @@ func (_mr *_MockTokenRevocationStorageRecorder) GetRefreshTokenSession(arg0, arg
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRefreshTokenSession", arg0, arg1, arg2)
 }
 
-func (_m *MockTokenRevocationStorage) RefreshTokenSignature(_param0 string) string {
-	ret := _m.ctrl.Call(_m, "RefreshTokenSignature", _param0)
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-func (_mr *_MockTokenRevocationStorageRecorder) RefreshTokenSignature(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "RefreshTokenSignature", arg0)
-}
-
 func (_m *MockTokenRevocationStorage) RevokeAccessToken(_param0 context.Context, _param1 string) {
 	_m.ctrl.Call(_m, "RevokeAccessToken", _param0, _param1)
 }
@@ -150,24 +106,4 @@ func (_m *MockTokenRevocationStorage) RevokeRefreshToken(_param0 context.Context
 
 func (_mr *_MockTokenRevocationStorageRecorder) RevokeRefreshToken(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RevokeRefreshToken", arg0, arg1)
-}
-
-func (_m *MockTokenRevocationStorage) ValidateAccessToken(_param0 context.Context, _param1 fosite.Requester, _param2 string) error {
-	ret := _m.ctrl.Call(_m, "ValidateAccessToken", _param0, _param1, _param2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (_mr *_MockTokenRevocationStorageRecorder) ValidateAccessToken(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "ValidateAccessToken", arg0, arg1, arg2)
-}
-
-func (_m *MockTokenRevocationStorage) ValidateRefreshToken(_param0 context.Context, _param1 fosite.Requester, _param2 string) error {
-	ret := _m.ctrl.Call(_m, "ValidateRefreshToken", _param0, _param1, _param2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (_mr *_MockTokenRevocationStorageRecorder) ValidateRefreshToken(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "ValidateRefreshToken", arg0, arg1, arg2)
 }

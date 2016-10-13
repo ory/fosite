@@ -19,6 +19,9 @@ type Store struct {
 	Implicit       map[string]fosite.Requester
 	RefreshTokens  map[string]fosite.Requester
 	Users          map[string]UserRelation
+	// In-memory request ID to token signatures
+	AccessTokenRequestIDs  map[string]string
+	RefreshTokenRequestIDs map[string]string
 }
 
 func NewStore() *Store {
@@ -30,6 +33,8 @@ func NewStore() *Store {
 		Implicit:       make(map[string]fosite.Requester),
 		RefreshTokens:  make(map[string]fosite.Requester),
 		Users:          make(map[string]UserRelation),
+		AccessTokenRequestIDs:  make(map[string]string),
+		RefreshTokenRequestIDs: make(map[string]string),
 	}
 }
 
@@ -54,10 +59,12 @@ func NewExampleStore() *Store {
 				Password: "secret",
 			},
 		},
-		AuthorizeCodes: map[string]fosite.Requester{},
-		Implicit:       map[string]fosite.Requester{},
-		AccessTokens:   map[string]fosite.Requester{},
-		RefreshTokens:  map[string]fosite.Requester{},
+		AuthorizeCodes:         map[string]fosite.Requester{},
+		Implicit:               map[string]fosite.Requester{},
+		AccessTokens:           map[string]fosite.Requester{},
+		RefreshTokens:          map[string]fosite.Requester{},
+		AccessTokenRequestIDs:  map[string]string{},
+		RefreshTokenRequestIDs: map[string]string{},
 	}
 }
 
@@ -107,6 +114,7 @@ func (s *Store) DeleteAuthorizeCodeSession(_ context.Context, code string) error
 
 func (s *Store) CreateAccessTokenSession(_ context.Context, signature string, req fosite.Requester) error {
 	s.AccessTokens[signature] = req
+	s.AccessTokenRequestIDs[req.GetID()] = signature
 	return nil
 }
 
@@ -125,6 +133,7 @@ func (s *Store) DeleteAccessTokenSession(_ context.Context, signature string) er
 
 func (s *Store) CreateRefreshTokenSession(_ context.Context, signature string, req fosite.Requester) error {
 	s.RefreshTokens[signature] = req
+	s.RefreshTokenRequestIDs[req.GetID()] = signature
 	return nil
 }
 
@@ -180,4 +189,17 @@ func (s *Store) PersistRefreshTokenGrantSession(ctx context.Context, originalRef
 	}
 
 	return nil
+}
+func (s *Store) RevokeRefreshToken(ctx context.Context, requestID string) {
+	if signature, exists := s.RefreshTokenRequestIDs[requestID]; exists {
+		s.DeleteRefreshTokenSession(ctx, signature)
+	}
+	return
+}
+
+func (s *Store) RevokeAccessToken(ctx context.Context, requestID string) {
+	if signature, exists := s.AccessTokenRequestIDs[requestID]; exists {
+		s.DeleteAccessTokenSession(ctx, signature)
+	}
+	return
 }

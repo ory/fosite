@@ -8,6 +8,8 @@ import (
 
 type TokenRevocationHandler struct {
 	TokenRevocationStorage TokenRevocationStorage
+	RefreshTokenStrategy   RefreshTokenStrategy
+	AccessTokenStrategy    AccessTokenStrategy
 }
 
 // RevokeToken implements https://tools.ietf.org/html/rfc7009#section-2.1
@@ -16,12 +18,12 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 	discoveryFuncs := []func() (request fosite.Requester, err error){
 		func() (request fosite.Requester, err error) {
 			// Refresh token
-			signature := r.TokenRevocationStorage.RefreshTokenSignature(token)
+			signature := r.RefreshTokenStrategy.RefreshTokenSignature(token)
 			return r.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
 		},
 		func() (request fosite.Requester, err error) {
 			// Access token
-			signature := r.TokenRevocationStorage.AccessTokenSignature(token)
+			signature := r.AccessTokenStrategy.AccessTokenSignature(token)
 			return r.TokenRevocationStorage.GetAccessTokenSession(ctx, signature, nil)
 		},
 	}

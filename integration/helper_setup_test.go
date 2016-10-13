@@ -32,11 +32,13 @@ var fositeStore = &store.Store{
 			Password: "secret",
 		},
 	},
-	AuthorizeCodes: map[string]fosite.Requester{},
-	Implicit:       map[string]fosite.Requester{},
-	AccessTokens:   map[string]fosite.Requester{},
-	RefreshTokens:  map[string]fosite.Requester{},
-	IDSessions:     map[string]fosite.Requester{},
+	AuthorizeCodes:         map[string]fosite.Requester{},
+	Implicit:               map[string]fosite.Requester{},
+	AccessTokens:           map[string]fosite.Requester{},
+	RefreshTokens:          map[string]fosite.Requester{},
+	IDSessions:             map[string]fosite.Requester{},
+	AccessTokenRequestIDs:  map[string]string{},
+	RefreshTokenRequestIDs: map[string]string{},
 }
 
 type defaultSession struct {

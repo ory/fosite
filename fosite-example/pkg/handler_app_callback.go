@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/parnurzeal/gorequest"
 	"golang.org/x/oauth2"
@@ -21,6 +22,28 @@ func CallbackHandler(c oauth2.Config) func(rw http.ResponseWriter, req *http.Req
 				req.URL.Query().Get("error"),
 				req.URL.Query().Get("error_description"),
 			)))
+			return
+		}
+
+		if req.URL.Query().Get("revoke") != "" {
+			revokeURL := strings.Replace(c.Endpoint.TokenURL, "token", "revoke", 1)
+			resp, body, errs := gorequest.New().Post(revokeURL).SetBasicAuth(c.ClientID, c.ClientSecret).SendString(url.Values{
+				"token_type_hint": {"refresh_token"},
+				"token":           {req.URL.Query().Get("revoke")},
+			}.Encode()).End()
+			if len(errs) > 0 {
+				rw.Write([]byte(fmt.Sprintf(`<p>Could not revoke token %s</p>`, errs)))
+				return
+			}
+
+			rw.Write([]byte(fmt.Sprintf(`<p>Received status code from the revoke endpoint:<br><code>%d</code></p>`, resp.StatusCode)))
+			if body != "" {
+				rw.Write([]byte(fmt.Sprintf(`<p>Got a response from the revoke endpoint:<br><code>%s</code></p>`, body)))
+			}
+
+			rw.Write([]byte(fmt.Sprintf(`<p>These tokens have been revoked, try to use the refresh token by <br><a href="%s">by clicking here</a></p>`, "?refresh="+url.QueryEscape(req.URL.Query().Get("revoke")))))
+			rw.Write([]byte(fmt.Sprintf(`<p>Try to use the access token by <br><a href="%s">by clicking here</a></p>`, "/protected-api?token="+url.QueryEscape(req.URL.Query().Get("access_token")))))
+
 			return
 		}
 
@@ -65,7 +88,7 @@ func CallbackHandler(c oauth2.Config) func(rw http.ResponseWriter, req *http.Req
 				<code>%s</code>
 			</li>
 			<li>
-				Refresh token (click <a href="%s">here to use it</a>):<br>
+				Refresh token (click <a href="%s">here to use it</a>) (click <a href="%s">here to revoke it</a>):<br>
 				<code>%s</code>
 			</li>
 			<li>
@@ -76,6 +99,7 @@ func CallbackHandler(c oauth2.Config) func(rw http.ResponseWriter, req *http.Req
 			"/protected-api?token="+token.AccessToken,
 			token.AccessToken,
 			"?refresh="+url.QueryEscape(token.RefreshToken),
+			"?revoke="+url.QueryEscape(token.RefreshToken)+"&access_token="+url.QueryEscape(token.AccessToken),
 			token.RefreshToken,
 			token,
 		)))
