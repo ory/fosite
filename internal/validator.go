@@ -30,12 +30,12 @@ func (_m *MockTokenValidator) EXPECT() *_MockTokenValidatorRecorder {
 	return _m.recorder
 }
 
-func (_m *MockTokenValidator) ValidateToken(_param0 context.Context, _param1 string, _param2 fosite.TokenType, _param3 fosite.AccessRequester, _param4 []string) error {
-	ret := _m.ctrl.Call(_m, "ValidateToken", _param0, _param1, _param2, _param3, _param4)
+func (_m *MockTokenValidator) IntrospectToken(_param0 context.Context, _param1 string, _param2 fosite.TokenType, _param3 fosite.AccessRequester, _param4 []string) error {
+	ret := _m.ctrl.Call(_m, "IntrospectToken", _param0, _param1, _param2, _param3, _param4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-func (_mr *_MockTokenValidatorRecorder) ValidateToken(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "ValidateToken", arg0, arg1, arg2, arg3, arg4)
+func (_mr *_MockTokenValidatorRecorder) IntrospectToken(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "IntrospectToken", arg0, arg1, arg2, arg3, arg4)
 }

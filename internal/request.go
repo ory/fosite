@@ -4,11 +4,10 @@
 package internal
 
 import (
-	url "net/url"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
+	url "net/url"
+	time "time"
 )
 
 // Mock of Requester interface
@@ -58,6 +57,16 @@ func (_m *MockRequester) GetGrantedScopes() fosite.Arguments {
 
 func (_mr *_MockRequesterRecorder) GetGrantedScopes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantedScopes")
+}
+
+func (_m *MockRequester) GetID() string {
+	ret := _m.ctrl.Call(_m, "GetID")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+func (_mr *_MockRequesterRecorder) GetID() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetID")
 }
 
 func (_m *MockRequester) GetRequestForm() url.Values {
