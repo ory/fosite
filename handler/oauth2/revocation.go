@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"github.com/ory-am/fosite"
-	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -39,7 +38,7 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 		ar, err = discoveryFuncs[1]()
 	}
 	if err != nil {
-		return errors.Wrap(fosite.ErrNotFound, "Nothing to revoke")
+		return nil
 	}
 
 	requestID := ar.GetID()

@@ -56,7 +56,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because validation failed",
 			setup: func() {
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{
-					GrantedScopes:[]string{"offline"},
+					GrantedScopes: []string{"offline"},
 				}, nil)
 				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").Return(errors.New(""))
 			},
@@ -70,8 +70,8 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 					GrantTypes: fosite.Arguments{"refresh_token"},
 				}
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(&fosite.Request{
-					Client: &fosite.DefaultClient{ID: ""},
-					GrantedScopes:[]string{"offline"},
+					Client:        &fosite.DefaultClient{ID: ""},
+					GrantedScopes: []string{"offline"},
 				}, nil)
 				chgen.EXPECT().ValidateRefreshToken(nil, areq, "some.refreshtokensig").AnyTimes().Return(nil)
 			},

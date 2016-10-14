@@ -12,13 +12,13 @@ type MemoryUserRelation struct {
 }
 
 type MemoryStore struct {
-	Clients                map[string]*fosite.DefaultClient
-	AuthorizeCodes         map[string]fosite.Requester
-	IDSessions             map[string]fosite.Requester
-	AccessTokens           map[string]fosite.Requester
-	Implicit               map[string]fosite.Requester
-	RefreshTokens          map[string]fosite.Requester
-	Users                  map[string]MemoryUserRelation
+	Clients        map[string]*fosite.DefaultClient
+	AuthorizeCodes map[string]fosite.Requester
+	IDSessions     map[string]fosite.Requester
+	AccessTokens   map[string]fosite.Requester
+	Implicit       map[string]fosite.Requester
+	RefreshTokens  map[string]fosite.Requester
+	Users          map[string]MemoryUserRelation
 	// In-memory request ID to token signatures
 	AccessTokenRequestIDs  map[string]string
 	RefreshTokenRequestIDs map[string]string
@@ -190,17 +190,16 @@ func (s *MemoryStore) PersistRefreshTokenGrantSession(ctx context.Context, origi
 
 	return nil
 }
-func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) {
+func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) error {
 	if signature, exists := s.RefreshTokenRequestIDs[requestID]; exists {
 		s.DeleteRefreshTokenSession(ctx, signature)
 	}
-	return
+	return nil
 }
 
-func (s *MemoryStore) RevokeAccessToken(ctx context.Context, requestID string) {
+func (s *MemoryStore) RevokeAccessToken(ctx context.Context, requestID string) error {
 	if signature, exists := s.AccessTokenRequestIDs[requestID]; exists {
 		s.DeleteAccessTokenSession(ctx, signature)
 	}
-	return
+	return nil
 }
-

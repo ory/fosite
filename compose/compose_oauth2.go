@@ -9,7 +9,10 @@ import (
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
+		// register the handler
 		*oauth2.AuthorizeExplicitGrantHandler
+
+		// also register the validator for access tokens
 		*oauth2.CoreValidator
 	}{
 		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
@@ -33,7 +36,10 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 // an access token, refresh token and authorize code validator.
 func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
+		// register the handler
 		*oauth2.ClientCredentialsGrantHandler
+
+		// also register the validator for access tokens
 		*oauth2.CoreValidator
 	}{
 		ClientCredentialsGrantHandler: &oauth2.ClientCredentialsGrantHandler{
@@ -56,7 +62,10 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 // an access token, refresh token and authorize code validator.
 func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
+		// register the handler
 		*oauth2.RefreshTokenGrantHandler
+
+		// also register the validator for access tokens
 		*oauth2.CoreValidator
 	}{
 		RefreshTokenGrantHandler: &oauth2.RefreshTokenGrantHandler{
@@ -77,7 +86,10 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
+		// register the handler
 		*oauth2.AuthorizeImplicitGrantTypeHandler
+
+		// also register the validator for access tokens
 		*oauth2.CoreValidator
 	}{
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
@@ -98,7 +110,10 @@ func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strateg
 // an access token, refresh token and authorize code validator.
 func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &struct {
+		// register the handler
 		*oauth2.ResourceOwnerPasswordCredentialsGrantHandler
+
+		// also register the validator for access tokens
 		*oauth2.CoreValidator
 	}{
 		ResourceOwnerPasswordCredentialsGrantHandler: &oauth2.ResourceOwnerPasswordCredentialsGrantHandler{

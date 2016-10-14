@@ -9,10 +9,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/oauth2"
+	"github.com/ory-am/fosite/storage"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/ory-am/fosite/storage"
 )
 
 func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {

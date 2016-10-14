@@ -19,13 +19,40 @@ type mySessionData struct {
 	*foauth.HMACSession
 }
 
+func tokenRevocationHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
+		ctx := fosite.NewContext()
+		err := oauth2.NewRevocationRequest(ctx, req)
+		if err != nil {
+			t.Logf("Revoke request failed because %s.", err.Error())
+			t.Logf("Stack: %v", err.(stackTracer).StackTrace())
+		}
+		oauth2.WriteRevocationResponse(rw, err)
+	}
+}
+
+func tokenIntrospectionHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
+		ctx := fosite.NewContext()
+		ar, err := oauth2.NewIntrospectionRequest(ctx, req, session)
+		if err != nil {
+			t.Logf("Introspection request failed because %s.", err.Error())
+			t.Logf("Stack: %s", err.(stackTracer).StackTrace())
+			oauth2.WriteIntrospectionError(rw, err)
+			return
+		}
+
+		oauth2.WriteIntrospectionResponse(rw, ar)
+	}
+}
+
 func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
 		if _, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session); err != nil {
 			rfcerr := fosite.ErrorToRFC6749Error(err)
-			t.Logf("Info request failed because %s.", err.Error())
-			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
+			t.Logf("Info request failed because `%s`.", err.Error())
+			t.Logf("Stack: %s", err.(stackTracer).StackTrace())
 			http.Error(rw, rfcerr.Description, rfcerr.StatusCode)
 			return
 		}
@@ -47,6 +74,9 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session int
 			return
 		}
 
+		if ar.GetRequestedScopes().Has("fosite") {
+			ar.GrantScope("fosite")
+		}
 		if ar.GetRequestedScopes().Has("offline") {
 			ar.GrantScope("offline")
 		}
@@ -103,6 +133,10 @@ func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw ht
 			t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
 			oauth2.WriteAccessError(rw, accessRequest, err)
 			return
+		}
+
+		if accessRequest.GetRequestedScopes().Has("fosite") {
+			accessRequest.GrantScope("fosite")
 		}
 
 		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)

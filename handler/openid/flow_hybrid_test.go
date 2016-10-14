@@ -10,11 +10,11 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/storage"
 	"github.com/ory-am/fosite/token/hmac"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/ory-am/fosite/storage"
 )
 
 var idStrategy = &DefaultStrategy{
@@ -67,7 +67,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenLifespan: time.Hour,
 			AccessTokenStrategy: hmacStrategy,
-			AccessTokenStorage: storage.NewMemoryStore(),
+			AccessTokenStorage:  storage.NewMemoryStore(),
 		},
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,

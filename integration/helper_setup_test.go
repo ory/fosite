@@ -9,10 +9,10 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/ory-am/fosite/handler/openid"
+	"github.com/ory-am/fosite/storage"
 	"github.com/ory-am/fosite/token/hmac"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	"github.com/ory-am/fosite/storage"
 )
 
 var fositeStore = &storage.MemoryStore{
@@ -86,6 +86,9 @@ func mockServer(t *testing.T, f fosite.OAuth2Provider, session interface{}) *htt
 	router.HandleFunc("/token", tokenEndpointHandler(t, f))
 	router.HandleFunc("/callback", authCallbackHandler(t))
 	router.HandleFunc("/info", tokenInfoHandler(t, f, session))
+	router.HandleFunc("/introspect", tokenIntrospectionHandler(t, f, session))
+	router.HandleFunc("/revoke", tokenRevocationHandler(t, f, session))
+
 	ts := httptest.NewServer(router)
 	return ts
 }
