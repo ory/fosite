@@ -28,15 +28,17 @@ type handler func(config *Config, storage interface{}, strategy interface{}) int
 //	OAuth2ClientCredentialsGrantFactory,
 // 	// for a complete list refer to the docs of this package
 //  )
+//
+// Compose makes use of interface{} types in order to be able to handle a all types of stores, strategies and handlers.
 func Compose(config *Config, storage interface{}, strategy interface{}, handlers ...handler) fosite.OAuth2Provider {
 	f := &fosite.Fosite{
 		Store: storage.(fosite.Storage),
-		AuthorizeEndpointHandlers: fosite.AuthorizeEndpointHandlers{},
-		TokenEndpointHandlers:     fosite.TokenEndpointHandlers{},
-		TokenIntrospectionHandlers:           fosite.TokenIntrospectionHandlers{},
-		RevocationHandlers:        fosite.RevocationHandlers{},
-		Hasher:                    &fosite.BCrypt{WorkFactor: config.GetHashCost()},
-		ScopeStrategy:             fosite.HierarchicScopeStrategy,
+		AuthorizeEndpointHandlers:  fosite.AuthorizeEndpointHandlers{},
+		TokenEndpointHandlers:      fosite.TokenEndpointHandlers{},
+		TokenIntrospectionHandlers: fosite.TokenIntrospectionHandlers{},
+		RevocationHandlers:         fosite.RevocationHandlers{},
+		Hasher:                     &fosite.BCrypt{WorkFactor: config.GetHashCost()},
+		ScopeStrategy:              fosite.HierarchicScopeStrategy,
 	}
 
 	for _, h := range handlers {

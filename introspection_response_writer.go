@@ -1,9 +1,9 @@
 package fosite
 
 import (
-	"net/http"
 	"github.com/pkg/errors"
 	"github.com/square/go-jose/json"
+	"net/http"
 	"strings"
 )
 
@@ -29,12 +29,18 @@ import (
 // respond with an introspection response with the "active" field set to
 // "false" as described in Section 2.2.
 func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
+	if err == nil {
+		return
+	}
+
 	if errors.Cause(err) == ErrRequestUnauthorized {
 		writeJsonError(rw, err)
 		return
 	}
 
-	_ = json.NewEncoder(rw).Encode(struct{ Active bool `json:"active"` }{Active:false})
+	_ = json.NewEncoder(rw).Encode(struct {
+		Active bool `json:"active"`
+	}{Active: false})
 }
 
 // WriteIntrospectionError responds with an error if token introspection failed as defined in
@@ -166,22 +172,25 @@ func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
 //	 }
 func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r IntrospectionResponder) {
 	if !r.IsActive() {
-		_ = json.NewEncoder(rw).Encode(struct{ Active bool `json:"active"` }{Active:false})
+		_ = json.NewEncoder(rw).Encode(&struct {
+			Active bool `json:"active"`
+		}{Active: false})
+		return
 	}
 
 	_ = json.NewEncoder(rw).Encode(struct {
-		Active    bool `json:"active"`
-		ClientID  string `json:"client_id"`
-		Scope     string `json:"scope"`
-		ExpiresAt int64 `json:"exp"`
-		IssuedAt  int64 `json:"iat"`
+		Active    bool        `json:"active"`
+		ClientID  string      `json:"client_id"`
+		Scope     string      `json:"scope"`
+		ExpiresAt int64       `json:"exp"`
+		IssuedAt  int64       `json:"iat"`
 		Extra     interface{} `json:",inline"`
 	}{
-		Active:true,
-		ClientID: r.GetAccessRequester().GetClient().GetID(),
-		Scope: strings.Join(r.GetAccessRequester().GetGrantedScopes(), " "),
+		Active:    true,
+		ClientID:  r.GetAccessRequester().GetClient().GetID(),
+		Scope:     strings.Join(r.GetAccessRequester().GetGrantedScopes(), " "),
 		ExpiresAt: r.GetExpiresAt().Unix(),
-		IssuedAt: r.GetAccessRequester().GetRequestedAt().Unix(),
-		Extra: r.GetAccessRequester().GetSession(),
+		IssuedAt:  r.GetAccessRequester().GetRequestedAt().Unix(),
+		Extra:     r.GetAccessRequester().GetSession(),
 	})
 }

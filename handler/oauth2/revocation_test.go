@@ -92,7 +92,7 @@ func TestRevokeToken(t *testing.T) {
 		},
 		{
 			description: "should pass - refresh token discovery first; both tokens not found",
-			expectErr:   fosite.ErrNotFound,
+			expectErr:   nil,
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
@@ -105,7 +105,7 @@ func TestRevokeToken(t *testing.T) {
 		},
 		{
 			description: "should pass - access token discovery first; both tokens not found",
-			expectErr:   fosite.ErrNotFound,
+			expectErr:   nil,
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken

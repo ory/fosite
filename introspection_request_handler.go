@@ -1,11 +1,11 @@
 package fosite
 
 import (
-	"net/http"
-	"golang.org/x/net/context"
 	"github.com/pkg/errors"
-	"time"
+	"golang.org/x/net/context"
+	"net/http"
 	"strings"
+	"time"
 )
 
 // NewIntrospectionRequest initiates token introspection as defined in
@@ -70,7 +70,7 @@ import (
 //	Accept: application/json
 //	Content-Type: application/x-www-form-urlencoded
 //	Authorization: Bearer 23410913-abewfq.123483
-//	
+//
 //	token=2YotnFZFEjr1zCsicMWpAA
 //
 // In this example, the protected resource uses a client identifier and
@@ -85,19 +85,23 @@ import (
 //	Accept: application/json
 //	Content-Type: application/x-www-form-urlencoded
 //	Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
-//	
+//
 //	token=mF_9.B5f-4.1JqM&token_type_hint=access_token
 func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, session interface{}) (IntrospectionResponder, error) {
-	if err := r.ParseForm(); err != nil {
-		return nil, errors.Wrap(ErrInvalidRequest, "Could not parse form values")
+	if r.Method != "POST" {
+		return nil, errors.Wrap(ErrInvalidRequest, "HTTP method is not POST")
+	} else if err := r.ParseForm(); err != nil {
+		return nil, errors.Wrap(ErrInvalidRequest, err.Error())
 	}
 
 	token := r.PostForm.Get("token")
-	tokenType := r.PostForm.Get("token_type")
+	tokenType := r.PostForm.Get("token_type_hint")
 	scope := r.PostForm.Get("scope")
-
-
 	if clientToken := AccessTokenFromRequest(r); clientToken != "" {
+		if token == clientToken {
+			return nil, errors.Wrap(ErrRequestUnauthorized, "Bearer and introspection token are identical")
+		}
+
 		if _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session); err != nil {
 			return nil, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
 		}
@@ -120,27 +124,29 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 
 	ar, err := f.IntrospectToken(ctx, token, TokenType(tokenType), session, strings.Split(scope, " ")...)
 	if err != nil {
-		return &IntrospectionResponse{Active: false}, err
+		return &IntrospectionResponse{Active: false}, nil
 	}
 
 	return &IntrospectionResponse{
-		Active: true,
+		Active:          true,
 		AccessRequester: ar,
 	}, nil
 }
 
 type IntrospectionResponse struct {
-	Active bool
+	Active          bool
 	AccessRequester AccessRequester
-	ExpiresAt time.Time
+	ExpiresAt       time.Time
 }
 
 func (r *IntrospectionResponse) IsActive() bool {
 	return r.Active
 }
+
 func (r *IntrospectionResponse) GetAccessRequester() AccessRequester {
 	return r.AccessRequester
 }
+
 func (r *IntrospectionResponse) GetExpiresAt() time.Time {
 	return r.ExpiresAt
 }

@@ -35,6 +35,10 @@ func TestIntrospectToken(t *testing.T) {
 				httpreq.Header.Set("Authorization", "bearer")
 				chgen.EXPECT().AccessTokenSignature("").Return("")
 				store.EXPECT().GetAccessTokenSession(nil, "", nil).Return(nil, errors.New(""))
+				chgen.EXPECT().RefreshTokenSignature("").Return("")
+				store.EXPECT().GetRefreshTokenSession(nil, "", nil).Return(nil, errors.New(""))
+				chgen.EXPECT().AuthorizeCodeSignature("").Return("")
+				store.EXPECT().GetAuthorizeCodeSession(nil, "", nil).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrRequestUnauthorized,
 		},
@@ -44,6 +48,10 @@ func TestIntrospectToken(t *testing.T) {
 				httpreq.Header.Set("Authorization", "bearer 1234")
 				chgen.EXPECT().AccessTokenSignature("1234").AnyTimes().Return("asdf")
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
+				chgen.EXPECT().RefreshTokenSignature("1234").Return("asdf")
+				store.EXPECT().GetRefreshTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
+				chgen.EXPECT().AuthorizeCodeSignature("1234").Return("asdf")
+				store.EXPECT().GetAuthorizeCodeSession(nil, "asdf", nil).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrRequestUnauthorized,
 		},
@@ -52,6 +60,10 @@ func TestIntrospectToken(t *testing.T) {
 			setup: func() {
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).AnyTimes().Return(areq, nil)
 				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errors.Wrap(fosite.ErrTokenExpired, ""))
+				chgen.EXPECT().RefreshTokenSignature("1234").Return("asdf")
+				store.EXPECT().GetRefreshTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
+				chgen.EXPECT().AuthorizeCodeSignature("1234").Return("asdf")
+				store.EXPECT().GetAuthorizeCodeSession(nil, "asdf", nil).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrTokenExpired,
 		},

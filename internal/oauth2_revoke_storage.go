@@ -92,16 +92,20 @@ func (_mr *_MockTokenRevocationStorageRecorder) GetRefreshTokenSession(arg0, arg
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRefreshTokenSession", arg0, arg1, arg2)
 }
 
-func (_m *MockTokenRevocationStorage) RevokeAccessToken(_param0 context.Context, _param1 string) {
-	_m.ctrl.Call(_m, "RevokeAccessToken", _param0, _param1)
+func (_m *MockTokenRevocationStorage) RevokeAccessToken(_param0 context.Context, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "RevokeAccessToken", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 func (_mr *_MockTokenRevocationStorageRecorder) RevokeAccessToken(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RevokeAccessToken", arg0, arg1)
 }
 
-func (_m *MockTokenRevocationStorage) RevokeRefreshToken(_param0 context.Context, _param1 string) {
-	_m.ctrl.Call(_m, "RevokeRefreshToken", _param0, _param1)
+func (_m *MockTokenRevocationStorage) RevokeRefreshToken(_param0 context.Context, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "RevokeRefreshToken", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 func (_mr *_MockTokenRevocationStorageRecorder) RevokeRefreshToken(arg0, arg1 interface{}) *gomock.Call {

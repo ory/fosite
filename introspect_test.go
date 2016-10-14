@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
-	"github.com/ory-am/fosite/storage"
 	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/storage"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -17,7 +17,7 @@ import (
 
 func TestIntrospect(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	validator := internal.NewMockTokenValidator(ctrl)
+	validator := internal.NewMockTokenIntrospector(ctrl)
 	defer ctrl.Finish()
 
 	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewMemoryStore(), []byte{}, nil).(*Fosite)

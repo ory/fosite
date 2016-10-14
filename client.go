@@ -32,7 +32,7 @@ type DefaultClient struct {
 	GrantTypes    []string `json:"grant_types"`
 	ResponseTypes []string `json:"response_types"`
 	Scopes        []string `json:"scopes"`
-	Public        bool `json:"public"`
+	Public        bool     `json:"public"`
 }
 
 func (c *DefaultClient) GetID() string {

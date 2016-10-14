@@ -30,7 +30,7 @@ func TestRequest(t *testing.T) {
 func TestMergeRequest(t *testing.T) {
 	a := &Request{
 		RequestedAt:   time.Now(),
-		Client:        &DefaultClient{ID:"123"},
+		Client:        &DefaultClient{ID: "123"},
 		Scopes:        Arguments{"asdff"},
 		GrantedScopes: []string{"asdf"},
 		Form:          url.Values{"foo": []string{"fasdf"}},

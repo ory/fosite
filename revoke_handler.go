@@ -48,7 +48,6 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 		return errors.Wrap(ErrInvalidClient, err.Error())
 	}
 
-	r.ParseForm()
 	token := r.PostForm.Get("token")
 	tokenTypeHint := TokenType(r.PostForm.Get("token_type_hint"))
 
@@ -82,7 +81,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 // purpose of the revocation request, invalidating the particular token,
 // is already achieved.
 func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
-	switch err {
+	switch errors.Cause(err) {
 	case ErrInvalidRequest:
 		fallthrough
 	case ErrInvalidClient:
