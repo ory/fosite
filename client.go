@@ -19,6 +19,9 @@ type Client interface {
 
 	// Returns the scopes this client is allowed to request.
 	GetScopes() Arguments
+
+	// IsPublic returns true, if this client is marked as public.
+	IsPublic() bool
 }
 
 // DefaultClient is a simple default implementation of the Client interface.
@@ -29,10 +32,15 @@ type DefaultClient struct {
 	GrantTypes    []string `json:"grant_types"`
 	ResponseTypes []string `json:"response_types"`
 	Scopes        []string `json:"scopes"`
+	Public        bool `json:"public"`
 }
 
 func (c *DefaultClient) GetID() string {
 	return c.ID
+}
+
+func (c *DefaultClient) IsPublic() bool {
+	return c.Public
 }
 
 func (c *DefaultClient) GetRedirectURIs() []string {

@@ -63,9 +63,11 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
 	}
 
-	// Enforce client authentication
-	if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-		return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
+	if !client.IsPublic() {
+		// Enforce client authentication
+		if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
+			return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
+		}
 	}
 	accessRequest.Client = client
 

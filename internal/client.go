@@ -88,3 +88,13 @@ func (_m *MockClient) GetScopes() fosite.Arguments {
 func (_mr *_MockClientRecorder) GetScopes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetScopes")
 }
+
+func (_m *MockClient) IsPublic() bool {
+	ret := _m.ctrl.Call(_m, "IsPublic")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+func (_mr *_MockClientRecorder) IsPublic() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "IsPublic")
+}
