@@ -129,26 +129,29 @@ type OAuth2Provider interface {
 
 	// NewIntrospectionRequest initiates token introspection as defined in
 	// https://tools.ietf.org/search/rfc7662#section-2.1
-	// NewIntrospectionRequest(ctx context.Context, r *http.Request, session interface{}) (IntrospectionResponse, error)
+	NewIntrospectionRequest(ctx context.Context, r *http.Request, session interface{}) (IntrospectionResponder, error)
 
 	// WriteIntrospectionError responds with an error if token introspection failed as defined in
 	// https://tools.ietf.org/search/rfc7662#section-2.3
-	// WriteIntrospectionError(rw http.ResponseWriter, err error)
+	WriteIntrospectionError(rw http.ResponseWriter, err error)
 
 	// WriteIntrospectionResponse responds with token metadata discovered by token introspection as defined in
 	// https://tools.ietf.org/search/rfc7662#section-2.2
-	// WriteIntrospectionResponse(rw http.ResponseWriter, r IntrospectionResponse)
+	WriteIntrospectionResponse(rw http.ResponseWriter, r IntrospectionResponder)
 }
 
 // IntrospectionResponse is the response object that will be returned when token introspection was successful,
 // for example when the client is allowed to perform token introspection. Refer to
 // https://tools.ietf.org/search/rfc7662#section-2.2 for more details.
-type IntrospectionResponse interface {
+type IntrospectionResponder interface {
 	// IsActive returns true if the introspected token is active and false otherwise.
 	IsActive() bool
 
-	// GetAccessRequest returns nil when IsActive() is false and the original access request object otherwise.
-	GetAccessRequest() AccessRequester
+	// AccessRequester returns nil when IsActive() is false and the original access request object otherwise.
+	GetAccessRequester() AccessRequester
+
+	// GetExpiresAt returns the expiration date.
+	GetExpiresAt() time.Time
 }
 
 // Requester is an abstract interface for handling requests in Fosite.
