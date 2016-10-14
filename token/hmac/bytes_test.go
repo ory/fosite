@@ -1,4 +1,4 @@
-package rand
+package hmac
 
 import (
 	"testing"

@@ -5,7 +5,6 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/hash"
 )
 
 type handler func(config *Config, storage interface{}, strategy interface{}) interface{}
@@ -35,9 +34,9 @@ func Compose(config *Config, storage interface{}, strategy interface{}, handlers
 		Store: storage.(fosite.Storage),
 		AuthorizeEndpointHandlers: fosite.AuthorizeEndpointHandlers{},
 		TokenEndpointHandlers:     fosite.TokenEndpointHandlers{},
-		TokenValidators:           fosite.TokenValidators{},
+		TokenIntrospectionHandlers:           fosite.TokenIntrospectionHandlers{},
 		RevocationHandlers:        fosite.RevocationHandlers{},
-		Hasher:                    &hash.BCrypt{WorkFactor: config.GetHashCost()},
+		Hasher:                    &fosite.BCrypt{WorkFactor: config.GetHashCost()},
 		Logger:                    &logrus.Logger{},
 		ScopeStrategy:             fosite.HierarchicScopeStrategy,
 	}
@@ -51,7 +50,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, handlers
 			f.TokenEndpointHandlers.Append(th)
 		}
 		if tv, ok := res.(fosite.TokenIntrospector); ok {
-			f.TokenValidators.Append(tv)
+			f.TokenIntrospectionHandlers.Append(tv)
 		}
 		if rh, ok := res.(fosite.RevocationHandler); ok {
 			f.RevocationHandlers.Append(rh)

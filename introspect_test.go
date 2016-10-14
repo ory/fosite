@@ -8,7 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
-	store "github.com/ory-am/fosite/fosite-example/pkg"
+	"github.com/ory-am/fosite/storage"
 	"github.com/ory-am/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -20,7 +20,7 @@ func TestIntrospect(t *testing.T) {
 	validator := internal.NewMockTokenValidator(ctrl)
 	defer ctrl.Finish()
 
-	f := compose.ComposeAllEnabled(new(compose.Config), store.NewStore(), []byte{}, nil).(*Fosite)
+	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewMemoryStore(), []byte{}, nil).(*Fosite)
 	httpreq := &http.Request{
 		Header: http.Header{
 			"Authorization": []string{"bearer some-token"},
@@ -45,7 +45,7 @@ func TestIntrospect(t *testing.T) {
 			description: "should fail",
 			scopes:      []string{"foo"},
 			setup: func() {
-				f.TokenValidators = TokenValidators{validator}
+				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrUnknownRequest)
 			},
 			expectErr: ErrRequestUnauthorized,

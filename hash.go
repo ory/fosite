@@ -1,4 +1,4 @@
-package hash
+package fosite
 
 // Hasher defines how a oauth2-compatible hasher should look like.
 type Hasher interface {

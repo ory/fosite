@@ -34,7 +34,7 @@ func TestTokenEndpointHandlers(t *testing.T) {
 
 func TestAuthorizedRequestValidators(t *testing.T) {
 	h := &oauth2.CoreValidator{}
-	hs := TokenValidators{}
+	hs := TokenIntrospectionHandlers{}
 	hs.Append(h)
 	hs.Append(h)
 	hs.Append(&oauth2.CoreValidator{})

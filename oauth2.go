@@ -129,15 +129,15 @@ type OAuth2Provider interface {
 
 	// NewIntrospectionRequest initiates token introspection as defined in
 	// https://tools.ietf.org/search/rfc7662#section-2.1
-	NewIntrospectionRequest(ctx context.Context, r *http.Request, session interface{}) (IntrospectionResponse, error)
+	// NewIntrospectionRequest(ctx context.Context, r *http.Request, session interface{}) (IntrospectionResponse, error)
 
 	// WriteIntrospectionError responds with an error if token introspection failed as defined in
 	// https://tools.ietf.org/search/rfc7662#section-2.3
-	WriteIntrospectionError(rw http.ResponseWriter, error)
+	// WriteIntrospectionError(rw http.ResponseWriter, err error)
 
 	// WriteIntrospectionResponse responds with token metadata discovered by token introspection as defined in
 	// https://tools.ietf.org/search/rfc7662#section-2.2
-	WriteIntrospectionResponse(rw http.ResponseWriter, r IntrospectionResponse)
+	// WriteIntrospectionResponse(rw http.ResponseWriter, r IntrospectionResponse)
 }
 
 // IntrospectionResponse is the response object that will be returned when token introspection was successful,

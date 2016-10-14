@@ -1,5 +1,6 @@
 #!/bin/bash
 
+mockgen -package internal -destination internal/hash.go github.com/ory-am/fosite Hasher
 mockgen -package internal -destination internal/storage.go github.com/ory-am/fosite Storage
 mockgen -package internal -destination internal/oauth2_storage.go github.com/ory-am/fosite/handler/oauth2 CoreStorage
 mockgen -package internal -destination internal/oauth2_strategy.go github.com/ory-am/fosite/handler/oauth2 CoreStrategy
