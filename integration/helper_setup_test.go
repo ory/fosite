@@ -7,15 +7,15 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/ory-am/fosite"
-	store "github.com/ory-am/fosite/fosite-example/pkg"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/ory-am/fosite/handler/openid"
 	"github.com/ory-am/fosite/token/hmac"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	"github.com/ory-am/fosite/storage"
 )
 
-var fositeStore = &store.Store{
+var fositeStore = &storage.MemoryStore{
 	Clients: map[string]*fosite.DefaultClient{
 		"my-client": {
 			ID:            "my-client",
@@ -26,7 +26,7 @@ var fositeStore = &store.Store{
 			Scopes:        []string{"fosite", "offline", "openid"},
 		},
 	},
-	Users: map[string]store.UserRelation{
+	Users: map[string]storage.MemoryUserRelation{
 		"peter": {
 			Username: "peter",
 			Password: "secret",

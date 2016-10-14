@@ -8,11 +8,11 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	store "github.com/ory-am/fosite/fosite-example/pkg"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/ory-am/fosite/storage"
 )
 
 func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
@@ -27,7 +27,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenLifespan: time.Hour,
 			AccessTokenStrategy: hmacStrategy,
-			AccessTokenStorage:  store.NewStore(),
+			AccessTokenStorage:  storage.NewMemoryStore(),
 		},
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,

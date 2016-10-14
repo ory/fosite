@@ -9,9 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/rand"
 	"github.com/pkg/errors"
+	"github.com/ory-am/fosite"
 )
 
 // HMACStrategy is responsible for generating and validating challenges.
@@ -48,7 +47,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	// constructed from a cryptographically strong random or pseudo-random
 	// number sequence (see [RFC4086] for best current practice) generated
 	// by the authorization server.
-	key, err := rand.RandomBytes(c.AuthCodeEntropy)
+	key, err := RandomBytes(c.AuthCodeEntropy)
 	if err != nil {
 		return "", "", errors.Wrap(err, "")
 	}

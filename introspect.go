@@ -26,7 +26,7 @@ func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType To
 	var found bool = false
 
 	ar := NewAccessRequest(session)
-	for _, validator := range f.TokenValidators {
+	for _, validator := range f.TokenIntrospectionHandlers {
 		if err := errors.Cause(validator.IntrospectToken(ctx, token, tokenType, ar, scopes)); err == ErrUnknownRequest {
 			// Nothing to do
 		} else if err != nil {

@@ -69,15 +69,15 @@ You can run this minimalistic example by doing
 
 ```
 go get github.com/Masterminds/glide
-go get -d github.com/ory-am/fosite
-cd $GOPATH/src/github.com/ory-am/fosite
+go get github.com/ory-am/fosite-example
+cd $GOPATH/src/github.com/ory-am/fosite-example
 glide install
-go install github.com/ory-am/fosite/fosite-example
+go install github.com/ory-am/fosite-example
 fosite-example
 ```
 
 There should be a server listening on [localhost:3846](https://localhost:3846/). You can check out the example's
-source code [here](fosite-example/main.go).
+source code [here](https://github.com/ory-am/fosite-example/).
 
 ## A word on quality
 
@@ -175,21 +175,21 @@ Instantiating fosite by hand can be painful. Therefore we created a few convenie
 It is strongly encouraged to use these well tested composers.
 
 In this very basic example, we will instantiate fosite with all OpenID Connect and OAuth2 handlers enabled. Please refer
-to the [example app](fosite-example/main.go) for more details.
+to the [example app](https://github.com/ory-am/fosite-example/) for more details.
 
 This little code snippet sets up a full-blown OAuth2 and OpenID Connect example.
 
 ```go
 import "github.com/ory-am/fosite"
 import "github.com/ory-am/fosite/compose"
-import "github.com/ory-am/fosite/fosite-example/store"
+import "github.com/ory-am/fosite/storage"
 
 // This is the exemplary storage that contains:
 // * an OAuth2 Client with id "my-client" and secret "foobar" capable of all oauth2 and open id connect grant and response types.
 // * a User for the resource owner password credentials grant type with usename "peter" and password "secret".
 //
 // You will most likely replace this with your own logic once you set up a real world application.
-var storage = store.NewExampleStore()
+var storage = storage.NewMemoryStore()
 
 // This secret is being used to sign access and refresh tokens as well as authorize codes.
 var secret = []byte{"my super secret password"}
@@ -319,7 +319,7 @@ func someResourceProviderHandlerFunc(rw http.ResponseWriter, req *http.Request) 
 
 Fosite provides integration tests as well as a http server example:
 
-* Fosite ships with an example app that runs in your browser: [Example app](fosite-example/main.go).
+* Fosite ships with an example app that runs in your browser: [Example app](https://github.com/ory-am/fosite-example/).
 * If you want to check out how to enable specific handlers, check out the [integration tests](integration/).
 
 If you have working examples yourself, please share them with us!
@@ -327,7 +327,7 @@ If you have working examples yourself, please share them with us!
 ### Exemplary Storage Implementation
 
 Fosite does not ship a storage implementation. This is intended, because requirements vary with every environment.
-You can find a reference implementation at [fosite-example/pkg/store.go](fosite-example/pkg/store.go).
+You can find a reference implementation at [storage/memory.go](storage/memory.go).
 This storage fulfills requirements from all OAuth2 and OpenID Conenct handlers.
 
 ### Extensible handlers

@@ -1,4 +1,4 @@
-package hash
+package fosite
 
 import (
 	"github.com/pkg/errors"

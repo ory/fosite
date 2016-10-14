@@ -8,13 +8,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
-	store "github.com/ory-am/fosite/fosite-example/pkg"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/ory-am/fosite/internal"
 	"github.com/ory-am/fosite/token/hmac"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/ory-am/fosite/storage"
 )
 
 var idStrategy = &DefaultStrategy{
@@ -62,12 +62,12 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			AccessTokenLifespan:       time.Hour,
 			AuthCodeLifespan:          time.Hour,
 			AccessTokenStrategy:       hmacStrategy,
-			AuthorizeCodeGrantStorage: store.NewStore(),
+			AuthorizeCodeGrantStorage: storage.NewMemoryStore(),
 		},
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenLifespan: time.Hour,
 			AccessTokenStrategy: hmacStrategy,
-			AccessTokenStorage:  store.NewStore(),
+			AccessTokenStorage: storage.NewMemoryStore(),
 		},
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,

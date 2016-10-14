@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/ory-am/fosite/hash"
 )
 
 // AuthorizeEndpointHandlers is a list of AuthorizeEndpointHandler
@@ -35,25 +34,11 @@ func (t *TokenEndpointHandlers) Append(h TokenEndpointHandler) {
 	*t = append(*t, h)
 }
 
-// TokenValidators is a list of TokenValidator
-type TokenValidators []TokenValidator
-
-// Append adds an AccessTokenValidator to this list. Ignores duplicates based on reflect.TypeOf.
-func (t *TokenValidators) Append(h TokenValidator) {
-	for _, this := range *t {
-		if reflect.TypeOf(this) == reflect.TypeOf(h) {
-			return
-		}
-	}
-
-	*t = append(*t, h)
-}
-
-// TokenValidators is a list of TokenValidator
-type TokenValidators []TokenIntrospector
+// TokenIntrospectionHandlers is a list of TokenValidator
+type TokenIntrospectionHandlers []TokenIntrospector
 
 // Add adds an AccessTokenValidator to this list. Ignores duplicates based on reflect.TypeOf.
-func (t *TokenValidators) Append(h TokenIntrospector) {
+func (t *TokenIntrospectionHandlers) Append(h TokenIntrospector) {
 	for _, this := range *t {
 		if reflect.TypeOf(this) == reflect.TypeOf(h) {
 			return
@@ -79,12 +64,12 @@ func (t *RevocationHandlers) Append(h RevocationHandler) {
 
 // Fosite implements OAuth2Provider.
 type Fosite struct {
-	Store                     Storage
-	AuthorizeEndpointHandlers AuthorizeEndpointHandlers
-	TokenEndpointHandlers     TokenEndpointHandlers
-	TokenValidators           TokenValidators
-	RevocationHandlers        RevocationHandlers
-	Hasher                    hash.Hasher
-	Logger                    logrus.StdLogger
-	ScopeStrategy             ScopeStrategy
+	Store                      Storage
+	AuthorizeEndpointHandlers  AuthorizeEndpointHandlers
+	TokenEndpointHandlers      TokenEndpointHandlers
+	TokenIntrospectionHandlers TokenIntrospectionHandlers
+	RevocationHandlers         RevocationHandlers
+	Hasher                     Hasher
+	Logger                     logrus.StdLogger
+	ScopeStrategy              ScopeStrategy
 }

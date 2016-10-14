@@ -6,7 +6,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-type UserRelation struct {
+type MemoryUserRelation struct {
 	Username string
 	Password string
 }
@@ -18,7 +18,7 @@ type MemoryStore struct {
 	AccessTokens           map[string]fosite.Requester
 	Implicit               map[string]fosite.Requester
 	RefreshTokens          map[string]fosite.Requester
-	Users                  map[string]UserRelation
+	Users                  map[string]MemoryUserRelation
 	// In-memory request ID to token signatures
 	AccessTokenRequestIDs  map[string]string
 	RefreshTokenRequestIDs map[string]string
@@ -32,7 +32,7 @@ func NewMemoryStore() *MemoryStore {
 		AccessTokens:   make(map[string]fosite.Requester),
 		Implicit:       make(map[string]fosite.Requester),
 		RefreshTokens:  make(map[string]fosite.Requester),
-		Users:          make(map[string]UserRelation),
+		Users:          make(map[string]MemoryUserRelation),
 		AccessTokenRequestIDs:  make(map[string]string),
 		RefreshTokenRequestIDs: make(map[string]string),
 	}
@@ -51,7 +51,7 @@ func NewExampleStore() *MemoryStore {
 				Scopes:        []string{"fosite", "openid", "photos", "offline"},
 			},
 		},
-		Users: map[string]UserRelation{
+		Users: map[string]MemoryUserRelation{
 			"peter": {
 				// This store simply checks for equality, a real storage implementation would obviously use
 				// a hashing algorithm for encrypting the user password.
