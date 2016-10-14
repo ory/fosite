@@ -33,8 +33,11 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 	// The client MUST authenticate with the authorization server as described in Section 3.2.1.
 	// This requirement is already fulfilled because fosite requries all token requests to be authenticated as described
 	// in https://tools.ietf.org/html/rfc6749#section-3.2.1
+	if client.IsPublic() {
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is public and thus not allowed to use grant type client_credentials")
+	}
+	// if the client is not public, he has already been authenticated by the access request handler.
 
-	// There's nothing else to do. All other security considerations are for the client side.
 	return nil
 }
 

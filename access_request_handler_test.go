@@ -106,6 +106,7 @@ func TestNewAccessRequest(t *testing.T) {
 			expectErr: ErrInvalidClient,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
+				client.EXPECT().IsPublic().Return(false)
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(errors.New(""))
 			},
@@ -121,6 +122,7 @@ func TestNewAccessRequest(t *testing.T) {
 			expectErr: ErrServerError,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
+				client.EXPECT().IsPublic().Return(false)
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(ErrServerError)
@@ -137,8 +139,30 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
+				client.EXPECT().IsPublic().Return(false)
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			},
+			handlers: TokenEndpointHandlers{handler},
+			expect: &AccessRequest{
+				GrantTypes: Arguments{"foo"},
+				Request: Request{
+					Client: client,
+				},
+			},
+		},
+		{
+			header: http.Header{
+				"Authorization": {basicAuth("foo", "bar")},
+			},
+			method: "POST",
+			form: url.Values{
+				"grant_type": {"foo"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
+				client.EXPECT().IsPublic().Return(true)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: TokenEndpointHandlers{handler},
