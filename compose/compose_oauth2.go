@@ -118,3 +118,13 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 		},
 	}
 }
+
+// OAuth2TokenRevocationFactory creates an OAuth2 token revocation handler and registers
+// an access token, refresh token and authorize code validator.
+func OAuth2TokenRevocationFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.TokenRevocationHandler{
+		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
+	}
+}

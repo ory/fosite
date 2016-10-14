@@ -12,7 +12,7 @@ type CoreValidator struct {
 	ScopeStrategy fosite.ScopeStrategy
 }
 
-func (c *CoreValidator) ValidateToken(ctx context.Context, token string, tokenType fosite.TokenType, accessRequest fosite.AccessRequester, scopes []string) error {
+func (c *CoreValidator) IntrospectToken(ctx context.Context, token string, tokenType fosite.TokenType, accessRequest fosite.AccessRequester, scopes []string) error {
 	switch tokenType {
 	case fosite.AccessToken:
 		return c.validateAccessToken(ctx, token, accessRequest, scopes)

@@ -33,3 +33,21 @@ type TokenEndpointHandler interface {
 	// the request, this method should return ErrUnknownRequest and otherwise handle the request.
 	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester) error
 }
+
+// RevocationHandler is the interface that allows token revocation for an OAuth2.0 provider.
+// https://tools.ietf.org/html/rfc7009
+//
+// RevokeToken is invoked after a new token revocation request is parsed.
+//
+// https://tools.ietf.org/html/rfc7009#section-2.1
+// If the particular
+// token is a refresh token and the authorization server supports the
+// revocation of access tokens, then the authorization server SHOULD
+// also invalidate all access tokens based on the same authorization
+// grant (see Implementation Note). If the token passed to the request
+// is an access token, the server MAY revoke the respective refresh
+// token as well.
+type RevocationHandler interface {
+	// RevokeToken handles access and refresh token revocation.
+	RevokeToken(ctx context.Context, token string, tokenType TokenType) error
+}

@@ -15,7 +15,7 @@ type ClientCredentialsGrantHandler struct {
 	ScopeStrategy fosite.ScopeStrategy
 }
 
-// ValidateTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
+// IntrospectTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
 func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Context, r *http.Request, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
