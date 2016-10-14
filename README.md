@@ -380,6 +380,15 @@ This place is reserved for the fearless bug hunters, reviewers and contributors 
 * [leetal](https://github.com/leetal):
   [contributions](https://github.com/ory-am/fosite/issues?q=author%3Aleetal),
   [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Aleetal).
+* [jrossiter](https://github.com/jrossiter):
+  [contributions](https://github.com/ory-am/fosite/issues?q=author%3Ajrossiter),
+  [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Ajrossiter).
+* [jrossiter](https://github.com/jrossiter):
+  [contributions](https://github.com/ory-am/fosite/issues?q=author%3Ajrossiter),
+  [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Ajrossiter).
+* [danilobuerger](https://github.com/danilobuerger):
+  [contributions](https://github.com/ory-am/fosite/issues?q=author%3Adanilobuerger),
+  [participations](https://github.com/ory-am/fosite/issues?q=commenter%3Adanilobuerger).
 
 Find out more about the [author](https://aeneas.io/) of Fosite and Hydra, and the
 [Ory Company](https://ory.am/).

@@ -7,6 +7,10 @@ import (
 )
 
 func (c *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err error) {
+	writeJsonError(rw, err)
+}
+
+func writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 	rfcerr := ErrorToRFC6749Error(err)

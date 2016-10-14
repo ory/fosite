@@ -1,6 +1,24 @@
 This is a list of breaking changes. As long as `1.0.0` is not released, breaking changes will be addressed as minor version
 bumps (`0.1.0` -> `0.2.0`).
 
+## 0.4.0
+
+Breaking changes:
+
+* `./fosite-example` is now a separate repository: https://github.com/ory-am/fosite-example
+* `github.com/ory-am/fosite/fosite-example/pkg.Store` is now `github.com/ory-am/fosite/storage.MemoryStore`
+* `fosite.Client` has now a new method called `IsPublic()` which can be used to identify public clients who do not own a client secret
+* All grant types except the client_credentials grant now allow public clients. public clients are usually mobile apps and single page apps.
+* `TokenValidator` is now `TokenIntrospector`, `TokenValidationHandlers` is now `TokenIntrospectionHandlers`.
+* `TokenValidator.ValidateToken` is now `TokenIntrospector.IntrospectToken`
+* `fosite.OAuth2Provider.NewIntrospectionRequest()` has been added
+* `fosite.OAuth2Provider.WriteIntrospectionError()` has been added
+* `fosite.OAuth2Provider.WriteIntrospectionResponse()` has been added
+
+## 0.3.0
+
+* Updated jwt-go from 2.7.0 to 3.0.0
+
 ## 0.2.0
 
 Breaking changes:
