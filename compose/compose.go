@@ -49,7 +49,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, handlers
 		if th, ok := res.(fosite.TokenEndpointHandler); ok {
 			f.TokenEndpointHandlers.Append(th)
 		}
-		if tv, ok := res.(fosite.TokenValidator); ok {
+		if tv, ok := res.(fosite.TokenIntrospector); ok {
 			f.TokenValidators.Append(tv)
 		}
 	}

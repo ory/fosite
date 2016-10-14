@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateToken(t *testing.T) {
+func TestIntrospectToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockCoreStorage(ctrl)
 	chgen := internal.NewMockCoreStrategy(ctrl)
@@ -63,7 +63,7 @@ func TestValidateToken(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := v.ValidateToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq, []string{})
+		err := v.IntrospectToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq, []string{})
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

@@ -305,7 +305,7 @@ func someResourceProviderHandlerFunc(rw http.ResponseWriter, req *http.Request) 
 	mySessionData := &session{}
 	requiredScope := "blogposts.create"
 
-	ar, err := oauth2.ValidateToken(ctx, fosite.AccessTokenFromRequest(req), mySessionData, requiredScope)
+	ar, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), mySessionData, requiredScope)
 	if err != nil {
 		// ...
 	}
