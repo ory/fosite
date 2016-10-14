@@ -2,8 +2,6 @@ package fosite
 
 import (
 	"reflect"
-
-	"github.com/Sirupsen/logrus"
 )
 
 // AuthorizeEndpointHandlers is a list of AuthorizeEndpointHandler
@@ -70,6 +68,5 @@ type Fosite struct {
 	TokenIntrospectionHandlers TokenIntrospectionHandlers
 	RevocationHandlers         RevocationHandlers
 	Hasher                     Hasher
-	Logger                     logrus.StdLogger
 	ScopeStrategy              ScopeStrategy
 }

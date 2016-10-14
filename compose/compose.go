@@ -3,7 +3,6 @@ package compose
 import (
 	"crypto/rsa"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/ory-am/fosite"
 )
 
@@ -37,7 +36,6 @@ func Compose(config *Config, storage interface{}, strategy interface{}, handlers
 		TokenIntrospectionHandlers:           fosite.TokenIntrospectionHandlers{},
 		RevocationHandlers:        fosite.RevocationHandlers{},
 		Hasher:                    &fosite.BCrypt{WorkFactor: config.GetHashCost()},
-		Logger:                    &logrus.Logger{},
 		ScopeStrategy:             fosite.HierarchicScopeStrategy,
 	}
 
