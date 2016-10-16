@@ -34,6 +34,13 @@ func runRevokeTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
 	resp, _, errs := gorequest.New().Post(ts.URL+"/revoke").
 		SetBasicAuth(oauthClient.ClientID, oauthClient.ClientSecret).
 		Type("form").
+		SendStruct(map[string]string{"token": "asdf"}).End()
+	assert.Len(t, errs, 0)
+	assert.Equal(t, 200, resp.StatusCode)
+
+	resp, _, errs = gorequest.New().Post(ts.URL+"/revoke").
+		SetBasicAuth(oauthClient.ClientID, oauthClient.ClientSecret).
+		Type("form").
 		SendStruct(map[string]string{"token": token.AccessToken}).End()
 	assert.Len(t, errs, 0)
 	assert.Equal(t, 200, resp.StatusCode)

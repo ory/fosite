@@ -38,7 +38,7 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 		ar, err = discoveryFuncs[1]()
 	}
 	if err != nil {
-		return nil
+		return err
 	}
 
 	requestID := ar.GetID()
