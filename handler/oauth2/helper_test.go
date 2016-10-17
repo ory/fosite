@@ -14,12 +14,13 @@ import (
 )
 
 func TestGetExpiresIn(t *testing.T) {
+	now := time.Now()
 	r := fosite.NewAccessRequest(&fosite.DefaultSession{
 		ExpiresAt: map[fosite.TokenType]time.Time{
-			fosite.AccessToken: time.Now().Add(time.Hour),
+			fosite.AccessToken: now.Add(time.Hour).Round(time.Minute),
 		},
 	})
-	assert.Equal(t, time.Hour, getExpiresIn(r, fosite.AccessToken, time.Millisecond))
+	assert.Equal(t, time.Hour, getExpiresIn(r, fosite.AccessToken, time.Millisecond, now))
 }
 
 func TestIssueAccessToken(t *testing.T) {

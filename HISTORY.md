@@ -13,6 +13,7 @@ to your composer if you need token introspection.
 * Session refactor:
   * The HMACSessionContainer was removed and replaced by `fosite.Session` / `fosite.DefaultSession`. All sessions
   must now implement this signature. The new session interface allows for better expiration time handling.
+  * The OpenID `DefaultSession` signature changed as well, it is now implementing the `fosite.Session` interface
 
 ## 0.4.0
 
