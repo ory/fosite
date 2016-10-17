@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
-	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/openid"
 	"github.com/ory-am/fosite/internal"
@@ -27,7 +26,6 @@ func TestOIDCImplicitFlow(t *testing.T) {
 				Subject: "peter",
 			},
 			Headers:        &jwt.Headers{},
-			DefaultSession: &fosite.DefaultSession{},
 		},
 	}
 	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())
@@ -76,7 +74,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 		c.setup()
 
 		var callbackURL *url.URL
-		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type="+c.responseType, -1) + "&nonce=" + c.nonce
+		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type=" + c.responseType, -1) + "&nonce=" + c.nonce
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				callbackURL = req.URL

@@ -46,28 +46,28 @@ func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
 		},
 		{
 			prepare: func(s *gorequest.SuperAgent) *gorequest.SuperAgent {
-				return s.Set("Authorization", "bearer "+a.AccessToken)
+				return s.Set("Authorization", "bearer " + a.AccessToken)
 			},
 			isActive: true,
 			scopes:   "fosite",
 		},
 		{
 			prepare: func(s *gorequest.SuperAgent) *gorequest.SuperAgent {
-				return s.Set("Authorization", "bearer "+a.AccessToken)
+				return s.Set("Authorization", "bearer " + a.AccessToken)
 			},
 			isActive: true,
 			scopes:   "",
 		},
 		{
 			prepare: func(s *gorequest.SuperAgent) *gorequest.SuperAgent {
-				return s.Set("Authorization", "bearer "+a.AccessToken)
+				return s.Set("Authorization", "bearer " + a.AccessToken)
 			},
 			isActive: false,
 			scopes:   "foo",
 		},
 		{
 			prepare: func(s *gorequest.SuperAgent) *gorequest.SuperAgent {
-				return s.Set("Authorization", "bearer "+b.AccessToken)
+				return s.Set("Authorization", "bearer " + b.AccessToken)
 			},
 			isActive: false,
 			scopes:   "",

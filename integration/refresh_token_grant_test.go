@@ -11,7 +11,7 @@ import (
 	hst "github.com/ory-am/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	oauth2 "golang.org/x/oauth2"
+	"golang.org/x/oauth2"
 )
 
 func TestRefreshTokenFlow(t *testing.T) {

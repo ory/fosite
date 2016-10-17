@@ -112,7 +112,6 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 						Subject: "peter",
 					},
 					Headers:        &jwt.Headers{},
-					DefaultSession: new(fosite.DefaultSession),
 				}
 				areq.Form.Add("nonce", "some-random-foo-nonce-wow")
 			},

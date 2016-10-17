@@ -22,17 +22,51 @@ type Session interface {
 
 // IDTokenSession is a session container for the id token
 type DefaultSession struct {
-	Claims  *jwt.IDTokenClaims
-	Headers *jwt.Headers
-	*fosite.DefaultSession
+	Claims    *jwt.IDTokenClaims
+	Headers   *jwt.Headers
+	ExpiresAt map[fosite.TokenType]time.Time
+	Username  string
+	Subject   string
 }
 
 func NewDefaultSession() *DefaultSession {
 	return &DefaultSession{
 		Claims:         &jwt.IDTokenClaims{},
 		Headers:        &jwt.Headers{},
-		DefaultSession: &fosite.DefaultSession{},
 	}
+}
+
+func (s *DefaultSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
+	if s.ExpiresAt == nil {
+		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
+	}
+	s.ExpiresAt[key] = exp
+}
+
+func (s *DefaultSession) GetExpiresAt(key fosite.TokenType) time.Time {
+	if s.ExpiresAt == nil {
+		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
+	}
+
+	if _, ok := s.ExpiresAt[key]; !ok {
+		return time.Time{}
+	}
+	return s.ExpiresAt[key]
+}
+
+func (s *DefaultSession) GetUsername() string {
+	if s == nil {
+		return ""
+	}
+	return s.Username
+}
+
+func (s *DefaultSession) GetSubject() string {
+	if s == nil {
+		return ""
+	}
+
+	return s.Subject
 }
 
 func (s *DefaultSession) IDTokenHeaders() *jwt.Headers {
