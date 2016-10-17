@@ -209,13 +209,11 @@ type session struct {
 	UserID string
 	Foobar int
 	
-	// this is used in the OAuth2 handlers. You can set per-session expiry times here, for example.
-	*oauth2Strat.HMACSession
+	// here, we are are not using the openid connect session:
+	fosite.DefaultSession
 	
-	// this is used by the OpenID connect handlers. You can set custom id token headers and claims.
-	*oidcStrat.DefaultSession
 }
-
+	
 // The authorize endpoint is usually at "https://mydomain.com/oauth2/auth".
 func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// This context will be passed to all methods. It doesn't fulfill a real purpose in the standard library but could be used

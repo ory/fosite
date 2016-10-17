@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"strconv"
 )
 
 // AuthorizeImplicitGrantTypeHandler is a response handler for the Authorize Code grant using the implicit grant type
@@ -63,8 +63,9 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
+	ar.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
 	resp.AddFragment("access_token", token)
-	resp.AddFragment("expires_in", strconv.Itoa(int(c.AccessTokenLifespan/time.Second)))
+	resp.AddFragment("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan)/time.Second), 10))
 	resp.AddFragment("token_type", "bearer")
 	resp.AddFragment("state", ar.GetState())
 	resp.AddFragment("scope", strings.Join(ar.GetGrantedScopes(), " "))

@@ -183,7 +183,7 @@ func TestNewAccessRequest(t *testing.T) {
 		c.mock()
 		ctx := NewContext()
 		fosite.TokenEndpointHandlers = c.handlers
-		ar, err := fosite.NewAccessRequest(ctx, r, &struct{}{})
+		ar, err := fosite.NewAccessRequest(ctx, r, new(DefaultSession))
 		assert.True(t, errors.Cause(err) == c.expectErr, "%d\nwant: %s \ngot: %s", k, c.expectErr, err)
 		if err != nil {
 			t.Logf("Error occured: %v", err)

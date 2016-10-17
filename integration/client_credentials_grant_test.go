@@ -3,6 +3,7 @@ package integration_test
 import (
 	"testing"
 
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
@@ -19,10 +20,8 @@ func TestClientCredentialsFlow(t *testing.T) {
 }
 
 func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
-	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2ClientCredentialsGrantFactory)
-	ts := mockServer(t, f, &mySessionData{
-		HMACSession: new(oauth2.HMACSession),
-	})
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2ClientCredentialsGrantFactory, compose.OAuth2TokenIntrospectionFactory)
+	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 
 	oauthClient := newOAuth2AppClient(ts)

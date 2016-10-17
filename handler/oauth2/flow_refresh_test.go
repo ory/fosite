@@ -20,7 +20,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	areq := fosite.NewAccessRequest(nil)
-	sess := struct{ Subject string }{Subject: "othersub"}
+	sess := &fosite.DefaultSession{Subject: "othersub"}
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := RefreshTokenGrantHandler{
@@ -166,6 +166,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		{
 			description: "should pass",
 			setup: func() {
+				areq.Session = &fosite.DefaultSession{}
 				store.EXPECT().PersistRefreshTokenGrantSession(nil, "reftokensig", "atsig", "resig", areq).AnyTimes().Return(nil)
 
 				aresp.EXPECT().SetAccessToken("access.atsig")

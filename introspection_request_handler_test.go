@@ -3,28 +3,24 @@ package fosite_test
 import (
 	"github.com/golang/mock/gomock"
 	"github.com/ory-am/fosite"
+	. "github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/internal"
+	"github.com/ory-am/fosite/storage"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
 	"testing"
-	"time"
-
-	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/storage"
-	"github.com/pkg/errors"
 )
 
 func TestIntrospectionResponse(t *testing.T) {
 	r := &fosite.IntrospectionResponse{
 		AccessRequester: fosite.NewAccessRequest(nil),
-		ExpiresAt:       time.Now(),
 		Active:          true,
 	}
 
 	assert.Equal(t, r.AccessRequester, r.GetAccessRequester())
-	assert.Equal(t, r.ExpiresAt, r.GetExpiresAt())
 	assert.Equal(t, r.Active, r.IsActive())
 }
 

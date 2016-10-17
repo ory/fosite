@@ -6,6 +6,7 @@ import (
 
 	"fmt"
 
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/openid"
 	"github.com/ory-am/fosite/internal"
@@ -20,7 +21,8 @@ func TestOpenIDConnectExplicitFlow(t *testing.T) {
 			Claims: &jwt.IDTokenClaims{
 				Subject: "peter",
 			},
-			Headers: &jwt.Headers{},
+			Headers:        &jwt.Headers{},
+			DefaultSession: &fosite.DefaultSession{},
 		},
 	}
 	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())

@@ -18,9 +18,11 @@ var hmacExpiredCase = fosite.Request{
 	Client: &fosite.DefaultClient{
 		Secret: []byte("foobarfoobarfoobarfoobar"),
 	},
-	Session: &HMACSession{
-		AccessTokenExpiry:   time.Now().Add(-time.Hour),
-		AuthorizeCodeExpiry: time.Now().Add(-time.Hour),
+	Session: &fosite.DefaultSession{
+		ExpiresAt: map[fosite.TokenType]time.Time{
+			fosite.AccessToken:   time.Now().Add(-time.Hour),
+			fosite.AuthorizeCode: time.Now().Add(-time.Hour),
+		},
 	},
 }
 
@@ -28,9 +30,11 @@ var hmacValidCase = fosite.Request{
 	Client: &fosite.DefaultClient{
 		Secret: []byte("foobarfoobarfoobarfoobar"),
 	},
-	Session: &HMACSession{
-		AccessTokenExpiry:   time.Now().Add(time.Hour),
-		AuthorizeCodeExpiry: time.Now().Add(time.Hour),
+	Session: &fosite.DefaultSession{
+		ExpiresAt: map[fosite.TokenType]time.Time{
+			fosite.AccessToken:   time.Now().Add(time.Hour),
+			fosite.AuthorizeCode: time.Now().Add(time.Hour),
+		},
 	},
 }
 
@@ -75,7 +79,7 @@ func TestHMACRefreshToken(t *testing.T) {
 }
 
 func TestHMACAuthorizeCode(t *testing.T) {
-	for _, c := range []struct {
+	for k, c := range []struct {
 		r    fosite.Request
 		pass bool
 	}{
@@ -94,11 +98,11 @@ func TestHMACAuthorizeCode(t *testing.T) {
 
 		err = s.ValidateAuthorizeCode(nil, &c.r, token)
 		if c.pass {
-			assert.Nil(t, err, "%s", err)
+			assert.Nil(t, err, "%d: %s", k, err)
 			validate := s.Enigma.Signature(token)
 			assert.Equal(t, signature, validate)
 		} else {
-			assert.NotNil(t, err, "%s", err)
+			assert.NotNil(t, err, "%d: %s", k, err)
 		}
 	}
 }

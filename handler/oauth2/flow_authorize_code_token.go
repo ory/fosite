@@ -1,12 +1,11 @@
 package oauth2
 
 import (
-	"net/http"
-	"time"
-
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"net/http"
+	"time"
 )
 
 // HandleTokenEndpointRequest implements
@@ -61,6 +60,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// client MUST authenticate with the authorization server as described
 	// in Section 3.2.1.
 	request.SetSession(authorizeRequest.GetSession())
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
 	return nil
 }
 
@@ -103,7 +103,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 
 	responder.SetAccessToken(access)
 	responder.SetTokenType("bearer")
-	responder.SetExpiresIn(c.AccessTokenLifespan / time.Second)
+	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, c.AccessTokenLifespan))
 	responder.SetScopes(requester.GetGrantedScopes())
 	if refresh != "" {
 		responder.SetExtra("refresh_token", refresh)

@@ -5,7 +5,6 @@ import (
 	"golang.org/x/net/context"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // NewIntrospectionRequest initiates token introspection as defined in
@@ -87,7 +86,7 @@ import (
 //	Authorization: Basic czZCaGRSa3F0MzpnWDFmQmF0M2JW
 //
 //	token=mF_9.B5f-4.1JqM&token_type_hint=access_token
-func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, session interface{}) (IntrospectionResponder, error) {
+func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, session Session) (IntrospectionResponder, error) {
 	if r.Method != "POST" {
 		return nil, errors.Wrap(ErrInvalidRequest, "HTTP method is not POST")
 	} else if err := r.ParseForm(); err != nil {
@@ -134,9 +133,8 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 }
 
 type IntrospectionResponse struct {
-	Active          bool
-	AccessRequester AccessRequester
-	ExpiresAt       time.Time
+	Active          bool            `json:"active"`
+	AccessRequester AccessRequester `json:",extra"`
 }
 
 func (r *IntrospectionResponse) IsActive() bool {
@@ -145,8 +143,4 @@ func (r *IntrospectionResponse) IsActive() bool {
 
 func (r *IntrospectionResponse) GetAccessRequester() AccessRequester {
 	return r.AccessRequester
-}
-
-func (r *IntrospectionResponse) GetExpiresAt() time.Time {
-	return r.ExpiresAt
 }

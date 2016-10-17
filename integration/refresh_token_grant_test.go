@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	hst "github.com/ory-am/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
@@ -28,10 +29,9 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 		strategy,
 		compose.OAuth2AuthorizeExplicitFactory,
 		compose.OAuth2RefreshTokenGrantFactory,
+		compose.OAuth2TokenIntrospectionFactory,
 	)
-	ts := mockServer(t, f, &mySessionData{
-		HMACSession: new(hst.HMACSession),
-	})
+	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
@@ -66,8 +66,9 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 			require.Nil(t, err, "(%d) %s", k, c.description)
 			require.NotEmpty(t, token.AccessToken, "(%d) %s", k, c.description)
 
+			t.Logf("Token %s\n", token)
 			token.Expiry = token.Expiry.Add(-time.Hour * 24)
-			t.Logf("Token %s", token)
+			t.Logf("Token %s\n", token)
 
 			tokenSource := oauthClient.TokenSource(oauth2.NoContext, token)
 			refreshed, err := tokenSource.Token()

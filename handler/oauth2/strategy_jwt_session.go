@@ -1,6 +1,7 @@
 package oauth2
 
 import (
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
 )
 
@@ -10,12 +11,15 @@ type JWTSessionContainer interface {
 
 	// GetJWTHeader returns the header.
 	GetJWTHeader() *jwt.Headers
+
+	fosite.Session
 }
 
 // JWTSession Container for the JWT session.
 type JWTSession struct {
 	JWTClaims *jwt.JWTClaims
 	JWTHeader *jwt.Headers
+	*fosite.DefaultSession
 }
 
 func (j *JWTSession) GetJWTClaims() *jwt.JWTClaims {

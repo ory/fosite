@@ -23,6 +23,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 
 	areq := fosite.NewAuthorizeRequest()
 	httpreq := &http.Request{Form: url.Values{}}
+	areq.Session = new(fosite.DefaultSession)
 
 	h := AuthorizeImplicitGrantTypeHandler{
 		AccessTokenStorage:  store,

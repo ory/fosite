@@ -1,6 +1,19 @@
 This is a list of breaking changes. As long as `1.0.0` is not released, breaking changes will be addressed as minor version
 bumps (`0.1.0` -> `0.2.0`).
 
+## 0.5.0
+
+Breaking changes:
+
+* `compose.OpenIDConnectExplicit` is now `compose.OpenIDConnectExplicitFactory`
+* `compose.OpenIDConnectImplicit` is now `compose.OpenIDConnectImplicitFactory`
+* `compose.OpenIDConnectHybrid` is now `compose.OpenIDConnectHybridFactory`
+* The token introspection handler is no longer added automatically by `compose.OAuth2*`. Add `compose.OAuth2TokenIntrospectionFactory`
+to your composer if you need token introspection.
+* Session refactor:
+  * The HMACSessionContainer was removed and replaced by `fosite.Session` / `fosite.DefaultSession`. All sessions
+  must now implement this signature. The new session interface allows for better expiration time handling.
+
 ## 0.4.0
 
 Breaking changes:

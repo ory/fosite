@@ -16,7 +16,7 @@ func TestRequest(t *testing.T) {
 		Scopes:        Arguments{},
 		GrantedScopes: []string{},
 		Form:          url.Values{"foo": []string{"bar"}},
-		Session:       1234,
+		Session:       new(DefaultSession),
 	}
 
 	assert.Equal(t, r.RequestedAt, r.GetRequestedAt())
@@ -34,7 +34,7 @@ func TestMergeRequest(t *testing.T) {
 		Scopes:        Arguments{"asdff"},
 		GrantedScopes: []string{"asdf"},
 		Form:          url.Values{"foo": []string{"fasdf"}},
-		Session:       54321,
+		Session:       new(DefaultSession),
 	}
 	b := &Request{
 		RequestedAt:   time.Now(),
@@ -42,7 +42,7 @@ func TestMergeRequest(t *testing.T) {
 		Scopes:        Arguments{},
 		GrantedScopes: []string{},
 		Form:          url.Values{},
-		Session:       12345,
+		Session:       new(DefaultSession),
 	}
 
 	b.Merge(a)

@@ -13,6 +13,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGetExpiresIn(t *testing.T) {
+	r := fosite.NewAccessRequest(&fosite.DefaultSession{
+		ExpiresAt: map[fosite.TokenType]time.Time{
+			fosite.AccessToken: time.Now().Add(time.Hour),
+		},
+	})
+	assert.Equal(t, time.Hour, getExpiresIn(r, fosite.AccessToken, time.Millisecond))
+}
+
 func TestIssueAccessToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	areq := &fosite.AccessRequest{}
@@ -28,6 +37,7 @@ func TestIssueAccessToken(t *testing.T) {
 		AccessTokenLifespan: time.Hour,
 	}
 
+	areq.Session = &fosite.DefaultSession{}
 	for k, c := range []struct {
 		mock func()
 		err  error

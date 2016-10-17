@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/openid"
 	"github.com/ory-am/fosite/internal"
@@ -25,7 +26,8 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			Claims: &jwt.IDTokenClaims{
 				Subject: "peter",
 			},
-			Headers: &jwt.Headers{},
+			Headers:        &jwt.Headers{},
+			DefaultSession: &fosite.DefaultSession{},
 		},
 	}
 	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())

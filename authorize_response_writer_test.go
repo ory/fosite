@@ -25,7 +25,7 @@ func TestNewAuthorizeResponse(t *testing.T) {
 	duo := &Fosite{
 		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{handlers[0], handlers[0]},
 	}
-	ar.EXPECT().SetSession(gomock.Eq(struct{}{})).AnyTimes()
+	ar.EXPECT().SetSession(gomock.Eq(new(DefaultSession))).AnyTimes()
 	fooErr := errors.New("foo")
 	for k, c := range []struct {
 		isErr     bool
@@ -66,7 +66,7 @@ func TestNewAuthorizeResponse(t *testing.T) {
 		},
 	} {
 		c.mock()
-		responder, err := oauth2.NewAuthorizeResponse(ctx, &http.Request{}, ar, struct{}{})
+		responder, err := oauth2.NewAuthorizeResponse(ctx, &http.Request{}, ar, new(DefaultSession))
 		assert.Equal(t, c.isErr, err != nil, "%d: %s", k, err)
 		if err != nil {
 			assert.Equal(t, c.expectErr, err, "%d: %s", k, err)

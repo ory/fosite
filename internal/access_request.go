@@ -109,9 +109,9 @@ func (_mr *_MockAccessRequesterRecorder) GetRequestedScopes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedScopes")
 }
 
-func (_m *MockAccessRequester) GetSession() interface{} {
+func (_m *MockAccessRequester) GetSession() fosite.Session {
 	ret := _m.ctrl.Call(_m, "GetSession")
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(fosite.Session)
 	return ret0
 }
 
@@ -143,7 +143,7 @@ func (_mr *_MockAccessRequesterRecorder) SetRequestedScopes(arg0 interface{}) *g
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetRequestedScopes", arg0)
 }
 
-func (_m *MockAccessRequester) SetSession(_param0 interface{}) {
+func (_m *MockAccessRequester) SetSession(_param0 fosite.Session) {
 	_m.ctrl.Call(_m, "SetSession", _param0)
 }
 

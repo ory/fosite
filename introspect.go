@@ -22,7 +22,7 @@ func AccessTokenFromRequest(req *http.Request) string {
 	return split[1]
 }
 
-func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType TokenType, session interface{}, scopes ...string) (AccessRequester, error) {
+func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType TokenType, session Session, scopes ...string) (AccessRequester, error) {
 	var found bool = false
 
 	ar := NewAccessRequest(session)

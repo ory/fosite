@@ -3,6 +3,7 @@ package integration_test
 import (
 	"testing"
 
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	hst "github.com/ory-am/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
@@ -20,9 +21,7 @@ func TestResourceOwnerPasswordCredentialsFlow(t *testing.T) {
 
 func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy hst.AccessTokenStrategy) {
 	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2ResourceOwnerPasswordCredentialsFactory)
-	ts := mockServer(t, f, &mySessionData{
-		HMACSession: new(hst.HMACSession),
-	})
+	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 
 	var username, password string

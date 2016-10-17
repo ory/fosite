@@ -179,18 +179,22 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 	}
 
 	_ = json.NewEncoder(rw).Encode(struct {
-		Active    bool        `json:"active"`
-		ClientID  string      `json:"client_id"`
-		Scope     string      `json:"scope"`
-		ExpiresAt int64       `json:"exp"`
-		IssuedAt  int64       `json:"iat"`
-		Extra     interface{} `json:",inline"`
+		Active    bool    `json:"active"`
+		ClientID  string  `json:"client_id,omitempty"`
+		Scope     string  `json:"scope,omitempty"`
+		ExpiresAt int64   `json:"exp,omitempty"`
+		IssuedAt  int64   `json:"iat,omitempty"`
+		Subject   string  `json:"sub,omitempty"`
+		Username  string  `json:"username,omitempty"`
+		Session   Session `json:"sess"`
 	}{
 		Active:    true,
 		ClientID:  r.GetAccessRequester().GetClient().GetID(),
 		Scope:     strings.Join(r.GetAccessRequester().GetGrantedScopes(), " "),
-		ExpiresAt: r.GetExpiresAt().Unix(),
+		ExpiresAt: r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).Unix(),
 		IssuedAt:  r.GetAccessRequester().GetRequestedAt().Unix(),
-		Extra:     r.GetAccessRequester().GetSession(),
+		Subject:   r.GetAccessRequester().GetSession().GetSubject(),
+		Username:  r.GetAccessRequester().GetSession().GetUsername(),
+		Session:   r.GetAccessRequester().GetSession(),
 	})
 }

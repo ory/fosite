@@ -16,12 +16,23 @@ const defaultExpiryTime = time.Hour
 type Session interface {
 	IDTokenClaims() *jwt.IDTokenClaims
 	IDTokenHeaders() *jwt.Headers
+
+	fosite.Session
 }
 
 // IDTokenSession is a session container for the id token
 type DefaultSession struct {
 	Claims  *jwt.IDTokenClaims
 	Headers *jwt.Headers
+	*fosite.DefaultSession
+}
+
+func NewDefaultSession() *DefaultSession {
+	return &DefaultSession{
+		Claims:         &jwt.IDTokenClaims{},
+		Headers:        &jwt.Headers{},
+		DefaultSession: &fosite.DefaultSession{},
+	}
 }
 
 func (s *DefaultSession) IDTokenHeaders() *jwt.Headers {

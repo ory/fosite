@@ -22,6 +22,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 	aresp := fosite.NewAuthorizeResponse()
 	areq := fosite.NewAuthorizeRequest()
 	httpreq := &http.Request{Form: url.Values{}}
+	areq.Session = new(fosite.DefaultSession)
 
 	h := OpenIDConnectImplicitHandler{
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
@@ -110,7 +111,8 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 					Claims: &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
-					Headers: &jwt.Headers{},
+					Headers:        &jwt.Headers{},
+					DefaultSession: new(fosite.DefaultSession),
 				}
 				areq.Form.Add("nonce", "some-random-foo-nonce-wow")
 			},

@@ -33,7 +33,7 @@ import (
 //   credentials (or assigned other authentication requirements), the
 //   client MUST authenticate with the authorization server as described
 //   in Section 3.2.1.
-func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session interface{}) (AccessRequester, error) {
+func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session Session) (AccessRequester, error) {
 	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
