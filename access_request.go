@@ -7,7 +7,7 @@ type AccessRequest struct {
 	Request
 }
 
-func NewAccessRequest(session interface{}) *AccessRequest {
+func NewAccessRequest(session Session) *AccessRequest {
 	r := &AccessRequest{
 		GrantTypes:       Arguments{},
 		HandledGrantType: Arguments{},

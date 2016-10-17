@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/pkg/errors"
@@ -25,10 +26,8 @@ func TestAuthorizeImplicitFlow(t *testing.T) {
 }
 
 func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
-	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2AuthorizeImplicitFactory)
-	ts := mockServer(t, f, &mySessionData{
-		HMACSession: new(oauth2.HMACSession),
-	})
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2AuthorizeImplicitFactory, compose.OAuth2TokenIntrospectionFactory)
+	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)

@@ -50,7 +50,7 @@ func (_mr *_MockAuthorizeCodeGrantStorageRecorder) DeleteAuthorizeCodeSession(ar
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAuthorizeCodeSession", arg0, arg1)
 }
 
-func (_m *MockAuthorizeCodeGrantStorage) GetAuthorizeCodeSession(_param0 context.Context, _param1 string, _param2 interface{}) (fosite.Requester, error) {
+func (_m *MockAuthorizeCodeGrantStorage) GetAuthorizeCodeSession(_param0 context.Context, _param1 string, _param2 fosite.Session) (fosite.Requester, error) {
 	ret := _m.ctrl.Call(_m, "GetAuthorizeCodeSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(fosite.Requester)
 	ret1, _ := ret[1].(error)

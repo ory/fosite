@@ -1,7 +1,9 @@
 package oauth2
 
 import (
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
+	"time"
 )
 
 type JWTSessionContainer interface {
@@ -10,12 +12,17 @@ type JWTSessionContainer interface {
 
 	// GetJWTHeader returns the header.
 	GetJWTHeader() *jwt.Headers
+
+	fosite.Session
 }
 
 // JWTSession Container for the JWT session.
 type JWTSession struct {
 	JWTClaims *jwt.JWTClaims
 	JWTHeader *jwt.Headers
+	ExpiresAt map[fosite.TokenType]time.Time
+	Username  string
+	Subject   string
 }
 
 func (j *JWTSession) GetJWTClaims() *jwt.JWTClaims {
@@ -30,4 +37,37 @@ func (j *JWTSession) GetJWTHeader() *jwt.Headers {
 		j.JWTHeader = &jwt.Headers{}
 	}
 	return j.JWTHeader
+}
+
+func (s *JWTSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
+	if s.ExpiresAt == nil {
+		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
+	}
+	s.ExpiresAt[key] = exp
+}
+
+func (s *JWTSession) GetExpiresAt(key fosite.TokenType) time.Time {
+	if s.ExpiresAt == nil {
+		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
+	}
+
+	if _, ok := s.ExpiresAt[key]; !ok {
+		return time.Time{}
+	}
+	return s.ExpiresAt[key]
+}
+
+func (s *JWTSession) GetUsername() string {
+	if s == nil {
+		return ""
+	}
+	return s.Username
+}
+
+func (s *JWTSession) GetSubject() string {
+	if s == nil {
+		return ""
+	}
+
+	return s.Subject
 }

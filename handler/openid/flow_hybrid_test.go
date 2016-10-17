@@ -32,7 +32,7 @@ var hmacStrategy = &oauth2.HMACSHAStrategy{
 type defaultSession struct {
 	Claims  *jwt.IDTokenClaims
 	Headers *jwt.Headers
-	*oauth2.HMACSession
+	*fosite.DefaultSession
 }
 
 func (s *defaultSession) IDTokenHeaders() *jwt.Headers {
@@ -116,8 +116,8 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 					Claims: &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
-					Headers:     &jwt.Headers{},
-					HMACSession: &oauth2.HMACSession{},
+					Headers:        &jwt.Headers{},
+					DefaultSession: new(fosite.DefaultSession),
 				}
 			},
 			expectErr: fosite.ErrInvalidGrant,

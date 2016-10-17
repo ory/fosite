@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"encoding/json"
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/parnurzeal/gorequest"
@@ -21,10 +22,8 @@ func TestIntrospectToken(t *testing.T) {
 }
 
 func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
-	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2ClientCredentialsGrantFactory)
-	ts := mockServer(t, f, &mySessionData{
-		HMACSession: new(oauth2.HMACSession),
-	})
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2ClientCredentialsGrantFactory, compose.OAuth2TokenIntrospectionFactory)
+	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 
 	oauthClient := newOAuth2AppClient(ts)
@@ -47,28 +46,28 @@ func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
 		},
 		{
 			prepare: func(s *gorequest.SuperAgent) *gorequest.SuperAgent {
-				return s.Set("Authorization", "bearer "+a.AccessToken)
+				return s.Set("Authorization", "bearer " + a.AccessToken)
 			},
 			isActive: true,
 			scopes:   "fosite",
 		},
 		{
 			prepare: func(s *gorequest.SuperAgent) *gorequest.SuperAgent {
-				return s.Set("Authorization", "bearer "+a.AccessToken)
+				return s.Set("Authorization", "bearer " + a.AccessToken)
 			},
 			isActive: true,
 			scopes:   "",
 		},
 		{
 			prepare: func(s *gorequest.SuperAgent) *gorequest.SuperAgent {
-				return s.Set("Authorization", "bearer "+a.AccessToken)
+				return s.Set("Authorization", "bearer " + a.AccessToken)
 			},
 			isActive: false,
 			scopes:   "foo",
 		},
 		{
 			prepare: func(s *gorequest.SuperAgent) *gorequest.SuperAgent {
-				return s.Set("Authorization", "bearer "+b.AccessToken)
+				return s.Set("Authorization", "bearer " + b.AccessToken)
 			},
 			isActive: false,
 			scopes:   "",

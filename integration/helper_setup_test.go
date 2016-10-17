@@ -43,7 +43,6 @@ var fositeStore = &storage.MemoryStore{
 
 type defaultSession struct {
 	*openid.DefaultSession
-	*oauth2.HMACSession
 }
 
 var accessTokenLifespan = time.Hour
@@ -80,7 +79,7 @@ var hmacStrategy = &oauth2.HMACSHAStrategy{
 	AuthorizeCodeLifespan: authCodeLifespan,
 }
 
-func mockServer(t *testing.T, f fosite.OAuth2Provider, session interface{}) *httptest.Server {
+func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {
 	router := mux.NewRouter()
 	router.HandleFunc("/auth", authEndpointHandler(t, f, session))
 	router.HandleFunc("/token", tokenEndpointHandler(t, f))

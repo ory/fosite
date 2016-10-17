@@ -3,7 +3,6 @@ package oauth2
 import (
 	"net/http"
 	"net/url"
-	"strconv"
 	"testing"
 	"time"
 
@@ -23,6 +22,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 
 	areq := fosite.NewAuthorizeRequest()
 	httpreq := &http.Request{Form: url.Values{}}
+	areq.Session = new(fosite.DefaultSession)
 
 	h := AuthorizeImplicitGrantTypeHandler{
 		AccessTokenStorage:  store,
@@ -70,7 +70,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).AnyTimes().Return(nil)
 
 				aresp.EXPECT().AddFragment("access_token", "access.ats")
-				aresp.EXPECT().AddFragment("expires_in", strconv.Itoa(int(h.AccessTokenLifespan/time.Second)))
+				aresp.EXPECT().AddFragment("expires_in", gomock.Any())
 				aresp.EXPECT().AddFragment("token_type", "bearer")
 				aresp.EXPECT().AddFragment("state", "state")
 				aresp.EXPECT().AddFragment("scope", "scope")

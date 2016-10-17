@@ -23,9 +23,10 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 	//mockcl := internal.NewMockClient(ctrl)
 	defer ctrl.Finish()
 
-	areq := fosite.NewAccessRequest(nil)
+	areq := fosite.NewAccessRequest(new(fosite.DefaultSession))
 	httpreq := &http.Request{PostForm: url.Values{}}
 	authreq := fosite.NewAuthorizeRequest()
+	areq.Session = new(fosite.DefaultSession)
 
 	h := AuthorizeExplicitGrantHandler{
 		AuthorizeCodeGrantStorage: store,
@@ -55,14 +56,14 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 				}
 				httpreq.PostForm.Add("code", "authcode")
 				auch.EXPECT().AuthorizeCodeSignature("authcode").AnyTimes().Return("authsig")
-				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).Return(nil, fosite.ErrNotFound)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", gomock.Any()).Return(nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should fail because validation failed",
 			setup: func() {
-				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", nil).AnyTimes().Return(authreq, nil)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "authsig", gomock.Any()).AnyTimes().Return(authreq, nil)
 				auch.EXPECT().ValidateAuthorizeCode(nil, areq, "authcode").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -122,6 +123,8 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 	authreq := fosite.NewAuthorizeRequest()
 	areq := fosite.NewAccessRequest(nil)
 	httpreq := &http.Request{PostForm: url.Values{}}
+	areq.Session = new(fosite.DefaultSession)
+	authreq.Session = new(fosite.DefaultSession)
 
 	h := AuthorizeExplicitGrantHandler{
 		AuthorizeCodeGrantStorage: store,
@@ -146,14 +149,14 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"} // grant_type REQUIRED. Value MUST be set to "authorization_code".
 				httpreq.PostForm = url.Values{"code": {"foo.bar"}}
 				ach.EXPECT().AuthorizeCodeSignature("foo.bar").AnyTimes().Return("bar")
-				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).Return(nil, fosite.ErrNotFound)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", gomock.Any()).Return(nil, fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
 			description: "should fail because authcode validation failed",
 			setup: func() {
-				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", nil).AnyTimes().Return(authreq, nil)
+				store.EXPECT().GetAuthorizeCodeSession(nil, "bar", gomock.Any()).AnyTimes().Return(authreq, nil)
 				ach.EXPECT().ValidateAuthorizeCode(nil, areq, "foo.bar").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrInvalidRequest,

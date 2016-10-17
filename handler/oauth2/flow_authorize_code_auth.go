@@ -65,6 +65,7 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
+	ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().Add(c.AuthCodeLifespan))
 	resp.AddQuery("code", code)
 	resp.AddQuery("state", ar.GetState())
 	resp.AddQuery("scope", strings.Join(ar.GetGrantedScopes(), " "))

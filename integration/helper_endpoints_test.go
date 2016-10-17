@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/ory-am/fosite"
-	foauth "github.com/ory-am/fosite/handler/oauth2"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,12 +13,7 @@ type stackTracer interface {
 	StackTrace() errors.StackTrace
 }
 
-type mySessionData struct {
-	Foo string
-	*foauth.HMACSession
-}
-
-func tokenRevocationHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
+func tokenRevocationHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
 		err := oauth2.NewRevocationRequest(ctx, req)
@@ -31,7 +25,7 @@ func tokenRevocationHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session 
 	}
 }
 
-func tokenIntrospectionHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
+func tokenIntrospectionHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
 		ar, err := oauth2.NewIntrospectionRequest(ctx, req, session)
@@ -46,7 +40,7 @@ func tokenIntrospectionHandler(t *testing.T, oauth2 fosite.OAuth2Provider, sessi
 	}
 }
 
-func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
+func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
 		if _, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session); err != nil {
@@ -61,7 +55,7 @@ func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interf
 	}
 }
 
-func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session interface{}) func(rw http.ResponseWriter, req *http.Request) {
+func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
 
@@ -124,9 +118,7 @@ func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw ht
 		req.ParseForm()
 		ctx := fosite.NewContext()
 
-		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &mySessionData{
-			HMACSession: &foauth.HMACSession{},
-		})
+		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &fosite.DefaultSession{})
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)

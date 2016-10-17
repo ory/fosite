@@ -23,7 +23,7 @@ func (a *AccessResponse) SetScopes(scopes Arguments) {
 }
 
 func (a *AccessResponse) SetExpiresIn(expiresIn time.Duration) {
-	a.SetExtra("expires_in", strconv.Itoa(int(expiresIn)))
+	a.SetExtra("expires_in", strconv.FormatInt(int64(expiresIn/time.Second), 10))
 }
 
 func (a *AccessResponse) SetExtra(key string, value interface{}) {

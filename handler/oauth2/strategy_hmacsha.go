@@ -1,7 +1,6 @@
 package oauth2
 
 import (
-	"reflect"
 	"time"
 
 	"fmt"
@@ -32,10 +31,12 @@ func (h HMACSHAStrategy) GenerateAccessToken(_ context.Context, _ fosite.Request
 }
 
 func (h HMACSHAStrategy) ValidateAccessToken(_ context.Context, r fosite.Requester, token string) (err error) {
-	if session, ok := r.GetSession().(HMACSessionContainer); !ok {
-		return errors.Wrap(fosite.ErrMisconfiguration, fmt.Sprintf("Session must be of type HMACSessionContainer, got: %s", reflect.TypeOf(r.GetSession())))
-	} else if session.AccessTokenExpiresAt(r.GetRequestedAt().Add(h.AccessTokenLifespan)).Before(time.Now()) {
-		return errors.Wrap(fosite.ErrTokenExpired, fmt.Sprintf("Access token expired at %s", session.AccessTokenExpiresAt(r.GetRequestedAt().Add(h.AccessTokenLifespan))))
+	var exp = r.GetSession().GetExpiresAt(fosite.AccessToken)
+	if exp.IsZero() && r.GetRequestedAt().Add(h.AccessTokenLifespan).Before(time.Now()) {
+		return errors.Wrap(fosite.ErrTokenExpired, fmt.Sprintf("Access token expired at %s", r.GetRequestedAt().Add(h.AccessTokenLifespan)))
+	}
+	if !exp.IsZero() && exp.Before(time.Now()) {
+		return errors.Wrap(fosite.ErrTokenExpired, fmt.Sprintf("Access token expired at %s", exp))
 	}
 	return h.Enigma.Validate(token)
 }
@@ -53,10 +54,12 @@ func (h HMACSHAStrategy) GenerateAuthorizeCode(_ context.Context, _ fosite.Reque
 }
 
 func (h HMACSHAStrategy) ValidateAuthorizeCode(_ context.Context, r fosite.Requester, token string) (err error) {
-	if session, ok := r.GetSession().(HMACSessionContainer); !ok {
-		return errors.Wrap(fosite.ErrMisconfiguration, fmt.Sprintf("Session must be of type HMACSessionContainer, got: %s", reflect.TypeOf(r.GetSession())))
-	} else if session.AuthorizeCodeExpiresAt(r.GetRequestedAt().Add(h.AuthorizeCodeLifespan)).Before(time.Now()) {
-		return errors.Wrap(fosite.ErrTokenExpired, fmt.Sprintf("Authorize code expired at %s", session.AuthorizeCodeExpiresAt(r.GetRequestedAt().Add(h.AccessTokenLifespan))))
+	var exp = r.GetSession().GetExpiresAt(fosite.AuthorizeCode)
+	if exp.IsZero() && r.GetRequestedAt().Add(h.AuthorizeCodeLifespan).Before(time.Now()) {
+		return errors.Wrap(fosite.ErrTokenExpired, fmt.Sprintf("Authorize code expired at %s", r.GetRequestedAt().Add(h.AuthorizeCodeLifespan)))
+	}
+	if !exp.IsZero() && exp.Before(time.Now()) {
+		return errors.Wrap(fosite.ErrTokenExpired, fmt.Sprintf("Authorize code expired at %s", exp))
 	}
 
 	return h.Enigma.Validate(token)

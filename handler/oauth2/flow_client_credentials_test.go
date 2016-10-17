@@ -43,6 +43,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should pass",
 			mock: func() {
+				areq.EXPECT().GetSession().Return(new(fosite.DefaultSession))
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
@@ -63,7 +64,7 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockClientCredentialsGrantStorage(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
-	areq := fosite.NewAccessRequest(nil)
+	areq := fosite.NewAccessRequest(new(fosite.DefaultSession))
 	aresp := fosite.NewAccessResponse()
 	defer ctrl.Finish()
 
@@ -100,7 +101,7 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 			description: "should pass",
 			mock: func() {
 				areq.GrantTypes = fosite.Arguments{"client_credentials"}
-
+				areq.Session = &fosite.DefaultSession{}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"client_credentials"}}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)

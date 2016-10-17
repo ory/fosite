@@ -202,20 +202,6 @@ var config = compose.Config {
 
 var oauth2Provider = compose.ComposeAllEnabled(config *Config, storage, secret, privateKey)
 
-// The session will be persisted by the store and made available when e.g. validating tokens or handling token endpoint requests.
-// The default OAuth2 and OpenID Connect handlers require the session to implement a few methods. Apart from that, the 
-// session struct can be anything you want it to be.
-type session struct {
-	UserID string
-	Foobar int
-	
-	// this is used in the OAuth2 handlers. You can set per-session expiry times here, for example.
-	*oauth2Strat.HMACSession
-	
-	// this is used by the OpenID connect handlers. You can set custom id token headers and claims.
-	*oidcStrat.DefaultSession
-}
-
 // The authorize endpoint is usually at "https://mydomain.com/oauth2/auth".
 func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// This context will be passed to all methods. It doesn't fulfill a real purpose in the standard library but could be used
@@ -247,8 +233,12 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 
 	// Now that the user is authorized, we set up a session. When validating / looking up tokens, we additionally get
 	// the session. You can store anything you want in it.
-	mySessionData := &session{
-		UserID: req.Form.Get("username")
+	
+    // The session will be persisted by the store and made available when e.g. validating tokens or handling token endpoint requests.
+    // The default OAuth2 and OpenID Connect handlers require the session to implement a few methods. Apart from that, the 
+    // session struct can be anything you want it to be.
+	mySessionData := &fosite.DefaultSession{
+		Username: req.Form.Get("username")
 	}
 
 	// It's also wise to check the requested scopes, e.g.:
@@ -273,7 +263,7 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 // The token endpoint is usually at "https://mydomain.com/oauth2/token"
 func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	ctx := NewContext()
-	mySessionData := &session{}
+	mySessionData := new(fosite.DefaultSession)
 
 	// This will create an access request object and iterate through the registered TokenEndpointHandlers to validate the request.
 	accessRequest, err := oauth2.NewAccessRequest(ctx, req, mySessionData)
@@ -302,7 +292,7 @@ func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 
 func someResourceProviderHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	ctx := NewContext()
-	mySessionData := &session{}
+	mySessionData := new(fosite.DefaultSession)
 	requiredScope := "blogposts.create"
 
 	ar, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), mySessionData, requiredScope)

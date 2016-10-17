@@ -9,13 +9,13 @@ import (
 
 // Request is an implementation of Requester
 type Request struct {
-	ID            string      `json:"id" gorethink:"id"`
-	RequestedAt   time.Time   `json:"requestedAt" gorethink:"requestedAt"`
-	Client        Client      `json:"client" gorethink:"client"`
-	Scopes        Arguments   `json:"scopes" gorethink:"scopes"`
-	GrantedScopes Arguments   `json:"grantedScopes" gorethink:"grantedScopes"`
-	Form          url.Values  `json:"form" gorethink:"form"`
-	Session       interface{} `json:"session" gorethink:"session"`
+	ID            string     `json:"id" gorethink:"id"`
+	RequestedAt   time.Time  `json:"requestedAt" gorethink:"requestedAt"`
+	Client        Client     `json:"client" gorethink:"client"`
+	Scopes        Arguments  `json:"scopes" gorethink:"scopes"`
+	GrantedScopes Arguments  `json:"grantedScopes" gorethink:"grantedScopes"`
+	Form          url.Values `json:"form" gorethink:"form"`
+	Session       Session    `json:"session" gorethink:"session"`
 }
 
 func NewRequest() *Request {
@@ -79,11 +79,11 @@ func (a *Request) GrantScope(scope string) {
 	a.GrantedScopes = append(a.GrantedScopes, scope)
 }
 
-func (a *Request) SetSession(session interface{}) {
+func (a *Request) SetSession(session Session) {
 	a.Session = session
 }
 
-func (a *Request) GetSession() interface{} {
+func (a *Request) GetSession() Session {
 	return a.Session
 }
 

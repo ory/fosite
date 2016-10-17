@@ -129,9 +129,9 @@ func (_mr *_MockAuthorizeRequesterRecorder) GetResponseTypes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetResponseTypes")
 }
 
-func (_m *MockAuthorizeRequester) GetSession() interface{} {
+func (_m *MockAuthorizeRequester) GetSession() fosite.Session {
 	ret := _m.ctrl.Call(_m, "GetSession")
-	ret0, _ := ret[0].(interface{})
+	ret0, _ := ret[0].(fosite.Session)
 	return ret0
 }
 
@@ -191,7 +191,7 @@ func (_mr *_MockAuthorizeRequesterRecorder) SetResponseTypeHandled(arg0 interfac
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetResponseTypeHandled", arg0)
 }
 
-func (_m *MockAuthorizeRequester) SetSession(_param0 interface{}) {
+func (_m *MockAuthorizeRequester) SetSession(_param0 fosite.Session) {
 	_m.ctrl.Call(_m, "SetSession", _param0)
 }
 

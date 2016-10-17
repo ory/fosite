@@ -5,6 +5,7 @@ import (
 
 	"net/http"
 
+	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/compose"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
@@ -21,10 +22,8 @@ func TestAuthorizeCodeFlow(t *testing.T) {
 }
 
 func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
-	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2AuthorizeExplicitFactory)
-	ts := mockServer(t, f, &mySessionData{
-		HMACSession: new(oauth2.HMACSession),
-	})
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2TokenIntrospectionFactory)
+	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
