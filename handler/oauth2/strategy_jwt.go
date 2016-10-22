@@ -37,7 +37,7 @@ func (h RS256JWTStrategy) AuthorizeCodeSignature(token string) string {
 }
 
 func (h *RS256JWTStrategy) GenerateAccessToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
-	return h.generate(requester)
+	return h.generate(fosite.AccessToken, requester)
 }
 
 func (h *RS256JWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Requester, token string) error {
@@ -45,7 +45,7 @@ func (h *RS256JWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Reque
 }
 
 func (h *RS256JWTStrategy) GenerateRefreshToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
-	return h.generate(requester)
+	return h.generate(fosite.RefreshToken, requester)
 }
 
 func (h *RS256JWTStrategy) ValidateRefreshToken(_ context.Context, _ fosite.Requester, token string) error {
@@ -53,7 +53,7 @@ func (h *RS256JWTStrategy) ValidateRefreshToken(_ context.Context, _ fosite.Requ
 }
 
 func (h *RS256JWTStrategy) GenerateAuthorizeCode(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
-	return h.generate(requester)
+	return h.generate(fosite.AuthorizeCode, requester)
 }
 
 func (h *RS256JWTStrategy) ValidateAuthorizeCode(_ context.Context, requester fosite.Requester, token string) error {
@@ -98,12 +98,14 @@ func (h *RS256JWTStrategy) validate(token string) error {
 	return nil
 }
 
-func (h *RS256JWTStrategy) generate(requester fosite.Requester) (string, string, error) {
+func (h *RS256JWTStrategy) generate(tokenType fosite.TokenType, requester fosite.Requester) (string, string, error) {
 	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); !ok {
 		return "", "", errors.New("Session must be of type JWTSessionContainer")
 	} else if jwtSession.GetJWTClaims() == nil {
 		return "", "", errors.New("GetTokenClaims() must not be nil")
 	} else {
-		return h.RS256JWTStrategy.Generate(jwtSession.GetJWTClaims().ToMapClaims(), jwtSession.GetJWTHeader())
+		claims := jwtSession.GetJWTClaims()
+		claims.ExpiresAt = jwtSession.GetExpiresAt(tokenType)
+		return h.RS256JWTStrategy.Generate(claims.ToMapClaims(), jwtSession.GetJWTHeader())
 	}
 }
