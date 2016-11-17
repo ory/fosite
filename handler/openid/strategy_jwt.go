@@ -2,13 +2,14 @@ package openid
 
 import (
 	"net/http"
-
+	"encoding/gob"
 	"time"
 
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"bytes"
 )
 
 const defaultExpiryTime = time.Hour
@@ -35,6 +36,17 @@ func NewDefaultSession() *DefaultSession {
 		Headers:        &jwt.Headers{},
 	}
 }
+
+func (s *DefaultSession) Clone() fosite.Session {
+	var clone DefaultSession
+	var mod bytes.Buffer
+	enc := gob.NewEncoder(&mod)
+	dec := gob.NewDecoder(&mod)
+	_ = enc.Encode(s)
+	_ = dec.Decode(&clone)
+	return &clone
+}
+
 
 func (s *DefaultSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
 	if s.ExpiresAt == nil {

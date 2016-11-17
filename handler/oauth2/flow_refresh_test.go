@@ -90,7 +90,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				}, nil)
 			},
 			expect: func() {
-				assert.Equal(t, sess, areq.Session)
+				assert.NotEqual(t, sess, areq.Session)
 				assert.NotEqual(t, time.Now().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
 				assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.GrantedScopes)
 				assert.Equal(t, fosite.Arguments{"foo", "bar"}, areq.Scopes)

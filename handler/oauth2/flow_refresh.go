@@ -57,7 +57,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.Wrap(fosite.ErrInvalidRequest, "Client ID mismatch")
 	}
 
-	request.SetSession(originalRequest.GetSession())
+	request.SetSession(originalRequest.GetSession().Clone())
 	request.SetRequestedScopes(originalRequest.GetRequestedScopes())
 	for _, scope := range originalRequest.GetGrantedScopes() {
 		request.GrantScope(scope)

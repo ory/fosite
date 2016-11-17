@@ -4,6 +4,8 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
 	"time"
+	"bytes"
+	"encoding/gob"
 )
 
 type JWTSessionContainer interface {
@@ -70,4 +72,14 @@ func (s *JWTSession) GetSubject() string {
 	}
 
 	return s.Subject
+}
+
+func (s *JWTSession) Clone() fosite.Session {
+	var clone JWTSession
+	var mod bytes.Buffer
+	enc := gob.NewEncoder(&mod)
+	dec := gob.NewDecoder(&mod)
+	_ = enc.Encode(s)
+	_ = dec.Decode(&clone)
+	return &clone
 }

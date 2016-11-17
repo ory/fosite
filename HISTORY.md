@@ -1,6 +1,12 @@
 This is a list of breaking changes. As long as `1.0.0` is not released, breaking changes will be addressed as minor version
 bumps (`0.1.0` -> `0.2.0`).
 
+## 0.6.0
+
+A bug related to refresh tokens was found. To mitigate it, a `Clone()` method has been introduced to the `fosite.Session` interface.
+If you use a custom session object, this will be a breaking change. Fosite's default sessions have been upgraded and no additional
+work should be required. If you use your own session struct, we encourage using package `gob/encoding` to deep-copy it in `Clone()`.
+
 ## 0.5.0
 
 Breaking changes:
