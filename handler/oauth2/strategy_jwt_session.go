@@ -75,6 +75,10 @@ func (s *JWTSession) GetSubject() string {
 }
 
 func (s *JWTSession) Clone() fosite.Session {
+	if s == nil {
+		return nil
+	}
+
 	var clone JWTSession
 	var mod bytes.Buffer
 	enc := gob.NewEncoder(&mod)

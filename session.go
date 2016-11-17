@@ -70,6 +70,10 @@ func (s *DefaultSession) GetSubject() string {
 }
 
 func (s *DefaultSession) Clone() Session {
+	if s == nil {
+		return nil
+	}
+
 	var clone DefaultSession
 	var mod bytes.Buffer
 	enc := gob.NewEncoder(&mod)

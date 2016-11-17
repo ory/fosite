@@ -101,7 +101,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 			return nil, errors.Wrap(ErrRequestUnauthorized, "Bearer and introspection token are identical")
 		}
 
-		if _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session); err != nil {
+		if _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
 			return nil, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
 		}
 	} else {

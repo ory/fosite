@@ -38,6 +38,10 @@ func NewDefaultSession() *DefaultSession {
 }
 
 func (s *DefaultSession) Clone() fosite.Session {
+	if s == nil {
+		return nil
+	}
+
 	var clone DefaultSession
 	var mod bytes.Buffer
 	enc := gob.NewEncoder(&mod)

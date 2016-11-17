@@ -86,7 +86,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 		},
 	} {
 		c.setup()
-		res, err := f.NewIntrospectionRequest(nil, httpreq, nil)
+		res, err := f.NewIntrospectionRequest(nil, httpreq, &DefaultSession{})
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if res != nil {
 			assert.Equal(t, c.isActive, res.IsActive())
