@@ -1,6 +1,10 @@
 package fosite
 
-import "time"
+import (
+	"time"
+	"bytes"
+	"encoding/gob"
+)
 
 // Session is an interface that is used to store session data between OAuth2 requests. It can be used to look up
 // when a session expires or what the subject's name was.
@@ -20,6 +24,9 @@ type Session interface {
 
 	// GetSubject returns the subject, if set. This is optional and only used during token introspection.
 	GetSubject() string
+
+	// Clone clones the session.
+	Clone() Session
 }
 
 // DefaultSession is a default implementation of the session interface.
@@ -60,4 +67,14 @@ func (s *DefaultSession) GetSubject() string {
 	}
 
 	return s.Subject
+}
+
+func (s *DefaultSession) Clone() Session {
+	var clone DefaultSession
+	var mod bytes.Buffer
+	enc := gob.NewEncoder(&mod)
+	dec := gob.NewDecoder(&mod)
+	_ = enc.Encode(s)
+	_ = dec.Decode(&clone)
+	return &clone
 }
