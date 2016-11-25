@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// WriteIntrospectionResponse responds with token metadata discovered by token introspection as defined in
+// WriteIntrospectionError responds with token metadata discovered by token introspection as defined in
 // https://tools.ietf.org/search/rfc7662#section-2.2
 //
 // If the protected resource uses OAuth 2.0 client credentials to
@@ -33,7 +33,8 @@ func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
 		return
 	}
 
-	if errors.Cause(err) == ErrRequestUnauthorized {
+	switch errors.Cause(err) {
+	case ErrInvalidRequest, ErrRequestUnauthorized:
 		writeJsonError(rw, err)
 		return
 	}
@@ -43,7 +44,7 @@ func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
 	}{Active: false})
 }
 
-// WriteIntrospectionError responds with an error if token introspection failed as defined in
+// WriteIntrospectionResponse responds with an error if token introspection failed as defined in
 // https://tools.ietf.org/search/rfc7662#section-2.3
 //
 // The server responds with a JSON object [RFC7159] in "application/
