@@ -19,6 +19,12 @@ func ToString(i interface{}) string {
 		return s
 	}
 
+	if sl, ok := i.([]string); ok {
+		if len(sl) == 1 {
+			return sl[0]
+		}
+	}
+
 	return ""
 }
 
