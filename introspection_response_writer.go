@@ -39,6 +39,7 @@ func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
 		return
 	}
 
+	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	_ = json.NewEncoder(rw).Encode(struct {
 		Active bool `json:"active"`
 	}{Active: false})
