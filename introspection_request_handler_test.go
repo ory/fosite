@@ -35,6 +35,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 		Header: http.Header{},
 		Form:   url.Values{},
 	}
+	newErr := errors.New("")
 
 	for k, c := range []struct {
 		description string
@@ -49,7 +50,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 			expectErr: ErrInvalidRequest,
 		},
 		{
-			description: "should pass",
+			description: "should fail",
 			setup: func() {
 				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				httpreq = &http.Request{
@@ -62,9 +63,10 @@ func TestNewIntrospectionRequest(t *testing.T) {
 					},
 				}
 				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
+				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(newErr)
 			},
 			isActive: false,
+			expectErr: newErr,
 		},
 		{
 			description: "should pass",

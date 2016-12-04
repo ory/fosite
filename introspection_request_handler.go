@@ -88,9 +88,9 @@ import (
 //	token=mF_9.B5f-4.1JqM&token_type_hint=access_token
 func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, session Session) (IntrospectionResponder, error) {
 	if r.Method != "POST" {
-		return nil, errors.Wrap(ErrInvalidRequest, "HTTP method is not POST")
+		return &IntrospectionResponse{Active: false}, errors.Wrap(ErrInvalidRequest, "HTTP method is not POST")
 	} else if err := r.ParseForm(); err != nil {
-		return nil, errors.Wrap(ErrInvalidRequest, err.Error())
+		return &IntrospectionResponse{Active: false}, errors.Wrap(ErrInvalidRequest, err.Error())
 	}
 
 	token := r.PostForm.Get("token")
@@ -98,32 +98,32 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 	scope := r.PostForm.Get("scope")
 	if clientToken := AccessTokenFromRequest(r); clientToken != "" {
 		if token == clientToken {
-			return nil, errors.Wrap(ErrRequestUnauthorized, "Bearer and introspection token are identical")
+			return &IntrospectionResponse{Active: false}, errors.Wrap(ErrRequestUnauthorized, "Bearer and introspection token are identical")
 		}
 
 		if _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
-			return nil, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
+			return &IntrospectionResponse{Active: false}, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
 		}
 	} else {
 		clientID, clientSecret, ok := r.BasicAuth()
 		if !ok {
-			return nil, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
+			return &IntrospectionResponse{Active: false}, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
 		}
 
 		client, err := f.Store.GetClient(clientID)
 		if err != nil {
-			return nil, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
+			return &IntrospectionResponse{Active: false}, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
 		}
 
 		// Enforce client authentication
 		if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-			return nil, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
+			return &IntrospectionResponse{Active: false}, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
 		}
 	}
 
 	ar, err := f.IntrospectToken(ctx, token, TokenType(tokenType), session, strings.Split(scope, " ")...)
 	if err != nil {
-		return &IntrospectionResponse{Active: false}, nil
+		return &IntrospectionResponse{Active: false}, err
 	}
 
 	return &IntrospectionResponse{
