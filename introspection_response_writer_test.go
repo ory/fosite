@@ -17,7 +17,7 @@ func TestWriteIntrospectionError(t *testing.T) {
 	rw := internal.NewMockResponseWriter(c)
 
 	rw.EXPECT().WriteHeader(http.StatusUnauthorized) //[]byte("{\"active\":\"false\"}"))
-	rw.EXPECT().Header().Return(http.Header{})
+	rw.EXPECT().Header().AnyTimes().Return(http.Header{})
 	rw.EXPECT().Write(gomock.Any())
 	f.WriteIntrospectionError(rw, errors.Wrap(ErrRequestUnauthorized, ""))
 
