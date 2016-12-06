@@ -28,6 +28,7 @@ var (
 	ErrTokenExpired            = errors.New("Token expired")
 	ErrScopeNotGranted         = errors.New("The token was not granted the requested scope")
 	ErrTokenClaim              = errors.New("The token failed validation due to a claim mismatch")
+	ErrInactiveToken 	   = errors.New("Token is inactive because it is malformed, expired or otherwise invalid")
 )
 
 const (
@@ -53,6 +54,7 @@ const (
 	errTokenExpired                = "token_expired"
 	errScopeNotGranted             = "scope_not_granted"
 	errTokenClaim                  = "token_claim"
+	errTokenInactive               = "token_inactive"
 )
 
 type RFC6749Error struct {
@@ -65,6 +67,17 @@ type RFC6749Error struct {
 
 func ErrorToRFC6749Error(err error) *RFC6749Error {
 	switch errors.Cause(err) {
+	case ErrInactiveToken: {
+		{
+			return &RFC6749Error{
+				Name:        errTokenInactive,
+				Description: ErrInactiveToken.Error(),
+				Debug:       err.Error(),
+				Hint:        "Token validation failed.",
+				StatusCode:  http.StatusUnauthorized,
+			}
+		}
+	}
 	case ErrTokenClaim:
 		{
 			return &RFC6749Error{
