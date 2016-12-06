@@ -1,7 +1,6 @@
 package fosite
 
 import (
-	"strconv"
 	"strings"
 	"time"
 )
@@ -23,7 +22,7 @@ func (a *AccessResponse) SetScopes(scopes Arguments) {
 }
 
 func (a *AccessResponse) SetExpiresIn(expiresIn time.Duration) {
-	a.SetExtra("expires_in", strconv.FormatInt(int64(expiresIn/time.Second), 10))
+	a.SetExtra("expires_in", int64(expiresIn/time.Second))
 }
 
 func (a *AccessResponse) SetExtra(key string, value interface{}) {
