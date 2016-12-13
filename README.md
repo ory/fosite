@@ -160,7 +160,7 @@ Before we skip ahead, it is important to note how scopes are being used in fosit
 The general pattern can be abstracted as `<scope>.<sub-scope>.<sub-sub-scope>.<sub-sub-...>`. Every level ("subset")
 contains all sublevels, too. For example:
 
-* `blogposts` grants scopes `blogposts.create`, `blogposts.delete`, `blockposts.read`, `blohposts.own.read`.
+* `blogposts` grants scopes `blogposts.create`, `blogposts.delete`, `blogposts.read`, `blogposts.own.read`.
 * `blogposts.create` does not grant `blogposts.delete` nor `blogposts.read` nor `blogposts.own.read`.
 * `blogposts.own.read` does not grant `blogposts.create`.
 * `blogposts.own` grants `blogposts.own.read` but not `blogposts.create`.
