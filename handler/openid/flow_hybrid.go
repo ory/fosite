@@ -27,12 +27,14 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
-	if !(ar.GetResponseTypes().Matches("token", "id_token", "code") || ar.GetResponseTypes().Matches("token", "code")) {
+	if !(ar.GetResponseTypes().Matches("token", "id_token", "code") || ar.GetResponseTypes().Matches("token", "code") || ar.GetResponseTypes().Matches("id_token", "code")) {
 		return nil
 	}
 
-	if !ar.GetClient().GetResponseTypes().Has("token", "code") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the code and token response type")
+	if ar.GetResponseTypes().Matches("token") && !ar.GetClient().GetResponseTypes().Has("token") {
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the token response type")
+	} else if ar.GetResponseTypes().Matches("code") && !ar.GetClient().GetResponseTypes().Has("code") {
+		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the code response type")
 	} else if ar.GetResponseTypes().Matches("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
 		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the id_token response type")
 	}
@@ -87,7 +89,12 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		claims.AccessTokenHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength() / 2])))
 	}
 
-	if !ar.GetGrantedScopes().Has("openid") {
+	if resp.GetFragment().Get("state") == "" {
+		resp.AddFragment("state", ar.GetState())
+	}
+
+	if !ar.GetGrantedScopes().Has("openid") || !ar.GetResponseTypes().Has("id_token") {
+		ar.SetResponseTypeHandled("id_token")
 		return nil
 	}
 
@@ -95,13 +102,8 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return errors.Wrap(err, err.Error())
 	}
 
-	// there is no need to check for https, because implicit flow does not require https
-	// https://tools.ietf.org/html/rfc6819#section-4.4.2
-
-	if resp.GetFragment().Get("state") == "" {
-		resp.AddFragment("state", ar.GetState())
-	}
-
 	ar.SetResponseTypeHandled("id_token")
 	return nil
+	// there is no need to check for https, because implicit flow does not require https
+	// https://tools.ietf.org/html/rfc6819#section-4.4.2
 }

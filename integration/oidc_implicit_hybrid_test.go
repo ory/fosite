@@ -42,6 +42,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 		nonce        string
 		setup        func()
 		hasToken     bool
+		hasIdToken   bool
 		hasCode      bool
 	}{
 		{
@@ -50,6 +51,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			setup: func() {
 				oauthClient.Scopes = []string{"fosite"}
 			},
+			hasToken:      true,
 		},
 		{
 
@@ -60,15 +62,36 @@ func TestOIDCImplicitFlow(t *testing.T) {
 				oauthClient.Scopes = []string{"fosite", "openid"}
 			},
 			hasToken: true,
+			hasIdToken: true,
 		},
+
 		{
 
 			responseType: "token%20id_token%20code",
 			nonce:        "1111111111111111",
-			description:  "should pass id token (id_token token)",
+			description:  "should pass id token (code id_token token)",
 			setup:        func() {},
 			hasToken:     true,
 			hasCode:      true,
+			hasIdToken: true,
+		},
+		{
+
+			responseType: "token%20code",
+			nonce:        "1111111111111111",
+			description:  "should pass id token (code token)",
+			setup:        func() {},
+			hasToken:     true,
+			hasCode:      true,
+		},
+		{
+
+			responseType: "id_token%20code",
+			nonce:        "1111111111111111",
+			description:  "should pass id token (id_token code)",
+			setup:        func() {},
+			hasCode:      true,
+			hasIdToken: true,
 		},
 	} {
 		c.setup()
@@ -84,9 +107,31 @@ func TestOIDCImplicitFlow(t *testing.T) {
 		resp, err := client.Get(authURL)
 		require.NotNil(t, err, "(%d) %s", k, c.description)
 
-		t.Logf("Response: %s", callbackURL.String())
+		t.Logf("Response (%d): %s", k, callbackURL.String())
 		fragment, err := url.ParseQuery(callbackURL.Fragment)
 		require.Nil(t, err, "(%d) %s", k, c.description)
+
+		if c.hasToken {
+			assert.NotEmpty(t, fragment.Get("access_token"), "(%d) %s", k, c.description)
+		} else {
+			assert.Empty(t, fragment.Get("access_token"), "(%d) %s", k, c.description)
+		}
+
+		if c.hasCode {
+			assert.NotEmpty(t, fragment.Get("code"), "(%d) %s", k, c.description)
+		} else {
+			assert.Empty(t, fragment.Get("code"), "(%d) %s", k, c.description)
+		}
+
+		if c.hasIdToken {
+			assert.NotEmpty(t, fragment.Get("id_token"), "(%d) %s", k, c.description)
+		} else {
+			assert.Empty(t, fragment.Get("id_token"), "(%d) %s", k, c.description)
+		}
+
+		if !c.hasToken {
+			continue
+		}
 
 		expires, err := strconv.Atoi(fragment.Get("expires_in"))
 		require.Nil(t, err, "(%d) %s", k, c.description)
@@ -98,22 +143,11 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			Expiry:       time.Now().Add(time.Duration(expires) * time.Second),
 		}
 
-		if c.hasToken {
-			assert.NotEmpty(t, fragment.Get("id_token"), "(%d) %s", k, c.description)
-		} else {
-			assert.Empty(t, fragment.Get("id_token"), "(%d) %s", k, c.description)
-		}
-
-		if c.hasCode {
-			assert.NotEmpty(t, fragment.Get("code"), "(%d) %s", k, c.description)
-		} else {
-			assert.Empty(t, fragment.Get("code"), "(%d) %s", k, c.description)
-		}
-
 		httpClient := oauthClient.Client(oauth2.NoContext, token)
 		resp, err = httpClient.Get(ts.URL + "/info")
 		require.Nil(t, err, "(%d) %s", k, c.description)
 		assert.Equal(t, http.StatusNoContent, resp.StatusCode, "(%d) %s", k, c.description)
 		t.Logf("Passed test case (%d) %s", k, c.description)
+
 	}
 }
