@@ -25,7 +25,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			Claims: &jwt.IDTokenClaims{
 				Subject: "peter",
 			},
-			Headers:        &jwt.Headers{},
+			Headers: &jwt.Headers{},
 		},
 	}
 	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())
@@ -51,7 +51,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			setup: func() {
 				oauthClient.Scopes = []string{"fosite"}
 			},
-			hasToken:      true,
+			hasToken: true,
 		},
 		{
 
@@ -61,7 +61,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			setup: func() {
 				oauthClient.Scopes = []string{"fosite", "openid"}
 			},
-			hasToken: true,
+			hasToken:   true,
 			hasIdToken: true,
 		},
 
@@ -73,7 +73,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			setup:        func() {},
 			hasToken:     true,
 			hasCode:      true,
-			hasIdToken: true,
+			hasIdToken:   true,
 		},
 		{
 
@@ -91,13 +91,13 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			description:  "should pass id token (id_token code)",
 			setup:        func() {},
 			hasCode:      true,
-			hasIdToken: true,
+			hasIdToken:   true,
 		},
 	} {
 		c.setup()
 
 		var callbackURL *url.URL
-		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type=" + c.responseType, -1) + "&nonce=" + c.nonce
+		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type="+c.responseType, -1) + "&nonce=" + c.nonce
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				callbackURL = req.URL
