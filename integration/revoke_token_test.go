@@ -30,22 +30,22 @@ func runRevokeTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
 	token, err := oauthClient.Token(goauth.NoContext)
 	assert.Nil(t, err)
 
-	resp, _, errs := gorequest.New().Post(ts.URL + "/revoke").
+	resp, _, errs := gorequest.New().Post(ts.URL+"/revoke").
 		SetBasicAuth(oauthClient.ClientID, oauthClient.ClientSecret).
 		Type("form").
 		SendStruct(map[string]string{"token": "asdf"}).End()
 	assert.Len(t, errs, 0)
 	assert.Equal(t, 200, resp.StatusCode)
 
-	resp, _, errs = gorequest.New().Post(ts.URL + "/revoke").
+	resp, _, errs = gorequest.New().Post(ts.URL+"/revoke").
 		SetBasicAuth(oauthClient.ClientID, oauthClient.ClientSecret).
 		Type("form").
 		SendStruct(map[string]string{"token": token.AccessToken}).End()
 	assert.Len(t, errs, 0)
 	assert.Equal(t, 200, resp.StatusCode)
 
-	hres, _, errs := gorequest.New().Get(ts.URL + "/info").
-		Set("Authorization", "bearer " + token.AccessToken).
+	hres, _, errs := gorequest.New().Get(ts.URL+"/info").
+		Set("Authorization", "bearer "+token.AccessToken).
 		End()
 	require.Len(t, errs, 0)
 	assert.Equal(t, http.StatusUnauthorized, hres.StatusCode)

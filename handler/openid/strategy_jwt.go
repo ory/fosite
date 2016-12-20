@@ -1,15 +1,15 @@
 package openid
 
 import (
-	"net/http"
 	"encoding/gob"
+	"net/http"
 	"time"
 
+	"bytes"
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"bytes"
 )
 
 const defaultExpiryTime = time.Hour
@@ -32,8 +32,8 @@ type DefaultSession struct {
 
 func NewDefaultSession() *DefaultSession {
 	return &DefaultSession{
-		Claims:         &jwt.IDTokenClaims{},
-		Headers:        &jwt.Headers{},
+		Claims:  &jwt.IDTokenClaims{},
+		Headers: &jwt.Headers{},
 	}
 }
 
@@ -50,7 +50,6 @@ func (s *DefaultSession) Clone() fosite.Session {
 	_ = dec.Decode(&clone)
 	return &clone
 }
-
 
 func (s *DefaultSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
 	if s.ExpiresAt == nil {

@@ -111,7 +111,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 					Claims: &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
-					Headers:        &jwt.Headers{},
+					Headers: &jwt.Headers{},
 				}
 				areq.Form.Add("nonce", "some-random-foo-nonce-wow")
 			},

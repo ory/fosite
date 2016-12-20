@@ -65,7 +65,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(newErr)
 			},
-			isActive: false,
+			isActive:  false,
 			expectErr: newErr,
 		},
 		{

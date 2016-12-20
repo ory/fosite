@@ -1,9 +1,9 @@
 package fosite
 
 import (
-	"time"
 	"bytes"
 	"encoding/gob"
+	"time"
 )
 
 // Session is an interface that is used to store session data between OAuth2 requests. It can be used to look up

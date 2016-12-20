@@ -16,9 +16,9 @@ import (
 type OpenIDConnectImplicitHandler struct {
 	AuthorizeImplicitGrantTypeHandler *oauth2.AuthorizeImplicitGrantTypeHandler
 	*IDTokenHandleHelper
-	ScopeStrategy                     fosite.ScopeStrategy
+	ScopeStrategy fosite.ScopeStrategy
 
-	RS256JWTStrategy                  *jwt.RS256JWTStrategy
+	RS256JWTStrategy *jwt.RS256JWTStrategy
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -63,7 +63,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 			return err
 		}
 
-		claims.AccessTokenHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength() / 2])))
+		claims.AccessTokenHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2])))
 	} else {
 		resp.AddFragment("state", ar.GetState())
 	}
