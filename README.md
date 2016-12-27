@@ -10,7 +10,7 @@
 Built simple, powerful and extensible. This library implements peer-reviewed [IETF RFC6749](https://tools.ietf.org/html/rfc6749),
 counterfeits weaknesses covered in peer-reviewed [IETF RFC6819](https://tools.ietf.org/html/rfc6819) and countermeasures various database
 attack scenarios, keeping your application safe when that hacker penetrates or leaks your database. OpenID Connect is
-implemented according to [OpenID Connect Core 1.0 incorporating errata set 1](openid.net/specs/openid-connect-core-1_0.html) and
+implemented according to [OpenID Connect Core 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-core-1_0.html) and
 includes all flows: code, implicit, hybrid.
 
 This library considered and implemented:
