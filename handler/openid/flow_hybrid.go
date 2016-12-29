@@ -71,7 +71,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		claims.CodeHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2])))
+		claims.CodeHash = base64.URLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2]))
 	}
 
 	if ar.GetResponseTypes().Has("token") {
@@ -86,7 +86,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err != nil {
 			return err
 		}
-		claims.AccessTokenHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2])))
+		claims.AccessTokenHash = base64.URLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2]))
 	}
 
 	if resp.GetFragment().Get("state") == "" {

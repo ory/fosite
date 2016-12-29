@@ -15,8 +15,8 @@ var idTokenClaims = &IDTokenClaims{
 	Audience:        "tests",
 	ExpiresAt:       time.Now().Add(time.Hour).Round(time.Second),
 	AuthTime:        time.Now(),
-	AccessTokenHash: []byte("foobar"),
-	CodeHash:        []byte("barfoo"),
+	AccessTokenHash: "foobar",
+	CodeHash:        "barfoo",
 	Extra: map[string]interface{}{
 		"foo": "bar",
 		"baz": "bar",
