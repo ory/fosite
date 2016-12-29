@@ -3,6 +3,7 @@ package fosite
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 )
 
 func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
@@ -22,11 +23,21 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	}
 
 	redirectURI := ar.GetRedirectURI()
-	query := redirectURI.Query()
+	query := url.Values{}
 	query.Add("error", rfcerr.Name)
 	query.Add("error_description", rfcerr.Description)
 	query.Add("state", ar.GetState())
-	redirectURI.RawQuery = query.Encode()
+
+	if ar.GetResponseTypes().Exact("token") || len(ar.GetResponseTypes()) > 1 {
+		redirectURI.Fragment = query.Encode()
+	} else {
+		for key, values := range redirectURI.Query() {
+			for _, value := range values {
+				query.Add(key, value)
+			}
+		}
+		redirectURI.RawQuery = query.Encode()
+	}
 
 	rw.Header().Add("Location", redirectURI.String())
 	rw.WriteHeader(http.StatusFound)
