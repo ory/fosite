@@ -15,8 +15,8 @@ type IDTokenClaims struct {
 	ExpiresAt       time.Time
 	IssuedAt        time.Time
 	AuthTime        time.Time
-	AccessTokenHash []byte
-	CodeHash        []byte
+	AccessTokenHash string
+	CodeHash        string
 	Extra           map[string]interface{}
 }
 

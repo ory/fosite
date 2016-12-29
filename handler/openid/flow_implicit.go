@@ -63,7 +63,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 			return err
 		}
 
-		claims.AccessTokenHash = []byte(base64.URLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2])))
+		claims.AccessTokenHash = base64.URLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]))
 	} else {
 		resp.AddFragment("state", ar.GetState())
 	}
