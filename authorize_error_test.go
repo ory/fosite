@@ -64,8 +64,9 @@ func TestWriteAuthorizeError(t *testing.T) {
 			err: ErrInvalidRequest,
 			mock: func() {
 				req.EXPECT().IsRedirectURIValid().Return(true)
-				req.EXPECT().GetRedirectURI().Return(purls[0])
+				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
+				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -79,8 +80,9 @@ func TestWriteAuthorizeError(t *testing.T) {
 			err: ErrInvalidRequest,
 			mock: func() {
 				req.EXPECT().IsRedirectURIValid().Return(true)
-				req.EXPECT().GetRedirectURI().Return(purls[1])
+				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
+				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -90,6 +92,74 @@ func TestWriteAuthorizeError(t *testing.T) {
 				assert.Equal(t, a, b, "%d", k)
 			},
 		},
+		{
+			err: ErrInvalidRequest,
+			mock: func() {
+				req.EXPECT().IsRedirectURIValid().Return(true)
+				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
+				req.EXPECT().GetState().Return("foostate")
+				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(k int) {
+				a, _ := url.Parse("https://foobar.com/")
+				a.Fragment = "error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&state=foostate"
+				b, _ := url.Parse(header.Get("Location"))
+				assert.Equal(t, a, b, "%d", k)
+			},
+		},
+		{
+			err: ErrInvalidRequest,
+			mock: func() {
+				req.EXPECT().IsRedirectURIValid().Return(true)
+				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
+				req.EXPECT().GetState().Return("foostate")
+				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(k int) {
+				a, _ := url.Parse("https://foobar.com/?foo=bar")
+				a.Fragment = "error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&state=foostate"
+				b, _ := url.Parse(header.Get("Location"))
+				assert.Equal(t, a.String(), b.String(), "%d", k)
+			},
+		},
+		{
+			err: ErrInvalidRequest,
+			mock: func() {
+				req.EXPECT().IsRedirectURIValid().Return(true)
+				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
+				req.EXPECT().GetState().Return("foostate")
+				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(k int) {
+				a, _ := url.Parse("https://foobar.com/")
+				a.Fragment = "error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&state=foostate"
+				b, _ := url.Parse(header.Get("Location"))
+				assert.Equal(t, a, b, "%d", k)
+			},
+		},
+		{
+			err: ErrInvalidRequest,
+			mock: func() {
+				req.EXPECT().IsRedirectURIValid().Return(true)
+				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
+				req.EXPECT().GetState().Return("foostate")
+				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(k int) {
+				a, _ := url.Parse("https://foobar.com/?foo=bar")
+				a.Fragment = "error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&state=foostate"
+				b, _ := url.Parse(header.Get("Location"))
+				assert.Equal(t, a.String(), b.String(), "%d", k)
+			},
+		},
 	} {
 		c.mock()
 		oauth2.WriteAuthorizeError(rw, req, c.err)
@@ -97,4 +167,9 @@ func TestWriteAuthorizeError(t *testing.T) {
 		header = http.Header{}
 		t.Logf("Passed test case %d", k)
 	}
+}
+
+func copyUrl(u *url.URL) *url.URL {
+	url, _ := url.Parse(u.String())
+	return url
 }
