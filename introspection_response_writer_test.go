@@ -19,7 +19,7 @@ func TestWriteIntrospectionError(t *testing.T) {
 	rw.EXPECT().WriteHeader(http.StatusUnauthorized) //[]byte("{\"active\":\"false\"}"))
 	rw.EXPECT().Header().AnyTimes().Return(http.Header{})
 	rw.EXPECT().Write(gomock.Any())
-	f.WriteIntrospectionError(rw, errors.Wrap(ErrRequestUnauthorized, ""))
+	f.WriteIntrospectionError(rw, errors.WithStack(ErrRequestUnauthorized))
 
 	rw.EXPECT().Write([]byte("{\"active\":false}\n"))
 	f.WriteIntrospectionError(rw, errors.New(""))

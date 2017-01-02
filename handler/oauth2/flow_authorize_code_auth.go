@@ -38,11 +38,11 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("code") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "")
+		return errors.WithStack(fosite.ErrInvalidGrant)
 	}
 
 	if !fosite.IsRedirectURISecure(ar.GetRedirectURI()) {
-		return errors.Wrap(fosite.ErrInvalidRequest, "")
+		return errors.Wrap(fosite.ErrInvalidRequest, "Redirect URL is using an insecure protocol")
 	}
 
 	client := ar.GetClient()

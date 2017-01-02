@@ -11,7 +11,7 @@ import (
 func RandomBytes(n int) ([]byte, error) {
 	bytes := make([]byte, n)
 	if _, err := io.ReadFull(rand.Reader, bytes); err != nil {
-		return []byte{}, errors.Wrap(err, "")
+		return []byte{}, errors.WithStack(err)
 	}
 	return bytes, nil
 }

@@ -25,7 +25,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	// grant_type REQUIRED.
 	// Value MUST be set to "password".
 	if !request.GetGrantTypes().Exact("password") {
-		return errors.Wrap(fosite.ErrUnknownRequest, "")
+		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("password") {
@@ -57,7 +57,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.3.3
 func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().Exact("password") {
-		return errors.Wrap(fosite.ErrUnknownRequest, "")
+		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	var refresh, refreshSignature string

@@ -26,7 +26,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	// grant_type REQUIRED.
 	// Value MUST be set to "refresh_token".
 	if !request.GetGrantTypes().Exact("refresh_token") {
-		return errors.Wrap(fosite.ErrUnknownRequest, "")
+		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
@@ -70,7 +70,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-6
 func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().Exact("refresh_token") {
-		return errors.Wrap(fosite.ErrUnknownRequest, "")
+		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	accessToken, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)

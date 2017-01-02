@@ -63,7 +63,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 	}
 
 	if !found {
-		return errors.Wrap(ErrInvalidRequest, "")
+		return errors.WithStack(ErrInvalidRequest)
 	}
 
 	return nil

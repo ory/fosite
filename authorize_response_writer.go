@@ -23,7 +23,7 @@ func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar A
 	}
 
 	if !ar.DidHandleAllResponseTypes() {
-		return nil, errors.Wrap(ErrUnsupportedResponseType, "")
+		return nil, errors.WithStack(ErrUnsupportedResponseType)
 	}
 
 	return resp, nil

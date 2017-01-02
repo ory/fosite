@@ -145,7 +145,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, _ *http.Request, req
 	// Although optional, this is considered good practice and therefore enforced.
 	if len(nonce) < fosite.MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
-		return "", errors.Wrap(fosite.ErrInsufficientEntropy, "")
+		return "", errors.WithStack(fosite.ErrInsufficientEntropy)
 	}
 
 	claims.Nonce = nonce

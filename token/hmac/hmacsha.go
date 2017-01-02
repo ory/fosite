@@ -49,7 +49,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	// by the authorization server.
 	key, err := RandomBytes(c.AuthCodeEntropy)
 	if err != nil {
-		return "", "", errors.Wrap(err, "")
+		return "", "", errors.WithStack(err)
 	}
 
 	if len(key) < c.AuthCodeEntropy {
@@ -60,7 +60,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	mac := hmac.New(sha256.New, useSecret)
 	_, err = mac.Write(key)
 	if err != nil {
-		return "", "", errors.Wrap(err, "")
+		return "", "", errors.WithStack(err)
 	}
 
 	signature := mac.Sum([]byte{})
@@ -73,35 +73,35 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 func (c *HMACStrategy) Validate(token string) error {
 	split := strings.Split(token, ".")
 	if len(split) != 2 {
-		return errors.Wrap(fosite.ErrInvalidTokenFormat, "")
+		return errors.WithStack(fosite.ErrInvalidTokenFormat)
 	}
 
 	key := split[0]
 	signature := split[1]
 	if key == "" || signature == "" {
-		return errors.Wrap(fosite.ErrInvalidTokenFormat, "")
+		return errors.WithStack(fosite.ErrInvalidTokenFormat)
 	}
 
 	decodedSignature, err := b64.DecodeString(signature)
 	if err != nil {
-		return errors.Wrap(err, "")
+		return errors.WithStack(err)
 	}
 
 	decodedKey, err := b64.DecodeString(key)
 	if err != nil {
-		return errors.Wrap(err, "")
+		return errors.WithStack(err)
 	}
 
 	useSecret := append([]byte{}, c.GlobalSecret...)
 	mac := hmac.New(sha256.New, useSecret)
 	_, err = mac.Write(decodedKey)
 	if err != nil {
-		return errors.Wrap(err, "")
+		return errors.WithStack(err)
 	}
 
 	if !hmac.Equal(decodedSignature, mac.Sum([]byte{})) {
 		// Hash is invalid
-		return errors.Wrap(fosite.ErrTokenSignatureMismatch, "")
+		return errors.WithStack(fosite.ErrTokenSignatureMismatch)
 	}
 
 	return nil

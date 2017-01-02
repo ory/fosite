@@ -41,7 +41,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 	sess, ok := ar.GetSession().(Session)
 	if !ok {
-		return errors.Wrap(ErrInvalidSession, "")
+		return errors.WithStack(ErrInvalidSession)
 	}
 
 	client := ar.GetClient()
