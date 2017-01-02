@@ -48,7 +48,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 
 	sess, ok := ar.GetSession().(Session)
 	if !ok {
-		return errors.Wrap(ErrInvalidSession, "")
+		return errors.WithStack(ErrInvalidSession)
 	}
 
 	claims := sess.IDTokenClaims()

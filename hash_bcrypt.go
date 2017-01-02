@@ -13,14 +13,14 @@ type BCrypt struct {
 func (b *BCrypt) Hash(data []byte) ([]byte, error) {
 	s, err := bcrypt.GenerateFromPassword(data, b.WorkFactor)
 	if err != nil {
-		return nil, errors.Wrap(err, "")
+		return nil, errors.WithStack(err)
 	}
 	return s, nil
 }
 
 func (b *BCrypt) Compare(hash, data []byte) error {
 	if err := bcrypt.CompareHashAndPassword(hash, data); err != nil {
-		return errors.Wrap(err, "")
+		return errors.WithStack(err)
 	}
 	return nil
 }

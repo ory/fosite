@@ -59,7 +59,7 @@ func TestIntrospectToken(t *testing.T) {
 			description: "should fail because validation fails",
 			setup: func() {
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).AnyTimes().Return(areq, nil)
-				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errors.Wrap(fosite.ErrTokenExpired, ""))
+				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errors.WithStack(fosite.ErrTokenExpired))
 				chgen.EXPECT().RefreshTokenSignature("1234").Return("asdf")
 				store.EXPECT().GetRefreshTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
 				chgen.EXPECT().AuthorizeCodeSignature("1234").Return("asdf")

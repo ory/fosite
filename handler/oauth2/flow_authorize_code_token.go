@@ -14,7 +14,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !request.GetGrantTypes().Exact("authorization_code") {
-		return errors.Wrap(fosite.ErrUnknownRequest, "")
+		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("authorization_code") {
@@ -68,7 +68,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !requester.GetGrantTypes().Exact("authorization_code") {
-		return errors.Wrap(fosite.ErrUnknownRequest, "")
+		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	code := req.PostForm.Get("code")

@@ -83,7 +83,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	if !found {
-		return nil, errors.Wrap(ErrInvalidRequest, "")
+		return nil, errors.WithStack(ErrInvalidRequest)
 	}
 	return accessRequest, nil
 }

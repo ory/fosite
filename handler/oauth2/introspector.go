@@ -58,7 +58,7 @@ func (c *CoreValidator) introspectAccessToken(ctx context.Context, token string,
 		}
 
 		if !c.ScopeStrategy(or.GetGrantedScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, "")
+			return errors.WithStack(fosite.ErrInvalidScope)
 		}
 	}
 

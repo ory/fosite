@@ -29,11 +29,11 @@ func (j *RS256JWTStrategy) Generate(claims jwt.Claims, header Mapper) (string, s
 	var sig, sstr string
 	var err error
 	if sstr, err = token.SigningString(); err != nil {
-		return "", "", errors.Wrap(err, "")
+		return "", "", errors.WithStack(err)
 	}
 
 	if sig, err = token.Method.Sign(sstr, j.PrivateKey); err != nil {
-		return "", "", errors.Wrap(err, "")
+		return "", "", errors.WithStack(err)
 	}
 
 	return fmt.Sprintf("%s.%s", sstr, sig), sig, nil
@@ -42,7 +42,7 @@ func (j *RS256JWTStrategy) Generate(claims jwt.Claims, header Mapper) (string, s
 // Validate validates a token and returns its signature or an error if the token is not valid.
 func (j *RS256JWTStrategy) Validate(token string) (string, error) {
 	if _, err := j.Decode(token); err != nil {
-		return "", errors.Wrap(err, "")
+		return "", errors.WithStack(err)
 	}
 
 	return j.GetSignature(token)
@@ -82,7 +82,7 @@ func (j *RS256JWTStrategy) Hash(in []byte) ([]byte, error) {
 	hash := sha256.New()
 	_, err := hash.Write(in)
 	if err != nil {
-		return []byte{}, errors.Wrap(err, "")
+		return []byte{}, errors.WithStack(err)
 	}
 	return hash.Sum([]byte{}), nil
 }
