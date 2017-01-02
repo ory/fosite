@@ -97,7 +97,7 @@ func IsValidRedirectURI(redirectURI *url.URL) bool {
 }
 
 func IsRedirectURISecure(redirectURI *url.URL) bool {
-	return !(redirectURI.Scheme != "https" && !isLocalhost(redirectURI))
+	return !(redirectURI.Scheme == "http" && !isLocalhost(redirectURI))
 }
 
 func isLocalhost(redirectURI *url.URL) bool {
