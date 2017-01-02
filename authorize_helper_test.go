@@ -75,6 +75,24 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			isError: true,
 		},
 		{
+			client:  &DefaultClient{RedirectURIs: []string{"wta://auth"}},
+			url:     "wta://auth",
+			expected: "wta://auth",
+			isError: false,
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"wta:///auth"}},
+			url:     "wta:///auth",
+			expected: "wta:///auth",
+			isError: false,
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"wta://foo/auth"}},
+			url:     "wta://foo/auth",
+			expected: "wta://foo/auth",
+			isError: false,
+		},
+		{
 			client:  &DefaultClient{RedirectURIs: []string{"https://bar.com/cb"}},
 			url:     "https://foo.com/cb",
 			isError: true,
@@ -109,5 +127,21 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			assert.Equal(t, c.expected, redir.String(), "%d", k)
 		}
 		t.Logf("Passed test case %d", k)
+	}
+}
+
+func TestIsRedirectURISecure(t *testing.T) {
+	for d, c := range []struct{
+		u string
+		err bool
+	} {
+		{u: "http://google.com", err: true},
+		{u: "https://google.com", err: false},
+		{u: "http://localhost", err: false},
+		{u: "wta://auth", err: false},
+	} {
+		uu, err := url.Parse(c.u)
+		require.Nil(t, err)
+		assert.Equal(t, !c.err, IsRedirectURISecure(uu), "case %d", d)
 	}
 }
