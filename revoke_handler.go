@@ -43,9 +43,11 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 		return errors.Wrap(ErrInvalidClient, err.Error())
 	}
 
-	// Enforce client authentication
-	if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-		return errors.Wrap(ErrInvalidClient, err.Error())
+	// Enforce client authentication for confidential clients
+	if !client.IsPublic() {
+		if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
+			return errors.Wrap(ErrInvalidClient, err.Error())
+		}
 	}
 
 	token := r.PostForm.Get("token")
