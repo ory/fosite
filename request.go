@@ -52,6 +52,7 @@ func (a *Request) GetRequestedScopes() Arguments {
 }
 
 func (a *Request) SetRequestedScopes(s Arguments) {
+	a.Scopes = nil
 	for _, scope := range s {
 		a.AppendRequestedScope(scope)
 	}
