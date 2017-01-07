@@ -58,8 +58,8 @@ const (
 )
 
 type RFC6749Error struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"error"`
+	Description string `json:"error_description"`
 	Hint        string `json:"-"`
 	StatusCode  int    `json:"statusCode"`
 	Debug       string `json:"-"`
