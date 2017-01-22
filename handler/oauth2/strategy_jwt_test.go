@@ -23,7 +23,6 @@ var j = &RS256JWTStrategy{
 var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
 	return &fosite.Request{
 		Client: &fosite.DefaultClient{
-			ID:     "group0",
 			Secret: []byte("foobarfoobarfoobarfoobar"),
 		},
 		Session: &JWTSession{
@@ -51,7 +50,6 @@ var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
 var jwtExpiredCase = func(tokenType fosite.TokenType) *fosite.Request {
 	return &fosite.Request{
 		Client: &fosite.DefaultClient{
-			ID:     "group0",
 			Secret: []byte("foobarfoobarfoobarfoobar"),
 		},
 		Session: &JWTSession{
