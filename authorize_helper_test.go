@@ -75,22 +75,22 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			isError: true,
 		},
 		{
-			client:  &DefaultClient{RedirectURIs: []string{"wta://auth"}},
-			url:     "wta://auth",
+			client:   &DefaultClient{RedirectURIs: []string{"wta://auth"}},
+			url:      "wta://auth",
 			expected: "wta://auth",
-			isError: false,
+			isError:  false,
 		},
 		{
-			client:  &DefaultClient{RedirectURIs: []string{"wta:///auth"}},
-			url:     "wta:///auth",
+			client:   &DefaultClient{RedirectURIs: []string{"wta:///auth"}},
+			url:      "wta:///auth",
 			expected: "wta:///auth",
-			isError: false,
+			isError:  false,
 		},
 		{
-			client:  &DefaultClient{RedirectURIs: []string{"wta://foo/auth"}},
-			url:     "wta://foo/auth",
+			client:   &DefaultClient{RedirectURIs: []string{"wta://foo/auth"}},
+			url:      "wta://foo/auth",
 			expected: "wta://foo/auth",
-			isError: false,
+			isError:  false,
 		},
 		{
 			client:  &DefaultClient{RedirectURIs: []string{"https://bar.com/cb"}},
@@ -131,10 +131,10 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 }
 
 func TestIsRedirectURISecure(t *testing.T) {
-	for d, c := range []struct{
-		u string
+	for d, c := range []struct {
+		u   string
 		err bool
-	} {
+	}{
 		{u: "http://google.com", err: true},
 		{u: "https://google.com", err: false},
 		{u: "http://localhost", err: false},

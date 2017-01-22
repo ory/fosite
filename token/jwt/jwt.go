@@ -59,7 +59,7 @@ func (j *RS256JWTStrategy) Decode(token string) (*jwt.Token, error) {
 	})
 
 	if err != nil {
-		return nil, errors.Errorf("Couldn't parse token: %v", err)
+		return nil, errors.Wrap(err, "Couldn't parse token")
 	} else if !parsedToken.Valid {
 		return nil, errors.Errorf("Token is invalid")
 	}

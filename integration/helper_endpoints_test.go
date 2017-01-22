@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/ory-am/fosite"
+	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -113,17 +114,17 @@ func authCallbackHandler(t *testing.T) func(rw http.ResponseWriter, req *http.Re
 	}
 }
 
-func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw http.ResponseWriter, req *http.Request) {
+func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		req.ParseForm()
 		ctx := fosite.NewContext()
 
-		accessRequest, err := oauth2.NewAccessRequest(ctx, req, &fosite.DefaultSession{})
+		accessRequest, err := provider.NewAccessRequest(ctx, req, &oauth2.JWTSession{})
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)
 			t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
-			oauth2.WriteAccessError(rw, accessRequest, err)
+			provider.WriteAccessError(rw, accessRequest, err)
 			return
 		}
 
@@ -131,15 +132,15 @@ func tokenEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider) func(rw ht
 			accessRequest.GrantScope("fosite")
 		}
 
-		response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
+		response, err := provider.NewAccessResponse(ctx, req, accessRequest)
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)
 			t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
-			oauth2.WriteAccessError(rw, accessRequest, err)
+			provider.WriteAccessError(rw, accessRequest, err)
 			return
 		}
 
-		oauth2.WriteAccessResponse(rw, accessRequest, response)
+		provider.WriteAccessResponse(rw, accessRequest, response)
 	}
 }

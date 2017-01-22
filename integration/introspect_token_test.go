@@ -14,15 +14,34 @@ import (
 )
 
 func TestIntrospectToken(t *testing.T) {
-	for _, strategy := range []oauth2.AccessTokenStrategy{
-		hmacStrategy,
+	for _, c := range []struct {
+		description string
+		strategy    oauth2.AccessTokenStrategy
+		factory     compose.Factory
+	}{
+		{
+			description: "HMAC strategy with OAuth2TokenIntrospectionFactory",
+			strategy:    hmacStrategy,
+			factory:     compose.OAuth2TokenIntrospectionFactory,
+		},
+		{
+			description: "JWT strategy with OAuth2TokenIntrospectionFactory",
+			strategy:    jwtStrategy,
+			factory:     compose.OAuth2TokenIntrospectionFactory,
+		},
+		{
+			description: "JWT strategy with OAuth2StatelessJWTIntrospectionFactory",
+			strategy:    jwtStrategy,
+			factory:     compose.OAuth2StatelessJWTIntrospectionFactory,
+		},
 	} {
-		runIntrospectTokenTest(t, strategy)
+		t.Logf("testing %v", c.description)
+		runIntrospectTokenTest(t, c.strategy, c.factory)
 	}
 }
 
-func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
-	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2ClientCredentialsGrantFactory, compose.OAuth2TokenIntrospectionFactory)
+func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy, introspectionFactory compose.Factory) {
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, compose.OAuth2ClientCredentialsGrantFactory, introspectionFactory)
 	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 
@@ -74,7 +93,11 @@ func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
 		},
 	} {
 		res := struct {
-			Active bool `json:"active"`
+			Active    bool    `json:"active"`
+			ClientId  string  `json:"client_id"`
+			Scope     string  `json:"scope"`
+			ExpiresAt float64 `json:"exp"`
+			IssuedAt  float64 `json:"iat"`
 		}{}
 		s := gorequest.New()
 		s = s.Post(ts.URL + "/introspect").
@@ -86,5 +109,12 @@ func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
 		t.Logf("Got answer: %s", bytes)
 		assert.Len(t, errs, 0)
 		assert.Equal(t, c.isActive, res.Active)
+		if c.isActive {
+			assert.Equal(t, "my-client", res.ClientId)
+			assert.Equal(t, "fosite", res.Scope)
+			assert.True(t, res.ExpiresAt > 0)
+			assert.True(t, res.IssuedAt > 0)
+			assert.True(t, res.IssuedAt < res.ExpiresAt)
+		}
 	}
 }
