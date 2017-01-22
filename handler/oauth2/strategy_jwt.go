@@ -48,9 +48,7 @@ func (h *RS256JWTStrategy) ValidateJWT(tokenType fosite.TokenType, token string)
 	claims.FromMapClaims(t.Claims.(jwtx.MapClaims))
 
 	requester = &fosite.Request{
-		Client: &fosite.DefaultClient{
-			ID: claims.Audience,
-		},
+		Client:      &fosite.DefaultClient{},
 		RequestedAt: claims.IssuedAt,
 		Session: &JWTSession{
 			JWTClaims: &claims,
@@ -153,10 +151,6 @@ func (h *RS256JWTStrategy) generate(tokenType fosite.TokenType, requester fosite
 
 		if claims.Issuer == "" {
 			claims.Issuer = h.Issuer
-		}
-
-		if claims.Audience == "" {
-			claims.Audience = requester.GetClient().GetID()
 		}
 
 		claims.Scope = requester.GetGrantedScopes()

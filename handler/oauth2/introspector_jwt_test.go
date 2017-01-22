@@ -96,7 +96,6 @@ func TestIntrospectJWT(t *testing.T) {
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 
 		if err == nil {
-			assert.Equal(t, "group0", areq.GetClient().GetID())
 			assert.Equal(t, "peter", areq.Session.GetSubject())
 		}
 

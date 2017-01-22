@@ -110,7 +110,6 @@ func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy, i
 		assert.Len(t, errs, 0)
 		assert.Equal(t, c.isActive, res.Active)
 		if c.isActive {
-			assert.Equal(t, "my-client", res.ClientId)
 			assert.Equal(t, "fosite", res.Scope)
 			assert.True(t, res.ExpiresAt > 0)
 			assert.True(t, res.IssuedAt > 0)
