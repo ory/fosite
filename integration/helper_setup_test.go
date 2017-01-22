@@ -9,8 +9,10 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/ory-am/fosite/handler/openid"
+	"github.com/ory-am/fosite/internal"
 	"github.com/ory-am/fosite/storage"
 	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory-am/fosite/token/jwt"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )
@@ -77,6 +79,12 @@ var hmacStrategy = &oauth2.HMACSHAStrategy{
 	},
 	AccessTokenLifespan:   accessTokenLifespan,
 	AuthorizeCodeLifespan: authCodeLifespan,
+}
+
+var jwtStrategy = &oauth2.RS256JWTStrategy{
+	RS256JWTStrategy: &jwt.RS256JWTStrategy{
+		PrivateKey: internal.MustRSAKey(),
+	},
 }
 
 func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {

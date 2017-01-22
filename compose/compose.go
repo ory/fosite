@@ -6,7 +6,7 @@ import (
 	"github.com/ory-am/fosite"
 )
 
-type handler func(config *Config, storage interface{}, strategy interface{}) interface{}
+type Factory func(config *Config, storage interface{}, strategy interface{}) interface{}
 
 // Compose takes a config, a storage, a strategy and handlers to instantiate an OAuth2Provider:
 //
@@ -30,7 +30,7 @@ type handler func(config *Config, storage interface{}, strategy interface{}) int
 //  )
 //
 // Compose makes use of interface{} types in order to be able to handle a all types of stores, strategies and handlers.
-func Compose(config *Config, storage interface{}, strategy interface{}, handlers ...handler) fosite.OAuth2Provider {
+func Compose(config *Config, storage interface{}, strategy interface{}, factories ...Factory) fosite.OAuth2Provider {
 	f := &fosite.Fosite{
 		Store: storage.(fosite.Storage),
 		AuthorizeEndpointHandlers:  fosite.AuthorizeEndpointHandlers{},
@@ -41,8 +41,8 @@ func Compose(config *Config, storage interface{}, strategy interface{}, handlers
 		ScopeStrategy:              fosite.HierarchicScopeStrategy,
 	}
 
-	for _, h := range handlers {
-		res := h(config, storage, strategy)
+	for _, factory := range factories {
+		res := factory(config, storage, strategy)
 		if ah, ok := res.(fosite.AuthorizeEndpointHandler); ok {
 			f.AuthorizeEndpointHandlers.Append(ah)
 		}

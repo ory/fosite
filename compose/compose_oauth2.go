@@ -87,3 +87,17 @@ func OAuth2TokenIntrospectionFactory(config *Config, storage interface{}, strate
 		ScopeStrategy: fosite.HierarchicScopeStrategy,
 	}
 }
+
+// OAuth2StatelessJWTIntrospectionFactory creates an OAuth2 token introspection handler and
+// registers an access token validator. This can only be used to validate JWTs and does so
+// statelessly, meaning it uses only the data available in the JWT itself, and does not access the
+// storage implementation at all.
+//
+// Due to the stateless nature of this factory, THE BUILT-IN REVOCATION MECHANISMS WILL NOT WORK.
+// If you need revocation, you can validate JWTs statefully, using the other factories.
+func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.StatelessJWTValidator{
+		JWTAccessTokenStrategy: strategy.(oauth2.JWTAccessTokenStrategy),
+		ScopeStrategy:          fosite.HierarchicScopeStrategy,
+	}
+}

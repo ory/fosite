@@ -16,10 +16,24 @@ var jwtClaims = &JWTClaims{
 	Audience:  "tests",
 	ExpiresAt: time.Now().Add(time.Hour).Round(time.Second),
 	JTI:       "abcdef",
+	Scope:     []string{"email", "offline"},
 	Extra: map[string]interface{}{
 		"foo": "bar",
 		"baz": "bar",
 	},
+}
+
+var jwtClaimsMap = map[string]interface{}{
+	"sub": jwtClaims.Subject,
+	"iat": float64(jwtClaims.IssuedAt.Unix()),
+	"iss": jwtClaims.Issuer,
+	"nbf": float64(jwtClaims.NotBefore.Unix()),
+	"aud": jwtClaims.Audience,
+	"exp": float64(jwtClaims.ExpiresAt.Unix()),
+	"jti": jwtClaims.JTI,
+	"scp": []string{"email", "offline"},
+	"foo": jwtClaims.Extra["foo"],
+	"baz": jwtClaims.Extra["baz"],
 }
 
 func TestClaimAddGetString(t *testing.T) {
@@ -45,15 +59,11 @@ func TestAssert(t *testing.T) {
 }
 
 func TestClaimsToMap(t *testing.T) {
-	assert.Equal(t, map[string]interface{}{
-		"sub": jwtClaims.Subject,
-		"iat": float64(jwtClaims.IssuedAt.Unix()),
-		"iss": jwtClaims.Issuer,
-		"nbf": float64(jwtClaims.NotBefore.Unix()),
-		"aud": jwtClaims.Audience,
-		"exp": float64(jwtClaims.ExpiresAt.Unix()),
-		"jti": jwtClaims.JTI,
-		"foo": jwtClaims.Extra["foo"],
-		"baz": jwtClaims.Extra["baz"],
-	}, jwtClaims.ToMap())
+	assert.Equal(t, jwtClaimsMap, jwtClaims.ToMap())
+}
+
+func TestClaimsFromMap(t *testing.T) {
+	var claims JWTClaims
+	claims.FromMap(jwtClaimsMap)
+	assert.Equal(t, jwtClaims, &claims)
 }
