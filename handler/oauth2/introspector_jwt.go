@@ -35,3 +35,9 @@ func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token strin
 	accessRequest.Merge(or)
 	return nil
 }
+
+// Revocation is not supported with the stateless validator. If you need revocation, use the
+// CoreValidator struct instead.
+func (v *StatelessJWTValidator) RevokeToken(ctx context.Context, token string, tokenType fosite.TokenType) error {
+	return errors.Wrap(fosite.ErrMisconfiguration, "Token revocation is not supported")
+}
