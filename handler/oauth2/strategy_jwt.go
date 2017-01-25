@@ -140,10 +140,7 @@ func (h *RS256JWTStrategy) generate(tokenType fosite.TokenType, requester fosite
 		return "", "", errors.New("GetTokenClaims() must not be nil")
 	} else {
 		claims := jwtSession.GetJWTClaims()
-
-		if claims.ExpiresAt.IsZero() {
-			claims.ExpiresAt = jwtSession.GetExpiresAt(tokenType)
-		}
+		claims.ExpiresAt = jwtSession.GetExpiresAt(tokenType)
 
 		if claims.IssuedAt.IsZero() {
 			claims.IssuedAt = time.Now()
