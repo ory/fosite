@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/token/hmac"
 	"github.com/stretchr/testify/assert"
 )
 

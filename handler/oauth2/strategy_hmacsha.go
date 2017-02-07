@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"fmt"
-	"github.com/ory-am/fosite"
-	enigma "github.com/ory-am/fosite/token/hmac"
+	"github.com/ory/fosite"
+	enigma "github.com/ory/fosite/token/hmac"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )

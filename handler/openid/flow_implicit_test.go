@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/handler/oauth2"
-	"github.com/ory-am/fosite/storage"
-	"github.com/ory-am/fosite/token/jwt"
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/storage"
+	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
