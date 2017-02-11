@@ -25,8 +25,8 @@ to your composer if you need token introspection.
 
 Breaking changes:
 
-* `./fosite-example` is now a separate repository: https://github.com/ory-am/fosite-example
-* `github.com/ory-am/fosite/fosite-example/pkg.Store` is now `github.com/ory-am/fosite/storage.MemoryStore`
+* `./fosite-example` is now a separate repository: https://github.com/ory/fosite-example
+* `github.com/ory/fosite/fosite-example/pkg.Store` is now `github.com/ory/fosite/storage.MemoryStore`
 * `fosite.Client` has now a new method called `IsPublic()` which can be used to identify public clients who do not own a client secret
 * All grant types except the client_credentials grant now allow public clients. public clients are usually mobile apps and single page apps.
 * `TokenValidator` is now `TokenIntrospector`, `TokenValidationHandlers` is now `TokenIntrospectionHandlers`.

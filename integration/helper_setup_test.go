@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/handler/oauth2"
-	"github.com/ory-am/fosite/handler/openid"
-	"github.com/ory-am/fosite/storage"
-	"github.com/ory-am/fosite/token/hmac"
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/storage"
+	"github.com/ory/fosite/token/hmac"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 )

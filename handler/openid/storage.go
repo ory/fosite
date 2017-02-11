@@ -1,7 +1,7 @@
 package openid
 
 import (
-	"github.com/ory-am/fosite"
+	"github.com/ory/fosite"
 	"golang.org/x/net/context"
 )
 

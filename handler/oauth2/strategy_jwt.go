@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	jwtx "github.com/dgrijalva/jwt-go"
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/token/jwt"
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )

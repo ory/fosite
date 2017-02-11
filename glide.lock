@@ -46,7 +46,7 @@ testImports:
   version: b1479103caacaa39319f75e7f57fc545287fca0d
 - name: github.com/oleiade/reflections
   version: ec27669d960a245738b87ffa688dac28fa288c33
-- name: github.com/ory-am/common
+- name: github.com/ory/common
   version: d93c852f2d09c219fd058756caf67bbdf8cf4be4
   subpackages:
   - pkg
