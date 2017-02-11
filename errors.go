@@ -36,7 +36,7 @@ const (
 	errRequestForbidden            = "request_forbidden"
 	errInvalidRequestName          = "invalid_request"
 	errUnauthorizedClientName      = "unauthorized_client"
-	errAccessDeniedName            = "acccess_denied"
+	errAccessDeniedName            = "access_denied"
 	errUnsupportedResponseTypeName = "unsupported_response_type"
 	errInvalidScopeName            = "invalid_scope"
 	errServerErrorName             = "server_error"
