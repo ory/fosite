@@ -7,7 +7,7 @@ import (
 // StringInSlice returns true if needle exists in haystack
 func StringInSlice(needle string, haystack []string) bool {
 	for _, b := range haystack {
-		if b == needle {
+		if strings.ToLower(b) == strings.ToLower(needle) {
 			return true
 		}
 	}
