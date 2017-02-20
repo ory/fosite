@@ -115,6 +115,18 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			expected: "https://bar.com/cb",
 		},
 		{
+			client:   &DefaultClient{RedirectURIs: []string{"https://bar.Com/cb"}},
+			url:      "https://bar.com/cb",
+			isError:  false,
+			expected: "https://bar.com/cb",
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"https://bar.com/cb"}},
+			url:      "https://bar.Com/cb",
+			isError:  false,
+			expected: "https://bar.Com/cb",
+		},
+		{
 			client:  &DefaultClient{RedirectURIs: []string{"https://bar.com/cb"}},
 			url:     "https://bar.com/cb123",
 			isError: true,
