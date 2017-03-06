@@ -18,6 +18,8 @@ func TestIsLocalhost(t *testing.T) {
 		{expect: true, rawurl: "https://localhost:1234"},
 		{expect: true, rawurl: "https://127.0.0.1:1234"},
 		{expect: true, rawurl: "https://127.0.0.1"},
+		{expect: true, rawurl: "https://test.localhost:1234"},
+		{expect: true, rawurl: "https://test.localhost"},
 	} {
 		u, _ := url.Parse(c.rawurl)
 		assert.Equal(t, c.expect, isLocalhost(u), "case %d", k)
@@ -150,6 +152,7 @@ func TestIsRedirectURISecure(t *testing.T) {
 		{u: "http://google.com", err: true},
 		{u: "https://google.com", err: false},
 		{u: "http://localhost", err: false},
+		{u: "http://test.localhost", err: false},
 		{u: "wta://auth", err: false},
 	} {
 		uu, err := url.Parse(c.u)
