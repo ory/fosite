@@ -6,6 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"net/url"
 )
 
 // Implements
@@ -34,6 +35,7 @@ import (
 //   client MUST authenticate with the authorization server as described
 //   in Section 3.2.1.
 func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session Session) (AccessRequester, error) {
+	var err error
 	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
@@ -53,9 +55,14 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return accessRequest, errors.Wrap(ErrInvalidRequest, "No grant type given")
 	}
 
-	clientID, clientSecret, ok := r.BasicAuth()
-	if !ok {
-		return accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP Authorization header missing or invalid")
+	// Decode client_id and client_secret which should be in "application/x-www-form-urlencoded" format.
+	var clientID, clientSecret string
+	if id, secret, ok := r.BasicAuth(); !ok {
+		return accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP authorization header missing or invalid")
+	} else if clientID, err = url.QueryUnescape(id); err != nil {
+		return accessRequest, errors.Wrap(ErrInvalidRequest, `The client id in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`)
+	} else if clientSecret, err = url.QueryUnescape(secret); err != nil {
+		return accessRequest, errors.Wrap(ErrInvalidRequest, `The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`)
 	}
 
 	client, err := f.Store.GetClient(clientID)
