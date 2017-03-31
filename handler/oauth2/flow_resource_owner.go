@@ -8,6 +8,7 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"time"
 )
 
 type ResourceOwnerPasswordCredentialsGrantHandler struct {
@@ -48,6 +49,8 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
 		}
 	}
+
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
 
 	// Credentials must not be passed around, potentially leaking to the database!
 	delete(request.GetRequestForm(), "password")
