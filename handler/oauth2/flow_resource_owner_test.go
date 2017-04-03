@@ -38,7 +38,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because not responsible",
 			expectErr:   fosite.ErrUnknownRequest,
 			setup: func() {
-				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{""})
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"123"})
 			},
 		},
 		{
