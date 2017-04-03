@@ -61,6 +61,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// in Section 3.2.1.
 	request.SetSession(authorizeRequest.GetSession())
 	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().Add(c.RefreshTokenLifespan))
 	return nil
 }
 

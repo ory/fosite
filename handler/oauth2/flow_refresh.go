@@ -19,6 +19,9 @@ type RefreshTokenGrantHandler struct {
 
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration
+
+	// RefreshTokenLifespan defines the lifetime of a refresh token.
+	RefreshTokenLifespan time.Duration
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
@@ -64,6 +67,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().Add(c.RefreshTokenLifespan))
 	return nil
 }
 

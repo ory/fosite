@@ -15,6 +15,7 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 		AuthorizeCodeGrantStorage: storage.(oauth2.AuthorizeCodeGrantStorage),
 		AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
 		AccessTokenLifespan:       config.GetAccessTokenLifespan(),
+		RefreshTokenLifespan:      config.GetRefreshTokenLifespan(),
 		ScopeStrategy:             fosite.HierarchicScopeStrategy,
 	}
 }
@@ -40,6 +41,7 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
 		RefreshTokenGrantStorage: storage.(oauth2.RefreshTokenGrantStorage),
 		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		RefreshTokenLifespan:     config.GetRefreshTokenLifespan(),
 	}
 }
 
@@ -64,6 +66,7 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 			AccessTokenLifespan: config.GetAccessTokenLifespan(),
 		},
+		RefreshTokenLifespan: config.GetRefreshTokenLifespan(),
 		RefreshTokenStrategy: strategy.(oauth2.RefreshTokenStrategy),
 		ScopeStrategy:        fosite.HierarchicScopeStrategy,
 	}

@@ -16,6 +16,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 	ResourceOwnerPasswordCredentialsGrantStorage ResourceOwnerPasswordCredentialsGrantStorage
 
 	RefreshTokenStrategy RefreshTokenStrategy
+	RefreshTokenLifespan time.Duration
 	ScopeStrategy        fosite.ScopeStrategy
 
 	*HandleHelper
@@ -51,6 +52,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	}
 
 	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().Add(c.RefreshTokenLifespan))
 
 	// Credentials must not be passed around, potentially leaking to the database!
 	delete(request.GetRequestForm(), "password")

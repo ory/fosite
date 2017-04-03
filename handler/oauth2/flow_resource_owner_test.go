@@ -84,7 +84,9 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 					Scopes: []string{"foo", "bar", "baz"},
 				})
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar"})
-				areq.EXPECT().GetSession().Return(new(fosite.DefaultSession))
+				session := new(fosite.DefaultSession)
+				areq.EXPECT().GetSession().Return(session)
+				areq.EXPECT().GetSession().Return(session)
 				areq.EXPECT().GetRequestForm().Return(url.Values{})
 			},
 		},
