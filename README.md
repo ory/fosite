@@ -40,6 +40,7 @@ imaginable and is built on top of Fosite.
     - [Code Examples](#code-examples)
     - [Exemplary Storage Implementation](#exemplary-storage-implementation)
     - [Extensible handlers](#extensible-handlers)
+    - [JWT Introspection](#jwt-introspection)
   - [Contribute](#contribute)
     - [Refresh mock objects](#refresh-mock-objects)
   - [Hall of Fame](#hall-of-fame)
@@ -335,6 +336,9 @@ Of course, fosite ships handlers for all OAuth2 and OpenID Connect flows.
  [Authentication using the Implicit Flow](http://openid.net/specs/openid-connect-core-1_0.html#ImplicitFlowAuth),
  [Authentication using the Hybrid Flow](http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth)
  
+### JWT Introspection
+
+Please note that when using the OAuth2StatelessJWTIntrospectionFactory access token revocation is not possible.
 
 This section is missing documentation and we welcome any contributions in that direction.
 
