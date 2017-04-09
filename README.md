@@ -335,12 +335,12 @@ Of course, fosite ships handlers for all OAuth2 and OpenID Connect flows.
  [Authentication using the Authorization Code Flow](http://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth),
  [Authentication using the Implicit Flow](http://openid.net/specs/openid-connect-core-1_0.html#ImplicitFlowAuth),
  [Authentication using the Hybrid Flow](http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth)
+
+This section is missing documentation and we welcome any contributions in that direction.
  
 ### JWT Introspection
 
 Please note that when using the OAuth2StatelessJWTIntrospectionFactory access token revocation is not possible.
-
-This section is missing documentation and we welcome any contributions in that direction.
 
 ## Contribute
 
