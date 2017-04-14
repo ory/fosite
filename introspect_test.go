@@ -2,7 +2,6 @@ package fosite_test
 
 import (
 	"net/http"
-	"net/url"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -15,18 +14,38 @@ import (
 	"golang.org/x/net/context"
 )
 
+func TestAccessTokenFromRequestNoToken(t *testing.T) {
+	req, _ := http.NewRequest("GET", "http://example.com/test", nil)
+
+	assert.Equal(t, AccessTokenFromRequest(req), "", "No token should produce an empty string")
+}
+
+func TestAccessTokenFromRequestHeader(t *testing.T) {
+	token := "TokenFromHeader"
+
+	req, _ := http.NewRequest("GET", "http://example.com/test", nil)
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	assert.Equal(t, AccessTokenFromRequest(req), token, "Token should be obtainable from header")
+}
+
+func TestAccessTokenFromRequestQuery(t *testing.T) {
+	token := "TokenFromQueryParam"
+
+	req, _ := http.NewRequest("GET", "http://example.com/test?access_token="+token, nil)
+
+	assert.Equal(t, AccessTokenFromRequest(req), token, "Token should be obtainable from access_token query parameter")
+}
+
 func TestIntrospect(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	validator := internal.NewMockTokenIntrospector(ctrl)
 	defer ctrl.Finish()
 
 	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewMemoryStore(), []byte{}, nil).(*Fosite)
-	httpreq := &http.Request{
-		Header: http.Header{
-			"Authorization": []string{"bearer some-token"},
-		},
-		Form: url.Values{},
-	}
+
+	req, _ := http.NewRequest("GET", "http://example.com/test", nil)
+	req.Header.Add("Authorization", "bearer some-token")
 
 	for k, c := range []struct {
 		description string
@@ -77,7 +96,7 @@ func TestIntrospect(t *testing.T) {
 		},
 	} {
 		c.setup()
-		_, err := f.IntrospectToken(nil, AccessTokenFromRequest(httpreq), AccessToken, nil, c.scopes...)
+		_, err := f.IntrospectToken(nil, AccessTokenFromRequest(req), AccessToken, nil, c.scopes...)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
