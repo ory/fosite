@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
+	"context"
 )
 
 var ErrUnknownRequest = errors.New("The handler is not responsible for this request.")

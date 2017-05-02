@@ -2,7 +2,7 @@ package openid
 
 import (
 	"github.com/ory-am/fosite"
-	"golang.org/x/net/context"
+	"context"
 )
 
 var ErrNoSessionFound = fosite.ErrNotFound

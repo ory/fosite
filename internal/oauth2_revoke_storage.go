@@ -6,7 +6,7 @@ package internal
 import (
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory-am/fosite"
-	context "golang.org/x/net/context"
+	context "context"
 )
 
 // Mock of TokenRevocationStorage interface

@@ -1,7 +1,7 @@
 package oauth2
 
 import (
-	"golang.org/x/net/context"
+	"context"
 )
 
 // TokenRevocationStorage provides the storage implementation

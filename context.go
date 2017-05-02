@@ -1,6 +1,6 @@
 package fosite
 
-import "golang.org/x/net/context"
+import "context"
 
 func NewContext() context.Context {
 	return context.Background()

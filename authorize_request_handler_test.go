@@ -11,7 +11,7 @@ import (
 	. "github.com/ory-am/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
+	"context"
 )
 
 // Should pass

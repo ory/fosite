@@ -10,7 +10,7 @@ import (
 	"github.com/ory-am/fosite/handler/oauth2"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
+	"context"
 )
 
 type OpenIDConnectHybridHandler struct {

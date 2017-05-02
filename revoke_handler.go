@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
+	"context"
 )
 
 // NewRevocationRequest handles incoming token revocation requests and
@@ -96,7 +96,7 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 			return
 		}
 
-		rw.WriteHeader(rfcerr.StatusCode)
+		rw.WriteHeader(rfcerr.Code)
 		rw.Write(js)
 	default:
 		// 200 OK

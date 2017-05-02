@@ -17,7 +17,7 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 		}
 
 		rw.Header().Set("Content-Type", "application/json")
-		rw.WriteHeader(rfcerr.StatusCode)
+		rw.WriteHeader(rfcerr.Code)
 		rw.Write(js)
 		return
 	}
