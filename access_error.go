@@ -20,6 +20,6 @@ func writeJsonError(rw http.ResponseWriter, err error) {
 		return
 	}
 
-	rw.WriteHeader(rfcerr.StatusCode)
+	rw.WriteHeader(rfcerr.Code)
 	rw.Write(js)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/ory-am/fosite/storage"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/net/context"
+	"context"
 )
 
 func TestAccessTokenFromRequestNoToken(t *testing.T) {

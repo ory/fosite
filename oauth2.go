@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 )
 
 const MinParameterEntropy = 8

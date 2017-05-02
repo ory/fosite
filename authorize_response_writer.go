@@ -5,7 +5,7 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
+	"context"
 )
 
 func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar AuthorizeRequester, session Session) (AuthorizeResponder, error) {

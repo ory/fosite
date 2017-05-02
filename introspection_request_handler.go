@@ -2,7 +2,7 @@ package fosite
 
 import (
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
+	"context"
 	"net/http"
 	"strings"
 )

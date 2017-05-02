@@ -8,7 +8,7 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/ory-am/fosite/token/jwt"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
+	"context"
 )
 
 // RS256JWTStrategy is a JWT RS256 strategy.

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/ory-am/fosite"
-	"golang.org/x/net/context"
+	"context"
 )
 
 type HandleHelper struct {

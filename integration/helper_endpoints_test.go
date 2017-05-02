@@ -48,7 +48,7 @@ func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite
 			rfcerr := fosite.ErrorToRFC6749Error(err)
 			t.Logf("Info request failed because `%s`.", err.Error())
 			t.Logf("Stack: %s", err.(stackTracer).StackTrace())
-			http.Error(rw, rfcerr.Description, rfcerr.StatusCode)
+			http.Error(rw, rfcerr.Description, rfcerr.Code)
 			return
 		}
 

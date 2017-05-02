@@ -9,7 +9,7 @@ import (
 
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
-	"golang.org/x/net/context"
+	"context"
 )
 
 // AuthorizeExplicitGrantTypeHandler is a response handler for the Authorize Code grant using the explicit grant type
