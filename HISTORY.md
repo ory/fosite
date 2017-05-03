@@ -1,6 +1,12 @@
 This is a list of breaking changes. As long as `1.0.0` is not released, breaking changes will be addressed as minor version
 bumps (`0.1.0` -> `0.2.0`).
 
+## 0.7.0
+
+Breaking changes
+
+* Replaced `"golang.org/x/net/context"` with `"context"`.
+
 ## 0.6.0
 
 A bug related to refresh tokens was found. To mitigate it, a `Clone()` method has been introduced to the `fosite.Session` interface.
