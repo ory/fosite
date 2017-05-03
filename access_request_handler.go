@@ -6,7 +6,6 @@ import (
 
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"net/url"
 )
 
 // Implements
