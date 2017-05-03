@@ -1,4 +1,4 @@
-package: github.com/ory-am/fosite
+package: github.com/ory/fosite
 import:
 - package: github.com/asaskevich/govalidator
   version: ~5.0.0

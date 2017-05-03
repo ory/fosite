@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory-am/fosite"
+	"github.com/ory/fosite"
 	"context"
 )
 

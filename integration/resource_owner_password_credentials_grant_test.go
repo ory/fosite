@@ -3,9 +3,9 @@ package integration_test
 import (
 	"testing"
 
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/compose"
-	hst "github.com/ory-am/fosite/handler/oauth2"
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/compose"
+	hst "github.com/ory/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"

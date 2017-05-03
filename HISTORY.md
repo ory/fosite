@@ -6,6 +6,7 @@ bumps (`0.1.0` -> `0.2.0`).
 Breaking changes
 
 * Replaced `"golang.org/x/net/context"` with `"context"`.
+* Move the repo from `github.com/ory-am/fosite` to `github.com/ory/fosite`
 
 ## 0.6.0
 

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ory-am/fosite"
+	"github.com/ory/fosite"
 	"github.com/pkg/errors"
 )
 

@@ -3,7 +3,7 @@ package openid
 import (
 	"net/http"
 
-	"github.com/ory-am/fosite"
+	"github.com/ory/fosite"
 	"context"
 )
 

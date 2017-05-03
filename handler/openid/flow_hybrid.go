@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"encoding/base64"
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/handler/oauth2"
-	"github.com/ory-am/fosite/token/jwt"
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"context"
 )

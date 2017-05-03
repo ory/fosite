@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	. "github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/internal"
+	. "github.com/ory/fosite"
+	"github.com/ory/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )

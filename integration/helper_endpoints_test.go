@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/handler/oauth2"
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
