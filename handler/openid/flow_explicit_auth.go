@@ -3,9 +3,10 @@ package openid
 import (
 	"net/http"
 
+	"context"
+
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
-	"context"
 )
 
 type OpenIDConnectExplicitHandler struct {

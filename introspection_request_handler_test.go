@@ -1,6 +1,10 @@
 package fosite_test
 
 import (
+	"net/http"
+	"net/url"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite"
 	. "github.com/ory/fosite"
@@ -9,9 +13,6 @@ import (
 	"github.com/ory/fosite/storage"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/url"
-	"testing"
 )
 
 func TestIntrospectionResponse(t *testing.T) {

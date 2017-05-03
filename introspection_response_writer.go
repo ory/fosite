@@ -1,10 +1,11 @@
 package fosite
 
 import (
-	"github.com/pkg/errors"
-	"github.com/square/go-jose/json"
 	"net/http"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/square/go-jose/json"
 )
 
 // WriteIntrospectionError responds with token metadata discovered by token introspection as defined in

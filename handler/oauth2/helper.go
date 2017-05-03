@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ory/fosite"
 	"context"
+
+	"github.com/ory/fosite"
 )
 
 type HandleHelper struct {

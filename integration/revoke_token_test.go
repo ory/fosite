@@ -3,6 +3,8 @@ package integration_test
 import (
 	"testing"
 
+	"net/http"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/oauth2"
@@ -10,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
-	"net/http"
 )
 
 func TestRevokeToken(t *testing.T) {

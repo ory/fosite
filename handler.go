@@ -3,8 +3,9 @@ package fosite
 import (
 	"net/http"
 
-	"github.com/pkg/errors"
 	"context"
+
+	"github.com/pkg/errors"
 )
 
 var ErrUnknownRequest = errors.New("The handler is not responsible for this request.")

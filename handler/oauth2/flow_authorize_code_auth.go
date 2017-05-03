@@ -7,9 +7,10 @@ import (
 
 	"fmt"
 
+	"context"
+
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
-	"context"
 )
 
 // AuthorizeExplicitGrantTypeHandler is a response handler for the Authorize Code grant using the explicit grant type

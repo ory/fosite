@@ -5,10 +5,11 @@ import (
 
 	"fmt"
 
-	"github.com/ory/fosite"
-	"github.com/pkg/errors"
 	"context"
 	"time"
+
+	"github.com/ory/fosite"
+	"github.com/pkg/errors"
 )
 
 type ClientCredentialsGrantHandler struct {

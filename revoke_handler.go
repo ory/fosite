@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pkg/errors"
 	"context"
+
+	"github.com/pkg/errors"
 )
 
 // NewRevocationRequest handles incoming token revocation requests and

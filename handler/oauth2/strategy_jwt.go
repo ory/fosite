@@ -4,11 +4,12 @@ import (
 	"strings"
 	"time"
 
+	"context"
+
 	jwtx "github.com/dgrijalva/jwt-go"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
-	"context"
 )
 
 // RS256JWTStrategy is a JWT RS256 strategy.

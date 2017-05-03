@@ -1,10 +1,11 @@
 package fosite
 
 import (
-	"github.com/pkg/errors"
 	"context"
 	"net/http"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // NewIntrospectionRequest initiates token introspection as defined in

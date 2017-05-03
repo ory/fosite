@@ -3,9 +3,10 @@ package oauth2
 import (
 	"bytes"
 	"encoding/gob"
+	"time"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
-	"time"
 )
 
 type JWTSessionContainer interface {

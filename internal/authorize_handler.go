@@ -4,10 +4,11 @@
 package internal
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	fosite "github.com/ory/fosite"
 	context "context"
 	http "net/http"
+
+	gomock "github.com/golang/mock/gomock"
+	fosite "github.com/ory/fosite"
 )
 
 // Mock of AuthorizeEndpointHandler interface
