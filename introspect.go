@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pkg/errors"
 	"context"
+
+	"github.com/pkg/errors"
 )
 
 type TokenIntrospector interface {

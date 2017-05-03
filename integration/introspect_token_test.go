@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"encoding/json"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/oauth2"

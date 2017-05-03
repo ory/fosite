@@ -75,7 +75,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 					Description: ErrInactiveToken.Error(),
 					Debug:       err.Error(),
 					Hint:        "Token validation failed.",
-					Code:  http.StatusUnauthorized,
+					Code:        http.StatusUnauthorized,
 				}
 			}
 		}
@@ -86,7 +86,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 				Description: ErrTokenClaim.Error(),
 				Debug:       err.Error(),
 				Hint:        "One or more token claims failed validation.",
-				Code:  http.StatusUnauthorized,
+				Code:        http.StatusUnauthorized,
 			}
 		}
 	case ErrScopeNotGranted:
@@ -96,7 +96,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 				Description: ErrScopeNotGranted.Error(),
 				Debug:       err.Error(),
 				Hint:        "The resource owner did not grant the requested scope.",
-				Code:  http.StatusForbidden,
+				Code:        http.StatusForbidden,
 			}
 		}
 	case ErrTokenExpired:
@@ -106,7 +106,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 				Description: ErrTokenExpired.Error(),
 				Debug:       err.Error(),
 				Hint:        "The token expired.",
-				Code:  http.StatusUnauthorized,
+				Code:        http.StatusUnauthorized,
 			}
 		}
 	case ErrInvalidTokenFormat:
@@ -116,7 +116,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 				Description: ErrInvalidTokenFormat.Error(),
 				Debug:       err.Error(),
 				Hint:        "Check that you provided a valid token in the right format.",
-				Code:  http.StatusBadRequest,
+				Code:        http.StatusBadRequest,
 			}
 		}
 	case ErrTokenSignatureMismatch:
@@ -126,7 +126,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 				Description: ErrTokenSignatureMismatch.Error(),
 				Debug:       err.Error(),
 				Hint:        "Check that you provided  a valid token in the right format.",
-				Code:  http.StatusBadRequest,
+				Code:        http.StatusBadRequest,
 			}
 		}
 	case ErrRequestUnauthorized:
@@ -136,7 +136,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 				Description: ErrRequestUnauthorized.Error(),
 				Debug:       err.Error(),
 				Hint:        "Check that you provided valid credentials in the right format.",
-				Code:  http.StatusUnauthorized,
+				Code:        http.StatusUnauthorized,
 			}
 		}
 	case ErrRequestForbidden:
@@ -146,7 +146,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 				Description: ErrRequestForbidden.Error(),
 				Debug:       err.Error(),
 				Hint:        "You are not allowed to perform this action.",
-				Code:  http.StatusForbidden,
+				Code:        http.StatusForbidden,
 			}
 		}
 	case ErrInvalidRequest:
@@ -155,7 +155,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 			Description: ErrInvalidRequest.Error(),
 			Debug:       err.Error(),
 			Hint:        "Make sure that the various parameters are correct, be aware of case sensitivity and trim your parameters. Make sure that the client you are using has exactly whitelisted the redirect_uri you specified.",
-			Code:  http.StatusBadRequest,
+			Code:        http.StatusBadRequest,
 		}
 	case ErrUnauthorizedClient:
 		return &RFC6749Error{
@@ -163,7 +163,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 			Description: ErrUnauthorizedClient.Error(),
 			Debug:       err.Error(),
 			Hint:        "Make sure that client id and secret are correctly specified and that the client exists.",
-			Code:  http.StatusUnauthorized,
+			Code:        http.StatusUnauthorized,
 		}
 	case ErrAccessDenied:
 		return &RFC6749Error{
@@ -171,91 +171,91 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 			Description: ErrAccessDenied.Error(),
 			Debug:       err.Error(),
 			Hint:        "Make sure that the request you are making is valid. Maybe the credential or request parameters you are using are limited in scope or otherwise restricted.",
-			Code:  http.StatusForbidden,
+			Code:        http.StatusForbidden,
 		}
 	case ErrUnsupportedResponseType:
 		return &RFC6749Error{
 			Name:        errUnsupportedResponseTypeName,
 			Description: ErrUnsupportedResponseType.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusBadRequest,
+			Code:        http.StatusBadRequest,
 		}
 	case ErrInvalidScope:
 		return &RFC6749Error{
 			Name:        errInvalidScopeName,
 			Description: ErrInvalidScope.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusBadRequest,
+			Code:        http.StatusBadRequest,
 		}
 	case ErrServerError:
 		return &RFC6749Error{
 			Name:        errServerErrorName,
 			Description: ErrServerError.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusInternalServerError,
+			Code:        http.StatusInternalServerError,
 		}
 	case ErrTemporarilyUnavailable:
 		return &RFC6749Error{
 			Name:        errTemporarilyUnavailableName,
 			Description: ErrTemporarilyUnavailable.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusServiceUnavailable,
+			Code:        http.StatusServiceUnavailable,
 		}
 	case ErrUnsupportedGrantType:
 		return &RFC6749Error{
 			Name:        errUnsupportedGrantTypeName,
 			Description: ErrUnsupportedGrantType.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusBadRequest,
+			Code:        http.StatusBadRequest,
 		}
 	case ErrInvalidGrant:
 		return &RFC6749Error{
 			Name:        errInvalidGrantName,
 			Description: ErrInvalidGrant.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusBadRequest,
+			Code:        http.StatusBadRequest,
 		}
 	case ErrInvalidClient:
 		return &RFC6749Error{
 			Name:        errInvalidClientName,
 			Description: ErrInvalidClient.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusUnauthorized,
+			Code:        http.StatusUnauthorized,
 		}
 	case ErrInvalidState:
 		return &RFC6749Error{
 			Name:        errInvalidState,
 			Description: ErrInvalidState.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusBadRequest,
+			Code:        http.StatusBadRequest,
 		}
 	case ErrInsufficientEntropy:
 		return &RFC6749Error{
 			Name:        errInsufficientEntropy,
 			Description: ErrInsufficientEntropy.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusBadRequest,
+			Code:        http.StatusBadRequest,
 		}
 	case ErrMisconfiguration:
 		return &RFC6749Error{
 			Name:        errMisconfiguration,
 			Description: ErrMisconfiguration.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusInternalServerError,
+			Code:        http.StatusInternalServerError,
 		}
 	case ErrNotFound:
 		return &RFC6749Error{
 			Name:        errNotFound,
 			Description: ErrNotFound.Error(),
 			Debug:       err.Error(),
-			Code:  http.StatusNotFound,
+			Code:        http.StatusNotFound,
 		}
 	default:
 		return &RFC6749Error{
 			Name:        UnknownErrorName,
 			Description: "The error is unrecognizable.",
 			Debug:       err.Error(),
-			Code:  http.StatusInternalServerError,
+			Code:        http.StatusInternalServerError,
 		}
 	}
 }

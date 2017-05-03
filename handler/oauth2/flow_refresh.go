@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"time"
 
+	"context"
+
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
-	"context"
 )
 
 type RefreshTokenGrantHandler struct {

@@ -1,8 +1,9 @@
 package oauth2
 
 import (
-	"github.com/ory/fosite"
 	"context"
+
+	"github.com/ory/fosite"
 )
 
 type RefreshTokenGrantStorage interface {

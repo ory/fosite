@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"testing"
 
+	"context"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
@@ -11,7 +13,6 @@ import (
 	"github.com/ory/fosite/storage"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"context"
 )
 
 func TestAccessTokenFromRequestNoToken(t *testing.T) {

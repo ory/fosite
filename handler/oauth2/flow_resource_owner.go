@@ -5,9 +5,10 @@ import (
 
 	"fmt"
 
+	"context"
+
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
-	"context"
 )
 
 type ResourceOwnerPasswordCredentialsGrantHandler struct {

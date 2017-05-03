@@ -3,11 +3,12 @@ package oauth2
 import (
 	"time"
 
+	"context"
 	"fmt"
+
 	"github.com/ory/fosite"
 	enigma "github.com/ory/fosite/token/hmac"
 	"github.com/pkg/errors"
-	"context"
 )
 
 type HMACSHAStrategy struct {

@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/pkg/errors"
 	"context"
+
+	"github.com/pkg/errors"
 )
 
 func (o *Fosite) NewAuthorizeResponse(ctx context.Context, r *http.Request, ar AuthorizeRequester, session Session) (AuthorizeResponder, error) {

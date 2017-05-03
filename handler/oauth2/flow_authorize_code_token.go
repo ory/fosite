@@ -1,11 +1,12 @@
 package oauth2
 
 import (
-	"github.com/ory/fosite"
-	"github.com/pkg/errors"
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/ory/fosite"
+	"github.com/pkg/errors"
 )
 
 // HandleTokenEndpointRequest implements

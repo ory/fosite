@@ -3,8 +3,9 @@ package openid
 import (
 	"net/http"
 
-	"github.com/ory/fosite"
 	"context"
+
+	"github.com/ory/fosite"
 )
 
 type OpenIDConnectTokenStrategy interface {

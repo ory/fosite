@@ -1,9 +1,10 @@
 package storage
 
 import (
+	"context"
+
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
-	"context"
 )
 
 type MemoryUserRelation struct {
