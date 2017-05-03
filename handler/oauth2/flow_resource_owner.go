@@ -5,7 +5,7 @@ import (
 
 	"fmt"
 
-	"github.com/ory-am/fosite"
+	"github.com/ory/fosite"
 	"github.com/pkg/errors"
 	"context"
 )

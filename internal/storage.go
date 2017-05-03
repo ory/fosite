@@ -5,7 +5,7 @@ package internal
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	fosite "github.com/ory-am/fosite"
+	fosite "github.com/ory/fosite"
 )
 
 // Mock of Storage interface

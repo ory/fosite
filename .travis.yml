@@ -1,6 +1,6 @@
 language: go
 
-go_import_path: github.com/ory-am/fosite
+go_import_path: github.com/ory/fosite
 
 go:
   - 1.7

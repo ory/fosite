@@ -6,7 +6,7 @@ import (
 
 	"time"
 
-	"github.com/ory-am/fosite/internal"
+	"github.com/ory/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

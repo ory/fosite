@@ -3,8 +3,8 @@ package oauth2
 import (
 	"bytes"
 	"encoding/gob"
-	"github.com/ory-am/fosite"
-	"github.com/ory-am/fosite/token/jwt"
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/token/jwt"
 	"time"
 )
 
