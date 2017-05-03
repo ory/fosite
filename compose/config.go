@@ -12,6 +12,9 @@ type Config struct {
 	// IDTokenLifespan sets how long an id token is going to be valid. Defaults to one hour.
 	IDTokenLifespan time.Duration
 
+	// RefreshTokenLifespan sets how long a refresh token is going to be valid. Defaults to one week.
+	RefreshTokenLifespan time.Duration
+
 	// HashCost sets the cost of the password hashing cost. Defaults to 12.
 	HashCost int
 }
@@ -32,7 +35,7 @@ func (c *Config) GetIDTokenLifespan() time.Duration {
 	return c.IDTokenLifespan
 }
 
-// GetAccessTokenLifespan returns how long a refresh token should be valid. Defaults to one hour.
+// GetAccessTokenLifespan returns how long an access token should be valid. Defaults to one hour.
 func (c *Config) GetAccessTokenLifespan() time.Duration {
 	if c.AccessTokenLifespan == 0 {
 		return time.Hour
@@ -40,7 +43,15 @@ func (c *Config) GetAccessTokenLifespan() time.Duration {
 	return c.AccessTokenLifespan
 }
 
-// GetAccessTokenLifespan returns how long a refresh token should be valid. Defaults to one hour.
+// GetRefreshTokenLifespan returns how long a refresh token should be valid. Defaults to one week.
+func (c *Config) GetRefreshTokenLifespan() time.Duration {
+	if c.RefreshTokenLifespan == 0 {
+		return time.Hour * 24 * 7
+	}
+	return c.RefreshTokenLifespan
+}
+
+// GetHashCost returns the password hashing cost. Defaults to 12.
 func (c *Config) GetHashCost() int {
 	if c.HashCost == 0 {
 		return 12

@@ -8,6 +8,7 @@ import (
 	"github.com/ory-am/fosite"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"time"
 )
 
 type ResourceOwnerPasswordCredentialsGrantHandler struct {
@@ -15,6 +16,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 	ResourceOwnerPasswordCredentialsGrantStorage ResourceOwnerPasswordCredentialsGrantStorage
 
 	RefreshTokenStrategy RefreshTokenStrategy
+	RefreshTokenLifespan time.Duration
 	ScopeStrategy        fosite.ScopeStrategy
 
 	*HandleHelper
@@ -48,6 +50,9 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
 		}
 	}
+
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().Add(c.RefreshTokenLifespan))
 
 	// Credentials must not be passed around, potentially leaking to the database!
 	delete(request.GetRequestForm(), "password")

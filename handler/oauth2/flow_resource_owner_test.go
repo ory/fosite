@@ -16,9 +16,9 @@ import (
 func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockResourceOwnerPasswordCredentialsGrantStorage(ctrl)
+	areq := internal.NewMockAccessRequester(ctrl)
 	defer ctrl.Finish()
 
-	areq := fosite.NewAccessRequest(nil)
 	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
@@ -38,16 +38,19 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because not responsible",
 			expectErr:   fosite.ErrUnknownRequest,
 			setup: func() {
-				areq.GrantTypes = fosite.Arguments{"123"}
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"123"})
 			},
 		},
 		{
 			description: "should fail because because invalid credentials",
 			setup: func() {
-				areq.GrantTypes = fosite.Arguments{"password"}
-				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}}
 				httpreq.PostForm.Set("username", "peter")
 				httpreq.PostForm.Set("password", "pan")
+
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"password"})
+				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
+					GrantTypes: fosite.Arguments{"password"},
+				})
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -55,6 +58,13 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should fail because because error on lookup",
 			setup: func() {
+				httpreq.PostForm.Set("username", "peter")
+				httpreq.PostForm.Set("password", "pan")
+
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"password"})
+				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
+					GrantTypes: fosite.Arguments{"password"},
+				})
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
@@ -62,7 +72,22 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should pass",
 			setup: func() {
+				httpreq.PostForm.Set("username", "peter")
+				httpreq.PostForm.Set("password", "pan")
+
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"password"})
+				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
+					GrantTypes: fosite.Arguments{"password"},
+				})
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(nil)
+				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
+					Scopes: []string{"foo", "bar", "baz"},
+				})
+				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar"})
+				session := new(fosite.DefaultSession)
+				areq.EXPECT().GetSession().Return(session)
+				areq.EXPECT().GetSession().Return(session)
+				areq.EXPECT().GetRequestForm().Return(url.Values{})
 			},
 		},
 	} {
