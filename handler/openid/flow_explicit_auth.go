@@ -1,8 +1,6 @@
 package openid
 
 import (
-	"net/http"
-
 	"context"
 
 	"github.com/ory/fosite"
@@ -16,7 +14,7 @@ type OpenIDConnectExplicitHandler struct {
 	*IDTokenHandleHelper
 }
 
-func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
+func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	if !(ar.GetGrantedScopes().Has("openid") && ar.GetResponseTypes().Exact("code")) {
 		return nil
 	}

@@ -1,7 +1,6 @@
 package fosite_test
 
 import (
-	"net/http"
 	"testing"
 
 	"context"
@@ -35,14 +34,14 @@ func TestNewAuthorizeResponse(t *testing.T) {
 	}{
 		{
 			mock: func() {
-				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fooErr)
+				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(fooErr)
 			},
 			isErr:     true,
 			expectErr: fooErr,
 		},
 		{
 			mock: func() {
-				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				ar.EXPECT().DidHandleAllResponseTypes().Return(true)
 			},
 			isErr: false,
@@ -50,8 +49,8 @@ func TestNewAuthorizeResponse(t *testing.T) {
 		{
 			mock: func() {
 				oauth2 = duo
-				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				ar.EXPECT().DidHandleAllResponseTypes().Return(true)
 			},
 			isErr: false,
@@ -59,15 +58,15 @@ func TestNewAuthorizeResponse(t *testing.T) {
 		{
 			mock: func() {
 				oauth2 = duo
-				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fooErr)
+				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(fooErr)
 			},
 			isErr:     true,
 			expectErr: fooErr,
 		},
 	} {
 		c.mock()
-		responder, err := oauth2.NewAuthorizeResponse(ctx, &http.Request{}, ar, new(DefaultSession))
+		responder, err := oauth2.NewAuthorizeResponse(ctx, ar, new(DefaultSession))
 		assert.Equal(t, c.isErr, err != nil, "%d: %s", k, err)
 		if err != nil {
 			assert.Equal(t, c.expectErr, err, "%d: %s", k, err)

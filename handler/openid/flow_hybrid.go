@@ -1,8 +1,6 @@
 package openid
 
 import (
-	"net/http"
-
 	"fmt"
 
 	"context"
@@ -23,7 +21,7 @@ type OpenIDConnectHybridHandler struct {
 	Enigma *jwt.RS256JWTStrategy
 }
 
-func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
+func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	if len(ar.GetResponseTypes()) < 2 {
 		return nil
 	}
@@ -78,7 +76,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	if ar.GetResponseTypes().Has("token") {
 		if !ar.GetClient().GetGrantTypes().Has("implicit") {
 			return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the implicit grant type")
-		} else if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
+		} else if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, ar, resp); err != nil {
 			return errors.Wrap(err, err.Error())
 		}
 		ar.SetResponseTypeHandled("token")
@@ -99,7 +97,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
-	if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
+	if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, ar, resp); err != nil {
 		return errors.Wrap(err, err.Error())
 	}
 

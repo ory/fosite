@@ -1,7 +1,6 @@
 package oauth2
 
 import (
-	"net/http"
 	"strings"
 	"time"
 
@@ -28,7 +27,7 @@ type AuthorizeImplicitGrantTypeHandler struct {
 	ScopeStrategy fosite.ScopeStrategy
 }
 
-func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
+func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
 	if !ar.GetResponseTypes().Exact("token") {
 		return nil
@@ -52,10 +51,10 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 	// there is no need to check for https, because implicit flow does not require https
 	// https://tools.ietf.org/html/rfc6819#section-4.4.2
 
-	return c.IssueImplicitAccessToken(ctx, req, ar, resp)
+	return c.IssueImplicitAccessToken(ctx, ar, resp)
 }
 
-func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
+func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// Generate the code
 	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, ar)
 	if err != nil {

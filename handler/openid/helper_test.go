@@ -1,7 +1,6 @@
 package openid
 
 import (
-	"net/http"
 	"net/url"
 	"testing"
 
@@ -26,7 +25,6 @@ func TestGenerateIDToken(t *testing.T) {
 	chgen := internal.NewMockOpenIDConnectTokenStrategy(ctrl)
 	defer ctrl.Finish()
 
-	httpreq := &http.Request{Form: url.Values{}}
 	ar := fosite.NewAccessRequest(nil)
 	sess := &DefaultSession{
 		Claims: &jwt.IDTokenClaims{
@@ -46,19 +44,19 @@ func TestGenerateIDToken(t *testing.T) {
 			setup: func() {
 				ar.Form.Set("nonce", "11111111111111111111111111111111111")
 				ar.SetSession(sess)
-				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar).Return("", fooErr)
+				chgen.EXPECT().GenerateIDToken(nil, ar).Return("", fooErr)
 			},
 			expectErr: fooErr,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				chgen.EXPECT().GenerateIDToken(nil, httpreq, ar).AnyTimes().Return("asdf", nil)
+				chgen.EXPECT().GenerateIDToken(nil, ar).AnyTimes().Return("asdf", nil)
 			},
 		},
 	} {
 		c.setup()
-		token, err := h.generateIDToken(nil, httpreq, ar)
+		token, err := h.generateIDToken(nil, ar)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if err == nil {
 			assert.NotEmpty(t, token, "(%d) %s", k, c.description)
@@ -73,7 +71,6 @@ func TestIssueExplicitToken(t *testing.T) {
 	resp := internal.NewMockAccessResponder(ctrl)
 	defer ctrl.Finish()
 
-	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
 	ar.SetSession(&DefaultSession{Claims: &jwt.IDTokenClaims{
@@ -82,7 +79,7 @@ func TestIssueExplicitToken(t *testing.T) {
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueExplicitIDToken(nil, httpreq, ar, resp)
+	err := h.IssueExplicitIDToken(nil, ar, resp)
 	assert.Nil(t, err, "%s", err)
 }
 
@@ -91,7 +88,6 @@ func TestIssueImplicitToken(t *testing.T) {
 	resp := internal.NewMockAuthorizeResponder(ctrl)
 	defer ctrl.Finish()
 
-	httpreq := &http.Request{}
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
 	ar.SetSession(&DefaultSession{Claims: &jwt.IDTokenClaims{
@@ -100,6 +96,6 @@ func TestIssueImplicitToken(t *testing.T) {
 
 	resp.EXPECT().AddFragment("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueImplicitIDToken(nil, httpreq, ar, resp)
+	err := h.IssueImplicitIDToken(nil, ar, resp)
 	assert.Nil(t, err, "%s", err)
 }

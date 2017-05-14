@@ -75,7 +75,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 
 	var found bool = false
 	for _, loader := range f.TokenEndpointHandlers {
-		if err := loader.HandleTokenEndpointRequest(ctx, r, accessRequest); err == nil {
+		if err := loader.HandleTokenEndpointRequest(ctx, accessRequest); err == nil {
 			found = true
 		} else if errors.Cause(err) == ErrUnknownRequest {
 			// do nothing

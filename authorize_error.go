@@ -8,7 +8,6 @@ import (
 
 func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 	rfcerr := ErrorToRFC6749Error(err)
-
 	if !ar.IsRedirectURIValid() {
 		js, err := json.MarshalIndent(rfcerr, "", "\t")
 		if err != nil {

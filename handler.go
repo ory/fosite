@@ -1,8 +1,6 @@
 package fosite
 
 import (
-	"net/http"
-
 	"context"
 
 	"github.com/pkg/errors"
@@ -22,17 +20,17 @@ type AuthorizeEndpointHandler interface {
 	//   authorization code as described by Section 4.1.1, "token" for
 	//   requesting an access token (implicit grant) as described by
 	//   Section 4.2.1, or a registered extension value as described by Section 8.4.
-	HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, requester AuthorizeRequester, responder AuthorizeResponder) error
+	HandleAuthorizeEndpointRequest(ctx context.Context, requester AuthorizeRequester, responder AuthorizeResponder) error
 }
 
 type TokenEndpointHandler interface {
 	// PopulateTokenEndpointResponse is responsible for setting return values and should only be executed if
 	// the handler's HandleTokenEndpointRequest did not return ErrUnknownRequest.
-	PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester AccessRequester, responder AccessResponder) error
+	PopulateTokenEndpointResponse(ctx context.Context, requester AccessRequester, responder AccessResponder) error
 
 	// HandleTokenEndpointRequest handles an authorize request. If the handler is not responsible for handling
 	// the request, this method should return ErrUnknownRequest and otherwise handle the request.
-	HandleTokenEndpointRequest(ctx context.Context, req *http.Request, requester AccessRequester) error
+	HandleTokenEndpointRequest(ctx context.Context, requester AccessRequester) error
 }
 
 // RevocationHandler is the interface that allows token revocation for an OAuth2.0 provider.

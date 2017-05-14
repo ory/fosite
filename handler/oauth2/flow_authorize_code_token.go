@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/ory/fosite"
@@ -11,7 +10,7 @@ import (
 
 // HandleTokenEndpointRequest implements
 // * https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything)
-func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request fosite.AccessRequester) error {
+func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !request.GetGrantTypes().Exact("authorization_code") {
@@ -22,7 +21,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type authorization_code")
 	}
 
-	code := r.PostForm.Get("code")
+	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.AuthorizeCodeGrantStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
@@ -51,7 +50,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// request as described in Section 4.1.1, and if included ensure that
 	// their values are identical.
 	forcedRedirectURI := authorizeRequest.GetRequestForm().Get("redirect_uri")
-	if forcedRedirectURI != "" && forcedRedirectURI != r.PostForm.Get("redirect_uri") {
+	if forcedRedirectURI != "" && forcedRedirectURI != request.GetRequestForm().Get("redirect_uri") {
 		return errors.Wrap(fosite.ErrInvalidRequest, "Redirect URI mismatch")
 	}
 
@@ -65,14 +64,15 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	return nil
 }
 
-func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !requester.GetGrantTypes().Exact("authorization_code") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	code := req.PostForm.Get("code")
+	code := requester.GetRequestForm().Get("code")
+	//code := req.PostForm.Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.AuthorizeCodeGrantStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {

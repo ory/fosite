@@ -2,7 +2,6 @@ package openid
 
 import (
 	"encoding/gob"
-	"net/http"
 	"time"
 
 	"bytes"
@@ -106,7 +105,7 @@ type DefaultStrategy struct {
 	Issuer string
 }
 
-func (h DefaultStrategy) GenerateIDToken(_ context.Context, _ *http.Request, requester fosite.Requester) (token string, err error) {
+func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Requester) (token string, err error) {
 	if h.Expiry == 0 {
 		h.Expiry = defaultExpiryTime
 	}
