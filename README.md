@@ -251,7 +251,7 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// Now we need to get a response. This is the place where the AuthorizeEndpointHandlers kick in and start processing the request.
 	// NewAuthorizeResponse is capable of running multiple response type handlers which in turn enables this library
 	// to support open id connect.
-	response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, mySessionData)
+	response, err := oauth2.NewAuthorizeResponse(ctx, ar, mySessionData)
 	if err != nil {
 		oauth2.WriteAuthorizeError(rw, ar, err)
 		return
@@ -279,7 +279,7 @@ func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 
 	// Next we create a response for the access request. Again, we iterate through the TokenEndpointHandlers
 	// and aggregate the result in response.
-	response, err := oauth2.NewAccessResponse(ctx, req, accessRequest)
+	response, err := oauth2.NewAccessResponse(ctx, accessRequest)
 	if err != nil {
 		oauth2.WriteAccessError(rw, accessRequest, err)
 		return
