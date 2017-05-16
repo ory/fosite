@@ -4,9 +4,10 @@
 package internal
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	http "net/http"
 	url "net/url"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // Mock of AuthorizeResponder interface
