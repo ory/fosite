@@ -87,7 +87,7 @@ func (s *MemoryStore) DeleteOpenIDConnectSession(_ context.Context, authorizeCod
 	return nil
 }
 
-func (s *MemoryStore) GetClient(id string) (fosite.Client, error) {
+func (s *MemoryStore) GetClient(_ context.Context, id string) (fosite.Client, error) {
 	cl, ok := s.Clients[id]
 	if !ok {
 		return nil, fosite.ErrNotFound

@@ -111,7 +111,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 			return &IntrospectionResponse{Active: false}, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
 		}
 
-		client, err := f.Store.GetClient(clientID)
+		client, err := f.Store.GetClient(ctx, clientID)
 		if err != nil {
 			return &IntrospectionResponse{Active: false}, errors.Wrap(ErrRequestUnauthorized, "HTTP Authorization header missing, malformed or credentials used are invalid")
 		}

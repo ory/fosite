@@ -4,6 +4,8 @@
 package internal
 
 import (
+	context "context"
+
 	gomock "github.com/golang/mock/gomock"
 	fosite "github.com/ory/fosite"
 )
@@ -29,13 +31,13 @@ func (_m *MockStorage) EXPECT() *_MockStorageRecorder {
 	return _m.recorder
 }
 
-func (_m *MockStorage) GetClient(_param0 string) (fosite.Client, error) {
-	ret := _m.ctrl.Call(_m, "GetClient", _param0)
+func (_m *MockStorage) GetClient(_param0 context.Context, _param1 string) (fosite.Client, error) {
+	ret := _m.ctrl.Call(_m, "GetClient", _param0, _param1)
 	ret0, _ := ret[0].(fosite.Client)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-func (_mr *_MockStorageRecorder) GetClient(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetClient", arg0)
+func (_mr *_MockStorageRecorder) GetClient(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetClient", arg0, arg1)
 }

@@ -60,7 +60,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP authorization header missing or invalid")
 	}
 
-	client, err := f.Store.GetClient(clientID)
+	client, err := f.Store.GetClient(ctx, clientID)
 	if err != nil {
 		return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
 	}
