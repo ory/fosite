@@ -60,11 +60,13 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, ar)
 	if err != nil {
 		return errors.Wrap(fosite.ErrServerError, err.Error())
-	} else if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar); err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	ar.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar); err != nil {
+		return errors.Wrap(fosite.ErrServerError, err.Error())
+	}
+
 	resp.AddFragment("access_token", token)
 	resp.AddFragment("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now())/time.Second), 10))
 	resp.AddFragment("token_type", "bearer")
