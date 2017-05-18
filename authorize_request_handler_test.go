@@ -43,7 +43,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			r:             &http.Request{},
 			expectedError: ErrInvalidClient,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any()).Return(nil, errors.New("foo"))
+				store.EXPECT().GetClient(gomock.Any(), gomock.Any()).Return(nil, errors.New("foo"))
 			},
 		},
 		/* invalid redirect uri */
@@ -53,7 +53,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			query:         url.Values{"redirect_uri": []string{"invalid"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any()).Return(nil, errors.New("foo"))
+				store.EXPECT().GetClient(gomock.Any(), gomock.Any()).Return(nil, errors.New("foo"))
 			},
 		},
 		/* invalid client */
@@ -63,7 +63,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			query:         url.Values{"redirect_uri": []string{"https://foo.bar/cb"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any()).Return(nil, errors.New("foo"))
+				store.EXPECT().GetClient(gomock.Any(), gomock.Any()).Return(nil, errors.New("foo"))
 			},
 		},
 		/* redirect client mismatch */
@@ -75,7 +75,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidRequest,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}}, nil)
 			},
 		},
 		/* redirect client mismatch */
@@ -88,7 +88,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidRequest,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}}, nil)
 			},
 		},
 		/* redirect client mismatch */
@@ -101,7 +101,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidRequest,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}}, nil)
 			},
 		},
 		/* no state */
@@ -115,7 +115,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidState,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 		},
 		/* short state */
@@ -130,7 +130,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidState,
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 		},
 		/* success case */
@@ -145,7 +145,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				"scope":         {"foo bar"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient("1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 			expect: &AuthorizeRequest{
 				RedirectURI:   redir,

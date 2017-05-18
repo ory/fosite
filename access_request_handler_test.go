@@ -68,7 +68,7 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 			expectErr: ErrInvalidClient,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Eq("foo")).Return(nil, errors.New(""))
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(nil, errors.New(""))
 			},
 		},
 		{
@@ -92,7 +92,7 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 			expectErr: ErrInvalidClient,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Eq("foo")).Return(nil, errors.New(""))
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(nil, errors.New(""))
 			},
 		},
 		{
@@ -105,7 +105,7 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 			expectErr: ErrInvalidClient,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().IsPublic().Return(false)
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(errors.New(""))
@@ -121,7 +121,7 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 			expectErr: ErrServerError,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().IsPublic().Return(false)
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
@@ -138,7 +138,7 @@ func TestNewAccessRequest(t *testing.T) {
 				"grant_type": {"foo"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().IsPublic().Return(false)
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
@@ -161,7 +161,7 @@ func TestNewAccessRequest(t *testing.T) {
 				"grant_type": {"foo"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Eq("foo")).Return(client, nil)
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().IsPublic().Return(true)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},

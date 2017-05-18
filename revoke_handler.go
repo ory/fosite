@@ -39,7 +39,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 		return errors.Wrap(ErrInvalidRequest, "HTTP Authorization header missing or invalid")
 	}
 
-	client, err := f.Store.GetClient(clientID)
+	client, err := f.Store.GetClient(ctx, clientID)
 	if err != nil {
 		return errors.Wrap(ErrInvalidClient, err.Error())
 	}
