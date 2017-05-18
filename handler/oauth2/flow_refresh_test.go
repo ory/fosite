@@ -1,7 +1,6 @@
 package oauth2
 
 import (
-	"net/http"
 	"net/url"
 	"testing"
 	"time"
@@ -21,7 +20,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 	areq := fosite.NewAccessRequest(nil)
 	sess := &fosite.DefaultSession{Subject: "othersub"}
-	httpreq := &http.Request{PostForm: url.Values{}}
+	areq.Form = url.Values{}
 
 	h := RefreshTokenGrantHandler{
 		RefreshTokenGrantStorage: store,
@@ -46,7 +45,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"refresh_token"}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"refresh_token"}}
-				httpreq.PostForm.Add("refresh_token", "some.refreshtokensig")
+				areq.Form.Add("refresh_token", "some.refreshtokensig")
 				chgen.EXPECT().RefreshTokenSignature("some.refreshtokensig").AnyTimes().Return("refreshtokensig")
 				store.EXPECT().GetRefreshTokenSession(nil, "refreshtokensig", nil).Return(nil, fosite.ErrNotFound)
 			},
@@ -99,7 +98,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
+		err := h.HandleTokenEndpointRequest(nil, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if c.expect != nil {
 			c.expect()
@@ -115,7 +114,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 	acts := internal.NewMockAccessTokenStrategy(ctrl)
 	areq := fosite.NewAccessRequest(nil)
 	aresp := internal.NewMockAccessResponder(ctrl)
-	httpreq := &http.Request{PostForm: url.Values{}}
+	areq.Form = url.Values{}
 	defer ctrl.Finish()
 
 	areq.Client = &fosite.DefaultClient{}
@@ -141,7 +140,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because access token generation fails",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"refresh_token"}
-				httpreq.PostForm.Add("refresh_token", "foo.reftokensig")
+				areq.Form.Add("refresh_token", "foo.reftokensig")
 				rcts.EXPECT().RefreshTokenSignature("foo.reftokensig").AnyTimes().Return("reftokensig")
 				acts.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New(""))
 			},
@@ -178,7 +177,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
+		err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

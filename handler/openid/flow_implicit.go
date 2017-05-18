@@ -1,8 +1,6 @@
 package openid
 
 import (
-	"net/http"
-
 	"fmt"
 
 	"context"
@@ -22,7 +20,7 @@ type OpenIDConnectImplicitHandler struct {
 	RS256JWTStrategy *jwt.RS256JWTStrategy
 }
 
-func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
+func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	if !(ar.GetGrantedScopes().Has("openid") && (ar.GetResponseTypes().Has("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
 		return nil
 	} else if ar.GetResponseTypes().Has("code") {
@@ -54,7 +52,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 
 	claims := sess.IDTokenClaims()
 	if ar.GetResponseTypes().Has("token") {
-		if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, req, ar, resp); err != nil {
+		if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, ar, resp); err != nil {
 			return errors.Wrap(err, err.Error())
 		}
 
@@ -69,7 +67,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		resp.AddFragment("state", ar.GetState())
 	}
 
-	if err := c.IssueImplicitIDToken(ctx, req, ar, resp); err != nil {
+	if err := c.IssueImplicitIDToken(ctx, ar, resp); err != nil {
 		return errors.Wrap(err, err.Error())
 	}
 

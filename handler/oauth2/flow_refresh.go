@@ -1,7 +1,6 @@
 package oauth2
 
 import (
-	"net/http"
 	"time"
 
 	"context"
@@ -23,7 +22,7 @@ type RefreshTokenGrantHandler struct {
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
-func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, request fosite.AccessRequester) error {
+func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "refresh_token".
 	if !request.GetGrantTypes().Exact("refresh_token") {
@@ -34,7 +33,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type refresh_token")
 	}
 
-	refresh := req.PostForm.Get("refresh_token")
+	refresh := request.GetRequestForm().Get("refresh_token")
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(refresh)
 	originalRequest, err := c.RefreshTokenGrantStorage.GetRefreshTokenSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
@@ -69,7 +68,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 }
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-6
-func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().Exact("refresh_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -84,7 +83,7 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
-	signature := c.RefreshTokenStrategy.RefreshTokenSignature(req.PostForm.Get("refresh_token"))
+	signature := c.RefreshTokenStrategy.RefreshTokenSignature(requester.GetRequestForm().Get("refresh_token"))
 	if err := c.RefreshTokenGrantStorage.PersistRefreshTokenGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
 		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}

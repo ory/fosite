@@ -1,8 +1,6 @@
 package oauth2
 
 import (
-	"net/http"
-
 	"fmt"
 
 	"context"
@@ -18,7 +16,7 @@ type ClientCredentialsGrantHandler struct {
 }
 
 // IntrospectTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
-func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Context, r *http.Request, request fosite.AccessRequester) error {
+func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
 	if !request.GetGrantTypes().Exact("client_credentials") {
@@ -45,7 +43,7 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 }
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.4.3
-func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, r *http.Request, request fosite.AccessRequester, response fosite.AccessResponder) error {
+func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
 	if !request.GetGrantTypes().Exact("client_credentials") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -54,5 +52,5 @@ func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type client_credentials")
 	}
 
-	return c.IssueAccessToken(ctx, r, request, response)
+	return c.IssueAccessToken(ctx, request, response)
 }

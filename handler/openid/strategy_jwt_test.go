@@ -90,7 +90,7 @@ func TestJWTStrategy_GenerateIDToken(t *testing.T) {
 		},
 	} {
 		c.setup()
-		token, err := j.GenerateIDToken(nil, nil, req)
+		token, err := j.GenerateIDToken(nil, req)
 		assert.Equal(t, c.expectErr, err != nil, "%d: %s", k, err)
 		if !c.expectErr {
 			assert.NotEmpty(t, token)

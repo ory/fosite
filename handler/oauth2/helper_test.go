@@ -1,7 +1,6 @@
 package oauth2
 
 import (
-	"net/http"
 	"testing"
 	"time"
 
@@ -29,7 +28,6 @@ func TestIssueAccessToken(t *testing.T) {
 	aresp := &fosite.AccessResponse{Extra: map[string]interface{}{}}
 	accessStrat := internal.NewMockAccessTokenStrategy(ctrl)
 	accessStore := internal.NewMockAccessTokenStorage(ctrl)
-	httpReq := &http.Request{}
 	defer ctrl.Finish()
 
 	helper := HandleHelper{
@@ -65,7 +63,7 @@ func TestIssueAccessToken(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := helper.IssueAccessToken(nil, httpReq, areq, aresp)
+		err := helper.IssueAccessToken(nil, areq, aresp)
 		require.Equal(t, err == nil, c.err == nil)
 		if c.err != nil {
 			assert.EqualError(t, err, c.err.Error(), "Case %d", k)

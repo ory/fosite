@@ -1,5 +1,5 @@
-hash: aa02e086b70588bfd6c024fab3d156ca642e0ca4fee207ebd1633eafd121534f
-updated: 2017-05-03T15:33:26.3844827+02:00
+hash: 2f6fa8dc5ade79bbc0ed0d47b16040420f96011fc2d84185f1a9754285f60b87
+updated: 2017-05-15T09:35:06.156922857+02:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
@@ -9,6 +9,10 @@ imports:
   version: bd3c8e81be01eef76d4b503f5e687d2d1354d2d9
   subpackages:
   - gomock
+- name: github.com/ory/common
+  version: b6357395e30805e2ad1f6d8fb759fa2b7146d8da
+  subpackages:
+  - pkg
 - name: github.com/pborman/uuid
   version: a97ce2ca70fa5a848076093f05e639a89ca34d06
 - name: github.com/pkg/errors
@@ -18,12 +22,12 @@ imports:
   subpackages:
   - json
 - name: golang.org/x/crypto
-  version: 453249f01cfeb54c3d549ddb75ff152ca243f9d8
+  version: e0d166c33c321d0ff863f459a5882096e334f508
   subpackages:
   - bcrypt
   - blowfish
 - name: golang.org/x/net
-  version: dd2d9a67c97da0afa00d5726e28086007a0acce5
+  version: 075e191f18186a8ff2becaf64478e30f4545cdad
   subpackages:
   - context
   - publicsuffix
@@ -35,7 +39,7 @@ testImports:
 - name: github.com/go-errors/errors
   version: 8fa88b06e5974e97fbf9899a7f86a344bfd1f105
 - name: github.com/golang/protobuf
-  version: 69b215d01a5606c843240eab4937eab3acee6530
+  version: c3cefd437628a0b7d31b34fe44b3a7a540e98527
   subpackages:
   - proto
 - name: github.com/gorilla/context
@@ -43,15 +47,11 @@ testImports:
 - name: github.com/gorilla/mux
   version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
 - name: github.com/moul/http2curl
-  version: 4e24498b31dba4683efb9d35c1c8a91e2eda28c8
+  version: b1479103caacaa39319f75e7f57fc545287fca0d
 - name: github.com/oleiade/reflections
   version: 2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496
-- name: github.com/ory-am/common
-  version: b6357395e30805e2ad1f6d8fb759fa2b7146d8da
-  subpackages:
-  - pkg
 - name: github.com/parnurzeal/gorequest
-  version: 5bf13be198787abbed057fb7c4007f372083a0f5
+  version: 2aea80ce763523ecc6452e61c3727ae9595a5809
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
@@ -64,16 +64,16 @@ testImports:
   - assert
   - require
 - name: golang.org/x/oauth2
-  version: b9780ec78894ab900c062d58ee3076cd9b2a4501
+  version: 04e1573abc896e70388bd387a69753c378d46466
   subpackages:
   - clientcredentials
   - internal
 - name: golang.org/x/sys
-  version: e4594059fe4cde2daf423055a596c2cd1e6c9adf
+  version: 1e99a4f9d247b28c670884b9a8d6801f39a47b77
   subpackages:
   - unix
 - name: google.golang.org/appengine
-  version: 3a452f9e00122ead39586d68ffdb9c6e1326af3c
+  version: b4728023490a62e70ba739ff62aa65ffcca84210
   subpackages:
   - internal
   - internal/base

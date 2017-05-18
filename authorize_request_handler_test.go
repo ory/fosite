@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"github.com/golang/mock/gomock"
-	"github.com/ory-am/common/pkg"
+	"github.com/ory/common/pkg"
 	. "github.com/ory/fosite"
 	. "github.com/ory/fosite/internal"
 	"github.com/pkg/errors"

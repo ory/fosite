@@ -54,7 +54,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := h.HandleTokenEndpointRequest(nil, c.req, areq)
+		err := h.HandleTokenEndpointRequest(nil, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
@@ -109,7 +109,7 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := h.PopulateTokenEndpointResponse(nil, c.req, areq, aresp)
+		err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

@@ -1,8 +1,6 @@
 package oauth2
 
 import (
-	"net/http"
-	"net/url"
 	"testing"
 	"time"
 
@@ -21,7 +19,6 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 	defer ctrl.Finish()
 
 	areq := fosite.NewAuthorizeRequest()
-	httpreq := &http.Request{Form: url.Values{}}
 	areq.Session = new(fosite.DefaultSession)
 
 	h := AuthorizeImplicitGrantTypeHandler{
@@ -79,7 +76,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.HandleAuthorizeEndpointRequest(nil, httpreq, areq, aresp)
+		err := h.HandleAuthorizeEndpointRequest(nil, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

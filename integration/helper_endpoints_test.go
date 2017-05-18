@@ -82,7 +82,7 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 		// Normally, this would be the place where you would check if the user is logged in and gives his consent.
 		// For this test, let's assume that the user exists, is logged in, and gives his consent...
 
-		response, err := oauth2.NewAuthorizeResponse(ctx, req, ar, session)
+		response, err := oauth2.NewAuthorizeResponse(ctx, ar, session)
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", ar)
@@ -132,7 +132,7 @@ func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw 
 			accessRequest.GrantScope("fosite")
 		}
 
-		response, err := provider.NewAccessResponse(ctx, req, accessRequest)
+		response, err := provider.NewAccessResponse(ctx, accessRequest)
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)

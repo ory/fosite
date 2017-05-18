@@ -1,19 +1,17 @@
 package openid
 
 import (
-	"net/http"
-
 	"context"
 
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
 )
 
-func (c *OpenIDConnectExplicitHandler) HandleTokenEndpointRequest(ctx context.Context, r *http.Request, request fosite.AccessRequester) error {
+func (c *OpenIDConnectExplicitHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	return fosite.ErrUnknownRequest
 }
 
-func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().Exact("authorization_code") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -37,5 +35,5 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use response type id_token")
 	}
 
-	return c.IssueExplicitIDToken(ctx, req, authorize, responder)
+	return c.IssueExplicitIDToken(ctx, authorize, responder)
 }

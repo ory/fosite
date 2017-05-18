@@ -1,7 +1,6 @@
 package oauth2
 
 import (
-	"net/http"
 	"strings"
 	"time"
 
@@ -32,7 +31,7 @@ type AuthorizeExplicitGrantHandler struct {
 	ScopeStrategy fosite.ScopeStrategy
 }
 
-func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
+func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
 	if !ar.GetResponseTypes().Exact("code") {
 		return nil
@@ -53,10 +52,10 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 		}
 	}
 
-	return c.IssueAuthorizeCode(ctx, req, ar, resp)
+	return c.IssueAuthorizeCode(ctx, ar, resp)
 }
 
-func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, req *http.Request, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
+func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 	if err != nil {
 		return errors.Wrap(fosite.ErrServerError, err.Error())

@@ -52,7 +52,7 @@ type OAuth2Provider interface {
 	//	 If an authorization request is missing the "response_type" parameter,
 	//	 or if the response type is not understood, the authorization server
 	//	 MUST return an error response as described in Section 4.1.2.1.
-	NewAuthorizeResponse(ctx context.Context, req *http.Request, requester AuthorizeRequester, session Session) (AuthorizeResponder, error)
+	NewAuthorizeResponse(ctx context.Context, requester AuthorizeRequester, session Session) (AuthorizeResponder, error)
 
 	// WriteAuthorizeError returns the error codes to the redirection endpoint or shows the error to the user, if no valid
 	// redirect uri was given. Implements rfc6749#section-4.1.2.1
@@ -97,7 +97,7 @@ type OAuth2Provider interface {
 	//
 	// The following specs must be considered in any implementation of this method:
 	// https://tools.ietf.org/html/rfc6749#section-5.1
-	NewAccessResponse(ctx context.Context, req *http.Request, requester AccessRequester) (AccessResponder, error)
+	NewAccessResponse(ctx context.Context, requester AccessRequester) (AccessResponder, error)
 
 	// WriteAccessError writes an access request error response.
 	//

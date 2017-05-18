@@ -1,7 +1,6 @@
 package oauth2
 
 import (
-	"net/http"
 	"net/url"
 	"testing"
 	"time"
@@ -19,7 +18,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	areq := fosite.NewAccessRequest(nil)
-	httpreq := &http.Request{PostForm: url.Values{}}
+	areq.Form = url.Values{}
 
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
 		ResourceOwnerPasswordCredentialsGrantStorage: store,
@@ -46,8 +45,9 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}}
-				httpreq.PostForm.Set("username", "peter")
-				httpreq.PostForm.Set("password", "pan")
+				areq.Form.Set("username", "peter")
+				areq.Form.Set("password", "pan")
+
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidRequest,
@@ -67,7 +67,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.HandleTokenEndpointRequest(nil, httpreq, areq)
+		err := h.HandleTokenEndpointRequest(nil, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}
@@ -84,7 +84,6 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 	defer ctrl.Finish()
 
 	areq := fosite.NewAccessRequest(nil)
-	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
 		ResourceOwnerPasswordCredentialsGrantStorage: store,
@@ -136,7 +135,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
+		err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if c.expect != nil {
 			c.expect()

@@ -1,8 +1,6 @@
 package openid
 
 import (
-	"net/http"
-	"net/url"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -19,7 +17,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	areq.Client = &fosite.DefaultClient{
 		ResponseTypes: fosite.Arguments{"id_token"},
 	}
-	assert.True(t, errors.Cause(h.HandleTokenEndpointRequest(nil, nil, areq)) == fosite.ErrUnknownRequest)
+	assert.True(t, errors.Cause(h.HandleTokenEndpointRequest(nil, areq)) == fosite.ErrUnknownRequest)
 }
 
 func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
@@ -35,7 +33,6 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 	}
 	aresp := fosite.NewAccessResponse()
 	areq := fosite.NewAccessRequest(session)
-	httpreq := &http.Request{PostForm: url.Values{}}
 
 	h := &OpenIDConnectExplicitHandler{
 		OpenIDConnectRequestStorage: store,
@@ -94,7 +91,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 	} {
 		c.setup()
-		err := h.PopulateTokenEndpointResponse(nil, httpreq, areq, aresp)
+		err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

@@ -1,8 +1,6 @@
 package oauth2
 
 import (
-	"net/http"
-
 	"fmt"
 
 	"context"
@@ -22,7 +20,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.2
-func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, req *http.Request, request fosite.AccessRequester) error {
+func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "password".
 	if !request.GetGrantTypes().Exact("password") {
@@ -33,8 +31,8 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type password")
 	}
 
-	username := req.PostForm.Get("username")
-	password := req.PostForm.Get("password")
+	username := request.GetRequestForm().Get("username")
+	password := request.GetRequestForm().Get("password")
 	if username == "" || password == "" {
 		return errors.Wrap(fosite.ErrInvalidRequest, "Username or password missing")
 	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
@@ -56,7 +54,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 }
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.3.3
-func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, req *http.Request, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().Exact("password") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -72,7 +70,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 		}
 	}
 
-	if err := c.IssueAccessToken(ctx, req, requester, responder); err != nil {
+	if err := c.IssueAccessToken(ctx, requester, responder); err != nil {
 		return err
 	}
 
