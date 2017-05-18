@@ -1,9 +1,65 @@
 This is a list of breaking changes. As long as `1.0.0` is not released, breaking changes will be addressed as minor version
 bumps (`0.1.0` -> `0.2.0`).
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [0.8.0](#080)
+  - [Breaking changes](#breaking-changes)
+    - [`ClientManager`](#clientmanager)
+    - [`OAuth2Provider`](#oauth2provider)
+- [0.7.0](#070)
+- [0.6.0](#060)
+- [0.5.0](#050)
+- [0.4.0](#040)
+- [0.3.0](#030)
+- [0.2.0](#020)
+- [0.1.0](#010)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 0.8.0
+
+This patch addresses some inconsistencies in the public interfaces. Also
+remaining references to the old repository location at `ory-am/fosite` 
+where updated to `ory/fosite`.
+
+### Breaking changes
+
+#### `ClientManager`
+
+The [`ClientManager`](https://github.com/ory/fosite/blob/master/client_manager.go) interface
+changed, as a context parameter was added:
+
+```go
+type ClientManager interface {
+	// GetClient loads the client by its ID or returns an error
+  	// if the client does not exist or another error occurred.
+-	GetClient(id string) (Client, error)
++	GetClient(ctx context.Context, id string) (Client, error)
+}
+```
+
+#### `OAuth2Provider`
+
+The [OAuth2Provider](https://github.com/ory/fosite/blob/master/oauth2.go) interface changed,
+as the need for passing down `*http.Request` was removed. This is justifiable
+because `NewAuthorizeRequest` and `NewAccessRequest` already contain `*http.Request`.
+
+The public api of those two methods changed:
+
+```go
+-	NewAuthorizeResponse(ctx context.Context, req *http.Request, requester AuthorizeRequester, session Session) (AuthorizeResponder, error)
++	NewAuthorizeResponse(ctx context.Context, requester AuthorizeRequester, session Session) (AuthorizeResponder, error)
+
+
+-	NewAccessResponse(ctx context.Context, req *http.Request, requester AccessRequester) (AccessResponder, error)
++	NewAccessResponse(ctx context.Context, requester AccessRequester) (AccessResponder, error)
+```
+
 ## 0.7.0
 
-Breaking changes
+Breaking changes:
 
 * Replaced `"golang.org/x/net/context"` with `"context"`.
 * Move the repo from `github.com/ory-am/fosite` to `github.com/ory/fosite`
