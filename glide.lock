@@ -1,5 +1,5 @@
-hash: 2f6fa8dc5ade79bbc0ed0d47b16040420f96011fc2d84185f1a9754285f60b87
-updated: 2017-05-15T09:35:06.156922857+02:00
+hash: f7a62d30538f7380d83a36c84be4a3c01430f374e212db3e540e7b0c0500d69b
+updated: 2017-05-19T18:13:54.528981+12:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
@@ -9,6 +9,8 @@ imports:
   version: bd3c8e81be01eef76d4b503f5e687d2d1354d2d9
   subpackages:
   - gomock
+- name: github.com/lhecker/argon2
+  version: b3ac3756bd9227d6d4d5f9dec8142b1cd9ca6ac5
 - name: github.com/ory/common
   version: b6357395e30805e2ad1f6d8fb759fa2b7146d8da
   subpackages:
