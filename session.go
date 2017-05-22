@@ -14,6 +14,9 @@ type Session interface {
 	//  session.SetExpiresAt(fosite.AccessToken, time.Now().Add(time.Hour))
 	SetExpiresAt(key TokenType, exp time.Time)
 
+	// GetTokenTypes returns the token types this session is linked to.
+	GetTokenTypes() []string
+
 	// SetExpiresAt returns expiration time of a token if set, or time.IsZero() if not.
 	//
 	//  session.GetExpiresAt(fosite.AccessToken)
@@ -34,6 +37,14 @@ type DefaultSession struct {
 	ExpiresAt map[TokenType]time.Time
 	Username  string
 	Subject   string
+}
+
+func (s *DefaultSession) GetTokenTypes() []string {
+	r := []string{}
+	for tokenType, _ := range s.ExpiresAt {
+		r = append(r, string(tokenType))
+	}
+	return r
 }
 
 func (s *DefaultSession) SetExpiresAt(key TokenType, exp time.Time) {

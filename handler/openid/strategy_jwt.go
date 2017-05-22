@@ -51,6 +51,14 @@ func (s *DefaultSession) Clone() fosite.Session {
 	return &clone
 }
 
+func (s *DefaultSession) GetTokenTypes() []string {
+	r := []string{}
+	for tokenType, _ := range s.ExpiresAt {
+		r = append(r, string(tokenType))
+	}
+	return r
+}
+
 func (s *DefaultSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
 	if s.ExpiresAt == nil {
 		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
