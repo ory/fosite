@@ -9,7 +9,6 @@ mockgen -package internal -destination internal/access_token_storage.go github.c
 mockgen -package internal -destination internal/refresh_token_strategy.go github.com/ory/fosite/handler/oauth2 RefreshTokenStorage
 mockgen -package internal -destination internal/oauth2_client_storage.go github.com/ory/fosite/handler/oauth2 ClientCredentialsGrantStorage
 mockgen -package internal -destination internal/oauth2_explicit_storage.go github.com/ory/fosite/handler/oauth2 AuthorizeCodeGrantStorage
-mockgen -package internal -destination internal/oauth2_implicit_storage.go github.com/ory/fosite/handler/oauth2 ImplicitGrantStorage
 mockgen -package internal -destination internal/oauth2_owner_storage.go github.com/ory/fosite/handler/oauth2 ResourceOwnerPasswordCredentialsGrantStorage
 mockgen -package internal -destination internal/oauth2_refresh_storage.go github.com/ory/fosite/handler/oauth2 RefreshTokenGrantStorage
 mockgen -package internal -destination internal/oauth2_revoke_storage.go github.com/ory/fosite/handler/oauth2 TokenRevocationStorage
