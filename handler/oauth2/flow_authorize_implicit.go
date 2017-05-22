@@ -18,7 +18,7 @@ import (
 type AuthorizeImplicitGrantTypeHandler struct {
 	AccessTokenStrategy AccessTokenStrategy
 
-	// ImplicitGrantStorage is used to persist session data across requests.
+	// AccessTokenStorage is used to persist session data across requests.
 	AccessTokenStorage AccessTokenStorage
 
 	// AccessTokenLifespan defines the lifetime of an access token.
