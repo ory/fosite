@@ -30,14 +30,17 @@ type Factory func(config *Config, storage interface{}, strategy interface{}) int
 //  )
 //
 // Compose makes use of interface{} types in order to be able to handle a all types of stores, strategies and handlers.
-func Compose(config *Config, storage interface{}, strategy interface{}, factories ...Factory) fosite.OAuth2Provider {
+func Compose(config *Config, storage interface{}, strategy interface{}, hasher fosite.Hasher, factories ...Factory) fosite.OAuth2Provider {
+	if hasher == nil {
+		hasher = &fosite.BCrypt{WorkFactor: config.GetHashCost()}
+	}
 	f := &fosite.Fosite{
 		Store: storage.(fosite.Storage),
 		AuthorizeEndpointHandlers:  fosite.AuthorizeEndpointHandlers{},
 		TokenEndpointHandlers:      fosite.TokenEndpointHandlers{},
 		TokenIntrospectionHandlers: fosite.TokenIntrospectionHandlers{},
 		RevocationHandlers:         fosite.RevocationHandlers{},
-		Hasher:                     &fosite.BCrypt{WorkFactor: config.GetHashCost()},
+		Hasher:                     hasher,
 		ScopeStrategy:              fosite.HierarchicScopeStrategy,
 	}
 
@@ -69,6 +72,8 @@ func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *
 			CoreStrategy:               NewOAuth2HMACStrategy(config, secret),
 			OpenIDConnectTokenStrategy: NewOpenIDConnectStrategy(key),
 		},
+		nil,
+
 		OAuth2AuthorizeExplicitFactory,
 		OAuth2AuthorizeImplicitFactory,
 		OAuth2ClientCredentialsGrantFactory,

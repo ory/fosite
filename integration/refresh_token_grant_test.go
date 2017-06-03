@@ -27,6 +27,7 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 		new(compose.Config),
 		fositeStore,
 		strategy,
+		nil,
 		compose.OAuth2AuthorizeExplicitFactory,
 		compose.OAuth2RefreshTokenGrantFactory,
 		compose.OAuth2TokenIntrospectionFactory,
