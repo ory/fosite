@@ -4,6 +4,7 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+- [0.9.0](#090)
 - [0.8.0](#080)
   - [Breaking changes](#breaking-changes)
     - [`ClientManager`](#clientmanager)
@@ -17,6 +18,18 @@ bumps (`0.1.0` -> `0.2.0`).
 - [0.1.0](#010)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 0.9.0
+
+This patch adds the ability to pass a custom hasher to `compose.Compose`, which is a breaking change. You can pass nil for the fosite default hasher:
+
+```
+package compose
+
+-func Compose(config *Config, storage interface{}, strategy interface{}, factories ...Factory) fosite.OAuth2Provider {
++func Compose(config *Config, storage interface{}, strategy interface{}, hasher fosite.Hasher, factories ...Factory) fosite.OAuth2Provider {
+```
+
 
 ## 0.8.0
 
