@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/ory/common/pkg"
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/pkg/errors"
@@ -188,7 +187,7 @@ func TestNewAccessRequest(t *testing.T) {
 		if err != nil {
 			t.Logf("Error occured: %v", err)
 		} else {
-			pkg.AssertObjectKeysEqual(t, c.expect, ar, "GrantTypes", "Client")
+			AssertObjectKeysEqual(t, c.expect, ar, "GrantTypes", "Client")
 			assert.NotNil(t, ar.GetRequestedAt())
 		}
 		t.Logf("Passed test case %d", k)
