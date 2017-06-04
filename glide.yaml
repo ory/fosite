@@ -21,9 +21,6 @@ import:
 - package: golang.org/x/net
   subpackages:
   - context
-- package: github.com/ory/common
-  subpackages:
-  - pkg
 testImport:
 - package: github.com/gorilla/mux
   version: ~1.1.0

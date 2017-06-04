@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/golang/mock/gomock"
-	"github.com/ory/common/pkg"
 	. "github.com/ory/fosite"
 	. "github.com/ory/fosite/internal"
 	"github.com/pkg/errors"
@@ -172,7 +171,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		if c.expectedError != nil {
 			assert.Equal(t, errors.Cause(err), c.expectedError, "%d: %s\n%s", k, c.desc, err)
 		} else {
-			pkg.AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "Scopes", "Client", "RedirectURI", "State")
+			AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "Scopes", "Client", "RedirectURI", "State")
 			assert.NotNil(t, ar.GetRequestedAt())
 		}
 		t.Logf("Passed test case %d", k)
