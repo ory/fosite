@@ -35,4 +35,3 @@ testImport:
 - package: golang.org/x/oauth2
   subpackages:
   - clientcredentials
-- package: github.com/Sirupsen/logrus
