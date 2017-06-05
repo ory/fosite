@@ -1,34 +1,35 @@
 package: github.com/ory/fosite
 import:
 - package: github.com/asaskevich/govalidator
-  version: ~5.0.0
+  version: ~6.0.0
 - package: github.com/dgrijalva/jwt-go
   version: ~3.0.0
 - package: github.com/golang/mock
   subpackages:
   - gomock
+- package: github.com/oleiade/reflections
+  version: ~1.0.0
 - package: github.com/pborman/uuid
   version: ~1.0.0
 - package: github.com/pkg/errors
   version: ~0.8.0
 - package: github.com/square/go-jose
-  version: ~1.1.0
+  version: ~2.1.1
   subpackages:
   - json
-- package: golang.org/x/crypto
-  subpackages:
-  - bcrypt
-- package: golang.org/x/net
-  subpackages:
-  - context
-testImport:
-- package: github.com/gorilla/mux
-  version: ~1.1.0
 - package: github.com/stretchr/testify
   version: ~1.1.4
   subpackages:
   - assert
   - require
+- package: golang.org/x/crypto
+  subpackages:
+  - bcrypt
+testImport:
+- package: github.com/gorilla/mux
+  version: ~1.4.0
+- package: github.com/parnurzeal/gorequest
+  version: ~0.2.15
 - package: golang.org/x/oauth2
   subpackages:
   - clientcredentials

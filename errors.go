@@ -66,6 +66,10 @@ type RFC6749Error struct {
 }
 
 func ErrorToRFC6749Error(err error) *RFC6749Error {
+	if e, ok := err.(*RFC6749Error); ok {
+		return e
+	}
+
 	switch errors.Cause(err) {
 	case ErrInactiveToken:
 		{
