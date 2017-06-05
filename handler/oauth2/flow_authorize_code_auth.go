@@ -42,7 +42,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 	}
 
 	if !fosite.IsRedirectURISecure(ar.GetRedirectURI()) {
-		return errors.Wrap(fosite.ErrInvalidRequest, "Redirect URL is using an insecure protocol")
+		return errors.Wrap(fosite.ErrInvalidRequest, "Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/")
 	}
 
 	client := ar.GetClient()

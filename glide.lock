@@ -1,73 +1,67 @@
-hash: 2f6fa8dc5ade79bbc0ed0d47b16040420f96011fc2d84185f1a9754285f60b87
-updated: 2017-05-15T09:35:06.156922857+02:00
+hash: 6ebba9e11cfb855c03017079bd796c2dabc44e61c83ba8a8c03dd223efe1a988
+updated: 2017-06-04T16:32:58.9143689+02:00
 imports:
 - name: github.com/asaskevich/govalidator
-  version: 7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877
+  version: 4918b99a7cb949bb295f3c7bbaf24b577d806e35
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
 - name: github.com/golang/mock
   version: bd3c8e81be01eef76d4b503f5e687d2d1354d2d9
   subpackages:
   - gomock
+- name: github.com/oleiade/reflections
+  version: 2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496
 - name: github.com/pborman/uuid
   version: a97ce2ca70fa5a848076093f05e639a89ca34d06
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
-- name: github.com/square/go-jose
-  version: aa2e30fdd1fe9dd3394119af66451ae790d50e0d
-  subpackages:
-  - json
-- name: golang.org/x/crypto
-  version: e0d166c33c321d0ff863f459a5882096e334f508
-  subpackages:
-  - bcrypt
-  - blowfish
-- name: golang.org/x/net
-  version: 075e191f18186a8ff2becaf64478e30f4545cdad
-  subpackages:
-  - context
-  - publicsuffix
-testImports:
-- name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
-  subpackages:
-  - spew
-- name: github.com/go-errors/errors
-  version: 8fa88b06e5974e97fbf9899a7f86a344bfd1f105
-- name: github.com/golang/protobuf
-  version: c3cefd437628a0b7d31b34fe44b3a7a540e98527
-  subpackages:
-  - proto
-- name: github.com/gorilla/context
-  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
-- name: github.com/gorilla/mux
-  version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
-- name: github.com/moul/http2curl
-  version: b1479103caacaa39319f75e7f57fc545287fca0d
-- name: github.com/oleiade/reflections
-  version: 2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496
-- name: github.com/parnurzeal/gorequest
-  version: 2aea80ce763523ecc6452e61c3727ae9595a5809
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/square/go-jose
+  version: af13e1fbc7ac2df7f7eab54e5177104d546d0e9c
+  subpackages:
+  - json
 - name: github.com/stretchr/testify
   version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
   - require
+- name: golang.org/x/crypto
+  version: e1a4589e7d3ea14a3352255d04b6f1a418845e5e
+  subpackages:
+  - bcrypt
+  - blowfish
+testImports:
+- name: github.com/golang/protobuf
+  version: 5a0f697c9ed9d68fef0116532c6e05cfeae00e55
+  subpackages:
+  - proto
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: bcd8bc72b08df0f70df986b97f95590779502d31
+- name: github.com/moul/http2curl
+  version: 4e24498b31dba4683efb9d35c1c8a91e2eda28c8
+- name: github.com/parnurzeal/gorequest
+  version: a578a48e8d6ca8b01a3b18314c43c6716bb5f5a3
+- name: golang.org/x/net
+  version: e4fa1c5465ad6111f206fc92186b8c83d64adbe1
+  subpackages:
+  - context
+  - publicsuffix
 - name: golang.org/x/oauth2
-  version: 04e1573abc896e70388bd387a69753c378d46466
+  version: f047394b6d14284165300fd82dad67edb3a4d7f6
   subpackages:
   - clientcredentials
   - internal
-- name: golang.org/x/sys
-  version: 1e99a4f9d247b28c670884b9a8d6801f39a47b77
-  subpackages:
-  - unix
 - name: google.golang.org/appengine
-  version: b4728023490a62e70ba739ff62aa65ffcca84210
+  version: a2f4131514e563cedfdb6e7d267df9ad48591e93
   subpackages:
   - internal
   - internal/base
