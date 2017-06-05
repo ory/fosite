@@ -36,7 +36,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 		Header: http.Header{},
 		Form:   url.Values{},
 	}
-	newErr := errors.New("")
+	newErr := errors.New("asdf")
 
 	for k, c := range []struct {
 		description string
@@ -67,7 +67,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(newErr)
 			},
 			isActive:  false,
-			expectErr: newErr,
+			expectErr: ErrInactiveToken,
 		},
 		{
 			description: "should pass",
