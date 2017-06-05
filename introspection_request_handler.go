@@ -124,7 +124,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 
 	ar, err := f.IntrospectToken(ctx, token, TokenType(tokenType), session, strings.Split(scope, " ")...)
 	if err != nil {
-		return &IntrospectionResponse{Active: false}, err
+		return &IntrospectionResponse{Active: false}, errors.Wrapf(ErrInactiveToken, "Validator returned error %s", err.Error())
 	}
 
 	return &IntrospectionResponse{
