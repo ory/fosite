@@ -81,13 +81,13 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	}
 
+	for _, scope := range authorizeRequest.GetGrantedScopes() {
+		requester.GrantScope(scope)
+	}
+
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
 		return errors.Wrap(fosite.ErrServerError, err.Error())
-	}
-
-	for _, scope := range authorizeRequest.GetGrantedScopes() {
-		requester.GrantScope(scope)
 	}
 
 	var refresh, refreshSignature string
