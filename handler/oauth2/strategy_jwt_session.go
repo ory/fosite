@@ -42,6 +42,14 @@ func (j *JWTSession) GetJWTHeader() *jwt.Headers {
 	return j.JWTHeader
 }
 
+func (s *JWTSession) GetTokenTypes() []string {
+	r := []string{}
+	for tokenType, _ := range s.ExpiresAt {
+		r = append(r, string(tokenType))
+	}
+	return r
+}
+
 func (s *JWTSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
 	if s.ExpiresAt == nil {
 		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
