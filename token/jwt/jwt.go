@@ -25,6 +25,8 @@ func (j *RS256JWTStrategy) Generate(claims jwt.Claims, header Mapper) (string, s
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	token.Header = assign(token.Header, header.ToMap())
+	// "public" is understood to be the most recent keyid
+	token.Header["kid"] = "public"
 
 	var sig, sstr string
 	var err error
