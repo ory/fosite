@@ -351,10 +351,10 @@ go get -d github.com/ory/fosite
 cd $GOPATH/src/github.com/ory/fosite
 git status
 git remote add myfork <url-to-your-fork>
-go test ./...
+go test $(glide novendor)
 ```
 
-Simple, right? Now you are ready to go! Make sure to run `go test ./...` often, detecting problems with your code
+Simple, right? Now you are ready to go! Make sure to run `go test $(glide novendor)` often, detecting problems with your code
 rather sooner than later. Please read [CONTRIBUTE.md] before creating pull requests and issues.
 
 ### Refresh mock objects
