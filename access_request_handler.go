@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"net/url"
 )
 
 // Implements
@@ -55,9 +56,13 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	// Decode client_id and client_secret which should be in "application/x-www-form-urlencoded" format.
-	clientID, clientSecret, ok := r.BasicAuth()
-	if !ok {
+	var clientID, clientSecret string
+	if id, secret, ok := r.BasicAuth(); !ok {
 		return accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP authorization header missing or invalid")
+	} else if clientID, err = url.QueryUnescape(id); err != nil {
+		return accessRequest, errors.Wrap(ErrInvalidRequest, `The client id in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`)
+	} else if clientSecret, err = url.QueryUnescape(secret); err != nil {
+		return accessRequest, errors.Wrap(ErrInvalidRequest, `The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`)
 	}
 
 	client, err := f.Store.GetClient(ctx, clientID)
