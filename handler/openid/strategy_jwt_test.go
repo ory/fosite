@@ -86,7 +86,7 @@ func TestJWTStrategy_GenerateIDToken(t *testing.T) {
 					Headers: &jwt.Headers{},
 				})
 			},
-			expectErr: true,
+			expectErr: false,
 		},
 	} {
 		c.setup()

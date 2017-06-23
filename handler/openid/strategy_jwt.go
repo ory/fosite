@@ -142,8 +142,9 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 
 	nonce := requester.GetRequestForm().Get("nonce")
 	// OPTIONAL. String value used to associate a Client session with an ID Token, and to mitigate replay attacks.
-	// Although optional, this is considered good practice and therefore enforced.
-	if len(nonce) < fosite.MinParameterEntropy {
+	if len(nonce) == 0 {
+		// skip this check, no nonce provided
+	} else if len(nonce) < fosite.MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
 		return "", errors.WithStack(fosite.ErrInsufficientEntropy)
 	}
