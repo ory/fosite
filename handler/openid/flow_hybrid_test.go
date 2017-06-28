@@ -120,20 +120,26 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			expectErr: fosite.ErrInvalidGrant,
 		},
 		{
-			description: "should fail because nonce was not set",
+			description: "should fail because nonce was not sufficient",
 			setup: func() {
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
 					Scopes:        []string{"openid"},
 				}
+				areq.Form.Set("nonce", "short")
 			},
 			expectErr: fosite.ErrInsufficientEntropy,
 		},
 		{
-			description: "should fail because nonce was not set",
+			description: "should pass because nonce was set with sufficient entropy",
 			setup: func() {
-				areq.Form.Add("nonce", "some-foobar-nonce-win")
+				areq.Form.Set("nonce", "some-foobar-nonce-win")
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
+					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
+					Scopes:        []string{"openid"},
+				}
 			},
 		},
 		{
@@ -148,8 +154,14 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 	} {
 		c.setup()
 		err := h.HandleAuthorizeEndpointRequest(nil, areq, aresp)
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-		t.Logf("Passed test case %d", k)
+		condition := errors.Cause(err) == c.expectErr
+		assert.True(t, condition, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		if condition {
+			t.Logf("Passed test case %d", k)
+		} else {
+			t.Logf("Failed test case %d", k)
+		}
+
 		if c.check != nil {
 			c.check()
 		}
