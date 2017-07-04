@@ -1,12 +1,8 @@
-hash: 6ebba9e11cfb855c03017079bd796c2dabc44e61c83ba8a8c03dd223efe1a988
-updated: 2017-06-04T16:32:58.9143689+02:00
+hash: d92ad78a0e95699af758182303644f7316bb846aa8efbd29301f27cf690b59f3
+updated: 2017-07-04T17:33:31.555098144+10:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 4918b99a7cb949bb295f3c7bbaf24b577d806e35
-- name: github.com/davecgh/go-spew
-  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
-  subpackages:
-  - spew
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
 - name: github.com/golang/mock
@@ -19,25 +15,16 @@ imports:
   version: a97ce2ca70fa5a848076093f05e639a89ca34d06
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
-- name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
-  subpackages:
-  - difflib
-- name: github.com/square/go-jose
-  version: af13e1fbc7ac2df7f7eab54e5177104d546d0e9c
-  subpackages:
-  - json
-- name: github.com/stretchr/testify
-  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
-  subpackages:
-  - assert
-  - require
 - name: golang.org/x/crypto
   version: e1a4589e7d3ea14a3352255d04b6f1a418845e5e
   subpackages:
   - bcrypt
   - blowfish
 testImports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
 - name: github.com/golang/protobuf
   version: 5a0f697c9ed9d68fef0116532c6e05cfeae00e55
   subpackages:
@@ -50,6 +37,15 @@ testImports:
   version: 4e24498b31dba4683efb9d35c1c8a91e2eda28c8
 - name: github.com/parnurzeal/gorequest
   version: a578a48e8d6ca8b01a3b18314c43c6716bb5f5a3
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert
+  - require
 - name: golang.org/x/net
   version: e4fa1c5465ad6111f206fc92186b8c83d64adbe1
   subpackages:
