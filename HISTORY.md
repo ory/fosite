@@ -19,6 +19,11 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.10.0
+
+It is no longer possible to introspect authorize codes, and passing scopes to the introspector now also checks
+refresh token scopes.
+
 ## 0.9.0
 
 This patch adds the ability to pass a custom hasher to `compose.Compose`, which is a breaking change. You can pass nil for the fosite default hasher:
