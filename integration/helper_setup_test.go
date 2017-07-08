@@ -85,6 +85,7 @@ var jwtStrategy = &oauth2.RS256JWTStrategy{
 	RS256JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: internal.MustRSAKey(),
 	},
+	HMACSHAStrategy: hmacStrategy,
 }
 
 func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {
