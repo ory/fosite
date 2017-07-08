@@ -180,8 +180,13 @@ func (s *MemoryStore) PersistAuthorizeCodeGrantSession(ctx context.Context, auth
 
 	return nil
 }
+
 func (s *MemoryStore) PersistRefreshTokenGrantSession(ctx context.Context, originalRefreshSignature, accessSignature, refreshSignature string, request fosite.Requester) error {
-	if err := s.DeleteRefreshTokenSession(ctx, originalRefreshSignature); err != nil {
+	if ts, err := s.GetRefreshTokenSession(ctx, originalRefreshSignature, nil); err != nil {
+		return err
+	} else if err := s.RevokeAccessToken(ctx, ts.GetID()); err != nil {
+		return err
+	} else if err := s.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
 		return err
 	} else if err := s.CreateAccessTokenSession(ctx, accessSignature, request); err != nil {
 		return err
@@ -191,6 +196,7 @@ func (s *MemoryStore) PersistRefreshTokenGrantSession(ctx context.Context, origi
 
 	return nil
 }
+
 func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) error {
 	if signature, exists := s.RefreshTokenRequestIDs[requestID]; exists {
 		s.DeleteRefreshTokenSession(ctx, signature)

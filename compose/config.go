@@ -1,8 +1,8 @@
 package compose
 
 import (
-	"time"
 	"github.com/ory/fosite"
+	"time"
 )
 
 type Config struct {
