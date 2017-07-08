@@ -83,6 +83,7 @@ func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *
 		OpenIDConnectExplicitFactory,
 		OpenIDConnectImplicitFactory,
 		OpenIDConnectHybridFactory,
+		OpenIDConnectRefreshFactory,
 
 		OAuth2TokenIntrospectionFactory,
 	)
