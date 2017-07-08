@@ -41,7 +41,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 		TokenIntrospectionHandlers: fosite.TokenIntrospectionHandlers{},
 		RevocationHandlers:         fosite.RevocationHandlers{},
 		Hasher:                     hasher,
-		ScopeStrategy:              fosite.HierarchicScopeStrategy,
+		ScopeStrategy:              config.GetScopeStrategy(),
 	}
 
 	for _, factory := range factories {

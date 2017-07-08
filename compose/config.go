@@ -1,6 +1,9 @@
 package compose
 
-import "time"
+import (
+	"time"
+	"github.com/ory/fosite"
+)
 
 type Config struct {
 	// AccessTokenLifespan sets how long an access token is going to be valid. Defaults to one hour.
@@ -14,6 +17,16 @@ type Config struct {
 
 	// HashCost sets the cost of the password hashing cost. Defaults to 12.
 	HashCost int
+
+	ScopeStrategy fosite.ScopeStrategy
+}
+
+// GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
+func (c *Config) GetScopeStrategy() fosite.ScopeStrategy {
+	if c.ScopeStrategy == nil {
+		c.ScopeStrategy = fosite.WildcardScopeStrategy
+	}
+	return c.ScopeStrategy
 }
 
 // GetAuthorizeCodeLifespan returns how long an authorize code should be valid. Defaults to one fifteen minutes.

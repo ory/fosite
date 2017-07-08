@@ -1,7 +1,6 @@
 package compose
 
 import (
-	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 )
 
@@ -15,7 +14,7 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 		AuthorizeCodeGrantStorage: storage.(oauth2.AuthorizeCodeGrantStorage),
 		AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
 		AccessTokenLifespan:       config.GetAccessTokenLifespan(),
-		ScopeStrategy:             fosite.HierarchicScopeStrategy,
+		ScopeStrategy:             config.GetScopeStrategy(),
 	}
 }
 
@@ -28,7 +27,7 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 			AccessTokenLifespan: config.GetAccessTokenLifespan(),
 		},
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
+		ScopeStrategy: config.GetScopeStrategy(),
 	}
 }
 
@@ -50,7 +49,7 @@ func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strateg
 		AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
 		AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 		AccessTokenLifespan: config.GetAccessTokenLifespan(),
-		ScopeStrategy:       fosite.HierarchicScopeStrategy,
+		ScopeStrategy:       config.GetScopeStrategy(),
 	}
 }
 
@@ -65,7 +64,7 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 			AccessTokenLifespan: config.GetAccessTokenLifespan(),
 		},
 		RefreshTokenStrategy: strategy.(oauth2.RefreshTokenStrategy),
-		ScopeStrategy:        fosite.HierarchicScopeStrategy,
+		ScopeStrategy:        config.GetScopeStrategy(),
 	}
 }
 
@@ -84,7 +83,7 @@ func OAuth2TokenIntrospectionFactory(config *Config, storage interface{}, strate
 	return &oauth2.CoreValidator{
 		CoreStrategy:  strategy.(oauth2.CoreStrategy),
 		CoreStorage:   storage.(oauth2.CoreStorage),
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
+		ScopeStrategy: config.GetScopeStrategy(),
 	}
 }
 
@@ -98,6 +97,6 @@ func OAuth2TokenIntrospectionFactory(config *Config, storage interface{}, strate
 func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.StatelessJWTValidator{
 		JWTAccessTokenStrategy: strategy.(oauth2.JWTAccessTokenStrategy),
-		ScopeStrategy:          fosite.HierarchicScopeStrategy,
+		ScopeStrategy:          config.GetScopeStrategy(),
 	}
 }

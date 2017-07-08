@@ -1,7 +1,6 @@
 package compose
 
 import (
-	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
 )
@@ -26,7 +25,7 @@ func OpenIDConnectImplicitFactory(config *Config, storage interface{}, strategy 
 			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 			AccessTokenLifespan: config.GetAccessTokenLifespan(),
 		},
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
+		ScopeStrategy: config.GetScopeStrategy(),
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
@@ -45,7 +44,7 @@ func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy in
 			AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
 			AccessTokenLifespan:       config.GetAccessTokenLifespan(),
 		},
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
+		ScopeStrategy: config.GetScopeStrategy(),
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
 			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),

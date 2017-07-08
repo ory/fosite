@@ -19,6 +19,21 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.11.0
+
+A new [scope strategy](https://github.com/ory/fosite/pull/187) was introduced called `WildcardScopeStrategy`. This strategy is now the default when using
+the composer. To set the HierarchicScopeStrategy strategy, do:
+
+```
+import "github.com/ory/fosite/compose"
+
+var config = &compose.Config{
+    ScopeStrategy: fosite.HierarchicScopeStrategy,
+}
+```
+
+
+
 ## 0.10.0
 
 It is no longer possible to introspect authorize codes, and passing scopes to the introspector now also checks
@@ -34,7 +49,6 @@ package compose
 -func Compose(config *Config, storage interface{}, strategy interface{}, factories ...Factory) fosite.OAuth2Provider {
 +func Compose(config *Config, storage interface{}, strategy interface{}, hasher fosite.Hasher, factories ...Factory) fosite.OAuth2Provider {
 ```
-
 
 ## 0.8.0
 

@@ -194,6 +194,7 @@ func (s *MemoryStore) PersistRefreshTokenGrantSession(ctx context.Context, origi
 func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) error {
 	if signature, exists := s.RefreshTokenRequestIDs[requestID]; exists {
 		s.DeleteRefreshTokenSession(ctx, signature)
+		s.DeleteAccessTokenSession(ctx, signature)
 	}
 	return nil
 }
