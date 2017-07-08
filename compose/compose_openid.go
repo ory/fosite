@@ -5,8 +5,9 @@ import (
 	"github.com/ory/fosite/handler/openid"
 )
 
-// OpenIDConnectExplicitFactory creates an OpenID Connect explicit ("authorize code flow") grant handler. You must add this handler
-// *after* you have added an OAuth2 authorize code handler!
+// OpenIDConnectExplicitFactory creates an OpenID Connect explicit ("authorize code flow") grant handler.
+//
+// **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
 func OpenIDConnectExplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectExplicitHandler{
 		OpenIDConnectRequestStorage: storage.(openid.OpenIDConnectRequestStorage),
@@ -16,8 +17,20 @@ func OpenIDConnectExplicitFactory(config *Config, storage interface{}, strategy 
 	}
 }
 
-// OpenIDConnectImplicitFactory creates an OpenID Connect implicit ("implicit flow") grant handler. You must add this handler
-// *after* you have added an OAuth2 authorize implicit handler!
+// OpenIDConnectRefreshFactory creates a handler for refreshing openid connect tokens.
+//
+// **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
+func OpenIDConnectRefreshFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
+	return &openid.OpenIDConnectRefreshHandler{
+		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
+			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
+		},
+	}
+}
+
+// OpenIDConnectImplicitFactory creates an OpenID Connect implicit ("implicit flow") grant handler.
+//
+// **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
 func OpenIDConnectImplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectImplicitHandler{
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
@@ -32,8 +45,9 @@ func OpenIDConnectImplicitFactory(config *Config, storage interface{}, strategy 
 	}
 }
 
-// OpenIDConnectHybridFactory creates an OpenID Connect hybrid grant handler. You must add this handler
-// *after* you have added an OAuth2 authorize code and implicit authorize handler!
+// OpenIDConnectHybridFactory creates an OpenID Connect hybrid grant handler.
+//
+// **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
 func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectHybridHandler{
 		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{

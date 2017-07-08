@@ -2,37 +2,29 @@ package integration_test
 
 import (
 	"testing"
-
 	"net/http"
 	"time"
 
-	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
-	hst "github.com/ory/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
+	"github.com/ory/fosite/internal"
+	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/token/jwt"
 )
 
 func TestRefreshTokenFlow(t *testing.T) {
-	for _, strategy := range []hst.AccessTokenStrategy{
-		hmacStrategy,
-	} {
-		runRefreshTokenGrantTest(t, strategy)
+	session := &defaultSession{
+		DefaultSession: &openid.DefaultSession{
+			Claims: &jwt.IDTokenClaims{
+				Subject: "peter",
+			},
+			Headers: &jwt.Headers{},
+		},
 	}
-}
-
-func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
-	f := compose.Compose(
-		new(compose.Config),
-		fositeStore,
-		strategy,
-		nil,
-		compose.OAuth2AuthorizeExplicitFactory,
-		compose.OAuth2RefreshTokenGrantFactory,
-		compose.OAuth2TokenIntrospectionFactory,
-	)
-	ts := mockServer(t, f, &fosite.DefaultSession{})
+	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())
+	ts := mockServer(t, f, session)
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
@@ -51,7 +43,7 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 		{
 			description: "should pass",
 			setup: func() {
-				oauthClient.Scopes = []string{"fosite", "offline"}
+				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
 			},
 			pass: true,
 		},
@@ -77,6 +69,7 @@ func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
 				require.Nil(t, err, "(%d) %s: %s", k, c.description, err)
 				assert.NotEqual(t, token.RefreshToken, refreshed.RefreshToken, "(%d) %s", k, c.description)
 				assert.NotEqual(t, token.AccessToken, refreshed.AccessToken, "(%d) %s", k, c.description)
+				assert.NotNil(t, token.Extra("id_token"), "(%d) %s", k, c.description)
 			} else {
 				require.NotNil(t, err, "(%d) %s: %s", k, c.description, err)
 

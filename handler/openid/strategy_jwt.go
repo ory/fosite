@@ -10,6 +10,7 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
+	"github.com/pborman/uuid"
 )
 
 const defaultExpiryTime = time.Hour
@@ -112,16 +113,16 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 
 	sess, ok := requester.GetSession().(Session)
 	if !ok {
-		return "", errors.New("Session must be of type strategy.Session")
+		return "", errors.New("Failed to generate id token because session must be of type fosite/handler/openid.Session")
 	}
 
 	claims := sess.IDTokenClaims()
 	if requester.GetRequestForm().Get("max_age") != "" && (claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now())) {
-		return "", errors.New("Authentication time claim is required when max_age is set and can not be in the future")
+		return "", errors.New("Failed to generate id token because authentication time claim is required when max_age is set and can not be in the future")
 	}
 
 	if claims.Subject == "" {
-		return "", errors.New("Subject claim can not be empty")
+		return "", errors.New("Failed to generate id token because subject is an empty string")
 	}
 
 	if claims.ExpiresAt.IsZero() {
@@ -129,7 +130,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	}
 
 	if claims.ExpiresAt.Before(time.Now()) {
-		return "", errors.New("Expiry claim can not be in the past")
+		return "", errors.New("Failed to generate id token because expiry claim can not be in the past")
 	}
 
 	if claims.AuthTime.IsZero() {
@@ -143,7 +144,8 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	nonce := requester.GetRequestForm().Get("nonce")
 	// OPTIONAL. String value used to associate a Client session with an ID Token, and to mitigate replay attacks.
 	if len(nonce) == 0 {
-		// skip this check, no nonce provided
+		// skip this check, no nonce provided, let's use a random one.
+		nonce = uuid.New()
 	} else if len(nonce) < fosite.MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
 		return "", errors.WithStack(fosite.ErrInsufficientEntropy)
