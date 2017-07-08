@@ -2,86 +2,98 @@ package integration_test
 
 import (
 	"testing"
-
 	"net/http"
 	"time"
 
-	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
-	hst "github.com/ory/fosite/handler/oauth2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
+	"github.com/ory/fosite/internal"
+	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/token/jwt"
 )
 
 func TestRefreshTokenFlow(t *testing.T) {
-	for _, strategy := range []hst.AccessTokenStrategy{
-		hmacStrategy,
-	} {
-		runRefreshTokenGrantTest(t, strategy)
+	session := &defaultSession{
+		DefaultSession: &openid.DefaultSession{
+			Claims: &jwt.IDTokenClaims{
+				Subject: "peter",
+			},
+			Headers: &jwt.Headers{},
+		},
 	}
-}
-
-func runRefreshTokenGrantTest(t *testing.T, strategy interface{}) {
-	f := compose.Compose(
-		new(compose.Config),
-		fositeStore,
-		strategy,
-		nil,
-		compose.OAuth2AuthorizeExplicitFactory,
-		compose.OAuth2RefreshTokenGrantFactory,
-		compose.OAuth2TokenIntrospectionFactory,
-	)
-	ts := mockServer(t, f, &fosite.DefaultSession{})
+	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())
+	ts := mockServer(t, f, session)
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
 	state := "1234567890"
 	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
-	for k, c := range []struct {
+	for _, c := range []struct {
 		description string
 		setup       func()
 		pass        bool
+		check       func(original, refreshed *oauth2.Token)
 	}{
 		{
-			description: "should fail because scope missing",
-			setup:       func() {},
+			description: "should fail because refresh scope missing",
+			setup:       func() {
+				oauthClient.Scopes = []string{"fosite"}
+			},
 			pass:        false,
 		},
 		{
-			description: "should pass",
+			description: "should pass but not yield id token",
 			setup: func() {
-				oauthClient.Scopes = []string{"fosite", "offline"}
+				oauthClient.Scopes = []string{"offline"}
 			},
 			pass: true,
+			check: func(original, refreshed *oauth2.Token) {
+				assert.NotEqual(t, original.RefreshToken, refreshed.RefreshToken)
+				assert.NotEqual(t, original.AccessToken, refreshed.AccessToken)
+				assert.Nil(t, refreshed.Extra("id_token"))
+			},
+		},
+		{
+			description: "should pass and yield id token",
+			setup: func() {
+				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
+			},
+			pass: true,
+			check: func(original, refreshed *oauth2.Token) {
+				assert.NotEqual(t, original.RefreshToken, refreshed.RefreshToken)
+				assert.NotEqual(t, original.AccessToken, refreshed.AccessToken)
+				assert.NotNil(t, refreshed.Extra("id_token"))
+			},
 		},
 	} {
-		c.setup()
+		t.Run("case="+c.description, func(t *testing.T) {
+			c.setup()
 
-		resp, err := http.Get(oauthClient.AuthCodeURL(state))
-		require.Nil(t, err)
-		require.Equal(t, http.StatusOK, resp.StatusCode, "(%d) %s", k, c.description)
+			resp, err := http.Get(oauthClient.AuthCodeURL(state))
+			require.NoError(t, err)
+			require.Equal(t, http.StatusOK, resp.StatusCode)
 
-		if resp.StatusCode == http.StatusOK {
+			if resp.StatusCode != http.StatusOK {
+				return
+			}
+
 			token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
-			require.Nil(t, err, "(%d) %s", k, c.description)
-			require.NotEmpty(t, token.AccessToken, "(%d) %s", k, c.description)
+			require.NoError(t, err)
+			require.NotEmpty(t, token.AccessToken)
 
 			t.Logf("Token %s\n", token)
 			token.Expiry = token.Expiry.Add(-time.Hour * 24)
-			t.Logf("Token %s\n", token)
 
 			tokenSource := oauthClient.TokenSource(oauth2.NoContext, token)
 			refreshed, err := tokenSource.Token()
 			if c.pass {
-				require.Nil(t, err, "(%d) %s: %s", k, c.description, err)
-				assert.NotEqual(t, token.RefreshToken, refreshed.RefreshToken, "(%d) %s", k, c.description)
-				assert.NotEqual(t, token.AccessToken, refreshed.AccessToken, "(%d) %s", k, c.description)
+				require.NoError(t, err)
+				c.check(token, refreshed)
 			} else {
-				require.NotNil(t, err, "(%d) %s: %s", k, c.description, err)
-
+				require.NotNil(t, err)
 			}
-		}
-		t.Logf("Passed test case (%d) %s", k, c.description)
+		})
 	}
 }
