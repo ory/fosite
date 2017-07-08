@@ -15,7 +15,8 @@ import (
 // RS256JWTStrategy is a JWT RS256 strategy.
 type RS256JWTStrategy struct {
 	*jwt.RS256JWTStrategy
-	Issuer string
+	HMACSHAStrategy *HMACSHAStrategy
+	Issuer          string
 }
 
 func (h RS256JWTStrategy) signature(token string) string {
@@ -31,12 +32,13 @@ func (h RS256JWTStrategy) AccessTokenSignature(token string) string {
 	return h.signature(token)
 }
 
-func (h RS256JWTStrategy) RefreshTokenSignature(token string) string {
-	return h.signature(token)
+func (h *RS256JWTStrategy) GenerateAccessToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
+	return h.generate(fosite.AccessToken, requester)
 }
 
-func (h RS256JWTStrategy) AuthorizeCodeSignature(token string) string {
-	return h.signature(token)
+func (h *RS256JWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Requester, token string) error {
+	_, err := h.validate(token)
+	return err
 }
 
 func (h *RS256JWTStrategy) ValidateJWT(tokenType fosite.TokenType, token string) (requester fosite.Requester, err error) {
@@ -68,31 +70,28 @@ func (h *RS256JWTStrategy) ValidateJWT(tokenType fosite.TokenType, token string)
 	return
 }
 
-func (h *RS256JWTStrategy) GenerateAccessToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
-	return h.generate(fosite.AccessToken, requester)
+func (h RS256JWTStrategy) RefreshTokenSignature(token string) string {
+	return h.HMACSHAStrategy.RefreshTokenSignature(token)
 }
 
-func (h *RS256JWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Requester, token string) error {
-	_, err := h.validate(token)
-	return err
+func (h RS256JWTStrategy) AuthorizeCodeSignature(token string) string {
+	return h.HMACSHAStrategy.AuthorizeCodeSignature(token)
 }
 
-func (h *RS256JWTStrategy) GenerateRefreshToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
-	return h.generate(fosite.RefreshToken, requester)
+func (h *RS256JWTStrategy) GenerateRefreshToken(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
+	return h.HMACSHAStrategy.GenerateRefreshToken(ctx, req)
 }
 
-func (h *RS256JWTStrategy) ValidateRefreshToken(_ context.Context, _ fosite.Requester, token string) error {
-	_, err := h.validate(token)
-	return err
+func (h *RS256JWTStrategy) ValidateRefreshToken(ctx context.Context, req fosite.Requester, token string) error {
+	return h.HMACSHAStrategy.ValidateRefreshToken(ctx, req, token)
 }
 
-func (h *RS256JWTStrategy) GenerateAuthorizeCode(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
-	return h.generate(fosite.AuthorizeCode, requester)
+func (h *RS256JWTStrategy) GenerateAuthorizeCode(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
+	return h.HMACSHAStrategy.GenerateAuthorizeCode(ctx, req)
 }
 
-func (h *RS256JWTStrategy) ValidateAuthorizeCode(_ context.Context, requester fosite.Requester, token string) error {
-	_, err := h.validate(token)
-	return err
+func (h *RS256JWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosite.Requester, token string) error {
+	return h.HMACSHAStrategy.ValidateAuthorizeCode(ctx, req, token)
 }
 
 func (h *RS256JWTStrategy) validate(token string) (t *jwtx.Token, err error) {

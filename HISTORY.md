@@ -4,6 +4,12 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
+
+- [0.11.0](#0110)
+  - [WildcardScopeStrategy](#wildcardscopestrategy)
+  - [Refresh tokens and authorize codes are no longer JWTs](#refresh-tokens-and-authorize-codes-are-no-longer-jwts)
+  - [Delete access tokens when persisting refresh session](#delete-access-tokens-when-persisting-refresh-session)
+- [0.10.0](#0100)
 - [0.9.0](#090)
 - [0.8.0](#080)
   - [Breaking changes](#breaking-changes)
@@ -21,6 +27,10 @@ bumps (`0.1.0` -> `0.2.0`).
 
 ## 0.11.0
 
+This release introduces breaking changes:
+
+### WildcardScopeStrategy
+
 A new [scope strategy](https://github.com/ory/fosite/pull/187) was introduced called `WildcardScopeStrategy`. This strategy is now the default when using
 the composer. To set the HierarchicScopeStrategy strategy, do:
 
@@ -32,7 +42,47 @@ var config = &compose.Config{
 }
 ```
 
+### Refresh tokens and authorize codes are no longer JWTs
 
+Using JWTs for refresh tokens and authorize codes did not make sense:
+
+1. Refresh tokens are long-living credentials, JWTs require an expiry date.
+2. Refresh tokens are never validated client-side, only server-side. Thus access to the store is available.
+3. Authorize codes are never validated client-side, only server-side.
+
+Also, one compose method changed due to this:
+
+```go
+package compose
+
+// ..
+
+- func NewOAuth2JWTStrategy(key *rsa.PrivateKey) *oauth2.RS256JWTStrategy
++ func NewOAuth2JWTStrategy(key *rsa.PrivateKey, strategy *oauth2.HMACSHAStrategy) *oauth2.RS256JWTStrategy
+```
+
+### Delete access tokens when persisting refresh session
+
+Please delete access tokens in your store when you persist a refresh session. This increases security. Here
+is an example of how to do that using only existing methods:
+
+```go
+func (s *MemoryStore) PersistRefreshTokenGrantSession(ctx context.Context, originalRefreshSignature, accessSignature, refreshSignature string, request fosite.Requester) error {
+	if ts, err := s.GetRefreshTokenSession(ctx, originalRefreshSignature, nil); err != nil {
+		return err
+	} else if err := s.RevokeAccessToken(ctx, ts.GetID()); err != nil {
+		return err
+	} else if err := s.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
+ 		return err
+ 	} else if err := s.CreateAccessTokenSession(ctx, accessSignature, request); err != nil {
+ 		return err
+ 	} else if err := s.CreateRefreshTokenSession(ctx, refreshSignature, request); err != nil {
+ 		return err
+ 	}
+
+ 	return nil
+}
+```
 
 ## 0.10.0
 
