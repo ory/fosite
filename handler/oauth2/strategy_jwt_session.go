@@ -1,12 +1,11 @@
 package oauth2
 
 import (
-	"bytes"
-	"encoding/gob"
 	"time"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
+	"github.com/mohae/deepcopy"
 )
 
 type JWTSessionContainer interface {
@@ -80,11 +79,5 @@ func (s *JWTSession) Clone() fosite.Session {
 		return nil
 	}
 
-	var clone JWTSession
-	var mod bytes.Buffer
-	enc := gob.NewEncoder(&mod)
-	dec := gob.NewDecoder(&mod)
-	_ = enc.Encode(s)
-	_ = dec.Decode(&clone)
-	return &clone
+	return deepcopy.Copy(s).(fosite.Session)
 }

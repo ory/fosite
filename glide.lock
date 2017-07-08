@@ -1,36 +1,51 @@
 hash: d92ad78a0e95699af758182303644f7316bb846aa8efbd29301f27cf690b59f3
-updated: 2017-07-04T17:33:31.555098144+10:00
+updated: 2017-07-08T21:49:06.7880537+02:00
 imports:
 - name: github.com/asaskevich/govalidator
   version: 4918b99a7cb949bb295f3c7bbaf24b577d806e35
 - name: github.com/dgrijalva/jwt-go
   version: d2709f9f1f31ebcda9651b03077758c1f3a0018c
 - name: github.com/golang/mock
-  version: bd3c8e81be01eef76d4b503f5e687d2d1354d2d9
+  version: 93f6609a15b7de76bd49259f1f9a6b58df358936
   subpackages:
   - gomock
+- name: github.com/mohae/deepcopy
+  version: 491d3605edfb866af34a48075bd4355ac1bf46ca
 - name: github.com/oleiade/reflections
   version: 2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496
 - name: github.com/pborman/uuid
   version: a97ce2ca70fa5a848076093f05e639a89ca34d06
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/rakyll/hey
+  version: 886125b9f23d5bdb23dbb1000f2bff4b757ccfb1
+  subpackages:
+  - requester
 - name: golang.org/x/crypto
-  version: e1a4589e7d3ea14a3352255d04b6f1a418845e5e
+  version: 453249f01cfeb54c3d549ddb75ff152ca243f9d8
   subpackages:
   - bcrypt
   - blowfish
+- name: golang.org/x/net
+  version: dd2d9a67c97da0afa00d5726e28086007a0acce5
+  subpackages:
+  - context
+  - http2
+  - http2/hpack
+  - idna
+  - lex/httplex
+  - publicsuffix
 testImports:
 - name: github.com/davecgh/go-spew
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/golang/protobuf
-  version: 5a0f697c9ed9d68fef0116532c6e05cfeae00e55
+  version: 69b215d01a5606c843240eab4937eab3acee6530
   subpackages:
   - proto
 - name: github.com/gorilla/context
-  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+  version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
 - name: github.com/gorilla/mux
   version: bcd8bc72b08df0f70df986b97f95590779502d31
 - name: github.com/moul/http2curl
@@ -46,18 +61,13 @@ testImports:
   subpackages:
   - assert
   - require
-- name: golang.org/x/net
-  version: e4fa1c5465ad6111f206fc92186b8c83d64adbe1
-  subpackages:
-  - context
-  - publicsuffix
 - name: golang.org/x/oauth2
-  version: f047394b6d14284165300fd82dad67edb3a4d7f6
+  version: b9780ec78894ab900c062d58ee3076cd9b2a4501
   subpackages:
   - clientcredentials
   - internal
 - name: google.golang.org/appengine
-  version: a2f4131514e563cedfdb6e7d267df9ad48591e93
+  version: 3a452f9e00122ead39586d68ffdb9c6e1326af3c
   subpackages:
   - internal
   - internal/base
