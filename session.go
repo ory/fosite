@@ -1,9 +1,8 @@
 package fosite
 
 import (
-	"bytes"
-	"encoding/gob"
 	"time"
+	"github.com/mohae/deepcopy"
 )
 
 // Session is an interface that is used to store session data between OAuth2 requests. It can be used to look up
@@ -74,11 +73,5 @@ func (s *DefaultSession) Clone() Session {
 		return nil
 	}
 
-	var clone DefaultSession
-	var mod bytes.Buffer
-	enc := gob.NewEncoder(&mod)
-	dec := gob.NewDecoder(&mod)
-	_ = enc.Encode(s)
-	_ = dec.Decode(&clone)
-	return &clone
+	return deepcopy.Copy(s).(Session)
 }
