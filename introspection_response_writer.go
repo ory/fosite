@@ -1,9 +1,9 @@
 package fosite
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
-	"encoding/json"
 
 	"github.com/pkg/errors"
 )
