@@ -34,3 +34,33 @@ func HierarchicScopeStrategy(haystack []string, needle string) bool {
 
 	return false
 }
+
+func WildcardScopeStrategy(haystack []string, needle string) bool {
+	for _, this := range haystack {
+		if this == needle {
+			return true
+		}
+
+		needles := strings.Split(needle, ".")
+		haystack := strings.Split(this, ".")
+		if len(needles) != len(haystack) {
+			continue
+		}
+
+		var noteq bool
+		for k, needle := range needles {
+			current := haystack[k]
+			if needle == "*" && len(current) > 0 {
+			} else if current != needle {
+				noteq = true
+				break
+			}
+		}
+
+		if !noteq {
+			return true
+		}
+	}
+
+	return false
+}

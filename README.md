@@ -157,18 +157,45 @@ There is an API documentation available at [godoc.org/ory/fosite](https://godoc.
 
 ### Scopes
 
-Before we skip ahead, it is important to note how scopes are being used in fosite per default.
-The general pattern can be abstracted as `<scope>.<sub-scope>.<sub-sub-scope>.<sub-sub-...>`. Every level ("subset")
-contains all sublevels, too. For example:
+Fosite has two strategies for matching scopes. You can replace the default scope strategy if you need a custom
+one by implementing `fosite.ScopeStrategy`.
 
-* `blogposts` grants scopes `blogposts.create`, `blogposts.delete`, `blogposts.read`, `blogposts.own.read`.
-* `blogposts.create` does not grant `blogposts.delete` nor `blogposts.read` nor `blogposts.own.read`.
-* `blogposts.own.read` does not grant `blogposts.create`.
-* `blogposts.own` grants `blogposts.own.read` but not `blogposts.create`.
+Using the composer, setting a strategy is easy:
 
-You can replace the default scope strategy if you need a custom one by implementing `fosite.ScopeStrategy`.
+```go
+import "github.com/ory/fosite/compose"
+
+var config = &compose.Config{
+    ScopeStrategy: fosite.HierarchicScopeStrategy,
+}
+```
 
 **Note:** To issue refresh tokens with any of the grants, you need to include the `offline` scope in the OAuth2 request.
+
+#### `fosite.WildcardScopeStrategy`
+
+This is the default strategy, and the safest one. It is best explained by looking at some examples:
+
+* `users.*` matches `users.read`
+* `users.read` matches `users.read`
+* `users` does not match `users.read`
+* `users.read.*` does not match `users.read`
+* `users.*.*` does not match `users.read`
+* `users.*.*` matches `users.read.own`
+* `users.read.*` matches `users.read.own`
+* `users.write.*` does not match `users.read.own`
+
+#### `fosite.HierarchicScopeStrategy`
+
+This strategy is deprecated, use it with care. Again, it is best explained by looking at some examples:
+
+* `users` matches `users`
+* `users` matches `users.read`
+* `users` matches `users.read.own`
+* `users.read` matches `users.read`
+* `users.read` matches `users.read.own`
+* `users.read` does not match `users.write`
+* `users.read` does not match `users.write.own`
 
 ### Quickstart
 

@@ -41,3 +41,49 @@ func TestHierarchicScopeStrategy(t *testing.T) {
 	assert.True(t, strategy(scopes, "offline"))
 	assert.True(t, strategy(scopes, "offline.baz.bar.baz"))
 }
+
+func TestWildcardScopeStrategy(t *testing.T) {
+	var strategy ScopeStrategy = WildcardScopeStrategy
+	var scopes = []string{}
+
+	assert.False(t, strategy(scopes, "foo.bar.baz"))
+	assert.False(t, strategy(scopes, "foo.*.bar"))
+	assert.False(t, strategy(scopes, "foo.*"))
+	assert.False(t, strategy(scopes, "*"))
+
+	scopes = []string{""}
+	assert.False(t, strategy(scopes, "*"))
+
+	scopes = []string{"foo"}
+	assert.True(t, strategy(scopes, "*"))
+	assert.False(t, strategy(scopes, "foo.*"))
+	assert.False(t, strategy(scopes, "fo*"))
+
+	scopes = []string{"foo.bar"}
+	assert.True(t, strategy(scopes, "foo.*"))
+
+	scopes = []string{"foo.baz"}
+	assert.True(t, strategy(scopes, "foo.*"))
+	assert.False(t, strategy(scopes, "foo.*.foo"))
+	assert.False(t, strategy(scopes, "foo.*."))
+	assert.False(t, strategy(scopes, "foo.foo.*."))
+	assert.False(t, strategy(scopes, "foo.foo.*"))
+
+	scopes = []string{"foo.baz.bar"}
+	assert.False(t, strategy(scopes, "foo.*"))
+	assert.True(t, strategy(scopes, "foo.*.*"))
+	assert.True(t, strategy(scopes, "foo.*.bar"))
+	assert.True(t, strategy(scopes, "foo.baz.*"))
+	assert.True(t, strategy(scopes, "foo.baz.bar"))
+	assert.False(t, strategy(scopes, "foo.b*.bar"))
+
+	scopes = []string{"foo.bar", "foo.baz.bar"}
+	assert.True(t, strategy(scopes, "foo.*"))
+	assert.True(t, strategy(scopes, "foo.*.*"))
+	assert.True(t, strategy(scopes, "foo.*.bar"))
+	assert.False(t, strategy(scopes, "foo.bar.*"))
+	assert.True(t, strategy(scopes, "foo.baz.*"))
+
+	scopes = []string{"foo..bar"}
+	assert.False(t, strategy(scopes, "foo.*.bar"))
+}
