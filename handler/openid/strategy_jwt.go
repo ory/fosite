@@ -1,15 +1,13 @@
 package openid
 
 import (
-	"encoding/gob"
 	"time"
-
-	"bytes"
 	"context"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
+	"github.com/mohae/deepcopy"
 	"github.com/pborman/uuid"
 )
 
@@ -43,13 +41,7 @@ func (s *DefaultSession) Clone() fosite.Session {
 		return nil
 	}
 
-	var clone DefaultSession
-	var mod bytes.Buffer
-	enc := gob.NewEncoder(&mod)
-	dec := gob.NewDecoder(&mod)
-	_ = enc.Encode(s)
-	_ = dec.Decode(&clone)
-	return &clone
+	return deepcopy.Copy(s).(fosite.Session)
 }
 
 func (s *DefaultSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
