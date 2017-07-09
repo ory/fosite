@@ -12,8 +12,8 @@ import (
 
 var hmacshaStrategy = HMACSHAStrategy{
 	Enigma:                &hmac.HMACStrategy{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
-	AccessTokenLifespan:   time.Minute,
-	AuthorizeCodeLifespan: time.Minute,
+	AccessTokenLifespan:   time.Hour * 24,
+	AuthorizeCodeLifespan: time.Hour * 24,
 }
 
 var hmacExpiredCase = fosite.Request{
