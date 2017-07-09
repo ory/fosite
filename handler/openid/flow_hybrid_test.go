@@ -59,7 +59,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			AccessTokenLifespan:       time.Hour,
 			AuthCodeLifespan:          time.Hour,
 			AccessTokenStrategy:       hmacStrategy,
-			AuthorizeCodeGrantStorage: storage.NewMemoryStore(),
+			CoreStorage: storage.NewMemoryStore(),
 		},
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenLifespan: time.Hour,

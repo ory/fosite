@@ -18,9 +18,7 @@ type AuthorizeExplicitGrantHandler struct {
 	AccessTokenStrategy   AccessTokenStrategy
 	RefreshTokenStrategy  RefreshTokenStrategy
 	AuthorizeCodeStrategy AuthorizeCodeStrategy
-
-	// AuthorizeCodeGrantStorage is used to persist session data across requests.
-	AuthorizeCodeGrantStorage AuthorizeCodeGrantStorage
+	CoreStorage           CoreStorage
 
 	// AuthCodeLifespan defines the lifetime of an authorize code.
 	AuthCodeLifespan time.Duration
@@ -62,7 +60,7 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 	}
 
 	ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().Add(c.AuthCodeLifespan))
-	if err := c.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
+	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
 		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 

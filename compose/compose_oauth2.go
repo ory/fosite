@@ -11,7 +11,7 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 		AccessTokenStrategy:       strategy.(oauth2.AccessTokenStrategy),
 		RefreshTokenStrategy:      strategy.(oauth2.RefreshTokenStrategy),
 		AuthorizeCodeStrategy:     strategy.(oauth2.AuthorizeCodeStrategy),
-		AuthorizeCodeGrantStorage: storage.(oauth2.AuthorizeCodeGrantStorage),
+		CoreStorage: storage.(oauth2.CoreStorage),
 		AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
 		AccessTokenLifespan:       config.GetAccessTokenLifespan(),
 		ScopeStrategy:             config.GetScopeStrategy(),
@@ -37,7 +37,7 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 	return &oauth2.RefreshTokenGrantHandler{
 		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
 		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
-		RefreshTokenGrantStorage: storage.(oauth2.RefreshTokenGrantStorage),
+		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
 		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
 	}
 }

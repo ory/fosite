@@ -59,7 +59,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		code, signature, err := c.AuthorizeExplicitGrantHandler.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 		if err != nil {
 			return errors.Wrap(fosite.ErrServerError, err.Error())
-		} else if err := c.AuthorizeExplicitGrantHandler.AuthorizeCodeGrantStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
+		} else if err := c.AuthorizeExplicitGrantHandler.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
 			return errors.Wrap(fosite.ErrServerError, err.Error())
 		}
 
