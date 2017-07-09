@@ -6,9 +6,16 @@ bumps (`0.1.0` -> `0.2.0`).
 
 
 - [0.11.0](#0110)
-  - [WildcardScopeStrategy](#wildcardscopestrategy)
-  - [Refresh tokens and authorize codes are no longer JWTs](#refresh-tokens-and-authorize-codes-are-no-longer-jwts)
-  - [Delete access tokens when persisting refresh session](#delete-access-tokens-when-persisting-refresh-session)
+  - [Non-breaking changes](#non-breaking-changes)
+    - [Storage adapter](#storage-adapter)
+    - [Reducing use of gomock](#reducing-use-of-gomock)
+  - [Breaking Changes](#breaking-changes)
+    - [`fosite/handler/oauth2.AuthorizeCodeGrantStorage` was removed](#fositehandleroauth2authorizecodegrantstorage-was-removed)
+    - [`fosite/handler/oauth2.RefreshTokenGrantStorage` was removed](#fositehandleroauth2refreshtokengrantstorage-was-removed)
+    - [`fosite/handler/oauth2.AuthorizeCodeGrantStorage` was removed](#fositehandleroauth2authorizecodegrantstorage-was-removed-1)
+    - [WildcardScopeStrategy](#wildcardscopestrategy)
+    - [Refresh tokens and authorize codes are no longer JWTs](#refresh-tokens-and-authorize-codes-are-no-longer-jwts)
+    - [Delete access tokens when persisting refresh session](#delete-access-tokens-when-persisting-refresh-session)
 - [0.10.0](#0100)
 - [0.9.0](#090)
 - [0.8.0](#080)
@@ -27,9 +34,38 @@ bumps (`0.1.0` -> `0.2.0`).
 
 ## 0.11.0
 
-This release introduces breaking changes:
+### Non-breaking changes
 
-### WildcardScopeStrategy
+#### Storage adapter
+
+To simplify the storage adapter logic, and also reduce the likelihoods of bugs within the storage adapter, the
+interface was greatly simplified. Specifically, these two methods have been removed:
+
+* `PersistRefreshTokenGrantSession(ctx context.Context, requestRefreshSignature, accessSignature, refreshSignature string, request fosite.Requester) error`
+* `PersistAuthorizeCodeGrantSession(ctx context.Context, authorizeCode, accessSignature, refreshSignature string, request fosite.Requester) error`
+
+For this change, you don't need to do anything. You can however simply delete those two methods from your store.
+
+#### Reducing use of gomock
+
+In the long term, fosite should remove all gomocks and instead test against the internal implementations. This
+will increase iterations per line during tests and reduce annoying mock updates.
+
+### Breaking Changes
+
+#### `fosite/handler/oauth2.AuthorizeCodeGrantStorage` was removed
+
+`AuthorizeCodeGrantStorage` was used specifically in the composer. Refactor references to `AuthorizeCodeGrantStorage` with `CoreStorage`.
+
+#### `fosite/handler/oauth2.RefreshTokenGrantStorage` was removed
+
+`RefreshTokenGrantStorage` was used specifically in the composer. Refactor references to `RefreshTokenGrantStorage` with `CoreStorage`.
+
+#### `fosite/handler/oauth2.AuthorizeCodeGrantStorage` was removed
+
+`AuthorizeCodeGrantStorage` was used specifically in the composer. Refactor references to `AuthorizeCodeGrantStorage` with `CoreStorage`.
+
+#### WildcardScopeStrategy
 
 A new [scope strategy](https://github.com/ory/fosite/pull/187) was introduced called `WildcardScopeStrategy`. This strategy is now the default when using
 the composer. To set the HierarchicScopeStrategy strategy, do:
@@ -42,7 +78,7 @@ var config = &compose.Config{
 }
 ```
 
-### Refresh tokens and authorize codes are no longer JWTs
+#### Refresh tokens and authorize codes are no longer JWTs
 
 Using JWTs for refresh tokens and authorize codes did not make sense:
 
@@ -61,7 +97,7 @@ package compose
 + func NewOAuth2JWTStrategy(key *rsa.PrivateKey, strategy *oauth2.HMACSHAStrategy) *oauth2.RS256JWTStrategy
 ```
 
-### Delete access tokens when persisting refresh session
+#### Delete access tokens when persisting refresh session
 
 Please delete access tokens in your store when you persist a refresh session. This increases security. Here
 is an example of how to do that using only existing methods:

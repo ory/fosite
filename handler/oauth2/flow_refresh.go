@@ -1,21 +1,17 @@
 package oauth2
 
 import (
-	"time"
-
 	"context"
+	"time"
 
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
 )
 
 type RefreshTokenGrantHandler struct {
-	AccessTokenStrategy AccessTokenStrategy
-
-	RefreshTokenStrategy RefreshTokenStrategy
-
-	// RefreshTokenGrantStorage is used to persist session data across requests.
-	RefreshTokenGrantStorage RefreshTokenGrantStorage
+	AccessTokenStrategy    AccessTokenStrategy
+	RefreshTokenStrategy   RefreshTokenStrategy
+	TokenRevocationStorage TokenRevocationStorage
 
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration
@@ -34,8 +30,13 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	refresh := request.GetRequestForm().Get("refresh_token")
+	// The authorization server MUST ... validate the refresh token.
+	if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, request, refresh); err != nil {
+		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
+	}
+
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(refresh)
-	originalRequest, err := c.RefreshTokenGrantStorage.GetRefreshTokenSession(ctx, signature, request.GetSession())
+	originalRequest, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	} else if err != nil {
@@ -45,11 +46,6 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	if !originalRequest.GetGrantedScopes().Has("offline") {
 		return errors.Wrap(fosite.ErrScopeNotGranted, "The client is not allowed to use grant type refresh_token")
 
-	}
-
-	// The authorization server MUST ... validate the refresh token.
-	if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, request, refresh); err != nil {
-		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	}
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
@@ -84,8 +80,16 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	}
 
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(requester.GetRequestForm().Get("refresh_token"))
-	if err := c.RefreshTokenGrantStorage.PersistRefreshTokenGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+	if ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil); err != nil {
+		return err
+	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
+		return err
+	} else if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
+		return err
+	} else if err := c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, requester); err != nil {
+		return err
+	} else if err := c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester); err != nil {
+		return err
 	}
 
 	responder.SetAccessToken(accessToken)

@@ -54,7 +54,7 @@ func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy in
 			AccessTokenStrategy:       strategy.(oauth2.AccessTokenStrategy),
 			RefreshTokenStrategy:      strategy.(oauth2.RefreshTokenStrategy),
 			AuthorizeCodeStrategy:     strategy.(oauth2.AuthorizeCodeStrategy),
-			AuthorizeCodeGrantStorage: storage.(oauth2.AuthorizeCodeGrantStorage),
+			CoreStorage: storage.(oauth2.CoreStorage),
 			AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
 			AccessTokenLifespan:       config.GetAccessTokenLifespan(),
 		},
