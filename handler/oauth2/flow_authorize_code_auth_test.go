@@ -72,7 +72,9 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 								RedirectURIs:  []string{"https://asdf.de/cb"},
 							},
 							GrantedScopes: fosite.Arguments{"a", "b"},
-							Session:       &fosite.DefaultSession{},
+							Session:       &fosite.DefaultSession{
+								ExpiresAt: map[fosite.TokenType]time.Time{fosite.AccessToken: time.Now().Add(time.Hour)},
+							},
 							RequestedAt: time.Now(),
 						},
 						State:       "superstate",
@@ -82,7 +84,6 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					expect: func(t *testing.T, areq *fosite.AuthorizeRequest, aresp *fosite.AuthorizeResponse) {
 						code := aresp.GetQuery().Get("code")
 						assert.NotEmpty(t, code)
-						require.NoError(t, strategy.ValidateAuthorizeCode(nil, areq, code))
 
 						assert.Equal(t, strings.Join(areq.GrantedScopes, " "), aresp.GetQuery().Get("scope"))
 						assert.Equal(t, areq.State, aresp.GetQuery().Get("state"))
