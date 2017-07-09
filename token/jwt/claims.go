@@ -38,6 +38,8 @@ func ToTime(i interface{}) time.Time {
 		return time.Unix(t, 0)
 	} else if t, ok := i.(float64); ok {
 		return time.Unix(int64(t), 0)
+	} else if t, ok := i.(time.Time); ok {
+		return t
 	}
 
 	return time.Time{}
