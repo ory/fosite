@@ -35,23 +35,29 @@ func HierarchicScopeStrategy(haystack []string, needle string) bool {
 	return false
 }
 
-func WildcardScopeStrategy(haystack []string, needle string) bool {
-	for _, this := range haystack {
-		if this == needle {
-			return true
-		}
+func WildcardScopeStrategy(matchers []string, needle string) bool {
+	needleParts := strings.Split(needle, ".")
+	for _, matcher := range matchers {
+		matcherParts := strings.Split(matcher, ".")
 
-		needles := strings.Split(needle, ".")
-		haystack := strings.Split(this, ".")
-		if len(needles) != len(haystack) {
+		if len(matcherParts) > len(needleParts) {
 			continue
 		}
 
 		var noteq bool
-		for k, needle := range needles {
-			current := haystack[k]
-			if needle == "*" && len(current) > 0 {
-			} else if current != needle {
+		for k, c := range strings.Split(matcher, ".") {
+			// this is the last item and the lengths are different
+			if k == len(matcherParts)-1 && len(matcherParts) != len(needleParts) {
+				if c != "*" {
+					noteq = true
+					break
+				}
+			}
+
+			if c == "*" && len(needleParts[k]) > 0 {
+				// pass because this satisfies the requirements
+				continue
+			} else if c != needleParts[k] {
 				noteq = true
 				break
 			}

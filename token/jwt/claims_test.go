@@ -2,8 +2,9 @@ package jwt
 
 import (
 	"testing"
-	"github.com/stretchr/testify/assert"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestToString(t *testing.T) {

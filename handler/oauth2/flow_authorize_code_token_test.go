@@ -81,7 +81,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 					setup: func(t *testing.T, areq *fosite.AccessRequest) {
 						require.NoError(t, store.CreateAuthorizeCodeSession(nil, "bar", areq))
 					},
-					expectErr:   fosite.ErrInvalidRequest,
+					expectErr: fosite.ErrInvalidRequest,
 				},
 				{
 					areq: &fosite.AccessRequest{
