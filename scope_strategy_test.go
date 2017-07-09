@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"strings"
 )
 
 func TestHierarchicScopeStrategy(t *testing.T) {
@@ -104,4 +105,11 @@ func TestWildcardScopeStrategy(t *testing.T) {
 	assert.True(t, strategy(scopes, "foo.bar.bar.baz.baz.baz.baz"))
 	assert.False(t, strategy(scopes, "foo.bar.bar.baz.baz"))
 	assert.False(t, strategy(scopes, "foo.bar.baz.baz.baz.bar"))
+
+	scopes = strings.Fields("hydra.* openid offline  hydra")
+	assert.True(t, strategy(scopes, "hydra.clients"))
+	assert.True(t, strategy(scopes, "hydra.clients.get"))
+	assert.True(t, strategy(scopes, "hydra"))
+	assert.True(t, strategy(scopes, "offline"))
+	assert.True(t, strategy(scopes, "openid"))
 }
