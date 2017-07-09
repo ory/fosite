@@ -2,6 +2,7 @@ package fosite
 
 import (
 	"time"
+
 	"github.com/mohae/deepcopy"
 )
 

@@ -14,25 +14,25 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
 	if !request.GetGrantTypes().Exact("authorization_code") {
-		return errors.WithStack(fosite.ErrUnknownRequest)
+		return errors.WithStack(errors.WithStack(fosite.ErrUnknownRequest))
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type authorization_code")
+		return errors.Wrap(errors.WithStack(fosite.ErrInvalidGrant), "The client is not allowed to use grant type authorization_code")
 	}
 
 	code := request.GetRequestForm().Get("code")
+	// The authorization server MUST verify that the authorization code is valid
+	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
+		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), err.Error())
+	}
+
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
-	authorizeRequest, err := c.AuthorizeCodeGrantStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
+	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	} else if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
-	}
-
-	// The authorization server MUST verify that the authorization code is valid
-	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
-		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
+		return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
 	}
 
 	// Override scopes
@@ -42,7 +42,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,
 	if authorizeRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.Wrap(fosite.ErrInvalidRequest, "Client ID mismatch")
+		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), "Client ID mismatch")
 	}
 
 	// ensure that the "redirect_uri" parameter is present if the
@@ -51,7 +51,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// their values are identical.
 	forcedRedirectURI := authorizeRequest.GetRequestForm().Get("redirect_uri")
 	if forcedRedirectURI != "" && forcedRedirectURI != request.GetRequestForm().Get("redirect_uri") {
-		return errors.Wrap(fosite.ErrInvalidRequest, "Redirect URI mismatch")
+		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), "Redirect URI mismatch")
 	}
 
 	// Checking of POST client_id skipped, because:
@@ -72,13 +72,14 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	code := requester.GetRequestForm().Get("code")
-	//code := req.PostForm.Get("code")
+	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
+		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), err.Error())
+	}
+
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
-	authorizeRequest, err := c.AuthorizeCodeGrantStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
+	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
-	} else if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
-		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
+		return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
 	}
 
 	for _, scope := range authorizeRequest.GetGrantedScopes() {
@@ -87,19 +88,25 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
 	}
 
 	var refresh, refreshSignature string
 	if authorizeRequest.GetGrantedScopes().Has("offline") {
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
-			return errors.Wrap(fosite.ErrServerError, err.Error())
+			return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
 		}
 	}
 
-	if err := c.AuthorizeCodeGrantStorage.PersistAuthorizeCodeGrantSession(ctx, signature, accessSignature, refreshSignature, requester); err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+	if err := c.CoreStorage.DeleteAuthorizeCodeSession(ctx, signature); err != nil {
+		return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
+	} else if err := c.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester); err != nil {
+		return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
+	} else if refreshSignature != "" {
+		if err := c.CoreStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester); err != nil {
+			return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
+		}
 	}
 
 	responder.SetAccessToken(access)

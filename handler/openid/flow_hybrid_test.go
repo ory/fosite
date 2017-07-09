@@ -55,11 +55,11 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 	areq := fosite.NewAuthorizeRequest()
 	h := OpenIDConnectHybridHandler{
 		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
-			AuthorizeCodeStrategy:     hmacStrategy,
-			AccessTokenLifespan:       time.Hour,
-			AuthCodeLifespan:          time.Hour,
-			AccessTokenStrategy:       hmacStrategy,
-			AuthorizeCodeGrantStorage: storage.NewMemoryStore(),
+			AuthorizeCodeStrategy: hmacStrategy,
+			AccessTokenLifespan:   time.Hour,
+			AuthCodeLifespan:      time.Hour,
+			AccessTokenStrategy:   hmacStrategy,
+			CoreStorage:           storage.NewMemoryStore(),
 		},
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenLifespan: time.Hour,

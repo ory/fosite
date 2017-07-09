@@ -167,36 +167,6 @@ func (s *MemoryStore) Authenticate(_ context.Context, name string, secret string
 	return nil
 }
 
-func (s *MemoryStore) PersistAuthorizeCodeGrantSession(ctx context.Context, authorizeCode, accessSignature, refreshSignature string, request fosite.Requester) error {
-	if err := s.DeleteAuthorizeCodeSession(ctx, authorizeCode); err != nil {
-		return err
-	} else if err := s.CreateAccessTokenSession(ctx, accessSignature, request); err != nil {
-		return err
-	} else if refreshSignature == "" {
-		return nil
-	} else if err := s.CreateRefreshTokenSession(ctx, refreshSignature, request); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *MemoryStore) PersistRefreshTokenGrantSession(ctx context.Context, originalRefreshSignature, accessSignature, refreshSignature string, request fosite.Requester) error {
-	if ts, err := s.GetRefreshTokenSession(ctx, originalRefreshSignature, nil); err != nil {
-		return err
-	} else if err := s.RevokeAccessToken(ctx, ts.GetID()); err != nil {
-		return err
-	} else if err := s.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
-		return err
-	} else if err := s.CreateAccessTokenSession(ctx, accessSignature, request); err != nil {
-		return err
-	} else if err := s.CreateRefreshTokenSession(ctx, refreshSignature, request); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) error {
 	if signature, exists := s.RefreshTokenRequestIDs[requestID]; exists {
 		s.DeleteRefreshTokenSession(ctx, signature)

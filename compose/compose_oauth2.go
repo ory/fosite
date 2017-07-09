@@ -8,13 +8,13 @@ import (
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeExplicitGrantHandler{
-		AccessTokenStrategy:       strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:      strategy.(oauth2.RefreshTokenStrategy),
-		AuthorizeCodeStrategy:     strategy.(oauth2.AuthorizeCodeStrategy),
-		AuthorizeCodeGrantStorage: storage.(oauth2.AuthorizeCodeGrantStorage),
-		AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
-		AccessTokenLifespan:       config.GetAccessTokenLifespan(),
-		ScopeStrategy:             config.GetScopeStrategy(),
+		AccessTokenStrategy:   strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:  strategy.(oauth2.RefreshTokenStrategy),
+		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
+		CoreStorage:           storage.(oauth2.CoreStorage),
+		AuthCodeLifespan:      config.GetAuthorizeCodeLifespan(),
+		AccessTokenLifespan:   config.GetAccessTokenLifespan(),
+		ScopeStrategy:         config.GetScopeStrategy(),
 	}
 }
 
@@ -35,10 +35,10 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 // an access token, refresh token and authorize code validator.
 func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.RefreshTokenGrantHandler{
-		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
-		RefreshTokenGrantStorage: storage.(oauth2.RefreshTokenGrantStorage),
-		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
+		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		AccessTokenLifespan:    config.GetAccessTokenLifespan(),
 	}
 }
 
