@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"time"
 )
 
 func parseUrl(uu string) *url.URL {
@@ -72,6 +73,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 							},
 							GrantedScopes: fosite.Arguments{"a", "b"},
 							Session:       &fosite.DefaultSession{},
+							RequestedAt: time.Now(),
 						},
 						State:       "superstate",
 						RedirectURI: parseUrl("https://asdf.de/cb"),
