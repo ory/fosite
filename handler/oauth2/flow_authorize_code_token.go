@@ -22,17 +22,18 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	}
 
 	code := request.GetRequestForm().Get("code")
-	// The authorization server MUST verify that the authorization code is valid
-	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
-		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), err.Error())
-	}
-
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	} else if err != nil {
 		return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
+	}
+
+	// The authorization server MUST verify that the authorization code is valid
+	// Validation happens
+	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
+		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), err.Error())
 	}
 
 	// Override scopes
@@ -72,14 +73,13 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	code := requester.GetRequestForm().Get("code")
-	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
-		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), err.Error())
-	}
-
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {
 		return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
+	} else if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
+		// This needs to happen after store retrieval for the session to be hydrated properly
+		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), err.Error())
 	}
 
 	for _, scope := range authorizeRequest.GetGrantedScopes() {

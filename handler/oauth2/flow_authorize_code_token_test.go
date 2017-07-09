@@ -78,6 +78,9 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						},
 					},
 					description: "should fail because validation failed",
+					setup: func(t *testing.T, areq *fosite.AccessRequest) {
+						require.NoError(t, store.CreateAuthorizeCodeSession(nil, "bar", areq))
+					},
 					expectErr:   fosite.ErrInvalidRequest,
 				},
 				{
@@ -120,9 +123,9 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 					err := h.PopulateTokenEndpointResponse(nil, c.areq, aresp)
 
 					if c.expectErr != nil {
-						require.EqualError(t, errors.Cause(err), c.expectErr.Error())
+						require.EqualError(t, errors.Cause(err), c.expectErr.Error(), "%v", err)
 					} else {
-						require.NoError(t, err)
+						require.NoError(t, err, "%v", err)
 					}
 
 					if c.check != nil {
