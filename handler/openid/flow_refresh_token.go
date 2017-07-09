@@ -3,9 +3,10 @@ package openid
 import (
 	"context"
 
+	"time"
+
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type OpenIDConnectRefreshHandler struct {

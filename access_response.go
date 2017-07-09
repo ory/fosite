@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func NewAccessResponse() AccessResponder {
+func NewAccessResponse() *AccessResponse {
 	return &AccessResponse{
 		Extra: map[string]interface{}{},
 	}

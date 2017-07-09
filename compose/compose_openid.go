@@ -51,12 +51,12 @@ func OpenIDConnectImplicitFactory(config *Config, storage interface{}, strategy 
 func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectHybridHandler{
 		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
-			AccessTokenStrategy:       strategy.(oauth2.AccessTokenStrategy),
-			RefreshTokenStrategy:      strategy.(oauth2.RefreshTokenStrategy),
-			AuthorizeCodeStrategy:     strategy.(oauth2.AuthorizeCodeStrategy),
-			AuthorizeCodeGrantStorage: storage.(oauth2.AuthorizeCodeGrantStorage),
-			AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
-			AccessTokenLifespan:       config.GetAccessTokenLifespan(),
+			AccessTokenStrategy:   strategy.(oauth2.AccessTokenStrategy),
+			RefreshTokenStrategy:  strategy.(oauth2.RefreshTokenStrategy),
+			AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
+			CoreStorage:           storage.(oauth2.CoreStorage),
+			AuthCodeLifespan:      config.GetAuthorizeCodeLifespan(),
+			AccessTokenLifespan:   config.GetAccessTokenLifespan(),
 		},
 		ScopeStrategy: config.GetScopeStrategy(),
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{

@@ -10,8 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var s = HMACSHAStrategy{
-	Enigma: &hmac.HMACStrategy{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
+var hmacshaStrategy = HMACSHAStrategy{
+	Enigma:                &hmac.HMACStrategy{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
+	AccessTokenLifespan:   time.Hour * 24,
+	AuthorizeCodeLifespan: time.Hour * 24,
 }
 
 var hmacExpiredCase = fosite.Request{
@@ -52,14 +54,14 @@ func TestHMACAccessToken(t *testing.T) {
 			pass: false,
 		},
 	} {
-		token, signature, err := s.GenerateAccessToken(nil, &c.r)
+		token, signature, err := hmacshaStrategy.GenerateAccessToken(nil, &c.r)
 		assert.Nil(t, err, "%s", err)
 		assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-		err = s.ValidateAccessToken(nil, &c.r, token)
+		err = hmacshaStrategy.ValidateAccessToken(nil, &c.r, token)
 		if c.pass {
 			assert.Nil(t, err, "%s", err)
-			validate := s.Enigma.Signature(token)
+			validate := hmacshaStrategy.Enigma.Signature(token)
 			assert.Equal(t, signature, validate)
 		} else {
 			assert.NotNil(t, err, "%s", err)
@@ -68,12 +70,12 @@ func TestHMACAccessToken(t *testing.T) {
 }
 
 func TestHMACRefreshToken(t *testing.T) {
-	token, signature, err := s.GenerateRefreshToken(nil, &hmacValidCase)
+	token, signature, err := hmacshaStrategy.GenerateRefreshToken(nil, &hmacValidCase)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-	validate := s.Enigma.Signature(token)
-	err = s.ValidateRefreshToken(nil, &hmacValidCase, token)
+	validate := hmacshaStrategy.Enigma.Signature(token)
+	err = hmacshaStrategy.ValidateRefreshToken(nil, &hmacValidCase, token)
 	assert.Nil(t, err, "%s", err)
 	assert.Equal(t, signature, validate)
 }
@@ -92,14 +94,14 @@ func TestHMACAuthorizeCode(t *testing.T) {
 			pass: false,
 		},
 	} {
-		token, signature, err := s.GenerateAuthorizeCode(nil, &c.r)
+		token, signature, err := hmacshaStrategy.GenerateAuthorizeCode(nil, &c.r)
 		assert.Nil(t, err, "%s", err)
 		assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-		err = s.ValidateAuthorizeCode(nil, &c.r, token)
+		err = hmacshaStrategy.ValidateAuthorizeCode(nil, &c.r, token)
 		if c.pass {
 			assert.Nil(t, err, "%d: %s", k, err)
-			validate := s.Enigma.Signature(token)
+			validate := hmacshaStrategy.Enigma.Signature(token)
 			assert.Equal(t, signature, validate)
 		} else {
 			assert.NotNil(t, err, "%d: %s", k, err)
