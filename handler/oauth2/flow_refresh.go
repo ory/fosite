@@ -30,10 +30,6 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	refresh := request.GetRequestForm().Get("refresh_token")
-	// The authorization server MUST ... validate the refresh token.
-	if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, request, refresh); err != nil {
-		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
-	}
 
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(refresh)
 	originalRequest, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, request.GetSession())
@@ -41,6 +37,10 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	} else if err != nil {
 		return errors.Wrap(fosite.ErrServerError, err.Error())
+	} else if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, request, refresh); err != nil {
+		// The authorization server MUST ... validate the refresh token.
+		// This needs to happen after store retrieval for the session to be hydrated properly
+		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
 	}
 
 	if !originalRequest.GetGrantedScopes().Has("offline") {
