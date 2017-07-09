@@ -177,13 +177,20 @@ var config = &compose.Config{
 This is the default strategy, and the safest one. It is best explained by looking at some examples:
 
 * `users.*` matches `users.read`
+* `users.*` matches `users.read.foo`
 * `users.read` matches `users.read`
 * `users` does not match `users.read`
 * `users.read.*` does not match `users.read`
 * `users.*.*` does not match `users.read`
 * `users.*.*` matches `users.read.own`
+* `users.*.*` matches `users.read.own.other`
 * `users.read.*` matches `users.read.own`
+* `users.read.*` matches `users.read.own.other`
 * `users.write.*` does not match `users.read.own`
+* `users.*.bar` matches `users.bar.baz`
+* `users.*.bar` does not `users.baz.baz.bar`
+
+To request `users.*`, a client must have exactly `users.*` as granted scope.
 
 #### `fosite.HierarchicScopeStrategy`
 
