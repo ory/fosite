@@ -5,12 +5,13 @@ import (
 	"strings"
 	"testing"
 
+	"time"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/storage"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"time"
 )
 
 func parseUrl(uu string) *url.URL {
@@ -72,7 +73,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 								RedirectURIs:  []string{"https://asdf.de/cb"},
 							},
 							GrantedScopes: fosite.Arguments{"a", "b"},
-							Session:       &fosite.DefaultSession{
+							Session: &fosite.DefaultSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{fosite.AccessToken: time.Now().Add(time.Hour)},
 							},
 							RequestedAt: time.Now(),
