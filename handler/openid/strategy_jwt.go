@@ -1,14 +1,14 @@
 package openid
 
 import (
-	"time"
 	"context"
+	"time"
 
+	"github.com/mohae/deepcopy"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/pkg/errors"
-	"github.com/mohae/deepcopy"
 	"github.com/pborman/uuid"
+	"github.com/pkg/errors"
 )
 
 const defaultExpiryTime = time.Hour

@@ -1,10 +1,11 @@
 package fosite_test
 
 import (
+	"testing"
+
 	"github.com/oleiade/reflections"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestAssertObjectsAreEqualByKeys(t *testing.T) {
