@@ -1,8 +1,9 @@
 package compose
 
 import (
-	"github.com/ory/fosite"
 	"time"
+
+	"github.com/ory/fosite"
 )
 
 type Config struct {
