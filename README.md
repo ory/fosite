@@ -245,9 +245,9 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 
 	// Let's create an AuthorizeRequest object!
 	// It will analyze the request and extract important information like scopes, response type and others.
-	ar, err := oauth2.NewAuthorizeRequest(ctx, req)
+	ar, err := oauth2Provider.NewAuthorizeRequest(ctx, req)
 	if err != nil {
-		oauth2.WriteAuthorizeError(rw, ar, err)
+		oauth2Provider.WriteAuthorizeError(rw, ar, err)
 		return
 	}
 	
@@ -285,14 +285,14 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// Now we need to get a response. This is the place where the AuthorizeEndpointHandlers kick in and start processing the request.
 	// NewAuthorizeResponse is capable of running multiple response type handlers which in turn enables this library
 	// to support open id connect.
-	response, err := oauth2.NewAuthorizeResponse(ctx, ar, mySessionData)
+	response, err := oauth2Provider.NewAuthorizeResponse(ctx, ar, mySessionData)
 	if err != nil {
-		oauth2.WriteAuthorizeError(rw, ar, err)
+		oauth2Provider.WriteAuthorizeError(rw, ar, err)
 		return
 	}
 
 	// Awesome, now we redirect back to the client redirect uri and pass along an authorize code
-	oauth2.WriteAuthorizeResponse(rw, ar, response)
+	oauth2Provider.WriteAuthorizeResponse(rw, ar, response)
 }
 
 // The token endpoint is usually at "https://mydomain.com/oauth2/token"
@@ -301,9 +301,9 @@ func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	mySessionData := new(fosite.DefaultSession)
 
 	// This will create an access request object and iterate through the registered TokenEndpointHandlers to validate the request.
-	accessRequest, err := oauth2.NewAccessRequest(ctx, req, mySessionData)
+	accessRequest, err := oauth2Provider.NewAccessRequest(ctx, req, mySessionData)
 	if err != nil {
-		oauth2.WriteAccessError(rw, accessRequest, err)
+		oauth2Provider.WriteAccessError(rw, accessRequest, err)
 		return
 	}
 	
@@ -313,14 +313,14 @@ func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 
 	// Next we create a response for the access request. Again, we iterate through the TokenEndpointHandlers
 	// and aggregate the result in response.
-	response, err := oauth2.NewAccessResponse(ctx, accessRequest)
+	response, err := oauth2Provider.NewAccessResponse(ctx, accessRequest)
 	if err != nil {
-		oauth2.WriteAccessError(rw, accessRequest, err)
+		oauth2Provider.WriteAccessError(rw, accessRequest, err)
 		return
 	}
 
 	// All done, send the response.
-	oauth2.WriteAccessResponse(rw, accessRequest, response)
+	oauth2Provider.WriteAccessResponse(rw, accessRequest, response)
 
 	// The client has a valid access token now
 }
@@ -330,7 +330,7 @@ func someResourceProviderHandlerFunc(rw http.ResponseWriter, req *http.Request) 
 	mySessionData := new(fosite.DefaultSession)
 	requiredScope := "blogposts.create"
 
-	ar, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), mySessionData, requiredScope)
+	ar, err := oauth2Provider.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, mySessionData, requiredScope)
 	if err != nil {
 		// ...
 	}
