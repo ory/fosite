@@ -10,10 +10,19 @@ import (
 type CoreValidator struct {
 	CoreStrategy
 	CoreStorage
+	AccessOnly    bool
 	ScopeStrategy fosite.ScopeStrategy
 }
 
 func (c *CoreValidator) IntrospectToken(ctx context.Context, token string, tokenType fosite.TokenType, accessRequest fosite.AccessRequester, scopes []string) (err error) {
+	if c.AccessOnly {
+		if err = c.introspectAccessToken(ctx, token, accessRequest, scopes); err == nil {
+			return nil
+		}
+
+		return err
+	}
+
 	switch tokenType {
 	case fosite.RefreshToken:
 		if err = c.introspectRefreshToken(ctx, token, accessRequest, scopes); err == nil {

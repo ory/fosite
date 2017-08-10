@@ -83,6 +83,7 @@ func OAuth2TokenIntrospectionFactory(config *Config, storage interface{}, strate
 	return &oauth2.CoreValidator{
 		CoreStrategy:  strategy.(oauth2.CoreStrategy),
 		CoreStorage:   storage.(oauth2.CoreStorage),
+		AccessOnly:    config.GetAccessOnly(),
 		ScopeStrategy: config.GetScopeStrategy(),
 	}
 }
