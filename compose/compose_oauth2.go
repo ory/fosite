@@ -81,10 +81,10 @@ func OAuth2TokenRevocationFactory(config *Config, storage interface{}, strategy 
 // an access token and refresh token validator.
 func OAuth2TokenIntrospectionFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.CoreValidator{
-		CoreStrategy:  strategy.(oauth2.CoreStrategy),
-		CoreStorage:   storage.(oauth2.CoreStorage),
-		AccessOnly:    config.GetAccessOnly(),
-		ScopeStrategy: config.GetScopeStrategy(),
+		CoreStrategy:                  strategy.(oauth2.CoreStrategy),
+		CoreStorage:                   storage.(oauth2.CoreStorage),
+		ScopeStrategy:                 config.GetScopeStrategy(),
+		DisableRefreshTokenValidation: config.DisableRefreshTokenValidation,
 	}
 }
 

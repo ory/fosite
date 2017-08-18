@@ -19,8 +19,8 @@ type Config struct {
 	// HashCost sets the cost of the password hashing cost. Defaults to 12.
 	HashCost int
 
-	// AccessOnly sets whether the introspection endpoint only validates access tokens.
-	AccessOnly bool
+	// DisableRefreshTokenValidation sets the introspection endpoint to disable refresh token validation.
+	DisableRefreshTokenValidation bool
 
 	ScopeStrategy fosite.ScopeStrategy
 }
@@ -63,9 +63,4 @@ func (c *Config) GetHashCost() int {
 		return 12
 	}
 	return c.HashCost
-}
-
-// GetAccessOnly returns whether the introspection endpoint only validates access tokens.
-func (c *Config) GetAccessOnly() bool {
-	return c.AccessOnly
 }

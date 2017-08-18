@@ -62,6 +62,14 @@ func TestIntrospectToken(t *testing.T) {
 			expectErr: fosite.ErrTokenExpired,
 		},
 		{
+			description: "should fail because access token invalid",
+			setup: func() {
+				v.DisableRefreshTokenValidation = true
+				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errors.WithStack(fosite.ErrInvalidTokenFormat))
+			},
+			expectErr: fosite.ErrInvalidTokenFormat,
+		},
+		{
 			description: "should pass",
 			setup: func() {
 				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(nil)
