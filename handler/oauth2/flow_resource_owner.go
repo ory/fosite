@@ -2,6 +2,7 @@ package oauth2
 
 import (
 	"fmt"
+	"time"
 
 	"context"
 
@@ -50,6 +51,8 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 
 	// Credentials must not be passed around, potentially leaking to the database!
 	delete(request.GetRequestForm(), "password")
+
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
 	return nil
 }
 

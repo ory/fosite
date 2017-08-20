@@ -17,7 +17,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 	store := internal.NewMockResourceOwnerPasswordCredentialsGrantStorage(ctrl)
 	defer ctrl.Finish()
 
-	areq := fosite.NewAccessRequest(nil)
+	areq := fosite.NewAccessRequest(new(fosite.DefaultSession))
 	areq.Form = url.Values{}
 
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
