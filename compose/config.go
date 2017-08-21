@@ -19,6 +19,9 @@ type Config struct {
 	// HashCost sets the cost of the password hashing cost. Defaults to 12.
 	HashCost int
 
+	// DisableRefreshTokenValidation sets the introspection endpoint to disable refresh token validation.
+	DisableRefreshTokenValidation bool
+
 	ScopeStrategy fosite.ScopeStrategy
 }
 
