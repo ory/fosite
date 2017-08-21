@@ -32,6 +32,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 		description string
 		setup       func()
 		expectErr   error
+		check       func(areq *fosite.AccessRequest)
 	}{
 		{
 			description: "should fail because not responsible",
@@ -64,12 +65,18 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			setup: func() {
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(nil)
 			},
+			check: func(areq *fosite.AccessRequest) {
+				assert.NotEmpty(t, areq.GetSession().GetExpiresAt(fosite.AccessToken))
+			},
 		},
 	} {
 		c.setup()
 		err := h.HandleTokenEndpointRequest(nil, areq)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
+		if c.check != nil {
+			c.check(areq)
+		}
 	}
 }
 
