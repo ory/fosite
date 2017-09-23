@@ -1,4 +1,4 @@
-# ![Fosite security first OAuth2 framework](fosite.png)
+# ![Fosite security first OAuth2 framework](https://storage.googleapis.com/ory.am/github-banner/ory_01-fosite.png)
 
 [![Build Status](https://travis-ci.org/ory/fosite.svg?branch=master)](https://travis-ci.org/ory/fosite?branch=master)
 [![Coverage Status](https://coveralls.io/repos/ory/fosite/badge.svg?branch=master&service=github&foo)](https://coveralls.io/github/ory/fosite?branch=master)
