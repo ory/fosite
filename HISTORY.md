@@ -5,6 +5,9 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [0.12.0](#0120)
+  - [Breaking changes](#breaking-changes)
+    - [Improved cryptographic methods](#improved-cryptographic-methods)
 - [0.11.0](#0110)
   - [Non-breaking changes](#non-breaking-changes)
     - [Storage adapter](#storage-adapter)
@@ -19,7 +22,7 @@ bumps (`0.1.0` -> `0.2.0`).
 - [0.10.0](#0100)
 - [0.9.0](#090)
 - [0.8.0](#080)
-  - [Breaking changes](#breaking-changes)
+  - [Breaking changes](#breaking-changes-1)
     - [`ClientManager`](#clientmanager)
     - [`OAuth2Provider`](#oauth2provider)
 - [0.7.0](#070)
