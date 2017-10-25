@@ -3,8 +3,9 @@ package fosite
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"strings"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHierarchicScopeStrategy(t *testing.T) {

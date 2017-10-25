@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
-	"fmt"
 )
 
 var j = &RS256JWTStrategy{
