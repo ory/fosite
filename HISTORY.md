@@ -35,6 +35,12 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.13.0
+
+### Breaking changes
+
+`glide` was replaced with `dep`.
+
 ## 0.12.0
 
 ### Breaking changes
