@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
+	"fmt"
 )
 
 func TestAuthorizeCodeFlow(t *testing.T) {
@@ -44,22 +45,23 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 			authStatusCode: http.StatusOK,
 		},
 	} {
-		c.setup()
+		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
+			c.setup()
 
-		resp, err := http.Get(oauthClient.AuthCodeURL(state))
-		require.Nil(t, err)
-		require.Equal(t, c.authStatusCode, resp.StatusCode, "(%d) %s", k, c.description)
+			resp, err := http.Get(oauthClient.AuthCodeURL(state))
+			require.NoError(t, err)
+			require.Equal(t, c.authStatusCode, resp.StatusCode)
 
-		if resp.StatusCode == http.StatusOK {
-			token, err := oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
-			require.Nil(t, err, "(%d) %s", k, c.description)
-			require.NotEmpty(t, token.AccessToken, "(%d) %s", k, c.description)
+			if resp.StatusCode == http.StatusOK {
+				token, err := oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
+				require.NoError(t, err)
+				require.NotEmpty(t, token.AccessToken)
 
-			httpClient := oauthClient.Client(goauth.NoContext, token)
-			resp, err := httpClient.Get(ts.URL + "/info")
-			require.Nil(t, err, "(%d) %s", k, c.description)
-			assert.Equal(t, http.StatusNoContent, resp.StatusCode, "(%d) %s", k, c.description)
-		}
-		t.Logf("Passed test case (%d) %s", k, c.description)
+				httpClient := oauthClient.Client(goauth.NoContext, token)
+				resp, err := httpClient.Get(ts.URL + "/info")
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+			}
+		})
 	}
 }

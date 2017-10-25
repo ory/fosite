@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
+	"fmt"
 )
 
 func TestIntrospectToken(t *testing.T) {
@@ -48,11 +49,11 @@ func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy, i
 
 	oauthClient := newOAuth2AppClient(ts)
 	a, err := oauthClient.Token(goauth.NoContext)
-	require.Nil(t, err)
+	require.NoError(t, err)
 	b, err := oauthClient.Token(goauth.NoContext)
-	require.Nil(t, err)
+	require.NoError(t, err)
 
-	for _, c := range []struct {
+	for k, c := range []struct {
 		prepare  func(*gorequest.SuperAgent) *gorequest.SuperAgent
 		isActive bool
 		scopes   string
@@ -93,28 +94,31 @@ func runIntrospectTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy, i
 			scopes:   "",
 		},
 	} {
-		res := struct {
-			Active    bool    `json:"active"`
-			ClientId  string  `json:"client_id"`
-			Scope     string  `json:"scope"`
-			ExpiresAt float64 `json:"exp"`
-			IssuedAt  float64 `json:"iat"`
-		}{}
-		s := gorequest.New()
-		s = s.Post(ts.URL + "/introspect").
-			Type("form").
-			SendStruct(map[string]string{"token": b.AccessToken, "scope": c.scopes})
-		_, bytes, errs := c.prepare(s).End()
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			res := struct {
+				Active    bool    `json:"active"`
+				ClientId  string  `json:"client_id"`
+				Scope     string  `json:"scope"`
+				ExpiresAt float64 `json:"exp"`
+				IssuedAt  float64 `json:"iat"`
+			}{}
+			s := gorequest.New()
+			s = s.Post(ts.URL + "/introspect").
+				Type("form").
+				SendStruct(map[string]string{"token": b.AccessToken, "scope": c.scopes})
+			_, bytes, errs := c.prepare(s).End()
 
-		assert.Nil(t, json.Unmarshal([]byte(bytes), &res))
-		t.Logf("Got answer: %s", bytes)
-		assert.Len(t, errs, 0)
-		assert.Equal(t, c.isActive, res.Active)
-		if c.isActive {
-			assert.Equal(t, "fosite", res.Scope)
-			assert.True(t, res.ExpiresAt > 0)
-			assert.True(t, res.IssuedAt > 0)
-			assert.True(t, res.IssuedAt < res.ExpiresAt)
-		}
+			assert.Nil(t, json.Unmarshal([]byte(bytes), &res))
+			t.Logf("Got answer: %s", bytes)
+
+			assert.Len(t, errs, 0)
+			assert.Equal(t, c.isActive, res.Active)
+			if c.isActive {
+				assert.Equal(t, "fosite", res.Scope)
+				assert.True(t, res.ExpiresAt > 0)
+				assert.True(t, res.IssuedAt > 0)
+				assert.True(t, res.IssuedAt < res.ExpiresAt)
+			}
+		})
 	}
 }

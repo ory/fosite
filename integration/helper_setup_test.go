@@ -75,7 +75,7 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 
 var hmacStrategy = &oauth2.HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{
-		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows-nobody-knows"),
+		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 	},
 	AccessTokenLifespan:   accessTokenLifespan,
 	AuthorizeCodeLifespan: authCodeLifespan,
