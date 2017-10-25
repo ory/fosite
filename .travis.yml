@@ -3,11 +3,7 @@ language: go
 go_import_path: github.com/ory/fosite
 
 go:
-  - 1.7
-  - 1.8
-
-env:
-  - GO15VENDOREXPERIMENT=1
+  - 1.9
 
 install:
    - go get github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/Masterminds/glide github.com/ory/go-acc
