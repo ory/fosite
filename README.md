@@ -57,7 +57,7 @@ was out there, so we decided to build it ourselves.
 
 The core public API is almost stable as most changes will only touch the inner workings.
 
-We strongly encourage vendoring fosite using [glide](https://glide.sh) or comparable tools.
+We strongly encourage vendoring fosite using [dep](https://github.com/golang/dep) or comparable tools.
 
 ## Example
 
@@ -69,10 +69,9 @@ of code.
 You can run this minimalistic example by doing
 
 ```
-go get github.com/Masterminds/glide
 go get github.com/ory/fosite-example
 cd $GOPATH/src/github.com/ory/fosite-example
-glide install
+dep ensure
 go install github.com/ory/fosite-example
 fosite-example
 ```
@@ -148,7 +147,7 @@ GOPATH environment variable.
 go get -d github.com/ory/fosite
 ```
 
-We recommend to use [Glide](https://github.com/Masterminds/glide) or [Godep](https://github.com/tools/godep) to
+We recommend to use [dep](https://github.com/golang/dep) to
 mitigate compatibility breaks that come with new api versions.
 
 ## Documentation
@@ -385,10 +384,10 @@ go get -d github.com/ory/fosite
 cd $GOPATH/src/github.com/ory/fosite
 git status
 git remote add myfork <url-to-your-fork>
-go test $(glide novendor)
+go test ./..
 ```
 
-Simple, right? Now you are ready to go! Make sure to run `go test $(glide novendor)` often, detecting problems with your code
+Simple, right? Now you are ready to go! Make sure to run `go test ./...` often, detecting problems with your code
 rather sooner than later. Please read [CONTRIBUTE.md] before creating pull requests and issues.
 
 ### Refresh mock objects

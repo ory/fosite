@@ -96,7 +96,7 @@ To make a pull request, you will need a GitHub account; if you are unclear on th
 
 1. Create a feature branch off of `master` so that changes do not get mixed up.
 1. [Rebase](https://git-scm.com/book/en/Git-Branching-Rebasing) your local changes against the `master` branch.
-1. Run the full project test suite with the `go test $(glide novendor)` (or equivalent) command and confirm that it passes.
+1. Run the full project test suite with the `go test ./...` (or equivalent) command and confirm that it passes.
 1. Run `gofmt -s` (if the project is written in Go).
 1. Accept the Developer's Certificate of Origin on all commits (see above).
 1. Ensure that each commit has a subsystem prefix (ex: `controller: `).
