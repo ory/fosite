@@ -6,10 +6,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
+	"sync"
+
+	"github.com/gtank/cryptopasta"
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
-	"sync"
-	"github.com/gtank/cryptopasta"
 )
 
 // HMACStrategy is responsible for generating and validating challenges.

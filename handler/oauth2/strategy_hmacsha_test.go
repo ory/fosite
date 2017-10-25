@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/stretchr/testify/assert"
-	"fmt"
 )
 
 var hmacshaStrategy = HMACSHAStrategy{
@@ -67,7 +68,7 @@ func TestHMACAccessToken(t *testing.T) {
 				assert.Equal(t, signature, validate)
 			} else {
 				assert.Error(t, err)
-			}			
+			}
 		})
 	}
 }
