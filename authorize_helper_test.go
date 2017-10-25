@@ -156,7 +156,7 @@ func TestIsRedirectURISecure(t *testing.T) {
 		{u: "wta://auth", err: false},
 	} {
 		uu, err := url.Parse(c.u)
-		require.Nil(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, !c.err, IsRedirectURISecure(uu), "case %d", d)
 	}
 }

@@ -29,7 +29,7 @@ func runRevokeTokenTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
 
 	oauthClient := newOAuth2AppClient(ts)
 	token, err := oauthClient.Token(goauth.NoContext)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	resp, _, errs := gorequest.New().Post(ts.URL+"/revoke").
 		SetBasicAuth(oauthClient.ClientID, oauthClient.ClientSecret).

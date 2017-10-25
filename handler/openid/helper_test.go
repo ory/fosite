@@ -80,7 +80,7 @@ func TestIssueExplicitToken(t *testing.T) {
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 	err := h.IssueExplicitIDToken(nil, ar, resp)
-	assert.Nil(t, err, "%s", err)
+	assert.NoError(t, err)
 }
 
 func TestIssueImplicitToken(t *testing.T) {
@@ -97,5 +97,5 @@ func TestIssueImplicitToken(t *testing.T) {
 	resp.EXPECT().AddFragment("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 	err := h.IssueImplicitIDToken(nil, ar, resp)
-	assert.Nil(t, err, "%s", err)
+	assert.NoError(t, err)
 }

@@ -23,7 +23,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 			Headers: &jwt.Headers{},
 		},
 	}
-	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())
+	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 
@@ -92,7 +92,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 				require.NoError(t, err)
 				c.check(token, refreshed)
 			} else {
-				require.NotNil(t, err)
+				require.Error(t, err)
 			}
 		})
 	}

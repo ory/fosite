@@ -23,7 +23,7 @@ func TestHash(t *testing.T) {
 	}
 	in := []byte("foo")
 	out, err := j.Hash(in)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEqual(t, in, out)
 }
 
@@ -64,19 +64,19 @@ func TestGenerateJWT(t *testing.T) {
 	}
 
 	token, sig, err := j.Generate(claims.ToMapClaims(), header)
-	require.Nil(t, err, "%s", err)
+	require.NoError(t, err)
 	require.NotNil(t, token)
 
 	sig, err = j.Validate(token)
-	require.Nil(t, err, "%s", err)
+	require.NoError(t, err)
 
 	sig, err = j.Validate(token + "." + "0123456789")
-	require.NotNil(t, err, "%s", err)
+	require.Error(t, err)
 
 	partToken := strings.Split(token, ".")[2]
 
 	sig, err = j.Validate(partToken)
-	require.NotNil(t, err, "%s", err)
+	require.Error(t, err)
 
 	// Reset private key
 	j.PrivateKey = internal.MustRSAKey()
@@ -86,23 +86,23 @@ func TestGenerateJWT(t *testing.T) {
 		ExpiresAt: time.Now().Add(-time.Hour),
 	}
 	token, sig, err = j.Generate(claims.ToMapClaims(), header)
-	require.Nil(t, err, "%s", err)
+	require.NoError(t, err)
 	require.NotNil(t, token)
 	//t.Logf("%s.%s", token, sig)
 
 	sig, err = j.Validate(token)
-	require.NotNil(t, err, "%s", err)
+	require.Error(t, err)
 
 	// Lets validate the nbf claim
 	claims = &JWTClaims{
 		NotBefore: time.Now().Add(time.Hour),
 	}
 	token, sig, err = j.Generate(claims.ToMapClaims(), header)
-	require.Nil(t, err, "%s", err)
+	require.NoError(t, err)
 	require.NotNil(t, token)
 	//t.Logf("%s.%s", token, sig)
 	sig, err = j.Validate(token)
-	require.NotNil(t, err, "%s", err)
+	require.Error(t, err)
 	require.Empty(t, sig, "%s", err)
 }
 
@@ -120,7 +120,7 @@ func TestValidateSignatureRejectsJWT(t *testing.T) {
 		".foo",
 	} {
 		_, err = j.Validate(c)
-		assert.NotNil(t, err, "%s", err)
+		assert.Error(t, err)
 		t.Logf("Passed test case %d", k)
 	}
 }

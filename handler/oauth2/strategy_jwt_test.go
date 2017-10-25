@@ -9,6 +9,7 @@ import (
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
+	"fmt"
 )
 
 var j = &RS256JWTStrategy{
@@ -72,7 +73,7 @@ var jwtExpiredCase = func(tokenType fosite.TokenType) *fosite.Request {
 }
 
 func TestAccessToken(t *testing.T) {
-	for _, c := range []struct {
+	for k, c := range []struct {
 		r    *fosite.Request
 		pass bool
 	}{
@@ -85,17 +86,19 @@ func TestAccessToken(t *testing.T) {
 			pass: false,
 		},
 	} {
-		token, signature, err := j.GenerateAccessToken(nil, c.r)
-		assert.Nil(t, err, "%s", err)
-		assert.Equal(t, strings.Split(token, ".")[2], signature)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			token, signature, err := j.GenerateAccessToken(nil, c.r)
+			assert.NoError(t, err)
+			assert.Equal(t, strings.Split(token, ".")[2], signature)
 
-		validate := j.signature(token)
-		err = j.ValidateAccessToken(nil, c.r, token)
-		if c.pass {
-			assert.Nil(t, err, "%s", err)
-			assert.Equal(t, signature, validate)
-		} else {
-			assert.NotNil(t, err, "%s", err)
-		}
+			validate := j.signature(token)
+			err = j.ValidateAccessToken(nil, c.r, token)
+			if c.pass {
+				assert.NoError(t, err)
+				assert.Equal(t, signature, validate)
+			} else {
+				assert.Error(t, err)
+			}
+		})
 	}
 }

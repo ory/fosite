@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
+	"fmt"
 )
 
 func TestAuthorizeImplicitFlow(t *testing.T) {
@@ -47,36 +48,37 @@ func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 			authStatusCode: http.StatusOK,
 		},
 	} {
-		c.setup()
+		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
+			c.setup()
 
-		var callbackURL *url.URL
-		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type=token", -1)
-		client := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				callbackURL = req.URL
-				return errors.New("Dont follow redirects")
-			},
-		}
-		resp, err := client.Get(authURL)
-		require.NotNil(t, err)
-
-		if resp.StatusCode == http.StatusOK {
-			fragment, err := url.ParseQuery(callbackURL.Fragment)
-			require.Nil(t, err)
-			expires, err := strconv.Atoi(fragment.Get("expires_in"))
-			require.Nil(t, err)
-			token := &goauth.Token{
-				AccessToken:  fragment.Get("access_token"),
-				TokenType:    fragment.Get("token_type"),
-				RefreshToken: fragment.Get("refresh_token"),
-				Expiry:       time.Now().Add(time.Duration(expires) * time.Second),
+			var callbackURL *url.URL
+			authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type=token", -1)
+			client := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					callbackURL = req.URL
+					return errors.New("Dont follow redirects")
+				},
 			}
+			resp, err := client.Get(authURL)
+			require.Error(t, err)
 
-			httpClient := oauthClient.Client(goauth.NoContext, token)
-			resp, err := httpClient.Get(ts.URL + "/info")
-			require.Nil(t, err, "(%d) %s", k, c.description)
-			assert.Equal(t, http.StatusNoContent, resp.StatusCode, "(%d) %s", k, c.description)
-		}
-		t.Logf("Passed test case (%d) %s", k, c.description)
+			if resp.StatusCode == http.StatusOK {
+				fragment, err := url.ParseQuery(callbackURL.Fragment)
+				require.NoError(t, err)
+				expires, err := strconv.Atoi(fragment.Get("expires_in"))
+				require.NoError(t, err)
+				token := &goauth.Token{
+					AccessToken:  fragment.Get("access_token"),
+					TokenType:    fragment.Get("token_type"),
+					RefreshToken: fragment.Get("refresh_token"),
+					Expiry:       time.Now().Add(time.Duration(expires) * time.Second),
+				}
+
+				httpClient := oauthClient.Client(goauth.NoContext, token)
+				resp, err := httpClient.Get(ts.URL + "/info")
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+			}
+		})
 	}
 }

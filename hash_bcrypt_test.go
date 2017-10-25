@@ -13,7 +13,7 @@ func TestHash(t *testing.T) {
 	}
 	password := []byte("foo")
 	hash, err := h.Hash(password)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, hash)
 	assert.NotEqual(t, hash, password)
 }
@@ -24,10 +24,10 @@ func TestCompareEquals(t *testing.T) {
 	}
 	password := []byte("foo")
 	hash, err := h.Hash(password)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, hash)
 	err = h.Compare(hash, password)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 }
 
 func TestCompareDifferent(t *testing.T) {
@@ -36,8 +36,8 @@ func TestCompareDifferent(t *testing.T) {
 	}
 	password := []byte("foo")
 	hash, err := h.Hash(password)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotNil(t, hash)
 	err = h.Compare(hash, []byte(uuid.NewRandom()))
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }

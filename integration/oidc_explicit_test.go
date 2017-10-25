@@ -23,7 +23,7 @@ func TestOpenIDConnectExplicitFlow(t *testing.T) {
 			Headers: &jwt.Headers{},
 		},
 	}
-	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())
+	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
 	ts := mockServer(t, f, session)
 
 	defer ts.Close()
@@ -45,19 +45,20 @@ func TestOpenIDConnectExplicitFlow(t *testing.T) {
 			authStatusCode: http.StatusOK,
 		},
 	} {
-		c.setup()
+		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
+			c.setup()
 
-		resp, err := http.Get(oauthClient.AuthCodeURL(state) + "&nonce=1234567890")
-		require.Nil(t, err)
-		require.Equal(t, c.authStatusCode, resp.StatusCode, "(%d) %s", k, c.description)
+			resp, err := http.Get(oauthClient.AuthCodeURL(state) + "&nonce=1234567890")
+			require.NoError(t, err)
+			require.Equal(t, c.authStatusCode, resp.StatusCode)
 
-		if resp.StatusCode == http.StatusOK {
-			token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
-			fmt.Printf("after exchange: %s\n\n", fositeStore.AuthorizeCodes)
-			require.Nil(t, err, "(%d) %s", k, c.description)
-			require.NotEmpty(t, token.AccessToken, "(%d) %s", k, c.description)
-			require.NotEmpty(t, token.Extra("id_token"), "(%d) %s", k, c.description)
-		}
-		t.Logf("Passed test case (%d) %s", k, c.description)
+			if resp.StatusCode == http.StatusOK {
+				token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
+				fmt.Printf("after exchange: %s\n\n", fositeStore.AuthorizeCodes)
+				require.NoError(t, err)
+				require.NotEmpty(t, token.AccessToken)
+				require.NotEmpty(t, token.Extra("id_token"))
+			}
+		})
 	}
 }
