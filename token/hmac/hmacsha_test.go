@@ -17,7 +17,7 @@ func TestGenerateFailsWithShortCredentials(t *testing.T) {
 
 func TestGenerate(t *testing.T) {
 	cg := HMACStrategy{
-		GlobalSecret: []byte("12345678901234567890"),
+		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
 	}
 
 	token, signature, err := cg.Generate()
@@ -40,7 +40,7 @@ func TestGenerate(t *testing.T) {
 func TestValidateSignatureRejects(t *testing.T) {
 	var err error
 	cg := HMACStrategy{
-		GlobalSecret: []byte("12345678901234567890"),
+		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
 	}
 	for k, c := range []string{
 		"",

@@ -32,6 +32,15 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.12.0
+
+### Breaking changes
+
+#### Improved cryptographic methods
+
+* The minimum required secret length used to generate signatures of access tokens has increased from 16 to 32 byte.
+* The algorithm used to generate access tokens using the HMAC-SHA strategy has changed from HMAC-SHA256 to HMAC-SHA512.
+
 ## 0.11.0
 
 ### Non-breaking changes

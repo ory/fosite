@@ -17,6 +17,7 @@ import (
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
+	"fmt"
 )
 
 func TestOIDCImplicitFlow(t *testing.T) {
@@ -28,7 +29,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			Headers: &jwt.Headers{},
 		},
 	}
-	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random"), internal.MustRSAKey())
+	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 
@@ -94,60 +95,61 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			hasIdToken:   true,
 		},
 	} {
-		c.setup()
+		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
+			c.setup()
 
-		var callbackURL *url.URL
-		authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type="+c.responseType, -1) + "&nonce=" + c.nonce
-		client := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				callbackURL = req.URL
-				return errors.New("Dont follow redirects")
-			},
-		}
-		resp, err := client.Get(authURL)
-		require.NotNil(t, err, "(%d) %s", k, c.description)
+			var callbackURL *url.URL
+			authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type="+c.responseType, -1) + "&nonce=" + c.nonce
+			client := &http.Client{
+				CheckRedirect: func(req *http.Request, via []*http.Request) error {
+					callbackURL = req.URL
+					return errors.New("Dont follow redirects")
+				},
+			}
+			resp, err := client.Get(authURL)
+			require.Error(t, err)
 
-		t.Logf("Response (%d): %s", k, callbackURL.String())
-		fragment, err := url.ParseQuery(callbackURL.Fragment)
-		require.Nil(t, err, "(%d) %s", k, c.description)
+			t.Logf("Response (%d): %s", k, callbackURL.String())
+			fragment, err := url.ParseQuery(callbackURL.Fragment)
+			require.NoError(t, err)
 
-		if c.hasToken {
-			assert.NotEmpty(t, fragment.Get("access_token"), "(%d) %s", k, c.description)
-		} else {
-			assert.Empty(t, fragment.Get("access_token"), "(%d) %s", k, c.description)
-		}
+			if c.hasToken {
+				assert.NotEmpty(t, fragment.Get("access_token"))
+			} else {
+				assert.Empty(t, fragment.Get("access_token"))
+			}
 
-		if c.hasCode {
-			assert.NotEmpty(t, fragment.Get("code"), "(%d) %s", k, c.description)
-		} else {
-			assert.Empty(t, fragment.Get("code"), "(%d) %s", k, c.description)
-		}
+			if c.hasCode {
+				assert.NotEmpty(t, fragment.Get("code"))
+			} else {
+				assert.Empty(t, fragment.Get("code"))
+			}
 
-		if c.hasIdToken {
-			assert.NotEmpty(t, fragment.Get("id_token"), "(%d) %s", k, c.description)
-		} else {
-			assert.Empty(t, fragment.Get("id_token"), "(%d) %s", k, c.description)
-		}
+			if c.hasIdToken {
+				assert.NotEmpty(t, fragment.Get("id_token"))
+			} else {
+				assert.Empty(t, fragment.Get("id_token"))
+			}
 
-		if !c.hasToken {
-			continue
-		}
+			if !c.hasToken {
+				return
+			}
 
-		expires, err := strconv.Atoi(fragment.Get("expires_in"))
-		require.Nil(t, err, "(%d) %s", k, c.description)
+			expires, err := strconv.Atoi(fragment.Get("expires_in"))
+			require.NoError(t, err)
 
-		token := &oauth2.Token{
-			AccessToken:  fragment.Get("access_token"),
-			TokenType:    fragment.Get("token_type"),
-			RefreshToken: fragment.Get("refresh_token"),
-			Expiry:       time.Now().Add(time.Duration(expires) * time.Second),
-		}
+			token := &oauth2.Token{
+				AccessToken:  fragment.Get("access_token"),
+				TokenType:    fragment.Get("token_type"),
+				RefreshToken: fragment.Get("refresh_token"),
+				Expiry:       time.Now().Add(time.Duration(expires) * time.Second),
+			}
 
-		httpClient := oauthClient.Client(oauth2.NoContext, token)
-		resp, err = httpClient.Get(ts.URL + "/info")
-		require.Nil(t, err, "(%d) %s", k, c.description)
-		assert.Equal(t, http.StatusNoContent, resp.StatusCode, "(%d) %s", k, c.description)
-		t.Logf("Passed test case (%d) %s", k, c.description)
-
+			httpClient := oauthClient.Client(oauth2.NoContext, token)
+			resp, err = httpClient.Get(ts.URL + "/info")
+			require.NoError(t, err)
+			assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+			t.Logf("Passed test case (%d) %s", k, c.description)
+		})
 	}
 }

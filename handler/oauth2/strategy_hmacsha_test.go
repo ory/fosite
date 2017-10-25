@@ -11,7 +11,7 @@ import (
 )
 
 var hmacshaStrategy = HMACSHAStrategy{
-	Enigma:                &hmac.HMACStrategy{GlobalSecret: []byte("foobarfoobarfoobarfoobar")},
+	Enigma:                &hmac.HMACStrategy{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")},
 	AccessTokenLifespan:   time.Hour * 24,
 	AuthorizeCodeLifespan: time.Hour * 24,
 }

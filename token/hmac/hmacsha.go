@@ -3,20 +3,20 @@
 package hmac
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"strings"
-
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
+	"sync"
+	"github.com/gtank/cryptopasta"
 )
 
 // HMACStrategy is responsible for generating and validating challenges.
 type HMACStrategy struct {
 	AuthCodeEntropy int
 	GlobalSecret    []byte
+	sync.Mutex
 }
 
 const (
@@ -32,9 +32,15 @@ var b64 = base64.URLEncoding.WithPadding(base64.NoPadding)
 // Generate generates a token and a matching signature or returns an error.
 // This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets.
 func (c *HMACStrategy) Generate() (string, string, error) {
-	if len(c.GlobalSecret) < minimumSecretLength/2 {
-		return "", "", errors.New("Secret is not strong enough")
+	c.Lock()
+	defer c.Unlock()
+
+	if len(c.GlobalSecret) < minimumSecretLength {
+		return "", "", errors.Errorf("Secret for signing HMAC-SHA256 is expected to be 32 byte long, got %d byte", len(c.GlobalSecret))
 	}
+
+	var signingKey [32]byte
+	copy(signingKey[:], c.GlobalSecret)
 
 	if c.AuthCodeEntropy < minimumEntropy {
 		c.AuthCodeEntropy = minimumEntropy
@@ -47,59 +53,49 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	// constructed from a cryptographically strong random or pseudo-random
 	// number sequence (see [RFC4086] for best current practice) generated
 	// by the authorization server.
-	key, err := RandomBytes(c.AuthCodeEntropy)
+	tokenKey, err := RandomBytes(c.AuthCodeEntropy)
 	if err != nil {
 		return "", "", errors.WithStack(err)
 	}
 
-	if len(key) < c.AuthCodeEntropy {
-		return "", "", errors.New("Could not read enough random data for key generation")
-	}
+	signature := cryptopasta.GenerateHMAC(tokenKey, &signingKey)
 
-	useSecret := append([]byte{}, c.GlobalSecret...)
-	mac := hmac.New(sha256.New, useSecret)
-	_, err = mac.Write(key)
-	if err != nil {
-		return "", "", errors.WithStack(err)
-	}
-
-	signature := mac.Sum([]byte{})
 	encodedSignature := b64.EncodeToString(signature)
-	encodedToken := fmt.Sprintf("%s.%s", b64.EncodeToString(key), encodedSignature)
+	encodedToken := fmt.Sprintf("%s.%s", b64.EncodeToString(tokenKey), encodedSignature)
 	return encodedToken, encodedSignature, nil
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
 func (c *HMACStrategy) Validate(token string) error {
+	if len(c.GlobalSecret) < minimumSecretLength {
+		return errors.Errorf("Secret for signing HMAC-SHA256 is expected to be 32 byte long, got %d byte", len(c.GlobalSecret))
+	}
+
+	var signingKey [32]byte
+	copy(signingKey[:], c.GlobalSecret)
+
 	split := strings.Split(token, ".")
 	if len(split) != 2 {
 		return errors.WithStack(fosite.ErrInvalidTokenFormat)
 	}
 
-	key := split[0]
-	signature := split[1]
-	if key == "" || signature == "" {
+	tokenKey := split[0]
+	tokenSignature := split[1]
+	if tokenKey == "" || tokenSignature == "" {
 		return errors.WithStack(fosite.ErrInvalidTokenFormat)
 	}
 
-	decodedSignature, err := b64.DecodeString(signature)
+	decodedTokenSignature, err := b64.DecodeString(tokenSignature)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	decodedKey, err := b64.DecodeString(key)
+	decodedTokenKey, err := b64.DecodeString(tokenKey)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	useSecret := append([]byte{}, c.GlobalSecret...)
-	mac := hmac.New(sha256.New, useSecret)
-	_, err = mac.Write(decodedKey)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	if !hmac.Equal(decodedSignature, mac.Sum([]byte{})) {
+	if !cryptopasta.CheckHMAC(decodedTokenKey, decodedTokenSignature, &signingKey) {
 		// Hash is invalid
 		return errors.WithStack(fosite.ErrTokenSignatureMismatch)
 	}
