@@ -18,5 +18,5 @@ install:
 
 script:
   - ./scripts/test-format.sh
-  - go-acc -o coverage.txt ./...
+  - go-acc -o coverage.txt $(go list ./... | grep -v /vendor/)
   - goveralls -coverprofile="coverage.txt"
