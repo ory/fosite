@@ -3,7 +3,7 @@ language: go
 go_import_path: github.com/ory/fosite
 
 go:
-  - 1.9
+  - 1.9.x
 
 env:
   - DEP_VERSION="0.3.2"
