@@ -62,5 +62,5 @@ type TokenEndpointHandler interface {
 // token as well.
 type RevocationHandler interface {
 	// RevokeToken handles access and refresh token revocation.
-	RevokeToken(ctx context.Context, token string, tokenType TokenType) error
+	RevokeToken(ctx context.Context, token string, tokenType TokenType, client Client) error
 }

@@ -45,16 +45,31 @@ func TestRevokeToken(t *testing.T) {
 		description string
 		mock        func()
 		expectErr   error
+		client      fosite.Client
 	}{
+		{
+			description: "should fail - token was issued to another client",
+			expectErr:   fosite.ErrRevokationClientMismatch,
+			client:      &fosite.DefaultClient{ID: "bar"},
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.RefreshToken
+				rtStrat.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
+				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "foo"})
+			},
+		},
 		{
 			description: "should pass - refresh token discovery first; refresh token found",
 			expectErr:   nil,
+			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
 				rtStrat.EXPECT().RefreshTokenSignature(token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 				ar.EXPECT().GetID()
+				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
 				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
 				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
 			},
@@ -62,12 +77,14 @@ func TestRevokeToken(t *testing.T) {
 		{
 			description: "should pass - access token discovery first; access token found",
 			expectErr:   nil,
+			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
 				atStrat.EXPECT().AccessTokenSignature(token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 				ar.EXPECT().GetID()
+				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
 				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
 				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
 			},
@@ -75,6 +92,7 @@ func TestRevokeToken(t *testing.T) {
 		{
 			description: "should pass - refresh token discovery first; refresh token not found",
 			expectErr:   nil,
+			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
@@ -84,6 +102,7 @@ func TestRevokeToken(t *testing.T) {
 				rtStrat.EXPECT().RefreshTokenSignature(token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 				ar.EXPECT().GetID()
+				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
 				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
 				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
 			},
@@ -91,6 +110,7 @@ func TestRevokeToken(t *testing.T) {
 		{
 			description: "should pass - access token discovery first; access token not found",
 			expectErr:   nil,
+			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
@@ -100,13 +120,15 @@ func TestRevokeToken(t *testing.T) {
 				atStrat.EXPECT().AccessTokenSignature(token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 				ar.EXPECT().GetID()
+				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
 				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any())
 				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any())
 			},
 		},
 		{
-			description: "should pass - refresh token discovery first; both tokens not found",
+			description: "should fail - refresh token discovery first; both tokens not found",
 			expectErr:   fosite.ErrNotFound,
+			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
@@ -118,8 +140,9 @@ func TestRevokeToken(t *testing.T) {
 			},
 		},
 		{
-			description: "should pass - access token discovery first; both tokens not found",
+			description: "should fail - access token discovery first; both tokens not found",
 			expectErr:   fosite.ErrNotFound,
+			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
@@ -132,7 +155,7 @@ func TestRevokeToken(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := h.RevokeToken(nil, token, tokenType)
+		err := h.RevokeToken(nil, token, tokenType, c.client)
 		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		t.Logf("Passed test case %d", k)
 	}

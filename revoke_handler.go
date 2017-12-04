@@ -70,7 +70,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 
 	var found bool
 	for _, loader := range f.RevocationHandlers {
-		if err := loader.RevokeToken(ctx, token, tokenTypeHint); err == nil {
+		if err := loader.RevokeToken(ctx, token, tokenTypeHint, client); err == nil {
 			found = true
 		} else if errors.Cause(err) == ErrUnknownRequest {
 			// do nothing

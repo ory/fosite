@@ -108,7 +108,7 @@ func TestNewRevocationRequest(t *testing.T) {
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				client.EXPECT().IsPublic().Return(false)
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
-				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: RevocationHandlers{handler},
 		},
@@ -127,7 +127,7 @@ func TestNewRevocationRequest(t *testing.T) {
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				client.EXPECT().IsPublic().Return(false)
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
-				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: RevocationHandlers{handler},
 		},
@@ -145,7 +145,7 @@ func TestNewRevocationRequest(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().IsPublic().Return(true)
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
-				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: RevocationHandlers{handler},
 		},
@@ -163,7 +163,7 @@ func TestNewRevocationRequest(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				client.EXPECT().IsPublic().Return(false)
-				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: RevocationHandlers{handler},
 		},
@@ -182,7 +182,7 @@ func TestNewRevocationRequest(t *testing.T) {
 				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
 				client.EXPECT().IsPublic().Return(false)
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
-				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handler.EXPECT().RevokeToken(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: RevocationHandlers{handler},
 		},
