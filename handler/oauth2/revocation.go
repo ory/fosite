@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/ory/fosite"
+	"github.com/pkg/errors"
 )
 
 type TokenRevocationHandler struct {
@@ -28,7 +29,7 @@ type TokenRevocationHandler struct {
 
 // RevokeToken implements https://tools.ietf.org/html/rfc7009#section-2.1
 // The token type hint indicates which token type check should be performed first.
-func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, tokenType fosite.TokenType) error {
+func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, tokenType fosite.TokenType, client fosite.Client) error {
 	discoveryFuncs := []func() (request fosite.Requester, err error){
 		func() (request fosite.Requester, err error) {
 			// Refresh token
@@ -54,6 +55,10 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 	}
 	if err != nil {
 		return err
+	}
+
+	if ar.GetClient().GetID() != client.GetID() {
+		return errors.WithStack(fosite.ErrRevokationClientMismatch)
 	}
 
 	requestID := ar.GetID()
