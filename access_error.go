@@ -28,7 +28,7 @@ func writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 	rfcerr := ErrorToRFC6749Error(err)
-	js, err := json.Marshal(err)
+	js, err := json.Marshal(rfcerr)
 	if err != nil {
 		http.Error(rw, fmt.Sprintf(`{"error": "%s"}`, err.Error()), http.StatusInternalServerError)
 		return
