@@ -34,7 +34,7 @@ func tokenRevocationHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session 
 		err := oauth2.NewRevocationRequest(ctx, req)
 		if err != nil {
 			t.Logf("Revoke request failed because %s.", err.Error())
-			t.Logf("Stack: %v", err.(stackTracer).StackTrace())
+			// t.Logf("Stack: %v", err.(stackTracer).StackTrace())
 		}
 		oauth2.WriteRevocationResponse(rw, err)
 	}
@@ -46,7 +46,7 @@ func tokenIntrospectionHandler(t *testing.T, oauth2 fosite.OAuth2Provider, sessi
 		ar, err := oauth2.NewIntrospectionRequest(ctx, req, session)
 		if err != nil {
 			t.Logf("Introspection request failed because %s.", err.Error())
-			t.Logf("Stack: %s", err.(stackTracer).StackTrace())
+			// t.Logf("Stack: %s", err.(stackTracer).StackTrace())
 			oauth2.WriteIntrospectionError(rw, err)
 			return
 		}
@@ -59,10 +59,9 @@ func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
 		if _, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session); err != nil {
-			rfcerr := fosite.ErrorToRFC6749Error(err)
 			t.Logf("Info request failed because `%s`.", err.Error())
-			t.Logf("Stack: %s", err.(stackTracer).StackTrace())
-			http.Error(rw, rfcerr.Description, rfcerr.Code)
+			// t.Logf("Stack: %s", err.(stackTracer).StackTrace())
+			http.Error(rw, errors.Cause(err).(*fosite.RFC6749Error).Description, errors.Cause(err).(*fosite.RFC6749Error).Code)
 			return
 		}
 
@@ -78,7 +77,7 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", ar)
-			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
+			// t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}
@@ -100,7 +99,7 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", ar)
-			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
+			// t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}
@@ -137,7 +136,7 @@ func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw 
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)
-			t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
+			// t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
 			provider.WriteAccessError(rw, accessRequest, err)
 			return
 		}
@@ -150,7 +149,7 @@ func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw 
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)
-			t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
+			// t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
 			provider.WriteAccessError(rw, accessRequest, err)
 			return
 		}

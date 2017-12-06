@@ -47,7 +47,7 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 	f := &Fosite{}
 
 	for k, c := range []struct {
-		err  error
+		err  *RFC6749Error
 		code string
 	}{
 		{ErrInvalidRequest, "invalid_request"},
@@ -70,6 +70,6 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 		require.NoError(t, err, "(%d) %s", k, c.code)
 
 		assert.Equal(t, c.code, params.Error, "(%d) %s: error", k, c.code)
-		assert.Equal(t, c.err.Error(), params.Description, "(%d) %s: description", k, c.code)
+		assert.Equal(t, c.err.Description, params.Description, "(%d) %s: description", k, c.code)
 	}
 }
