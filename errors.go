@@ -66,7 +66,6 @@ var (
 		Description: "The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server",
 		Code:        http.StatusServiceUnavailable,
 	}
-
 	ErrUnsupportedGrantType = &RFC6749Error{
 		Name:        errUnsupportedGrantTypeName,
 		Description: "The authorization grant type is not supported by the authorization server",
