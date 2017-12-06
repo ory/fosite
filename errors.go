@@ -177,7 +177,7 @@ const (
 	errRevokationClientMismatchName = "revokation_client_mismatch"
 )
 
-func errorToRFC6749Error(err error) *RFC6749Error {
+func ErrorToRFC6749Error(err error) *RFC6749Error {
 	if e, ok := err.(*RFC6749Error); ok {
 		return e
 	} else if e, ok := errors.Cause(err).(*RFC6749Error); ok {

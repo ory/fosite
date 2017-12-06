@@ -27,7 +27,7 @@ func (c *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err
 func writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-	rfcerr := errorToRFC6749Error(err)
+	rfcerr := ErrorToRFC6749Error(err)
 	js, err := json.Marshal(err)
 	if err != nil {
 		http.Error(rw, fmt.Sprintf(`{"error": "%s"}`, err.Error()), http.StatusInternalServerError)
