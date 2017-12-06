@@ -104,14 +104,13 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 	case ErrInvalidClient:
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-		rfcerr := ErrorToRFC6749Error(err)
-		js, err := json.Marshal(rfcerr)
+		js, err := json.Marshal(ErrInvalidClient)
 		if err != nil {
 			http.Error(rw, fmt.Sprintf(`{"error": "%s"}`, err.Error()), http.StatusInternalServerError)
 			return
 		}
 
-		rw.WriteHeader(rfcerr.Code)
+		rw.WriteHeader(ErrInvalidClient.Code)
 		rw.Write(js)
 	default:
 		// 200 OK
