@@ -34,15 +34,15 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("id_token", "code") {
-		return errors.Wrap(fosite.ErrInvalidRequest, "The client is not allowed to use response type id_token and code")
+		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("The client is not allowed to use response type id_token and code"))
 	}
 
 	if len(resp.GetCode()) == 0 {
-		return errors.Wrap(fosite.ErrMisconfiguration, "Authorization code has not been issued yet")
+		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("Authorization code has not been issued yet"))
 	}
 
 	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar); err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	// there is no need to check for https, because it has already been checked by core.explicit

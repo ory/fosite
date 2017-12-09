@@ -48,17 +48,17 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 	}
 
 	if !ar.GetClient().GetResponseTypes().Has("token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use response type token")
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token"))
 	}
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type implicit")
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use grant type implicit"))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
+			return errors.WithStack(fosite.ErrInvalidScope.WithDebug(fmt.Sprintf("The client is not allowed to request scope %s", scope)))
 		}
 	}
 
@@ -74,11 +74,11 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	// Generate the code
 	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, ar)
 	if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar); err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	resp.AddFragment("access_token", token)

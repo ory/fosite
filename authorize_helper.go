@@ -35,7 +35,7 @@ func GetRedirectURIFromRequestValues(values url.Values) (string, error) {
 	// The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component
 	redirectURI, err := url.QueryUnescape(values.Get("redirect_uri"))
 	if err != nil {
-		return "", errors.Wrap(ErrInvalidRequest, "redirect_uri parameter malformed or missing")
+		return "", errors.WithStack(ErrInvalidRequest.WithDebug("redirect_uri parameter malformed or missing"))
 	}
 	return redirectURI, nil
 }
@@ -85,7 +85,7 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 		}
 	}
 
-	return nil, errors.Wrap(ErrInvalidRequest, "redirect_uri parameter does not match with registered client redirect urls")
+	return nil, errors.WithStack(ErrInvalidRequest.WithDebug("redirect_uri parameter does not match with registered client redirect urls"))
 }
 
 // IsValidRedirectURI validates a redirect_uri as specified in:

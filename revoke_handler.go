@@ -43,25 +43,25 @@ import (
 // server and does not influence the revocation response.
 func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) error {
 	if r.Method != "POST" {
-		return errors.Wrap(ErrInvalidRequest, "HTTP method is not POST")
+		return errors.WithStack(ErrInvalidRequest.WithDebug("HTTP method is not POST"))
 	} else if err := r.ParseForm(); err != nil {
-		return errors.Wrap(ErrInvalidRequest, err.Error())
+		return errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
 	}
 
 	clientID, clientSecret, ok := r.BasicAuth()
 	if !ok {
-		return errors.Wrap(ErrInvalidRequest, "HTTP Authorization header missing or invalid")
+		return errors.WithStack(ErrInvalidRequest.WithDebug("HTTP Authorization header missing or invalid"))
 	}
 
 	client, err := f.Store.GetClient(ctx, clientID)
 	if err != nil {
-		return errors.Wrap(ErrInvalidClient, err.Error())
+		return errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
 	}
 
 	// Enforce client authentication for confidential clients
 	if !client.IsPublic() {
 		if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-			return errors.Wrap(ErrInvalidClient, err.Error())
+			return errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
 		}
 	}
 

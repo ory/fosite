@@ -16,11 +16,7 @@ package fosite
 
 import (
 	"context"
-
-	"github.com/pkg/errors"
 )
-
-var ErrUnknownRequest = errors.New("The handler is not responsible for this request.")
 
 type AuthorizeEndpointHandler interface {
 	// HandleAuthorizeRequest handles an authorize endpoint request. To extend the handler's capabilities, the http request

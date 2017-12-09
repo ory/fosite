@@ -33,7 +33,7 @@ func (f *Fosite) NewAccessResponse(ctx context.Context, requester AccessRequeste
 	}
 
 	if response.GetAccessToken() == "" || response.GetTokenType() == "" {
-		return nil, errors.Wrap(ErrServerError, "Access token or token type not set")
+		return nil, errors.WithStack(ErrServerError.WithDebug("Access token or token type not set"))
 	}
 
 	return response, nil

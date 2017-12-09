@@ -36,11 +36,11 @@ func (c *OpenIDConnectRefreshHandler) HandleTokenEndpointRequest(ctx context.Con
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the authorization_code grant type")
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
 	}
 
 	if !request.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.Wrap(fosite.ErrUnknownRequest, "The client is not allowed to use response type id_token")
+		return errors.WithStack(fosite.ErrUnknownRequest.WithDebug("The client is not allowed to use response type id_token"))
 	}
 
 	sess, ok := request.GetSession().(Session)
@@ -63,11 +63,11 @@ func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.
 	}
 
 	if !requester.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the authorization_code grant type")
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
 	}
 
 	if !requester.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.Wrap(errors.WithStack(fosite.ErrUnknownRequest), "The client is not allowed to use response type id_token")
+		return errors.WithStack(fosite.ErrUnknownRequest.WithDebug("The client is not allowed to use response type id_token"))
 	}
 
 	return c.IssueExplicitIDToken(ctx, requester, responder)
