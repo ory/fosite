@@ -55,14 +55,15 @@ func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType To
 		if err := errors.Cause(validator.IntrospectToken(ctx, token, tokenType, ar, scopes)); err == ErrUnknownRequest {
 			// Nothing to do
 		} else if err != nil {
-			return nil, errors.Wrap(err, "A validator returned an error")
+			rfcerr := ErrorToRFC6749Error(err)
+			return nil, errors.WithStack(rfcerr.WithDebug("A validator returned an error"))
 		} else {
 			found = true
 		}
 	}
 
 	if !found {
-		return nil, errors.Wrap(ErrRequestUnauthorized, "No validator felt responsible for validating the token")
+		return nil, errors.WithStack(ErrRequestUnauthorized.WithDebug("No validator felt responsible for validating the token"))
 	}
 
 	return ar, nil

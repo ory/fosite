@@ -32,21 +32,21 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 
 	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, requester.GetRequestForm().Get("code"), requester)
 	if errors.Cause(err) == ErrNoSessionFound {
-		return errors.Wrap(fosite.ErrUnknownRequest, err.Error())
+		return errors.WithStack(fosite.ErrUnknownRequest.WithDebug(err.Error()))
 	} else if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	if !authorize.GetGrantedScopes().Has("openid") {
-		return errors.Wrap(fosite.ErrMisconfiguration, "The an openid connect session was found but the openid scope is missing in it")
+		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("The an openid connect session was found but the openid scope is missing in it"))
 	}
 
 	if !requester.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use the authorization_code grant type")
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
 	}
 
 	if !requester.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use response type id_token")
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
 	}
 
 	return c.IssueExplicitIDToken(ctx, authorize, responder)

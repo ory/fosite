@@ -40,7 +40,7 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
+			return errors.WithStack(fosite.ErrInvalidScope.WithDebug(fmt.Sprintf("The client is not allowed to request scope %s", scope)))
 		}
 	}
 
@@ -48,7 +48,7 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 	// This requirement is already fulfilled because fosite requries all token requests to be authenticated as described
 	// in https://tools.ietf.org/html/rfc6749#section-3.2.1
 	if client.IsPublic() {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is public and thus not allowed to use grant type client_credentials")
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is public and thus not allowed to use grant type client_credentials"))
 	}
 	// if the client is not public, he has already been authenticated by the access request handler.
 
@@ -63,7 +63,7 @@ func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("client_credentials") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type client_credentials")
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use grant type client_credentials"))
 	}
 
 	return c.IssueAccessToken(ctx, request, response)

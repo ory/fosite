@@ -55,13 +55,13 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 	}
 
 	if !fosite.IsRedirectURISecure(ar.GetRedirectURI()) {
-		return errors.Wrap(fosite.ErrInvalidRequest, "Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/")
+		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/"))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
+			return errors.WithStack(fosite.ErrInvalidScope.WithDebug(fmt.Sprintf("The client is not allowed to request scope %s", scope)))
 		}
 	}
 
@@ -71,12 +71,12 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 	if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().Add(c.AuthCodeLifespan))
 	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	resp.AddQuery("code", code)

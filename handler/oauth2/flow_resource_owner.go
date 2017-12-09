@@ -43,23 +43,23 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("password") {
-		return errors.Wrap(fosite.ErrInvalidGrant, "The client is not allowed to use grant type password")
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use grant type password"))
 	}
 
 	username := request.GetRequestForm().Get("username")
 	password := request.GetRequestForm().Get("password")
 	if username == "" || password == "" {
-		return errors.Wrap(fosite.ErrInvalidRequest, "Username or password missing")
+		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Username or password missing"))
 	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
-		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
+		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug(err.Error()))
 	} else if err != nil {
-		return errors.Wrap(fosite.ErrServerError, err.Error())
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.Wrap(fosite.ErrInvalidScope, fmt.Sprintf("The client is not allowed to request scope %s", scope))
+			return errors.WithStack(fosite.ErrInvalidScope.WithDebug(fmt.Sprintf("The client is not allowed to request scope %s", scope)))
 		}
 	}
 
@@ -81,9 +81,9 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 		var err error
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
-			return errors.Wrap(fosite.ErrServerError, err.Error())
+			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 		} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester); err != nil {
-			return errors.Wrap(fosite.ErrServerError, err.Error())
+			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 		}
 	}
 

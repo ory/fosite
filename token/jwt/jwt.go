@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/ory/fosite"
 	"github.com/pkg/errors"
 )
 
@@ -73,9 +74,9 @@ func (j *RS256JWTStrategy) Decode(token string) (*jwt.Token, error) {
 	})
 
 	if err != nil {
-		return nil, errors.Wrap(err, "Couldn't parse token")
+		return nil, errors.WithStack(fosite.ErrorToRFC6749Error(err).WithDebug("Couldn't parse token"))
 	} else if !parsedToken.Valid {
-		return nil, errors.Errorf("Token is invalid")
+		return nil, errors.WithStack(fosite.ErrInactiveToken)
 	}
 
 	return parsedToken, err

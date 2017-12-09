@@ -119,27 +119,27 @@ func (h *RS256JWTStrategy) validate(token string) (t *jwtx.Token, err error) {
 		if e, ok := errors.Cause(err).(*jwtx.ValidationError); ok {
 			switch e.Errors {
 			case jwtx.ValidationErrorMalformed:
-				err = errors.Wrap(fosite.ErrInvalidTokenFormat, err.Error())
+				err = errors.WithStack(fosite.ErrInvalidTokenFormat.WithDebug(err.Error()))
 			case jwtx.ValidationErrorUnverifiable:
-				err = errors.Wrap(fosite.ErrTokenSignatureMismatch, err.Error())
+				err = errors.WithStack(fosite.ErrTokenSignatureMismatch.WithDebug(err.Error()))
 			case jwtx.ValidationErrorSignatureInvalid:
-				err = errors.Wrap(fosite.ErrTokenSignatureMismatch, err.Error())
+				err = errors.WithStack(fosite.ErrTokenSignatureMismatch.WithDebug(err.Error()))
 			case jwtx.ValidationErrorAudience:
-				err = errors.Wrap(fosite.ErrTokenClaim, err.Error())
+				err = errors.WithStack(fosite.ErrTokenClaim.WithDebug(err.Error()))
 			case jwtx.ValidationErrorExpired:
-				err = errors.Wrap(fosite.ErrTokenExpired, err.Error())
+				err = errors.WithStack(fosite.ErrTokenExpired.WithDebug(err.Error()))
 			case jwtx.ValidationErrorIssuedAt:
-				err = errors.Wrap(fosite.ErrTokenClaim, err.Error())
+				err = errors.WithStack(fosite.ErrTokenClaim.WithDebug(err.Error()))
 			case jwtx.ValidationErrorIssuer:
-				err = errors.Wrap(fosite.ErrTokenClaim, err.Error())
+				err = errors.WithStack(fosite.ErrTokenClaim.WithDebug(err.Error()))
 			case jwtx.ValidationErrorNotValidYet:
-				err = errors.Wrap(fosite.ErrTokenClaim, err.Error())
+				err = errors.WithStack(fosite.ErrTokenClaim.WithDebug(err.Error()))
 			case jwtx.ValidationErrorId:
-				err = errors.Wrap(fosite.ErrTokenClaim, err.Error())
+				err = errors.WithStack(fosite.ErrTokenClaim.WithDebug(err.Error()))
 			case jwtx.ValidationErrorClaimsInvalid:
-				err = errors.Wrap(fosite.ErrTokenClaim, err.Error())
+				err = errors.WithStack(fosite.ErrTokenClaim.WithDebug(err.Error()))
 			default:
-				err = errors.Wrap(fosite.ErrRequestUnauthorized, err.Error())
+				err = errors.WithStack(fosite.ErrRequestUnauthorized.WithDebug(err.Error()))
 			}
 		}
 	}

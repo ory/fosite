@@ -54,9 +54,9 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
-		return accessRequest, errors.Wrap(ErrInvalidRequest, "HTTP method is not POST")
+		return accessRequest, errors.WithStack(ErrInvalidRequest.WithDebug("HTTP method is not POST"))
 	} else if err := r.ParseForm(); err != nil {
-		return accessRequest, errors.Wrap(ErrInvalidRequest, err.Error())
+		return accessRequest, errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
 	}
 
 	accessRequest.Form = r.PostForm
@@ -67,7 +67,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	accessRequest.SetRequestedScopes(removeEmpty(strings.Split(r.PostForm.Get("scope"), " ")))
 	accessRequest.GrantTypes = removeEmpty(strings.Split(r.PostForm.Get("grant_type"), " "))
 	if len(accessRequest.GrantTypes) < 1 {
-		return accessRequest, errors.Wrap(ErrInvalidRequest, "No grant type given")
+		return accessRequest, errors.WithStack(ErrInvalidRequest.WithDebug("No grant type given"))
 	}
 
 	// Decode client_id and client_secret which should be in "application/x-www-form-urlencoded" format.
@@ -78,13 +78,13 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 
 	client, err := f.Store.GetClient(ctx, clientID)
 	if err != nil {
-		return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
+		return accessRequest, errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
 	}
 
 	if !client.IsPublic() {
 		// Enforce client authentication
 		if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-			return accessRequest, errors.Wrap(ErrInvalidClient, err.Error())
+			return accessRequest, errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
 		}
 	}
 	accessRequest.Client = client
@@ -110,9 +110,9 @@ func clientCredentialsFromRequest(r *http.Request) (clientID, clientSecret strin
 	if id, secret, ok := r.BasicAuth(); !ok {
 		return clientCredentialsFromRequestBody(r)
 	} else if clientID, err = url.QueryUnescape(id); err != nil {
-		return "", "", errors.Wrap(ErrInvalidRequest, `The client id in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`)
+		return "", "", errors.WithStack(ErrInvalidRequest.WithDebug(`The client id in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`))
 	} else if clientSecret, err = url.QueryUnescape(secret); err != nil {
-		return "", "", errors.Wrap(ErrInvalidRequest, `The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`)
+		return "", "", errors.WithStack(ErrInvalidRequest.WithDebug(`The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`))
 	}
 
 	return clientID, clientSecret, nil
@@ -123,13 +123,13 @@ func clientCredentialsFromRequestBody(r *http.Request) (clientID, clientSecret s
 	clientSecret = r.PostForm.Get("client_secret")
 
 	if clientID == "" {
-		return "", "", errors.Wrap(ErrInvalidRequest, "Client credentials missing or malformed in both HTTP Authorization header and HTTP POST body")
+		return "", "", errors.WithStack(ErrInvalidRequest.WithDebug("Client credentials missing or malformed in both HTTP Authorization header and HTTP POST body"))
 	}
 
 	if clientID, err = url.QueryUnescape(clientID); err != nil {
-		return "", "", errors.Wrap(ErrInvalidRequest, `The client id in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`)
+		return "", "", errors.WithStack(ErrInvalidRequest.WithDebug(`The client id in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`))
 	} else if clientSecret, err = url.QueryUnescape(clientSecret); err != nil {
-		return "", "", errors.Wrap(ErrInvalidRequest, `The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`)
+		return "", "", errors.WithStack(ErrInvalidRequest.WithDebug(`The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`))
 	}
 
 	return clientID, clientSecret, nil

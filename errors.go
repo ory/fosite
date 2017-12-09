@@ -22,6 +22,11 @@ import (
 )
 
 var (
+	ErrUnknownRequest = &RFC6749Error{
+		Name:        errUnknownErrorName,
+		Description: "The handler is not responsible for this request",
+		Code:        http.StatusInternalServerError,
+	}
 	ErrRequestForbidden = &RFC6749Error{
 		Name:        errRequestForbidden,
 		Description: "The request is not allowed",
@@ -228,4 +233,10 @@ func (e *RFC6749Error) Details() []map[string]interface{} {
 
 func (e *RFC6749Error) StatusCode() int {
 	return e.Code
+}
+
+func (e *RFC6749Error) WithDebug(debug string) *RFC6749Error {
+	err := *e
+	e.Debug = debug
+	return &err
 }
