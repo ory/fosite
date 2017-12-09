@@ -26,6 +26,7 @@ import (
 	"github.com/ory/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewAccessRequest(t *testing.T) {
@@ -49,6 +50,7 @@ func TestNewAccessRequest(t *testing.T) {
 		{
 			header:    http.Header{},
 			expectErr: ErrInvalidRequest,
+			form:      url.Values{},
 			method:    "POST",
 			mock:      func() {},
 		},
@@ -66,7 +68,7 @@ func TestNewAccessRequest(t *testing.T) {
 			method: "POST",
 			form: url.Values{
 				"grant_type": {"foo"},
-				"client_id":  {"foo"},
+				"client_id":  {""},
 			},
 			expectErr: ErrInvalidRequest,
 			mock:      func() {},
@@ -187,24 +189,26 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 		},
 	} {
-		r := &http.Request{
-			Header:   c.header,
-			PostForm: c.form,
-			Form:     c.form,
-			Method:   c.method,
-		}
-		c.mock()
-		ctx := NewContext()
-		fosite.TokenEndpointHandlers = c.handlers
-		ar, err := fosite.NewAccessRequest(ctx, r, new(DefaultSession))
-		assert.True(t, errors.Cause(err) == c.expectErr, "%d\nwant: %s \ngot: %s", k, c.expectErr, err)
-		if err != nil {
-			t.Logf("Error occured: %v", err)
-		} else {
-			AssertObjectKeysEqual(t, c.expect, ar, "GrantTypes", "Client")
-			assert.NotNil(t, ar.GetRequestedAt())
-		}
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			r := &http.Request{
+				Header:   c.header,
+				PostForm: c.form,
+				Form:     c.form,
+				Method:   c.method,
+			}
+			c.mock()
+			ctx := NewContext()
+			fosite.TokenEndpointHandlers = c.handlers
+			ar, err := fosite.NewAccessRequest(ctx, r, new(DefaultSession))
+
+			if c.expectErr != nil {
+				assert.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+				AssertObjectKeysEqual(t, c.expect, ar, "GrantTypes", "Client")
+				assert.NotNil(t, ar.GetRequestedAt())
+			}
+		})
 	}
 }
 
