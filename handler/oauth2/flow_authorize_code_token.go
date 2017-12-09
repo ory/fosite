@@ -39,15 +39,20 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
+		// If an authorize code is used twice (which is likely the case here), we should try and invalidate any previously
+		// issued access and refresh tokens.
+		c.TokenRevocationStorage.RevokeAccessToken(ctx, authorizeRequest.GetID())
+		c.TokenRevocationStorage.RevokeRefreshToken(ctx, authorizeRequest.GetID())
+
 		return errors.WithStack(fosite.ErrInactiveCode)
 	} else if err != nil {
-		return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
+		return errors.Wrap(fosite.ErrServerError, err.Error())
 	}
 
 	// The authorization server MUST verify that the authorization code is valid
 	// This needs to happen after store retrieval for the session to be hydrated properly
 	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
-		return errors.Wrap(errors.WithStack(fosite.ErrInactiveCode), err.Error())
+		return errors.Wrap(fosite.ErrInactiveCode, err.Error())
 	}
 
 	// Override scopes
@@ -76,6 +81,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// in Section 3.2.1.
 	request.SetSession(authorizeRequest.GetSession())
 	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	request.SetID(authorizeRequest.GetID())
 	return nil
 }
 

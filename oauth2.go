@@ -167,6 +167,9 @@ type IntrospectionResponder interface {
 
 // Requester is an abstract interface for handling requests in Fosite.
 type Requester interface {
+	// SetID sets the unique identifier.
+	SetID(id string)
+
 	// GetID returns a unique identifier.
 	GetID() string
 
