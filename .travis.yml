@@ -14,9 +14,12 @@ before_install:
 
 install:
   - dep ensure
-  - go get github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/ory/go-acc github.com/bradfitz/goimports
+  - go get github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/bradfitz/goimports
 
 script:
-  - ./scripts/test-format.sh
-  - go-acc -o coverage.txt ./...
+  - touch ./coverage.tmp
+  - |
+    echo 'mode: atomic' > coverage.txt
+  - |
+    go list ./... | grep -v /vendor | grep -v /internal | xargs -n1 -I{} sh -c 'go test -race -covermode=atomic -coverprofile=coverage.tmp -coverpkg $(go list ./... | grep -v /vendor | grep -v /internal | tr "\n" ",") {} && tail -n +2 coverage.tmp >> coverage.txt || exit 255' && rm coverage.tmp
   - goveralls -coverprofile="coverage.txt"
