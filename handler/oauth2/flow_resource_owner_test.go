@@ -19,11 +19,14 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
@@ -84,13 +87,19 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			},
 		},
 	} {
-		c.setup()
-		err := h.HandleTokenEndpointRequest(nil, areq)
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-		t.Logf("Passed test case %d", k)
-		if c.check != nil {
-			c.check(areq)
-		}
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.setup()
+			err := h.HandleTokenEndpointRequest(nil, areq)
+
+			if c.expectErr != nil {
+				require.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+				if c.check != nil {
+					c.check(areq)
+				}
+			}
+		})
 	}
 }
 
@@ -155,12 +164,17 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			},
 		},
 	} {
-		c.setup()
-		err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-		if c.expect != nil {
-			c.expect()
-		}
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.setup()
+			err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
+			if c.expectErr != nil {
+				require.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+				if c.expect != nil {
+					c.expect()
+				}
+			}
+		})
 	}
 }

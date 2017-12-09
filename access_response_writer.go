@@ -26,7 +26,8 @@ func (f *Fosite) NewAccessResponse(ctx context.Context, requester AccessRequeste
 
 	response := NewAccessResponse()
 	for _, tk = range f.TokenEndpointHandlers {
-		if err = tk.PopulateTokenEndpointResponse(ctx, requester, response); errors.Cause(err) == ErrUnknownRequest {
+		if err = tk.PopulateTokenEndpointResponse(ctx, requester, response); err == nil {
+		} else if errors.Cause(err).Error() == ErrUnknownRequest.Error() {
 		} else if err != nil {
 			return nil, err
 		}

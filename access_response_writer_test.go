@@ -19,11 +19,14 @@ import (
 
 	"context"
 
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewAccessResponse(t *testing.T) {
@@ -81,11 +84,17 @@ func TestNewAccessResponse(t *testing.T) {
 			},
 		},
 	} {
-		f.TokenEndpointHandlers = c.handlers
-		c.mock()
-		ar, err := f.NewAccessResponse(nil, nil)
-		assert.True(t, errors.Cause(err) == c.expectErr, "%d", k)
-		assert.Equal(t, ar, c.expect)
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			f.TokenEndpointHandlers = c.handlers
+			c.mock()
+			ar, err := f.NewAccessResponse(nil, nil)
+
+			if c.expectErr != nil {
+				assert.EqualError(t, errors.Cause(err), c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, ar, c.expect)
+			}
+		})
 	}
 }

@@ -74,7 +74,7 @@ func (j *RS256JWTStrategy) Decode(token string) (*jwt.Token, error) {
 	})
 
 	if err != nil {
-		return nil, errors.WithStack(fosite.ErrorToRFC6749Error(err).WithDebug("Couldn't parse token"))
+		return nil, errors.WithStack(err)
 	} else if !parsedToken.Valid {
 		return nil, errors.WithStack(fosite.ErrInactiveToken)
 	}

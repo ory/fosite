@@ -75,6 +75,7 @@ var jwtExpiredCase = func(tokenType fosite.TokenType) *fosite.Request {
 				Audience:  "group0",
 				IssuedAt:  time.Now(),
 				NotBefore: time.Now(),
+				ExpiresAt: time.Now().Add(-time.Minute),
 				Extra:     make(map[string]interface{}),
 			},
 			JWTHeader: &jwt.Headers{

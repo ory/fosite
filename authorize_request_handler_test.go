@@ -21,11 +21,14 @@ import (
 
 	"context"
 
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/ory/fosite"
 	. "github.com/ory/fosite/internal"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Should pass
@@ -171,23 +174,23 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 		},
 	} {
-		t.Logf("Joining test case %d", k)
-		c.mock()
-		if c.r == nil {
-			c.r = &http.Request{Header: http.Header{}}
-			if c.query != nil {
-				c.r.URL = &url.URL{RawQuery: c.query.Encode()}
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.mock()
+			if c.r == nil {
+				c.r = &http.Request{Header: http.Header{}}
+				if c.query != nil {
+					c.r.URL = &url.URL{RawQuery: c.query.Encode()}
+				}
 			}
-		}
 
-		ar, err := c.conf.NewAuthorizeRequest(context.Background(), c.r)
-		assert.Equal(t, c.expectedError == nil, err == nil, "%d: %s\n%s", k, c.desc, err)
-		if c.expectedError != nil {
-			assert.Equal(t, errors.Cause(err), c.expectedError, "%d: %s\n%s", k, c.desc, err)
-		} else {
-			AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "Scopes", "Client", "RedirectURI", "State")
-			assert.NotNil(t, ar.GetRequestedAt())
-		}
-		t.Logf("Passed test case %d", k)
+			ar, err := c.conf.NewAuthorizeRequest(context.Background(), c.r)
+			if c.expectedError != nil {
+				assert.EqualError(t, errors.Cause(err), c.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+				AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "Scopes", "Client", "RedirectURI", "State")
+				assert.NotNil(t, ar.GetRequestedAt())
+			}
+		})
 	}
 }

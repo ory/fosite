@@ -19,11 +19,12 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
@@ -67,10 +68,15 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 			},
 		},
 	} {
-		c.mock()
-		err := h.HandleTokenEndpointRequest(nil, areq)
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.mock()
+			err := h.HandleTokenEndpointRequest(nil, areq)
+			if c.expectErr != nil {
+				require.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }
 
@@ -122,9 +128,14 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 			},
 		},
 	} {
-		c.mock()
-		err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.mock()
+			err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
+			if c.expectErr != nil {
+				require.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }

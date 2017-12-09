@@ -18,11 +18,13 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
@@ -89,9 +91,14 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 			expectErr: nil,
 		},
 	} {
-		c.setup()
-		err := h.HandleAuthorizeEndpointRequest(nil, areq, aresp)
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.setup()
+			err := h.HandleAuthorizeEndpointRequest(nil, areq, aresp)
+			if c.expectErr != nil {
+				require.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }

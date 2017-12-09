@@ -52,13 +52,13 @@ func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType To
 
 	ar := NewAccessRequest(session)
 	for _, validator := range f.TokenIntrospectionHandlers {
-		if err := errors.Cause(validator.IntrospectToken(ctx, token, tokenType, ar, scopes)); err == ErrUnknownRequest {
+		if err := errors.Cause(validator.IntrospectToken(ctx, token, tokenType, ar, scopes)); err == nil {
+			found = true
+		} else if err.Error() == ErrUnknownRequest.Error() {
 			// Nothing to do
 		} else if err != nil {
 			rfcerr := ErrorToRFC6749Error(err)
 			return nil, errors.WithStack(rfcerr.WithDebug("A validator returned an error"))
-		} else {
-			found = true
 		}
 	}
 
