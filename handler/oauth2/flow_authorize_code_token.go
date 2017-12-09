@@ -39,7 +39,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
-		return errors.Wrap(fosite.ErrInvalidRequest, err.Error())
+		return errors.WithStack(fosite.ErrInactiveCode)
 	} else if err != nil {
 		return errors.Wrap(errors.WithStack(fosite.ErrServerError), err.Error())
 	}
@@ -47,7 +47,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// The authorization server MUST verify that the authorization code is valid
 	// This needs to happen after store retrieval for the session to be hydrated properly
 	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
-		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), err.Error())
+		return errors.Wrap(errors.WithStack(fosite.ErrInactiveCode), err.Error())
 	}
 
 	// Override scopes
@@ -57,7 +57,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,
 	if authorizeRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.Wrap(errors.WithStack(fosite.ErrInvalidRequest), "Client ID mismatch")
+		return errors.Wrap(errors.WithStack(fosite.ErrInactiveCode), "Client ID mismatch")
 	}
 
 	// ensure that the "redirect_uri" parameter is present if the
