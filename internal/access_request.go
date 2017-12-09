@@ -136,6 +136,14 @@ func (_mr *_MockAccessRequesterRecorder) Merge(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Merge", arg0)
 }
 
+func (_m *MockAccessRequester) SetID(_param0 string) {
+	_m.ctrl.Call(_m, "SetID", _param0)
+}
+
+func (_mr *_MockAccessRequesterRecorder) SetID(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetID", arg0)
+}
+
 func (_m *MockAccessRequester) SetRequestedScopes(_param0 fosite.Arguments) {
 	_m.ctrl.Call(_m, "SetRequestedScopes", _param0)
 }
