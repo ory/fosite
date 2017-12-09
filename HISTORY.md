@@ -35,6 +35,20 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.14.0
+
+This release focuses on improving compatibility with OpenID Connect Certification and better error context.
+
+* Error handling is improved by explicitly adding debug information (e.g. "Token invalid because it was not found
+in the database") to the error object. Previously, the original error was prepended which caused weird formatting issues.
+* Allows client credentials in POST body at the `/oauth2/token` endpoint. Please note that this method is not recommended
+to be used, unless the client making the request is unable to use HTTP Basic Authorization.
+* Allows public clients (without secret) to access the `/oauth2/token` endpoint which was previously only possible by adding an arbitrary
+secret.
+
+This release has no breaking changes to the external API but due to the nature of the changes, it is released
+as a new major version.
+
 ## 0.13.0
 
 ### Breaking changes
