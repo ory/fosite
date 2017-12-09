@@ -38,12 +38,13 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			h := AuthorizeExplicitGrantHandler{
-				CoreStorage:           store,
-				AuthorizeCodeStrategy: strategy,
-				AccessTokenStrategy:   strategy,
-				RefreshTokenStrategy:  strategy,
-				ScopeStrategy:         fosite.HierarchicScopeStrategy,
-				AccessTokenLifespan:   time.Minute,
+				CoreStorage:            store,
+				AuthorizeCodeStrategy:  strategy,
+				AccessTokenStrategy:    strategy,
+				RefreshTokenStrategy:   strategy,
+				ScopeStrategy:          fosite.HierarchicScopeStrategy,
+				AccessTokenLifespan:    time.Minute,
+				TokenRevocationStorage: store,
 			}
 			for _, c := range []struct {
 				areq        *fosite.AccessRequest

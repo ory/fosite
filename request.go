@@ -49,6 +49,10 @@ func (a *Request) GetID() string {
 	return a.ID
 }
 
+func (a *Request) SetID(id string) {
+	a.ID = id
+}
+
 func (a *Request) GetRequestForm() url.Values {
 	return a.Form
 }
