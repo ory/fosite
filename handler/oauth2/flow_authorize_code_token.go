@@ -38,13 +38,20 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
-	if errors.Cause(err) == fosite.ErrNotFound {
+	if err != nil && errors.Cause(err).Error() == fosite.ErrNotFound.Error() {
 		// If an authorize code is used twice (which is likely the case here), we should try and invalidate any previously
 		// issued access and refresh tokens.
-		c.TokenRevocationStorage.RevokeAccessToken(ctx, authorizeRequest.GetID())
-		c.TokenRevocationStorage.RevokeRefreshToken(ctx, authorizeRequest.GetID())
+		// reqID := authorizeRequest.GetID()
+		//
+		var debug string
+		// if revErr := c.TokenRevocationStorage.RevokeAccessToken(ctx, reqID); revErr != nil {
+		// 	debug += revErr.Error() + "\n"
+		// }
+		// if revErr := c.TokenRevocationStorage.RevokeRefreshToken(ctx, reqID); revErr != nil {
+		//	debug += revErr.Error() + "\n"
+		// }
 
-		return errors.WithStack(fosite.ErrInactiveCode)
+		return errors.WithStack(fosite.ErrInactiveAuthorizationCode.WithDebug(debug))
 	} else if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
@@ -52,7 +59,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// The authorization server MUST verify that the authorization code is valid
 	// This needs to happen after store retrieval for the session to be hydrated properly
 	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
-		return errors.WithStack(fosite.ErrInactiveCode.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrInactiveAuthorizationCode.WithDebug(err.Error()))
 	}
 
 	// Override scopes
@@ -62,7 +69,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,
 	if authorizeRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.WithStack(fosite.ErrInactiveCode.WithDebug("Client ID mismatch"))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Client ID mismatch"))
 	}
 
 	// ensure that the "redirect_uri" parameter is present if the

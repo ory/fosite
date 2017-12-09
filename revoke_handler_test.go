@@ -19,6 +19,8 @@ import (
 	"net/url"
 	"testing"
 
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
@@ -187,20 +189,23 @@ func TestNewRevocationRequest(t *testing.T) {
 			handlers: RevocationHandlers{handler},
 		},
 	} {
-		r := &http.Request{
-			Header:   c.header,
-			PostForm: c.form,
-			Form:     c.form,
-			Method:   c.method,
-		}
-		c.mock()
-		ctx := NewContext()
-		fosite.RevocationHandlers = c.handlers
-		err := fosite.NewRevocationRequest(ctx, r)
-		assert.True(t, errors.Cause(err) == c.expectErr, "%d\nwant: %s \ngot: %s", k, c.expectErr, err)
-		if err != nil {
-			t.Logf("Error occured: %v", err)
-		}
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			r := &http.Request{
+				Header:   c.header,
+				PostForm: c.form,
+				Form:     c.form,
+				Method:   c.method,
+			}
+			c.mock()
+			ctx := NewContext()
+			fosite.RevocationHandlers = c.handlers
+			err := fosite.NewRevocationRequest(ctx, r)
+
+			if c.expectErr != nil {
+				assert.EqualError(t, err, c.expectErr.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
 }

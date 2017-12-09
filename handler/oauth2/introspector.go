@@ -17,9 +17,10 @@ package oauth2
 import (
 	"context"
 
+	"fmt"
+
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
-	"fmt"
 )
 
 type CoreValidator struct {

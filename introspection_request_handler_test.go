@@ -19,6 +19,8 @@ import (
 	"net/url"
 	"testing"
 
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite"
 	. "github.com/ory/fosite"
@@ -27,6 +29,7 @@ import (
 	"github.com/ory/fosite/storage"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIntrospectionResponse(t *testing.T) {
@@ -102,12 +105,16 @@ func TestNewIntrospectionRequest(t *testing.T) {
 			isActive: true,
 		},
 	} {
-		c.setup()
-		res, err := f.NewIntrospectionRequest(nil, httpreq, &DefaultSession{})
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-		if res != nil {
-			assert.Equal(t, c.isActive, res.IsActive())
-		}
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.setup()
+			res, err := f.NewIntrospectionRequest(nil, httpreq, &DefaultSession{})
+
+			if c.expectErr != nil {
+				assert.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, c.isActive, res.IsActive())
+			}
+		})
 	}
 }

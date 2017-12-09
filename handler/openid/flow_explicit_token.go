@@ -22,7 +22,7 @@ import (
 )
 
 func (c *OpenIDConnectExplicitHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	return fosite.ErrUnknownRequest
+	return errors.WithStack(fosite.ErrUnknownRequest)
 }
 
 func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {

@@ -15,6 +15,7 @@
 package oauth2
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -22,7 +23,7 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIntrospectToken(t *testing.T) {
@@ -90,9 +91,15 @@ func TestIntrospectToken(t *testing.T) {
 			},
 		},
 	} {
-		c.setup()
-		err := v.IntrospectToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq, []string{})
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.setup()
+			err := v.IntrospectToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq, []string{})
+
+			if c.expectErr != nil {
+				require.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }

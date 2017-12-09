@@ -20,13 +20,15 @@ import (
 
 	"context"
 
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccessTokenFromRequestNoToken(t *testing.T) {
@@ -110,9 +112,14 @@ func TestIntrospect(t *testing.T) {
 			},
 		},
 	} {
-		c.setup()
-		_, err := f.IntrospectToken(nil, AccessTokenFromRequest(req), AccessToken, nil, c.scopes...)
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.setup()
+			_, err := f.IntrospectToken(nil, AccessTokenFromRequest(req), AccessToken, nil, c.scopes...)
+			if c.expectErr != nil {
+				assert.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }

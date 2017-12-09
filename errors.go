@@ -148,7 +148,7 @@ var (
 		Hint:        "Token validation failed.",
 		Code:        http.StatusUnauthorized,
 	}
-	ErrInactiveCode = &RFC6749Error{
+	ErrInactiveAuthorizationCode = &RFC6749Error{
 		Name:        errAuthorizaionCodeInactiveName,
 		Description: "Authorization code is inactive because it is malformed, expired or otherwise invalid",
 		Hint:        "Authorization code validation failed.",
@@ -237,6 +237,6 @@ func (e *RFC6749Error) StatusCode() int {
 
 func (e *RFC6749Error) WithDebug(debug string) *RFC6749Error {
 	err := *e
-	e.Debug = debug
+	err.Debug = debug
 	return &err
 }

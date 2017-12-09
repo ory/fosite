@@ -72,7 +72,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 	for _, loader := range f.RevocationHandlers {
 		if err := loader.RevokeToken(ctx, token, tokenTypeHint, client); err == nil {
 			found = true
-		} else if errors.Cause(err) == ErrUnknownRequest {
+		} else if errors.Cause(err).Error() == ErrUnknownRequest.Error() {
 			// do nothing
 		} else if err != nil {
 			return err
@@ -98,10 +98,15 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 // purpose of the revocation request, invalidating the particular token,
 // is already achieved.
 func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
-	switch errors.Cause(err) {
-	case ErrInvalidRequest:
+	if err == nil {
+		rw.WriteHeader(http.StatusOK)
+		return
+	}
+
+	switch errors.Cause(err).Error() {
+	case ErrInvalidRequest.Error():
 		fallthrough
-	case ErrInvalidClient:
+	case ErrInvalidClient.Error():
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 		js, err := json.Marshal(ErrInvalidClient)

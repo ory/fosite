@@ -19,11 +19,13 @@ import (
 	"strings"
 	"testing"
 
+	"fmt"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIntrospectJWT(t *testing.T) {
@@ -101,19 +103,21 @@ func TestIntrospectJWT(t *testing.T) {
 			},
 		},
 	} {
-		if c.scopes == nil {
-			c.scopes = []string{}
-		}
-		areq := fosite.NewAccessRequest(nil)
-		err := v.IntrospectToken(nil, c.token(), fosite.AccessToken, areq, c.scopes)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			if c.scopes == nil {
+				c.scopes = []string{}
+			}
 
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+			areq := fosite.NewAccessRequest(nil)
+			err := v.IntrospectToken(nil, c.token(), fosite.AccessToken, areq, c.scopes)
 
-		if err == nil {
-			assert.Equal(t, "peter", areq.Session.GetSubject())
-		}
-
-		t.Logf("Passed test case %d", k)
+			if c.expectErr != nil {
+				require.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, "peter", areq.Session.GetSubject())
+			}
+		})
 	}
 }
 
