@@ -29,6 +29,7 @@ var idTokenClaims = &IDTokenClaims{
 	Audience:        "tests",
 	ExpiresAt:       time.Now().UTC().Add(time.Hour).Round(time.Second),
 	AuthTime:        time.Now().UTC(),
+	RequestedAt:     time.Now().UTC(),
 	AccessTokenHash: "foobar",
 	CodeHash:        "barfoo",
 	AuthenticationContextClassReference: "acr",
@@ -39,9 +40,9 @@ var idTokenClaims = &IDTokenClaims{
 }
 
 func TestIDTokenAssert(t *testing.T) {
-	assert.Nil(t, (&IDTokenClaims{ExpiresAt: time.Now().UTC().Add(time.Hour)}).
+	assert.NoError(t, (&IDTokenClaims{ExpiresAt: time.Now().UTC().Add(time.Hour)}).
 		ToMapClaims().Valid())
-	assert.NotNil(t, (&IDTokenClaims{ExpiresAt: time.Now().UTC().Add(-time.Hour)}).
+	assert.Error(t, (&IDTokenClaims{ExpiresAt: time.Now().UTC().Add(-time.Hour)}).
 		ToMapClaims().Valid())
 }
 
@@ -49,6 +50,7 @@ func TestIDTokenClaimsToMap(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{
 		"sub":       idTokenClaims.Subject,
 		"iat":       float64(idTokenClaims.IssuedAt.Unix()),
+		"rat":       float64(idTokenClaims.RequestedAt.Unix()),
 		"iss":       idTokenClaims.Issuer,
 		"aud":       idTokenClaims.Audience,
 		"nonce":     idTokenClaims.Nonce,
