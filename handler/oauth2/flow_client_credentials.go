@@ -52,7 +52,7 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 	}
 	// if the client is not public, he has already been authenticated by the access request handler.
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan))
 	return nil
 }
 

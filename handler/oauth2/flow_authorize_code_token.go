@@ -87,7 +87,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// client MUST authenticate with the authorization server as described
 	// in Section 3.2.1.
 	request.SetSession(authorizeRequest.GetSession())
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan))
 	request.SetID(authorizeRequest.GetID())
 	return nil
 }
@@ -138,7 +138,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 
 	responder.SetAccessToken(access)
 	responder.SetTokenType("bearer")
-	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, c.AccessTokenLifespan, time.Now()))
+	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
 	if refresh != "" {
 		responder.SetExtra("refresh_token", refresh)

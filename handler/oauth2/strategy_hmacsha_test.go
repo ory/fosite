@@ -38,8 +38,8 @@ var hmacExpiredCase = fosite.Request{
 	},
 	Session: &fosite.DefaultSession{
 		ExpiresAt: map[fosite.TokenType]time.Time{
-			fosite.AccessToken:   time.Now().Add(-time.Hour),
-			fosite.AuthorizeCode: time.Now().Add(-time.Hour),
+			fosite.AccessToken:   time.Now().UTC().Add(-time.Hour),
+			fosite.AuthorizeCode: time.Now().UTC().Add(-time.Hour),
 		},
 	},
 }
@@ -50,8 +50,8 @@ var hmacValidCase = fosite.Request{
 	},
 	Session: &fosite.DefaultSession{
 		ExpiresAt: map[fosite.TokenType]time.Time{
-			fosite.AccessToken:   time.Now().Add(time.Hour),
-			fosite.AuthorizeCode: time.Now().Add(time.Hour),
+			fosite.AccessToken:   time.Now().UTC().Add(time.Hour),
+			fosite.AuthorizeCode: time.Now().UTC().Add(time.Hour),
 		},
 	},
 }

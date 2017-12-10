@@ -88,9 +88,9 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 							},
 							GrantedScopes: fosite.Arguments{"a", "b"},
 							Session: &fosite.DefaultSession{
-								ExpiresAt: map[fosite.TokenType]time.Time{fosite.AccessToken: time.Now().Add(time.Hour)},
+								ExpiresAt: map[fosite.TokenType]time.Time{fosite.AccessToken: time.Now().UTC().Add(time.Hour)},
 							},
-							RequestedAt: time.Now(),
+							RequestedAt: time.Now().UTC(),
 						},
 						State:       "superstate",
 						RedirectURI: parseUrl("https://asdf.de/cb"),

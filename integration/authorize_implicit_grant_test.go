@@ -86,7 +86,7 @@ func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 					AccessToken:  fragment.Get("access_token"),
 					TokenType:    fragment.Get("token_type"),
 					RefreshToken: fragment.Get("refresh_token"),
-					Expiry:       time.Now().Add(time.Duration(expires) * time.Second),
+					Expiry:       time.Now().UTC().Add(time.Duration(expires) * time.Second),
 				}
 
 				httpClient := oauthClient.Client(goauth.NoContext, token)

@@ -91,7 +91,7 @@ func TestAuthorizeRequest(t *testing.T) {
 			ar: &AuthorizeRequest{
 				Request: Request{
 					Client:      &DefaultClient{RedirectURIs: []string{"https://foobar.com/cb"}},
-					RequestedAt: time.Now(),
+					RequestedAt: time.Now().UTC(),
 					Scopes:      []string{"foo", "bar"},
 				},
 				RedirectURI:   urlparse("https://foobar.com/cb"),

@@ -88,23 +88,23 @@ func (c *JWTClaims) FromMap(m map[string]interface{}) {
 		case "iat":
 			switch v.(type) {
 			case float64:
-				c.IssuedAt = time.Unix(int64(v.(float64)), 0)
+				c.IssuedAt = time.Unix(int64(v.(float64)), 0).UTC()
 			case int64:
-				c.IssuedAt = time.Unix(v.(int64), 0)
+				c.IssuedAt = time.Unix(v.(int64), 0).UTC()
 			}
 		case "nbf":
 			switch v.(type) {
 			case float64:
-				c.NotBefore = time.Unix(int64(v.(float64)), 0)
+				c.NotBefore = time.Unix(int64(v.(float64)), 0).UTC()
 			case int64:
-				c.NotBefore = time.Unix(v.(int64), 0)
+				c.NotBefore = time.Unix(v.(int64), 0).UTC()
 			}
 		case "exp":
 			switch v.(type) {
 			case float64:
-				c.ExpiresAt = time.Unix(int64(v.(float64)), 0)
+				c.ExpiresAt = time.Unix(int64(v.(float64)), 0).UTC()
 			case int64:
-				c.ExpiresAt = time.Unix(v.(int64), 0)
+				c.ExpiresAt = time.Unix(v.(int64), 0).UTC()
 			}
 		case "scp":
 			switch v.(type) {

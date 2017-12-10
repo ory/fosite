@@ -24,11 +24,11 @@ import (
 
 var idTokenClaims = &IDTokenClaims{
 	Subject:         "peter",
-	IssuedAt:        time.Now().Round(time.Second),
+	IssuedAt:        time.Now().UTC().Round(time.Second),
 	Issuer:          "fosite",
 	Audience:        "tests",
-	ExpiresAt:       time.Now().Add(time.Hour).Round(time.Second),
-	AuthTime:        time.Now(),
+	ExpiresAt:       time.Now().UTC().Add(time.Hour).Round(time.Second),
+	AuthTime:        time.Now().UTC(),
 	AccessTokenHash: "foobar",
 	CodeHash:        "barfoo",
 	AuthenticationContextClassReference: "acr",
@@ -39,9 +39,9 @@ var idTokenClaims = &IDTokenClaims{
 }
 
 func TestIDTokenAssert(t *testing.T) {
-	assert.Nil(t, (&IDTokenClaims{ExpiresAt: time.Now().Add(time.Hour)}).
+	assert.Nil(t, (&IDTokenClaims{ExpiresAt: time.Now().UTC().Add(time.Hour)}).
 		ToMapClaims().Valid())
-	assert.NotNil(t, (&IDTokenClaims{ExpiresAt: time.Now().Add(-time.Hour)}).
+	assert.NotNil(t, (&IDTokenClaims{ExpiresAt: time.Now().UTC().Add(-time.Hour)}).
 		ToMapClaims().Valid())
 }
 

@@ -38,7 +38,7 @@ func (h *HandleHelper) IssueAccessToken(ctx context.Context, requester fosite.Ac
 
 	responder.SetAccessToken(token)
 	responder.SetTokenType("bearer")
-	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, h.AccessTokenLifespan, time.Now()))
+	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, h.AccessTokenLifespan, time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
 	return nil
 }
