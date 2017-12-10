@@ -123,7 +123,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	}
 
 	claims := sess.IDTokenClaims()
-	if requester.GetRequestForm().Get("max_age") != "" && (claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now())) {
+	if requester.GetRequestForm().Get("max_age") != "" && (claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now().UTC())) {
 		return "", errors.New("Failed to generate id token because authentication time claim is required when max_age is set and can not be in the future")
 	}
 
@@ -132,15 +132,15 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	}
 
 	if claims.ExpiresAt.IsZero() {
-		claims.ExpiresAt = time.Now().Add(h.Expiry)
+		claims.ExpiresAt = time.Now().UTC().Add(h.Expiry)
 	}
 
-	if claims.ExpiresAt.Before(time.Now()) {
+	if claims.ExpiresAt.Before(time.Now().UTC()) {
 		return "", errors.New("Failed to generate id token because expiry claim can not be in the past")
 	}
 
 	if claims.AuthTime.IsZero() {
-		claims.AuthTime = time.Now()
+		claims.AuthTime = time.Now().UTC()
 	}
 
 	if claims.Issuer == "" {
@@ -159,7 +159,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 
 	claims.Nonce = nonce
 	claims.Audience = requester.GetClient().GetID()
-	claims.IssuedAt = time.Now()
+	claims.IssuedAt = time.Now().UTC()
 
 	token, _, err = h.RS256JWTStrategy.Generate(claims.ToMapClaims(), sess.IDTokenHeaders())
 	return token, err

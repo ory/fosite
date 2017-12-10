@@ -49,9 +49,9 @@ func ToTime(i interface{}) time.Time {
 	}
 
 	if t, ok := i.(int64); ok {
-		return time.Unix(t, 0)
+		return time.Unix(t, 0).UTC()
 	} else if t, ok := i.(float64); ok {
-		return time.Unix(int64(t), 0)
+		return time.Unix(int64(t), 0).UTC()
 	} else if t, ok := i.(time.Time); ok {
 		return t
 	}

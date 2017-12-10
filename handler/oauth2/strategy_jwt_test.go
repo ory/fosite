@@ -46,15 +46,15 @@ var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
 				Issuer:    "fosite",
 				Subject:   "peter",
 				Audience:  "group0",
-				IssuedAt:  time.Now(),
-				NotBefore: time.Now(),
+				IssuedAt:  time.Now().UTC(),
+				NotBefore: time.Now().UTC(),
 				Extra:     make(map[string]interface{}),
 			},
 			JWTHeader: &jwt.Headers{
 				Extra: make(map[string]interface{}),
 			},
 			ExpiresAt: map[fosite.TokenType]time.Time{
-				tokenType: time.Now().Add(time.Hour),
+				tokenType: time.Now().UTC().Add(time.Hour),
 			},
 		},
 	}
@@ -73,16 +73,16 @@ var jwtExpiredCase = func(tokenType fosite.TokenType) *fosite.Request {
 				Issuer:    "fosite",
 				Subject:   "peter",
 				Audience:  "group0",
-				IssuedAt:  time.Now(),
-				NotBefore: time.Now(),
-				ExpiresAt: time.Now().Add(-time.Minute),
+				IssuedAt:  time.Now().UTC(),
+				NotBefore: time.Now().UTC(),
+				ExpiresAt: time.Now().UTC().Add(-time.Minute),
 				Extra:     make(map[string]interface{}),
 			},
 			JWTHeader: &jwt.Headers{
 				Extra: make(map[string]interface{}),
 			},
 			ExpiresAt: map[fosite.TokenType]time.Time{
-				tokenType: time.Now().Add(-time.Hour),
+				tokenType: time.Now().UTC().Add(-time.Hour),
 			},
 		},
 	}

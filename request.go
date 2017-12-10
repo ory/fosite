@@ -38,7 +38,7 @@ func NewRequest() *Request {
 		Scopes:        Arguments{},
 		GrantedScopes: Arguments{},
 		Form:          url.Values{},
-		RequestedAt:   time.Now(),
+		RequestedAt:   time.Now().UTC(),
 	}
 }
 

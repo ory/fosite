@@ -117,13 +117,13 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 							Scopes:        fosite.Arguments{"foo", "bar"},
 							Session:       sess,
 							Form:          url.Values{"foo": []string{"bar"}},
-							RequestedAt:   time.Now().Add(-time.Hour).Round(time.Hour),
+							RequestedAt:   time.Now().UTC().Add(-time.Hour).Round(time.Hour),
 						})
 						require.NoError(t, err)
 					},
 					expect: func(t *testing.T) {
 						assert.NotEqual(t, sess, areq.Session)
-						assert.NotEqual(t, time.Now().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
+						assert.NotEqual(t, time.Now().UTC().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
 						assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.GrantedScopes)
 						assert.Equal(t, fosite.Arguments{"foo", "bar"}, areq.Scopes)
 						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)

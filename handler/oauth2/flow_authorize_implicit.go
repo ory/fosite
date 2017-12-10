@@ -69,7 +69,7 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 }
 
 func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
-	ar.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	ar.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan))
 
 	// Generate the code
 	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, ar)
@@ -82,7 +82,7 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	}
 
 	resp.AddFragment("access_token", token)
-	resp.AddFragment("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now())/time.Second), 10))
+	resp.AddFragment("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC())/time.Second), 10))
 	resp.AddFragment("token_type", "bearer")
 	resp.AddFragment("state", ar.GetState())
 	resp.AddFragment("scope", strings.Join(ar.GetGrantedScopes(), " "))

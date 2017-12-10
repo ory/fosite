@@ -25,7 +25,7 @@ import (
 
 func TestRequest(t *testing.T) {
 	r := &Request{
-		RequestedAt:   time.Now(),
+		RequestedAt:   time.Now().UTC(),
 		Client:        &DefaultClient{},
 		Scopes:        Arguments{},
 		GrantedScopes: []string{},
@@ -43,7 +43,7 @@ func TestRequest(t *testing.T) {
 
 func TestMergeRequest(t *testing.T) {
 	a := &Request{
-		RequestedAt:   time.Now(),
+		RequestedAt:   time.Now().UTC(),
 		Client:        &DefaultClient{ID: "123"},
 		Scopes:        Arguments{"asdff"},
 		GrantedScopes: []string{"asdf"},
@@ -51,7 +51,7 @@ func TestMergeRequest(t *testing.T) {
 		Session:       new(DefaultSession),
 	}
 	b := &Request{
-		RequestedAt:   time.Now(),
+		RequestedAt:   time.Now().UTC(),
 		Client:        &DefaultClient{},
 		Scopes:        Arguments{},
 		GrantedScopes: []string{},

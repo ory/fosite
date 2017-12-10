@@ -27,7 +27,7 @@ import (
 )
 
 func TestGetExpiresIn(t *testing.T) {
-	now := time.Now()
+	now := time.Now().UTC()
 	r := fosite.NewAccessRequest(&fosite.DefaultSession{
 		ExpiresAt: map[fosite.TokenType]time.Time{
 			fosite.AccessToken: now.Add(time.Hour),

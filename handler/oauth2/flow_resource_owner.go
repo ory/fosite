@@ -66,7 +66,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	// Credentials must not be passed around, potentially leaking to the database!
 	delete(request.GetRequestForm(), "password")
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(c.AccessTokenLifespan))
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan))
 	return nil
 }
 

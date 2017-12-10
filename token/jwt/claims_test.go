@@ -32,7 +32,7 @@ func TestToTime(t *testing.T) {
 	assert.Equal(t, time.Time{}, ToTime(nil))
 	assert.Equal(t, time.Time{}, ToTime("1234"))
 
-	now := time.Now().Round(time.Second)
+	now := time.Now().UTC().Round(time.Second)
 	assert.Equal(t, now, ToTime(now))
 	assert.Equal(t, now, ToTime(now.Unix()))
 	assert.Equal(t, now, ToTime(float64(now.Unix())))

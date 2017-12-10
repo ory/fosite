@@ -46,7 +46,7 @@ func TestJWTStrategy_GenerateIDToken(t *testing.T) {
 				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims: &jwt.IDTokenClaims{
 						Subject:  "peter",
-						AuthTime: time.Now(),
+						AuthTime: time.Now().UTC(),
 					},
 					Headers: &jwt.Headers{},
 				})
@@ -60,7 +60,7 @@ func TestJWTStrategy_GenerateIDToken(t *testing.T) {
 				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims: &jwt.IDTokenClaims{
 						Subject:   "peter",
-						ExpiresAt: time.Now().Add(-time.Hour),
+						ExpiresAt: time.Now().UTC().Add(-time.Hour),
 					},
 					Headers: &jwt.Headers{},
 				})

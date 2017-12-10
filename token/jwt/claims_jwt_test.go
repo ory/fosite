@@ -24,11 +24,11 @@ import (
 
 var jwtClaims = &JWTClaims{
 	Subject:   "peter",
-	IssuedAt:  time.Now().Round(time.Second),
+	IssuedAt:  time.Now().UTC().Round(time.Second),
 	Issuer:    "fosite",
-	NotBefore: time.Now().Round(time.Second),
+	NotBefore: time.Now().UTC().Round(time.Second),
 	Audience:  "tests",
-	ExpiresAt: time.Now().Add(time.Hour).Round(time.Second),
+	ExpiresAt: time.Now().UTC().Add(time.Hour).Round(time.Second),
 	JTI:       "abcdef",
 	Scope:     []string{"email", "offline"},
 	Extra: map[string]interface{}{
@@ -60,16 +60,16 @@ func TestClaimsToMapSetsID(t *testing.T) {
 }
 
 func TestAssert(t *testing.T) {
-	assert.Nil(t, (&JWTClaims{ExpiresAt: time.Now().Add(time.Hour)}).
+	assert.Nil(t, (&JWTClaims{ExpiresAt: time.Now().UTC().Add(time.Hour)}).
 		ToMapClaims().Valid())
-	assert.NotNil(t, (&JWTClaims{ExpiresAt: time.Now().Add(-2 * time.Hour)}).
+	assert.NotNil(t, (&JWTClaims{ExpiresAt: time.Now().UTC().Add(-2 * time.Hour)}).
 		ToMapClaims().Valid())
-	assert.NotNil(t, (&JWTClaims{NotBefore: time.Now().Add(time.Hour)}).
+	assert.NotNil(t, (&JWTClaims{NotBefore: time.Now().UTC().Add(time.Hour)}).
 		ToMapClaims().Valid())
-	assert.NotNil(t, (&JWTClaims{NotBefore: time.Now().Add(-time.Hour)}).
+	assert.NotNil(t, (&JWTClaims{NotBefore: time.Now().UTC().Add(-time.Hour)}).
 		ToMapClaims().Valid())
-	assert.Nil(t, (&JWTClaims{ExpiresAt: time.Now().Add(time.Hour),
-		NotBefore: time.Now().Add(-time.Hour)}).ToMapClaims().Valid())
+	assert.Nil(t, (&JWTClaims{ExpiresAt: time.Now().UTC().Add(time.Hour),
+		NotBefore: time.Now().UTC().Add(-time.Hour)}).ToMapClaims().Valid())
 }
 
 func TestClaimsToMap(t *testing.T) {

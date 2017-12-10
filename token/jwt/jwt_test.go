@@ -70,7 +70,7 @@ func TestAssign(t *testing.T) {
 
 func TestGenerateJWT(t *testing.T) {
 	claims := &JWTClaims{
-		ExpiresAt: time.Now().Add(time.Hour),
+		ExpiresAt: time.Now().UTC().Add(time.Hour),
 	}
 
 	j := RS256JWTStrategy{
@@ -97,7 +97,7 @@ func TestGenerateJWT(t *testing.T) {
 
 	// Lets validate the exp claim
 	claims = &JWTClaims{
-		ExpiresAt: time.Now().Add(-time.Hour),
+		ExpiresAt: time.Now().UTC().Add(-time.Hour),
 	}
 	token, sig, err = j.Generate(claims.ToMapClaims(), header)
 	require.NoError(t, err)
@@ -109,7 +109,7 @@ func TestGenerateJWT(t *testing.T) {
 
 	// Lets validate the nbf claim
 	claims = &JWTClaims{
-		NotBefore: time.Now().Add(time.Hour),
+		NotBefore: time.Now().UTC().Add(time.Hour),
 	}
 	token, sig, err = j.Generate(claims.ToMapClaims(), header)
 	require.NoError(t, err)
