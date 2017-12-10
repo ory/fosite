@@ -120,7 +120,7 @@ func clientCredentialsFromRequest(r *http.Request) (clientID, clientSecret strin
 
 func clientCredentialsFromRequestBody(r *http.Request) (clientID, clientSecret string, err error) {
 	clientID = r.PostForm.Get("client_id")
-	clientSecret = r.PostForm.Get("client_secret")
+	//clientSecret = r.PostForm.Get("client_secret")
 
 	if clientID == "" {
 		return "", "", errors.WithStack(ErrInvalidRequest.WithDebug("Client credentials missing or malformed in both HTTP Authorization header and HTTP POST body"))
@@ -128,9 +128,11 @@ func clientCredentialsFromRequestBody(r *http.Request) (clientID, clientSecret s
 
 	if clientID, err = url.QueryUnescape(clientID); err != nil {
 		return "", "", errors.WithStack(ErrInvalidRequest.WithDebug(`The client id in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`))
-	} else if clientSecret, err = url.QueryUnescape(clientSecret); err != nil {
-		return "", "", errors.WithStack(ErrInvalidRequest.WithDebug(`The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`))
 	}
+
+	//if clientSecret, err = url.QueryUnescape(clientSecret); err != nil {
+	//	return "", "", errors.WithStack(ErrInvalidRequest.WithDebug(`The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded"`))
+	//}
 
 	return clientID, clientSecret, nil
 }
