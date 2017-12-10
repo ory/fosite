@@ -22,16 +22,17 @@ import (
 
 // IDTokenClaims represent the claims used in open id connect requests
 type IDTokenClaims struct {
-	Issuer          string
-	Subject         string
-	Audience        string
-	Nonce           string
-	ExpiresAt       time.Time
-	IssuedAt        time.Time
-	AuthTime        time.Time
-	AccessTokenHash string
-	CodeHash        string
-	Extra           map[string]interface{}
+	Issuer                              string
+	Subject                             string
+	Audience                            string
+	Nonce                               string
+	ExpiresAt                           time.Time
+	IssuedAt                            time.Time
+	AuthTime                            time.Time
+	AccessTokenHash                     string
+	AuthenticationContextClassReference string
+	CodeHash                            string
+	Extra                               map[string]interface{}
 }
 
 // ToMap will transform the headers to a map structure
@@ -52,6 +53,10 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 
 	if !c.AuthTime.IsZero() {
 		ret["auth_time"] = c.AuthTime.Unix()
+	}
+
+	if len(c.AuthenticationContextClassReference) > 0 {
+		ret["acr"] = c.AuthenticationContextClassReference
 	}
 
 	ret["iat"] = float64(c.IssuedAt.Unix())
