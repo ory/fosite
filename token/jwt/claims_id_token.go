@@ -28,6 +28,7 @@ type IDTokenClaims struct {
 	Nonce                               string
 	ExpiresAt                           time.Time
 	IssuedAt                            time.Time
+	RequestedAt                         time.Time
 	AuthTime                            time.Time
 	AccessTokenHash                     string
 	AuthenticationContextClassReference string
@@ -55,12 +56,17 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 		ret["auth_time"] = c.AuthTime.Unix()
 	}
 
+	if !c.RequestedAt.IsZero() {
+		ret["auth_time"] = c.RequestedAt.Unix()
+	}
+
 	if len(c.AuthenticationContextClassReference) > 0 {
 		ret["acr"] = c.AuthenticationContextClassReference
 	}
 
 	ret["iat"] = float64(c.IssuedAt.Unix())
 	ret["exp"] = float64(c.ExpiresAt.Unix())
+	ret["rat"] = float64(c.RequestedAt.Unix())
 	return ret
 
 }

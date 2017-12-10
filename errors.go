@@ -159,9 +159,27 @@ var (
 		Description: "Token was not issued to the client making the revokation request",
 		Code:        http.StatusBadRequest,
 	}
+	ErrLoginRequired = &RFC6749Error{
+		Name:        errLoginRequired,
+		Description: "The Authorization Server requires End-User authentication",
+		Code:        http.StatusBadRequest,
+	}
+	ErrInteractionRequired = &RFC6749Error{
+		Description: "The Authorization Server requires End-User interaction of some form to proceed",
+		Name:        errInteractionRequired,
+		Code:        http.StatusBadRequest,
+	}
+	ErrConsentRequired = &RFC6749Error{
+		Description: "The Authorization Server requires End-User consent",
+		Name:        errConsentRequired,
+		Code:        http.StatusBadRequest,
+	}
 )
 
 const (
+	errConsentRequired              = "consent_required"
+	errInteractionRequired          = "interaction_required"
+	errLoginRequired                = "login_required"
 	errRequestUnauthorizedName      = "request_unauthorized"
 	errRequestForbidden             = "request_forbidden"
 	errInvalidRequestName           = "invalid_request"

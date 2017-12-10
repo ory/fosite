@@ -80,7 +80,6 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			hasToken:   true,
 			hasIdToken: true,
 		},
-
 		{
 
 			responseType: "token%20id_token%20code",
