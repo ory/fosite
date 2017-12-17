@@ -25,7 +25,7 @@ var (
 	ErrUnknownRequest = &RFC6749Error{
 		Name:        errUnknownErrorName,
 		Description: "The handler is not responsible for this request",
-		Code:        http.StatusInternalServerError,
+		Code:        http.StatusBadRequest,
 	}
 	ErrRequestForbidden = &RFC6749Error{
 		Name:        errRequestForbidden,
@@ -43,7 +43,7 @@ var (
 		Name:        errUnauthorizedClientName,
 		Description: "The client is not authorized to request a token using this method",
 		Hint:        "Make sure that client id and secret are correctly specified and that the client exists.",
-		Code:        http.StatusUnauthorized,
+		Code:        http.StatusBadRequest,
 	}
 	ErrAccessDenied = &RFC6749Error{
 		Name:        errAccessDeniedName,
@@ -84,7 +84,7 @@ var (
 	ErrInvalidClient = &RFC6749Error{
 		Name:        errInvalidClientName,
 		Description: "Client authentication failed (e.g., unknown client, no client authentication included, or unsupported authentication method)",
-		Code:        http.StatusForbidden,
+		Code:        http.StatusUnauthorized,
 	}
 	ErrInvalidState = &RFC6749Error{
 		Name:        errInvalidStateName,
@@ -152,7 +152,7 @@ var (
 		Name:        errAuthorizaionCodeInactiveName,
 		Description: "Authorization code is inactive because it is malformed, expired or otherwise invalid",
 		Hint:        "Authorization code validation failed.",
-		Code:        http.StatusForbidden,
+		Code:        http.StatusBadRequest,
 	}
 	ErrRevokationClientMismatch = &RFC6749Error{
 		Name:        errRevokationClientMismatchName,
