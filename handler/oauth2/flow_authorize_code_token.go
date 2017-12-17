@@ -51,7 +51,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 		//	debug += revErr.Error() + "\n"
 		// }
 
-		return errors.WithStack(fosite.ErrInactiveAuthorizationCode.WithDebug(debug))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug(debug))
 	} else if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
@@ -59,7 +59,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// The authorization server MUST verify that the authorization code is valid
 	// This needs to happen after store retrieval for the session to be hydrated properly
 	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
-		return errors.WithStack(fosite.ErrInactiveAuthorizationCode.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug(err.Error()))
 	}
 
 	// Override scopes
