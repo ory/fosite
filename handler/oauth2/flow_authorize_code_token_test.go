@@ -211,7 +211,7 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						require.NoError(t, err)
 						areq.Form = url.Values{"code": {token}}
 					},
-					expectErr: fosite.ErrInactiveAuthorizationCode,
+					expectErr: fosite.ErrInvalidGrant,
 				},
 				{
 					areq: &fosite.AccessRequest{
@@ -224,7 +224,7 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					description: "should fail because authcode validation failed",
-					expectErr:   fosite.ErrInactiveAuthorizationCode,
+					expectErr:   fosite.ErrInvalidGrant,
 				},
 				{
 					areq: &fosite.AccessRequest{

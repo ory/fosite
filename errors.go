@@ -148,12 +148,6 @@ var (
 		Hint:        "Token validation failed.",
 		Code:        http.StatusUnauthorized,
 	}
-	ErrInactiveAuthorizationCode = &RFC6749Error{
-		Name:        errAuthorizaionCodeInactiveName,
-		Description: "Authorization code is inactive because it is malformed, expired or otherwise invalid",
-		Hint:        "Authorization code validation failed.",
-		Code:        http.StatusBadRequest,
-	}
 	ErrRevokationClientMismatch = &RFC6749Error{
 		Name:        errRevokationClientMismatchName,
 		Description: "Token was not issued to the client making the revokation request",
@@ -202,7 +196,6 @@ const (
 	errScopeNotGrantedName          = "scope_not_granted"
 	errTokenClaimName               = "token_claim"
 	errTokenInactiveName            = "token_inactive"
-	errAuthorizaionCodeInactiveName = "authorization_code_inactive"
 	errUnknownErrorName             = "error"
 	errRevokationClientMismatchName = "revokation_client_mismatch"
 )
