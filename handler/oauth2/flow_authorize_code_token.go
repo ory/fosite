@@ -27,11 +27,11 @@ import (
 func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
-	if !request.GetGrantTypes().Exact("authorization_code") {
+	if !request.GetGrantTypes().Exactly("authorization_code") {
 		return errors.WithStack(errors.WithStack(fosite.ErrUnknownRequest))
 	}
 
-	if !request.GetClient().GetGrantTypes().Has("authorization_code") {
+	if !request.GetClient().GetGrantTypes().HasAll("authorization_code") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use grant type authorization_code"))
 	}
 
@@ -95,7 +95,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
-	if !requester.GetGrantTypes().Exact("authorization_code") {
+	if !requester.GetGrantTypes().Exactly("authorization_code") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -119,7 +119,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	var refresh, refreshSignature string
-	if authorizeRequest.GetGrantedScopes().Has("offline") {
+	if authorizeRequest.GetGrantedScopes().HasOneOf("offline", "offline_access") {
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
 			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))

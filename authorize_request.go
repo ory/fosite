@@ -72,7 +72,7 @@ func (d *AuthorizeRequest) SetResponseTypeHandled(name string) {
 
 func (d *AuthorizeRequest) DidHandleAllResponseTypes() bool {
 	for _, rt := range d.ResponseTypes {
-		if !d.HandledResponseTypes.Has(rt) {
+		if !d.HandledResponseTypes.HasAll(rt) {
 			return false
 		}
 	}

@@ -29,11 +29,11 @@ type OpenIDConnectExplicitHandler struct {
 }
 
 func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
-	if !(ar.GetGrantedScopes().Has("openid") && ar.GetResponseTypes().Exact("code")) {
+	if !(ar.GetGrantedScopes().HasAll("openid") && ar.GetResponseTypes().Exactly("code")) {
 		return nil
 	}
 
-	if !ar.GetClient().GetResponseTypes().Has("id_token", "code") {
+	if !ar.GetClient().GetResponseTypes().HasAll("id_token", "code") {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("The client is not allowed to use response type id_token and code"))
 	}
 

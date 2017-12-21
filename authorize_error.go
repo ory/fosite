@@ -41,7 +41,7 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	query.Add("error_description", rfcerr.Description)
 	query.Add("state", ar.GetState())
 
-	if ar.GetResponseTypes().Exact("token") || len(ar.GetResponseTypes()) > 1 {
+	if ar.GetResponseTypes().Exactly("token") || len(ar.GetResponseTypes()) > 1 {
 		redirectURI.Fragment = query.Encode()
 	} else {
 		for key, values := range redirectURI.Query() {

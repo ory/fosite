@@ -18,7 +18,7 @@ import "strings"
 
 type Arguments []string
 
-func (r Arguments) Matches(items ...string) bool {
+func (r Arguments) Equals(items ...string) bool {
 	found := make(map[string]bool)
 	for _, item := range items {
 		if !StringInSlice(item, r) {
@@ -30,7 +30,7 @@ func (r Arguments) Matches(items ...string) bool {
 	return len(found) == len(r) && len(r) == len(items)
 }
 
-func (r Arguments) Has(items ...string) bool {
+func (r Arguments) HasAll(items ...string) bool {
 	for _, item := range items {
 		if !StringInSlice(item, r) {
 			return false
@@ -40,6 +40,16 @@ func (r Arguments) Has(items ...string) bool {
 	return true
 }
 
-func (r Arguments) Exact(name string) bool {
+func (r Arguments) HasOneOf(items ...string) bool {
+	for _, item := range items {
+		if StringInSlice(item, r) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (r Arguments) Exactly(name string) bool {
 	return name == strings.Join(r, " ")
 }

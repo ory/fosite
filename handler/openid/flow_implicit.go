@@ -35,20 +35,20 @@ type OpenIDConnectImplicitHandler struct {
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
-	if !(ar.GetGrantedScopes().Has("openid") && (ar.GetResponseTypes().Has("token", "id_token") || ar.GetResponseTypes().Exact("id_token"))) {
+	if !(ar.GetGrantedScopes().HasAll("openid") && (ar.GetResponseTypes().HasAll("token", "id_token") || ar.GetResponseTypes().Exactly("id_token"))) {
 		return nil
-	} else if ar.GetResponseTypes().Has("code") {
+	} else if ar.GetResponseTypes().HasAll("code") {
 		// hybrid flow
 		return nil
 	}
 
-	if !ar.GetClient().GetGrantTypes().Has("implicit") {
+	if !ar.GetClient().GetGrantTypes().HasAll("implicit") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use implicit grant type"))
 	}
 
-	if ar.GetResponseTypes().Exact("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
+	if ar.GetResponseTypes().Exactly("id_token") && !ar.GetClient().GetResponseTypes().HasAll("id_token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
-	} else if ar.GetResponseTypes().Matches("token", "id_token") && !ar.GetClient().GetResponseTypes().Has("token", "id_token") {
+	} else if ar.GetResponseTypes().Equals("token", "id_token") && !ar.GetClient().GetResponseTypes().HasAll("token", "id_token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token and id_token"))
 	}
 
@@ -65,7 +65,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	claims := sess.IDTokenClaims()
-	if ar.GetResponseTypes().Has("token") {
+	if ar.GetResponseTypes().HasAll("token") {
 		if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, ar, resp); err != nil {
 			return errors.WithStack(err)
 		}

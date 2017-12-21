@@ -112,8 +112,8 @@ func TestAuthorizeRequest(t *testing.T) {
 		c.ar.GrantScope("foo")
 		c.ar.SetSession(&DefaultSession{})
 		c.ar.SetRequestedScopes([]string{"foo"})
-		assert.True(t, c.ar.GetGrantedScopes().Has("foo"))
-		assert.True(t, c.ar.GetRequestedScopes().Has("foo"))
+		assert.True(t, c.ar.GetGrantedScopes().HasAll("foo"))
+		assert.True(t, c.ar.GetRequestedScopes().HasAll("foo"))
 		assert.Equal(t, &DefaultSession{}, c.ar.GetSession())
 	}
 }
