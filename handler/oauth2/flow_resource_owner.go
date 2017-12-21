@@ -77,7 +77,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 	}
 
 	var refresh, refreshSignature string
-	if requester.GetGrantedScopes().Has("offline") {
+	if requester.GetGrantedScopes().HasOneOf("offline", "offline_access") {
 		var err error
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
