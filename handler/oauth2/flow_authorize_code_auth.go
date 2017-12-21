@@ -46,11 +46,11 @@ type AuthorizeExplicitGrantHandler struct {
 
 func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
-	if !ar.GetResponseTypes().Exact("code") {
+	if !ar.GetResponseTypes().Exactly("code") {
 		return nil
 	}
 
-	if !ar.GetClient().GetResponseTypes().Has("code") {
+	if !ar.GetClient().GetResponseTypes().HasAll("code") {
 		return errors.WithStack(fosite.ErrInvalidGrant)
 	}
 

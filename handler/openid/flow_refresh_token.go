@@ -27,19 +27,19 @@ type OpenIDConnectRefreshHandler struct {
 }
 
 func (c *OpenIDConnectRefreshHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !request.GetGrantTypes().Exact("refresh_token") {
+	if !request.GetGrantTypes().Exactly("refresh_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	if !request.GetGrantedScopes().Has("openid") {
+	if !request.GetGrantedScopes().HasAll("openid") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
+	if !request.GetClient().GetGrantTypes().HasAll("refresh_token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
 	}
 
-	if !request.GetClient().GetResponseTypes().Has("id_token") {
+	if !request.GetClient().GetResponseTypes().HasAll("id_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest.WithDebug("The client is not allowed to use response type id_token"))
 	}
 
@@ -54,19 +54,19 @@ func (c *OpenIDConnectRefreshHandler) HandleTokenEndpointRequest(ctx context.Con
 }
 
 func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !requester.GetGrantTypes().Exact("refresh_token") {
+	if !requester.GetGrantTypes().Exactly("refresh_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	if !requester.GetGrantedScopes().Has("openid") {
+	if !requester.GetGrantedScopes().HasAll("openid") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	if !requester.GetClient().GetGrantTypes().Has("refresh_token") {
+	if !requester.GetClient().GetGrantTypes().HasAll("refresh_token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
 	}
 
-	if !requester.GetClient().GetResponseTypes().Has("id_token") {
+	if !requester.GetClient().GetResponseTypes().HasAll("id_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest.WithDebug("The client is not allowed to use response type id_token"))
 	}
 

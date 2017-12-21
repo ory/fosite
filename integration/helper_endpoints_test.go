@@ -82,13 +82,13 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 			return
 		}
 
-		if ar.GetRequestedScopes().Has("fosite") {
+		if ar.GetRequestedScopes().HasAll("fosite") {
 			ar.GrantScope("fosite")
 		}
-		if ar.GetRequestedScopes().Has("offline") {
+		if ar.GetRequestedScopes().HasAll("offline") {
 			ar.GrantScope("offline")
 		}
-		if ar.GetRequestedScopes().Has("openid") {
+		if ar.GetRequestedScopes().HasAll("openid") {
 			ar.GrantScope("openid")
 		}
 
@@ -141,7 +141,7 @@ func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw 
 			return
 		}
 
-		if accessRequest.GetRequestedScopes().Has("fosite") {
+		if accessRequest.GetRequestedScopes().HasAll("fosite") {
 			accessRequest.GrantScope("fosite")
 		}
 

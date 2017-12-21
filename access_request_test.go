@@ -25,7 +25,7 @@ func TestAccessRequest(t *testing.T) {
 	ar.GrantTypes = Arguments{"foobar"}
 	ar.Client = &DefaultClient{}
 	ar.GrantScope("foo")
-	assert.True(t, ar.GetGrantedScopes().Has("foo"))
+	assert.True(t, ar.GetGrantedScopes().HasAll("foo"))
 	assert.NotNil(t, ar.GetRequestedAt())
 	assert.Equal(t, ar.GrantTypes, ar.GetGrantTypes())
 	assert.Equal(t, ar.Client, ar.GetClient())

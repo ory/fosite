@@ -40,15 +40,15 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
-	if !(ar.GetResponseTypes().Matches("token", "id_token", "code") || ar.GetResponseTypes().Matches("token", "code") || ar.GetResponseTypes().Matches("id_token", "code")) {
+	if !(ar.GetResponseTypes().Equals("token", "id_token", "code") || ar.GetResponseTypes().Equals("token", "code") || ar.GetResponseTypes().Equals("id_token", "code")) {
 		return nil
 	}
 
-	if ar.GetResponseTypes().Matches("token") && !ar.GetClient().GetResponseTypes().Has("token") {
+	if ar.GetResponseTypes().Equals("token") && !ar.GetClient().GetResponseTypes().HasAll("token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the token response type"))
-	} else if ar.GetResponseTypes().Matches("code") && !ar.GetClient().GetResponseTypes().Has("code") {
+	} else if ar.GetResponseTypes().Equals("code") && !ar.GetClient().GetResponseTypes().HasAll("code") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the code response type"))
-	} else if ar.GetResponseTypes().Matches("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
+	} else if ar.GetResponseTypes().Equals("id_token") && !ar.GetClient().GetResponseTypes().HasAll("id_token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the id_token response type"))
 	}
 
@@ -65,8 +65,8 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	claims := sess.IDTokenClaims()
-	if ar.GetResponseTypes().Has("code") {
-		if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
+	if ar.GetResponseTypes().HasAll("code") {
+		if !ar.GetClient().GetGrantTypes().HasAll("authorization_code") {
 			return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
 		}
 
@@ -87,8 +87,8 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		claims.CodeHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2]))
 	}
 
-	if ar.GetResponseTypes().Has("token") {
-		if !ar.GetClient().GetGrantTypes().Has("implicit") {
+	if ar.GetResponseTypes().HasAll("token") {
+		if !ar.GetClient().GetGrantTypes().HasAll("implicit") {
 			return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the implicit grant type"))
 		} else if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, ar, resp); err != nil {
 			return errors.WithStack(err)
@@ -106,7 +106,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		resp.AddFragment("state", ar.GetState())
 	}
 
-	if !ar.GetGrantedScopes().Has("openid") || !ar.GetResponseTypes().Has("id_token") {
+	if !ar.GetGrantedScopes().HasAll("openid") || !ar.GetResponseTypes().HasAll("id_token") {
 		ar.SetResponseTypeHandled("id_token")
 		return nil
 	}

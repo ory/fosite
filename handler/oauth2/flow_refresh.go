@@ -35,11 +35,11 @@ type RefreshTokenGrantHandler struct {
 func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "refresh_token".
-	if !request.GetGrantTypes().Exact("refresh_token") {
+	if !request.GetGrantTypes().Exactly("refresh_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
+	if !request.GetClient().GetGrantTypes().HasAll("refresh_token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use grant type refresh_token"))
 	}
 
@@ -57,7 +57,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug(err.Error()))
 	}
 
-	if !originalRequest.GetGrantedScopes().Has("offline") {
+	if !originalRequest.GetGrantedScopes().HasOneOf("offline", "offline_access") {
 		return errors.WithStack(fosite.ErrScopeNotGranted.WithDebug("The client is not allowed to use grant type refresh_token"))
 
 	}
@@ -79,7 +79,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-6
 func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !requester.GetGrantTypes().Exact("refresh_token") {
+	if !requester.GetGrantTypes().Exactly("refresh_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 

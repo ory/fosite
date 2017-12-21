@@ -43,15 +43,15 @@ type AuthorizeImplicitGrantTypeHandler struct {
 
 func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
-	if !ar.GetResponseTypes().Exact("token") {
+	if !ar.GetResponseTypes().Exactly("token") {
 		return nil
 	}
 
-	if !ar.GetClient().GetResponseTypes().Has("token") {
+	if !ar.GetClient().GetResponseTypes().HasAll("token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token"))
 	}
 
-	if !ar.GetClient().GetGrantTypes().Has("implicit") {
+	if !ar.GetClient().GetGrantTypes().HasAll("implicit") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use grant type implicit"))
 	}
 
