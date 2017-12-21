@@ -57,7 +57,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug(err.Error()))
 	}
 
-	if !originalRequest.GetGrantedScopes().Has("offline") {
+	if !originalRequest.GetGrantedScopes().HasOneOf("offline", "offline_access") {
 		return errors.WithStack(fosite.ErrScopeNotGranted.WithDebug("The client is not allowed to use grant type refresh_token"))
 
 	}

@@ -40,6 +40,16 @@ func (r Arguments) Has(items ...string) bool {
 	return true
 }
 
+func (r Arguments) HasOneOf(items ...string) bool {
+	for _, item := range items {
+		if StringInSlice(item, r) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (r Arguments) Exact(name string) bool {
 	return name == strings.Join(r, " ")
 }

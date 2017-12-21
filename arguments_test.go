@@ -160,3 +160,30 @@ func TestArgumentsMatches(t *testing.T) {
 		t.Logf("Passed test case %d", k)
 	}
 }
+
+func TestArgumentsOneOf(t *testing.T) {
+	for k, c := range []struct {
+		args   Arguments
+		oneOf  []string
+		expect bool
+	}{
+		{
+			args:   Arguments{"baz", "bar"},
+			oneOf:  []string{"foo", "bar"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"foo", "baz"},
+			oneOf:  []string{"foo", "bar"},
+			expect: true,
+		},
+		{
+			args:   Arguments{"baz"},
+			oneOf:  []string{"foo", "bar"},
+			expect: false,
+		},
+	} {
+		assert.Equal(t, c.expect, c.args.HasOneOf(c.oneOf...), "%d", k)
+		t.Logf("Passed test case %d", k)
+	}
+}
