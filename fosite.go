@@ -83,4 +83,5 @@ type Fosite struct {
 	RevocationHandlers         RevocationHandlers
 	Hasher                     Hasher
 	ScopeStrategy              ScopeStrategy
+	RevealDebugPayloads        bool
 }

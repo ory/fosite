@@ -23,6 +23,10 @@ import (
 func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 	rfcerr := ErrorToRFC6749Error(err)
 	if !ar.IsRedirectURIValid() {
+		if !c.RevealDebugPayloads {
+			rfcerr.Debug = ""
+		}
+
 		js, err := json.MarshalIndent(rfcerr, "", "\t")
 		if err != nil {
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -40,6 +44,13 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	query.Add("error", rfcerr.Name)
 	query.Add("error_description", rfcerr.Description)
 	query.Add("state", ar.GetState())
+	if !c.RevealDebugPayloads && rfcerr.Debug != "" {
+		query.Add("error_debug", rfcerr.Debug)
+	}
+
+	if rfcerr.Hint != "" {
+		query.Add("error_hint", rfcerr.Hint)
+	}
 
 	if ar.GetResponseTypes().Exact("token") || len(ar.GetResponseTypes()) > 1 {
 		redirectURI.Fragment = query.Encode()

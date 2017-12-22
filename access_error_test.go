@@ -20,6 +20,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"fmt"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/ory/fosite"
 	. "github.com/ory/fosite/internal"
@@ -47,29 +49,43 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 	f := &Fosite{}
 
 	for k, c := range []struct {
-		err  *RFC6749Error
-		code string
+		err   *RFC6749Error
+		code  string
+		debug bool
 	}{
-		{ErrInvalidRequest, "invalid_request"},
-		{ErrInvalidClient, "invalid_client"},
-		{ErrInvalidGrant, "invalid_grant"},
-		{ErrInvalidScope, "invalid_scope"},
-		{ErrUnauthorizedClient, "unauthorized_client"},
-		{ErrUnsupportedGrantType, "unsupported_grant_type"},
+		{ErrInvalidRequest.WithDebug("some-debug"), "invalid_request", false},
+		{ErrInvalidClient.WithDebug("some-debug"), "invalid_client", false},
+		{ErrInvalidGrant.WithDebug("some-debug"), "invalid_grant", false},
+		{ErrInvalidScope.WithDebug("some-debug"), "invalid_scope", false},
+		{ErrUnauthorizedClient.WithDebug("some-debug"), "unauthorized_client", false},
+		{ErrUnsupportedGrantType.WithDebug("some-debug"), "unsupported_grant_type", false},
 	} {
-		rw := httptest.NewRecorder()
-		f.WriteAccessError(rw, nil, c.err)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			f.RevealDebugPayloads = c.debug
 
-		var params struct {
-			Error       string `json:"error"`             // specified by RFC, required
-			Description string `json:"error_description"` // specified by RFC, optional
-		}
+			rw := httptest.NewRecorder()
+			f.WriteAccessError(rw, nil, c.err)
 
-		require.NotNil(t, rw.Body, "(%d) %s: nil body", k, c.code)
-		err := json.NewDecoder(rw.Body).Decode(&params)
-		require.NoError(t, err, "(%d) %s", k, c.code)
+			var params struct {
+				Error       string `json:"error"`             // specified by RFC, required
+				Description string `json:"error_description"` // specified by RFC, optional
+				Debug       string `json:"error_debug"`
+				Hint        string `json:"error_hint"`
+			}
 
-		assert.Equal(t, c.code, params.Error, "(%d) %s: error", k, c.code)
-		assert.Equal(t, c.err.Description, params.Description, "(%d) %s: description", k, c.code)
+			require.NotNil(t, rw.Body)
+			err := json.NewDecoder(rw.Body).Decode(&params)
+			require.NoError(t, err)
+
+			assert.Equal(t, c.code, params.Error)
+			assert.Equal(t, c.err.Description, params.Description)
+			assert.Equal(t, c.err.Hint, params.Hint)
+
+			if !c.debug {
+				assert.Empty(t, params.Debug)
+			} else {
+				assert.Equal(t, "some-debug", params.Debug)
+			}
+		})
 	}
 }
