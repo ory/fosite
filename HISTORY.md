@@ -39,6 +39,17 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.16.0
+
+This patch introduces `RevealDebugPayloads` to the Fosite struct which enables/disables sending debug information to
+clients. Debug information may contain sensitive information as it forwards error messages from, for example, storage
+implementations. For this reason, `RevealDebugPayloads` defaults to false. Keep in mind that the information may be
+very helpful when specific OAuth 2.0 requests fail and we generally recommend displaying debug information.
+
+Additionally, error keys for JSON changed which caused a new minor version, speicifically
+[`statusCode` was changed to `status_code`](https://github.com/ory/fosite/pull/242/files#diff-dd25e0e0a594c3f3592c1c717039b85eR221).
+
+
 ## 0.15.0
 
 This release focuses on improving compatibility with OpenID Connect Certification and better error context.
