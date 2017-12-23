@@ -61,7 +61,7 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 		{ErrUnsupportedGrantType.WithDebug("some-debug"), "unsupported_grant_type", false},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			f.RevealDebugPayloads = c.debug
+			f.SendDebugMessages = c.debug
 
 			rw := httptest.NewRecorder()
 			f.WriteAccessError(rw, nil, c.err)

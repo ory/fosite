@@ -83,5 +83,9 @@ type Fosite struct {
 	RevocationHandlers         RevocationHandlers
 	Hasher                     Hasher
 	ScopeStrategy              ScopeStrategy
-	RevealDebugPayloads        bool
+
+	// SendDebugMessages if set to true, includes error debug messages in response payloads. Be aware that sensitive
+	// data may be exposed, depending on your implementation of Fosite. Such sensitive data might include database error
+	// codes or other information. Proceed with caution!
+	SendDebugMessages bool
 }

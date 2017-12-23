@@ -23,7 +23,7 @@ import (
 func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 	rfcerr := ErrorToRFC6749Error(err)
 	if !ar.IsRedirectURIValid() {
-		if !c.RevealDebugPayloads {
+		if !c.SendDebugMessages {
 			rfcerr.Debug = ""
 		}
 
@@ -44,7 +44,7 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	query.Add("error", rfcerr.Name)
 	query.Add("error_description", rfcerr.Description)
 	query.Add("state", ar.GetState())
-	if c.RevealDebugPayloads && rfcerr.Debug != "" {
+	if c.SendDebugMessages && rfcerr.Debug != "" {
 		query.Add("error_debug", rfcerr.Debug)
 	}
 

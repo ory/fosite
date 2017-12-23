@@ -28,7 +28,7 @@ func (c *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 	rfcerr := ErrorToRFC6749Error(err)
-	if !c.RevealDebugPayloads {
+	if !c.SendDebugMessages {
 		rfcerr.Debug = ""
 	}
 
