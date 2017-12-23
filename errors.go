@@ -218,9 +218,9 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 type RFC6749Error struct {
 	Name        string `json:"error"`
 	Description string `json:"error_description"`
-	Hint        string `json:"-"`
-	Code        int    `json:"statusCode"`
-	Debug       string `json:"-"`
+	Hint        string `json:"error_hint,omitempty"`
+	Code        int    `json:"status_code,omitempty"`
+	Debug       string `json:"error_debug,omitempty"`
 }
 
 func (e *RFC6749Error) Status() string {

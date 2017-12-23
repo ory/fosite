@@ -21,13 +21,17 @@ import (
 )
 
 func (c *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err error) {
-	writeJsonError(rw, err)
+	c.writeJsonError(rw, err)
 }
 
-func writeJsonError(rw http.ResponseWriter, err error) {
+func (c *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 	rfcerr := ErrorToRFC6749Error(err)
+	if !c.SendDebugMessagesToClients {
+		rfcerr.Debug = ""
+	}
+
 	js, err := json.Marshal(rfcerr)
 	if err != nil {
 		http.Error(rw, fmt.Sprintf(`{"error": "%s"}`, err.Error()), http.StatusInternalServerError)
