@@ -36,6 +36,12 @@ type Config struct {
 	// DisableRefreshTokenValidation sets the introspection endpoint to disable refresh token validation.
 	DisableRefreshTokenValidation bool
 
+	// SendDebugMessagesToClients if set to true, includes error debug messages in response payloads. Be aware that sensitive
+	// data may be exposed, depending on your implementation of Fosite. Such sensitive data might include database error
+	// codes or other information. Proceed with caution!
+	SendDebugMessagesToClients bool
+
+	// ScopeStrategy sets the scope strategy that should be supported, for example fosite.WildcardScopeStrategy.
 	ScopeStrategy fosite.ScopeStrategy
 }
 

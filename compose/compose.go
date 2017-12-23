@@ -56,6 +56,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 		RevocationHandlers:         fosite.RevocationHandlers{},
 		Hasher:                     hasher,
 		ScopeStrategy:              config.GetScopeStrategy(),
+		SendDebugMessagesToClients: config.SendDebugMessagesToClients,
 	}
 
 	for _, factory := range factories {
