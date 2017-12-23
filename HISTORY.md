@@ -41,7 +41,7 @@ bumps (`0.1.0` -> `0.2.0`).
 
 ## 0.16.0
 
-This patch introduces `RevealDebugPayloads` to the Fosite struct which enables/disables sending debug information to
+This patch introduces `SendDebugMessagesToClients` to the Fosite struct which enables/disables sending debug information to
 clients. Debug information may contain sensitive information as it forwards error messages from, for example, storage
 implementations. For this reason, `RevealDebugPayloads` defaults to false. Keep in mind that the information may be
 very helpful when specific OAuth 2.0 requests fail and we generally recommend displaying debug information.

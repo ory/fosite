@@ -209,7 +209,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			oauth2 := &Fosite{
-				SendDebugMessages: c.debug,
+				SendDebugMessagesToClients: c.debug,
 			}
 
 			ctrl := gomock.NewController(t)
