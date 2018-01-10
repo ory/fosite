@@ -97,6 +97,24 @@ func (s *DefaultSession) GetSubject() string {
 	return s.Subject
 }
 
+func (s *DefaultSession) GetCodeChallenge() string {
+	// HACK: No need
+	return ""
+}
+
+func (s *DefaultSession) SetCodeChallenge(string) {
+	// HACK: No need
+}
+
+func (s *DefaultSession) GetCodeChallengeMethod() string {
+	// HACK: No need
+	return ""
+}
+
+func (s *DefaultSession) SetCodeChallengeMethod(string) {
+	// HACK: No need
+}
+
 func (s *DefaultSession) IDTokenHeaders() *jwt.Headers {
 	if s.Headers == nil {
 		s.Headers = &jwt.Headers{}
