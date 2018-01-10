@@ -79,6 +79,12 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
+	// Stores PKCE parameters
+	if len(ar.GetCodeChallenge()) > 0 {
+		ar.GetSession().SetCodeChallenge(ar.GetCodeChallenge())
+		ar.GetSession().SetCodeChallengeMethod(ar.GetCodeChallengeMethod())
+	}
+
 	resp.AddQuery("code", code)
 	resp.AddQuery("state", ar.GetState())
 	resp.AddQuery("scope", strings.Join(ar.GetGrantedScopes(), " "))

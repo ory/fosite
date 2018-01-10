@@ -149,6 +149,82 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 		},
+		/* missing code_challenge with required for public client */
+		{
+			desc: "missing code challenge, required for public client",
+			conf: &Fosite{Store: store, RequirePKCEForPublicClients: true},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code"},
+				"state":         {"strong-state"},
+			},
+			expectedError: ErrCodeChallengeRequired,
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+			},
+		},
+		/* invalid code verifier */
+		{
+			desc: "invalid challenge code verifier",
+			conf: &Fosite{Store: store, RequirePKCEForPublicClients: true},
+			query: url.Values{
+				"redirect_uri":          {"https://foo.bar/cb"},
+				"client_id":             {"1234"},
+				"response_type":         {"code"},
+				"state":                 {"strong-state"},
+				"code_challenge":        {"123456"},
+				"code_challenge_method": {"foo"},
+			},
+			expectedError: ErrCodeChallengeMethodNotSupported,
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+			},
+		},
+		/* invalid challenge code syntax */
+		{
+			desc: "invalid challenge code syntax",
+			conf: &Fosite{Store: store, RequirePKCEForPublicClients: true},
+			query: url.Values{
+				"redirect_uri":   {"https://foo.bar/cb"},
+				"client_id":      {"1234"},
+				"response_type":  {"code"},
+				"state":          {"strong-state"},
+				"code_challenge": {"123456"},
+			},
+			expectedError: ErrInvalidCodeChallenge,
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+			},
+		},
+		/* PKCE success case */
+		{
+			desc: "PKCE success case",
+			conf: &Fosite{Store: store, RequirePKCEForPublicClients: true},
+			query: url.Values{
+				"redirect_uri":          {"https://foo.bar/cb"},
+				"client_id":             {"1234"},
+				"response_type":         {"code"},
+				"state":                 {"strong-state"},
+				"scope":                 {"foo bar"},
+				"code_challenge":        {"E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"},
+				"code_challenge_method": {"s256"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+			},
+			expect: &AuthorizeRequest{
+				RedirectURI:         redir,
+				ResponseTypes:       []string{"code"},
+				State:               "strong-state",
+				CodeChallenge:       "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+				CodeChallengeMethod: "s256",
+				Request: Request{
+					Client: &DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}},
+					Scopes: []string{"foo", "bar"},
+				},
+			},
+		},
 		/* success case */
 		{
 			desc: "should pass",
@@ -164,9 +240,11 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
 			},
 			expect: &AuthorizeRequest{
-				RedirectURI:   redir,
-				ResponseTypes: []string{"code", "token"},
-				State:         "strong-state",
+				RedirectURI:         redir,
+				ResponseTypes:       []string{"code", "token"},
+				State:               "strong-state",
+				CodeChallenge:       "",
+				CodeChallengeMethod: "",
 				Request: Request{
 					Client: &DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}},
 					Scopes: []string{"foo", "bar"},

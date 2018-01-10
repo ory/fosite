@@ -25,6 +25,11 @@ type AuthorizeRequest struct {
 	State                string    `json:"state" gorethink:"state"`
 	HandledResponseTypes Arguments `json:"handledResponseTypes" gorethink:"handledResponseTypes"`
 
+	// Optional code_challenge as described in rfc7636
+	CodeChallenge string `json:"code_challenge" gorethink:"code_challenge"`
+	// Optional code_challenge_method as described in rfc7636
+	CodeChallengeMethod string `json:"code_challenge_method" gorethink:"code_challenge_method"`
+
 	Request
 }
 
@@ -60,6 +65,14 @@ func (d *AuthorizeRequest) GetResponseTypes() Arguments {
 
 func (d *AuthorizeRequest) GetState() string {
 	return d.State
+}
+
+func (d *AuthorizeRequest) GetCodeChallenge() string {
+	return d.CodeChallenge
+}
+
+func (d *AuthorizeRequest) GetCodeChallengeMethod() string {
+	return d.CodeChallengeMethod
 }
 
 func (d *AuthorizeRequest) GetRedirectURI() *url.URL {

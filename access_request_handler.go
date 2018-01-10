@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/fosite/pkce"
+
 	"net/url"
 
 	"github.com/pkg/errors"
@@ -88,6 +90,30 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		}
 	}
 	accessRequest.Client = client
+
+	// PKCE Handling
+	if accessRequest.GetGrantTypes().Has("authorization_code") {
+		codeVerifier := r.PostForm.Get("code_verifier")
+		if len(codeVerifier) > 0 {
+			// Validate code challenge syntax
+			// https://tools.ietf.org/html/rfc7636#section-4.2
+			if !pkce.IsValid(codeVerifier) {
+				return accessRequest, errors.WithStack(ErrInvalidCodeChallenge.WithDebug("Invalid code verifier format"))
+			}
+
+			// Validate code challenge method value
+			verifier := pkce.GetVerifier(session.GetCodeChallengeMethod())
+			if verifier == nil {
+				// https://tools.ietf.org/html/rfc7636#section-4.4.1
+				return accessRequest, errors.WithStack(ErrCodeChallengeMethodNotSupported)
+			}
+
+			// Verify challenge
+			if !verifier.Compare(codeVerifier, session.GetCodeChallenge()) {
+				return accessRequest, errors.WithStack(ErrInvalidCodeChallenge.WithDebug("Challenge comparison failed"))
+			}
+		}
+	}
 
 	var found bool = false
 	for _, loader := range f.TokenEndpointHandlers {

@@ -88,6 +88,24 @@ func (s *JWTSession) GetSubject() string {
 	return s.Subject
 }
 
+func (s *JWTSession) GetCodeChallenge() string {
+	// HACK: No need
+	return ""
+}
+
+func (s *JWTSession) SetCodeChallenge(string) {
+	// HACK: No need
+}
+
+func (s *JWTSession) GetCodeChallengeMethod() string {
+	// HACK: No need
+	return ""
+}
+
+func (s *JWTSession) SetCodeChallengeMethod(string) {
+	// HACK: No need
+}
+
 func (s *JWTSession) Clone() fosite.Session {
 	if s == nil {
 		return nil
