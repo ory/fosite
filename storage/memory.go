@@ -65,6 +65,14 @@ func NewExampleStore() *MemoryStore {
 				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 				Scopes:        []string{"fosite", "openid", "photos", "offline"},
 			},
+			"encoded:client": {
+				ID:            "encoded:client",
+				Secret:        []byte(`$2a$10$A7M8b65dSSKGHF0H2sNkn.9Z0hT8U1Nv6OWPV3teUUaczXkVkxuDS`), // = "encoded&password"
+				RedirectURIs:  []string{"http://localhost:3846/callback"},
+				ResponseTypes: []string{"id_token", "code", "token"},
+				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+				Scopes:        []string{"fosite", "openid", "photos", "offline"},
+			},
 		},
 		Users: map[string]MemoryUserRelation{
 			"peter": {

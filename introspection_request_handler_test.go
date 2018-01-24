@@ -47,7 +47,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 	validator := internal.NewMockTokenIntrospector(ctrl)
 	defer ctrl.Finish()
 
-	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewMemoryStore(), []byte{}, nil).(*Fosite)
+	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewExampleStore(), []byte{}, nil).(*Fosite)
 	httpreq := &http.Request{
 		Method: "POST",
 		Header: http.Header{},
@@ -100,6 +100,42 @@ func TestNewIntrospectionRequest(t *testing.T) {
 					},
 				}
 				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			},
+			isActive: true,
+		},
+		{
+			description: "should pass with basic auth if username and password encoded",
+			setup: func() {
+				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				httpreq = &http.Request{
+					Method: "POST",
+					Header: http.Header{
+						//Basic Authorization with username=encoded:client and password=encoded&password
+						"Authorization": []string{"Basic ZW5jb2RlZCUzQWNsaWVudDplbmNvZGVkJTI2cGFzc3dvcmQ="},
+					},
+					PostForm: url.Values{
+						"token": []string{"introspect-token"},
+					},
+				}
+				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			},
+			isActive: true,
+		},
+		{
+			description: "should pass with basic auth if username and password not encoded",
+			setup: func() {
+				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				httpreq = &http.Request{
+					Method: "POST",
+					Header: http.Header{
+						//Basic Authorization with username=my-client and password=foobar
+						"Authorization": []string{"Basic bXktY2xpZW50OmZvb2Jhcg=="},
+					},
+					PostForm: url.Values{
+						"token": []string{"introspect-token"},
+					},
+				}
 				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			isActive: true,
