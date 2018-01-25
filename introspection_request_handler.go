@@ -127,17 +127,18 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 		if !ok {
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
 		}
+
 		clientID, err := url.QueryUnescape(id)
 		if err != nil {
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
 		}
 
-		client, err := f.Store.GetClient(ctx, clientID)
+		clientSecret, err := url.QueryUnescape(secret)
 		if err != nil {
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
 		}
 
-		clientSecret, err := url.QueryUnescape(secret)
+		client, err := f.Store.GetClient(ctx, clientID)
 		if err != nil {
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
 		}
