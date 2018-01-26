@@ -46,6 +46,7 @@ func TestNewAccessRequest(t *testing.T) {
 		expectErr error
 		expect    *AccessRequest
 		handlers  TokenEndpointHandlers
+		session   Session
 	}{
 		{
 			header:    http.Header{},
@@ -188,6 +189,107 @@ func TestNewAccessRequest(t *testing.T) {
 				},
 			},
 		},
+		/* invalid code verifier syntax */
+		{
+			header: http.Header{
+				"Authorization": {basicAuth("foo", "bar")},
+			},
+			method: "POST",
+			form: url.Values{
+				"grant_type":    {"authorization_code"},
+				"code_verifier": {"123456"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
+				client.EXPECT().IsPublic().Return(false)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
+			},
+			expectErr: ErrInvalidCodeChallenge,
+			handlers:  TokenEndpointHandlers{handler},
+		},
+		/* plain code verifier should pass */
+		{
+			session: &DefaultSession{
+				CodeChallenge:       "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+				CodeChallengeMethod: "plain",
+			},
+			header: http.Header{
+				"Authorization": {basicAuth("foo", "bar")},
+			},
+			method: "POST",
+			form: url.Values{
+				"grant_type":    {"authorization_code"},
+				"code_verifier": {"E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
+				client.EXPECT().IsPublic().Return(false)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			handlers: TokenEndpointHandlers{handler},
+			expect: &AccessRequest{
+				GrantTypes: Arguments{"authorization_code"},
+				Request: Request{
+					Client: client,
+				},
+			},
+		},
+		/* plain code verifier should not pass */
+		{
+			session: &DefaultSession{
+				CodeChallenge:       "E9Melhoa2OwvFrEMTJuCHaoeK1t8URWbuKLMstw-cB",
+				CodeChallengeMethod: "plain",
+			},
+			header: http.Header{
+				"Authorization": {basicAuth("foo", "bar")},
+			},
+			method: "POST",
+			form: url.Values{
+				"grant_type":    {"authorization_code"},
+				"code_verifier": {"E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
+				client.EXPECT().IsPublic().Return(false)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			expectErr: ErrInvalidCodeChallenge,
+			handlers:  TokenEndpointHandlers{handler},
+		},
+		/* s256 verifier should pass */
+		{
+			session: &DefaultSession{
+				CodeChallenge:       "7MerufSWZM57TmdFh_wY7UcYYjkf6bK30uM9fYEJIJ4",
+				CodeChallengeMethod: "s256",
+			},
+			header: http.Header{
+				"Authorization": {basicAuth("foo", "bar")},
+			},
+			method: "POST",
+			form: url.Values{
+				"grant_type":    {"authorization_code"},
+				"code_verifier": {"pokiUom2YM4JRdVNyS79yhNT8qNhxo6yW6FNc39yi787tSrLrb6XXCSTNfeD"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
+				client.EXPECT().IsPublic().Return(false)
+				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
+				//handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			handlers: TokenEndpointHandlers{handler},
+			expect: &AccessRequest{
+				GrantTypes: Arguments{"authorization_code"},
+				Request: Request{
+					Client: client,
+				},
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			r := &http.Request{
@@ -199,7 +301,15 @@ func TestNewAccessRequest(t *testing.T) {
 			c.mock()
 			ctx := NewContext()
 			fosite.TokenEndpointHandlers = c.handlers
-			ar, err := fosite.NewAccessRequest(ctx, r, new(DefaultSession))
+
+			var session Session
+			if c.session != nil {
+				session = c.session
+			} else {
+				session = new(DefaultSession)
+			}
+
+			ar, err := fosite.NewAccessRequest(ctx, r, session)
 
 			if c.expectErr != nil {
 				assert.EqualError(t, err, c.expectErr.Error())

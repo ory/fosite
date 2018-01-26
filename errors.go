@@ -168,37 +168,55 @@ var (
 		Name:        errConsentRequired,
 		Code:        http.StatusBadRequest,
 	}
+	ErrCodeChallengeRequired = &RFC6749Error{
+		Description: "The code_challenge is required for public clients",
+		Name:        errCodeChallengeRequired,
+		Code:        http.StatusBadGateway,
+	}
+	ErrCodeChallengeMethodNotSupported = &RFC6749Error{
+		Description: "The code_challenge_method transform algorithm not supported",
+		Name:        errCodeChallengeMethodNotSupported,
+		Code:        http.StatusBadRequest,
+	}
+	ErrInvalidCodeChallenge = &RFC6749Error{
+		Description: "The code_challenge is invalid",
+		Name:        errInvalidCodeChallenge,
+		Code:        http.StatusBadRequest,
+	}
 )
 
 const (
-	errConsentRequired              = "consent_required"
-	errInteractionRequired          = "interaction_required"
-	errLoginRequired                = "login_required"
-	errRequestUnauthorizedName      = "request_unauthorized"
-	errRequestForbidden             = "request_forbidden"
-	errInvalidRequestName           = "invalid_request"
-	errUnauthorizedClientName       = "unauthorized_client"
-	errAccessDeniedName             = "access_denied"
-	errUnsupportedResponseTypeName  = "unsupported_response_type"
-	errInvalidScopeName             = "invalid_scope"
-	errServerErrorName              = "server_error"
-	errTemporarilyUnavailableName   = "temporarily_unavailable"
-	errUnsupportedGrantTypeName     = "unsupported_grant_type"
-	errInvalidGrantName             = "invalid_grant"
-	errInvalidClientName            = "invalid_client"
-	errNotFoundName                 = "not_found"
-	errInvalidStateName             = "invalid_state"
-	errMisconfigurationName         = "misconfiguration"
-	errInsufficientEntropyName      = "insufficient_entropy"
-	errInvalidTokenFormatName       = "invalid_token"
-	errTokenSignatureMismatchName   = "token_signature_mismatch"
-	errTokenExpiredName             = "token_expired"
-	errScopeNotGrantedName          = "scope_not_granted"
-	errTokenClaimName               = "token_claim"
-	errTokenInactiveName            = "token_inactive"
-	errAuthorizaionCodeInactiveName = "authorization_code_inactive"
-	errUnknownErrorName             = "error"
-	errRevokationClientMismatchName = "revokation_client_mismatch"
+	errConsentRequired                 = "consent_required"
+	errInteractionRequired             = "interaction_required"
+	errLoginRequired                   = "login_required"
+	errRequestUnauthorizedName         = "request_unauthorized"
+	errRequestForbidden                = "request_forbidden"
+	errInvalidRequestName              = "invalid_request"
+	errUnauthorizedClientName          = "unauthorized_client"
+	errAccessDeniedName                = "access_denied"
+	errUnsupportedResponseTypeName     = "unsupported_response_type"
+	errInvalidScopeName                = "invalid_scope"
+	errServerErrorName                 = "server_error"
+	errTemporarilyUnavailableName      = "temporarily_unavailable"
+	errUnsupportedGrantTypeName        = "unsupported_grant_type"
+	errInvalidGrantName                = "invalid_grant"
+	errInvalidClientName               = "invalid_client"
+	errNotFoundName                    = "not_found"
+	errInvalidStateName                = "invalid_state"
+	errMisconfigurationName            = "misconfiguration"
+	errInsufficientEntropyName         = "insufficient_entropy"
+	errInvalidTokenFormatName          = "invalid_token"
+	errTokenSignatureMismatchName      = "token_signature_mismatch"
+	errTokenExpiredName                = "token_expired"
+	errScopeNotGrantedName             = "scope_not_granted"
+	errTokenClaimName                  = "token_claim"
+	errTokenInactiveName               = "token_inactive"
+	errAuthorizaionCodeInactiveName    = "authorization_code_inactive"
+	errUnknownErrorName                = "error"
+	errRevokationClientMismatchName    = "revokation_client_mismatch"
+	errCodeChallengeRequired           = "code_challenge_required"
+	errCodeChallengeMethodNotSupported = "code_challenge_method_not_supported"
+	errInvalidCodeChallenge            = "invalid_code_challenge"
 )
 
 func ErrorToRFC6749Error(err error) *RFC6749Error {

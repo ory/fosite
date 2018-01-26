@@ -236,6 +236,12 @@ type AuthorizeRequester interface {
 	// GetState returns the request's state.
 	GetState() (state string)
 
+	// GetCodeChallenge returns the PKCE code challenge (rfc7636)
+	GetCodeChallenge() (code string)
+
+	// GetCodeChallengeMethod returns the used PKCE challenge method (rfc7636)
+	GetCodeChallengeMethod() (method string)
+
 	Requester
 }
 

@@ -15,13 +15,12 @@
 package fosite
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
-	"context"
-
-	"fmt"
-
+	"github.com/ory/fosite/pkce"
 	"github.com/pkg/errors"
 )
 
@@ -80,5 +79,41 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 
 	// Remove empty items from arrays
 	request.SetRequestedScopes(removeEmpty(strings.Split(r.Form.Get("scope"), " ")))
+
+	// Proof Key for Code Exchange by OAuth Public Clients
+	// https://tools.ietf.org/html/rfc7636
+	//
+	// PKCE is only for code response type
+	if request.ResponseTypes.Has("code") {
+		if codeChallenge := r.Form.Get("code_challenge"); len(codeChallenge) == 0 {
+			// Force code_challenge only for code response_type
+			if c.RequirePKCEForPublicClients {
+				// https://tools.ietf.org/html/rfc7636#section-4.4.1
+				return request, errors.WithStack(ErrCodeChallengeRequired)
+			}
+		} else {
+			codeChallengeMethod := r.Form.Get("code_challenge_method")
+			// https://tools.ietf.org/html/rfc7636#section-4.3, default to plain if not specified
+			if len(codeChallengeMethod) == 0 {
+				codeChallengeMethod = pkce.Plain
+			}
+
+			// Validate code challenge method value
+			if pkce.GetVerifier(codeChallengeMethod) == nil {
+				// https://tools.ietf.org/html/rfc7636#section-4.4.1
+				return request, errors.WithStack(ErrCodeChallengeMethodNotSupported)
+			}
+
+			// Validate code challenge syntax
+			// https://tools.ietf.org/html/rfc7636#section-4.2
+			if !pkce.IsValid(codeChallenge) {
+				return request, errors.WithStack(ErrInvalidCodeChallenge)
+			}
+
+			// Assign to request
+			request.CodeChallenge = codeChallenge
+		}
+	}
+
 	return request, nil
 }

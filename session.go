@@ -39,15 +39,29 @@ type Session interface {
 	// GetSubject returns the subject, if set. This is optional and only used during token introspection.
 	GetSubject() string
 
+	// SetCodeChallenge sets the code_challenge value
+	SetCodeChallenge(code string)
+
+	// GetCodeChallenge returns the code challenge value
+	GetCodeChallenge() string
+
+	// SetCodeChallengeMethod sets the code_challenge_method value
+	SetCodeChallengeMethod(code string)
+
+	// GetCodeChallengeMethod returns the code challenge method value
+	GetCodeChallengeMethod() string
+
 	// Clone clones the session.
 	Clone() Session
 }
 
 // DefaultSession is a default implementation of the session interface.
 type DefaultSession struct {
-	ExpiresAt map[TokenType]time.Time
-	Username  string
-	Subject   string
+	ExpiresAt           map[TokenType]time.Time
+	Username            string
+	Subject             string
+	CodeChallenge       string
+	CodeChallengeMethod string
 }
 
 func (s *DefaultSession) SetExpiresAt(key TokenType, exp time.Time) {
@@ -81,6 +95,30 @@ func (s *DefaultSession) GetSubject() string {
 	}
 
 	return s.Subject
+}
+
+func (s *DefaultSession) SetCodeChallenge(code string) {
+	s.CodeChallenge = code
+}
+
+func (s *DefaultSession) GetCodeChallenge() string {
+	if s == nil {
+		return ""
+	}
+
+	return s.CodeChallenge
+}
+
+func (s *DefaultSession) SetCodeChallengeMethod(method string) {
+	s.CodeChallengeMethod = method
+}
+
+func (s *DefaultSession) GetCodeChallengeMethod() string {
+	if s == nil {
+		return ""
+	}
+
+	return s.CodeChallengeMethod
 }
 
 func (s *DefaultSession) Clone() Session {

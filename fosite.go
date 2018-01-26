@@ -88,4 +88,7 @@ type Fosite struct {
 	// data may be exposed, depending on your implementation of Fosite. Such sensitive data might include database error
 	// codes or other information. Proceed with caution!
 	SendDebugMessagesToClients bool
+
+	// RequirePKCEForPublicClients is set to true, error will be emitted when remote client not using PKCE verifier.
+	RequirePKCEForPublicClients bool
 }
