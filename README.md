@@ -16,8 +16,10 @@ includes all flows: code, implicit, hybrid.
 This library considered and implemented:
 * [The OAuth 2.0 Authorization Framework](https://tools.ietf.org/html/rfc6749)
 * [OAuth 2.0 Multiple Response Type Encoding Practices](https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html)
-* [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819) (partially)
-* [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html) (partially)
+* [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
+* [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
+* [OAuth 2.0 for Native Apps](https://tools.ietf.org/html/rfc8252)
+* [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
 
 OAuth2 and OpenID Connect are difficult protocols. If you want quick wins, we strongly encourage you to look at [Hydra](https://github.com/ory-am/hydra).
 Hydra is a secure, high performance, cloud native OAuth2 and OpenID Connect service that integrates with every authentication method
