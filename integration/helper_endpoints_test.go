@@ -97,9 +97,10 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 
 		response, err := oauth2.NewAuthorizeResponse(ctx, ar, session)
 		if err != nil {
-			t.Logf("Access request failed because %s.", err.Error())
+			ca := errors.Cause(err).(*fosite.RFC6749Error)
+			t.Logf("Access request failed because %s - %s - %s.", err, ca.Description, ca.Debug)
 			t.Logf("Request: %s.", ar)
-			// t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
+			t.Logf("Stack: %+v.", err.(stackTracer).StackTrace())
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}

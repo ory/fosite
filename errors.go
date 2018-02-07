@@ -252,3 +252,9 @@ func (e *RFC6749Error) WithDebug(debug string) *RFC6749Error {
 	err.Debug = debug
 	return &err
 }
+
+func (e *RFC6749Error) WithDescription(description string) *RFC6749Error {
+	err := *e
+	err.Description = description
+	return &err
+}
