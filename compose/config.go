@@ -44,8 +44,8 @@ type Config struct {
 	// ScopeStrategy sets the scope strategy that should be supported, for example fosite.WildcardScopeStrategy.
 	ScopeStrategy fosite.ScopeStrategy
 
-	// AllowPublicAuthCodeFlowWithoutPKCE, if set to true, allows public clients to perform authorize code flows without PKCE. Defaults to false.
-	AllowPublicAuthCodeFlowWithoutPKCE bool
+	// EnforcePKCE, if set to true, requires public clients to perform authorize code flows with PKCE. Defaults to false.
+	EnforcePKCE bool
 
 	// EnablePKCEPlainChallengeMethod sets whether or not to allow the plain challenge method (S256 should be used whenever possible, plain is really discouraged). Defaults to false.
 	EnablePKCEPlainChallengeMethod bool

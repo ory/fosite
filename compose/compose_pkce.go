@@ -10,7 +10,7 @@ func OAuth2PKCEFactory(config *Config, storage interface{}, strategy interface{}
 	return &pkce.Handler{
 		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
 		CoreStorage:           storage.(oauth2.CoreStorage),
-		Force:                 !config.AllowPublicAuthCodeFlowWithoutPKCE,
-		EnablePlainChallengeMethod: !config.EnablePKCEPlainChallengeMethod,
+		Force:                 config.EnforcePKCE,
+		EnablePlainChallengeMethod: config.EnablePKCEPlainChallengeMethod,
 	}
 }

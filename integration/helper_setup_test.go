@@ -41,6 +41,15 @@ var fositeStore = &storage.MemoryStore{
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 			Scopes:        []string{"fosite", "offline", "openid"},
 		},
+		"public-client": {
+			ID:            "public-client",
+			Secret:        []byte{},
+			Public:        true,
+			RedirectURIs:  []string{"http://localhost:3846/callback"},
+			ResponseTypes: []string{"id_token", "code"},
+			GrantTypes:    []string{"refresh_token", "authorization_code"},
+			Scopes:        []string{"fosite", "offline", "openid"},
+		},
 	},
 	Users: map[string]storage.MemoryUserRelation{
 		"peter": {

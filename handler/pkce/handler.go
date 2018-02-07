@@ -174,3 +174,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 	return nil
 }
+
+func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+	return nil
+}
