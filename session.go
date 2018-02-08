@@ -28,7 +28,7 @@ type Session interface {
 	//  session.SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(time.Hour))
 	SetExpiresAt(key TokenType, exp time.Time)
 
-	// SetExpiresAt returns expiration time of a token if set, or time.IsZero() if not.
+	// GetExpiresAt returns the expiration time of a token if set, or time.IsZero() if not.
 	//
 	//  session.GetExpiresAt(fosite.AccessToken)
 	GetExpiresAt(key TokenType) time.Time
