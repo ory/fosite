@@ -354,7 +354,7 @@ If you have working examples yourself, please share them with us!
 
 Fosite does not ship a storage implementation. This is intended, because requirements vary with every environment.
 You can find a reference implementation at [storage/memory.go](storage/memory.go).
-This storage fulfills requirements from all OAuth2 and OpenID Conenct handlers.
+This storage fulfills requirements from all OAuth2 and OpenID Connect handlers.
 
 ### Extensible handlers
 
