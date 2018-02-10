@@ -67,7 +67,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 			expectErr: fosite.ErrServerError,
 		},
 		{
-			description: "should fail because persistance failed",
+			description: "should fail because persistence failed",
 			setup: func() {
 				chgen.EXPECT().GenerateAccessToken(nil, areq).AnyTimes().Return("access.ats", "ats", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).Return(errors.New(""))

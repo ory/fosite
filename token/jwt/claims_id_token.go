@@ -80,7 +80,7 @@ func (c *IDTokenClaims) Get(key string) interface{} {
 	return c.ToMap()[key]
 }
 
-// ToMapClaims will return a jwt-go MapClaims representaion
+// ToMapClaims will return a jwt-go MapClaims representation
 func (c IDTokenClaims) ToMapClaims() jwt.MapClaims {
 	return c.ToMap()
 }
