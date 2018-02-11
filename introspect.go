@@ -28,8 +28,8 @@ type TokenIntrospector interface {
 }
 
 func AccessTokenFromRequest(req *http.Request) string {
-	// Acording to https://tools.ietf.org/html/rfc6750 you can pass tokens through:
-	// - Form-Encoded Body Parameter. Recomended, more likely to appear. e.g.: Authorization: Bearer mytoken123
+	// According to https://tools.ietf.org/html/rfc6750 you can pass tokens through:
+	// - Form-Encoded Body Parameter. Recommended, more likely to appear. e.g.: Authorization: Bearer mytoken123
 	// - URI Query Parameter e.g. access_token=mytoken123
 
 	auth := req.Header.Get("Authorization")

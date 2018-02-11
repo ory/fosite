@@ -137,12 +137,12 @@ func (c JWTClaims) Get(key string) interface{} {
 	return c.ToMap()[key]
 }
 
-// ToMapClaims will return a jwt-go MapClaims representaion
+// ToMapClaims will return a jwt-go MapClaims representation
 func (c JWTClaims) ToMapClaims() jwt.MapClaims {
 	return c.ToMap()
 }
 
-// FromMapClaims will populate claims from a jwt-go MapClaims representaion
+// FromMapClaims will populate claims from a jwt-go MapClaims representation
 func (c *JWTClaims) FromMapClaims(mc jwt.MapClaims) {
 	c.FromMap(mc)
 }
