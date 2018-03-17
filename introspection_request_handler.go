@@ -127,32 +127,32 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 		}
 
 		if _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing, malformed, or credentials used are invalid"))
 		}
 	} else {
 		id, secret, ok := r.BasicAuth()
 		if !ok {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing"))
 		}
 
 		clientID, err := url.QueryUnescape(id)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("Unable to decode OAuth 2.0 Client ID from HTTP basic authorization header"))
 		}
 
 		clientSecret, err := url.QueryUnescape(secret)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("Unable to decode OAuth 2.0 Client Secret from HTTP basic authorization header"))
 		}
 
 		client, err := f.Store.GetClient(ctx, clientID)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("Unable to find OAuth 2.0 Client from HTTP basic authorization header"))
 		}
 
 		// Enforce client authentication
 		if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing.WithDebug(malformed or credentials used are invalid"))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("OAuth 2.0 Client credentials are invalid"))
 		}
 	}
 
