@@ -40,7 +40,7 @@ imaginable and is built on top of Fosite.
     - [Scopes](#scopes)
     - [Quickstart](#quickstart)
     - [Code Examples](#code-examples)
-    - [Exemplary Storage Implementation](#exemplary-storage-implementation)
+    - [Example Storage Implementation](#example-storage-implementation)
     - [Extensible handlers](#extensible-handlers)
     - [JWT Introspection](#jwt-introspection)
   - [Contribute](#contribute)
@@ -220,7 +220,7 @@ import "github.com/ory/fosite"
 import "github.com/ory/fosite/compose"
 import "github.com/ory/fosite/storage"
 
-// This is the exemplary storage that contains:
+// This is the example storage that contains:
 // * an OAuth2 Client with id "my-client" and secret "foobar" capable of all oauth2 and open id connect grant and response types.
 // * a User for the resource owner password credentials grant type with usename "peter" and password "secret".
 //
@@ -230,19 +230,24 @@ var storage = storage.NewMemoryStore()
 // This secret is being used to sign access and refresh tokens as well as authorize codes.
 var secret = []byte{"my super secret password"}
 
+privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+if err != nil {
+  panic("unable to create private key")
+}
+
 // check the api docs of compose.Config for further configuration options
 var config = compose.Config {
   	AccessTokenLifespan: time.Minute * 30,
   	// ...
 }
 
-var oauth2Provider = compose.ComposeAllEnabled(config *Config, storage, secret, privateKey)
+var oauth2Provider = compose.ComposeAllEnabled(config, storage, secret, privateKey)
 
 // The authorize endpoint is usually at "https://mydomain.com/oauth2/auth".
 func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// This context will be passed to all methods. It doesn't fulfill a real purpose in the standard library but could be used
 	// to abort database lookups or similar things.
-	ctx := NewContext()
+	ctx := req.Context()
 
 	// Let's create an AuthorizeRequest object!
 	// It will analyze the request and extract important information like scopes, response type and others.
@@ -251,7 +256,7 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 		oauth2Provider.WriteAuthorizeError(rw, ar, err)
 		return
 	}
-	
+
 	// Normally, this would be the place where you would check if the user is logged in and gives his consent.
 	// We're simplifying things and just checking if the request includes a valid username and password
 	if req.Form.Get("username") != "peter" {
@@ -269,12 +274,12 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 
 	// Now that the user is authorized, we set up a session. When validating / looking up tokens, we additionally get
 	// the session. You can store anything you want in it.
-	
+
     // The session will be persisted by the store and made available when e.g. validating tokens or handling token endpoint requests.
-    // The default OAuth2 and OpenID Connect handlers require the session to implement a few methods. Apart from that, the 
+    // The default OAuth2 and OpenID Connect handlers require the session to implement a few methods. Apart from that, the
     // session struct can be anything you want it to be.
 	mySessionData := &fosite.DefaultSession{
-		Username: req.Form.Get("username")
+		Username: req.Form.Get("username"),
 	}
 
 	// It's also wise to check the requested scopes, e.g.:
@@ -298,7 +303,7 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 
 // The token endpoint is usually at "https://mydomain.com/oauth2/token"
 func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
-	ctx := NewContext()
+	ctx := req.Context()
 	mySessionData := new(fosite.DefaultSession)
 
 	// This will create an access request object and iterate through the registered TokenEndpointHandlers to validate the request.
@@ -307,8 +312,8 @@ func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 		oauth2Provider.WriteAccessError(rw, accessRequest, err)
 		return
 	}
-	
-	if mySessionData.UserID == "super-admin-guy" {
+
+	if mySessionData.Username == "super-admin-guy" {
 		// do something...
 	}
 
@@ -327,7 +332,7 @@ func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 }
 
 func someResourceProviderHandlerFunc(rw http.ResponseWriter, req *http.Request) {
-	ctx := NewContext()
+	ctx := req.Context()
 	mySessionData := new(fosite.DefaultSession)
 	requiredScope := "blogposts.create"
 
@@ -335,7 +340,7 @@ func someResourceProviderHandlerFunc(rw http.ResponseWriter, req *http.Request) 
 	if err != nil {
 		// ...
 	}
-	
+
 	// if now error occurred the token + scope is valid and you have access to:
 	// ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetScopes(), mySessionData.UserID, ar.GetRequestedAt(), ...
 }
@@ -350,7 +355,7 @@ Fosite provides integration tests as well as a http server example:
 
 If you have working examples yourself, please share them with us!
 
-### Exemplary Storage Implementation
+### Example Storage Implementation
 
 Fosite does not ship a storage implementation. This is intended, because requirements vary with every environment.
 You can find a reference implementation at [storage/memory.go](storage/memory.go).
@@ -372,7 +377,7 @@ Of course, fosite ships handlers for all OAuth2 and OpenID Connect flows.
  [Authentication using the Hybrid Flow](http://openid.net/specs/openid-connect-core-1_0.html#HybridFlowAuth)
 
 This section is missing documentation and we welcome any contributions in that direction.
- 
+
 ### JWT Introspection
 
 Please note that when using the OAuth2StatelessJWTIntrospectionFactory access token revocation is not possible.
