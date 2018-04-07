@@ -88,14 +88,14 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should fail because lookup fails",
 			setup: func() {
 				aresp.EXPECT().GetCode().AnyTimes().Return("codeexample")
-				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", areq).Return(errors.New(""))
+				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", areq).AnyTimes().Return(nil)
+				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).AnyTimes().Return(nil)
 			},
 		},
 	} {

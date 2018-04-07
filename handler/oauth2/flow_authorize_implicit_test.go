@@ -77,7 +77,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 			description: "should fail because persistence failed",
 			setup: func() {
 				chgen.EXPECT().GenerateAccessToken(nil, areq).AnyTimes().Return("access.ats", "ats", nil)
-				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).Return(errors.New(""))
+				store.EXPECT().CreateAccessTokenSession(nil, "ats", gomock.Eq(areq.Sanitize([]string{}))).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -87,7 +87,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 				areq.State = "state"
 				areq.GrantedScopes = fosite.Arguments{"scope"}
 
-				store.EXPECT().CreateAccessTokenSession(nil, "ats", areq).AnyTimes().Return(nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "ats", gomock.Eq(areq.Sanitize([]string{}))).AnyTimes().Return(nil)
 
 				aresp.EXPECT().AddFragment("access_token", "access.ats")
 				aresp.EXPECT().AddFragment("expires_in", gomock.Any())

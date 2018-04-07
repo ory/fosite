@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
+ * Copyright © 2017-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,20 @@
  * limitations under the License.
  *
  * @author		Aeneas Rekkas <aeneas+oss@aeneas.io>
- * @copyright 	2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
+ * @Copyright 	2017-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
  * @license 	Apache-2.0
  *
  */
 
-package compose
+package pkce
 
 import (
-	"github.com/ory/fosite/handler/oauth2"
-	"github.com/ory/fosite/handler/pkce"
+	"context"
+	"github.com/ory/fosite"
 )
 
-// OAuth2PKCEFactory creates a PKCE handler.
-func OAuth2PKCEFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
-	return &pkce.Handler{
-		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
-		Storage:               storage.(pkce.PKCERequestStorage),
-		Force:                 config.EnforcePKCE,
-		EnablePlainChallengeMethod: config.EnablePKCEPlainChallengeMethod,
-	}
+type PKCERequestStorage interface {
+	GetPKCERequestSession(ctx context.Context, signature string, session fosite.Session) (fosite.Requester, error)
+	CreatePKCERequestSession(ctx context.Context, signature string, requester fosite.Requester) error
+	DeletePKCERequestSession(ctx context.Context, signature string) error
 }

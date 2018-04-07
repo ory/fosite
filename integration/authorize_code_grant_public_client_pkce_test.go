@@ -38,6 +38,7 @@ import (
 	"github.com/magiconair/properties/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
+	"io/ioutil"
 )
 
 func TestAuthorizeCodeFlowWithPublicClientAndPKCE(t *testing.T) {
@@ -64,9 +65,10 @@ func runAuthorizeCodeGrantWithPublicClientAndPKCETest(t *testing.T, strategy int
 	var authCodeUrl string
 	var verifier string
 	for k, c := range []struct {
-		description    string
-		setup          func()
-		authStatusCode int
+		description     string
+		setup           func()
+		authStatusCode  int
+		tokenStatusCode int
 	}{
 		{
 			description: "should fail because no challenge was given",
@@ -83,6 +85,15 @@ func runAuthorizeCodeGrantWithPublicClientAndPKCETest(t *testing.T, strategy int
 			},
 			authStatusCode: http.StatusOK,
 		},
+		{
+			description: "should fail because the verifier is mismatching",
+			setup: func() {
+				verifier = "failchallenge"
+				authCodeUrl = oauthClient.AuthCodeURL("12345678901234567890") + "&code_challenge=somechallenge"
+			},
+			authStatusCode:  http.StatusOK,
+			tokenStatusCode: http.StatusBadRequest,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
 			c.setup()
@@ -91,13 +102,14 @@ func runAuthorizeCodeGrantWithPublicClientAndPKCETest(t *testing.T, strategy int
 
 			resp, err := http.Get(authCodeUrl)
 			require.NoError(t, err)
-			require.Equal(t, c.authStatusCode, resp.StatusCode)
+			require.Equal(t, resp.StatusCode, c.authStatusCode)
 
 			if resp.StatusCode == http.StatusOK {
 				// This should fail because no verifier was given
-				_, err := oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
-				require.Error(t, err)
+				//_, err := oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
+				//require.Error(t, err)
 				//require.Empty(t, token.AccessToken)
+				t.Logf("Got redirect url: %s", resp.Request.URL)
 
 				resp, err := http.PostForm(ts.URL+"/token", url.Values{
 					"code":          {resp.Request.URL.Query().Get("code")},
@@ -109,9 +121,22 @@ func runAuthorizeCodeGrantWithPublicClientAndPKCETest(t *testing.T, strategy int
 				require.NoError(t, err)
 				defer resp.Body.Close()
 
+				body, err := ioutil.ReadAll(resp.Body)
+				require.NoError(t, err)
+
+				if c.tokenStatusCode != 0 {
+					require.Equal(t, c.tokenStatusCode, resp.StatusCode)
+					token := goauth.Token{}
+					require.NoError(t, json.Unmarshal(body, &token))
+					require.Empty(t, token.AccessToken)
+					return
+				}
+
 				assert.Equal(t, resp.StatusCode, http.StatusOK)
 				token := goauth.Token{}
-				require.NoError(t, json.NewDecoder(resp.Body).Decode(&token))
+				require.NoError(t, json.Unmarshal(body, &token))
+
+				require.NotEmpty(t, token.AccessToken, "Got body: %s", string(body))
 
 				httpClient := oauthClient.Client(goauth.NoContext, &token)
 				resp, err = httpClient.Get(ts.URL + "/info")

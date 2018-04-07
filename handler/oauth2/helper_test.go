@@ -71,14 +71,14 @@ func TestIssueAccessToken(t *testing.T) {
 		{
 			mock: func() {
 				accessStrat.EXPECT().GenerateAccessToken(nil, areq).Return("token", "signature", nil)
-				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", areq).Return(errors.New(""))
+				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", gomock.Eq(areq.Sanitize([]string{}))).Return(errors.New(""))
 			},
 			err: errors.New(""),
 		},
 		{
 			mock: func() {
 				accessStrat.EXPECT().GenerateAccessToken(nil, areq).Return("token", "signature", nil)
-				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", areq).Return(nil)
+				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 			},
 			err: nil,
 		},

@@ -39,7 +39,7 @@ type Handler struct {
 	EnablePlainChallengeMethod bool
 
 	AuthorizeCodeStrategy oauth2.AuthorizeCodeStrategy
-	CoreStorage           oauth2.CoreStorage
+	Storage               PKCERequestStorage
 }
 
 func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -54,7 +54,24 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 
 	challenge := ar.GetRequestForm().Get("code_challenge")
 	method := ar.GetRequestForm().Get("code_challenge_method")
-	return c.validate(challenge, method)
+	if err := c.validate(challenge, method); err != nil {
+		return err
+	}
+
+	code := resp.GetCode()
+	if len(code) == 0 {
+		return errors.WithStack(fosite.ErrServerError.WithDebug("The PKCE handler must be loaded after the authorize code handler"))
+	}
+
+	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
+	if err := c.Storage.CreatePKCERequestSession(ctx, signature, ar.Sanitize([]string{
+		"code_challenge",
+		"code_challenge_method",
+	})); err != nil {
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+	}
+
+	return nil
 }
 
 func (c *Handler) validate(challenge, method string) error {
@@ -101,7 +118,6 @@ func (c *Handler) validate(challenge, method string) error {
 }
 
 func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	// This let's us define multiple response types, for example open id connect's id_token
 	if !request.GetGrantTypes().Exact("authorization_code") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -112,8 +128,14 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
-	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
-	if err != nil {
+	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, signature, request.GetSession())
+	if errors.Cause(err) == fosite.ErrNotFound {
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDescription("Unable to find initial PKCE data tied to this request").WithDebug(err.Error()))
+	} else if err != nil {
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+	}
+
+	if err := c.Storage.DeletePKCERequestSession(ctx, signature); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 

@@ -150,7 +150,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				areq.Session = &fosite.DefaultSession{}
 				areq.GrantTypes = fosite.Arguments{"password"}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
-				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 			},
 			expect: func() {
 				assert.Nil(t, aresp.GetExtra("refresh_token"), "unexpected refresh token")
@@ -162,9 +162,9 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				areq.GrantScope("offline")
 				rtstr.EXPECT().GenerateRefreshToken(nil, areq).Return(mockRT, "bar", nil)
-				store.EXPECT().CreateRefreshTokenSession(nil, "bar", areq).Return(nil)
+				store.EXPECT().CreateRefreshTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
-				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 			},
 			expect: func() {
 				assert.NotNil(t, aresp.GetExtra("refresh_token"), "expected refresh token")

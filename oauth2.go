@@ -210,7 +210,11 @@ type Requester interface {
 	// GetRequestForm returns the request's form input.
 	GetRequestForm() url.Values
 
+	// Merge merges the argument into the method receiver.
 	Merge(requester Requester)
+
+	// Sanitize returns a sanitized clone of the request which can be used for storage.
+	Sanitize(allowedParameters []string) Requester
 }
 
 // AccessRequester is a token endpoint's request context.

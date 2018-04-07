@@ -35,6 +35,14 @@ type OpenIDConnectExplicitHandler struct {
 	*IDTokenHandleHelper
 }
 
+var oidcParameters = []string{"grant_type",
+	"max_age",
+	"prompt",
+	"acr_values",
+	"id_token_hint",
+	"nonce",
+}
+
 func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	if !(ar.GetGrantedScopes().Has("openid") && ar.GetResponseTypes().Exact("code")) {
 		return nil
@@ -48,7 +56,7 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("Authorization code has not been issued yet"))
 	}
 
-	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar); err != nil {
+	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar.Sanitize(oidcParameters)); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 

@@ -131,7 +131,7 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 				areq.Session = &fosite.DefaultSession{}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"client_credentials"}}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return("tokenfoo.bar", "bar", nil)
-				store.EXPECT().CreateAccessTokenSession(nil, "bar", areq).Return(nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 			},
 		},
 	} {
