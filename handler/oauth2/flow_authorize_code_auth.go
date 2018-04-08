@@ -49,6 +49,10 @@ type AuthorizeExplicitGrantHandler struct {
 	AccessTokenLifespan time.Duration
 
 	ScopeStrategy fosite.ScopeStrategy
+
+	// SanitationWhiteList is a whitelist of form values that are required by the token endpoint. These values
+	// are safe for storage in a database (cleartext).
+	SanitationWhiteList []string
 }
 
 func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -82,7 +86,7 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 	}
 
 	ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthCodeLifespan))
-	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar); err != nil {
+	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.GetSanitationWhiteList())); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
@@ -91,4 +95,14 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 	resp.AddQuery("scope", strings.Join(ar.GetGrantedScopes(), " "))
 	ar.SetResponseTypeHandled("code")
 	return nil
+}
+
+func (c *AuthorizeExplicitGrantHandler) GetSanitationWhiteList() []string {
+	if len(c.SanitationWhiteList) > 0 {
+		return c.SanitationWhiteList
+	}
+	return []string{
+		"code",
+		"redirect_uri",
+	}
 }

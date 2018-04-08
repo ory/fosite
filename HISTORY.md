@@ -5,6 +5,8 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [0.17.0](#0170)
+- [0.16.0](#0160)
 - [0.15.0](#0150)
 - [0.14.0](#0140)
 - [0.13.0](#0130)
@@ -38,6 +40,37 @@ bumps (`0.1.0` -> `0.2.0`).
 - [0.1.0](#010)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 0.17.0
+
+This release resolves a security issue (reported by [platform.sh](https://www.platform.sh)) related to potential storage implementations.
+This library used to pass all of the request body from both authorize and token endpoints to the storage adapters. As some of these values
+are needed in consecutive requests, some storage adapters chose to drop the full body to the database.
+
+This implied that confidential parameters, such as the `client_secret` which can be passed in the request body since
+version 0.15.0, were stored as key/value pairs in plaintext in the database. While most client secrets are generated
+programmatically (as opposed to set by the user), it's a considerable security issue nonetheless.
+
+The issue has been resolved by sanitizing the request body and only including those values truly required by their
+respective handlers. This lead to two breaking changes in the API:
+
+1. The `fosite.Requester` interface has a new method `Sanitize(allowedParameters []string) Requester` which returns
+a sanitized clone of the method receiver. If you do not use your own `fosite.Requester` implementation, this won't affect you.
+2. If you use the PKCE handler, you will have to add three new methods to your storage implementation. The methods
+to be added work exactly like, for example `CreateAuthorizeCodeSession`. A reference implementation can be found in
+[./storage/memory.go](./storage/memory.go). The method signatures are as follows:
+```go
+type PKCERequestStorage interface {
+	GetPKCERequestSession(ctx context.Context, signature string, session fosite.Session) (fosite.Requester, error)
+	CreatePKCERequestSession(ctx context.Context, signature string, requester fosite.Requester) error
+	DeletePKCERequestSession(ctx context.Context, signature string) error
+}
+```
+
+We encourage you to upgrade to this release and check your storage implementations and potentially remove old data.
+
+We would like to thank [platform.sh](https://www.platform.sh) for sponsoring the development of a patch that resolves this
+issue.
 
 ## 0.16.0
 

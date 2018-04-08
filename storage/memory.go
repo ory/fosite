@@ -40,6 +40,7 @@ type MemoryStore struct {
 	AccessTokens   map[string]fosite.Requester
 	Implicit       map[string]fosite.Requester
 	RefreshTokens  map[string]fosite.Requester
+	PKCES          map[string]fosite.Requester
 	Users          map[string]MemoryUserRelation
 	// In-memory request ID to token signatures
 	AccessTokenRequestIDs  map[string]string
@@ -54,6 +55,7 @@ func NewMemoryStore() *MemoryStore {
 		AccessTokens:   make(map[string]fosite.Requester),
 		Implicit:       make(map[string]fosite.Requester),
 		RefreshTokens:  make(map[string]fosite.Requester),
+		PKCES:          make(map[string]fosite.Requester),
 		Users:          make(map[string]MemoryUserRelation),
 		AccessTokenRequestIDs:  make(map[string]string),
 		RefreshTokenRequestIDs: make(map[string]string),
@@ -89,10 +91,11 @@ func NewExampleStore() *MemoryStore {
 				Password: "secret",
 			},
 		},
-		AuthorizeCodes:         map[string]fosite.Requester{},
-		Implicit:               map[string]fosite.Requester{},
-		AccessTokens:           map[string]fosite.Requester{},
-		RefreshTokens:          map[string]fosite.Requester{},
+		AuthorizeCodes: map[string]fosite.Requester{},
+		Implicit:       map[string]fosite.Requester{},
+		AccessTokens:   map[string]fosite.Requester{},
+		RefreshTokens:  map[string]fosite.Requester{},
+		PKCES:          map[string]fosite.Requester{},
 		AccessTokenRequestIDs:  map[string]string{},
 		RefreshTokenRequestIDs: map[string]string{},
 	}
@@ -139,6 +142,24 @@ func (s *MemoryStore) GetAuthorizeCodeSession(_ context.Context, code string, _ 
 
 func (s *MemoryStore) DeleteAuthorizeCodeSession(_ context.Context, code string) error {
 	delete(s.AuthorizeCodes, code)
+	return nil
+}
+
+func (s *MemoryStore) CreatePKCERequestSession(_ context.Context, code string, req fosite.Requester) error {
+	s.PKCES[code] = req
+	return nil
+}
+
+func (s *MemoryStore) GetPKCERequestSession(_ context.Context, code string, _ fosite.Session) (fosite.Requester, error) {
+	rel, ok := s.PKCES[code]
+	if !ok {
+		return nil, fosite.ErrNotFound
+	}
+	return rel, nil
+}
+
+func (s *MemoryStore) DeletePKCERequestSession(_ context.Context, code string) error {
+	delete(s.PKCES, code)
 	return nil
 }
 

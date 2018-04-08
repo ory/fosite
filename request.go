@@ -128,3 +128,21 @@ func (a *Request) Merge(request Requester) {
 		a.Form[k] = v
 	}
 }
+
+func (a *Request) Sanitize(allowedParameters []string) Requester {
+	b := new(Request)
+	allowed := map[string]bool{}
+	for _, v := range allowedParameters {
+		allowed[v] = true
+	}
+
+	*b = *a
+	b.Form = url.Values{}
+	for k := range a.Form {
+		if _, ok := allowed[k]; ok {
+			b.Form.Add(k, a.Form.Get(k))
+		}
+	}
+
+	return b
+}

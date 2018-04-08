@@ -74,3 +74,28 @@ func TestMergeRequest(t *testing.T) {
 	assert.EqualValues(t, a.Form, b.Form)
 	assert.EqualValues(t, a.Session, b.Session)
 }
+
+func TestSanitizeRequest(t *testing.T) {
+	a := &Request{
+		RequestedAt:   time.Now().UTC(),
+		Client:        &DefaultClient{ID: "123"},
+		Scopes:        Arguments{"asdff"},
+		GrantedScopes: []string{"asdf"},
+		Form: url.Values{
+			"foo": []string{"fasdf"},
+			"bar": []string{"fasdf", "fasdf"},
+			"baz": []string{"fasdf"},
+		},
+		Session: new(DefaultSession),
+	}
+
+	b := a.Sanitize([]string{"bar", "baz"})
+	assert.NotEqual(t, a.Form.Encode(), b.GetRequestForm().Encode())
+	assert.Empty(t, b.GetRequestForm().Get("foo"))
+	assert.Equal(t, "fasdf", b.GetRequestForm().Get("bar"))
+	assert.Equal(t, "fasdf", b.GetRequestForm().Get("baz"))
+
+	assert.Equal(t, "fasdf", a.GetRequestForm().Get("bar"))
+	assert.Equal(t, "fasdf", a.GetRequestForm().Get("baz"))
+	assert.Equal(t, "fasdf", a.GetRequestForm().Get("foo"))
+}

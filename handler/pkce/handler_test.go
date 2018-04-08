@@ -29,6 +29,7 @@ import (
 	"testing"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,11 +52,16 @@ func (m *mockCodeStrategy) ValidateAuthorizeCode(ctx context.Context, requester 
 }
 
 func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
-	h := &Handler{}
+	h := &Handler{
+		Storage:               storage.NewMemoryStore(),
+		AuthorizeCodeStrategy: new(oauth2.HMACSHAStrategy),
+	}
 	w := fosite.NewAuthorizeResponse()
 	r := fosite.NewAuthorizeRequest()
 	c := &fosite.DefaultClient{}
 	r.Client = c
+
+	w.AddQuery("code", "foo")
 
 	r.Form.Add("code_challenge", "challenge")
 	r.Form.Add("code_challenge_method", "plain")
@@ -86,7 +92,7 @@ func TestPKCEHandlerValidate(t *testing.T) {
 	s := storage.NewMemoryStore()
 	ms := &mockCodeStrategy{}
 	h := &Handler{
-		CoreStorage: s, AuthorizeCodeStrategy: ms,
+		Storage: s, AuthorizeCodeStrategy: ms,
 	}
 	pc := &fosite.DefaultClient{Public: true}
 
@@ -121,7 +127,7 @@ func TestPKCEHandlerValidate(t *testing.T) {
 		{
 			d:         "fails because invalid code",
 			grant:     "authorization_code",
-			expectErr: fosite.ErrServerError,
+			expectErr: fosite.ErrInvalidGrant,
 			client:    pc,
 			code:      "invalid-code-2",
 		},
@@ -221,7 +227,7 @@ func TestPKCEHandlerValidate(t *testing.T) {
 			ar := fosite.NewAuthorizeRequest()
 			ar.Form.Add("code_challenge", tc.challenge)
 			ar.Form.Add("code_challenge_method", tc.method)
-			require.NoError(t, s.CreateAuthorizeCodeSession(nil, fmt.Sprintf("valid-code-%d", k), ar))
+			require.NoError(t, s.CreatePKCERequestSession(nil, fmt.Sprintf("valid-code-%d", k), ar))
 
 			r := fosite.NewAccessRequest(nil)
 			r.Client = tc.client

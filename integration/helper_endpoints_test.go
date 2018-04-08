@@ -84,7 +84,7 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", ar)
-			// t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
+			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}
@@ -144,7 +144,7 @@ func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw 
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)
-			// t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
+			t.Logf("Stack: %+v.", err.(stackTracer).StackTrace())
 			provider.WriteAccessError(rw, accessRequest, err)
 			return
 		}
@@ -157,7 +157,7 @@ func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw 
 		if err != nil {
 			t.Logf("Access request failed because %s.", err.Error())
 			t.Logf("Request: %s.", accessRequest)
-			// t.Logf("Stack: %v.", err.(stackTracer).StackTrace())
+			t.Logf("Stack: %s.", err.(stackTracer).StackTrace())
 			provider.WriteAccessError(rw, accessRequest, err)
 			return
 		}
