@@ -135,3 +135,19 @@ func TestWildcardScopeStrategy(t *testing.T) {
 	assert.True(t, strategy(scopes, "offline"))
 	assert.True(t, strategy(scopes, "openid"))
 }
+
+func TestExactScopeStrategy2ScopeStrategy(t *testing.T) {
+	var strategy ScopeStrategy = ExactScopeStrategy
+
+	scopes := []string{"foo.bar.baz", "foo.bar"}
+	assert.True(t, strategy(scopes, "foo.bar.baz"))
+	assert.True(t, strategy(scopes, "foo.bar"))
+
+	assert.False(t, strategy(scopes, "foo.bar.baz.baz"))
+	assert.False(t, strategy(scopes, "foo.bar.bar"))
+
+	assert.False(t, strategy(scopes, "foo.bar.baz1"))
+	assert.False(t, strategy(scopes, "foo.bar1"))
+
+	assert.False(t, strategy([]string{}, "foo"))
+}

@@ -56,6 +56,16 @@ func HierarchicScopeStrategy(haystack []string, needle string) bool {
 	return false
 }
 
+func ExactScopeStrategy(haystack []string, needle string) bool {
+	for _, this := range haystack {
+		if needle == this {
+			return true
+		}
+	}
+
+	return false
+}
+
 func WildcardScopeStrategy(matchers []string, needle string) bool {
 	needleParts := strings.Split(needle, ".")
 	for _, matcher := range matchers {
