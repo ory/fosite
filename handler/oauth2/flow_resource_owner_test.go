@@ -75,7 +75,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(fosite.ErrNotFound)
 			},
-			expectErr: fosite.ErrInvalidRequest,
+			expectErr: fosite.ErrRequestUnauthorized,
 		},
 		{
 			description: "should fail because because error on lookup",

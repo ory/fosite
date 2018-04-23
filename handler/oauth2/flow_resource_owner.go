@@ -58,7 +58,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	if username == "" || password == "" {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Username or password missing"))
 	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrRequestUnauthorized.WithDebug(err.Error()))
 	} else if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
