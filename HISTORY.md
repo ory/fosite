@@ -41,6 +41,16 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.18.0
+
+This release allows the introspection handler to return the token type (e.g. `access_token`, `refresh_token`) of the
+introspected token. To achieve that, some breaking API changes have been introduced:
+
+* `OAuth2.IntrospectToken(ctx context.Context, token string, tokenType TokenType, session Session, scope ...string) (AccessRequester, error)` is now `OAuth2.IntrospectToken(ctx context.Context, token string, tokenType TokenType, session Session, scope ...string) (TokenType, AccessRequester, error)`.
+* `TokenIntrospector.IntrospectToken(ctx context.Context, token string, tokenType TokenType, accessRequest AccessRequester, scopes []string) (error)` is now `TokenIntrospector.IntrospectToken(ctx context.Context, token string, tokenType TokenType, accessRequest AccessRequester, scopes []string) (TokenType, error)`.
+
+This patch also resolves a misconfigured json key in the `IntrospectionResponse` struct. `AccessRequester AccessRequester json:",extra"` is now properly declared as `AccessRequester AccessRequester json:"extra"`.
+
 ## 0.17.0
 
 This release resolves a security issue (reported by [platform.sh](https://www.platform.sh)) related to potential storage implementations.

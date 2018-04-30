@@ -126,8 +126,10 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("Bearer and introspection token are identical"))
 		}
 
-		if _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
+		if tt, _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header missing, malformed, or credentials used are invalid"))
+		} else if tt != "" && tt != AccessToken {
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithDebug("HTTP Authorization header did not provide a valid access token"))
 		}
 	} else {
 		id, secret, ok := r.BasicAuth()
@@ -156,7 +158,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 		}
 	}
 
-	ar, err := f.IntrospectToken(ctx, token, TokenType(tokenType), session, strings.Split(scope, " ")...)
+	tt, ar, err := f.IntrospectToken(ctx, token, TokenType(tokenType), session, strings.Split(scope, " ")...)
 	if err != nil {
 		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInactiveToken.WithDebug(fmt.Sprintf("Validator returned error %s", err.Error())))
 	}
@@ -164,12 +166,14 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 	return &IntrospectionResponse{
 		Active:          true,
 		AccessRequester: ar,
+		TokenType:       tt,
 	}, nil
 }
 
 type IntrospectionResponse struct {
 	Active          bool            `json:"active"`
-	AccessRequester AccessRequester `json:",extra"`
+	AccessRequester AccessRequester `json:"extra"`
+	TokenType       TokenType       `json:"token_type,omitempty"`
 }
 
 func (r *IntrospectionResponse) IsActive() bool {
@@ -178,4 +182,8 @@ func (r *IntrospectionResponse) IsActive() bool {
 
 func (r *IntrospectionResponse) GetAccessRequester() AccessRequester {
 	return r.AccessRequester
+}
+
+func (r *IntrospectionResponse) GetTokenType() TokenType {
+	return r.TokenType
 }

@@ -65,7 +65,7 @@ func tokenIntrospectionHandler(t *testing.T, oauth2 fosite.OAuth2Provider, sessi
 func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
-		if _, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session); err != nil {
+		if _, _, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session); err != nil {
 			t.Logf("Info request failed because `%s`.", err.Error())
 			// t.Logf("Stack: %s", err.(stackTracer).StackTrace())
 			http.Error(rw, errors.Cause(err).(*fosite.RFC6749Error).Description, errors.Cause(err).(*fosite.RFC6749Error).Code)

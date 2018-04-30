@@ -31,7 +31,7 @@ import (
 )
 
 type TokenIntrospector interface {
-	IntrospectToken(ctx context.Context, token string, tokenType TokenType, accessRequest AccessRequester, scopes []string) error
+	IntrospectToken(ctx context.Context, token string, tokenType TokenType, accessRequest AccessRequester, scopes []string) (TokenType, error)
 }
 
 func AccessTokenFromRequest(req *http.Request) string {
@@ -54,24 +54,27 @@ func AccessTokenFromRequest(req *http.Request) string {
 	return split[1]
 }
 
-func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType TokenType, session Session, scopes ...string) (AccessRequester, error) {
+func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType TokenType, session Session, scopes ...string) (TokenType, AccessRequester, error) {
 	var found bool = false
+	var foundTokenType TokenType = ""
 
 	ar := NewAccessRequest(session)
 	for _, validator := range f.TokenIntrospectionHandlers {
-		if err := errors.Cause(validator.IntrospectToken(ctx, token, tokenType, ar, scopes)); err == nil {
+		tt, err := validator.IntrospectToken(ctx, token, tokenType, ar, scopes)
+		if err := errors.Cause(err); err == nil {
 			found = true
+			foundTokenType = tt
 		} else if err.Error() == ErrUnknownRequest.Error() {
 			// Nothing to do
 		} else if err != nil {
 			rfcerr := ErrorToRFC6749Error(err)
-			return nil, errors.WithStack(rfcerr.WithDebug("A validator returned an error"))
+			return "", nil, errors.WithStack(rfcerr.WithDebug("A validator returned an error"))
 		}
 	}
 
 	if !found {
-		return nil, errors.WithStack(ErrRequestUnauthorized.WithDebug("No validator felt responsible for validating the token"))
+		return "", nil, errors.WithStack(ErrRequestUnauthorized.WithDebug("No validator felt responsible for validating the token"))
 	}
 
-	return ar, nil
+	return foundTokenType, ar, nil
 }

@@ -116,7 +116,7 @@ func TestIntrospectJWT(t *testing.T) {
 			}
 
 			areq := fosite.NewAccessRequest(nil)
-			err := v.IntrospectToken(nil, c.token(), fosite.AccessToken, areq, c.scopes)
+			_, err := v.IntrospectToken(nil, c.token(), fosite.AccessToken, areq, c.scopes)
 
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())
@@ -145,7 +145,7 @@ func BenchmarkIntrospectJWT(b *testing.B) {
 	areq := fosite.NewAccessRequest(nil)
 
 	for n := 0; n < b.N; n++ {
-		err = v.IntrospectToken(nil, token, fosite.AccessToken, areq, []string{})
+		_, err = v.IntrospectToken(nil, token, fosite.AccessToken, areq, []string{})
 	}
 
 	assert.NoError(b, err)

@@ -37,28 +37,32 @@ type CoreValidator struct {
 	DisableRefreshTokenValidation bool
 }
 
-func (c *CoreValidator) IntrospectToken(ctx context.Context, token string, tokenType fosite.TokenType, accessRequest fosite.AccessRequester, scopes []string) (err error) {
+func (c *CoreValidator) IntrospectToken(ctx context.Context, token string, tokenType fosite.TokenType, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenType, error) {
 	if c.DisableRefreshTokenValidation {
-		return c.introspectAccessToken(ctx, token, accessRequest, scopes)
+		if err := c.introspectAccessToken(ctx, token, accessRequest, scopes); err != nil {
+			return "", err
+		}
+		return fosite.AccessToken, nil
 	}
 
+	var err error
 	switch tokenType {
 	case fosite.RefreshToken:
 		if err = c.introspectRefreshToken(ctx, token, accessRequest, scopes); err == nil {
-			return nil
+			return fosite.RefreshToken, nil
 		} else if err = c.introspectAccessToken(ctx, token, accessRequest, scopes); err == nil {
-			return nil
+			return fosite.AccessToken, nil
 		}
-		return err
+		return "", err
 	}
 
 	if err = c.introspectAccessToken(ctx, token, accessRequest, scopes); err == nil {
-		return nil
+		return fosite.AccessToken, nil
 	} else if err := c.introspectRefreshToken(ctx, token, accessRequest, scopes); err == nil {
-		return nil
+		return fosite.RefreshToken, nil
 	}
 
-	return err
+	return "", err
 }
 
 func matchScopes(ss fosite.ScopeStrategy, granted, scopes []string) error {
