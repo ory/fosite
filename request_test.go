@@ -99,3 +99,18 @@ func TestSanitizeRequest(t *testing.T) {
 	assert.Equal(t, "fasdf", a.GetRequestForm().Get("baz"))
 	assert.Equal(t, "fasdf", a.GetRequestForm().Get("foo"))
 }
+
+func TestIdentifyRequest(t *testing.T) {
+	a := &Request{
+		RequestedAt:   time.Now().UTC(),
+		Client:        &DefaultClient{},
+		Scopes:        Arguments{},
+		GrantedScopes: []string{},
+		Form:          url.Values{"foo": []string{"bar"}},
+		Session:       new(DefaultSession),
+	}
+
+	b := a.Sanitize([]string{})
+	b.GetID()
+	assert.Equal(t, a.ID, b.GetID())
+}
