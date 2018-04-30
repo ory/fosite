@@ -38,10 +38,10 @@ type StatelessJWTValidator struct {
 	ScopeStrategy fosite.ScopeStrategy
 }
 
-func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token string, tokenType fosite.TokenType, accessRequest fosite.AccessRequester, scopes []string) (err error) {
+func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token string, tokenType fosite.TokenType, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenType, error) {
 	or, err := v.JWTAccessTokenStrategy.ValidateJWT(fosite.AccessToken, token)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	for _, scope := range scopes {
@@ -50,10 +50,10 @@ func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token strin
 		}
 
 		if !v.ScopeStrategy(or.GetGrantedScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope)
+			return "", errors.WithStack(fosite.ErrInvalidScope)
 		}
 	}
 
 	accessRequest.Merge(or)
-	return nil
+	return "", nil
 }
