@@ -56,6 +56,9 @@ type Config struct {
 
 	// EnablePKCEPlainChallengeMethod sets whether or not to allow the plain challenge method (S256 should be used whenever possible, plain is really discouraged). Defaults to false.
 	EnablePKCEPlainChallengeMethod bool
+
+	// AllowedPromptValues sets which OpenID Connect prompt values the server supports. Defaults to []string{"login", "none", "consent", "select_account"}.
+	AllowedPromptValues []string
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.

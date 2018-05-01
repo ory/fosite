@@ -50,6 +50,12 @@
   revision = "1f550f6f2f69009f6ae57347c188e0a67cd4e500"
 
 [[projects]]
+  name = "github.com/magiconair/properties"
+  packages = ["assert"]
+  revision = "c3beff4c2358b44d0493c7dda585e7db7ff28ae6"
+  version = "v1.7.6"
+
+[[projects]]
   branch = "master"
   name = "github.com/mohae/deepcopy"
   packages = ["."]
@@ -66,6 +72,15 @@
   packages = ["."]
   revision = "2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496"
   version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/ory/go-convenience"
+  packages = [
+    "stringslice",
+    "stringsx"
+  ]
+  revision = "5f0c7c5dccfb8021c6de1f316a54afe530cdef63"
 
 [[projects]]
   name = "github.com/parnurzeal/gorequest"
@@ -93,43 +108,81 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert","require"]
+  packages = [
+    "assert",
+    "require"
+  ]
   revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
   version = "v1.1.4"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["bcrypt","blowfish"]
+  packages = [
+    "bcrypt",
+    "blowfish"
+  ]
   revision = "2509b142fb2b797aa7587dad548f113b2c0f20ce"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context","context/ctxhttp","idna","publicsuffix"]
+  packages = [
+    "context",
+    "context/ctxhttp",
+    "idna",
+    "publicsuffix"
+  ]
   revision = "4b14673ba32bee7f5ac0f990a48f033919fd418b"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/oauth2"
-  packages = [".","clientcredentials","internal"]
+  packages = [
+    ".",
+    "clientcredentials",
+    "internal"
+  ]
   revision = "bb50c06baba3d0c76f9d125c0719093e315b5b44"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
-  packages = ["collate","collate/build","internal/colltab","internal/gen","internal/tag","internal/triegen","internal/ucd","language","secure/bidirule","transform","unicode/bidi","unicode/cldr","unicode/norm","unicode/rangetable"]
+  packages = [
+    "collate",
+    "collate/build",
+    "internal/colltab",
+    "internal/gen",
+    "internal/tag",
+    "internal/triegen",
+    "internal/ucd",
+    "language",
+    "secure/bidirule",
+    "transform",
+    "unicode/bidi",
+    "unicode/cldr",
+    "unicode/norm",
+    "unicode/rangetable"
+  ]
   revision = "6eab0e8f74e86c598ec3b6fad4888e0c11482d48"
 
 [[projects]]
   name = "google.golang.org/appengine"
-  packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
+  packages = [
+    "internal",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "urlfetch"
+  ]
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
   version = "v1.0.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1ec88100ce674d2223851185b8712fcf94ba459b7b891314b79849ad95916938"
+  inputs-digest = "e321698ec771b2713753c3157127216f1271e4e1611ccd4d949be02b64183971"
   solver-name = "gps-cdcl"
   solver-version = 1

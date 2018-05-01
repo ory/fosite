@@ -92,7 +92,8 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
 		},
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
+		ScopeStrategy:                 fosite.HierarchicScopeStrategy,
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil),
 	}
 	for k, c := range []struct {
 		description string

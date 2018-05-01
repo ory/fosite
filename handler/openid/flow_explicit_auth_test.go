@@ -53,6 +53,7 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: j,
 		},
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil),
 	}
 	for k, c := range []struct {
 		description string

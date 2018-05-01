@@ -36,7 +36,8 @@ import (
 type OpenIDConnectImplicitHandler struct {
 	AuthorizeImplicitGrantTypeHandler *oauth2.AuthorizeImplicitGrantTypeHandler
 	*IDTokenHandleHelper
-	ScopeStrategy fosite.ScopeStrategy
+	ScopeStrategy                 fosite.ScopeStrategy
+	OpenIDConnectRequestValidator *OpenIDConnectRequestValidator
 
 	RS256JWTStrategy *jwt.RS256JWTStrategy
 }
@@ -51,6 +52,10 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use implicit grant type"))
+	}
+
+	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ar); err != nil {
+		return err
 	}
 
 	if ar.GetResponseTypes().Exact("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {

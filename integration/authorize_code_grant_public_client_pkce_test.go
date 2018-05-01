@@ -35,10 +35,11 @@ import (
 	"encoding/json"
 	"net/url"
 
+	"io/ioutil"
+
 	"github.com/magiconair/properties/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
-	"io/ioutil"
 )
 
 func TestAuthorizeCodeFlowWithPublicClientAndPKCE(t *testing.T) {
