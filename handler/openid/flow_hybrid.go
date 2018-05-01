@@ -38,6 +38,7 @@ type OpenIDConnectHybridHandler struct {
 	AuthorizeExplicitGrantHandler     *oauth2.AuthorizeExplicitGrantHandler
 	IDTokenHandleHelper               *IDTokenHandleHelper
 	ScopeStrategy                     fosite.ScopeStrategy
+	OpenIDConnectRequestValidator     *OpenIDConnectRequestValidator
 
 	Enigma *jwt.RS256JWTStrategy
 }
@@ -57,6 +58,10 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the code response type"))
 	} else if ar.GetResponseTypes().Matches("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the id_token response type"))
+	}
+
+	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ar); err != nil {
+		return err
 	}
 
 	sess, ok := ar.GetSession().(Session)

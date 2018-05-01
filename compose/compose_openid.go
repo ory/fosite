@@ -35,6 +35,7 @@ func OpenIDConnectExplicitFactory(config *Config, storage interface{}, strategy 
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues),
 	}
 }
 
@@ -63,6 +64,7 @@ func OpenIDConnectImplicitFactory(config *Config, storage interface{}, strategy 
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues),
 	}
 }
 
@@ -88,5 +90,6 @@ func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy in
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues),
 	}
 }

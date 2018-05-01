@@ -30,7 +30,8 @@ import (
 
 type OpenIDConnectExplicitHandler struct {
 	// OpenIDConnectRequestStorage is the storage for open id connect sessions.
-	OpenIDConnectRequestStorage OpenIDConnectRequestStorage
+	OpenIDConnectRequestStorage   OpenIDConnectRequestStorage
+	OpenIDConnectRequestValidator *OpenIDConnectRequestValidator
 
 	*IDTokenHandleHelper
 }
@@ -54,6 +55,10 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 
 	if len(resp.GetCode()) == 0 {
 		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("Authorization code has not been issued yet"))
+	}
+
+	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ar); err != nil {
+		return err
 	}
 
 	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar.Sanitize(oidcParameters)); err != nil {
