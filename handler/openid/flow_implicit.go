@@ -54,10 +54,6 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use implicit grant type"))
 	}
 
-	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ar); err != nil {
-		return err
-	}
-
 	if ar.GetResponseTypes().Exact("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
 	} else if ar.GetResponseTypes().Matches("token", "id_token") && !ar.GetClient().GetResponseTypes().Has("token", "id_token") {
@@ -74,6 +70,10 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	sess, ok := ar.GetSession().(Session)
 	if !ok {
 		return errors.WithStack(ErrInvalidSession)
+	}
+
+	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ar); err != nil {
+		return err
 	}
 
 	claims := sess.IDTokenClaims()

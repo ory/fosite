@@ -45,6 +45,7 @@ func newIDSession(j *jwt.IDTokenClaims) *defaultSession {
 		DefaultSession: &openid.DefaultSession{
 			Claims:  j,
 			Headers: &jwt.Headers{},
+			Subject: j.Subject,
 		},
 	}
 }
@@ -114,8 +115,8 @@ func TestOpenIDConnectExplicitFlow(t *testing.T) {
 				oauthClient.Scopes = []string{"openid"}
 				return oauthClient.AuthCodeURL("12345678901234567890") + "&nonce=1234567890&prompt=login"
 			},
-			authStatusCode: http.StatusOK,
-			expectTokenErr: "login_required",
+			authStatusCode: http.StatusNotAcceptable, // code from internal test callback handler when error occurs
+			expectAuthErr:  "login_required",
 		},
 		{
 			session: newIDSession(&jwt.IDTokenClaims{

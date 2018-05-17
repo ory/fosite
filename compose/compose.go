@@ -25,6 +25,7 @@ import (
 	"crypto/rsa"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/token/jwt"
 )
 
 type Factory func(config *Config, storage interface{}, strategy interface{}) interface{}
@@ -93,6 +94,9 @@ func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *
 		&CommonStrategy{
 			CoreStrategy:               NewOAuth2HMACStrategy(config, secret),
 			OpenIDConnectTokenStrategy: NewOpenIDConnectStrategy(key),
+			JWTStrategy: &jwt.RS256JWTStrategy{
+				PrivateKey: key,
+			},
 		},
 		nil,
 

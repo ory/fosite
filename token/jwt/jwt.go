@@ -35,6 +35,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+type JWTStrategy interface {
+	Generate(claims jwt.Claims, header Mapper) (string, string, error)
+	Validate(token string) (string, error)
+	GetSignature(token string) (string, error)
+	Hash(in []byte) ([]byte, error)
+	Decode(token string) (*jwt.Token, error)
+	GetSigningMethodLength() int
+}
+
 // RS256JWTStrategy is responsible for generating and validating JWT challenges
 type RS256JWTStrategy struct {
 	PrivateKey *rsa.PrivateKey

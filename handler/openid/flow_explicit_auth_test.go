@@ -48,12 +48,16 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 
 	areq := fosite.NewAuthorizeRequest()
 
+	session := NewDefaultSession()
+	session.Claims.Subject = "foo"
+	areq.Session = session
+
 	h := &OpenIDConnectExplicitHandler{
 		OpenIDConnectRequestStorage: store,
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: j,
 		},
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil),
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.RS256JWTStrategy),
 	}
 	for k, c := range []struct {
 		description string
