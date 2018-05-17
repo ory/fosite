@@ -53,8 +53,9 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			IDTokenStrategy: idStrategy,
 		},
 		ScopeStrategy:                 fosite.HierarchicScopeStrategy,
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil),
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.RS256JWTStrategy),
 	}
+
 	for k, c := range []struct {
 		description string
 		setup       func()
@@ -132,6 +133,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 						Subject: "peter",
 					},
 					Headers: &jwt.Headers{},
+					Subject: "peter",
 				}
 				areq.Form.Add("nonce", "some-random-foo-nonce-wow")
 			},

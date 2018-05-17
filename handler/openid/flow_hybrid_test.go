@@ -93,8 +93,9 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			IDTokenStrategy: idStrategy,
 		},
 		ScopeStrategy:                 fosite.HierarchicScopeStrategy,
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil),
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.RS256JWTStrategy),
 	}
+
 	for k, c := range []struct {
 		description string
 		setup       func()
@@ -133,12 +134,12 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
 					Scopes:        []string{"openid"},
 				}
-				areq.Session = &defaultSession{
+				areq.Session = &DefaultSession{
 					Claims: &jwt.IDTokenClaims{
 						Subject: "peter",
 					},
-					Headers:        &jwt.Headers{},
-					DefaultSession: new(fosite.DefaultSession),
+					Headers: &jwt.Headers{},
+					Subject: "peter",
 				}
 			},
 			expectErr: fosite.ErrInvalidGrant,

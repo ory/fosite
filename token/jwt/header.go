@@ -28,6 +28,10 @@ type Headers struct {
 	Extra map[string]interface{}
 }
 
+func NewHeaders() *Headers {
+	return &Headers{Extra: map[string]interface{}{}}
+}
+
 // ToMap will transform the headers to a map structure
 func (h *Headers) ToMap() map[string]interface{} {
 	var filter = map[string]bool{"alg": true, "typ": true}

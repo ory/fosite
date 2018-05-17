@@ -60,13 +60,13 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the id_token response type"))
 	}
 
-	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ar); err != nil {
-		return err
-	}
-
 	sess, ok := ar.GetSession().(Session)
 	if !ok {
 		return errors.WithStack(ErrInvalidSession)
+	}
+
+	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ar); err != nil {
+		return err
 	}
 
 	client := ar.GetClient()

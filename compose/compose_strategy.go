@@ -33,6 +33,7 @@ import (
 type CommonStrategy struct {
 	oauth2.CoreStrategy
 	openid.OpenIDConnectTokenStrategy
+	jwt.JWTStrategy
 }
 
 func NewOAuth2HMACStrategy(config *Config, secret []byte) *oauth2.HMACSHAStrategy {

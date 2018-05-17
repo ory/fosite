@@ -24,6 +24,7 @@ package compose
 import (
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/token/jwt"
 )
 
 // OpenIDConnectExplicitFactory creates an OpenID Connect explicit ("authorize code flow") grant handler.
@@ -35,7 +36,7 @@ func OpenIDConnectExplicitFactory(config *Config, storage interface{}, strategy 
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)),
 	}
 }
 
@@ -64,7 +65,7 @@ func OpenIDConnectImplicitFactory(config *Config, storage interface{}, strategy 
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)),
 	}
 }
 
@@ -90,6 +91,6 @@ func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy in
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)),
 	}
 }

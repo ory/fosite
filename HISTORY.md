@@ -5,6 +5,8 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [0.19.0](#0190)
+- [0.18.0](#0180)
 - [0.17.0](#0170)
 - [0.16.0](#0160)
 - [0.15.0](#0150)
@@ -40,6 +42,16 @@ bumps (`0.1.0` -> `0.2.0`).
 - [0.1.0](#010)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 0.19.0
+
+This release improves the OpenID Connect vaildation strategy which now properly handles `prompt`, `max_age`, and `id_token_hint`
+at the `/oauth2/auth` endpoint instead of the `/oauth2/token` endpoint.
+
+To achieve this, the `OpenIDConnectRequestValidator` has been modified and now requires a `jwt.JWTStrategy` (implemented by,
+for example `jwt.RS256JWTStrategy`).
+
+The compose package has been updated accordingly. You should not expect any major breaking changes from this release.
 
 ## 0.18.0
 
