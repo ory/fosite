@@ -147,16 +147,16 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 		}
 
 		if maxAge > 0 {
-			if claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now()) {
+			if claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now().UTC()) {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time claim is required when max_age is set and can not be in the future"))
-			} else if claims.AuthTime.Add(time.Second * time.Duration(maxAge)).Before(time.Now()) {
+			} else if claims.AuthTime.Add(time.Second * time.Duration(maxAge)).Before(time.Now().UTC()) {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time does not satisfy max_age time"))
 			}
 		}
 
 		prompt := requester.GetRequestForm().Get("prompt")
 		if prompt != "" {
-			if claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now()) {
+			if claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now().UTC()) {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Unable to determine validity of prompt parameter because auth_time is missing in id token claims"))
 			}
 		}
