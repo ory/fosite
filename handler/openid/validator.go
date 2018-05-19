@@ -107,13 +107,14 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(req fosite.AuthorizeReque
 		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because session subject is empty"))
 	}
 
-	if claims.AuthTime.After(time.Now().UTC()) {
+	// Adds a bit of wiggle room for timing issues
+	if claims.AuthTime.After(time.Now().UTC().Add(time.Second * 5)) {
 		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because authentication time is in the future"))
 	}
 
 	if maxAge > 0 {
 		if claims.AuthTime.IsZero() {
-			return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because authentication time claim is required when max_age is set and can not be in the future"))
+			return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because authentication time claim is required when max_age is set"))
 		} else if claims.AuthTime.Add(time.Second * time.Duration(maxAge)).Before(time.Now()) {
 			return errors.WithStack(fosite.ErrLoginRequired.WithDebug("Failed to validate OpenID Connect request because authentication time does not satisfy max_age time"))
 		}

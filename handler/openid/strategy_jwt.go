@@ -146,9 +146,14 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 			maxAge = 0
 		}
 
+		// Adds a bit of wiggle room for timing issues
+		if claims.AuthTime.After(time.Now().UTC().Add(time.Second * 5)) {
+			return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because authentication time is in the future"))
+		}
+
 		if maxAge > 0 {
-			if claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now().UTC()) {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time claim is required when max_age is set and can not be in the future"))
+			if claims.AuthTime.IsZero() {
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time claim is required when max_age is set"))
 			} else if claims.AuthTime.Add(time.Second * time.Duration(maxAge)).Before(time.Now().UTC()) {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time does not satisfy max_age time"))
 			}
