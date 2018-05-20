@@ -161,7 +161,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 
 		prompt := requester.GetRequestForm().Get("prompt")
 		if prompt != "" {
-			if claims.AuthTime.IsZero() || claims.AuthTime.After(time.Now().UTC()) {
+			if claims.AuthTime.IsZero() {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Unable to determine validity of prompt parameter because auth_time is missing in id token claims"))
 			}
 		}
