@@ -62,7 +62,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* empty request */
 		{
 			desc:          "empty request fails",
-			conf:          &Fosite{Store: store},
+			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
 			r:             &http.Request{},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -72,7 +72,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid redirect uri */
 		{
 			desc:          "invalid redirect uri fails",
-			conf:          &Fosite{Store: store},
+			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
 			query:         url.Values{"redirect_uri": []string{"invalid"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -82,7 +82,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid client */
 		{
 			desc:          "invalid client fails",
-			conf:          &Fosite{Store: store},
+			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
 			query:         url.Values{"redirect_uri": []string{"https://foo.bar/cb"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -92,45 +92,45 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Fosite{Store: store},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
 			query: url.Values{
 				"client_id": []string{"1234"},
 			},
 			expectedError: ErrInvalidRequest,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}, Scopes: []string{}}, nil)
 			},
 		},
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Fosite{Store: store},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
 			query: url.Values{
 				"redirect_uri": []string{""},
 				"client_id":    []string{"1234"},
 			},
 			expectedError: ErrInvalidRequest,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}, Scopes: []string{}}, nil)
 			},
 		},
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Fosite{Store: store},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
 			query: url.Values{
 				"redirect_uri": []string{"https://foo.bar/cb"},
 				"client_id":    []string{"1234"},
 			},
 			expectedError: ErrInvalidRequest,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"invalid"}, Scopes: []string{}}, nil)
 			},
 		},
 		/* no state */
 		{
 			desc: "no state",
-			conf: &Fosite{Store: store},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
 			query: url.Values{
 				"redirect_uri":  []string{"https://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -138,13 +138,13 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidState,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{}}, nil)
 			},
 		},
 		/* short state */
 		{
 			desc: "short state",
-			conf: &Fosite{Store: store},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -153,13 +153,29 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidState,
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{}}, nil)
 			},
+		},
+		/* fails because scope not given */
+		{
+			desc: "should fail because client does not have scope baz",
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar baz"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}}, nil)
+			},
+			expectedError: ErrInvalidScope,
 		},
 		/* success case */
 		{
 			desc: "should pass",
-			conf: &Fosite{Store: store},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -168,14 +184,14 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				"scope":         {"foo bar"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}}, nil)
 			},
 			expect: &AuthorizeRequest{
 				RedirectURI:   redir,
 				ResponseTypes: []string{"code", "token"},
 				State:         "strong-state",
 				Request: Request{
-					Client: &DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}},
+					Client: &DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}},
 					Scopes: []string{"foo", "bar"},
 				},
 			},
