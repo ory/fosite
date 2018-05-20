@@ -50,6 +50,13 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 	request.Client = client
 
+	scope := removeEmpty(strings.Split(r.Form.Get("scope"), " "))
+	for _, permission := range scope {
+		if !c.ScopeStrategy(client.GetScopes(), permission) {
+			return request, errors.WithStack(ErrInvalidScope.WithDebug(fmt.Sprintf("The client is not allowed to request scope %s", permission)))
+		}
+	}
+
 	// Fetch redirect URI from request
 	rawRedirURI, err := GetRedirectURIFromRequestValues(r.Form)
 	if err != nil {
@@ -86,6 +93,6 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	request.State = state
 
 	// Remove empty items from arrays
-	request.SetRequestedScopes(removeEmpty(strings.Split(r.Form.Get("scope"), " ")))
+	request.SetRequestedScopes(scope)
 	return request, nil
 }
