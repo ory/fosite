@@ -25,10 +25,12 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/pborman/uuid"
 )
 
 // IDTokenClaims represent the claims used in open id connect requests
 type IDTokenClaims struct {
+	JTI                                 string
 	Issuer                              string
 	Subject                             string
 	Audience                            string
@@ -50,9 +52,14 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 	ret["iss"] = c.Issuer
 	ret["aud"] = c.Audience
 	ret["nonce"] = c.Nonce
+	ret["jti"] = c.JTI
 
 	if len(c.AccessTokenHash) > 0 {
 		ret["at_hash"] = c.AccessTokenHash
+	}
+
+	if len(c.JTI) == 0 {
+		ret["jti"] = uuid.New()
 	}
 
 	if len(c.CodeHash) > 0 {
