@@ -32,7 +32,6 @@ import (
 	"github.com/mohae/deepcopy"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -220,11 +219,9 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	nonce := requester.GetRequestForm().Get("nonce")
 	// OPTIONAL. String value used to associate a Client session with an ID Token, and to mitigate replay attacks.
 	if len(nonce) == 0 {
-		// skip this check, no nonce provided, let's use a random one.
-		nonce = uuid.New()
-	} else if len(nonce) < fosite.MinParameterEntropy {
+	} else if len(nonce) > 0 && len(nonce) < fosite.MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
-		return "", errors.WithStack(fosite.ErrInsufficientEntropy)
+		return "", errors.WithStack(fosite.ErrInsufficientEntropy.WithDebug("Parameter nonce is set but does not satisfy minimum parameter entropy."))
 	}
 
 	claims.Nonce = nonce

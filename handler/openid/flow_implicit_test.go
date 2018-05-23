@@ -27,6 +27,8 @@ import (
 
 	"fmt"
 
+	"net/url"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
@@ -113,8 +115,36 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			expectErr: fosite.ErrInvalidGrant,
 		},
 		{
+			description: "should not do anything because request requirements are not met",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{"id_token"}
+				areq.Scopes = fosite.Arguments{"openid"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"implicit"},
+					ResponseTypes: fosite.Arguments{"token", "id_token"},
+					Scopes:        []string{"openid", "fosite"},
+				}
+			},
+			expectErr: fosite.ErrInvalidRequest,
+		},
+		{
+			description: "should not do anything because request requirements are not met",
+			setup: func() {
+				areq.Form = url.Values{"nonce": {"short"}}
+				areq.ResponseTypes = fosite.Arguments{"id_token"}
+				areq.Scopes = fosite.Arguments{"openid"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"implicit"},
+					ResponseTypes: fosite.Arguments{"token", "id_token"},
+					Scopes:        []string{"openid", "fosite"},
+				}
+			},
+			expectErr: fosite.ErrInsufficientEntropy,
+		},
+		{
 			description: "should fail because session not set",
 			setup: func() {
+				areq.Form = url.Values{"nonce": {"long-enough"}}
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
 				areq.Scopes = fosite.Arguments{"openid"}
 				areq.Client = &fosite.DefaultClient{
