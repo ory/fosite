@@ -30,6 +30,7 @@ import (
 )
 
 var idTokenClaims = &IDTokenClaims{
+	JTI:             "foo-id",
 	Subject:         "peter",
 	IssuedAt:        time.Now().UTC().Round(time.Second),
 	Issuer:          "fosite",
@@ -51,10 +52,13 @@ func TestIDTokenAssert(t *testing.T) {
 		ToMapClaims().Valid())
 	assert.Error(t, (&IDTokenClaims{ExpiresAt: time.Now().UTC().Add(-time.Hour)}).
 		ToMapClaims().Valid())
+
+	assert.NotEmpty(t, (new(IDTokenClaims)).ToMapClaims()["jti"])
 }
 
 func TestIDTokenClaimsToMap(t *testing.T) {
 	assert.Equal(t, map[string]interface{}{
+		"jti":       idTokenClaims.JTI,
 		"sub":       idTokenClaims.Subject,
 		"iat":       float64(idTokenClaims.IssuedAt.Unix()),
 		"rat":       float64(idTokenClaims.RequestedAt.Unix()),
