@@ -60,6 +60,12 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the id_token response type"))
 	}
 
+	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
+		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Parameter nonce must be set when using the hybrid flow"))
+	} else if len(nonce) < fosite.MinParameterEntropy {
+		return errors.WithStack(fosite.ErrInsufficientEntropy.WithDebug("Parameter nonce is set but does not satisfy minimum parameter entropy"))
+	}
+
 	sess, ok := ar.GetSession().(Session)
 	if !ok {
 		return errors.WithStack(ErrInvalidSession)

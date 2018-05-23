@@ -60,6 +60,12 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token and id_token"))
 	}
 
+	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
+		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Parameter nonce must be set when using the implicit flow"))
+	} else if len(nonce) < fosite.MinParameterEntropy {
+		return errors.WithStack(fosite.ErrInsufficientEntropy.WithDebug("Parameter nonce is set but does not satisfy minimum parameter entropy"))
+	}
+
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {

@@ -27,6 +27,8 @@ import (
 
 	"fmt"
 
+	"net/url"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
@@ -113,8 +115,36 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
+			description: "should fail because nonce not set but required",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{"token", "code"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
+					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
+					Scopes:        []string{"openid"},
+				}
+				areq.GrantedScopes = fosite.Arguments{"openid"}
+			},
+			expectErr: fosite.ErrInvalidRequest,
+		},
+		{
+			description: "should fail because nonce set but too short",
+			setup: func() {
+				areq.Form = url.Values{"nonce": {"short"}}
+				areq.ResponseTypes = fosite.Arguments{"token", "code"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
+					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
+					Scopes:        []string{"openid"},
+				}
+				areq.GrantedScopes = fosite.Arguments{"openid"}
+			},
+			expectErr: fosite.ErrInsufficientEntropy,
+		},
+		{
 			description: "should fail because session not given",
 			setup: func() {
+				areq.Form = url.Values{"nonce": {"long-enough"}}
 				areq.ResponseTypes = fosite.Arguments{"token", "code"}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
@@ -143,18 +173,6 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 				}
 			},
 			expectErr: fosite.ErrInvalidGrant,
-		},
-		{
-			description: "should fail because nonce was not sufficient",
-			setup: func() {
-				areq.Client = &fosite.DefaultClient{
-					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
-					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
-					Scopes:        []string{"openid"},
-				}
-				areq.Form.Set("nonce", "short")
-			},
-			expectErr: fosite.ErrInsufficientEntropy,
 		},
 		{
 			description: "should pass because nonce was set with sufficient entropy",
