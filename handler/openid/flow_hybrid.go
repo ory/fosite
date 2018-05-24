@@ -39,6 +39,7 @@ type OpenIDConnectHybridHandler struct {
 	IDTokenHandleHelper               *IDTokenHandleHelper
 	ScopeStrategy                     fosite.ScopeStrategy
 	OpenIDConnectRequestValidator     *OpenIDConnectRequestValidator
+	OpenIDConnectRequestStorage       OpenIDConnectRequestStorage
 
 	Enigma *jwt.RS256JWTStrategy
 }
@@ -103,6 +104,12 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 			return err
 		}
 		claims.CodeHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2]))
+
+		if ar.GetGrantedScopes().Has("openid") {
+			if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar.Sanitize(oidcParameters)); err != nil {
+				return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+			}
+		}
 	}
 
 	if ar.GetResponseTypes().Has("token") {
