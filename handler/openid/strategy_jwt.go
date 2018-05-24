@@ -153,7 +153,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 		if maxAge > 0 {
 			if claims.AuthTime.IsZero() {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time claim is required when max_age is set"))
-			} else if claims.AuthTime.Add(time.Second * time.Duration(maxAge)).Before(time.Now().UTC()) {
+			} else if claims.AuthTime.Add(time.Second * time.Duration(maxAge)).Before(claims.RequestedAt) {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time does not satisfy max_age time"))
 			}
 		}

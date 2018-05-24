@@ -115,7 +115,7 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(req fosite.AuthorizeReque
 	if maxAge > 0 {
 		if claims.AuthTime.IsZero() {
 			return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because authentication time claim is required when max_age is set"))
-		} else if claims.AuthTime.Add(time.Second * time.Duration(maxAge)).Before(time.Now()) {
+		} else if claims.AuthTime.Add(time.Second * time.Duration(maxAge)).Before(claims.RequestedAt) {
 			return errors.WithStack(fosite.ErrLoginRequired.WithDebug("Failed to validate OpenID Connect request because authentication time does not satisfy max_age time"))
 		}
 	}
