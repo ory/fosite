@@ -96,7 +96,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 		},
 		ScopeStrategy:                 fosite.HierarchicScopeStrategy,
 		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.RS256JWTStrategy),
-		OpenIDConnectRequestStorage: storage.NewMemoryStore(),
+		OpenIDConnectRequestStorage:   storage.NewMemoryStore(),
 	}
 
 	for k, c := range []struct {

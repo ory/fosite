@@ -91,7 +91,7 @@ func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy in
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestStorage: storage.(openid.OpenIDConnectRequestStorage),
+		OpenIDConnectRequestStorage:   storage.(openid.OpenIDConnectRequestStorage),
 		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)),
 	}
 }
