@@ -59,7 +59,7 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 		query.Add("error_hint", rfcerr.Hint)
 	}
 
-	if ar.GetResponseTypes().Exact("token") || len(ar.GetResponseTypes()) > 1 {
+	if !ar.GetResponseTypes().Exact("code") {
 		redirectURI.Fragment = query.Encode()
 	} else {
 		for key, values := range redirectURI.Query() {
