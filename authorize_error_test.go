@@ -213,6 +213,42 @@ func TestWriteAuthorizeError(t *testing.T) {
 				assert.Equal(t, a.String(), b.String())
 			},
 		},
+		{
+			debug: true,
+			err:   ErrInvalidRequest.WithDebug("with-debug"),
+			mock: func(rw *MockResponseWriter, req *MockAuthorizeRequester) {
+				req.EXPECT().IsRedirectURIValid().Return(true)
+				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
+				req.EXPECT().GetState().Return("foostate")
+				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"id_token"}))
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(t *testing.T, k int) {
+				a, _ := url.Parse("https://foobar.com/?foo=bar")
+				a.Fragment = "error=invalid_request&error_debug=with-debug&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate"
+				b, _ := url.Parse(header.Get("Location"))
+				assert.Equal(t, a.String(), b.String())
+			},
+		},
+		{
+			debug: true,
+			err:   ErrInvalidRequest.WithDebug("with-debug"),
+			mock: func(rw *MockResponseWriter, req *MockAuthorizeRequester) {
+				req.EXPECT().IsRedirectURIValid().Return(true)
+				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
+				req.EXPECT().GetState().Return("foostate")
+				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(t *testing.T, k int) {
+				a, _ := url.Parse("https://foobar.com/?foo=bar")
+				a.Fragment = "error=invalid_request&error_debug=with-debug&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate"
+				b, _ := url.Parse(header.Get("Location"))
+				assert.Equal(t, a.String(), b.String())
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			oauth2 := &Fosite{
