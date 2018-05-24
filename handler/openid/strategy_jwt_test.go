@@ -55,8 +55,9 @@ func TestJWTStrategy_GenerateIDToken(t *testing.T) {
 			setup: func() {
 				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims: &jwt.IDTokenClaims{
-						Subject:  "peter",
-						AuthTime: time.Now().UTC(),
+						Subject:     "peter",
+						AuthTime:    time.Now().UTC(),
+						RequestedAt: time.Now().UTC(),
 					},
 					Headers: &jwt.Headers{},
 				})
@@ -117,8 +118,9 @@ func TestJWTStrategy_GenerateIDToken(t *testing.T) {
 			setup: func() {
 				req = fosite.NewAccessRequest(&DefaultSession{
 					Claims: &jwt.IDTokenClaims{
-						Subject:  "peter",
-						AuthTime: time.Now().UTC(),
+						Subject:     "peter",
+						AuthTime:    time.Now().UTC(),
+						RequestedAt: time.Now().UTC(),
 					},
 					Headers: &jwt.Headers{},
 				})
