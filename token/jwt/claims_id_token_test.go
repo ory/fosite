@@ -34,7 +34,7 @@ var idTokenClaims = &IDTokenClaims{
 	Subject:         "peter",
 	IssuedAt:        time.Now().UTC().Round(time.Second),
 	Issuer:          "fosite",
-	Audience:        "tests",
+	Audience:        []string{"tests"},
 	ExpiresAt:       time.Now().UTC().Add(time.Hour).Round(time.Second),
 	AuthTime:        time.Now().UTC(),
 	RequestedAt:     time.Now().UTC(),

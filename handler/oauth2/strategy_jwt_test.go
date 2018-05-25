@@ -52,7 +52,7 @@ var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
 			JWTClaims: &jwt.JWTClaims{
 				Issuer:    "fosite",
 				Subject:   "peter",
-				Audience:  "group0",
+				Audience:  []string{"group0"},
 				IssuedAt:  time.Now().UTC(),
 				NotBefore: time.Now().UTC(),
 				Extra:     make(map[string]interface{}),
@@ -79,7 +79,7 @@ var jwtExpiredCase = func(tokenType fosite.TokenType) *fosite.Request {
 			JWTClaims: &jwt.JWTClaims{
 				Issuer:    "fosite",
 				Subject:   "peter",
-				Audience:  "group0",
+				Audience:  []string{"group0"},
 				IssuedAt:  time.Now().UTC(),
 				NotBefore: time.Now().UTC(),
 				ExpiresAt: time.Now().UTC().Add(-time.Minute),
