@@ -25,6 +25,7 @@ import (
 	"context"
 
 	"github.com/ory/fosite"
+	"github.com/pkg/errors"
 )
 
 type CoreStorage interface {
@@ -33,12 +34,26 @@ type CoreStorage interface {
 	RefreshTokenStorage
 }
 
+// ErrInvalidatedAuthorizeCode is an error indicating that an authorization code has been
+// used previously.
+var ErrInvalidatedAuthorizeCode = errors.New("Authorization code has ben invalidated")
+
+// AuthorizeCodeStorage handles storage requests related to authorization codes.
 type AuthorizeCodeStorage interface {
+	// GetAuthorizeCodeSession stores the authorization request for a given authorization code.
 	CreateAuthorizeCodeSession(ctx context.Context, code string, request fosite.Requester) (err error)
 
+	// GetAuthorizeCodeSession hydrates the session based on the given code and returns the authorization request.
+	// If the authorization code has been invalidated with `InvalidateAuthorizeCodeSession`, this
+	// method should return the ErrInvalidatedAuthorizeCode error.
+	//
+	// Make sure to also return the fosite.Requester value when returning the ErrInvalidatedAuthorizeCode error!
 	GetAuthorizeCodeSession(ctx context.Context, code string, session fosite.Session) (request fosite.Requester, err error)
 
-	DeleteAuthorizeCodeSession(ctx context.Context, code string) (err error)
+	// InvalidateAuthorizeCodeSession is called when an authorize code is being used. The state of the authorization
+	// code should be set to invalid and consecutive requests to GetAuthorizeCodeSession should return the
+	// ErrInvalidatedAuthorizeCode error.
+	InvalidateAuthorizeCodeSession(ctx context.Context, code string) (err error)
 }
 
 type AccessTokenStorage interface {
