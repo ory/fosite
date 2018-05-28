@@ -5,6 +5,7 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [0.20.0](#0200)
 - [0.19.0](#0190)
 - [0.18.0](#0180)
 - [0.17.0](#0170)
