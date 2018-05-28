@@ -29,7 +29,10 @@ import (
 )
 
 var (
-	ErrUnknownRequest = &RFC6749Error{
+	// ErrInvalidatedAuthorizeCode is an error indicating that an authorization code has been
+	// used previously.
+	ErrInvalidatedAuthorizeCode = errors.New("Authorization code has ben invalidated")
+	ErrUnknownRequest           = &RFC6749Error{
 		Name:        errUnknownErrorName,
 		Description: "The handler is not responsible for this request",
 		Code:        http.StatusBadRequest,

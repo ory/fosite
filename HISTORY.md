@@ -43,6 +43,55 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.20.0
+
+This release implements an OAuth 2.0 Best Practice with regards to revoking already issued access and refresh tokens
+if an authorization code is used more than one time.
+
+## Breaking Changes
+
+### JWT Claims
+
+- `github.com/ory/fosite/token/jwt.JWTClaims.Audience` is no longer a `string`, but a string slice `[]string`.
+- `github.com/ory/fosite/handler/openid.IDTokenClaims` is no longer a `string`, but a string slice `[]string`.
+
+### `AuthorizeCodeStorage`
+
+This improves security as, in the event of an authorization code being leaked, all associated tokens are revoked. To
+implement this feature, a breaking change had to be introduced. The `github.com/ory/fosite/handler/oauth2.AuthorizeCodeStorage`
+interface changed as follows:
+
+- `DeleteAuthorizeCodeSession(ctx context.Context, code string) (err error)` has been removed from the interface and
+is no longer used by this library.
+- `InvalidateAuthorizeCodeSession(ctx context.Context, code string) (err error)` has been introduced.
+- The error `github.com/ory/fosite/handler/oauth2.ErrInvalidatedAuthorizeCode` has been added.
+
+The following documentation sheds light on how you should update your storage adapter:
+
+```
+// ErrInvalidatedAuthorizeCode is an error indicating that an authorization code has been
+// used previously.
+var ErrInvalidatedAuthorizeCode = errors.New("Authorization code has ben invalidated")
+
+// AuthorizeCodeStorage handles storage requests related to authorization codes.
+type AuthorizeCodeStorage interface {
+	// GetAuthorizeCodeSession stores the authorization request for a given authorization code.
+	CreateAuthorizeCodeSession(ctx context.Context, code string, request fosite.Requester) (err error)
+
+	// GetAuthorizeCodeSession hydrates the session based on the given code and returns the authorization request.
+	// If the authorization code has been invalidated with `InvalidateAuthorizeCodeSession`, this
+	// method should return the ErrInvalidatedAuthorizeCode error.
+	//
+	// Make sure to also return the fosite.Requester value when returning the ErrInvalidatedAuthorizeCode error!
+	GetAuthorizeCodeSession(ctx context.Context, code string, session fosite.Session) (request fosite.Requester, err error)
+
+	// InvalidateAuthorizeCodeSession is called when an authorize code is being used. The state of the authorization
+	// code should be set to invalid and consecutive requests to GetAuthorizeCodeSession should return the
+	// ErrInvalidatedAuthorizeCode error.
+	InvalidateAuthorizeCodeSession(ctx context.Context, code string) (err error)
+}
+```
+
 ## 0.19.0
 
 This release improves the OpenID Connect vaildation strategy which now properly handles `prompt`, `max_age`, and `id_token_hint`

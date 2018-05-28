@@ -71,16 +71,6 @@ func (_mr *_MockCoreStorageRecorder) DeleteAccessTokenSession(arg0, arg1 interfa
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAccessTokenSession", arg0, arg1)
 }
 
-func (_m *MockCoreStorage) DeleteAuthorizeCodeSession(_param0 context.Context, _param1 string) error {
-	ret := _m.ctrl.Call(_m, "DeleteAuthorizeCodeSession", _param0, _param1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (_mr *_MockCoreStorageRecorder) DeleteAuthorizeCodeSession(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAuthorizeCodeSession", arg0, arg1)
-}
-
 func (_m *MockCoreStorage) DeleteRefreshTokenSession(_param0 context.Context, _param1 string) error {
 	ret := _m.ctrl.Call(_m, "DeleteRefreshTokenSession", _param0, _param1)
 	ret0, _ := ret[0].(error)
@@ -122,4 +112,14 @@ func (_m *MockCoreStorage) GetRefreshTokenSession(_param0 context.Context, _para
 
 func (_mr *_MockCoreStorageRecorder) GetRefreshTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRefreshTokenSession", arg0, arg1, arg2)
+}
+
+func (_m *MockCoreStorage) InvalidateAuthorizeCodeSession(_param0 context.Context, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "InvalidateAuthorizeCodeSession", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockCoreStorageRecorder) InvalidateAuthorizeCodeSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "InvalidateAuthorizeCodeSession", arg0, arg1)
 }

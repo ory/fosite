@@ -43,6 +43,13 @@ func TestAuthorizeCodeFlow(t *testing.T) {
 		runAuthorizeCodeGrantTest(t, strategy)
 	}
 }
+func TestAuthorizeCodeFlowDupeCode(t *testing.T) {
+	for _, strategy := range []oauth2.AccessTokenStrategy{
+		hmacStrategy,
+	} {
+		runAuthorizeCodeGrantDupeCodeTest(t, strategy)
+	}
+}
 
 func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 	f := compose.Compose(new(compose.Config), fositeStore, strategy, nil, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2TokenIntrospectionFactory)
@@ -86,4 +93,39 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 			}
 		})
 	}
+}
+
+func runAuthorizeCodeGrantDupeCodeTest(t *testing.T, strategy interface{}) {
+	f := compose.Compose(new(compose.Config), fositeStore, strategy, nil, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2TokenIntrospectionFactory)
+	ts := mockServer(t, f, &fosite.DefaultSession{})
+	defer ts.Close()
+
+	oauthClient := newOAuth2Client(ts)
+	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
+
+	oauthClient = newOAuth2Client(ts)
+	state := "12345678901234567890"
+
+	resp, err := http.Get(oauthClient.AuthCodeURL(state))
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	token, err := oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
+	require.NoError(t, err)
+	require.NotEmpty(t, token.AccessToken)
+
+	req, err := http.NewRequest("GET", ts.URL+"/info", nil)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
+
+	resp, err = http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+	_, err = oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
+	require.Error(t, err)
+
+	resp, err = http.DefaultClient.Get(ts.URL + "/info")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 }

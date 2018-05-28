@@ -101,15 +101,20 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	}
 
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(requester.GetRequestForm().Get("refresh_token"))
-	if ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil); err != nil {
+	ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
+	if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	} else if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
-	} else if err := c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
+	}
+
+	storeReq := requester.Sanitize([]string{})
+	storeReq.SetID(ts.GetID())
+	if err := c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, storeReq); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
-	} else if err := c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester.Sanitize([]string{})); err != nil {
+	} else if err := c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 

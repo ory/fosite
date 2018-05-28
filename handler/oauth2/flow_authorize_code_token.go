@@ -45,20 +45,25 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
-	if err != nil && errors.Cause(err).Error() == fosite.ErrNotFound.Error() {
-		// If an authorize code is used twice (which is likely the case here), we should try and invalidate any previously
-		// issued access and refresh tokens.
-		// reqID := authorizeRequest.GetID()
-		//
-		var debug string
-		// if revErr := c.TokenRevocationStorage.RevokeAccessToken(ctx, reqID); revErr != nil {
-		// 	debug += revErr.Error() + "\n"
-		// }
-		// if revErr := c.TokenRevocationStorage.RevokeRefreshToken(ctx, reqID); revErr != nil {
-		//	debug += revErr.Error() + "\n"
-		// }
+	if errors.Cause(err) == fosite.ErrInvalidatedAuthorizeCode {
+		if authorizeRequest == nil {
+			return fosite.ErrServerError.
+				WithDescription("Misconfigured code lead to an error that prohibited the OAuth 2.0 Framework from processing this request.").
+				WithDebug("GetAuthorizeCodeSession must return a value for fosite.Requester when returning ErrInvalidatedAuthorizeCode.")
+		}
 
+		//If an authorize code is used twice, we revoke all refresh and access tokens associated with this request.
+		reqID := authorizeRequest.GetID()
+		debug := "The authorization code has already been used."
+		if revErr := c.TokenRevocationStorage.RevokeAccessToken(ctx, reqID); revErr != nil {
+			debug += "Additionally, an error occurred during processing the access token revocation: " + revErr.Error() + "."
+		}
+		if revErr := c.TokenRevocationStorage.RevokeRefreshToken(ctx, reqID); revErr != nil {
+			debug += "Additionally, an error occurred during processing the refresh token revocation: " + revErr.Error() + "."
+		}
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug(debug))
+	} else if err != nil && errors.Cause(err).Error() == fosite.ErrNotFound.Error() {
+		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug(err.Error()))
 	} else if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
@@ -133,7 +138,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		}
 	}
 
-	if err := c.CoreStorage.DeleteAuthorizeCodeSession(ctx, signature); err != nil {
+	if err := c.CoreStorage.InvalidateAuthorizeCodeSession(ctx, signature); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	} else if err := c.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))

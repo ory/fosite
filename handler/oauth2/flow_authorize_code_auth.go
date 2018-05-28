@@ -53,6 +53,8 @@ type AuthorizeExplicitGrantHandler struct {
 	// SanitationWhiteList is a whitelist of form values that are required by the token endpoint. These values
 	// are safe for storage in a database (cleartext).
 	SanitationWhiteList []string
+
+	TokenRevocationStorage TokenRevocationStorage
 }
 
 func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {

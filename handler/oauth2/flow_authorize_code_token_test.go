@@ -149,9 +149,9 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 					err := h.PopulateTokenEndpointResponse(nil, c.areq, aresp)
 
 					if c.expectErr != nil {
-						require.EqualError(t, errors.Cause(err), c.expectErr.Error(), "%v", err)
+						require.EqualError(t, errors.Cause(err), c.expectErr.Error(), "%+v", err)
 					} else {
-						require.NoError(t, err, "%v", err)
+						require.NoError(t, err, "%+v", err)
 					}
 
 					if c.check != nil {
@@ -171,11 +171,11 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			h := AuthorizeExplicitGrantHandler{
-				CoreStorage:           store,
-				AuthorizeCodeStrategy: hmacshaStrategy,
-				ScopeStrategy:         fosite.HierarchicScopeStrategy,
-				//TokenRevocationStorage: store,
-				AuthCodeLifespan: time.Minute,
+				CoreStorage:            store,
+				AuthorizeCodeStrategy:  hmacshaStrategy,
+				ScopeStrategy:          fosite.HierarchicScopeStrategy,
+				TokenRevocationStorage: store,
+				AuthCodeLifespan:       time.Minute,
 			}
 			for i, c := range []struct {
 				areq        *fosite.AccessRequest
@@ -311,6 +311,30 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						require.NoError(t, store.CreateAuthorizeCodeSession(nil, signature, authreq))
 					},
 				},
+				{
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"authorization_code"},
+						Request: fosite.Request{
+							Form: url.Values{},
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"authorization_code"},
+							},
+							GrantedScopes: fosite.Arguments{"foo", "offline"},
+							Session:       &fosite.DefaultSession{},
+							RequestedAt:   time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
+						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
+						require.NoError(t, err)
+						areq.Form.Add("code", code)
+
+						require.NoError(t, store.CreateAuthorizeCodeSession(nil, sig, areq))
+						require.NoError(t, store.InvalidateAuthorizeCodeSession(nil, sig))
+					},
+					description: "should fail because code has been used already",
+					expectErr:   fosite.ErrInvalidGrant,
+				},
 			} {
 				t.Run(fmt.Sprintf("case=%d/description=%s", i, c.description), func(t *testing.T) {
 					if c.setup != nil {
@@ -321,9 +345,9 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 
 					err := h.HandleTokenEndpointRequest(context.Background(), c.areq)
 					if c.expectErr != nil {
-						require.EqualError(t, errors.Cause(err), c.expectErr.Error())
+						require.EqualError(t, errors.Cause(err), c.expectErr.Error(), "%+v", err)
 					} else {
-						require.NoError(t, err)
+						require.NoError(t, err, "%+v", err)
 					}
 				})
 			}

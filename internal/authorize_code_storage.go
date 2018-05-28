@@ -41,16 +41,6 @@ func (_mr *_MockAuthorizeCodeStorageRecorder) CreateAuthorizeCodeSession(arg0, a
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateAuthorizeCodeSession", arg0, arg1, arg2)
 }
 
-func (_m *MockAuthorizeCodeStorage) DeleteAuthorizeCodeSession(_param0 context.Context, _param1 string) error {
-	ret := _m.ctrl.Call(_m, "DeleteAuthorizeCodeSession", _param0, _param1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-func (_mr *_MockAuthorizeCodeStorageRecorder) DeleteAuthorizeCodeSession(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteAuthorizeCodeSession", arg0, arg1)
-}
-
 func (_m *MockAuthorizeCodeStorage) GetAuthorizeCodeSession(_param0 context.Context, _param1 string, _param2 fosite.Session) (fosite.Requester, error) {
 	ret := _m.ctrl.Call(_m, "GetAuthorizeCodeSession", _param0, _param1, _param2)
 	ret0, _ := ret[0].(fosite.Requester)
@@ -60,4 +50,14 @@ func (_m *MockAuthorizeCodeStorage) GetAuthorizeCodeSession(_param0 context.Cont
 
 func (_mr *_MockAuthorizeCodeStorageRecorder) GetAuthorizeCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAuthorizeCodeSession", arg0, arg1, arg2)
+}
+
+func (_m *MockAuthorizeCodeStorage) InvalidateAuthorizeCodeSession(_param0 context.Context, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "InvalidateAuthorizeCodeSession", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeCodeStorageRecorder) InvalidateAuthorizeCodeSession(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "InvalidateAuthorizeCodeSession", arg0, arg1)
 }

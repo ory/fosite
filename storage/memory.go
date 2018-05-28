@@ -35,7 +35,7 @@ type MemoryUserRelation struct {
 
 type MemoryStore struct {
 	Clients        map[string]*fosite.DefaultClient
-	AuthorizeCodes map[string]fosite.Requester
+	AuthorizeCodes map[string]StoreAuthorizeCode
 	IDSessions     map[string]fosite.Requester
 	AccessTokens   map[string]fosite.Requester
 	Implicit       map[string]fosite.Requester
@@ -50,7 +50,7 @@ type MemoryStore struct {
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
 		Clients:        make(map[string]*fosite.DefaultClient),
-		AuthorizeCodes: make(map[string]fosite.Requester),
+		AuthorizeCodes: make(map[string]StoreAuthorizeCode),
 		IDSessions:     make(map[string]fosite.Requester),
 		AccessTokens:   make(map[string]fosite.Requester),
 		Implicit:       make(map[string]fosite.Requester),
@@ -60,6 +60,11 @@ func NewMemoryStore() *MemoryStore {
 		AccessTokenRequestIDs:  make(map[string]string),
 		RefreshTokenRequestIDs: make(map[string]string),
 	}
+}
+
+type StoreAuthorizeCode struct {
+	active bool
+	fosite.Requester
 }
 
 func NewExampleStore() *MemoryStore {
@@ -91,7 +96,7 @@ func NewExampleStore() *MemoryStore {
 				Password: "secret",
 			},
 		},
-		AuthorizeCodes: map[string]fosite.Requester{},
+		AuthorizeCodes: map[string]StoreAuthorizeCode{},
 		Implicit:       map[string]fosite.Requester{},
 		AccessTokens:   map[string]fosite.Requester{},
 		RefreshTokens:  map[string]fosite.Requester{},
@@ -128,7 +133,7 @@ func (s *MemoryStore) GetClient(_ context.Context, id string) (fosite.Client, er
 }
 
 func (s *MemoryStore) CreateAuthorizeCodeSession(_ context.Context, code string, req fosite.Requester) error {
-	s.AuthorizeCodes[code] = req
+	s.AuthorizeCodes[code] = StoreAuthorizeCode{active: true, Requester: req}
 	return nil
 }
 
@@ -137,7 +142,21 @@ func (s *MemoryStore) GetAuthorizeCodeSession(_ context.Context, code string, _ 
 	if !ok {
 		return nil, fosite.ErrNotFound
 	}
-	return rel, nil
+	if !rel.active {
+		return rel, fosite.ErrInvalidatedAuthorizeCode
+	}
+
+	return rel.Requester, nil
+}
+
+func (s *MemoryStore) InvalidateAuthorizeCodeSession(ctx context.Context, code string) error {
+	rel, ok := s.AuthorizeCodes[code]
+	if !ok {
+		return fosite.ErrNotFound
+	}
+	rel.active = false
+	s.AuthorizeCodes[code] = rel
+	return nil
 }
 
 func (s *MemoryStore) DeleteAuthorizeCodeSession(_ context.Context, code string) error {
