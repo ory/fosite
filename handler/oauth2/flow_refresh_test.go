@@ -190,6 +190,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				{
 					description: "should pass",
 					setup: func() {
+						areq.ID = "req-id"
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Scopes = fosite.Arguments{"foo", "bar"}
 						areq.GrantedScopes = fosite.Arguments{"foo", "bar"}
@@ -206,6 +207,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 						_, err := store.GetRefreshTokenSession(nil, signature, nil)
 						require.Error(t, err)
 
+						assert.Equal(t, "req-id", areq.ID)
 						require.NoError(t, strategy.ValidateAccessToken(nil, areq, aresp.GetAccessToken()))
 						require.NoError(t, strategy.ValidateRefreshToken(nil, areq, aresp.ToMap()["refresh_token"].(string)))
 						assert.Equal(t, "bearer", aresp.GetTokenType())

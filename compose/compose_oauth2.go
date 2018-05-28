@@ -29,14 +29,14 @@ import (
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeExplicitGrantHandler{
-		AccessTokenStrategy:   strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:  strategy.(oauth2.RefreshTokenStrategy),
-		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
-		CoreStorage:           storage.(oauth2.CoreStorage),
-		AuthCodeLifespan:      config.GetAuthorizeCodeLifespan(),
-		AccessTokenLifespan:   config.GetAccessTokenLifespan(),
-		ScopeStrategy:         config.GetScopeStrategy(),
-		//TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
+		AuthorizeCodeStrategy:  strategy.(oauth2.AuthorizeCodeStrategy),
+		CoreStorage:            storage.(oauth2.CoreStorage),
+		AuthCodeLifespan:       config.GetAuthorizeCodeLifespan(),
+		AccessTokenLifespan:    config.GetAccessTokenLifespan(),
+		ScopeStrategy:          config.GetScopeStrategy(),
+		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
 	}
 }
 

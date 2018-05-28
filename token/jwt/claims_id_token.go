@@ -50,9 +50,17 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 	var ret = Copy(c.Extra)
 	ret["sub"] = c.Subject
 	ret["iss"] = c.Issuer
-	ret["aud"] = c.Audience
-	ret["nonce"] = c.Nonce
 	ret["jti"] = c.JTI
+
+	if len(c.Audience) > 0 {
+		ret["aud"] = c.Audience
+	} else {
+		ret["aud"] = []string{}
+	}
+
+	if len(c.Nonce) >= 0 {
+		ret["nonce"] = c.Nonce
+	}
 
 	if len(c.AccessTokenHash) > 0 {
 		ret["at_hash"] = c.AccessTokenHash

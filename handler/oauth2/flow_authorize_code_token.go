@@ -45,10 +45,10 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
-	if errors.Cause(err) == ErrInvalidatedAuthorizeCode {
+	if errors.Cause(err) == fosite.ErrInvalidatedAuthorizeCode {
 		if authorizeRequest == nil {
 			return fosite.ErrServerError.
-				WithDescription("A misconfigured code lead to an error that prohibited the OAuth 2.0 Framework from processing this request.").
+				WithDescription("Misconfigured code lead to an error that prohibited the OAuth 2.0 Framework from processing this request.").
 				WithDebug("GetAuthorizeCodeSession must return a value for fosite.Requester when returning ErrInvalidatedAuthorizeCode.")
 		}
 

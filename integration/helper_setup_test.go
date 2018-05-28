@@ -64,7 +64,7 @@ var fositeStore = &storage.MemoryStore{
 			Password: "secret",
 		},
 	},
-	AuthorizeCodes:         map[string]fosite.Requester{},
+	AuthorizeCodes:         map[string]storage.StoreAuthorizeCode{},
 	PKCES:                  map[string]fosite.Requester{},
 	Implicit:               map[string]fosite.Requester{},
 	AccessTokens:           map[string]fosite.Requester{},
