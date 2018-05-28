@@ -65,7 +65,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 
 	// The authorization server MUST verify that the authorization code is valid
 	// This needs to happen after store retrieval for the session to be hydrated properly
-	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
+	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, authorizeRequest, code); err != nil {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug(err.Error()))
 	}
 
