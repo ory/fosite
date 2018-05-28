@@ -33,7 +33,7 @@ type IDTokenClaims struct {
 	JTI                                 string
 	Issuer                              string
 	Subject                             string
-	Audience                            string
+	Audience                            []string
 	Nonce                               string
 	ExpiresAt                           time.Time
 	IssuedAt                            time.Time

@@ -227,7 +227,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	}
 
 	claims.Nonce = nonce
-	claims.Audience = requester.GetClient().GetID()
+	claims.Audience = append(claims.Audience, requester.GetClient().GetID())
 	claims.IssuedAt = time.Now().UTC()
 
 	token, _, err = h.RS256JWTStrategy.Generate(claims.ToMapClaims(), sess.IDTokenHeaders())

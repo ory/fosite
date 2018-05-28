@@ -32,7 +32,7 @@ import (
 type JWTClaims struct {
 	Subject   string
 	Issuer    string
-	Audience  string
+	Audience  []string
 	JTI       string
 	IssuedAt  time.Time
 	NotBefore time.Time
@@ -90,6 +90,8 @@ func (c *JWTClaims) FromMap(m map[string]interface{}) {
 			}
 		case "aud":
 			if s, ok := v.(string); ok {
+				c.Audience = []string{s}
+			} else if s, ok := v.([]string); ok {
 				c.Audience = s
 			}
 		case "iat":

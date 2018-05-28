@@ -16,8 +16,8 @@
 [[projects]]
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
-  revision = "dbeaa9332f19a944acb5736b4456cfcc02140e29"
-  version = "v3.1.0"
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
 
 [[projects]]
   name = "github.com/golang/mock"
@@ -183,6 +183,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e321698ec771b2713753c3157127216f1271e4e1611ccd4d949be02b64183971"
+  inputs-digest = "4c4bbc24daae52c8b043e503caec5d6d8753c6a737e0588eeec017fc455e7eea"
   solver-name = "gps-cdcl"
   solver-version = 1
