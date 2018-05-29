@@ -32,6 +32,7 @@ import (
 	"github.com/mohae/deepcopy"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
+	"github.com/ory/go-convenience/stringsx"
 	"github.com/pkg/errors"
 )
 
@@ -227,7 +228,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	}
 
 	claims.Nonce = nonce
-	claims.Audience = append(claims.Audience, requester.GetClient().GetID())
+	claims.Audience = stringsx.Unique(append(claims.Audience, requester.GetClient().GetID()))
 	claims.IssuedAt = time.Now().UTC()
 
 	token, _, err = h.RS256JWTStrategy.Generate(claims.ToMapClaims(), sess.IDTokenHeaders())
