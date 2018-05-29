@@ -128,6 +128,22 @@ func TestWriteAuthorizeError(t *testing.T) {
 			},
 		},
 		{
+			err: ErrUnsupportedGrantType,
+			mock: func(rw *MockResponseWriter, req *MockAuthorizeRequester) {
+				req.EXPECT().IsRedirectURIValid().Return(true)
+				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
+				req.EXPECT().GetState().Return("foostate")
+				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"foobar"}))
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			checkHeader: func(t *testing.T, k int) {
+				a, _ := url.Parse("https://foobar.com/?foo=bar#error=unsupported_grant_type&error_description=The+authorization+grant+type+is+not+supported+by+the+authorization+server&state=foostate")
+				b, _ := url.Parse(header.Get("Location"))
+				assert.Equal(t, a, b)
+			},
+		},
+		{
 			err: ErrInvalidRequest,
 			mock: func(rw *MockResponseWriter, req *MockAuthorizeRequester) {
 				req.EXPECT().IsRedirectURIValid().Return(true)

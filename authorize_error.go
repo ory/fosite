@@ -25,6 +25,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+
+	"github.com/pkg/errors"
 )
 
 func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
@@ -59,7 +61,7 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 		query.Add("error_hint", rfcerr.Hint)
 	}
 
-	if !ar.GetResponseTypes().Exact("code") {
+	if !ar.GetResponseTypes().Exact("code") && errors.Cause(err) != ErrUnsupportedResponseType {
 		redirectURI.Fragment = query.Encode()
 	} else {
 		for key, values := range redirectURI.Query() {
