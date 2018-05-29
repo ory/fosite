@@ -74,13 +74,13 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/ory/go-convenience"
   packages = [
     "stringslice",
     "stringsx"
   ]
-  revision = "5f0c7c5dccfb8021c6de1f316a54afe530cdef63"
+  revision = "8e5660ff0e4c9c7e0cecd82ea8a87a793ff9ed23"
+  version = "v0.0.3"
 
 [[projects]]
   name = "github.com/parnurzeal/gorequest"
@@ -183,6 +183,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4c4bbc24daae52c8b043e503caec5d6d8753c6a737e0588eeec017fc455e7eea"
+  inputs-digest = "7463dc423c1ad2a7624a26768643791085b84c96a074410a344e2ee7437be6f4"
   solver-name = "gps-cdcl"
   solver-version = 1

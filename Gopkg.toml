@@ -38,6 +38,10 @@
   version = "1.5.0"
 
 [[constraint]]
+  version = "0.0.3"
+  name = "github.com/ory/go-convenience"
+
+[[constraint]]
   branch = "master"
   name = "github.com/gtank/cryptopasta"
 
