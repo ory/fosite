@@ -132,7 +132,7 @@ func authCallbackHandler(t *testing.T) func(rw http.ResponseWriter, req *http.Re
 
 func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
-		req.ParseForm()
+		req.ParseMultipartForm(1 << 20)
 		ctx := fosite.NewContext()
 
 		accessRequest, err := provider.NewAccessRequest(ctx, req, &oauth2.JWTSession{})

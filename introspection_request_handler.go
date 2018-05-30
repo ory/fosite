@@ -114,8 +114,11 @@ import (
 func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, session Session) (IntrospectionResponder, error) {
 	if r.Method != "POST" {
 		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithDebug("HTTP method is not POST"))
-	} else if err := r.ParseForm(); err != nil {
+	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
 		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
+	}
+	if len(r.PostForm) == 0 {
+		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithDebug("missing form body"))
 	}
 
 	token := r.PostForm.Get("token")
