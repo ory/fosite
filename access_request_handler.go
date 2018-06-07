@@ -62,7 +62,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 
 	if r.Method != "POST" {
 		return accessRequest, errors.WithStack(ErrInvalidRequest.WithDebug("HTTP method is not POST"))
-	} else if err := r.ParseForm(); err != nil {
+	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
 		return accessRequest, errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
 	}
 

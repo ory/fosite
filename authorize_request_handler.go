@@ -39,7 +39,7 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 		Request:              *NewRequest(),
 	}
 
-	if err := r.ParseForm(); err != nil {
+	if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
 		return request, errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
 	}
 
