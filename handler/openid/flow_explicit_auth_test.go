@@ -75,7 +75,7 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"code"}
 				areq.Client = &fosite.DefaultClient{
-					ResponseTypes: fosite.Arguments{"code", "id_token"},
+					ResponseTypes: fosite.Arguments{"code"},
 				}
 				areq.Scopes = fosite.Arguments{""}
 			},

@@ -52,9 +52,12 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
 	}
 
-	if !requester.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
-	}
+	// The response type `id_token` is only required when performing the implicit or hybrid flow, see:
+	// https://openid.net/specs/openid-connect-registration-1_0.html
+	//
+	// if !requester.GetClient().GetResponseTypes().Has("id_token") {
+	// 	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
+	// }
 
 	return c.IssueExplicitIDToken(ctx, authorize, responder)
 }

@@ -44,6 +44,35 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.21.0
+
+This release improves compatibility with the OpenID Connect Dynamic Client Registration 1.0 specification.
+
+### Response Type `id_token` no longer required for authorize_code flow
+
+The `authorize_code` [does not require](https://openid.net/specs/openid-connect-registration-1_0.html#ClientMetadata)
+the `id_token` response type to be available when performing the OpenID Connect flow:
+
+> grant_types
+>      OPTIONAL. JSON array containing a list of the OAuth 2.0 Grant Types that the Client is declaring that it will restrict itself to using. The Grant Type values used by OpenID Connect are:
+>
+>          authorization_code: The Authorization Code Grant Type described in OAuth 2.0 Section 4.1.
+>          implicit: The Implicit Grant Type described in OAuth 2.0 Section 4.2.
+>          refresh_token: The Refresh Token Grant Type described in OAuth 2.0 Section 6.
+>
+>      The following table lists the correspondence between response_type values that the Client will use and grant_type values that MUST be included in the registered grant_types list:
+>
+>          code: authorization_code
+>          id_token: implicit
+>          token id_token: implicit
+>          code id_token: authorization_code, implicit
+>          code token: authorization_code, implicit
+>          code token id_token: authorization_code, implicit
+>
+>      If omitted, the default is that the Client will use only the authorization_code Grant Type.
+
+Before this patch, the `id_token` response type was required whenever an ID Token was requested. This patch changes that.
+
 ## 0.20.0
 
 This release implements an OAuth 2.0 Best Practice with regards to revoking already issued access and refresh tokens

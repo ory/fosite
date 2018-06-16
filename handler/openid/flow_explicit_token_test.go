@@ -39,7 +39,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	h := &OpenIDConnectExplicitHandler{}
 	areq := fosite.NewAccessRequest(nil)
 	areq.Client = &fosite.DefaultClient{
-		ResponseTypes: fosite.Arguments{"id_token"},
+	//ResponseTypes: fosite.Arguments{"id_token"},
 	}
 	assert.EqualError(t, h.HandleTokenEndpointRequest(nil, areq), fosite.ErrUnknownRequest.Error())
 }
@@ -79,8 +79,8 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"authorization_code"}
 				areq.Client = &fosite.DefaultClient{
-					GrantTypes:    fosite.Arguments{"authorization_code"},
-					ResponseTypes: fosite.Arguments{"id_token"},
+					GrantTypes: fosite.Arguments{"authorization_code"},
+					//ResponseTypes: fosite.Arguments{"id_token"},
 				}
 				areq.Form.Set("code", "foobar")
 				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", areq).Return(nil, ErrNoSessionFound)
