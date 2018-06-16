@@ -39,7 +39,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	h := &OpenIDConnectExplicitHandler{}
 	areq := fosite.NewAccessRequest(nil)
 	areq.Client = &fosite.DefaultClient{
-	//ResponseTypes: fosite.Arguments{"id_token"},
+		//ResponseTypes: fosite.Arguments{"id_token"},
 	}
 	assert.EqualError(t, h.HandleTokenEndpointRequest(nil, areq), fosite.ErrUnknownRequest.Error())
 }
