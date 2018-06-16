@@ -67,27 +67,14 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 			expectedErr: fosite.ErrInvalidGrant,
 		},
 		{
-			description: "should not pass because client may not ask for id_token",
-			areq: &fosite.AccessRequest{
-				GrantTypes: []string{"refresh_token"},
-				Request: fosite.Request{
-					GrantedScopes: []string{"openid"},
-					Client: &fosite.DefaultClient{
-						GrantTypes: []string{"refresh_token"},
-					},
-				},
-			},
-			expectedErr: fosite.ErrUnknownRequest,
-		},
-		{
 			description: "should pass",
 			areq: &fosite.AccessRequest{
 				GrantTypes: []string{"refresh_token"},
 				Request: fosite.Request{
 					GrantedScopes: []string{"openid"},
 					Client: &fosite.DefaultClient{
-						GrantTypes:    []string{"refresh_token"},
-						ResponseTypes: []string{"id_token"},
+						GrantTypes: []string{"refresh_token"},
+						//ResponseTypes: []string{"id_token"},
 					},
 					Session: &DefaultSession{},
 				},

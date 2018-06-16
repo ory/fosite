@@ -46,9 +46,12 @@ func (c *OpenIDConnectRefreshHandler) HandleTokenEndpointRequest(ctx context.Con
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
 	}
 
-	if !request.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.WithStack(fosite.ErrUnknownRequest.WithDebug("The client is not allowed to use response type id_token"))
-	}
+	// Refresh tokens can only be issued by an authorize_code which in turn disables the need to check if the id_token
+	// response type is enabled by the client.
+	//
+	// if !request.GetClient().GetResponseTypes().Has("id_token") {
+	// 	return errors.WithStack(fosite.ErrUnknownRequest.WithDebug("The client is not allowed to use response type id_token"))
+	// }
 
 	sess, ok := request.GetSession().(Session)
 	if !ok {
