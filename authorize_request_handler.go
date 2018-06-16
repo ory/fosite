@@ -92,6 +92,18 @@ func (c *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 	request.State = state
 
+	if len(request.Form.Get("request")) > 0 {
+		return request, errors.WithStack(ErrRequestNotSupported)
+	}
+
+	if len(request.Form.Get("request_uri")) > 0 {
+		return request, errors.WithStack(ErrRequestURINotSupported)
+	}
+
+	if len(request.Form.Get("registration")) > 0 {
+		return request, errors.WithStack(ErrRegistrationNotSupported)
+	}
+
 	// Remove empty items from arrays
 	request.SetRequestedScopes(scope)
 	return request, nil
