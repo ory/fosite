@@ -31,6 +31,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
@@ -137,7 +138,7 @@ func TestOpenIDConnectExplicitFlow(t *testing.T) {
 			defer ts.Close()
 
 			oauthClient := newOAuth2Client(ts)
-			fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
+			fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
 
 			resp, err := http.Get(c.setup(oauthClient))
 			require.NoError(t, err)

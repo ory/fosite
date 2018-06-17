@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
@@ -50,7 +51,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 
 	oauthClient := newOAuth2Client(ts)
 	state := "1234567890"
-	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
+	fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
 	for _, c := range []struct {
 		description string
 		setup       func()

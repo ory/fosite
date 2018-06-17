@@ -59,6 +59,15 @@ type Config struct {
 
 	// AllowedPromptValues sets which OpenID Connect prompt values the server supports. Defaults to []string{"login", "none", "consent", "select_account"}.
 	AllowedPromptValues []string
+
+	// TokenURL is the the URL of the Authorization Server's Token Endpoint. If the authorization server is intended
+	// to be compatible with the private_key_jwt client authentication method (see http://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth),
+	// this value MUST be set.
+	TokenURL string
+
+	// JWKSFetcherStrategy is responsible for fetching JSON Web Keys from remote URLs. This is required when the private_key_jwt
+	// client authentication method is used. Defaults to fosite.DefaultJWKSFetcherStrategy.
+	JWKSFetcher fosite.JWKSFetcherStrategy
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
@@ -99,4 +108,12 @@ func (c *Config) GetHashCost() int {
 		return 12
 	}
 	return c.HashCost
+}
+
+// GetJWKSFetcherStrategy returns the JWKSFetcherStrategy.
+func (c *Config) GetJWKSFetcherStrategy() fosite.JWKSFetcherStrategy {
+	if c.JWKSFetcher == nil {
+		c.JWKSFetcher = fosite.NewDefaultJWKSFetcherStrategy()
+	}
+	return c.JWKSFetcher
 }

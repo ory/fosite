@@ -54,7 +54,7 @@ func runTestAuthorizeImplicitGrant(t *testing.T, strategy interface{}) {
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
-	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
+	fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
 
 	var state string
 	for k, c := range []struct {

@@ -275,6 +275,12 @@ func (e *RFC6749Error) StatusCode() int {
 	return e.Code
 }
 
+func (e *RFC6749Error) WithHint(hin string) *RFC6749Error {
+	err := *e
+	err.Hint = hin
+	return &err
+}
+
 func (e *RFC6749Error) WithDebug(debug string) *RFC6749Error {
 	err := *e
 	err.Debug = debug

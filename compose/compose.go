@@ -56,6 +56,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 	if hasher == nil {
 		hasher = &fosite.BCrypt{WorkFactor: config.GetHashCost()}
 	}
+
 	f := &fosite.Fosite{
 		Store: storage.(fosite.Storage),
 		AuthorizeEndpointHandlers:  fosite.AuthorizeEndpointHandlers{},
@@ -65,6 +66,8 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 		Hasher:                     hasher,
 		ScopeStrategy:              config.GetScopeStrategy(),
 		SendDebugMessagesToClients: config.SendDebugMessagesToClients,
+		TokenURL:                   config.TokenURL,
+		JWKSFetcherStrategy:        config.GetJWKSFetcherStrategy(),
 	}
 
 	for _, factory := range factories {

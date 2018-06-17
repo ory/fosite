@@ -42,6 +42,10 @@
   name = "github.com/ory/go-convenience"
 
 [[constraint]]
+  version = "2.1.6"
+  name = "gopkg.in/square/go-jose.v2"
+
+[[constraint]]
   branch = "master"
   name = "github.com/gtank/cryptopasta"
 

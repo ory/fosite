@@ -58,21 +58,9 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 		return errors.WithStack(ErrInvalidRequest.WithDebug("missing form body"))
 	}
 
-	clientID, clientSecret, ok := r.BasicAuth()
-	if !ok {
-		return errors.WithStack(ErrInvalidRequest.WithDebug("HTTP Authorization header missing or invalid"))
-	}
-
-	client, err := f.Store.GetClient(ctx, clientID)
+	client, err := f.AuthenticateClient(ctx, r, r.PostForm)
 	if err != nil {
-		return errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
-	}
-
-	// Enforce client authentication for confidential clients
-	if !client.IsPublic() {
-		if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-			return errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
-		}
+		return err
 	}
 
 	token := r.PostForm.Get("token")
