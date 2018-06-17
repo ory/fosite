@@ -39,11 +39,11 @@ import (
 func TestNewAccessRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockStorage(ctrl)
-	client := internal.NewMockClient(ctrl)
 	handler := internal.NewMockTokenEndpointHandler(ctrl)
 	hasher := internal.NewMockHasher(ctrl)
 	defer ctrl.Finish()
 
+	client := &DefaultClient{}
 	fosite := &Fosite{Store: store, Hasher: hasher}
 	for k, c := range []struct {
 		header    http.Header
@@ -128,8 +128,8 @@ func TestNewAccessRequest(t *testing.T) {
 			expectErr: ErrInvalidClient,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().IsPublic().Return(false)
-				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				client.Public = false
+				client.Secret = []byte("foo")
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(errors.New(""))
 			},
 		},
@@ -144,8 +144,8 @@ func TestNewAccessRequest(t *testing.T) {
 			expectErr: ErrServerError,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().IsPublic().Return(false)
-				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				client.Public = false
+				client.Secret = []byte("foo")
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(ErrServerError)
 			},
@@ -161,8 +161,8 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().IsPublic().Return(false)
-				client.EXPECT().GetHashedSecret().Return([]byte("foo"))
+				client.Public = false
+				client.Secret = []byte("foo")
 				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
 			},
@@ -184,7 +184,7 @@ func TestNewAccessRequest(t *testing.T) {
 			},
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
-				client.EXPECT().IsPublic().Return(true)
+				client.Public = true
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: TokenEndpointHandlers{handler},

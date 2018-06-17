@@ -21,6 +21,10 @@
 
 package fosite
 
+import (
+	"gopkg.in/square/go-jose.v2"
+)
+
 // Client represents a client or an app.
 type Client interface {
 	// GetID returns the client ID.
@@ -45,6 +49,33 @@ type Client interface {
 	IsPublic() bool
 }
 
+type OpenIDConnectClient interface {
+	// Array of request_uri values that are pre-registered by the RP for use at the OP. Servers MAY cache the
+	// contents of the files referenced by these URIs and not retrieve them at the time they are used in a request.
+	// OPs can require that request_uri values used be pre-registered with the require_request_uri_registration
+	// discovery parameter.
+	GetRequestURIs() []string
+
+	// GetJSONWebKeys returns the JSON Web Key Set containing the public keys used by the client to authenticate.
+	GetJSONWebKeys() *jose.JSONWebKeySet
+
+	// GetJSONWebKeys returns the URL for lookup of JSON Web Key Set containing the
+	// public keys used by the client to authenticate.
+	GetJSONWebKeysURI() string
+
+	// JWS [JWS] alg algorithm [JWA] that MUST be used for signing Request Objects sent to the OP.
+	// All Request Objects from this Client MUST be rejected, if not signed with this algorithm.
+	GetRequestObjectSigningAlgorithm() string
+
+	// Requested Client Authentication method for the Token Endpoint. The options are client_secret_post,
+	// client_secret_basic, client_secret_jwt, private_key_jwt, and none.
+	GetTokenEndpointAuthMethod() string
+
+	// JWS [JWS] alg algorithm [JWA] that MUST be used for signing the JWT [JWT] used to authenticate the
+	// Client at the Token Endpoint for the private_key_jwt and client_secret_jwt authentication methods.
+	GetTokenEndpointAuthSigningAlgorithm() string
+}
+
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
 	ID            string   `json:"id"`
@@ -54,6 +85,14 @@ type DefaultClient struct {
 	ResponseTypes []string `json:"response_types"`
 	Scopes        []string `json:"scopes"`
 	Public        bool     `json:"public"`
+}
+
+type DefaultOpenIDConnectClient struct {
+	*DefaultClient
+	JSONWebKeysURI          string              `json:"jwks_uri"`
+	JSONWebKeys             *jose.JSONWebKeySet `json:"jwks"`
+	TokenEndpointAuthMethod string              `json:"token_endpoint_auth_method"`
+	RequestURIs             []string            `json:"request_uris"`
 }
 
 func (c *DefaultClient) GetID() string {
@@ -98,4 +137,28 @@ func (c *DefaultClient) GetResponseTypes() Arguments {
 		return Arguments{"code"}
 	}
 	return Arguments(c.ResponseTypes)
+}
+
+func (c *DefaultOpenIDConnectClient) GetJSONWebKeysURI() string {
+	return c.JSONWebKeysURI
+}
+
+func (c *DefaultOpenIDConnectClient) GetJSONWebKeys() *jose.JSONWebKeySet {
+	return c.JSONWebKeys
+}
+
+func (c *DefaultOpenIDConnectClient) GetTokenEndpointAuthSigningAlgorithm() string {
+	return "RS256"
+}
+
+func (c *DefaultOpenIDConnectClient) GetRequestObjectSigningAlgorithm() string {
+	return "RS256"
+}
+
+func (c *DefaultOpenIDConnectClient) GetTokenEndpointAuthMethod() string {
+	return c.TokenEndpointAuthMethod
+}
+
+func (c *DefaultOpenIDConnectClient) GetRequestURIs() []string {
+	return c.RequestURIs
 }

@@ -5,7 +5,13 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [0.21.0](#0210)
+  - [Adds `private_key_jwt` client authentication method](#adds-private_key_jwt-client-authentication-method)
+  - [Response Type `id_token` no longer required for authorize_code flow](#response-type-id_token-no-longer-required-for-authorize_code-flow)
 - [0.20.0](#0200)
+- [Breaking Changes](#breaking-changes)
+  - [JWT Claims](#jwt-claims)
+  - [`AuthorizeCodeStorage`](#authorizecodestorage)
 - [0.19.0](#0190)
 - [0.18.0](#0180)
 - [0.17.0](#0170)
@@ -21,7 +27,7 @@ bumps (`0.1.0` -> `0.2.0`).
   - [Non-breaking changes](#non-breaking-changes)
     - [Storage adapter](#storage-adapter)
     - [Reducing use of gomock](#reducing-use-of-gomock)
-  - [Breaking Changes](#breaking-changes)
+  - [Breaking Changes](#breaking-changes-1)
     - [`fosite/handler/oauth2.AuthorizeCodeGrantStorage` was removed](#fositehandleroauth2authorizecodegrantstorage-was-removed)
     - [`fosite/handler/oauth2.RefreshTokenGrantStorage` was removed](#fositehandleroauth2refreshtokengrantstorage-was-removed)
     - [`fosite/handler/oauth2.AuthorizeCodeGrantStorage` was removed](#fositehandleroauth2authorizecodegrantstorage-was-removed-1)
@@ -47,6 +53,17 @@ bumps (`0.1.0` -> `0.2.0`).
 ## 0.21.0
 
 This release improves compatibility with the OpenID Connect Dynamic Client Registration 1.0 specification.
+
+### Adds `private_key_jwt` client authentication method
+
+This patch adds the ability to perform the [`private_key_jwt` client authentication method](http://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication)
+defined in the OpenID Connect specification. Please note that method `client_secret_jwt` is not supported because of the BCrypt hashing strategy.
+
+For this strategy to work, you must set the `TokenURL` field of the `compose.Config` object to the authorization server's
+Token URL.
+
+If you would like to support this authentication method, your `Client` implementation must also implement `fosite.DefaultOpenIDConnectClient`
+and then, for example, `GetTokenEndpointAuthMethod()` should return `private_key_jwt`.
 
 ### Response Type `id_token` no longer required for authorize_code flow
 

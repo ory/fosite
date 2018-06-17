@@ -36,6 +36,7 @@ import (
 
 	"fmt"
 
+	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
@@ -56,7 +57,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
-	fositeStore.Clients["my-client"].RedirectURIs[0] = ts.URL + "/callback"
+	fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
 
 	var state = "12345678901234567890"
 	for k, c := range []struct {

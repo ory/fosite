@@ -90,6 +90,10 @@ type Fosite struct {
 	RevocationHandlers         RevocationHandlers
 	Hasher                     Hasher
 	ScopeStrategy              ScopeStrategy
+	JWKSFetcherStrategy        JWKSFetcherStrategy
+
+	// TokenURL is the the URL of the Authorization Server's Token Endpoint.
+	TokenURL string
 
 	// SendDebugMessagesToClients if set to true, includes error debug messages in response payloads. Be aware that sensitive
 	// data may be exposed, depending on your implementation of Fosite. Such sensitive data might include database error

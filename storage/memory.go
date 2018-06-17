@@ -34,7 +34,7 @@ type MemoryUserRelation struct {
 }
 
 type MemoryStore struct {
-	Clients        map[string]*fosite.DefaultClient
+	Clients        map[string]fosite.Client
 	AuthorizeCodes map[string]StoreAuthorizeCode
 	IDSessions     map[string]fosite.Requester
 	AccessTokens   map[string]fosite.Requester
@@ -49,7 +49,7 @@ type MemoryStore struct {
 
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		Clients:        make(map[string]*fosite.DefaultClient),
+		Clients:        make(map[string]fosite.Client),
 		AuthorizeCodes: make(map[string]StoreAuthorizeCode),
 		IDSessions:     make(map[string]fosite.Requester),
 		AccessTokens:   make(map[string]fosite.Requester),
@@ -70,8 +70,8 @@ type StoreAuthorizeCode struct {
 func NewExampleStore() *MemoryStore {
 	return &MemoryStore{
 		IDSessions: make(map[string]fosite.Requester),
-		Clients: map[string]*fosite.DefaultClient{
-			"my-client": {
+		Clients: map[string]fosite.Client{
+			"my-client": &fosite.DefaultClient{
 				ID:            "my-client",
 				Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 				RedirectURIs:  []string{"http://localhost:3846/callback"},
@@ -79,7 +79,7 @@ func NewExampleStore() *MemoryStore {
 				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 				Scopes:        []string{"fosite", "openid", "photos", "offline"},
 			},
-			"encoded:client": {
+			"encoded:client": &fosite.DefaultClient{
 				ID:            "encoded:client",
 				Secret:        []byte(`$2a$10$A7M8b65dSSKGHF0H2sNkn.9Z0hT8U1Nv6OWPV3teUUaczXkVkxuDS`), // = "encoded&password"
 				RedirectURIs:  []string{"http://localhost:3846/callback"},

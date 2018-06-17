@@ -52,7 +52,7 @@ func runAuthorizeCodeGrantWithPublicClientTest(t *testing.T, strategy interface{
 	oauthClient := newOAuth2Client(ts)
 	oauthClient.ClientSecret = ""
 	oauthClient.ClientID = "public-client"
-	fositeStore.Clients["public-client"].RedirectURIs[0] = ts.URL + "/callback"
+	fositeStore.Clients["public-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
 
 	var state string
 	for k, c := range []struct {

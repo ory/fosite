@@ -39,8 +39,8 @@ import (
 )
 
 var fositeStore = &storage.MemoryStore{
-	Clients: map[string]*fosite.DefaultClient{
-		"my-client": {
+	Clients: map[string]fosite.Client{
+		"my-client": &fosite.DefaultClient{
 			ID:            "my-client",
 			Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 			RedirectURIs:  []string{"http://localhost:3846/callback"},
@@ -48,7 +48,7 @@ var fositeStore = &storage.MemoryStore{
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 			Scopes:        []string{"fosite", "offline", "openid"},
 		},
-		"public-client": {
+		"public-client": &fosite.DefaultClient{
 			ID:            "public-client",
 			Secret:        []byte{},
 			Public:        true,
