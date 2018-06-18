@@ -67,6 +67,10 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 	assertion := request.Form.Get("request")
 	if location := request.Form.Get("request_uri"); len(location) > 0 {
+		if !stringslice.Has(oidcClient.GetRequestURIs(), location) {
+			return errors.WithStack(ErrInvalidRequestURI.WithHint(fmt.Sprintf("Request URI \"%s\" is not whitelisted by the OAuth 2.0 Client", location)))
+		}
+
 		hc := f.HTTPClient
 		if hc == nil {
 			hc = http.DefaultClient
@@ -74,17 +78,17 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 		response, err := hc.Get(location)
 		if err != nil {
-			return errors.WithStack(ErrInvalidRequest.WithDebug(fmt.Sprintf("Unable to fetch OpenID Connect request parameters from request_uri because %s", err)))
+			return errors.WithStack(ErrInvalidRequestURI.WithDebug(fmt.Sprintf("Unable to fetch OpenID Connect request parameters from request_uri because %s", err)))
 		}
 		defer response.Body.Close()
 
 		if response.StatusCode != http.StatusOK {
-			return errors.WithStack(ErrInvalidRequest.WithDebug(fmt.Sprintf("Unable to fetch OpenID Connect request parameters from request_uri because status code %d was expected, but got %d", http.StatusOK, response.StatusCode)))
+			return errors.WithStack(ErrInvalidRequestURI.WithDebug(fmt.Sprintf("Unable to fetch OpenID Connect request parameters from request_uri because status code %d was expected, but got %d", http.StatusOK, response.StatusCode)))
 		}
 
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			return errors.WithStack(ErrInvalidRequest.WithDebug(fmt.Sprintf("Unable to fetch OpenID Connect request parameters from request_uri because error %s occurred during body parsing", err)))
+			return errors.WithStack(ErrInvalidRequestURI.WithDebug(fmt.Sprintf("Unable to fetch OpenID Connect request parameters from request_uri because error %s occurred during body parsing", err)))
 		}
 
 		assertion = string(body)
@@ -92,22 +96,35 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 	token, err := jwt.ParseWithClaims(assertion, new(jwt.MapClaims), func(t *jwt.Token) (interface{}, error) {
 		if oidcClient.GetRequestObjectSigningAlgorithm() != fmt.Sprintf("%s", t.Header["alg"]) {
-			return nil, errors.WithStack(ErrInvalidRequest.WithDebug(fmt.Sprintf("The request object uses signing algorithm %s, but the requested OAuth 2.0 Client enforces signing algorithm %s", t.Header["alg"], oidcClient.GetRequestObjectSigningAlgorithm())))
+			return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("The request object uses signing algorithm %s, but the requested OAuth 2.0 Client enforces signing algorithm %s", t.Header["alg"], oidcClient.GetRequestObjectSigningAlgorithm())))
 		}
 
 		if t.Method == jwt.SigningMethodNone {
 			return jwt.UnsafeAllowNoneSignatureType, nil
 		}
 
-		if _, ok := t.Method.(*jwt.SigningMethodRSA); ok {
-			return f.findClientPublicJWK(oidcClient, t)
-		} else if _, ok := t.Method.(*jwt.SigningMethodECDSA); ok {
-			return f.findClientPublicJWK(oidcClient, t)
-		} else if _, ok := t.Method.(*jwt.SigningMethodRSAPSS); ok {
-			return f.findClientPublicJWK(oidcClient, t)
+		switch t.Method.(type) {
+		case *jwt.SigningMethodRSA:
+			key, err := f.findClientPublicJWK(oidcClient, t)
+			if err != nil {
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("Unable to retrieve signing key from OAuth 2.0 Client because %s", err)))
+			}
+			return key, nil
+		case *jwt.SigningMethodECDSA:
+			key, err := f.findClientPublicJWK(oidcClient, t)
+			if err != nil {
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("Unable to retrieve signing key from OAuth 2.0 Client because %s", err)))
+			}
+			return key, nil
+		case *jwt.SigningMethodRSAPSS:
+			key, err := f.findClientPublicJWK(oidcClient, t)
+			if err != nil {
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("Unable to retrieve signing key from OAuth 2.0 Client because %s", err)))
+			}
+			return key, nil
+		default:
+			return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("This request object uses unsupported signing algorithm %s", t.Header["alg"])))
 		}
-
-		return nil, errors.WithStack(ErrInvalidRequest.WithDebug(fmt.Sprintf("This request object uses unsupported signing algorithm %s", t.Header["alg"])))
 	})
 	if err != nil {
 		// Do not re-process already enhanced errors
@@ -115,16 +132,16 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 			if e.Inner != nil {
 				return e.Inner
 			}
-			return errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
+			return errors.WithStack(ErrInvalidRequestObject.WithDebug(err.Error()))
 		}
 		return err
 	} else if err := token.Claims.Valid(); err != nil {
-		return errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
+		return errors.WithStack(ErrInvalidRequestObject.WithDebug(err.Error()))
 	}
 
 	claims, ok := token.Claims.(*jwt.MapClaims)
 	if !ok {
-		return errors.WithStack(ErrInvalidRequest.WithDebug("Unable to type assert claims from request object"))
+		return errors.WithStack(ErrInvalidRequestObject.WithDebug("Unable to type assert claims from request object"))
 	}
 
 	for k, v := range *claims {

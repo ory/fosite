@@ -193,9 +193,21 @@ var (
 		Name:        errRegistrationNotSupportedName,
 		Code:        http.StatusBadRequest,
 	}
+	ErrInvalidRequestURI = &RFC6749Error{
+		Description: "The request_uri in the Authorization Request returns an error or contains invalid data. ",
+		Name:        errInvalidRequestURI,
+		Code:        http.StatusBadRequest,
+	}
+	ErrInvalidRequestObject = &RFC6749Error{
+		Description: "The request parameter contains an invalid Request Object. ",
+		Name:        errInvalidRequestObject,
+		Code:        http.StatusBadRequest,
+	}
 )
 
 const (
+	errInvalidRequestURI              = "invalid_request_uri"
+	errInvalidRequestObject              = "invalid_request_object"
 	errConsentRequired              = "consent_required"
 	errInteractionRequired          = "interaction_required"
 	errLoginRequired                = "login_required"
