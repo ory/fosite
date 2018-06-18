@@ -30,7 +30,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (o *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester, session Session) (AuthorizeResponder, error) {
+func (f *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester, session Session) (AuthorizeResponder, error) {
 	var resp = &AuthorizeResponse{
 		Header:   http.Header{},
 		Query:    url.Values{},
@@ -38,7 +38,7 @@ func (o *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester
 	}
 
 	ar.SetSession(session)
-	for _, h := range o.AuthorizeEndpointHandlers {
+	for _, h := range f.AuthorizeEndpointHandlers {
 		if err := h.HandleAuthorizeEndpointRequest(ctx, ar, resp); err != nil {
 			return nil, err
 		}

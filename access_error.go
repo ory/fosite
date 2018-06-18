@@ -27,15 +27,15 @@ import (
 	"net/http"
 )
 
-func (c *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err error) {
-	c.writeJsonError(rw, err)
+func (f *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err error) {
+	f.writeJsonError(rw, err)
 }
 
-func (c *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
+func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 	rfcerr := ErrorToRFC6749Error(err)
-	if !c.SendDebugMessagesToClients {
+	if !f.SendDebugMessagesToClients {
 		rfcerr.Debug = ""
 	}
 

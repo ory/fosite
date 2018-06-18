@@ -22,6 +22,7 @@
 package fosite
 
 import (
+	"net/http"
 	"reflect"
 )
 
@@ -91,6 +92,7 @@ type Fosite struct {
 	Hasher                     Hasher
 	ScopeStrategy              ScopeStrategy
 	JWKSFetcherStrategy        JWKSFetcherStrategy
+	HTTPClient                 *http.Client
 
 	// TokenURL is the the URL of the Authorization Server's Token Endpoint.
 	TokenURL string

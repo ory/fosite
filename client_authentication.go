@@ -35,6 +35,32 @@ import (
 
 const clientAssertionJWTBearerType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
+func (f *Fosite) findClientPublicJWK(oidcClient OpenIDConnectClient, t *jwt.Token) (interface{}, error) {
+	if set := oidcClient.GetJSONWebKeys(); set != nil {
+		return findPublicKey(t, set)
+	}
+
+	if location := oidcClient.GetJSONWebKeysURI(); len(location) > 0 {
+		keys, err := f.JWKSFetcherStrategy.Resolve(location, false)
+		if err != nil {
+			return nil, err
+		}
+
+		if key, err := findPublicKey(t, keys); err == nil {
+			return key, nil
+		}
+
+		keys, err = f.JWKSFetcherStrategy.Resolve(location, true)
+		if err != nil {
+			return nil, err
+		}
+
+		return findPublicKey(t, keys)
+	}
+
+	return nil, errors.WithStack(ErrInvalidClient.WithDebug("The OAuth 2.0 Client has no JSON Web Keys set registered"))
+}
+
 func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form url.Values) (Client, error) {
 	if assertionType := form.Get("client_assertion_type"); assertionType == clientAssertionJWTBearerType {
 		assertion := form.Get("client_assertion")
@@ -82,34 +108,16 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 			case "private_key_jwt":
 			}
 
-			if oidcClient.GetTokenEndpointAuthSigningAlgorithm() != "RS256" {
-				return nil, errors.WithStack(ErrInvalidClient.WithDebug(fmt.Sprintf("The OAuth 2.0 Client only supports the \"%s\" signing algorithm which this authorization server does not support", oidcClient.GetTokenEndpointAuthSigningAlgorithm())))
+			if oidcClient.GetTokenEndpointAuthSigningAlgorithm() != fmt.Sprintf("%s", t.Header["alg"]) {
+				return nil, errors.WithStack(ErrInvalidClient.WithDebug(fmt.Sprintf("The client_assertion uses signing algorithm %s, but the requested OAuth 2.0 Client enforces signing algorithm %s", t.Header["alg"], oidcClient.GetTokenEndpointAuthSigningAlgorithm())))
 			}
 
 			if _, ok := t.Method.(*jwt.SigningMethodRSA); ok {
-				if set := oidcClient.GetJSONWebKeys(); set != nil {
-					return findPublicKey(t, set)
-				}
-
-				if location := oidcClient.GetJSONWebKeysURI(); len(location) > 0 {
-					keys, err := f.JWKSFetcherStrategy.Resolve(location, false)
-					if err != nil {
-						return nil, err
-					}
-
-					if key, err := findPublicKey(t, keys); err == nil {
-						return key, nil
-					}
-
-					keys, err = f.JWKSFetcherStrategy.Resolve(location, true)
-					if err != nil {
-						return nil, err
-					}
-
-					return findPublicKey(t, keys)
-				}
-
-				return nil, errors.WithStack(ErrInvalidClient.WithDebug("The OAuth 2.0 Client has no JSON Web Keys set, thus client authentication method \"private_key_jwt\" failed"))
+				return f.findClientPublicJWK(oidcClient, t)
+			} else if _, ok := t.Method.(*jwt.SigningMethodECDSA); ok {
+				return f.findClientPublicJWK(oidcClient, t)
+			} else if _, ok := t.Method.(*jwt.SigningMethodRSAPSS); ok {
+				return f.findClientPublicJWK(oidcClient, t)
 			} else if _, ok := t.Method.(*jwt.SigningMethodHMAC); ok {
 				return nil, errors.WithStack(ErrInvalidClient.WithDebug("This authorization server does not support client authentication method \"client_secret_jwt\""))
 			}
@@ -122,7 +130,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 				if e.Inner != nil {
 					return nil, e.Inner
 				}
-				errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
+				return nil, errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
 			}
 			return nil, err
 		} else if err := token.Claims.Valid(); err != nil {
@@ -202,12 +210,12 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet) (*rsa.PublicKey, error) {
 	kid, ok := t.Header["kid"].(string)
 	if !ok {
-		return nil, errors.WithStack(ErrInvalidClient.WithDebug("The JSON Web Token from the client_assertion request parameter must contain a kid header value but did not"))
+		return nil, errors.WithStack(ErrInvalidRequest.WithDebug("The JSON Web Token from the client_assertion request parameter must contain a kid header value but did not"))
 	}
 
 	keys := set.Key(kid)
 	if len(keys) == 0 {
-		return nil, errors.WithStack(ErrInvalidClient.WithDebug(fmt.Sprintf("Unable to find signing key for kid \"%s\"", kid)))
+		return nil, errors.WithStack(ErrInvalidRequest.WithDebug(fmt.Sprintf("Unable to find signing key for kid \"%s\"", kid)))
 	}
 
 	for _, key := range keys {
@@ -219,7 +227,7 @@ func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet) (*rsa.PublicKey, error
 		}
 	}
 
-	return nil, errors.WithStack(ErrInvalidClient.WithDebug(fmt.Sprintf("Unable to find RSA public key with use=\"sig\" for kid \"%s\" in JSON Web Key Set", kid)))
+	return nil, errors.WithStack(ErrInvalidRequest.WithDebug(fmt.Sprintf("Unable to find RSA public key with use=\"sig\" for kid \"%s\" in JSON Web Key Set", kid)))
 }
 
 func clientCredentialsFromRequest(r *http.Request, form url.Values) (clientID, clientSecret string, err error) {
