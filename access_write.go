@@ -26,7 +26,7 @@ import (
 	"net/http"
 )
 
-func (c *Fosite) WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder) {
+func (f *Fosite) WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder) {
 	js, err := json.Marshal(responder.ToMap())
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)

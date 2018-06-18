@@ -31,7 +31,7 @@ var (
 	plusMatch = regexp.MustCompile("\\+")
 )
 
-func (c *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
+func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
 	redir := ar.GetRedirectURI()
 
 	// Explicit grants

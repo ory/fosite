@@ -29,10 +29,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
+func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 	rfcerr := ErrorToRFC6749Error(err)
 	if !ar.IsRedirectURIValid() {
-		if !c.SendDebugMessagesToClients {
+		if !f.SendDebugMessagesToClients {
 			rfcerr.Debug = ""
 		}
 
@@ -53,7 +53,7 @@ func (c *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	query.Add("error", rfcerr.Name)
 	query.Add("error_description", rfcerr.Description)
 	query.Add("state", ar.GetState())
-	if c.SendDebugMessagesToClients && rfcerr.Debug != "" {
+	if f.SendDebugMessagesToClients && rfcerr.Debug != "" {
 		query.Add("error_debug", rfcerr.Debug)
 	}
 
