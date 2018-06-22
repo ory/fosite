@@ -33,14 +33,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-// RS256JWTStrategy is a JWT RS256 strategy.
-type RS256JWTStrategy struct {
-	*jwt.RS256JWTStrategy
+// DefaultJWTStrategy is a JWT RS256 strategy.
+type DefaultJWTStrategy struct {
+	jwt.JWTStrategy
 	HMACSHAStrategy *HMACSHAStrategy
 	Issuer          string
 }
 
-func (h RS256JWTStrategy) signature(token string) string {
+func (h DefaultJWTStrategy) signature(token string) string {
 	split := strings.Split(token, ".")
 	if len(split) != 3 {
 		return ""
@@ -49,20 +49,20 @@ func (h RS256JWTStrategy) signature(token string) string {
 	return split[2]
 }
 
-func (h RS256JWTStrategy) AccessTokenSignature(token string) string {
+func (h DefaultJWTStrategy) AccessTokenSignature(token string) string {
 	return h.signature(token)
 }
 
-func (h *RS256JWTStrategy) GenerateAccessToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
+func (h *DefaultJWTStrategy) GenerateAccessToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
 	return h.generate(fosite.AccessToken, requester)
 }
 
-func (h *RS256JWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Requester, token string) error {
+func (h *DefaultJWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Requester, token string) error {
 	_, err := h.validate(token)
 	return err
 }
 
-func (h *RS256JWTStrategy) ValidateJWT(tokenType fosite.TokenType, token string) (requester fosite.Requester, err error) {
+func (h *DefaultJWTStrategy) ValidateJWT(tokenType fosite.TokenType, token string) (requester fosite.Requester, err error) {
 	t, err := h.validate(token)
 	if err != nil {
 		return nil, err
@@ -91,32 +91,32 @@ func (h *RS256JWTStrategy) ValidateJWT(tokenType fosite.TokenType, token string)
 	return
 }
 
-func (h RS256JWTStrategy) RefreshTokenSignature(token string) string {
+func (h DefaultJWTStrategy) RefreshTokenSignature(token string) string {
 	return h.HMACSHAStrategy.RefreshTokenSignature(token)
 }
 
-func (h RS256JWTStrategy) AuthorizeCodeSignature(token string) string {
+func (h DefaultJWTStrategy) AuthorizeCodeSignature(token string) string {
 	return h.HMACSHAStrategy.AuthorizeCodeSignature(token)
 }
 
-func (h *RS256JWTStrategy) GenerateRefreshToken(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
+func (h *DefaultJWTStrategy) GenerateRefreshToken(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
 	return h.HMACSHAStrategy.GenerateRefreshToken(ctx, req)
 }
 
-func (h *RS256JWTStrategy) ValidateRefreshToken(ctx context.Context, req fosite.Requester, token string) error {
+func (h *DefaultJWTStrategy) ValidateRefreshToken(ctx context.Context, req fosite.Requester, token string) error {
 	return h.HMACSHAStrategy.ValidateRefreshToken(ctx, req, token)
 }
 
-func (h *RS256JWTStrategy) GenerateAuthorizeCode(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
+func (h *DefaultJWTStrategy) GenerateAuthorizeCode(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
 	return h.HMACSHAStrategy.GenerateAuthorizeCode(ctx, req)
 }
 
-func (h *RS256JWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosite.Requester, token string) error {
+func (h *DefaultJWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosite.Requester, token string) error {
 	return h.HMACSHAStrategy.ValidateAuthorizeCode(ctx, req, token)
 }
 
-func (h *RS256JWTStrategy) validate(token string) (t *jwtx.Token, err error) {
-	t, err = h.RS256JWTStrategy.Decode(token)
+func (h *DefaultJWTStrategy) validate(token string) (t *jwtx.Token, err error) {
+	t, err = h.JWTStrategy.Decode(token)
 
 	if err == nil {
 		err = t.Claims.Valid()
@@ -154,7 +154,7 @@ func (h *RS256JWTStrategy) validate(token string) (t *jwtx.Token, err error) {
 	return
 }
 
-func (h *RS256JWTStrategy) generate(tokenType fosite.TokenType, requester fosite.Requester) (string, string, error) {
+func (h *DefaultJWTStrategy) generate(tokenType fosite.TokenType, requester fosite.Requester) (string, string, error) {
 	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); !ok {
 		return "", "", errors.New("Session must be of type JWTSessionContainer")
 	} else if jwtSession.GetJWTClaims() == nil {
@@ -173,6 +173,6 @@ func (h *RS256JWTStrategy) generate(tokenType fosite.TokenType, requester fosite
 
 		claims.Scope = requester.GetGrantedScopes()
 
-		return h.RS256JWTStrategy.Generate(claims.ToMapClaims(), jwtSession.GetJWTHeader())
+		return h.JWTStrategy.Generate(claims.ToMapClaims(), jwtSession.GetJWTHeader())
 	}
 }

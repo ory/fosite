@@ -46,9 +46,9 @@ func NewOAuth2HMACStrategy(config *Config, secret []byte) *oauth2.HMACSHAStrateg
 	}
 }
 
-func NewOAuth2JWTStrategy(key *rsa.PrivateKey, strategy *oauth2.HMACSHAStrategy) *oauth2.RS256JWTStrategy {
-	return &oauth2.RS256JWTStrategy{
-		RS256JWTStrategy: &jwt.RS256JWTStrategy{
+func NewOAuth2JWTStrategy(key *rsa.PrivateKey, strategy *oauth2.HMACSHAStrategy) *oauth2.DefaultJWTStrategy {
+	return &oauth2.DefaultJWTStrategy{
+		JWTStrategy: &jwt.RS256JWTStrategy{
 			PrivateKey: key,
 		},
 		HMACSHAStrategy: strategy,

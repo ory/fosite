@@ -36,8 +36,8 @@ import (
 )
 
 func TestIntrospectJWT(t *testing.T) {
-	strat := &RS256JWTStrategy{
-		RS256JWTStrategy: &jwt.RS256JWTStrategy{
+	strat := &DefaultJWTStrategy{
+		JWTStrategy: &jwt.RS256JWTStrategy{
 			PrivateKey: internal.MustRSAKey(),
 		},
 	}
@@ -129,8 +129,8 @@ func TestIntrospectJWT(t *testing.T) {
 }
 
 func BenchmarkIntrospectJWT(b *testing.B) {
-	strat := &RS256JWTStrategy{
-		RS256JWTStrategy: &jwt.RS256JWTStrategy{
+	strat := &DefaultJWTStrategy{
+		JWTStrategy: &jwt.RS256JWTStrategy{
 			PrivateKey: internal.MustRSAKey(),
 		},
 	}

@@ -59,6 +59,12 @@ This release improves compatibility with the OpenID Connect Dynamic Client Regis
 
 Field `RS256JWTStrategy` was renamed to `JWTStrategy` and now relies on an interface instead of a concrete struct.
 
+### `oauth2.RS256JWTStrategy` was renamed and field name changed
+
+The strategy `oauth2.RS256JWTStrategy` was renamed to `oauth2.DefaultJWTStrategy` and now accepts an interface that
+implements `jwt.JWTStrategy` instead of directly relying on `jwt.RS256JWTStrategy`. For this reason,
+the field `RS256JWTStrategy` was renamed to `JWTStrategy`
+
 ### Adds `private_key_jwt` client authentication method
 
 This patch adds the ability to perform the [`private_key_jwt` client authentication method](http://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication)

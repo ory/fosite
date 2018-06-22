@@ -112,8 +112,8 @@ var hmacStrategy = &oauth2.HMACSHAStrategy{
 	AuthorizeCodeLifespan: authCodeLifespan,
 }
 
-var jwtStrategy = &oauth2.RS256JWTStrategy{
-	RS256JWTStrategy: &jwt.RS256JWTStrategy{
+var jwtStrategy = &oauth2.DefaultJWTStrategy{
+	JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: internal.MustRSAKey(),
 	},
 	HMACSHAStrategy: hmacStrategy,

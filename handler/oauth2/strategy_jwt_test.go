@@ -34,8 +34,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var j = &RS256JWTStrategy{
-	RS256JWTStrategy: &jwt.RS256JWTStrategy{
+var j = &DefaultJWTStrategy{
+	JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: internal.MustRSAKey(),
 	},
 }
