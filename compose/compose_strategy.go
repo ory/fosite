@@ -57,7 +57,7 @@ func NewOAuth2JWTStrategy(key *rsa.PrivateKey, strategy *oauth2.HMACSHAStrategy)
 
 func NewOpenIDConnectStrategy(key *rsa.PrivateKey) *openid.DefaultStrategy {
 	return &openid.DefaultStrategy{
-		RS256JWTStrategy: &jwt.RS256JWTStrategy{
+		JWTStrategy: &jwt.RS256JWTStrategy{
 			PrivateKey: key,
 		},
 	}

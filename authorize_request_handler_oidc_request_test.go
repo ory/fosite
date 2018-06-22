@@ -168,12 +168,12 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			form:       url.Values{"scope": {"openid"}, "request_uri": {reqTS.URL}},
 			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "RS256"},
 			expectForm: url.Values{"scope": {"foo openid"}, "request_uri": {reqTS.URL}, "foo": {"bar"}, "baz": {"baz"}},
-			expectErr:ErrInvalidRequestURI,
+			expectErr:  ErrInvalidRequestURI,
 		},
 		{
 			d:          "should pass and set request_uri parameters properly and also fetch jwk from remote",
 			form:       url.Values{"scope": {"openid"}, "request_uri": {reqTS.URL}},
-			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "RS256", RequestURIs:[]string{reqTS.URL}},
+			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "RS256", RequestURIs: []string{reqTS.URL}},
 			expectForm: url.Values{"scope": {"foo openid"}, "request_uri": {reqTS.URL}, "foo": {"bar"}, "baz": {"baz"}},
 		},
 		{

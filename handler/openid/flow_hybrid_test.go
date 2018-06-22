@@ -41,7 +41,7 @@ import (
 )
 
 var idStrategy = &DefaultStrategy{
-	RS256JWTStrategy: &jwt.RS256JWTStrategy{
+	JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: internal.MustRSAKey(),
 	},
 }
@@ -95,7 +95,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			IDTokenStrategy: idStrategy,
 		},
 		ScopeStrategy:                 fosite.HierarchicScopeStrategy,
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.RS256JWTStrategy),
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.JWTStrategy),
 		OpenIDConnectRequestStorage:   storage.NewMemoryStore(),
 	}
 

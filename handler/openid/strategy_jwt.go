@@ -119,7 +119,7 @@ func (s *DefaultSession) IDTokenClaims() *jwt.IDTokenClaims {
 }
 
 type DefaultStrategy struct {
-	*jwt.RS256JWTStrategy
+	jwt.JWTStrategy
 
 	Expiry time.Duration
 	Issuer string
@@ -188,7 +188,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 		}
 
 		if tokenHintString := requester.GetRequestForm().Get("id_token_hint"); tokenHintString != "" {
-			tokenHint, err := h.RS256JWTStrategy.Decode(tokenHintString)
+			tokenHint, err := h.JWTStrategy.Decode(tokenHintString)
 			if err != nil {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug(fmt.Sprintf("Unable to decode id token from id_token_hint parameter because %s", err.Error())))
 			}
@@ -231,6 +231,6 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	claims.Audience = stringsx.Unique(append(claims.Audience, requester.GetClient().GetID()))
 	claims.IssuedAt = time.Now().UTC()
 
-	token, _, err = h.RS256JWTStrategy.Generate(claims.ToMapClaims(), sess.IDTokenHeaders())
+	token, _, err = h.JWTStrategy.Generate(claims.ToMapClaims(), sess.IDTokenHeaders())
 	return token, err
 }
