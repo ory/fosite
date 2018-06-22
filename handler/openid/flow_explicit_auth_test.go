@@ -35,7 +35,7 @@ import (
 )
 
 var j = &DefaultStrategy{
-	RS256JWTStrategy: &jwt.RS256JWTStrategy{
+	JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: internal.MustRSAKey(),
 	},
 }
@@ -57,7 +57,7 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: j,
 		},
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.RS256JWTStrategy),
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.JWTStrategy),
 	}
 	for k, c := range []struct {
 		description string

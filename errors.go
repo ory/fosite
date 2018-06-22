@@ -206,8 +206,8 @@ var (
 )
 
 const (
-	errInvalidRequestURI              = "invalid_request_uri"
-	errInvalidRequestObject              = "invalid_request_object"
+	errInvalidRequestURI            = "invalid_request_uri"
+	errInvalidRequestObject         = "invalid_request_object"
 	errConsentRequired              = "consent_required"
 	errInteractionRequired          = "interaction_required"
 	errLoginRequired                = "login_required"

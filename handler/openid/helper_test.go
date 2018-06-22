@@ -34,7 +34,7 @@ import (
 )
 
 var strat = &DefaultStrategy{
-	RS256JWTStrategy: &jwt.RS256JWTStrategy{
+	JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: internal.MustRSAKey(),
 	},
 }

@@ -6,6 +6,7 @@ bumps (`0.1.0` -> `0.2.0`).
 
 
 - [0.21.0](#0210)
+  - [`openid.DefaultStrategy` field name changed](#openiddefaultstrategy-field-name-changed)
   - [Adds `private_key_jwt` client authentication method](#adds-private_key_jwt-client-authentication-method)
   - [Response Type `id_token` no longer required for authorize_code flow](#response-type-id_token-no-longer-required-for-authorize_code-flow)
 - [0.20.0](#0200)
@@ -53,6 +54,10 @@ bumps (`0.1.0` -> `0.2.0`).
 ## 0.21.0
 
 This release improves compatibility with the OpenID Connect Dynamic Client Registration 1.0 specification.
+
+### `openid.DefaultStrategy` field name changed
+
+Field `RS256JWTStrategy` was renamed to `JWTStrategy` and now relies on an interface instead of a concrete struct.
 
 ### Adds `private_key_jwt` client authentication method
 

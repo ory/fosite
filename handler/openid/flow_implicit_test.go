@@ -55,7 +55,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			IDTokenStrategy: idStrategy,
 		},
 		ScopeStrategy:                 fosite.HierarchicScopeStrategy,
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.RS256JWTStrategy),
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.JWTStrategy),
 	}
 
 	for k, c := range []struct {
