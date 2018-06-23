@@ -197,7 +197,7 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	// response types is defined by their respective specifications.
 	responseTypes := removeEmpty(stringsx.Splitx(r.Form.Get("response_type"), " "))
 	if len(responseTypes) == 0 {
-		return errors.WithStack(ErrInvalidRequest.WithDebug("The request is missing the response_type parameter"))
+		return errors.WithStack(ErrUnsupportedResponseType.WithDebug("The request is missing the response_type parameter"))
 	}
 
 	var found bool
@@ -209,7 +209,7 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	}
 
 	if !found {
-		return errors.WithStack(ErrInvalidRequest.WithDebug(fmt.Sprintf("The client is not allowed to request response_type \"%s\"", r.Form.Get("response_type"))))
+		return errors.WithStack(ErrUnsupportedResponseType.WithDebug(fmt.Sprintf("The client is not allowed to request response_type \"%s\"", r.Form.Get("response_type"))))
 	}
 
 	request.ResponseTypes = responseTypes
