@@ -132,12 +132,12 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 
 	sess, ok := requester.GetSession().(Session)
 	if !ok {
-		return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because session must be of type fosite/handler/openid.Session"))
+		return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because session must be of type fosite/handler/openid.Session."))
 	}
 
 	claims := sess.IDTokenClaims()
 	if claims.Subject == "" {
-		return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string"))
+		return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
 	}
 
 	if requester.GetRequestForm().Get("grant_type") != "refresh_token" {
@@ -148,35 +148,35 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 
 		// Adds a bit of wiggle room for timing issues
 		if claims.AuthTime.After(time.Now().UTC().Add(time.Second * 5)) {
-			return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because authentication time is in the future"))
+			return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because authentication time is in the future."))
 		}
 
 		if maxAge > 0 {
 			if claims.AuthTime.IsZero() {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time claim is required when max_age is set"))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time claim is required when max_age is set."))
 			} else if claims.RequestedAt.IsZero() {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because requested at claim is required when max_age is set"))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because requested at claim is required when max_age is set."))
 			} else if claims.AuthTime.Add(time.Second * time.Duration(maxAge)).Before(claims.RequestedAt) {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time does not satisfy max_age time"))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because authentication time does not satisfy max_age time."))
 			}
 		}
 
 		prompt := requester.GetRequestForm().Get("prompt")
 		if prompt != "" {
 			if claims.AuthTime.IsZero() {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Unable to determine validity of prompt parameter because auth_time is missing in id token claims"))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Unable to determine validity of prompt parameter because auth_time is missing in id token claims."))
 			}
 		}
 
 		switch prompt {
 		case "none":
 			if claims.AuthTime.After(claims.RequestedAt) {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because prompt was set to \"none\" but auth_time happened after the authorization request was registered, indicating that the user was logged in during this request which is not allowed"))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because prompt was set to \"none\" but auth_time happened after the authorization request was registered, indicating that the user was logged in during this request which is not allowed."))
 			}
 			break
 		case "login":
 			if claims.AuthTime.Before(claims.RequestedAt) {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because prompt was set to \"login\" but auth_time happened before the authorization request was registered, indicating that the user was not re-authenticated which is forbidden"))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because prompt was set to \"login\" but auth_time happened before the authorization request was registered, indicating that the user was not re-authenticated which is forbidden."))
 			}
 			break
 		}
@@ -190,15 +190,15 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 		if tokenHintString := requester.GetRequestForm().Get("id_token_hint"); tokenHintString != "" {
 			tokenHint, err := h.JWTStrategy.Decode(tokenHintString)
 			if err != nil {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug(fmt.Sprintf("Unable to decode id token from id_token_hint parameter because %s", err.Error())))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug(fmt.Sprintf("Unable to decode id token from id_token_hint parameter because %s.", err.Error())))
 			}
 
 			if hintClaims, ok := tokenHint.Claims.(jwtgo.MapClaims); !ok {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Unable to decode id token from id_token_hint to *jwt.StandardClaims"))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Unable to decode id token from id_token_hint to *jwt.StandardClaims."))
 			} else if hintSub, _ := hintClaims["sub"].(string); hintSub == "" {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Provided id token from id_token_hint does not have a subject"))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Provided id token from id_token_hint does not have a subject."))
 			} else if hintSub != claims.Subject {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug(fmt.Sprintf("Subject from authorization mismatches id token subject from id_token_hint")))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug(fmt.Sprintf("Subject from authorization mismatches id token subject from id_token_hint.")))
 			}
 		}
 	}
@@ -208,7 +208,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	}
 
 	if claims.ExpiresAt.Before(time.Now().UTC()) {
-		return "", errors.New("Failed to generate id token because expiry claim can not be in the past")
+		return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because expiry claim can not be in the past."))
 	}
 
 	if claims.AuthTime.IsZero() {
@@ -224,7 +224,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	if len(nonce) == 0 {
 	} else if len(nonce) > 0 && len(nonce) < fosite.MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
-		return "", errors.WithStack(fosite.ErrInsufficientEntropy.WithDebug("Parameter nonce is set but does not satisfy minimum parameter entropy."))
+		return "", errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter \"nonce\" is set but does not satisfy the minimum entropy of %d characters.", fosite.MinParameterEntropy))
 	}
 
 	claims.Nonce = nonce

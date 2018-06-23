@@ -54,7 +54,7 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	//}
 
 	if len(resp.GetCode()) == 0 {
-		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("Authorization code has not been issued yet"))
+		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("The authorization code has not been issued yet, indicating a broken code configuration."))
 	}
 
 	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ar); err != nil {

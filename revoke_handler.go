@@ -50,12 +50,11 @@ import (
 // server and does not influence the revocation response.
 func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) error {
 	if r.Method != "POST" {
-		return errors.WithStack(ErrInvalidRequest.WithDebug("HTTP method is not POST"))
+		return errors.WithStack(ErrInvalidRequest.WithHintf("HTTP method is \"%s\", expected \"POST\".", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
-	}
-	if len(r.PostForm) == 0 {
-		return errors.WithStack(ErrInvalidRequest.WithDebug("missing form body"))
+		return errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithDebug(err.Error()))
+	} else if len(r.PostForm) == 0 {
+		return errors.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
 	}
 
 	client, err := f.AuthenticateClient(ctx, r, r.PostForm)

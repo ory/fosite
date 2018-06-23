@@ -60,7 +60,7 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 
 	code := resp.GetCode()
 	if len(code) == 0 {
-		return errors.WithStack(fosite.ErrServerError.WithDebug("The PKCE handler must be loaded after the authorize code handler"))
+		return errors.WithStack(fosite.ErrServerError.WithDebug("The PKCE handler must be loaded after the authorize code handler."))
 	}
 
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
@@ -84,7 +84,7 @@ func (c *Handler) validate(challenge, method string) error {
 		//nature of error, e.g., code challenge required.
 
 		return errors.WithStack(fosite.ErrInvalidRequest.
-			WithDescription("Public clients must include a code_challenge when performing the authorize code flow, but it is missing.").
+			WithHint("Public clients must include a code_challenge when performing the authorize code flow, but it is missing.").
 			WithDebug("The server is configured in a way that enforces PKCE for public clients."))
 	}
 
@@ -106,13 +106,13 @@ func (c *Handler) validate(challenge, method string) error {
 	case "":
 		if !c.EnablePlainChallengeMethod {
 			return errors.WithStack(fosite.ErrInvalidRequest.
-				WithDescription("Public clients must use code_challenge_method=S256, plain is not allowed.").
+				WithHint("Public clients must use code_challenge_method=S256, plain is not allowed.").
 				WithDebug("The server is configured in a way that enforces PKCE S256 as challenge method for public clients."))
 		}
 		break
 	default:
 		return errors.WithStack(fosite.ErrInvalidRequest.
-			WithDescription("The code_challenge_method is not supported, use S256 instead."))
+			WithHint("The code_challenge_method is not supported, use S256 instead."))
 	}
 	return nil
 }
@@ -130,7 +130,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDescription("Unable to find initial PKCE data tied to this request").WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to find initial PKCE data tied to this request").WithDebug(err.Error()))
 	} else if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
@@ -188,12 +188,12 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		//	43-octet URL safe string to use as the code verifier.
 		if verifierLength < 32 {
 			return errors.WithStack(fosite.ErrInsufficientEntropy.
-				WithDebug("The PKCE code verifier must contain at least 32 octets."))
+				WithHint("The PKCE code verifier must contain at least 32 octets."))
 		}
 
 		verifierBytes := make([]byte, verifierLength)
 		if _, err := base64.RawURLEncoding.Decode(verifierBytes, []byte(verifier)); err != nil {
-			return errors.WithStack(fosite.ErrInvalidGrant.WithDescription("Unable to decode code_verifier using base64 url decoding without padding.").WithDebug(err.Error()))
+			return errors.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to decode code_verifier using base64 url decoding without padding.").WithDebug(err.Error()))
 		}
 
 		hash := sha256.New()
@@ -203,7 +203,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 		if base64.RawURLEncoding.EncodeToString(hash.Sum([]byte{})) != challenge {
 			return errors.WithStack(fosite.ErrInvalidGrant.
-				WithDebug("The PKCE code challenge did not match the code verifier."))
+				WithHint("The PKCE code challenge did not match the code verifier."))
 		}
 		break
 	case "plain":
@@ -211,7 +211,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	default:
 		if verifier != challenge {
 			return errors.WithStack(fosite.ErrInvalidGrant.
-				WithDebug("The PKCE code challenge did not match the code verifier."))
+				WithHint("The PKCE code challenge did not match the code verifier."))
 		}
 	}
 

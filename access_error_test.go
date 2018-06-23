@@ -56,16 +56,19 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 	f := &Fosite{}
 
 	for k, c := range []struct {
-		err   *RFC6749Error
-		code  string
-		debug bool
+		err                *RFC6749Error
+		code               string
+		debug              bool
+		expectDebugMessage string
 	}{
-		{ErrInvalidRequest.WithDebug("some-debug"), "invalid_request", false},
-		{ErrInvalidClient.WithDebug("some-debug"), "invalid_client", false},
-		{ErrInvalidGrant.WithDebug("some-debug"), "invalid_grant", false},
-		{ErrInvalidScope.WithDebug("some-debug"), "invalid_scope", false},
-		{ErrUnauthorizedClient.WithDebug("some-debug"), "unauthorized_client", false},
-		{ErrUnsupportedGrantType.WithDebug("some-debug"), "unsupported_grant_type", false},
+		{ErrInvalidRequest.WithDebug("some-debug"), "invalid_request", true, "some-debug"},
+		{ErrInvalidRequest.WithDebugf("some-debug-%d", 1234), "invalid_request", true, "some-debug-1234"},
+		{ErrInvalidRequest.WithDebug("some-debug"), "invalid_request", false, "some-debug"},
+		{ErrInvalidClient.WithDebug("some-debug"), "invalid_client", false, "some-debug"},
+		{ErrInvalidGrant.WithDebug("some-debug"), "invalid_grant", false, "some-debug"},
+		{ErrInvalidScope.WithDebug("some-debug"), "invalid_scope", false, "some-debug"},
+		{ErrUnauthorizedClient.WithDebug("some-debug"), "unauthorized_client", false, "some-debug"},
+		{ErrUnsupportedGrantType.WithDebug("some-debug"), "unsupported_grant_type", false, "some-debug"},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			f.SendDebugMessagesToClients = c.debug
@@ -91,7 +94,7 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 			if !c.debug {
 				assert.Empty(t, params.Debug)
 			} else {
-				assert.Equal(t, "some-debug", params.Debug)
+				assert.Equal(t, c.expectDebugMessage, params.Debug)
 			}
 		})
 	}

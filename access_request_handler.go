@@ -59,11 +59,11 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
-		return accessRequest, errors.WithStack(ErrInvalidRequest.WithDebug("HTTP method is not POST"))
+		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHintf("HTTP method is \"%s\", expected \"POST\".", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return accessRequest, errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
+		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithDebug(err.Error()))
 	} else if len(r.PostForm) == 0 {
-		return accessRequest, errors.WithStack(ErrInvalidRequest)
+		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
 	}
 
 	accessRequest.Form = r.PostForm
@@ -74,7 +74,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	accessRequest.SetRequestedScopes(removeEmpty(strings.Split(r.PostForm.Get("scope"), " ")))
 	accessRequest.GrantTypes = removeEmpty(strings.Split(r.PostForm.Get("grant_type"), " "))
 	if len(accessRequest.GrantTypes) < 1 {
-		return accessRequest, errors.WithStack(ErrInvalidRequest.WithDebug("No grant type given"))
+		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint(`Request parameter "grant_type"" is missing`))
 	}
 
 	client, err := f.AuthenticateClient(ctx, r, r.PostForm)

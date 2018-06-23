@@ -22,7 +22,6 @@
 package oauth2
 
 import (
-	"fmt"
 	"time"
 
 	"context"
@@ -50,15 +49,15 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("password") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use grant type password"))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The client is not allowed to use authorization grant \"password\"."))
 	}
 
 	username := request.GetRequestForm().Get("username")
 	password := request.GetRequestForm().Get("password")
 	if username == "" || password == "" {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Username or password missing"))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Username or password are missing from the POST body."))
 	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
-		return errors.WithStack(fosite.ErrRequestUnauthorized.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrRequestUnauthorized.WithHint("Unable to authenticate the provided username and password credentials.").WithDebug(err.Error()))
 	} else if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
@@ -66,7 +65,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithDebug(fmt.Sprintf("The client is not allowed to request scope %s", scope)))
+			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
 		}
 	}
 

@@ -67,12 +67,12 @@ func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType To
 			// Nothing to do
 		} else if err != nil {
 			rfcerr := ErrorToRFC6749Error(err)
-			return "", nil, errors.WithStack(rfcerr.WithDebug("A validator returned an error"))
+			return "", nil, errors.WithStack(rfcerr)
 		}
 	}
 
 	if !found {
-		return "", nil, errors.WithStack(ErrRequestUnauthorized.WithDebug("No validator felt responsible for validating the token"))
+		return "", nil, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to find a suitable validation strategy for the token, thus it is invalid."))
 	}
 
 	return foundTokenType, ar, nil

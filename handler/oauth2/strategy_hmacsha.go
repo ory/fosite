@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"context"
-	"fmt"
 
 	"github.com/ory/fosite"
 	enigma "github.com/ory/fosite/token/hmac"
@@ -55,10 +54,10 @@ func (h HMACSHAStrategy) GenerateAccessToken(_ context.Context, _ fosite.Request
 func (h HMACSHAStrategy) ValidateAccessToken(_ context.Context, r fosite.Requester, token string) (err error) {
 	var exp = r.GetSession().GetExpiresAt(fosite.AccessToken)
 	if exp.IsZero() && r.GetRequestedAt().Add(h.AccessTokenLifespan).Before(time.Now().UTC()) {
-		return errors.WithStack(fosite.ErrTokenExpired.WithDebug(fmt.Sprintf("Access token expired at %s", r.GetRequestedAt().Add(h.AccessTokenLifespan))))
+		return errors.WithStack(fosite.ErrTokenExpired.WithHintf("Access token expired at \"%s\".", r.GetRequestedAt().Add(h.AccessTokenLifespan)))
 	}
 	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
-		return errors.WithStack(fosite.ErrTokenExpired.WithDebug(fmt.Sprintf("Access token expired at %s", exp)))
+		return errors.WithStack(fosite.ErrTokenExpired.WithHintf("Access token expired at \"%s\".", exp))
 	}
 	return h.Enigma.Validate(token)
 }
@@ -78,10 +77,10 @@ func (h HMACSHAStrategy) GenerateAuthorizeCode(_ context.Context, _ fosite.Reque
 func (h HMACSHAStrategy) ValidateAuthorizeCode(_ context.Context, r fosite.Requester, token string) (err error) {
 	var exp = r.GetSession().GetExpiresAt(fosite.AuthorizeCode)
 	if exp.IsZero() && r.GetRequestedAt().Add(h.AuthorizeCodeLifespan).Before(time.Now().UTC()) {
-		return errors.WithStack(fosite.ErrTokenExpired.WithDebug(fmt.Sprintf("Authorize code expired at %s", r.GetRequestedAt().Add(h.AuthorizeCodeLifespan))))
+		return errors.WithStack(fosite.ErrTokenExpired.WithHintf("Authorize code expired at \"%s\".", r.GetRequestedAt().Add(h.AuthorizeCodeLifespan)))
 	}
 	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
-		return errors.WithStack(fosite.ErrTokenExpired.WithDebug(fmt.Sprintf("Authorize code expired at %s", exp)))
+		return errors.WithStack(fosite.ErrTokenExpired.WithHintf("Authorize code expired at \"%s\".", exp))
 	}
 
 	return h.Enigma.Validate(token)

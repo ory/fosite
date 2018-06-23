@@ -50,25 +50,25 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 	if len(request.Form.Get("request")+request.Form.Get("request_uri")) == 0 {
 		return nil
 	} else if len(request.Form.Get("request")) > 0 && len(request.Form.Get("request_uri")) > 0 {
-		return errors.WithStack(ErrInvalidRequest.WithDebug("OpenID Connect parameters request and request_uri were both given, but you can use at most one"))
+		return errors.WithStack(ErrInvalidRequest.WithHint(`OpenID Connect parameters "request" and "request_uri" were both given, but you can use at most one.`))
 	}
 
 	oidcClient, ok := request.Client.(OpenIDConnectClient)
 	if !ok {
 		if len(request.Form.Get("request_uri")) > 0 {
-			return errors.WithStack(ErrRequestURINotSupported.WithDebug("OpenID Connect request_uri context was given, but OAuth 2.0 Client does not implement OpenIDConnectClient"))
+			return errors.WithStack(ErrRequestURINotSupported.WithHint(`OpenID Connect "request_uri" context was given, but the OAuth 2.0 Client does not implement advanced OpenID Connect capabilities.`))
 		}
-		return errors.WithStack(ErrRequestNotSupported.WithDebug("OpenID Connect request context was given, but OAuth 2.0 Client does not implement OpenIDConnectClient"))
+		return errors.WithStack(ErrRequestNotSupported.WithHint(`OpenID Connect "request" context was given, but the OAuth 2.0 Client does not implement advanced OpenID Connect capabilities.`))
 	}
 
 	if oidcClient.GetJSONWebKeys() == nil && len(oidcClient.GetJSONWebKeysURI()) == 0 {
-		return errors.WithStack(ErrInvalidRequest.WithDebug("OpenID Connect request or request_uri context was given, but OAuth 2.0 Client does not have any JSON Web Keys registered"))
+		return errors.WithStack(ErrInvalidRequest.WithHint(`OpenID Connect "request" or "request_uri" context was given, but the OAuth 2.0 Client does not have any JSON Web Keys registered.`))
 	}
 
 	assertion := request.Form.Get("request")
 	if location := request.Form.Get("request_uri"); len(location) > 0 {
 		if !stringslice.Has(oidcClient.GetRequestURIs(), location) {
-			return errors.WithStack(ErrInvalidRequestURI.WithHint(fmt.Sprintf("Request URI \"%s\" is not whitelisted by the OAuth 2.0 Client", location)))
+			return errors.WithStack(ErrInvalidRequestURI.WithHint(fmt.Sprintf("Request URI \"%s\" is not whitelisted by the OAuth 2.0 Client.", location)))
 		}
 
 		hc := f.HTTPClient
@@ -78,17 +78,17 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 		response, err := hc.Get(location)
 		if err != nil {
-			return errors.WithStack(ErrInvalidRequestURI.WithDebug(fmt.Sprintf("Unable to fetch OpenID Connect request parameters from request_uri because %s", err)))
+			return errors.WithStack(ErrInvalidRequestURI.WithHintf(`Unable to fetch OpenID Connect request parameters from "request_uri" because %s.`, err.Error()))
 		}
 		defer response.Body.Close()
 
 		if response.StatusCode != http.StatusOK {
-			return errors.WithStack(ErrInvalidRequestURI.WithDebug(fmt.Sprintf("Unable to fetch OpenID Connect request parameters from request_uri because status code %d was expected, but got %d", http.StatusOK, response.StatusCode)))
+			return errors.WithStack(ErrInvalidRequestURI.WithHintf(`Unable to fetch OpenID Connect request parameters from "request_uri" because status code "%d" was expected, but got "%d".`, http.StatusOK, response.StatusCode))
 		}
 
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			return errors.WithStack(ErrInvalidRequestURI.WithDebug(fmt.Sprintf("Unable to fetch OpenID Connect request parameters from request_uri because error %s occurred during body parsing", err)))
+			return errors.WithStack(ErrInvalidRequestURI.WithHintf(`Unable to fetch OpenID Connect request parameters from "request_uri" because error %s occurred during body parsing.`, err))
 		}
 
 		assertion = string(body)
@@ -96,7 +96,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 	token, err := jwt.ParseWithClaims(assertion, new(jwt.MapClaims), func(t *jwt.Token) (interface{}, error) {
 		if oidcClient.GetRequestObjectSigningAlgorithm() != fmt.Sprintf("%s", t.Header["alg"]) {
-			return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("The request object uses signing algorithm %s, but the requested OAuth 2.0 Client enforces signing algorithm %s", t.Header["alg"], oidcClient.GetRequestObjectSigningAlgorithm())))
+			return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf(`The request object uses signing algorithm %s, but the requested OAuth 2.0 Client enforces signing algorithm %s.`, t.Header["alg"], oidcClient.GetRequestObjectSigningAlgorithm()))
 		}
 
 		if t.Method == jwt.SigningMethodNone {
@@ -107,23 +107,23 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 		case *jwt.SigningMethodRSA:
 			key, err := f.findClientPublicJWK(oidcClient, t)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("Unable to retrieve signing key from OAuth 2.0 Client because %s", err)))
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve signing key from OAuth 2.0 Client because %s.", err))
 			}
 			return key, nil
 		case *jwt.SigningMethodECDSA:
 			key, err := f.findClientPublicJWK(oidcClient, t)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("Unable to retrieve signing key from OAuth 2.0 Client because %s", err)))
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve signing key from OAuth 2.0 Client because %s.", err))
 			}
 			return key, nil
 		case *jwt.SigningMethodRSAPSS:
 			key, err := f.findClientPublicJWK(oidcClient, t)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("Unable to retrieve signing key from OAuth 2.0 Client because %s", err)))
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve signing key from OAuth 2.0 Client because %s.", err))
 			}
 			return key, nil
 		default:
-			return nil, errors.WithStack(ErrInvalidRequestObject.WithDebug(fmt.Sprintf("This request object uses unsupported signing algorithm %s", t.Header["alg"])))
+			return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf(`This request object uses unsupported signing algorithm "%s"."`, t.Header["alg"]))
 		}
 	})
 	if err != nil {
@@ -132,16 +132,16 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 			if e.Inner != nil {
 				return e.Inner
 			}
-			return errors.WithStack(ErrInvalidRequestObject.WithDebug(err.Error()))
+			return errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to verify the request object's signature.").WithDebug(err.Error()))
 		}
 		return err
 	} else if err := token.Claims.Valid(); err != nil {
-		return errors.WithStack(ErrInvalidRequestObject.WithDebug(err.Error()))
+		return errors.WithStack(ErrInvalidRequestObject.WithHint("Unable to verify the request object because its claims could not be validated, check if the expiry time is set correctly.").WithDebug(err.Error()))
 	}
 
 	claims, ok := token.Claims.(*jwt.MapClaims)
 	if !ok {
-		return errors.WithStack(ErrInvalidRequestObject.WithDebug("Unable to type assert claims from request object"))
+		return errors.WithStack(ErrInvalidRequestObject.WithHint("Unable to type assert claims from request object.").WithDebugf(`Got claims of type %T but expected type "*jwt.MapClaims".`, token.Claims))
 	}
 
 	for k, v := range *claims {
@@ -163,15 +163,15 @@ func (f *Fosite) validateAuthorizeRedirectURI(r *http.Request, request *Authoriz
 	// Fetch redirect URI from request
 	rawRedirURI, err := GetRedirectURIFromRequestValues(request.Form)
 	if err != nil {
-		return errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
+		return err
 	}
 
 	// Validate redirect uri
 	redirectURI, err := MatchRedirectURIWithClientRedirectURIs(rawRedirURI, request.Client)
 	if err != nil {
-		return errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
+		return err
 	} else if !IsValidRedirectURI(redirectURI) {
-		return errors.WithStack(ErrInvalidRequest.WithDebug("not a valid redirect uri"))
+		return errors.WithStack(ErrInvalidRequest.WithHintf(`The redirect URI "%s" contains an illegal character (for example #) or is otherwise invalid.`, redirectURI))
 	}
 	request.RedirectURI = redirectURI
 	return nil
@@ -181,7 +181,7 @@ func (f *Fosite) validateAuthorizeScope(r *http.Request, request *AuthorizeReque
 	scope := removeEmpty(strings.Split(request.Form.Get("scope"), " "))
 	for _, permission := range scope {
 		if !f.ScopeStrategy(request.Client.GetScopes(), permission) {
-			return errors.WithStack(ErrInvalidScope.WithDebug(fmt.Sprintf("The client is not allowed to request scope %s", permission)))
+			return errors.WithStack(ErrInvalidScope.WithHintf(`The OAuth 2.0 Client is not allowed to request scope "%s".`, permission))
 		}
 	}
 	request.SetRequestedScopes(scope)
@@ -197,7 +197,7 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	// response types is defined by their respective specifications.
 	responseTypes := removeEmpty(stringsx.Splitx(r.Form.Get("response_type"), " "))
 	if len(responseTypes) == 0 {
-		return errors.WithStack(ErrUnsupportedResponseType.WithDebug("The request is missing the response_type parameter"))
+		return errors.WithStack(ErrUnsupportedResponseType.WithHint(`The request is missing the "response_type"" parameter.`))
 	}
 
 	var found bool
@@ -209,7 +209,7 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	}
 
 	if !found {
-		return errors.WithStack(ErrUnsupportedResponseType.WithDebug(fmt.Sprintf("The client is not allowed to request response_type \"%s\"", r.Form.Get("response_type"))))
+		return errors.WithStack(ErrUnsupportedResponseType.WithHintf("The client is not allowed to request response_type \"%s\".", r.Form.Get("response_type")))
 	}
 
 	request.ResponseTypes = responseTypes
@@ -224,13 +224,13 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 
 	if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return request, errors.WithStack(ErrInvalidRequest.WithDebug(err.Error()))
+		return request, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithDebug(err.Error()))
 	}
 
 	request.Form = r.Form
 	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	if err != nil {
-		return request, errors.WithStack(ErrInvalidClient)
+		return request, errors.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist."))
 	}
 	request.Client = client
 
@@ -263,7 +263,7 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	state := request.Form.Get("state")
 	if len(state) < MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
-		return request, errors.WithStack(ErrInvalidState.WithDebug(fmt.Sprintf("State length must at least be %d characters long", MinParameterEntropy)))
+		return request, errors.WithStack(ErrInvalidState.WithHintf(`Request parameter "state" must be at least be %d characters long to ensure sufficient entropy.`, MinParameterEntropy))
 	}
 	request.State = state
 
