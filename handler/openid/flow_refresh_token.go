@@ -77,9 +77,10 @@ func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
 	}
 
-	if !requester.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.WithStack(fosite.ErrUnknownRequest.WithDebug("The client is not allowed to use response type id_token"))
-	}
+	// Disabled because this is already handled at the authorize_request_handler
+	// if !requester.GetClient().GetResponseTypes().Has("id_token") {
+	// 	 return errors.WithStack(fosite.ErrUnknownRequest.WithDebug("The client is not allowed to use response type id_token"))
+	// }
 
 	return c.IssueExplicitIDToken(ctx, requester, responder)
 }

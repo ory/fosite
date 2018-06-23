@@ -55,6 +55,16 @@ bumps (`0.1.0` -> `0.2.0`).
 
 This release improves compatibility with the OpenID Connect Dynamic Client Registration 1.0 specification.
 
+### Changes to parsing of OAuth 2.0 Client `response_types`
+
+Previously, when response types such as `code token id_token` were requested (OpenID Connect Hybrid Flow) it was enough
+for the client to have `response_types=["code", "token", "id_token"]`. This is however incompatible with the
+OpenID Connect Dynamic Client Registration 1.0 spec which dictates that the `response_types` have to match exactly.
+
+Assuming you are requesting `&response_types=code+token+id_token`, your client should have `response_types=["code token id_token"]`,
+if other response types are required (e.g. `&response_types=code`, `&response_types=token`) they too must be included:
+`response_types=["code", "token", "code token id_token"]`.
+
 ### `openid.DefaultStrategy` field name changed
 
 Field `RS256JWTStrategy` was renamed to `JWTStrategy` and now relies on an interface instead of a concrete struct.

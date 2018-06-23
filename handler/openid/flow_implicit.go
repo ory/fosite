@@ -54,11 +54,12 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use implicit grant type"))
 	}
 
-	if ar.GetResponseTypes().Exact("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
-	} else if ar.GetResponseTypes().Matches("token", "id_token") && !ar.GetClient().GetResponseTypes().Has("token", "id_token") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token and id_token"))
-	}
+	// Disabled because this is already handled at the authorize_request_handler
+	//if ar.GetResponseTypes().Exact("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
+	//	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
+	//} else if ar.GetResponseTypes().Matches("token", "id_token") && !ar.GetClient().GetResponseTypes().Has("token", "id_token") {
+	//	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token and id_token"))
+	//}
 
 	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Parameter nonce must be set when using the implicit flow"))

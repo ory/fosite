@@ -54,9 +54,10 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		return nil
 	}
 
-	if !ar.GetClient().GetResponseTypes().Has("token") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token"))
-	}
+	// Disabled because this is already handled at the authorize_request_handler
+	// if !ar.GetClient().GetResponseTypes().Has("token") {
+	// 	 return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token"))
+	// }
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use grant type implicit"))
