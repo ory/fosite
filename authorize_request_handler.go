@@ -196,6 +196,10 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	// type "a b" is the same as "b a").  The meaning of such composite
 	// response types is defined by their respective specifications.
 	responseTypes := removeEmpty(stringsx.Splitx(r.Form.Get("response_type"), " "))
+	if len(responseTypes) == 0 {
+		return errors.WithStack(ErrInvalidRequest.WithDebug("The request is missing the response_type parameter"))
+	}
+
 	var found bool
 	for _, t := range request.GetClient().GetResponseTypes() {
 		if Arguments(responseTypes).Matches(removeEmpty(stringsx.Splitx(t, " "))...) {
