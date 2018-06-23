@@ -61,7 +61,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 		query.Add("error_hint", rfcerr.Hint)
 	}
 
-	if !ar.GetResponseTypes().Exact("code") && errors.Cause(err) != ErrUnsupportedResponseType {
+	if !(len(ar.GetResponseTypes()) == 0 || ar.GetResponseTypes().Exact("code")) && errors.Cause(err) != ErrUnsupportedResponseType {
 		redirectURI.Fragment = query.Encode()
 	} else {
 		for key, values := range redirectURI.Query() {
