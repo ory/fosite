@@ -47,7 +47,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use grant type refresh_token"))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"refresh_token\"."))
 	}
 
 	refresh := request.GetRequestForm().Get("refresh_token")
@@ -65,13 +65,13 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	if !originalRequest.GetGrantedScopes().HasOneOf("offline", "offline_access") {
-		return errors.WithStack(fosite.ErrScopeNotGranted.WithDebug("The client is not allowed to use grant type refresh_token"))
+		return errors.WithStack(fosite.ErrScopeNotGranted.WithHint("The OAuth 2.0 Client was not granted scope \"offline\" or \"offline_access\" and may thus not perform the \"refresh_token\" authorization grant."))
 
 	}
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
 	if originalRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Client ID mismatch"))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("The OAuth 2.0 Client ID from this request does not match the ID during the initial token issuance."))
 	}
 
 	request.SetSession(originalRequest.GetSession().Clone())

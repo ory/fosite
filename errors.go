@@ -287,9 +287,13 @@ func (e *RFC6749Error) StatusCode() int {
 	return e.Code
 }
 
-func (e *RFC6749Error) WithHint(hin string) *RFC6749Error {
+func (e *RFC6749Error) WithHintf(hint string, args ...interface{}) *RFC6749Error {
+	return e.WithHint(fmt.Sprintf(hint, args...))
+}
+
+func (e *RFC6749Error) WithHint(hint string) *RFC6749Error {
 	err := *e
-	err.Hint = hin
+	err.Hint = hint
 	return &err
 }
 
@@ -297,6 +301,10 @@ func (e *RFC6749Error) WithDebug(debug string) *RFC6749Error {
 	err := *e
 	err.Debug = debug
 	return &err
+}
+
+func (e *RFC6749Error) WithDebugf(debug string, args ...interface{}) *RFC6749Error {
+	return e.WithDebug(fmt.Sprintf(debug, args...))
 }
 
 func (e *RFC6749Error) WithDescription(description string) *RFC6749Error {

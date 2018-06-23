@@ -45,11 +45,11 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 	}
 
 	if !authorize.GetGrantedScopes().Has("openid") {
-		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("The an openid connect session was found but the openid scope is missing in it"))
+		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("An OpenID Connect session was found but the openid scope is missing, probably due to a broken code configuration."))
 	}
 
 	if !requester.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the authorization_code grant type"))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"authorization_code\"."))
 	}
 
 	// The response type `id_token` is only required when performing the implicit or hybrid flow, see:
