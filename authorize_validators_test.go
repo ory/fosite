@@ -49,6 +49,21 @@ func TestValidateResponseTypes(t *testing.T) {
 			art: []string{"token"},
 		},
 		{
+			rt:        "",
+			art:       []string{"token"},
+			expectErr: true,
+		},
+		{
+			rt:        "  ",
+			art:       []string{"token"},
+			expectErr: true,
+		},
+		{
+			rt:        "disable",
+			art:       []string{"token"},
+			expectErr: true,
+		},
+		{
 			rt:        "code token",
 			art:       []string{"token", "code"},
 			expectErr: true,
@@ -69,6 +84,9 @@ func TestValidateResponseTypes(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			r := &http.Request{Form: url.Values{"response_type": {tc.rt}}}
+			if tc.rt == "disable" {
+				r = &http.Request{Form: url.Values{}}
+			}
 			ar := NewAuthorizeRequest()
 			ar.Request.Client = &DefaultClient{ResponseTypes: tc.art}
 
