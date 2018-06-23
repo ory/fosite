@@ -63,9 +63,10 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 		return nil
 	}
 
-	if !ar.GetClient().GetResponseTypes().Has("code") {
-		return errors.WithStack(fosite.ErrInvalidGrant)
-	}
+	// Disabled because this is already handled at the authorize_request_handler
+	// if !ar.GetClient().GetResponseTypes().Has("code") {
+	// 	 return errors.WithStack(fosite.ErrInvalidGrant)
+	// }
 
 	if !fosite.IsRedirectURISecure(ar.GetRedirectURI()) {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/"))

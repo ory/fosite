@@ -121,19 +121,20 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 			},
 			expectedErr: fosite.ErrUnknownRequest,
 		},
-		{
-			description: "should not pass because client may not ask for id_token",
-			areq: &fosite.AccessRequest{
-				GrantTypes: []string{"refresh_token"},
-				Request: fosite.Request{
-					GrantedScopes: []string{"openid"},
-					Client: &fosite.DefaultClient{
-						GrantTypes: []string{"refresh_token"},
-					},
-				},
-			},
-			expectedErr: fosite.ErrUnknownRequest,
-		},
+		// Disabled because this is already handled at the authorize_request_handler
+		//{
+		//	description: "should not pass because client may not ask for id_token",
+		//	areq: &fosite.AccessRequest{
+		//		GrantTypes: []string{"refresh_token"},
+		//		Request: fosite.Request{
+		//			GrantedScopes: []string{"openid"},
+		//			Client: &fosite.DefaultClient{
+		//				GrantTypes: []string{"refresh_token"},
+		//			},
+		//		},
+		//	},
+		//	expectedErr: fosite.ErrUnknownRequest,
+		//},
 		{
 			description: "should pass",
 			areq: &fosite.AccessRequest{
@@ -141,8 +142,8 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 				Request: fosite.Request{
 					GrantedScopes: []string{"openid"},
 					Client: &fosite.DefaultClient{
-						GrantTypes:    []string{"refresh_token"},
-						ResponseTypes: []string{"id_token"},
+						GrantTypes: []string{"refresh_token"},
+						//ResponseTypes: []string{"id_token"},
 					},
 					Session: &DefaultSession{
 						Subject: "foo",

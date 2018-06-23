@@ -101,28 +101,29 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 			expectErr: fosite.ErrInvalidGrant,
 		},
-		{
-			description: "should not do anything because request requirements are not met",
-			setup: func() {
-				areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
-				areq.Scopes = fosite.Arguments{"openid"}
-				areq.Client = &fosite.DefaultClient{
-					GrantTypes:    fosite.Arguments{"implicit"},
-					ResponseTypes: fosite.Arguments{},
-					Scopes:        []string{"openid", "fosite"},
-				}
-			},
-			expectErr: fosite.ErrInvalidGrant,
-		},
+		// Disabled because this is already handled at the authorize_request_handler
+		//{
+		//	description: "should not do anything because request requirements are not met",
+		//	setup: func() {
+		//		areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
+		//		areq.Scopes = fosite.Arguments{"openid"}
+		//		areq.Client = &fosite.DefaultClient{
+		//			GrantTypes:    fosite.Arguments{"implicit"},
+		//			ResponseTypes: fosite.Arguments{},
+		//			Scopes:        []string{"openid", "fosite"},
+		//		}
+		//	},
+		//	expectErr: fosite.ErrInvalidGrant,
+		//},
 		{
 			description: "should not do anything because request requirements are not met",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
 				areq.Scopes = fosite.Arguments{"openid"}
 				areq.Client = &fosite.DefaultClient{
-					GrantTypes:    fosite.Arguments{"implicit"},
-					ResponseTypes: fosite.Arguments{"token", "id_token"},
-					Scopes:        []string{"openid", "fosite"},
+					GrantTypes: fosite.Arguments{"implicit"},
+					//ResponseTypes: fosite.Arguments{"token", "id_token"},
+					Scopes: []string{"openid", "fosite"},
 				}
 			},
 			expectErr: fosite.ErrInvalidRequest,

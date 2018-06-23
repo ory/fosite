@@ -184,14 +184,14 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				"scope":         {"foo bar"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{ResponseTypes: []string{"code token"}, RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}}, nil)
 			},
 			expect: &AuthorizeRequest{
 				RedirectURI:   redir,
 				ResponseTypes: []string{"code", "token"},
 				State:         "strong-state",
 				Request: Request{
-					Client: &DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}},
+					Client: &DefaultClient{ResponseTypes: []string{"code token"}, RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}},
 					Scopes: []string{"foo", "bar"},
 				},
 			},

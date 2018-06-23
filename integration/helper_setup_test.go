@@ -44,7 +44,7 @@ var fositeStore = &storage.MemoryStore{
 			ID:            "my-client",
 			Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 			RedirectURIs:  []string{"http://localhost:3846/callback"},
-			ResponseTypes: []string{"id_token", "code", "token"},
+			ResponseTypes: []string{"id_token", "code", "token", "token code", "id_token code", "token id_token", "token code id_token"},
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 			Scopes:        []string{"fosite", "offline", "openid"},
 		},
@@ -53,7 +53,7 @@ var fositeStore = &storage.MemoryStore{
 			Secret:        []byte{},
 			Public:        true,
 			RedirectURIs:  []string{"http://localhost:3846/callback"},
-			ResponseTypes: []string{"id_token", "code"},
+			ResponseTypes: []string{"id_token", "code", "code id_token"},
 			GrantTypes:    []string{"refresh_token", "authorization_code"},
 			Scopes:        []string{"fosite", "offline", "openid"},
 		},

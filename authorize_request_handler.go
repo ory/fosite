@@ -189,6 +189,29 @@ func (f *Fosite) validateAuthorizeScope(r *http.Request, request *AuthorizeReque
 	return nil
 }
 
+func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeRequest) error {
+	// https://tools.ietf.org/html/rfc6749#section-3.1.1
+	// Extension response types MAY contain a space-delimited (%x20) list of
+	// values, where the order of values does not matter (e.g., response
+	// type "a b" is the same as "b a").  The meaning of such composite
+	// response types is defined by their respective specifications.
+	responseTypes := removeEmpty(stringsx.Splitx(r.Form.Get("response_type"), " "))
+	var found bool
+	for _, t := range request.GetClient().GetResponseTypes() {
+		if Arguments(responseTypes).Matches(removeEmpty(stringsx.Splitx(t, " "))...) {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return errors.WithStack(ErrInvalidRequest.WithDebug(fmt.Sprintf("The client is not allowed to request response_type \"%s\"", r.Form.Get("response_type"))))
+	}
+
+	request.ResponseTypes = responseTypes
+	return nil
+}
+
 func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	request := &AuthorizeRequest{
 		ResponseTypes:        Arguments{},
@@ -223,12 +246,9 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 		return request, errors.WithStack(ErrRegistrationNotSupported)
 	}
 
-	// https://tools.ietf.org/html/rfc6749#section-3.1.1
-	// Extension response types MAY contain a space-delimited (%x20) list of
-	// values, where the order of values does not matter (e.g., response
-	// type "a b" is the same as "b a").  The meaning of such composite
-	// response types is defined by their respective specifications.
-	request.ResponseTypes = removeEmpty(strings.Split(request.Form.Get("response_type"), " "))
+	if err := f.validateResponseTypes(r, request); err != nil {
+		return request, err
+	}
 
 	// rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
 	// The "state" parameter should be used to link the authorization
