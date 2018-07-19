@@ -102,6 +102,9 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(req fosite.AuthorizeReque
 
 	claims := session.IDTokenClaims()
 	if claims.Subject == "" {
+		if stringslice.Has(prompt, "none") {
+			return errors.WithStack(fosite.ErrLoginRequired.WithDebug("Cannot authenticate user silently because user's session has expired or it has never been authenticated."))
+		}
 		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because session subject is empty."))
 	}
 
