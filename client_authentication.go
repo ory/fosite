@@ -102,7 +102,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 			case "client_secret_post":
 				fallthrough
 			case "client_secret_basic":
-				return nil, errors.WithStack(ErrInvalidClient.WithHintf("The OAuth 2.0 Request uses the \"client_secret_jwt\" authentication method, but the OAuth 2.0 Client only support the \"%s\" client authentication method.", oidcClient.GetTokenEndpointAuthMethod()))
+				return nil, errors.WithStack(ErrInvalidClient.WithHintf("The OAuth 2.0 Request uses the \"client_secret_jwt\" authentication method, but the OAuth 2.0 Client only supports the \"%s\" client authentication method. You must configure the OAuth 2.0 client's \"token_endpoint_auth_method\" value to accept \"client_secret_jwt\".", oidcClient.GetTokenEndpointAuthMethod()))
 			case "client_secret_jwt":
 				return nil, errors.WithStack(ErrInvalidClient.WithHint("This requested OAuth 2.0 client only supports client authentication method \"client_secret_jwt\", however that method is not supported by this server."))
 			case "private_key_jwt":
@@ -188,11 +188,11 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 	if oidcClient, ok := client.(OpenIDConnectClient); !ok {
 		// If this isn't an OpenID Connect client then we actually don't care about any of this, just continue!
 	} else if ok && form.Get("client_id") != "" && form.Get("client_secret") != "" && oidcClient.GetTokenEndpointAuthMethod() != "client_secret_post" {
-		return nil, errors.WithStack(ErrInvalidClient.WithHintf("The OAuth 2.0 Client supports client authentication method \"%s\", but method \"client_secret_post\" was requested.", oidcClient.GetTokenEndpointAuthMethod()))
+		return nil, errors.WithStack(ErrInvalidClient.WithHintf("The OAuth 2.0 Client supports client authentication method \"%s\", but method \"client_secret_post\" was requested. You must configure the OAuth 2.0 client's \"token_endpoint_auth_method\" value to accept \"client_secret_post\".", oidcClient.GetTokenEndpointAuthMethod()))
 	} else if _, _, basicOk := r.BasicAuth(); basicOk && ok && oidcClient.GetTokenEndpointAuthMethod() != "client_secret_basic" {
-		return nil, errors.WithStack(ErrInvalidClient.WithHintf("The OAuth 2.0 Client supports client authentication method \"%s\", but method \"client_secret_basic\" was requested.", oidcClient.GetTokenEndpointAuthMethod()))
+		return nil, errors.WithStack(ErrInvalidClient.WithHintf("The OAuth 2.0 Client supports client authentication method \"%s\", but method \"client_secret_basic\" was requested. You must configure the OAuth 2.0 client's \"token_endpoint_auth_method\" value to accept \"client_secret_basic\".", oidcClient.GetTokenEndpointAuthMethod()))
 	} else if ok && oidcClient.GetTokenEndpointAuthMethod() != "none" && client.IsPublic() {
-		return nil, errors.WithStack(ErrInvalidClient.WithHintf("The OAuth 2.0 Client supports client authentication method \"%s\", but method \"none\" was requested.", oidcClient.GetTokenEndpointAuthMethod()))
+		return nil, errors.WithStack(ErrInvalidClient.WithHintf("The OAuth 2.0 Client supports client authentication method \"%s\", but method \"none\" was requested. You must configure the OAuth 2.0 client's \"token_endpoint_auth_method\" value to accept \"none\".", oidcClient.GetTokenEndpointAuthMethod()))
 	}
 
 	if client.IsPublic() {
