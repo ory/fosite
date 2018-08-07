@@ -150,8 +150,8 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(req fosite.AuthorizeReque
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Failed to validate OpenID Connect request as decoding id token from id_token_hint to *jwt.StandardClaims failed."))
 	} else if hintSub, _ := hintClaims["sub"].(string); hintSub == "" {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Failed to validate OpenID Connect request because provided id token from id_token_hint does not have a subject."))
-	} else if hintSub != claims.Subject || hintSub != session.GetSubject() {
-		return errors.WithStack(fosite.ErrLoginRequired.WithHintf("Failed to validate OpenID Connect request because subject from session does not subject from id_token_hint."))
+	} else if hintSub != claims.Subject {
+		return errors.WithStack(fosite.ErrLoginRequired.WithHintf("Failed to validate OpenID Connect request because subject from ID token session claims does not subject from id_token_hint."))
 	}
 
 	return nil
