@@ -34,8 +34,11 @@ type Config struct {
 	// AuthorizeCodeLifespan sets how long an authorize code is going to be valid. Defaults to fifteen minutes.
 	AuthorizeCodeLifespan time.Duration
 
-	// IDTokenLifespan sets how long an id token is going to be valid. Defaults to one hour.
+	// IDTokenLifespan sets the default id token lifetime. Defaults to one hour.
 	IDTokenLifespan time.Duration
+
+	// IDTokenIssuer sets the default issuer of the ID Token.
+	IDTokenIssuer string
 
 	// HashCost sets the cost of the password hashing cost. Defaults to 12.
 	HashCost int

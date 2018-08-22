@@ -96,7 +96,7 @@ func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *
 		storage,
 		&CommonStrategy{
 			CoreStrategy:               NewOAuth2HMACStrategy(config, secret),
-			OpenIDConnectTokenStrategy: NewOpenIDConnectStrategy(key),
+			OpenIDConnectTokenStrategy: NewOpenIDConnectStrategy(config, key),
 			JWTStrategy: &jwt.RS256JWTStrategy{
 				PrivateKey: key,
 			},
