@@ -37,8 +37,9 @@ import (
 
 // HMACStrategy is responsible for generating and validating challenges.
 type HMACStrategy struct {
-	AuthCodeEntropy int
-	GlobalSecret    []byte
+	AuthCodeEntropy      int
+	GlobalSecret         []byte
+	RotatedGlobalSecrets [][]byte
 	sync.Mutex
 }
 
@@ -59,7 +60,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	defer c.Unlock()
 
 	if len(c.GlobalSecret) < minimumSecretLength {
-		return "", "", errors.Errorf("Secret for signing HMAC-SHA256 is expected to be 32 byte long, got %d byte", len(c.GlobalSecret))
+		return "", "", errors.Errorf("secret for signing HMAC-SHA256 is expected to be 32 byte long, got %d byte", len(c.GlobalSecret))
 	}
 
 	var signingKey [32]byte
@@ -90,12 +91,26 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
 func (c *HMACStrategy) Validate(token string) error {
-	if len(c.GlobalSecret) < minimumSecretLength {
-		return errors.Errorf("Secret for signing HMAC-SHA256 is expected to be 32 byte long, got %d byte", len(c.GlobalSecret))
+	keys := append([][]byte{c.GlobalSecret}, c.RotatedGlobalSecrets...)
+	for _, key := range keys {
+		if err := c.validate(key, token); err == nil {
+			return nil
+		} else if errors.Cause(err) == fosite.ErrTokenSignatureMismatch {
+		} else {
+			return err
+		}
+	}
+
+	return errors.New("a secret for signing HMAC-SHA256 is expected to be defined, but none were")
+}
+
+func (c *HMACStrategy) validate(secret []byte, token string) error {
+	if len(secret) < minimumSecretLength {
+		return errors.Errorf("secret for signing HMAC-SHA256 is expected to be 32 byte long, got %d byte", len(secret))
 	}
 
 	var signingKey [32]byte
-	copy(signingKey[:], c.GlobalSecret)
+	copy(signingKey[:], secret)
 
 	split := strings.Split(token, ".")
 	if len(split) != 2 {

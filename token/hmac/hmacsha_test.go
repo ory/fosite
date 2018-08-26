@@ -75,3 +75,46 @@ func TestValidateSignatureRejects(t *testing.T) {
 		t.Logf("Passed test case %d", k)
 	}
 }
+
+func TestValidateWithRotatedKey(t *testing.T) {
+	old := HMACStrategy{
+		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
+	}
+	now := HMACStrategy{
+		GlobalSecret: []byte("0000000090123456789012345678901234567890"),
+		RotatedGlobalSecrets: [][]byte{
+			[]byte("abcdefgh90123456789012345678901234567890"),
+			[]byte("1234567890123456789012345678901234567890"),
+		},
+	}
+
+	token, _, err := old.Generate()
+	require.NoError(t, err)
+
+	require.NoError(t, now.Validate(token))
+}
+
+func TestValidateWithRotatedKeyInvalid(t *testing.T) {
+	old := HMACStrategy{
+		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
+	}
+	now := HMACStrategy{
+		GlobalSecret: []byte("0000000090123456789012345678901234567890"),
+		RotatedGlobalSecrets: [][]byte{
+			[]byte("abcdefgh90123456789012345678901"),
+			[]byte("1234567890123456789012345678901234567890"),
+		},
+	}
+
+	token, _, err := old.Generate()
+	require.NoError(t, err)
+
+	require.Error(t, now.Validate(token))
+
+	now = HMACStrategy{
+		GlobalSecret:         nil,
+		RotatedGlobalSecrets: [][]byte{},
+	}
+
+	require.Error(t, now.Validate(token))
+}
