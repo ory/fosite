@@ -36,10 +36,11 @@ type CommonStrategy struct {
 	jwt.JWTStrategy
 }
 
-func NewOAuth2HMACStrategy(config *Config, secret []byte) *oauth2.HMACSHAStrategy {
+func NewOAuth2HMACStrategy(config *Config, secret []byte, rotatedSecrets [][]byte) *oauth2.HMACSHAStrategy {
 	return &oauth2.HMACSHAStrategy{
 		Enigma: &hmac.HMACStrategy{
-			GlobalSecret: secret,
+			GlobalSecret:         secret,
+			RotatedGlobalSecrets: rotatedSecrets,
 		},
 		AccessTokenLifespan:   config.GetAccessTokenLifespan(),
 		AuthorizeCodeLifespan: config.GetAuthorizeCodeLifespan(),
