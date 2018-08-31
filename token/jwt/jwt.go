@@ -91,9 +91,9 @@ func (j *RS256JWTStrategy) Decode(token string) (*jwt.Token, error) {
 	})
 
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return parsedToken, errors.WithStack(err)
 	} else if !parsedToken.Valid {
-		return nil, errors.WithStack(fosite.ErrInactiveToken)
+		return parsedToken, errors.WithStack(fosite.ErrInactiveToken)
 	}
 
 	return parsedToken, err

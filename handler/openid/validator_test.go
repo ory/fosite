@@ -200,6 +200,26 @@ func TestValidatePrompt(t *testing.T) {
 				ExpiresAt:   time.Now().Add(time.Hour),
 			}),
 		},
+		{
+			d:         "should pass subject from ID token matches subject from session even though id token is expired",
+			prompt:    "",
+			isPublic:  false,
+			expectErr: false,
+			s: &DefaultSession{
+				Subject: "foo",
+				Claims: &jwt.IDTokenClaims{
+					Subject:     "foo",
+					RequestedAt: time.Now().UTC(),
+					AuthTime:    time.Now().UTC().Add(-time.Second),
+					ExpiresAt:   time.Now().UTC().Add(-time.Second),
+				},
+			},
+			idTokenHint: genIDToken(jwt.IDTokenClaims{
+				Subject:     "foo",
+				RequestedAt: time.Now(),
+				ExpiresAt:   time.Now().Add(time.Hour),
+			}),
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			t.Logf("%s", tc.idTokenHint)

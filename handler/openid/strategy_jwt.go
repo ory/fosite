@@ -189,7 +189,9 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 
 		if tokenHintString := requester.GetRequestForm().Get("id_token_hint"); tokenHintString != "" {
 			tokenHint, err := h.JWTStrategy.Decode(tokenHintString)
-			if err != nil {
+			if ve, ok := errors.Cause(err).(*jwtgo.ValidationError); ok && ve.Errors == jwtgo.ValidationErrorExpired {
+				// Expired ID Tokens are allowed as values to id_token_hint
+			} else if err != nil {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug(fmt.Sprintf("Unable to decode id token from id_token_hint parameter because %s.", err.Error())))
 			}
 
