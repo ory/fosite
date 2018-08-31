@@ -240,6 +240,28 @@ func TestJWTStrategy_GenerateIDToken(t *testing.T) {
 			expectErr: false,
 		},
 		{
+			description: "should pass even though token is expired",
+			setup: func() {
+				req = fosite.NewAccessRequest(&DefaultSession{
+					Claims: &jwt.IDTokenClaims{
+						Subject:     "peter",
+						AuthTime:    time.Now().Add(-time.Hour).UTC(),
+						RequestedAt: time.Now().Add(-time.Minute),
+					},
+					Headers: &jwt.Headers{},
+				})
+				token, _ := j.GenerateIDToken(nil, fosite.NewAccessRequest(&DefaultSession{
+					Claims: &jwt.IDTokenClaims{
+						Subject:   "peter",
+						ExpiresAt: time.Now().Add(-time.Hour).UTC(),
+					},
+					Headers: &jwt.Headers{},
+				}))
+				req.Form.Set("id_token_hint", token)
+			},
+			expectErr: false,
+		},
+		{
 			description: "should fail because id_token_hint subject does not match subject from claims",
 			setup: func() {
 				req = fosite.NewAccessRequest(&DefaultSession{
@@ -261,7 +283,7 @@ func TestJWTStrategy_GenerateIDToken(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
 			c.setup()
 			token, err := j.GenerateIDToken(nil, req)
-			assert.Equal(t, c.expectErr, err != nil, "%d: %s", k, err)
+			assert.Equal(t, c.expectErr, err != nil, "%d: %+v", k, err)
 			if !c.expectErr {
 				assert.NotEmpty(t, token)
 			}
