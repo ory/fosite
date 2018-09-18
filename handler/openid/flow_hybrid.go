@@ -98,7 +98,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		resp.AddFragment("code", code)
 		ar.SetResponseTypeHandled("code")
 
-		hash, err := c.Enigma.Hash([]byte(resp.GetFragment().Get("code")))
+		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetFragment().Get("code")))
 		if err != nil {
 			return err
 		}
@@ -119,7 +119,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		}
 		ar.SetResponseTypeHandled("token")
 
-		hash, err := c.Enigma.Hash([]byte(resp.GetFragment().Get("access_token")))
+		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetFragment().Get("access_token")))
 		if err != nil {
 			return err
 		}

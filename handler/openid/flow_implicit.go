@@ -88,7 +88,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		}
 
 		ar.SetResponseTypeHandled("token")
-		hash, err := c.RS256JWTStrategy.Hash([]byte(resp.GetFragment().Get("access_token")))
+		hash, err := c.RS256JWTStrategy.Hash(ctx, []byte(resp.GetFragment().Get("access_token")))
 		if err != nil {
 			return err
 		}

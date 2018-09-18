@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"time"
 
+	"context"
+
 	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
@@ -140,7 +142,7 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(req fosite.AuthorizeReque
 		return nil
 	}
 
-	tokenHint, err := v.Strategy.Decode(idTokenHint)
+	tokenHint, err := v.Strategy.Decode(context.TODO(), idTokenHint)
 	if ve, ok := errors.Cause(err).(*jwtgo.ValidationError); ok && ve.Errors == jwtgo.ValidationErrorExpired {
 		// Expired tokens are ok
 	} else if err != nil {

@@ -116,7 +116,7 @@ func (h *DefaultJWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosi
 }
 
 func (h *DefaultJWTStrategy) validate(token string) (t *jwtx.Token, err error) {
-	t, err = h.JWTStrategy.Decode(token)
+	t, err = h.JWTStrategy.Decode(context.TODO(), token)
 
 	if err == nil {
 		err = t.Claims.Valid()
@@ -173,6 +173,6 @@ func (h *DefaultJWTStrategy) generate(tokenType fosite.TokenType, requester fosi
 
 		claims.Scope = requester.GetGrantedScopes()
 
-		return h.JWTStrategy.Generate(claims.ToMapClaims(), jwtSession.GetJWTHeader())
+		return h.JWTStrategy.Generate(context.TODO(), claims.ToMapClaims(), jwtSession.GetJWTHeader())
 	}
 }

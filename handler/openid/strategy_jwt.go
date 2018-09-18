@@ -125,7 +125,7 @@ type DefaultStrategy struct {
 	Issuer string
 }
 
-func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Requester) (token string, err error) {
+func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.Requester) (token string, err error) {
 	if h.Expiry == 0 {
 		h.Expiry = defaultExpiryTime
 	}
@@ -188,7 +188,7 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 		}
 
 		if tokenHintString := requester.GetRequestForm().Get("id_token_hint"); tokenHintString != "" {
-			tokenHint, err := h.JWTStrategy.Decode(tokenHintString)
+			tokenHint, err := h.JWTStrategy.Decode(ctx, tokenHintString)
 			if ve, ok := errors.Cause(err).(*jwtgo.ValidationError); ok && ve.Errors == jwtgo.ValidationErrorExpired {
 				// Expired ID Tokens are allowed as values to id_token_hint
 			} else if err != nil {
@@ -233,6 +233,6 @@ func (h DefaultStrategy) GenerateIDToken(_ context.Context, requester fosite.Req
 	claims.Audience = stringsx.Unique(append(claims.Audience, requester.GetClient().GetID()))
 	claims.IssuedAt = time.Now().UTC()
 
-	token, _, err = h.JWTStrategy.Generate(claims.ToMapClaims(), sess.IDTokenHeaders())
+	token, _, err = h.JWTStrategy.Generate(ctx, claims.ToMapClaims(), sess.IDTokenHeaders())
 	return token, err
 }
