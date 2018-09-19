@@ -28,6 +28,8 @@ import (
 
 	"time"
 
+	"context"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +40,7 @@ func TestValidatePrompt(t *testing.T) {
 	v := NewOpenIDConnectRequestValidator(nil, j)
 
 	var genIDToken = func(c jwt.IDTokenClaims) string {
-		s, _, err := j.Generate(c.ToMapClaims(), jwt.NewHeaders())
+		s, _, err := j.Generate(context.TODO(), c.ToMapClaims(), jwt.NewHeaders())
 		require.NoError(t, err)
 		return s
 	}

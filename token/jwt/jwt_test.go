@@ -27,6 +27,8 @@ import (
 
 	"time"
 
+	"context"
+
 	"github.com/ory/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,7 +45,7 @@ func TestHash(t *testing.T) {
 		PrivateKey: internal.MustRSAKey(),
 	}
 	in := []byte("foo")
-	out, err := j.Hash(in)
+	out, err := j.Hash(context.TODO(), in)
 	assert.NoError(t, err)
 	assert.NotEqual(t, in, out)
 }
@@ -84,19 +86,19 @@ func TestGenerateJWT(t *testing.T) {
 		PrivateKey: internal.MustRSAKey(),
 	}
 
-	token, sig, err := j.Generate(claims.ToMapClaims(), header)
+	token, sig, err := j.Generate(context.TODO(), claims.ToMapClaims(), header)
 	require.NoError(t, err)
 	require.NotNil(t, token)
 
-	sig, err = j.Validate(token)
+	sig, err = j.Validate(context.TODO(), token)
 	require.NoError(t, err)
 
-	sig, err = j.Validate(token + "." + "0123456789")
+	sig, err = j.Validate(context.TODO(), token+"."+"0123456789")
 	require.Error(t, err)
 
 	partToken := strings.Split(token, ".")[2]
 
-	sig, err = j.Validate(partToken)
+	sig, err = j.Validate(context.TODO(), partToken)
 	require.Error(t, err)
 
 	// Reset private key
@@ -106,23 +108,23 @@ func TestGenerateJWT(t *testing.T) {
 	claims = &JWTClaims{
 		ExpiresAt: time.Now().UTC().Add(-time.Hour),
 	}
-	token, sig, err = j.Generate(claims.ToMapClaims(), header)
+	token, sig, err = j.Generate(context.TODO(), claims.ToMapClaims(), header)
 	require.NoError(t, err)
 	require.NotNil(t, token)
 	//t.Logf("%s.%s", token, sig)
 
-	sig, err = j.Validate(token)
+	sig, err = j.Validate(context.TODO(), token)
 	require.Error(t, err)
 
 	// Lets validate the nbf claim
 	claims = &JWTClaims{
 		NotBefore: time.Now().UTC().Add(time.Hour),
 	}
-	token, sig, err = j.Generate(claims.ToMapClaims(), header)
+	token, sig, err = j.Generate(context.TODO(), claims.ToMapClaims(), header)
 	require.NoError(t, err)
 	require.NotNil(t, token)
 	//t.Logf("%s.%s", token, sig)
-	sig, err = j.Validate(token)
+	sig, err = j.Validate(context.TODO(), token)
 	require.Error(t, err)
 	require.Empty(t, sig, "%s", err)
 }
@@ -140,7 +142,7 @@ func TestValidateSignatureRejectsJWT(t *testing.T) {
 		"foo.",
 		".foo",
 	} {
-		_, err = j.Validate(c)
+		_, err = j.Validate(context.TODO(), c)
 		assert.Error(t, err)
 		t.Logf("Passed test case %d", k)
 	}

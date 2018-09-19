@@ -30,17 +30,19 @@ import (
 	"fmt"
 	"strings"
 
+	"context"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ory/fosite"
 	"github.com/pkg/errors"
 )
 
 type JWTStrategy interface {
-	Generate(claims jwt.Claims, header Mapper) (string, string, error)
-	Validate(token string) (string, error)
-	GetSignature(token string) (string, error)
-	Hash(in []byte) ([]byte, error)
-	Decode(token string) (*jwt.Token, error)
+	Generate(ctx context.Context, claims jwt.Claims, header Mapper) (string, string, error)
+	Validate(ctx context.Context, token string) (string, error)
+	Hash(ctx context.Context, in []byte) ([]byte, error)
+	Decode(ctx context.Context, token string) (*jwt.Token, error)
+	GetSignature(ctx context.Context, token string) (string, error)
 	GetSigningMethodLength() int
 }
 
@@ -50,7 +52,7 @@ type RS256JWTStrategy struct {
 }
 
 // Generate generates a new authorize code or returns an error. set secret
-func (j *RS256JWTStrategy) Generate(claims jwt.Claims, header Mapper) (string, string, error) {
+func (j *RS256JWTStrategy) Generate(ctx context.Context, claims jwt.Claims, header Mapper) (string, string, error) {
 	if header == nil || claims == nil {
 		return "", "", errors.New("Either claims or header is nil.")
 	}
@@ -72,16 +74,16 @@ func (j *RS256JWTStrategy) Generate(claims jwt.Claims, header Mapper) (string, s
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
-func (j *RS256JWTStrategy) Validate(token string) (string, error) {
-	if _, err := j.Decode(token); err != nil {
+func (j *RS256JWTStrategy) Validate(ctx context.Context, token string) (string, error) {
+	if _, err := j.Decode(ctx, token); err != nil {
 		return "", errors.WithStack(err)
 	}
 
-	return j.GetSignature(token)
+	return j.GetSignature(ctx, token)
 }
 
 // Decode will decode a JWT token
-func (j *RS256JWTStrategy) Decode(token string) (*jwt.Token, error) {
+func (j *RS256JWTStrategy) Decode(ctx context.Context, token string) (*jwt.Token, error) {
 	// Parse the token.
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
@@ -100,7 +102,7 @@ func (j *RS256JWTStrategy) Decode(token string) (*jwt.Token, error) {
 }
 
 // GetSignature will return the signature of a token
-func (j *RS256JWTStrategy) GetSignature(token string) (string, error) {
+func (j *RS256JWTStrategy) GetSignature(ctx context.Context, token string) (string, error) {
 	split := strings.Split(token, ".")
 	if len(split) != 3 {
 		return "", errors.New("Header, body and signature must all be set")
@@ -109,7 +111,7 @@ func (j *RS256JWTStrategy) GetSignature(token string) (string, error) {
 }
 
 // Hash will return a given hash based on the byte input or an error upon fail
-func (j *RS256JWTStrategy) Hash(in []byte) ([]byte, error) {
+func (j *RS256JWTStrategy) Hash(ctx context.Context, in []byte) ([]byte, error) {
 	// SigningMethodRS256
 	hash := sha256.New()
 	_, err := hash.Write(in)
