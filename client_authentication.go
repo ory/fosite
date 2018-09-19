@@ -28,6 +28,9 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 	"gopkg.in/square/go-jose.v2"
@@ -200,7 +203,10 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 	}
 
 	// Enforce client authentication
+	span, _ := opentracing.StartSpanFromContext(ctx, "hash_compare")
+	defer span.Finish()
 	if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
+		ext.Error.Set(span, true)
 		return nil, errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
 	}
 

@@ -40,6 +40,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/square/go-jose.v2"
+	"context"
 )
 
 func mustGenerateAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
@@ -364,7 +365,7 @@ func TestAuthenticateClient(t *testing.T) {
 			store.Clients[tc.client.ID] = tc.client
 			f.Store = store
 
-			c, err := f.AuthenticateClient(nil, tc.r, tc.form)
+			c, err := f.AuthenticateClient(context.TODO(), tc.r, tc.form)
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
 				return
