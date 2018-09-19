@@ -5,8 +5,13 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [0.22.0](#0220)
+  - [Breaking change(s)](#breaking-changes)
+    - [`JWTStrategy`](#jwtstrategy)
 - [0.21.0](#0210)
+  - [Changes to parsing of OAuth 2.0 Client `response_types`](#changes-to-parsing-of-oauth-20-client-response_types)
   - [`openid.DefaultStrategy` field name changed](#openiddefaultstrategy-field-name-changed)
+  - [`oauth2.RS256JWTStrategy` was renamed and field name changed](#oauth2rs256jwtstrategy-was-renamed-and-field-name-changed)
   - [Adds `private_key_jwt` client authentication method](#adds-private_key_jwt-client-authentication-method)
   - [Response Type `id_token` no longer required for authorize_code flow](#response-type-id_token-no-longer-required-for-authorize_code-flow)
 - [0.20.0](#0200)
@@ -50,6 +55,33 @@ bumps (`0.1.0` -> `0.2.0`).
 - [0.1.0](#010)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 0.22.0
+
+This releases addresses inconsistencies in some of the public interfaces by passing in the go context to their signatures.
+
+### Breaking change(s)
+
+#### `JWTStrategy`
+
+The [`JWTStrategy`](https://github.com/ory/fosite/blob/master/token/jwt/jwt.go) interface
+changed as a context parameter was added to its method signatures:
+
+```go
+type JWTStrategy interface {
+-	Generate(claims jwt.Claims, header Mapper) (string, string, error)
++	Generate(ctx context.Context, claims jwt.Claims, header Mapper) (string, string, error)
+-	Validate(token string) (string, error)
++	Validate(ctx context.Context, token string) (string, error)
+-	GetSignature(token string) (string, error)
++	GetSignature(ctx context.Context, token string) (string, error)
+-	Hash(in []byte) ([]byte, error)
++	Hash(ctx context.Context, in []byte) ([]byte, error)
+-	Decode(token string) (*jwt.Token, error)
++	Decode(ctx context.Context, token string) (*jwt.Token, error)
+	GetSigningMethodLength() int
+}
+```
 
 ## 0.21.0
 
