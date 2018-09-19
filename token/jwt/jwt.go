@@ -42,7 +42,7 @@ type JWTStrategy interface {
 	Validate(ctx context.Context, token string) (string, error)
 	Hash(ctx context.Context, in []byte) ([]byte, error)
 	Decode(ctx context.Context, token string) (*jwt.Token, error)
-	GetSignature(token string) (string, error)
+	GetSignature(ctx context.Context, token string) (string, error)
 	GetSigningMethodLength() int
 }
 
@@ -79,7 +79,7 @@ func (j *RS256JWTStrategy) Validate(ctx context.Context, token string) (string, 
 		return "", errors.WithStack(err)
 	}
 
-	return j.GetSignature(token)
+	return j.GetSignature(ctx, token)
 }
 
 // Decode will decode a JWT token
@@ -102,7 +102,7 @@ func (j *RS256JWTStrategy) Decode(ctx context.Context, token string) (*jwt.Token
 }
 
 // GetSignature will return the signature of a token
-func (j *RS256JWTStrategy) GetSignature(token string) (string, error) {
+func (j *RS256JWTStrategy) GetSignature(ctx context.Context, token string) (string, error) {
 	split := strings.Split(token, ".")
 	if len(split) != 3 {
 		return "", errors.New("Header, body and signature must all be set")
