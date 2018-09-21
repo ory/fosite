@@ -28,6 +28,8 @@ import (
 
 	"fmt"
 
+	"context"
+
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite"
 	. "github.com/ory/fosite"
@@ -87,8 +89,8 @@ func TestNewIntrospectionRequest(t *testing.T) {
 						"token": []string{"introspect-token"},
 					},
 				}
-				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
-				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), newErr)
+				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), newErr)
 			},
 			isActive:  false,
 			expectErr: ErrInactiveToken,
@@ -106,8 +108,8 @@ func TestNewIntrospectionRequest(t *testing.T) {
 						"token": []string{"introspect-token"},
 					},
 				}
-				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
-				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
 			},
 			isActive: true,
 		},
@@ -125,7 +127,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 						"token": []string{"introspect-token"},
 					},
 				}
-				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
 			},
 			isActive: true,
 		},
@@ -143,14 +145,14 @@ func TestNewIntrospectionRequest(t *testing.T) {
 						"token": []string{"introspect-token"},
 					},
 				}
-				validator.EXPECT().IntrospectToken(nil, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), nil)
 			},
 			isActive: true,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c.setup()
-			res, err := f.NewIntrospectionRequest(nil, httpreq, &DefaultSession{})
+			res, err := f.NewIntrospectionRequest(context.TODO(), httpreq, &DefaultSession{})
 
 			if c.expectErr != nil {
 				assert.EqualError(t, err, c.expectErr.Error())

@@ -200,7 +200,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 	}
 
 	// Enforce client authentication
-	if err := f.Hasher.Compare(client.GetHashedSecret(), []byte(clientSecret)); err != nil {
+	if err := f.Hasher.Compare(ctx, client.GetHashedSecret(), []byte(clientSecret)); err != nil {
 		return nil, errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
 	}
 
