@@ -22,6 +22,8 @@
 package fosite
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -31,7 +33,7 @@ type BCrypt struct {
 	WorkFactor int
 }
 
-func (b *BCrypt) Hash(data []byte) ([]byte, error) {
+func (b *BCrypt) Hash(ctx context.Context, data []byte) ([]byte, error) {
 	s, err := bcrypt.GenerateFromPassword(data, b.WorkFactor)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -39,7 +41,7 @@ func (b *BCrypt) Hash(data []byte) ([]byte, error) {
 	return s, nil
 }
 
-func (b *BCrypt) Compare(hash, data []byte) error {
+func (b *BCrypt) Compare(ctx context.Context, hash, data []byte) error {
 	if err := bcrypt.CompareHashAndPassword(hash, data); err != nil {
 		return errors.WithStack(err)
 	}
