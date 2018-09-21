@@ -24,6 +24,8 @@ package fosite
 import (
 	"testing"
 
+	"context"
+
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,7 +35,7 @@ func TestHash(t *testing.T) {
 		WorkFactor: 10,
 	}
 	password := []byte("foo")
-	hash, err := h.Hash(password)
+	hash, err := h.Hash(context.TODO(), password)
 	assert.NoError(t, err)
 	assert.NotNil(t, hash)
 	assert.NotEqual(t, hash, password)
@@ -44,10 +46,10 @@ func TestCompareEquals(t *testing.T) {
 		WorkFactor: 10,
 	}
 	password := []byte("foo")
-	hash, err := h.Hash(password)
+	hash, err := h.Hash(context.TODO(), password)
 	assert.NoError(t, err)
 	assert.NotNil(t, hash)
-	err = h.Compare(hash, password)
+	err = h.Compare(context.TODO(), hash, password)
 	assert.NoError(t, err)
 }
 
@@ -56,9 +58,9 @@ func TestCompareDifferent(t *testing.T) {
 		WorkFactor: 10,
 	}
 	password := []byte("foo")
-	hash, err := h.Hash(password)
+	hash, err := h.Hash(context.TODO(), password)
 	assert.NoError(t, err)
 	assert.NotNil(t, hash)
-	err = h.Compare(hash, []byte(uuid.NewRandom()))
+	err = h.Compare(context.TODO(), hash, []byte(uuid.NewRandom()))
 	assert.Error(t, err)
 }
