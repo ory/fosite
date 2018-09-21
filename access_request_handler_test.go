@@ -28,6 +28,8 @@ import (
 	"net/url"
 	"testing"
 
+	"context"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
@@ -130,7 +132,7 @@ func TestNewAccessRequest(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
 				client.Public = false
 				client.Secret = []byte("foo")
-				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(errors.New(""))
+				hasher.EXPECT().Compare(context.TODO(), gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(errors.New(""))
 			},
 		},
 		{
@@ -146,7 +148,7 @@ func TestNewAccessRequest(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
 				client.Public = false
 				client.Secret = []byte("foo")
-				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
+				hasher.EXPECT().Compare(context.TODO(), gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(ErrServerError)
 			},
 			handlers: TokenEndpointHandlers{handler},
@@ -163,7 +165,7 @@ func TestNewAccessRequest(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
 				client.Public = false
 				client.Secret = []byte("foo")
-				hasher.EXPECT().Compare(gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
+				hasher.EXPECT().Compare(context.TODO(), gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: TokenEndpointHandlers{handler},

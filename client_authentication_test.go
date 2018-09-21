@@ -32,6 +32,8 @@ import (
 	"testing"
 	"time"
 
+	"context"
+
 	"github.com/dgrijalva/jwt-go"
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
@@ -75,7 +77,7 @@ func TestAuthenticateClient(t *testing.T) {
 		TokenURL:            "token-url",
 	}
 
-	barSecret, err := hasher.Hash([]byte("bar"))
+	barSecret, err := hasher.Hash(context.TODO(), []byte("bar"))
 	require.NoError(t, err)
 
 	key := internal.MustRSAKey()
