@@ -5,8 +5,11 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [0.22.0](#0220)
+- [0.23.0](#0230)
   - [Breaking change(s)](#breaking-changes)
+    - [`Hasher`](#hasher)
+- [0.22.0](#0220)
+  - [Breaking change(s)](#breaking-changes-1)
     - [`JWTStrategy`](#jwtstrategy)
 - [0.21.0](#0210)
   - [Changes to parsing of OAuth 2.0 Client `response_types`](#changes-to-parsing-of-oauth-20-client-response_types)
@@ -55,6 +58,26 @@ bumps (`0.1.0` -> `0.2.0`).
 - [0.1.0](#010)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 0.23.0
+
+This releases addresses inconsistencies in some of the public interfaces by passing in the go context to their signatures.
+
+### Breaking change(s)
+
+#### `Hasher`
+
+The [`Hasher`](https://github.com/ory/fosite/blob/master/hash.go) interface
+changed as a context parameter was added to its method signatures:
+
+```go
+type Hasher interface {
+-	Compare(hash, data []byte) error
++	Compare(ctx context.Context, hash, data []byte) error
+-	Hash(data []byte) ([]byte, error)
++	Hash(ctx context.Context, data []byte) ([]byte, error)
+}
+```
 
 ## 0.22.0
 
