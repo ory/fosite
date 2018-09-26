@@ -51,7 +51,7 @@ func NewOpenIDConnectRequestValidator(prompt []string, strategy jwt.JWTStrategy)
 	}
 }
 
-func (v *OpenIDConnectRequestValidator) ValidatePrompt(req fosite.AuthorizeRequester) error {
+func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req fosite.AuthorizeRequester) error {
 	// prompt is case sensitive!
 	prompt := stringsx.Splitx(req.GetRequestForm().Get("prompt"), " ")
 
@@ -142,7 +142,7 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(req fosite.AuthorizeReque
 		return nil
 	}
 
-	tokenHint, err := v.Strategy.Decode(context.TODO(), idTokenHint)
+	tokenHint, err := v.Strategy.Decode(ctx, idTokenHint)
 	if ve, ok := errors.Cause(err).(*jwtgo.ValidationError); ok && ve.Errors == jwtgo.ValidationErrorExpired {
 		// Expired tokens are ok
 	} else if err != nil {
