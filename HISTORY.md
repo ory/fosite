@@ -5,11 +5,15 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [0.23.0](#0230)
+- [0.24.0](#0240)
   - [Breaking change(s)](#breaking-changes)
+    - [`fosite/handler/oauth2.JWTStrategy`](#fositehandleroauth2jwtstrategy)
+    - [`OpenIDConnectRequestValidator.ValidatePrompt`](#openidconnectrequestvalidatorvalidateprompt)
+- [0.23.0](#0230)
+  - [Breaking change(s)](#breaking-changes-1)
     - [`Hasher`](#hasher)
 - [0.22.0](#0220)
-  - [Breaking change(s)](#breaking-changes-1)
+  - [Breaking change(s)](#breaking-changes-2)
     - [`JWTStrategy`](#jwtstrategy)
 - [0.21.0](#0210)
   - [Changes to parsing of OAuth 2.0 Client `response_types`](#changes-to-parsing-of-oauth-20-client-response_types)
@@ -58,6 +62,34 @@ bumps (`0.1.0` -> `0.2.0`).
 - [0.1.0](#010)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## 0.24.0
+
+This release addresses areas where the go context was missing or not propagated down the call path properly.
+
+### Breaking change(s)
+
+#### `fosite/handler/oauth2.JWTStrategy`
+
+The [`fosite/handler/oauth2.JWTStrategy`](https://github.com/ory/fosite/blob/master/handler/oauth2/strategy.go) interface changed as a context
+parameter was added to its method signature:
+
+```go
+type JWTStrategy interface {
+-	Validate(tokenType fosite.TokenType, token string) (requester fosite.Requester, err error)
++	Validate(ctx context.Context, tokenType fosite.TokenType, token string) (requester fosite.Requester, err error)
+}
+```
+
+#### `OpenIDConnectRequestValidator.ValidatePrompt`
+
+The [`OpenIDConnectRequestValidator.ValidatePrompt`](https://github.com/ory/fosite/blob/master/handler/openid/validator.go)
+method signature was updated to take a go context as its first parameter:
+
+```go
+-	func (v *OpenIDConnectRequestValidator) ValidatePrompt(req fosite.AuthorizeRequester) error {
++	func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req fosite.AuthorizeRequester) error {
+```
 
 ## 0.23.0
 

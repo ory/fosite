@@ -34,7 +34,7 @@ type CoreStrategy interface {
 }
 
 type JWTStrategy interface {
-	ValidateJWT(tokenType fosite.TokenType, token string) (requester fosite.Requester, err error)
+	ValidateJWT(ctx context.Context, tokenType fosite.TokenType, token string) (requester fosite.Requester, err error)
 }
 
 type AccessTokenStrategy interface {

@@ -77,7 +77,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return errors.WithStack(ErrInvalidSession)
 	}
 
-	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ar); err != nil {
+	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ctx, ar); err != nil {
 		return err
 	}
 

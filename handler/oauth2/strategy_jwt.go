@@ -53,17 +53,17 @@ func (h DefaultJWTStrategy) AccessTokenSignature(token string) string {
 	return h.signature(token)
 }
 
-func (h *DefaultJWTStrategy) GenerateAccessToken(_ context.Context, requester fosite.Requester) (token string, signature string, err error) {
-	return h.generate(fosite.AccessToken, requester)
+func (h *DefaultJWTStrategy) GenerateAccessToken(ctx context.Context, requester fosite.Requester) (token string, signature string, err error) {
+	return h.generate(ctx, fosite.AccessToken, requester)
 }
 
-func (h *DefaultJWTStrategy) ValidateAccessToken(_ context.Context, _ fosite.Requester, token string) error {
-	_, err := h.validate(token)
+func (h *DefaultJWTStrategy) ValidateAccessToken(ctx context.Context, _ fosite.Requester, token string) error {
+	_, err := h.validate(ctx, token)
 	return err
 }
 
-func (h *DefaultJWTStrategy) ValidateJWT(tokenType fosite.TokenType, token string) (requester fosite.Requester, err error) {
-	t, err := h.validate(token)
+func (h *DefaultJWTStrategy) ValidateJWT(ctx context.Context, tokenType fosite.TokenType, token string) (requester fosite.Requester, err error) {
+	t, err := h.validate(ctx, token)
 	if err != nil {
 		return nil, err
 	}
@@ -115,8 +115,8 @@ func (h *DefaultJWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosi
 	return h.HMACSHAStrategy.ValidateAuthorizeCode(ctx, req, token)
 }
 
-func (h *DefaultJWTStrategy) validate(token string) (t *jwtx.Token, err error) {
-	t, err = h.JWTStrategy.Decode(context.TODO(), token)
+func (h *DefaultJWTStrategy) validate(ctx context.Context, token string) (t *jwtx.Token, err error) {
+	t, err = h.JWTStrategy.Decode(ctx, token)
 
 	if err == nil {
 		err = t.Claims.Valid()
@@ -154,7 +154,7 @@ func (h *DefaultJWTStrategy) validate(token string) (t *jwtx.Token, err error) {
 	return
 }
 
-func (h *DefaultJWTStrategy) generate(tokenType fosite.TokenType, requester fosite.Requester) (string, string, error) {
+func (h *DefaultJWTStrategy) generate(ctx context.Context, tokenType fosite.TokenType, requester fosite.Requester) (string, string, error) {
 	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); !ok {
 		return "", "", errors.New("Session must be of type JWTSessionContainer")
 	} else if jwtSession.GetJWTClaims() == nil {
@@ -173,6 +173,6 @@ func (h *DefaultJWTStrategy) generate(tokenType fosite.TokenType, requester fosi
 
 		claims.Scope = requester.GetGrantedScopes()
 
-		return h.JWTStrategy.Generate(context.TODO(), claims.ToMapClaims(), jwtSession.GetJWTHeader())
+		return h.JWTStrategy.Generate(ctx, claims.ToMapClaims(), jwtSession.GetJWTHeader())
 	}
 }
