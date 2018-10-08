@@ -142,11 +142,11 @@ OAuth2 stack, that's no problem. Or custom assertions, what ever you like and as
 
 ## Installation
 
-[Go 1.5+](https://golang.org) must be installed on your system and it is required that you have set up your
+[Go 1.11+](https://golang.org) must be installed on your system and it is required that you have set up your
 GOPATH environment variable.
 
 ```
-go get -d github.com/ory/fosite
+go get -u github.com/ory/fosite/...
 ```
 
 We recommend to use [dep](https://github.com/golang/dep) to

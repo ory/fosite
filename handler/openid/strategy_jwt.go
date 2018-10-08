@@ -23,17 +23,15 @@ package openid
 
 import (
 	"context"
-	"time"
-
 	"fmt"
-	"strconv"
-
 	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/mohae/deepcopy"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/ory/go-convenience/stringsx"
+	"github.com/ory/go-convenience/stringslice"
 	"github.com/pkg/errors"
+	"strconv"
+	"time"
 )
 
 const defaultExpiryTime = time.Hour
@@ -230,7 +228,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	}
 
 	claims.Nonce = nonce
-	claims.Audience = stringsx.Unique(append(claims.Audience, requester.GetClient().GetID()))
+	claims.Audience = stringslice.Unique(append(claims.Audience, requester.GetClient().GetID()))
 	claims.IssuedAt = time.Now().UTC()
 
 	token, _, err = h.JWTStrategy.Generate(ctx, claims.ToMapClaims(), sess.IDTokenHeaders())
