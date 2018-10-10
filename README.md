@@ -188,7 +188,7 @@ This is the default strategy, and the safest one. It is best explained by lookin
 * `users.read.*` matches `users.read.own`
 * `users.read.*` matches `users.read.own.other`
 * `users.write.*` does not match `users.read.own`
-* `users.*.bar` matches `users.bar.baz`
+* `users.*.bar` matches `users.baz.bar`
 * `users.*.bar` does not `users.baz.baz.bar`
 
 To request `users.*`, a client must have exactly `users.*` as granted scope.
