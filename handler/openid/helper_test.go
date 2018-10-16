@@ -120,3 +120,19 @@ func TestIssueImplicitToken(t *testing.T) {
 	err := h.IssueImplicitIDToken(nil, ar, resp)
 	assert.NoError(t, err)
 }
+
+func TestGetAccessTokenHash(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	req := internal.NewMockAccessRequester(ctrl)
+	resp := internal.NewMockAccessResponder(ctrl)
+
+	defer ctrl.Finish()
+
+	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
+
+	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+
+	hash, err := h.GetAccessTokenHash(nil, req, resp)
+	assert.NoError(t, err)
+	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
+}

@@ -157,6 +157,24 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
 			},
 		},
+		{
+			description: "should fail because missing subject claim",
+			areq: &fosite.AccessRequest{
+				GrantTypes: []string{"refresh_token"},
+				Request: fosite.Request{
+					GrantedScopes: []string{"openid"},
+					Client: &fosite.DefaultClient{
+						GrantTypes: []string{"refresh_token"},
+						//ResponseTypes: []string{"id_token"},
+					},
+					Session: &DefaultSession{
+						Subject: "foo",
+						Claims:  &jwt.IDTokenClaims{},
+					},
+				},
+			},
+			expectedErr: fosite.ErrServerError,
+		},
 	} {
 		t.Run("case="+c.description, func(t *testing.T) {
 			aresp := fosite.NewAccessResponse()

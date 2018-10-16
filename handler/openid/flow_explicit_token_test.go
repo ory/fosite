@@ -113,6 +113,13 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).AnyTimes().Return(r, nil)
 			},
 		},
+		{
+			description: "should fail because missing subject claim",
+			setup: func() {
+				session.Claims.Subject = ""
+			},
+			expectErr: fosite.ErrServerError,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c.setup()
