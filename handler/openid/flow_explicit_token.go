@@ -52,6 +52,21 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"authorization_code\"."))
 	}
 
+	sess, ok := requester.GetSession().(Session)
+	if !ok {
+		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because session must be of type fosite/handler/openid.Session."))
+	}
+
+	claims := sess.IDTokenClaims()
+	if claims.Subject == "" {
+		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
+	}
+
+	claims.AccessTokenHash, err = c.GetAccessTokenHash(ctx, requester, responder)
+	if err != nil {
+		return err
+	}
+
 	// The response type `id_token` is only required when performing the implicit or hybrid flow, see:
 	// https://openid.net/specs/openid-connect-registration-1_0.html
 	//

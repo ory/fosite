@@ -82,5 +82,22 @@ func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.
 	// 	 return errors.WithStack(fosite.ErrUnknownRequest.WithDebug("The client is not allowed to use response type id_token"))
 	// }
 
+	sess, ok := requester.GetSession().(Session)
+	if !ok {
+		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because session must be of type fosite/handler/openid.Session."))
+	}
+
+	claims := sess.IDTokenClaims()
+	if claims.Subject == "" {
+		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
+	}
+
+	hash, err := c.GetAccessTokenHash(ctx, requester, responder)
+	if err != nil {
+		return err
+	}
+
+	claims.AccessTokenHash = hash
+
 	return c.IssueExplicitIDToken(ctx, requester, responder)
 }
