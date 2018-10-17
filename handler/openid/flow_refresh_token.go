@@ -92,10 +92,7 @@ func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.
 		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
 	}
 
-	hash, err := c.GetAccessTokenHash(ctx, requester, responder)
-	if err != nil {
-		return err
-	}
+	hash := c.GetAccessTokenHash(ctx, requester, responder)
 
 	claims.AccessTokenHash = hash
 

@@ -28,27 +28,22 @@ import (
 	"encoding/base64"
 
 	"github.com/ory/fosite"
-	"github.com/pkg/errors"
 )
 
 type IDTokenHandleHelper struct {
 	IDTokenStrategy OpenIDConnectTokenStrategy
 }
 
-func (i *IDTokenHandleHelper) GetAccessTokenHash(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) (string, error) {
+func (i *IDTokenHandleHelper) GetAccessTokenHash(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) string {
 	token := responder.GetAccessToken()
 
 	buffer := bytes.NewBufferString(token)
 	hash := sha256.New()
-	_, err := hash.Write(buffer.Bytes())
-	if err != nil {
-		return "", errors.WithStack(err)
-	}
+	hash.Write(buffer.Bytes())
 	hashBuf := bytes.NewBuffer(hash.Sum([]byte{}))
 	len := hashBuf.Len()
 
-	return base64.RawURLEncoding.EncodeToString(hashBuf.Bytes()[:len/2]), nil
-
+	return base64.RawURLEncoding.EncodeToString(hashBuf.Bytes()[:len/2])
 }
 
 func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, fosr fosite.Requester) (token string, err error) {

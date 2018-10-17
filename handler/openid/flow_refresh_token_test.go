@@ -175,6 +175,19 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 			},
 			expectedErr: fosite.ErrServerError,
 		},
+		{
+			description: "should fail because missing session",
+			areq: &fosite.AccessRequest{
+				GrantTypes: []string{"refresh_token"},
+				Request: fosite.Request{
+					GrantedScopes: []string{"openid"},
+					Client: &fosite.DefaultClient{
+						GrantTypes: []string{"refresh_token"},
+					},
+				},
+			},
+			expectedErr: fosite.ErrServerError,
+		},
 	} {
 		t.Run("case="+c.description, func(t *testing.T) {
 			aresp := fosite.NewAccessResponse()

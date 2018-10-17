@@ -132,7 +132,6 @@ func TestGetAccessTokenHash(t *testing.T) {
 
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 
-	hash, err := h.GetAccessTokenHash(nil, req, resp)
-	assert.NoError(t, err)
+	hash := h.GetAccessTokenHash(nil, req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
 }

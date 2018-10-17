@@ -120,6 +120,13 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			},
 			expectErr: fosite.ErrServerError,
 		},
+		{
+			description: "should fail because missing session",
+			setup: func() {
+				areq.Session = nil
+			},
+			expectErr: fosite.ErrServerError,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c.setup()
