@@ -34,9 +34,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// expose key to verify id_token
+var key = internal.MustRSAKey()
 var j = &DefaultStrategy{
 	JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
+		PrivateKey: key,
 	},
 }
 

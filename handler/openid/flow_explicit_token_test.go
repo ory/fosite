@@ -33,6 +33,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	jwtgo "github.com/dgrijalva/jwt-go"
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
@@ -68,6 +69,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		description string
 		setup       func()
 		expectErr   error
+		check       func(t *testing.T, aresp *fosite.AccessResponse)
 	}{
 		{
 			description: "should fail because invalid response type",
@@ -112,6 +114,29 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				r.Form.Set("nonce", "1111111111111111")
 				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).AnyTimes().Return(r, nil)
 			},
+			check: func(t *testing.T, aresp *fosite.AccessResponse) {
+				assert.NotEmpty(t, aresp.GetExtra("id_token"))
+				idToken, _ := aresp.GetExtra("id_token").(string)
+				decodedIdToken, _ := jwtgo.Parse(idToken, func(token *jwtgo.Token)(interface{}, error) {
+					return key.PublicKey, nil
+				})
+				claims, _ := decodedIdToken.Claims.(jwtgo.MapClaims)
+				assert.NotEmpty(t, claims["at_hash"])			
+			},
+		},
+		{
+			description: "should fail because missing subject claim",
+			setup: func() {
+				session.Claims.Subject = ""
+			},
+			expectErr: fosite.ErrServerError,
+		},
+		{
+			description: "should fail because missing session",
+			setup: func() {
+				areq.Session = nil
+			},
+			expectErr: fosite.ErrServerError,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
@@ -122,6 +147,9 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				require.EqualError(t, err, c.expectErr.Error())
 			} else {
 				require.NoError(t, err)
+			}
+			if c.check != nil {
+				c.check(t, aresp)
 			}
 		})
 	}
