@@ -63,6 +63,39 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.26.0
+
+This release makes it easier to define custom JWT Containers for access tokens when using the JWT strategy. To do that,
+the following signatures have changed:
+
+// github.com/ory/fosite/handler/oauth2
+type JWTSessionContainer interface {
+	// GetJWTClaims returns the claims.
+-	GetJWTClaims() *jwt.JWTClaims
++	GetJWTClaims() jwt.JWTClaimsContainer
+
+	// GetJWTHeader returns the header.
+	GetJWTHeader() *jwt.Headers
+
+	fosite.Session
+}
+
++ type JWTClaimsContainer interface {
++	// With returns a copy of itself with expiresAt and scope set to the given values.
++	With(expiry time.Time, scope []string) JWTClaimsContainer
++
++	// WithDefaults returns a copy of itself with issuedAt and issuer set to the given default values. If those
++	// values are already set in the claims, they will not be updated.
++	WithDefaults(iat time.Time, issuer string) JWTClaimsContainer
++
++	// ToMapClaims returns the claims as a github.com/dgrijalva/jwt-go.MapClaims type.
++	ToMapClaims() jwt.MapClaims
++ }
+```
+
+All default session implementations have been updated to reflect this change. If you define custom session, this patch
+will affect you.
+
 ## 0.24.0
 
 This release addresses areas where the go context was missing or not propagated down the call path properly.
