@@ -22,16 +22,16 @@
 package fosite_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
 
-	"fmt"
-
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+
 	. "github.com/ory/fosite"
 	. "github.com/ory/fosite/internal"
-	"github.com/stretchr/testify/assert"
 )
 
 // Test for

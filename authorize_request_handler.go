@@ -22,14 +22,11 @@
 package fosite
 
 import (
+	"context"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"context"
-
-	"fmt"
-
-	"io/ioutil"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ory/go-convenience/stringslice"

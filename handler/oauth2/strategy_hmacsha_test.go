@@ -22,15 +22,15 @@
 package oauth2
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-	"fmt"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/hmac"
-	"github.com/stretchr/testify/assert"
 )
 
 var hmacshaStrategy = HMACSHAStrategy{

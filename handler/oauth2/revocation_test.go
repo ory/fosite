@@ -22,14 +22,14 @@
 package oauth2
 
 import (
+	"fmt"
 	"testing"
 
-	"fmt"
-
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRevokeToken(t *testing.T) {

@@ -22,16 +22,16 @@
 package oauth2
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
-	"fmt"
-
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
-	"github.com/stretchr/testify/require"
 )
 
 func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {

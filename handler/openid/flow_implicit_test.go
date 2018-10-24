@@ -22,19 +22,18 @@
 package openid
 
 import (
+	"fmt"
+	"net/url"
 	"testing"
 	"time"
 
-	"fmt"
-
-	"net/url"
-
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {

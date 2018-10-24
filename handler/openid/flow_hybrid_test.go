@@ -22,22 +22,21 @@
 package openid
 
 import (
+	"fmt"
+	"net/url"
 	"testing"
 	"time"
 
-	"fmt"
-
-	"net/url"
-
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 var idStrategy = &DefaultStrategy{

@@ -22,24 +22,20 @@
 package integration_test
 
 import (
-	"testing"
-
-	"net/http"
-
-	"fmt"
-
-	"github.com/ory/fosite"
-	"github.com/ory/fosite/compose"
-	"github.com/ory/fosite/handler/oauth2"
-	//"github.com/stretchr/testify/assert"
 	"encoding/json"
-	"net/url"
-
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
+	"testing"
 
 	"github.com/magiconair/properties/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
+
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/compose"
+	"github.com/ory/fosite/handler/oauth2" //"github.com/stretchr/testify/assert"
 )
 
 func TestAuthorizeCodeFlowWithPublicClientAndPKCE(t *testing.T) {

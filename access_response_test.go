@@ -24,8 +24,9 @@ package fosite_test
 import (
 	"testing"
 
-	. "github.com/ory/fosite"
 	"github.com/stretchr/testify/assert"
+
+	. "github.com/ory/fosite"
 )
 
 func TestAccessResponse(t *testing.T) {

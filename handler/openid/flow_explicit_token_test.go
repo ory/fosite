@@ -22,18 +22,18 @@
 package openid
 
 import (
+	"fmt"
 	"testing"
 
-	"fmt"
-
+	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
-	"github.com/ory/fosite"
-	"github.com/ory/fosite/internal"
-	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	jwtgo "github.com/dgrijalva/jwt-go"
+
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/internal"
+	"github.com/ory/fosite/token/jwt"
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
@@ -117,11 +117,11 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
 				idToken, _ := aresp.GetExtra("id_token").(string)
-				decodedIdToken, _ := jwtgo.Parse(idToken, func(token *jwtgo.Token)(interface{}, error) {
+				decodedIdToken, _ := jwtgo.Parse(idToken, func(token *jwtgo.Token) (interface{}, error) {
 					return key.PublicKey, nil
 				})
 				claims, _ := decodedIdToken.Claims.(jwtgo.MapClaims)
-				assert.NotEmpty(t, claims["at_hash"])			
+				assert.NotEmpty(t, claims["at_hash"])
 			},
 		},
 		{

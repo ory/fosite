@@ -28,11 +28,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/storage"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type mockCodeStrategy struct {
@@ -295,7 +296,7 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			h := &Handler{
-				Force: tc.force,
+				Force:                      tc.force,
 				EnablePlainChallengeMethod: tc.enablePlain,
 			}
 

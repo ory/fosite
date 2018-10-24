@@ -22,9 +22,8 @@
 package fosite
 
 import (
-	"testing"
-
 	"context"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 )

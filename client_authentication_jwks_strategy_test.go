@@ -27,11 +27,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	. "github.com/ory/fosite"
-	"github.com/ory/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/square/go-jose.v2"
+
+	. "github.com/ory/fosite"
+	"github.com/ory/fosite/internal"
 )
 
 func TestDefaultJWKSFetcherStrategy(t *testing.T) {

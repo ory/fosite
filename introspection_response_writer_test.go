@@ -26,9 +26,10 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
+
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
-	"github.com/pkg/errors"
 )
 
 func TestWriteIntrospectionError(t *testing.T) {

@@ -25,21 +25,22 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
+
+	. "github.com/ory/fosite/token/jwt"
 )
 
 var idTokenClaims = &IDTokenClaims{
-	JTI:             "foo-id",
-	Subject:         "peter",
-	IssuedAt:        time.Now().UTC().Round(time.Second),
-	Issuer:          "fosite",
-	Audience:        []string{"tests"},
-	ExpiresAt:       time.Now().UTC().Add(time.Hour).Round(time.Second),
-	AuthTime:        time.Now().UTC(),
-	RequestedAt:     time.Now().UTC(),
-	AccessTokenHash: "foobar",
-	CodeHash:        "barfoo",
+	JTI:                                 "foo-id",
+	Subject:                             "peter",
+	IssuedAt:                            time.Now().UTC().Round(time.Second),
+	Issuer:                              "fosite",
+	Audience:                            []string{"tests"},
+	ExpiresAt:                           time.Now().UTC().Add(time.Hour).Round(time.Second),
+	AuthTime:                            time.Now().UTC(),
+	RequestedAt:                         time.Now().UTC(),
+	AccessTokenHash:                     "foobar",
+	CodeHash:                            "barfoo",
 	AuthenticationContextClassReference: "acr",
 	Extra: map[string]interface{}{
 		"foo": "bar",

@@ -22,14 +22,14 @@
 package fosite_test
 
 import (
+	"net/http"
 	"testing"
 
-	"net/http"
-
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+
 	. "github.com/ory/fosite"
 	. "github.com/ory/fosite/internal"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteAccessResponse(t *testing.T) {
