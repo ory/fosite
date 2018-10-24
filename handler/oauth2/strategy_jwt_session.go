@@ -31,7 +31,7 @@ import (
 
 type JWTSessionContainer interface {
 	// GetJWTClaims returns the claims.
-	GetJWTClaims() *jwt.JWTClaims
+	GetJWTClaims() jwt.JWTClaimsContainer
 
 	// GetJWTHeader returns the header.
 	GetJWTHeader() *jwt.Headers
@@ -48,7 +48,7 @@ type JWTSession struct {
 	Subject   string
 }
 
-func (j *JWTSession) GetJWTClaims() *jwt.JWTClaims {
+func (j *JWTSession) GetJWTClaims() jwt.JWTClaimsContainer {
 	if j.JWTClaims == nil {
 		j.JWTClaims = &jwt.JWTClaims{}
 	}

@@ -22,6 +22,7 @@
 package oauth2
 
 import (
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 	"time"
@@ -55,7 +56,7 @@ var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
 				Audience:  []string{"group0"},
 				IssuedAt:  time.Now().UTC(),
 				NotBefore: time.Now().UTC(),
-				Extra:     make(map[string]interface{}),
+				Extra:     map[string]interface{}{"foo": "bar"},
 			},
 			JWTHeader: &jwt.Headers{
 				Extra: make(map[string]interface{}),
@@ -112,7 +113,10 @@ func TestAccessToken(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			token, signature, err := j.GenerateAccessToken(nil, c.r)
 			assert.NoError(t, err)
-			assert.Equal(t, strings.Split(token, ".")[2], signature)
+
+			parts := strings.Split(token, ".")
+			require.Len(t, parts, 3, "%s - %v", token, parts)
+			assert.Equal(t, parts[2], signature)
 
 			validate := j.signature(token)
 			err = j.ValidateAccessToken(nil, c.r, token)

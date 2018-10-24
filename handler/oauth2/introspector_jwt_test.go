@@ -92,6 +92,7 @@ func TestIntrospectJWT(t *testing.T) {
 				token, _, err := strat.GenerateAccessToken(nil, jwt)
 				assert.NoError(t, err)
 				parts := strings.Split(token, ".")
+				require.Len(t, parts, 3, "%s - %v", token, parts)
 				dec, err := base64.RawURLEncoding.DecodeString(parts[1])
 				assert.NoError(t, err)
 				s := strings.Replace(string(dec), "peter", "piper", -1)

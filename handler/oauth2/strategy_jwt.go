@@ -156,22 +156,19 @@ func (h *DefaultJWTStrategy) validate(ctx context.Context, token string) (t *jwt
 
 func (h *DefaultJWTStrategy) generate(ctx context.Context, tokenType fosite.TokenType, requester fosite.Requester) (string, string, error) {
 	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); !ok {
-		return "", "", errors.New("Session must be of type JWTSessionContainer")
+		return "", "", errors.Errorf("Session must be of type JWTSessionContainer but got type: %T", requester.GetSession())
 	} else if jwtSession.GetJWTClaims() == nil {
 		return "", "", errors.New("GetTokenClaims() must not be nil")
 	} else {
-		claims := jwtSession.GetJWTClaims()
-		claims.ExpiresAt = jwtSession.GetExpiresAt(tokenType)
-
-		if claims.IssuedAt.IsZero() {
-			claims.IssuedAt = time.Now().UTC()
-		}
-
-		if claims.Issuer == "" {
-			claims.Issuer = h.Issuer
-		}
-
-		claims.Scope = requester.GetGrantedScopes()
+		claims := jwtSession.GetJWTClaims().
+			With(
+				jwtSession.GetExpiresAt(tokenType),
+				requester.GetGrantedScopes(),
+			).
+			WithDefaults(
+				time.Now().UTC(),
+				h.Issuer,
+			)
 
 		return h.JWTStrategy.Generate(ctx, claims.ToMapClaims(), jwtSession.GetJWTHeader())
 	}

@@ -28,6 +28,25 @@ import (
 	"github.com/pborman/uuid"
 )
 
+type JWTClaimsDefaults struct {
+	ExpiresAt time.Time
+	IssuedAt  time.Time
+	Issuer    string
+	Scope     []string
+}
+
+type JWTClaimsContainer interface {
+	// With returns a copy of itself with expiresAt and scope set to the given values.
+	With(expiry time.Time, scope []string) JWTClaimsContainer
+
+	// WithDefaults returns a copy of itself with issuedAt and issuer set to the given default values. If those
+	// values are already set in the claims, they will not be updated.
+	WithDefaults(iat time.Time, issuer string) JWTClaimsContainer
+
+	// ToMapClaims returns the claims as a github.com/dgrijalva/jwt-go.MapClaims type.
+	ToMapClaims() jwt.MapClaims
+}
+
 // JWTClaims represent a token's claims.
 type JWTClaims struct {
 	Subject   string
@@ -39,6 +58,24 @@ type JWTClaims struct {
 	ExpiresAt time.Time
 	Scope     []string
 	Extra     map[string]interface{}
+}
+
+func (c *JWTClaims) With(expiry time.Time, scope []string) JWTClaimsContainer {
+	c.ExpiresAt = expiry
+	c.Scope = scope
+	return c
+
+}
+
+func (c *JWTClaims) WithDefaults(iat time.Time, issuer string) JWTClaimsContainer {
+	if c.IssuedAt.IsZero() {
+		c.IssuedAt = iat
+	}
+
+	if c.Issuer == "" {
+		c.Issuer = issuer
+	}
+	return c
 }
 
 // ToMap will transform the headers to a map structure
