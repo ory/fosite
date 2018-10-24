@@ -22,20 +22,19 @@
 package fosite_test
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
-	"context"
-
-	"fmt"
-
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAccessTokenFromRequestNoToken(t *testing.T) {

@@ -22,17 +22,17 @@
 package oauth2
 
 import (
-	"github.com/stretchr/testify/require"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/stretchr/testify/assert"
 )
 
 var j = &DefaultJWTStrategy{

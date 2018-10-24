@@ -22,16 +22,16 @@
 package openid
 
 import (
+	"fmt"
 	"testing"
 
-	"fmt"
-
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
 )
 
 // expose key to verify id_token

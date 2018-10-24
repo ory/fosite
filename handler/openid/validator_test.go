@@ -22,18 +22,17 @@
 package openid
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"testing"
-
 	"time"
 
-	"context"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestValidatePrompt(t *testing.T) {

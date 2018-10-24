@@ -5,8 +5,9 @@ package internal
 
 import (
 	context "context"
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockHasher is a mock of Hasher interface

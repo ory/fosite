@@ -22,20 +22,14 @@
 package oauth2
 
 import (
+	"context"
+	"fmt"
 	"net/url"
-	"testing"
-
-	//"time"
-
+	"testing" //"time"
 	//"github.com/golang/mock/gomock"
-	"github.com/ory/fosite"
-	//"github.com/ory/fosite/internal"
 	"time"
 
-	"context"
-
-	"fmt"
-
+	"github.com/ory/fosite" //"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"

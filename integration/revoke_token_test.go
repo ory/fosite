@@ -22,17 +22,17 @@
 package integration_test
 
 import (
+	"net/http"
 	"testing"
 
-	"net/http"
-
-	"github.com/ory/fosite"
-	"github.com/ory/fosite/compose"
-	"github.com/ory/fosite/handler/oauth2"
 	"github.com/parnurzeal/gorequest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
+
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/compose"
+	"github.com/ory/fosite/handler/oauth2"
 )
 
 func TestRevokeToken(t *testing.T) {

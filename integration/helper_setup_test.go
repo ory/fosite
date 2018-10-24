@@ -27,6 +27,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	goauth "golang.org/x/oauth2"
+	"golang.org/x/oauth2/clientcredentials"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
@@ -34,8 +37,6 @@ import (
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
-	goauth "golang.org/x/oauth2"
-	"golang.org/x/oauth2/clientcredentials"
 )
 
 var fositeStore = &storage.MemoryStore{

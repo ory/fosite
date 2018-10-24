@@ -23,16 +23,16 @@ package oauth2
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strings"
 	"testing"
 
-	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestIntrospectJWT(t *testing.T) {

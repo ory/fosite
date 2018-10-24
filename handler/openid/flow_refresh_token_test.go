@@ -24,12 +24,13 @@ package openid
 import (
 	"testing"
 
-	"github.com/ory/fosite"
-	"github.com/ory/fosite/token/jwt"
+	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	jwtgo "github.com/dgrijalva/jwt-go"
+
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/token/jwt"
 )
 
 func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
@@ -157,11 +158,11 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
 				idToken, _ := aresp.GetExtra("id_token").(string)
-				decodedIdToken, _ := jwtgo.Parse(idToken, func(token *jwtgo.Token)(interface{}, error) {
+				decodedIdToken, _ := jwtgo.Parse(idToken, func(token *jwtgo.Token) (interface{}, error) {
 					return key.PublicKey, nil
 				})
 				claims, _ := decodedIdToken.Claims.(jwtgo.MapClaims)
-				assert.NotEmpty(t, claims["at_hash"])			
+				assert.NotEmpty(t, claims["at_hash"])
 			},
 		},
 		{

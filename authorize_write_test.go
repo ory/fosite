@@ -27,9 +27,10 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
+
 	. "github.com/ory/fosite"
 	. "github.com/ory/fosite/internal"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteAuthorizeResponse(t *testing.T) {

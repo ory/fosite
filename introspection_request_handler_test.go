@@ -22,23 +22,22 @@
 package fosite_test
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
 
-	"fmt"
-
-	"context"
-
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ory/fosite"
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestIntrospectionResponse(t *testing.T) {

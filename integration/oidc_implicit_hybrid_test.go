@@ -22,6 +22,7 @@
 package integration_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -33,8 +34,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
-
-	"fmt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"

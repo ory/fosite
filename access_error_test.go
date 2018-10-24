@@ -23,17 +23,17 @@ package fosite_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"fmt"
-
 	"github.com/golang/mock/gomock"
-	. "github.com/ory/fosite"
-	. "github.com/ory/fosite/internal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	. "github.com/ory/fosite"
+	. "github.com/ory/fosite/internal"
 )
 
 func TestWriteAccessError(t *testing.T) {
