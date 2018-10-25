@@ -108,7 +108,7 @@ func (c *Config) GetAccessTokenLifespan() time.Duration {
 // GetAccessTokenLifespan returns how long a refresh token should be valid. Defaults to one hour.
 func (c *Config) GetHashCost() int {
 	if c.HashCost == 0 {
-		return 12
+		return fosite.DefaultBCryptWorkFactor
 	}
 	return c.HashCost
 }

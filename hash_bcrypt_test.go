@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestCompare(t *testing.T) {
@@ -108,5 +109,19 @@ func TestHash(t *testing.T) {
 				assert.NoError(t, err)
 			}
 		})
+	}
+}
+
+func TestDefaultWorkFactor(t *testing.T) {
+	b := &BCrypt{}
+	data := []byte("secrets")
+	hash, err := b.Hash(context.TODO(), data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cost, err := bcrypt.Cost(hash)
+	if cost != 12 {
+		t.Errorf("got cost factor %d", cost)
 	}
 }
