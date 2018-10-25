@@ -105,7 +105,7 @@ func (c *Config) GetAccessTokenLifespan() time.Duration {
 	return c.AccessTokenLifespan
 }
 
-// GetAccessTokenLifespan returns how long a refresh token should be valid. Defaults to one hour.
+// GetHashCost freturns the bcrypt cost factor. Defaults to 12.
 func (c *Config) GetHashCost() int {
 	if c.HashCost == 0 {
 		return 12
