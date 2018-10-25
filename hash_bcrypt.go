@@ -28,12 +28,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const DefaultBCryptWorkFactor = 12
+
 // BCrypt implements the Hasher interface by using BCrypt.
 type BCrypt struct {
 	WorkFactor int
 }
 
 func (b *BCrypt) Hash(ctx context.Context, data []byte) ([]byte, error) {
+	if b.WorkFactor == 0 {
+		b.WorkFactor = DefaultBCryptWorkFactor
+	}
 	s, err := bcrypt.GenerateFromPassword(data, b.WorkFactor)
 	if err != nil {
 		return nil, errors.WithStack(err)
