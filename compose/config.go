@@ -108,7 +108,7 @@ func (c *Config) GetAccessTokenLifespan() time.Duration {
 // GetHashCost returns the bcrypt cost factor. Defaults to 12.
 func (c *Config) GetHashCost() int {
 	if c.HashCost == 0 {
-		return 12
+		return fosite.DefaultBCryptWorkFactor
 	}
 	return c.HashCost
 }
