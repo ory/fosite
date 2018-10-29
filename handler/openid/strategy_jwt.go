@@ -29,8 +29,9 @@ import (
 
 	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/mohae/deepcopy"
-	"github.com/ory/go-convenience/stringslice"
 	"github.com/pkg/errors"
+
+	"github.com/ory/go-convenience/stringslice"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"

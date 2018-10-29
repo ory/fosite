@@ -204,15 +204,15 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 
 	rw.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(rw).Encode(struct {
-		Active    bool    `json:"active"`
-		ClientID  string  `json:"client_id,omitempty"`
-		Scope     string  `json:"scope,omitempty"`
-		Audience  []string  `json:"aud,omitempty"`
-		ExpiresAt int64   `json:"exp,omitempty"`
-		IssuedAt  int64   `json:"iat,omitempty"`
-		Subject   string  `json:"sub,omitempty"`
-		Username  string  `json:"username,omitempty"`
-		Session   Session `json:"sess,omitempty"`
+		Active    bool     `json:"active"`
+		ClientID  string   `json:"client_id,omitempty"`
+		Scope     string   `json:"scope,omitempty"`
+		Audience  []string `json:"aud,omitempty"`
+		ExpiresAt int64    `json:"exp,omitempty"`
+		IssuedAt  int64    `json:"iat,omitempty"`
+		Subject   string   `json:"sub,omitempty"`
+		Username  string   `json:"username,omitempty"`
+		Session   Session  `json:"sess,omitempty"`
 	}{
 		Active:    true,
 		ClientID:  r.GetAccessRequester().GetClient().GetID(),
@@ -220,7 +220,7 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 		ExpiresAt: r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).Unix(),
 		IssuedAt:  r.GetAccessRequester().GetRequestedAt().Unix(),
 		Subject:   r.GetAccessRequester().GetSession().GetSubject(),
-		Audience:   r.GetAccessRequester().GetGrantedAudience(),
+		Audience:  r.GetAccessRequester().GetGrantedAudience(),
 		Username:  r.GetAccessRequester().GetSession().GetUsername(),
 		// Session:   r.GetAccessRequester().GetSession(),
 	})

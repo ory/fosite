@@ -221,8 +221,8 @@ func TestNewAuthorizeRequest(t *testing.T) {
 						Scopes:   []string{"foo", "bar"},
 						Audience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
 					},
-					Scopes:   []string{"foo", "bar"},
-					Audience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+					RequestedScope:    []string{"foo", "bar"},
+					RequestedAudience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
 				},
 			},
 		},
@@ -241,7 +241,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				assert.EqualError(t, errors.Cause(err), c.expectedError.Error())
 			} else {
 				require.NoError(t, err)
-				AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "Audience", "Scopes", "Client", "RedirectURI", "State")
+				AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "RequestedAudience", "RequestedScope", "Client", "RedirectURI", "State")
 				assert.NotNil(t, ar.GetRequestedAt())
 			}
 		})

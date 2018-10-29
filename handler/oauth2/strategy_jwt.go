@@ -84,8 +84,8 @@ func (h *DefaultJWTStrategy) ValidateJWT(ctx context.Context, tokenType fosite.T
 			},
 			Subject: claims.Subject,
 		},
-		Scopes:        claims.Scope,
-		GrantedScopes: claims.Scope,
+		RequestedScope: claims.Scope,
+		GrantedScope:   claims.Scope,
 	}
 
 	return

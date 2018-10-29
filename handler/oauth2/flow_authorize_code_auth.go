@@ -46,8 +46,8 @@ type AuthorizeExplicitGrantHandler struct {
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration
 
-	ScopeStrategy fosite.ScopeStrategy
-	AudienceMatchingStrategy audienceMatchingStrategy
+	ScopeStrategy            fosite.ScopeStrategy
+	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 
 	// SanitationWhiteList is a whitelist of form values that are required by the token endpoint. These values
 	// are safe for storage in a database (cleartext).
@@ -78,7 +78,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 		}
 	}
 
-	if err := c.AudienceMatchingStrategy(ar.GetRequestedAudience(), client.GetAudience()); err != nil {
+	if err := c.AudienceMatchingStrategy(client.GetAudience(), ar.GetRequestedAudience()); err != nil {
 		return err
 	}
 

@@ -12,6 +12,8 @@ install:
   - go get github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/bradfitz/goimports
 
 script:
+  - curl -L https://git.io/vp6lP | sh
+  - gometalinter --disable-all --enable=gofmt --enable=vet --vendor ./...
   - touch ./coverage.tmp
   - |
     echo 'mode: atomic' > coverage.txt

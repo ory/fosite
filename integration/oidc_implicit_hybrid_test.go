@@ -169,7 +169,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 			httpClient := oauthClient.Client(oauth2.NoContext, token)
 			resp, err = httpClient.Get(ts.URL + "/info")
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
 			t.Logf("Passed test case (%d) %s", k, c.description)
 		})
 	}

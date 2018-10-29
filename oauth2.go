@@ -193,7 +193,7 @@ type Requester interface {
 	GetRequestedScopes() (scopes Arguments)
 
 	// GetRequestedAudience returns the requested audiences for this request.
-	GetRequestedAudience() (audienc Arguments)
+	GetRequestedAudience() (audience Arguments)
 
 	// SetRequestedScopes sets the request's scopes.
 	SetRequestedScopes(scopes Arguments)
@@ -214,7 +214,7 @@ type Requester interface {
 	GrantScope(scope string)
 
 	// GrantAudience marks a request's audience as granted.
-	GrantAudience(scope string)
+	GrantAudience(audience string)
 
 	// GetSession returns a pointer to the request's session or nil if none is set.
 	GetSession() (session Session)

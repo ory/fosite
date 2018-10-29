@@ -123,7 +123,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
 					Scopes:        []string{"openid"},
 				}
-				areq.GrantedScopes = fosite.Arguments{"openid"}
+				areq.GrantedScope = fosite.Arguments{"openid"}
 			},
 			expectErr: fosite.ErrInvalidRequest,
 		},
@@ -137,7 +137,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
 					Scopes:        []string{"openid"},
 				}
-				areq.GrantedScopes = fosite.Arguments{"openid"}
+				areq.GrantedScope = fosite.Arguments{"openid"}
 			},
 			expectErr: fosite.ErrInsufficientEntropy,
 		},
@@ -151,7 +151,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
 					Scopes:        []string{"openid"},
 				}
-				areq.GrantedScopes = fosite.Arguments{"openid"}
+				areq.GrantedScope = fosite.Arguments{"openid"}
 			},
 			expectErr: ErrInvalidSession,
 		},

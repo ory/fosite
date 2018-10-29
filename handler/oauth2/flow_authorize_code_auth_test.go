@@ -47,9 +47,10 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 			h := AuthorizeExplicitGrantHandler{
-				CoreStorage:           store,
-				AuthorizeCodeStrategy: strategy,
-				ScopeStrategy:         fosite.HierarchicScopeStrategy,
+				CoreStorage:              store,
+				AuthorizeCodeStrategy:    strategy,
+				ScopeStrategy:            fosite.HierarchicScopeStrategy,
+				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 			}
 			for _, c := range []struct {
 				areq        *fosite.AuthorizeRequest
@@ -91,9 +92,27 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 						Request: fosite.Request{
 							Client: &fosite.DefaultClient{
 								ResponseTypes: fosite.Arguments{"code"},
-								RedirectURIs:  []string{"https://asdf.de/cb"},
+								RedirectURIs:  []string{"https://asdf.com/cb"},
+								Audience:      []string{"https://www.ory.sh/api"},
 							},
-							GrantedScopes: fosite.Arguments{"a", "b"},
+							RequestedAudience: []string{"https://www.ory.sh/not-api"},
+						},
+						RedirectURI: parseUrl("https://asdf.com/cb"),
+					},
+					description: "should fail because audience doesn't match",
+					expectErr:   fosite.ErrInvalidRequest,
+				},
+				{
+					areq: &fosite.AuthorizeRequest{
+						ResponseTypes: fosite.Arguments{"code"},
+						Request: fosite.Request{
+							Client: &fosite.DefaultClient{
+								ResponseTypes: fosite.Arguments{"code"},
+								RedirectURIs:  []string{"https://asdf.de/cb"},
+								Audience:      []string{"https://www.ory.sh/api"},
+							},
+							RequestedAudience: []string{"https://www.ory.sh/api"},
+							GrantedScope:      fosite.Arguments{"a", "b"},
 							Session: &fosite.DefaultSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{fosite.AccessToken: time.Now().UTC().Add(time.Hour)},
 							},
@@ -107,7 +126,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 						code := aresp.GetQuery().Get("code")
 						assert.NotEmpty(t, code)
 
-						assert.Equal(t, strings.Join(areq.GrantedScopes, " "), aresp.GetQuery().Get("scope"))
+						assert.Equal(t, strings.Join(areq.GrantedScope, " "), aresp.GetQuery().Get("scope"))
 						assert.Equal(t, areq.State, aresp.GetQuery().Get("state"))
 					},
 				},

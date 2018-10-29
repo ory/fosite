@@ -32,8 +32,8 @@ import (
 
 type ClientCredentialsGrantHandler struct {
 	*HandleHelper
-	ScopeStrategy fosite.ScopeStrategy
-	AudienceMatchingStrategy audienceMatchingStrategy
+	ScopeStrategy            fosite.ScopeStrategy
+	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 }
 
 // IntrospectTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
@@ -51,7 +51,7 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 		}
 	}
 
-	if err := c.AudienceMatchingStrategy(request.GetRequestedAudience(), client.GetAudience()); err != nil {
+	if err := c.AudienceMatchingStrategy(client.GetAudience(), request.GetRequestedAudience()); err != nil {
 		return err
 	}
 

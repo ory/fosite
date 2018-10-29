@@ -50,7 +50,8 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			AccessTokenStorage:  store,
 			AccessTokenLifespan: time.Hour,
 		},
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
+		ScopeStrategy:            fosite.HierarchicScopeStrategy,
+		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 	}
 	for k, c := range []struct {
 		description string

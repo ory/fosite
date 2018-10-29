@@ -5,6 +5,7 @@ package internal
 
 import (
 	gomock "github.com/golang/mock/gomock"
+
 	fosite "github.com/ory/fosite"
 )
 

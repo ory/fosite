@@ -33,48 +33,50 @@ import (
 
 func TestRequest(t *testing.T) {
 	r := &Request{
-		RequestedAt:   time.Now().UTC(),
-		Client:        &DefaultClient{},
-		Scopes:        Arguments{},
-		GrantedScopes: []string{},
-		Form:          url.Values{"foo": []string{"bar"}},
-		Session:       new(DefaultSession),
+		RequestedAt:       time.Now().UTC(),
+		Client:            &DefaultClient{},
+		RequestedScope:    Arguments{"scope"},
+		GrantedScope:      Arguments{"scope"},
+		RequestedAudience: Arguments{"scope"},
+		GrantedAudience:   Arguments{"scope"},
+		Form:              url.Values{"foo": []string{"bar"}},
+		Session:           new(DefaultSession),
 	}
 
 	assert.Equal(t, r.RequestedAt, r.GetRequestedAt())
 	assert.Equal(t, r.Client, r.GetClient())
-	assert.Equal(t, r.GrantedScopes, r.GetGrantedScopes())
-	assert.Equal(t, r.Scopes, r.GetRequestedScopes())
+	assert.Equal(t, r.GrantedScope, r.GetGrantedScopes())
+	assert.Equal(t, r.RequestedScope, r.GetRequestedScopes())
 	assert.Equal(t, r.Form, r.GetRequestForm())
 	assert.Equal(t, r.Session, r.GetSession())
 }
 
 func TestMergeRequest(t *testing.T) {
 	a := &Request{
-		RequestedAt:   time.Now().UTC(),
-		Client:        &DefaultClient{ID: "123"},
-		Scopes:        Arguments{"scope-3", "scope-4"},
-		Audience:        Arguments{"aud-3", "aud-4"},
-		GrantedScopes: []string{"scope-1", "scope-2"},
-		GrantedAudience: []string{"aud-1", "aud-2"},
-		Form:          url.Values{"foo": []string{"fasdf"}},
-		Session:       new(DefaultSession),
+		RequestedAt:       time.Now().UTC(),
+		Client:            &DefaultClient{ID: "123"},
+		RequestedScope:    Arguments{"scope-3", "scope-4"},
+		RequestedAudience: Arguments{"aud-3", "aud-4"},
+		GrantedScope:      []string{"scope-1", "scope-2"},
+		GrantedAudience:   []string{"aud-1", "aud-2"},
+		Form:              url.Values{"foo": []string{"fasdf"}},
+		Session:           new(DefaultSession),
 	}
 	b := &Request{
-		RequestedAt:   time.Now().UTC(),
-		Client:        &DefaultClient{},
-		Scopes:        Arguments{},
-		GrantedScopes: []string{},
-		Form:          url.Values{},
-		Session:       new(DefaultSession),
+		RequestedAt:    time.Now().UTC(),
+		Client:         &DefaultClient{},
+		RequestedScope: Arguments{},
+		GrantedScope:   []string{},
+		Form:           url.Values{},
+		Session:        new(DefaultSession),
 	}
 
 	b.Merge(a)
 	assert.EqualValues(t, a.RequestedAt, b.RequestedAt)
 	assert.EqualValues(t, a.Client, b.Client)
-	assert.EqualValues(t, a.Scopes, b.Scopes)
-	assert.EqualValues(t, a.Audience, b.Audience)
-	assert.EqualValues(t, a.GrantedScopes, b.GrantedScopes)
+	assert.EqualValues(t, a.RequestedScope, b.RequestedScope)
+	assert.EqualValues(t, a.RequestedAudience, b.RequestedAudience)
+	assert.EqualValues(t, a.GrantedScope, b.GrantedScope)
 	assert.EqualValues(t, a.GrantedAudience, b.GrantedAudience)
 	assert.EqualValues(t, a.Form, b.Form)
 	assert.EqualValues(t, a.Session, b.Session)
@@ -82,10 +84,10 @@ func TestMergeRequest(t *testing.T) {
 
 func TestSanitizeRequest(t *testing.T) {
 	a := &Request{
-		RequestedAt:   time.Now().UTC(),
-		Client:        &DefaultClient{ID: "123"},
-		Scopes:        Arguments{"asdff"},
-		GrantedScopes: []string{"asdf"},
+		RequestedAt:    time.Now().UTC(),
+		Client:         &DefaultClient{ID: "123"},
+		RequestedScope: Arguments{"asdff"},
+		GrantedScope:   []string{"asdf"},
 		Form: url.Values{
 			"foo": []string{"fasdf"},
 			"bar": []string{"fasdf", "fasdf"},
@@ -107,12 +109,12 @@ func TestSanitizeRequest(t *testing.T) {
 
 func TestIdentifyRequest(t *testing.T) {
 	a := &Request{
-		RequestedAt:   time.Now().UTC(),
-		Client:        &DefaultClient{},
-		Scopes:        Arguments{},
-		GrantedScopes: []string{},
-		Form:          url.Values{"foo": []string{"bar"}},
-		Session:       new(DefaultSession),
+		RequestedAt:    time.Now().UTC(),
+		Client:         &DefaultClient{},
+		RequestedScope: Arguments{},
+		GrantedScope:   []string{},
+		Form:           url.Values{"foo": []string{"bar"}},
+		Session:        new(DefaultSession),
 	}
 
 	b := a.Sanitize([]string{})

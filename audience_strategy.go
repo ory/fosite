@@ -1,11 +1,13 @@
 package fosite
 
 import (
-	"github.com/ory/go-convenience/stringsx"
-	"github.com/pkg/errors"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/go-convenience/stringsx"
 )
 
 type AudienceMatchingStrategy func(haystack []string, needle []string) error
@@ -31,10 +33,9 @@ func DefaultAudienceMatchingStrategy(haystack []string, needle []string) error {
 			allowedPath := strings.TrimRight(hu.Path, "/")
 			if nu.Scheme == hu.Scheme &&
 				nu.Host == hu.Host &&
-				(
-					nu.Path == hu.Path ||
-						nu.Path == allowedPath ||
-						len(nu.Path) > len(allowedPath) &&  strings.TrimRight(nu.Path[:len(allowedPath)+1], "/") + "/" == allowedPath+"/") {
+				(nu.Path == hu.Path ||
+					nu.Path == allowedPath ||
+					len(nu.Path) > len(allowedPath) && strings.TrimRight(nu.Path[:len(allowedPath)+1], "/")+"/" == allowedPath+"/") {
 				found = true
 			}
 		}
@@ -47,7 +48,7 @@ func DefaultAudienceMatchingStrategy(haystack []string, needle []string) error {
 	return nil
 }
 
-func (f *Fosite) validateAuthorizeAudience(r *http.Request, request *AuthorizeRequest) (error) {
+func (f *Fosite) validateAuthorizeAudience(r *http.Request, request *AuthorizeRequest) error {
 	audience := stringsx.Splitx(request.Form.Get("audience"), " ")
 
 	if err := f.AudienceMatchingStrategy(request.Client.GetAudience(), audience); err != nil {

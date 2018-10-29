@@ -63,6 +63,51 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.27.0
+
+This PR adds the ability to specify a target audience for OAuth 2.0 Access Tokens.
+
+### Conceptual Changes
+
+From now on, `scope` and `audience` will be checked against the client's whitelisted scope and audience on every
+refresh token exchange. This prevents clients, which no longer are allowed to request a certain audience or scope,
+to keep using those values with existing refresh tokens.
+
+### API Changes
+
+```
+type fosite.Client interface {
++	// GetAudience returns the allowed audience(s) for this client.
++	GetAudience() Arguments
+}
+```
+
+```
+type fosite.Request struct {
+-   Scopes         Argument
++   RequestedScope Argument
+
+-   GrantedScopes  Argument
++   GrantedScope   Argument
+}
+```
+
+```
+type fosite.Requester interface {
++	// GetRequestedAudience returns the requested audiences for this request.
++	GetRequestedAudience() (audience Arguments)
+
++	// SetRequestedAudience sets the requested audienc.
++	SetRequestedAudience(audience Arguments)
+
++	// GetGrantedAudience returns all granted scopes.
++	GetGrantedAudience() (grantedAudience Arguments)
+
++	// GrantAudience marks a request's audience as granted.
++	GrantAudience(audience string)
+}
+```
+
 ## 0.26.0
 
 This release makes it easier to define custom JWT Containers for access tokens when using the JWT strategy. To do that,

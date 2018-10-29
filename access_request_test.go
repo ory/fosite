@@ -37,7 +37,7 @@ func TestAccessRequest(t *testing.T) {
 	assert.True(t, ar.GetGrantedScopes().Has("foo"))
 	assert.NotNil(t, ar.GetRequestedAt())
 	assert.Equal(t, ar.GrantTypes, ar.GetGrantTypes())
-	assert.Equal(t, Arguments{"foo", "bar"}, ar.Audience)
-	assert.Equal(t, Arguments{"foo", "bar"}, ar.Scopes)
+	assert.Equal(t, Arguments{"foo", "bar"}, ar.RequestedAudience)
+	assert.Equal(t, Arguments{"foo", "bar"}, ar.RequestedScope)
 	assert.Equal(t, ar.Client, ar.GetClient())
 }

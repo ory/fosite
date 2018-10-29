@@ -67,7 +67,7 @@ func TestIntrospectJWT(t *testing.T) {
 			description: "should pass because scope was granted",
 			token: func() string {
 				jwt := jwtValidCase(fosite.AccessToken)
-				jwt.GrantedScopes = []string{"foo", "bar"}
+				jwt.GrantedScope = []string{"foo", "bar"}
 				token, _, err := strat.GenerateAccessToken(nil, jwt)
 				assert.NoError(t, err)
 				return token

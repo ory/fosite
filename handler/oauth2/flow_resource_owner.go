@@ -36,7 +36,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 
 	RefreshTokenStrategy     RefreshTokenStrategy
 	ScopeStrategy            fosite.ScopeStrategy
-	AudienceMatchingStrategy audienceMatchingStrategy
+	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 
 	*HandleHelper
 }
@@ -70,7 +70,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 		}
 	}
 
-	if err := c.AudienceMatchingStrategy(request.GetRequestedAudience(), client.GetAudience()); err != nil {
+	if err := c.AudienceMatchingStrategy(client.GetAudience(), request.GetRequestedAudience()); err != nil {
 		return err
 	}
 

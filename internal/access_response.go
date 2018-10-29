@@ -4,9 +4,11 @@
 package internal
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	fosite "github.com/ory/fosite"
 	time "time"
+
+	gomock "github.com/golang/mock/gomock"
+
+	fosite "github.com/ory/fosite"
 )
 
 // Mock of AccessResponder interface

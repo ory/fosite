@@ -43,8 +43,8 @@ type AuthorizeImplicitGrantTypeHandler struct {
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration
 
-	ScopeStrategy fosite.ScopeStrategy
-	AudienceMatchingStrategy audienceMatchingStrategy
+	ScopeStrategy            fosite.ScopeStrategy
+	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 }
 
 func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -69,7 +69,7 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		}
 	}
 
-	if err := c.AudienceMatchingStrategy(ar.GetRequestedAudience(), client.GetAudience()); err != nil {
+	if err := c.AudienceMatchingStrategy(client.GetAudience(), ar.GetRequestedAudience()); err != nil {
 		return err
 	}
 

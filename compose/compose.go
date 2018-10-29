@@ -65,7 +65,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 		RevocationHandlers:         fosite.RevocationHandlers{},
 		Hasher:                     hasher,
 		ScopeStrategy:              config.GetScopeStrategy(),
-		AudienceMatchingStrategy:              config.GetAudienceStrategy(),
+		AudienceMatchingStrategy:   config.GetAudienceStrategy(),
 		SendDebugMessagesToClients: config.SendDebugMessagesToClients,
 		TokenURL:                   config.TokenURL,
 		JWKSFetcherStrategy:        config.GetJWKSFetcherStrategy(),
