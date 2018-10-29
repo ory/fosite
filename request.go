@@ -30,22 +30,26 @@ import (
 
 // Request is an implementation of Requester
 type Request struct {
-	ID            string     `json:"id" gorethink:"id"`
-	RequestedAt   time.Time  `json:"requestedAt" gorethink:"requestedAt"`
-	Client        Client     `json:"client" gorethink:"client"`
-	Scopes        Arguments  `json:"scopes" gorethink:"scopes"`
-	GrantedScopes Arguments  `json:"grantedScopes" gorethink:"grantedScopes"`
-	Form          url.Values `json:"form" gorethink:"form"`
-	Session       Session    `json:"session" gorethink:"session"`
+	ID              string     `json:"id" gorethink:"id"`
+	RequestedAt     time.Time  `json:"requestedAt" gorethink:"requestedAt"`
+	Client          Client     `json:"client" gorethink:"client"`
+	Scopes          Arguments  `json:"scopes" gorethink:"scopes"`
+	GrantedScopes   Arguments  `json:"grantedScopes" gorethink:"grantedScopes"`
+	Form            url.Values `json:"form" gorethink:"form"`
+	Session         Session    `json:"session" gorethink:"session"`
+	Audience        Arguments  `json:"audience"`
+	GrantedAudience Arguments  `json:"grantedAudience"`
 }
 
 func NewRequest() *Request {
 	return &Request{
-		Client:        &DefaultClient{},
-		Scopes:        Arguments{},
-		GrantedScopes: Arguments{},
-		Form:          url.Values{},
-		RequestedAt:   time.Now().UTC(),
+		Client:          &DefaultClient{},
+		Scopes:          Arguments{},
+		Audience:        Arguments{},
+		GrantedAudience: Arguments{},
+		GrantedScopes:   Arguments{},
+		Form:            url.Values{},
+		RequestedAt:     time.Now().UTC(),
 	}
 }
 
@@ -83,6 +87,13 @@ func (a *Request) SetRequestedScopes(s Arguments) {
 	}
 }
 
+func (a *Request) SetRequestedAudience(s Arguments) {
+	a.Audience = nil
+	for _, scope := range s {
+		a.AppendRequestedAudience(scope)
+	}
+}
+
 func (a *Request) AppendRequestedScope(scope string) {
 	for _, has := range a.Scopes {
 		if scope == has {
@@ -92,8 +103,34 @@ func (a *Request) AppendRequestedScope(scope string) {
 	a.Scopes = append(a.Scopes, scope)
 }
 
+func (a *Request) AppendRequestedAudience(audience string) {
+	for _, has := range a.Audience {
+		if audience == has {
+			return
+		}
+	}
+	a.Audience = append(a.Audience, audience)
+}
+
+func (a *Request) GetRequestedAudience() (audience Arguments) {
+	return a.Audience
+}
+
+func (a *Request) GrantAudience(scope string) {
+	for _, has := range a.GrantedAudience {
+		if scope == has {
+			return
+		}
+	}
+	a.GrantedAudience = append(a.GrantedAudience, scope)
+}
+
 func (a *Request) GetGrantedScopes() Arguments {
 	return a.GrantedScopes
+}
+
+func (a *Request) GetGrantedAudience() Arguments {
+	return a.GrantedAudience
 }
 
 func (a *Request) GrantScope(scope string) {
@@ -120,6 +157,14 @@ func (a *Request) Merge(request Requester) {
 	for _, scope := range request.GetGrantedScopes() {
 		a.GrantScope(scope)
 	}
+
+	for _, aud := range request.GetRequestedAudience() {
+		a.AppendRequestedAudience(aud)
+	}
+	for _, aud := range request.GetGrantedAudience() {
+		a.GrantAudience(aud)
+	}
+
 	a.RequestedAt = request.GetRequestedAt()
 	a.Client = request.GetClient()
 	a.Session = request.GetSession()

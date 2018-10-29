@@ -44,6 +44,7 @@ type AuthorizeImplicitGrantTypeHandler struct {
 	AccessTokenLifespan time.Duration
 
 	ScopeStrategy fosite.ScopeStrategy
+	AudienceMatchingStrategy audienceMatchingStrategy
 }
 
 func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -66,6 +67,10 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
 			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
 		}
+	}
+
+	if err := c.AudienceMatchingStrategy(ar.GetRequestedAudience(), client.GetAudience()); err != nil {
+		return err
 	}
 
 	// there is no need to check for https, because implicit flow does not require https

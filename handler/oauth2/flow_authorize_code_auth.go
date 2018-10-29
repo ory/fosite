@@ -47,6 +47,7 @@ type AuthorizeExplicitGrantHandler struct {
 	AccessTokenLifespan time.Duration
 
 	ScopeStrategy fosite.ScopeStrategy
+	AudienceMatchingStrategy audienceMatchingStrategy
 
 	// SanitationWhiteList is a whitelist of form values that are required by the token endpoint. These values
 	// are safe for storage in a database (cleartext).
@@ -75,6 +76,10 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
 			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
 		}
+	}
+
+	if err := c.AudienceMatchingStrategy(ar.GetRequestedAudience(), client.GetAudience()); err != nil {
+		return err
 	}
 
 	return c.IssueAuthorizeCode(ctx, ar, resp)

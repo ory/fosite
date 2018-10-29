@@ -54,6 +54,9 @@ type Config struct {
 	// ScopeStrategy sets the scope strategy that should be supported, for example fosite.WildcardScopeStrategy.
 	ScopeStrategy fosite.ScopeStrategy
 
+	// AudienceMatchingStrategy sets the audience matching strategy that should be supported, defaults to fosite.DefaultsAudienceMatchingStrategy.
+	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
+
 	// EnforcePKCE, if set to true, requires public clients to perform authorize code flows with PKCE. Defaults to false.
 	EnforcePKCE bool
 
@@ -79,6 +82,14 @@ func (c *Config) GetScopeStrategy() fosite.ScopeStrategy {
 		c.ScopeStrategy = fosite.WildcardScopeStrategy
 	}
 	return c.ScopeStrategy
+}
+
+// GetAudienceStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
+func (c *Config) GetAudienceStrategy() fosite.AudienceMatchingStrategy {
+	if c.AudienceMatchingStrategy == nil {
+		c.AudienceMatchingStrategy = fosite.DefaultAudienceMatchingStrategy
+	}
+	return c.AudienceMatchingStrategy
 }
 
 // GetAuthorizeCodeLifespan returns how long an authorize code should be valid. Defaults to one fifteen minutes.

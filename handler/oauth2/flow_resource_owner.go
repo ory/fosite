@@ -34,8 +34,9 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 	// ResourceOwnerPasswordCredentialsGrantStorage is used to persist session data across requests.
 	ResourceOwnerPasswordCredentialsGrantStorage ResourceOwnerPasswordCredentialsGrantStorage
 
-	RefreshTokenStrategy RefreshTokenStrategy
-	ScopeStrategy        fosite.ScopeStrategy
+	RefreshTokenStrategy     RefreshTokenStrategy
+	ScopeStrategy            fosite.ScopeStrategy
+	AudienceMatchingStrategy audienceMatchingStrategy
 
 	*HandleHelper
 }
@@ -67,6 +68,10 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
 			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
 		}
+	}
+
+	if err := c.AudienceMatchingStrategy(request.GetRequestedAudience(), client.GetAudience()); err != nil {
+		return err
 	}
 
 	// Credentials must not be passed around, potentially leaking to the database!

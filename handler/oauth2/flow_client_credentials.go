@@ -33,6 +33,7 @@ import (
 type ClientCredentialsGrantHandler struct {
 	*HandleHelper
 	ScopeStrategy fosite.ScopeStrategy
+	AudienceMatchingStrategy audienceMatchingStrategy
 }
 
 // IntrospectTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
@@ -48,6 +49,10 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
 			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
 		}
+	}
+
+	if err := c.AudienceMatchingStrategy(request.GetRequestedAudience(), client.GetAudience()); err != nil {
+		return err
 	}
 
 	// The client MUST authenticate with the authorization server as described in Section 3.2.1.

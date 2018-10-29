@@ -61,7 +61,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* empty request */
 		{
 			desc:          "empty request fails",
-			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			r:             &http.Request{},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -71,7 +71,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid redirect uri */
 		{
 			desc:          "invalid redirect uri fails",
-			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			query:         url.Values{"redirect_uri": []string{"invalid"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -81,7 +81,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid client */
 		{
 			desc:          "invalid client fails",
-			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			query:         url.Values{"redirect_uri": []string{"https://foo.bar/cb"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -91,7 +91,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			query: url.Values{
 				"client_id": []string{"1234"},
 			},
@@ -103,7 +103,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			query: url.Values{
 				"redirect_uri": []string{""},
 				"client_id":    []string{"1234"},
@@ -116,7 +116,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			query: url.Values{
 				"redirect_uri": []string{"https://foo.bar/cb"},
 				"client_id":    []string{"1234"},
@@ -129,7 +129,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* no state */
 		{
 			desc: "no state",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			query: url.Values{
 				"redirect_uri":  []string{"https://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -143,7 +143,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* short state */
 		{
 			desc: "short state",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -158,7 +158,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* fails because scope not given */
 		{
 			desc: "should fail because client does not have scope baz",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -171,27 +171,58 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidScope,
 		},
-		/* success case */
+		/* fails because scope not given */
 		{
-			desc: "should pass",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy},
+			desc: "should fail because client does not have scope baz",
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
 				"response_type": {"code token"},
 				"state":         {"strong-state"},
 				"scope":         {"foo bar"},
+				"audience":      {"https://cloud.ory.sh/api https://www.ory.sh/api"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{ResponseTypes: []string{"code token"}, RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"},
+					Audience: []string{"https://cloud.ory.sh/api"},
+				}, nil)
+			},
+			expectedError: ErrInvalidRequest,
+		},
+		/* success case */
+		{
+			desc: "should pass",
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+				"audience":      {"https://cloud.ory.sh/api https://www.ory.sh/api"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					ResponseTypes: []string{"code token"},
+					RedirectURIs:  []string{"https://foo.bar/cb"},
+					Scopes:        []string{"foo", "bar"},
+					Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+				}, nil)
 			},
 			expect: &AuthorizeRequest{
 				RedirectURI:   redir,
 				ResponseTypes: []string{"code", "token"},
 				State:         "strong-state",
 				Request: Request{
-					Client: &DefaultClient{ResponseTypes: []string{"code token"}, RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}},
-					Scopes: []string{"foo", "bar"},
+					Client: &DefaultClient{
+						ResponseTypes: []string{"code token"}, RedirectURIs: []string{"https://foo.bar/cb"},
+						Scopes:   []string{"foo", "bar"},
+						Audience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+					},
+					Scopes:   []string{"foo", "bar"},
+					Audience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
 				},
 			},
 		},
@@ -210,7 +241,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				assert.EqualError(t, errors.Cause(err), c.expectedError.Error())
 			} else {
 				require.NoError(t, err)
-				AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "Scopes", "Client", "RedirectURI", "State")
+				AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "Audience", "Scopes", "Client", "RedirectURI", "State")
 				assert.NotNil(t, ar.GetRequestedAt())
 			}
 		})

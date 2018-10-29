@@ -91,6 +91,7 @@ type Fosite struct {
 	RevocationHandlers         RevocationHandlers
 	Hasher                     Hasher
 	ScopeStrategy              ScopeStrategy
+	AudienceMatchingStrategy AudienceMatchingStrategy
 	JWKSFetcherStrategy        JWKSFetcherStrategy
 	HTTPClient                 *http.Client
 

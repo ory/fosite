@@ -50,7 +50,7 @@ func AssertObjectKeysEqual(t *testing.T, a, b interface{}, keys ...string) {
 		assert.NoError(t, err)
 		d, err := reflections.GetField(b, k)
 		assert.NoError(t, err)
-		assert.Equal(t, c, d, "%s", k)
+		assert.Equal(t, c, d, "field: %s", k)
 	}
 }
 

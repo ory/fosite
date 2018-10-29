@@ -4,12 +4,10 @@
 package internal
 
 import (
+	gomock "github.com/golang/mock/gomock"
+	fosite "github.com/ory/fosite"
 	url "net/url"
 	time "time"
-
-	gomock "github.com/golang/mock/gomock"
-
-	fosite "github.com/ory/fosite"
 )
 
 // Mock of AuthorizeRequester interface
@@ -59,6 +57,16 @@ func (_m *MockAuthorizeRequester) GetClient() fosite.Client {
 
 func (_mr *_MockAuthorizeRequesterRecorder) GetClient() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetClient")
+}
+
+func (_m *MockAuthorizeRequester) GetGrantedAudience() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetGrantedAudience")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) GetGrantedAudience() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantedAudience")
 }
 
 func (_m *MockAuthorizeRequester) GetGrantedScopes() fosite.Arguments {
@@ -111,6 +119,16 @@ func (_mr *_MockAuthorizeRequesterRecorder) GetRequestedAt() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedAt")
 }
 
+func (_m *MockAuthorizeRequester) GetRequestedAudience() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetRequestedAudience")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) GetRequestedAudience() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedAudience")
+}
+
 func (_m *MockAuthorizeRequester) GetRequestedScopes() fosite.Arguments {
 	ret := _m.ctrl.Call(_m, "GetRequestedScopes")
 	ret0, _ := ret[0].(fosite.Arguments)
@@ -149,6 +167,14 @@ func (_m *MockAuthorizeRequester) GetState() string {
 
 func (_mr *_MockAuthorizeRequesterRecorder) GetState() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetState")
+}
+
+func (_m *MockAuthorizeRequester) GrantAudience(_param0 string) {
+	_m.ctrl.Call(_m, "GrantAudience", _param0)
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) GrantAudience(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GrantAudience", arg0)
 }
 
 func (_m *MockAuthorizeRequester) GrantScope(_param0 string) {
@@ -193,6 +219,14 @@ func (_m *MockAuthorizeRequester) SetID(_param0 string) {
 
 func (_mr *_MockAuthorizeRequesterRecorder) SetID(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetID", arg0)
+}
+
+func (_m *MockAuthorizeRequester) SetRequestedAudience(_param0 fosite.Arguments) {
+	_m.ctrl.Call(_m, "SetRequestedAudience", _param0)
+}
+
+func (_mr *_MockAuthorizeRequesterRecorder) SetRequestedAudience(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetRequestedAudience", arg0)
 }
 
 func (_m *MockAuthorizeRequester) SetRequestedScopes(_param0 fosite.Arguments) {

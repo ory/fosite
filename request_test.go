@@ -53,8 +53,10 @@ func TestMergeRequest(t *testing.T) {
 	a := &Request{
 		RequestedAt:   time.Now().UTC(),
 		Client:        &DefaultClient{ID: "123"},
-		Scopes:        Arguments{"asdff"},
-		GrantedScopes: []string{"asdf"},
+		Scopes:        Arguments{"scope-3", "scope-4"},
+		Audience:        Arguments{"aud-3", "aud-4"},
+		GrantedScopes: []string{"scope-1", "scope-2"},
+		GrantedAudience: []string{"aud-1", "aud-2"},
 		Form:          url.Values{"foo": []string{"fasdf"}},
 		Session:       new(DefaultSession),
 	}
@@ -71,7 +73,9 @@ func TestMergeRequest(t *testing.T) {
 	assert.EqualValues(t, a.RequestedAt, b.RequestedAt)
 	assert.EqualValues(t, a.Client, b.Client)
 	assert.EqualValues(t, a.Scopes, b.Scopes)
+	assert.EqualValues(t, a.Audience, b.Audience)
 	assert.EqualValues(t, a.GrantedScopes, b.GrantedScopes)
+	assert.EqualValues(t, a.GrantedAudience, b.GrantedAudience)
 	assert.EqualValues(t, a.Form, b.Form)
 	assert.EqualValues(t, a.Session, b.Session)
 }
