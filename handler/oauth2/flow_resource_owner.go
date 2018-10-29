@@ -53,16 +53,6 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The client is not allowed to use authorization grant \"password\"."))
 	}
 
-	username := request.GetRequestForm().Get("username")
-	password := request.GetRequestForm().Get("password")
-	if username == "" || password == "" {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Username or password are missing from the POST body."))
-	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
-		return errors.WithStack(fosite.ErrRequestUnauthorized.WithHint("Unable to authenticate the provided username and password credentials.").WithDebug(err.Error()))
-	} else if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
-	}
-
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
@@ -72,6 +62,16 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 
 	if err := c.AudienceMatchingStrategy(client.GetAudience(), request.GetRequestedAudience()); err != nil {
 		return err
+	}
+
+	username := request.GetRequestForm().Get("username")
+	password := request.GetRequestForm().Get("password")
+	if username == "" || password == "" {
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Username or password are missing from the POST body."))
+	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
+		return errors.WithStack(fosite.ErrRequestUnauthorized.WithHint("Unable to authenticate the provided username and password credentials.").WithDebug(err.Error()))
+	} else if err != nil {
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	// Credentials must not be passed around, potentially leaking to the database!
