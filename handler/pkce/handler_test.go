@@ -73,6 +73,9 @@ func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	r.ResponseTypes = fosite.Arguments{"code"}
 	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
+	r.ResponseTypes = fosite.Arguments{"code", "id_token"}
+	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
+
 	c.Public = true
 	h.EnablePlainChallengeMethod = true
 	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
