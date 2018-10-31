@@ -99,8 +99,8 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 						areq.Form.Add("refresh_token", token)
 						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
-							Client:        &fosite.DefaultClient{ID: ""},
-							GrantedScopes: []string{"offline"},
+							Client:       &fosite.DefaultClient{ID: ""},
+							GrantedScope: []string{"offline"},
 						})
 						require.NoError(t, err)
 					},
@@ -120,20 +120,20 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 						areq.Form.Add("refresh_token", token)
 						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
-							Client:        &fosite.DefaultClient{ID: "foo"},
-							GrantedScopes: fosite.Arguments{"foo", "offline"},
-							Scopes:        fosite.Arguments{"foo", "bar"},
-							Session:       sess,
-							Form:          url.Values{"foo": []string{"bar"}},
-							RequestedAt:   time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+							Client:         &fosite.DefaultClient{ID: "foo"},
+							GrantedScope:   fosite.Arguments{"foo", "offline"},
+							RequestedScope: fosite.Arguments{"foo", "bar"},
+							Session:        sess,
+							Form:           url.Values{"foo": []string{"bar"}},
+							RequestedAt:    time.Now().UTC().Add(-time.Hour).Round(time.Hour),
 						})
 						require.NoError(t, err)
 					},
 					expect: func(t *testing.T) {
 						assert.NotEqual(t, sess, areq.Session)
 						assert.NotEqual(t, time.Now().UTC().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
-						assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.GrantedScopes)
-						assert.Equal(t, fosite.Arguments{"foo", "bar"}, areq.Scopes)
+						assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.GrantedScope)
+						assert.Equal(t, fosite.Arguments{"foo", "bar"}, areq.RequestedScope)
 						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
 					},
 				},
@@ -193,8 +193,8 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 					setup: func() {
 						areq.ID = "req-id"
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
-						areq.Scopes = fosite.Arguments{"foo", "bar"}
-						areq.GrantedScopes = fosite.Arguments{"foo", "bar"}
+						areq.RequestedScope = fosite.Arguments{"foo", "bar"}
+						areq.GrantedScope = fosite.Arguments{"foo", "bar"}
 
 						token, signature, err := strategy.GenerateRefreshToken(nil, nil)
 						require.NoError(t, err)

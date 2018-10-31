@@ -5,7 +5,6 @@ package internal
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	go_jose "gopkg.in/square/go-jose.v2"
 
 	fosite "github.com/ory/fosite"
 )
@@ -29,6 +28,16 @@ func NewMockClient(ctrl *gomock.Controller) *MockClient {
 
 func (_m *MockClient) EXPECT() *_MockClientRecorder {
 	return _m.recorder
+}
+
+func (_m *MockClient) GetAudience() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetAudience")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockClientRecorder) GetAudience() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAudience")
 }
 
 func (_m *MockClient) GetGrantTypes() fosite.Arguments {
@@ -59,26 +68,6 @@ func (_m *MockClient) GetID() string {
 
 func (_mr *_MockClientRecorder) GetID() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetID")
-}
-
-func (_m *MockClient) GetJSONWebKeys() *go_jose.JSONWebKeySet {
-	ret := _m.ctrl.Call(_m, "GetJSONWebKeys")
-	ret0, _ := ret[0].(*go_jose.JSONWebKeySet)
-	return ret0
-}
-
-func (_mr *_MockClientRecorder) GetJSONWebKeys() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetJSONWebKeys")
-}
-
-func (_m *MockClient) GetJSONWebKeysURI() string {
-	ret := _m.ctrl.Call(_m, "GetJSONWebKeysURI")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-func (_mr *_MockClientRecorder) GetJSONWebKeysURI() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetJSONWebKeysURI")
 }
 
 func (_m *MockClient) GetRedirectURIs() []string {

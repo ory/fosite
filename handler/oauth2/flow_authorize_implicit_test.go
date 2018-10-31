@@ -45,10 +45,11 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 	areq.Session = new(fosite.DefaultSession)
 
 	h := AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStorage:  store,
-		AccessTokenStrategy: chgen,
-		AccessTokenLifespan: time.Hour,
-		ScopeStrategy:       fosite.HierarchicScopeStrategy,
+		AccessTokenStorage:       store,
+		AccessTokenStrategy:      chgen,
+		AccessTokenLifespan:      time.Hour,
+		ScopeStrategy:            fosite.HierarchicScopeStrategy,
+		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 	}
 	for k, c := range []struct {
 		description string
@@ -74,8 +75,36 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 			expectErr: fosite.ErrServerError,
 		},
 		{
+			description: "should fail because scope invalid",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{"token"}
+				areq.RequestedScope = fosite.Arguments{"scope"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"implicit"},
+					ResponseTypes: fosite.Arguments{"token"},
+				}
+			},
+			expectErr: fosite.ErrInvalidScope,
+		},
+		{
+			description: "should fail because audience invalid",
+			setup: func() {
+				areq.ResponseTypes = fosite.Arguments{"token"}
+				areq.RequestedScope = fosite.Arguments{"scope"}
+				areq.RequestedAudience = fosite.Arguments{"https://www.ory.sh/not-api"}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"implicit"},
+					ResponseTypes: fosite.Arguments{"token"},
+					Scopes:        []string{"scope"},
+					Audience:      []string{"https://www.ory.sh/api"},
+				}
+			},
+			expectErr: fosite.ErrInvalidRequest,
+		},
+		{
 			description: "should fail because persistence failed",
 			setup: func() {
+				areq.RequestedAudience = fosite.Arguments{"https://www.ory.sh/api"}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).AnyTimes().Return("access.ats", "ats", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "ats", gomock.Eq(areq.Sanitize([]string{}))).Return(errors.New(""))
 			},
@@ -85,7 +114,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				areq.State = "state"
-				areq.GrantedScopes = fosite.Arguments{"scope"}
+				areq.GrantedScope = fosite.Arguments{"scope"}
 
 				store.EXPECT().CreateAccessTokenSession(nil, "ats", gomock.Eq(areq.Sanitize([]string{}))).AnyTimes().Return(nil)
 

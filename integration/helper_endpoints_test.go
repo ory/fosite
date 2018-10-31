@@ -22,6 +22,7 @@
 package integration_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -64,14 +65,18 @@ func tokenIntrospectionHandler(t *testing.T, oauth2 fosite.OAuth2Provider, sessi
 func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
-		_, _, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session)
+		_, resp, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session)
 		if err != nil {
 			t.Logf("Info request failed because: %+v", err)
 			http.Error(rw, errors.Cause(err).(*fosite.RFC6749Error).Description, errors.Cause(err).(*fosite.RFC6749Error).Code)
 			return
 		}
 
-		rw.WriteHeader(http.StatusNoContent)
+		t.Logf("Introspecting caused: %+v", resp)
+
+		if err := json.NewEncoder(rw).Encode(resp); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -90,11 +95,18 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 		if ar.GetRequestedScopes().Has("fosite") {
 			ar.GrantScope("fosite")
 		}
+
 		if ar.GetRequestedScopes().Has("offline") {
 			ar.GrantScope("offline")
 		}
+
 		if ar.GetRequestedScopes().Has("openid") {
 			ar.GrantScope("openid")
+		}
+
+		for _, a := range ar.GetRequestedAudience() {
+			t.Logf("Granting audience: %s", a)
+			ar.GrantAudience(a)
 		}
 
 		// Normally, this would be the place where you would check if the user is logged in and gives his consent.
@@ -107,6 +119,7 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}
+		t.Logf("Requested audience3: %+v", ar)
 
 		oauth2.WriteAuthorizeResponse(rw, ar, response)
 	}

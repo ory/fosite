@@ -33,25 +33,29 @@ type Client interface {
 	// GetHashedSecret returns the hashed secret as it is stored in the store.
 	GetHashedSecret() []byte
 
-	// Returns the client's allowed redirect URIs.
+	// GetRedirectURIs returns the client's allowed redirect URIs.
 	GetRedirectURIs() []string
 
-	// Returns the client's allowed grant types.
+	// GetGrantTypes returns the client's allowed grant types.
 	GetGrantTypes() Arguments
 
-	// Returns the client's allowed response types.
+	// GetResponseTypes returns the client's allowed response types.
 	GetResponseTypes() Arguments
 
-	// Returns the scopes this client is allowed to request.
+	// GetScopes returns the scopes this client is allowed to request.
 	GetScopes() Arguments
 
 	// IsPublic returns true, if this client is marked as public.
 	IsPublic() bool
+
+	// GetAudience returns the allowed audience(s) for this client.
+	GetAudience() Arguments
 }
 
+// OpenIDConnectClient represents a client capable of performing OpenID Connect requests.
 type OpenIDConnectClient interface {
-	// Array of request_uri values that are pre-registered by the RP for use at the OP. Servers MAY cache the
-	// contents of the files referenced by these URIs and not retrieve them at the time they are used in a request.
+	// GetRequestURIs is an array of request_uri values that are pre-registered by the RP for use at the OP. Servers MAY
+	// cache the contents of the files referenced by these URIs and not retrieve them at the time they are used in a request.
 	// OPs can require that request_uri values used be pre-registered with the require_request_uri_registration
 	// discovery parameter.
 	GetRequestURIs() []string
@@ -84,6 +88,7 @@ type DefaultClient struct {
 	GrantTypes    []string `json:"grant_types"`
 	ResponseTypes []string `json:"response_types"`
 	Scopes        []string `json:"scopes"`
+	Audience      []string `json:"audience"`
 	Public        bool     `json:"public"`
 }
 
@@ -102,6 +107,10 @@ func (c *DefaultClient) GetID() string {
 
 func (c *DefaultClient) IsPublic() bool {
 	return c.Public
+}
+
+func (c *DefaultClient) GetAudience() Arguments {
+	return c.Audience
 }
 
 func (c *DefaultClient) GetRedirectURIs() []string {

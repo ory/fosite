@@ -50,7 +50,8 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			AccessTokenStorage:  store,
 			AccessTokenLifespan: time.Hour,
 		},
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
+		ScopeStrategy:            fosite.HierarchicScopeStrategy,
+		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 	}
 	for k, c := range []struct {
 		description string
@@ -66,12 +67,28 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because because invalid credentials",
+			description: "should fail because because scope missing",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
-				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}}
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}, Scopes: []string{}}
+				areq.RequestedScope = []string{"foo-scope"}
+			},
+			expectErr: fosite.ErrInvalidScope,
+		},
+		{
+			description: "should fail because because audience missing",
+			setup: func() {
+				areq.RequestedAudience = fosite.Arguments{"https://www.ory.sh/api"}
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}, Scopes: []string{"foo-scope"}}
+			},
+			expectErr: fosite.ErrInvalidRequest,
+		},
+		{
+			description: "should fail because because invalid credentials",
+			setup: func() {
 				areq.Form.Set("username", "peter")
 				areq.Form.Set("password", "pan")
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}, Scopes: []string{"foo-scope"}, Audience: []string{"https://www.ory.sh/api"}}
 
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(fosite.ErrNotFound)
 			},

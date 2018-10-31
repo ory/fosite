@@ -46,7 +46,7 @@ func TestNewAccessRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	client := &DefaultClient{}
-	fosite := &Fosite{Store: store, Hasher: hasher}
+	fosite := &Fosite{Store: store, Hasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
 	for k, c := range []struct {
 		header    http.Header
 		form      url.Values

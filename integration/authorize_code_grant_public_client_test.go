@@ -22,6 +22,7 @@
 package integration_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -45,7 +46,7 @@ func TestAuthorizeCodeFlowWithPublicClient(t *testing.T) {
 
 func runAuthorizeCodeGrantWithPublicClientTest(t *testing.T, strategy interface{}) {
 	f := compose.Compose(new(compose.Config), fositeStore, strategy, nil, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2TokenIntrospectionFactory)
-	ts := mockServer(t, f, &fosite.DefaultSession{})
+	ts := mockServer(t, f, &fosite.DefaultSession{Subject: "foo-sub"})
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
@@ -57,8 +58,45 @@ func runAuthorizeCodeGrantWithPublicClientTest(t *testing.T, strategy interface{
 	for k, c := range []struct {
 		description    string
 		setup          func()
+		check          func(t *testing.T, r *http.Response)
+		params         []goauth.AuthCodeOption
 		authStatusCode int
 	}{
+		{
+			description: "should fail because of audience",
+			params:      []goauth.AuthCodeOption{goauth.SetAuthURLParam("audience", "https://www.ory.sh/not-api")},
+			setup: func() {
+				state = "12345678901234567890"
+			},
+			authStatusCode: http.StatusNotAcceptable,
+		},
+		{
+			description: "should fail because of scope",
+			params:      []goauth.AuthCodeOption{},
+			setup: func() {
+				oauthClient.Scopes = []string{"not-exist"}
+				state = "12345678901234567890"
+			},
+			authStatusCode: http.StatusNotAcceptable,
+		},
+		{
+			description: "should pass with proper audience",
+			params:      []goauth.AuthCodeOption{goauth.SetAuthURLParam("audience", "https://www.ory.sh/api")},
+			setup: func() {
+				state = "12345678901234567890"
+				oauthClient.Scopes = []string{"fosite"}
+			},
+			check: func(t *testing.T, r *http.Response) {
+				var b fosite.AccessRequest
+				b.Client = new(fosite.DefaultClient)
+				b.Session = new(defaultSession)
+				require.NoError(t, json.NewDecoder(r.Body).Decode(&b))
+				assert.EqualValues(t, fosite.Arguments{"https://www.ory.sh/api"}, b.RequestedAudience)
+				assert.EqualValues(t, fosite.Arguments{"https://www.ory.sh/api"}, b.GrantedAudience)
+				assert.EqualValues(t, "foo-sub", b.Session.(*defaultSession).Subject)
+			},
+			authStatusCode: http.StatusOK,
+		},
 		{
 			description: "should pass",
 			setup: func() {
@@ -70,7 +108,7 @@ func runAuthorizeCodeGrantWithPublicClientTest(t *testing.T, strategy interface{
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
 			c.setup()
 
-			resp, err := http.Get(oauthClient.AuthCodeURL(state))
+			resp, err := http.Get(oauthClient.AuthCodeURL(state, c.params...))
 			require.NoError(t, err)
 			require.Equal(t, c.authStatusCode, resp.StatusCode)
 
@@ -82,7 +120,11 @@ func runAuthorizeCodeGrantWithPublicClientTest(t *testing.T, strategy interface{
 				httpClient := oauthClient.Client(goauth.NoContext, token)
 				resp, err := httpClient.Get(ts.URL + "/info")
 				require.NoError(t, err)
-				assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+				assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+				if c.check != nil {
+					c.check(t, resp)
+				}
 			}
 		})
 	}

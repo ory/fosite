@@ -34,8 +34,9 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 	// ResourceOwnerPasswordCredentialsGrantStorage is used to persist session data across requests.
 	ResourceOwnerPasswordCredentialsGrantStorage ResourceOwnerPasswordCredentialsGrantStorage
 
-	RefreshTokenStrategy RefreshTokenStrategy
-	ScopeStrategy        fosite.ScopeStrategy
+	RefreshTokenStrategy     RefreshTokenStrategy
+	ScopeStrategy            fosite.ScopeStrategy
+	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 
 	*HandleHelper
 }
@@ -52,6 +53,17 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The client is not allowed to use authorization grant \"password\"."))
 	}
 
+	client := request.GetClient()
+	for _, scope := range request.GetRequestedScopes() {
+		if !c.ScopeStrategy(client.GetScopes(), scope) {
+			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
+		}
+	}
+
+	if err := c.AudienceMatchingStrategy(client.GetAudience(), request.GetRequestedAudience()); err != nil {
+		return err
+	}
+
 	username := request.GetRequestForm().Get("username")
 	password := request.GetRequestForm().Get("password")
 	if username == "" || password == "" {
@@ -60,13 +72,6 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 		return errors.WithStack(fosite.ErrRequestUnauthorized.WithHint("Unable to authenticate the provided username and password credentials.").WithDebug(err.Error()))
 	} else if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
-	}
-
-	client := request.GetClient()
-	for _, scope := range request.GetRequestedScopes() {
-		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
-		}
 	}
 
 	// Credentials must not be passed around, potentially leaking to the database!

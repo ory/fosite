@@ -47,7 +47,8 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 			AccessTokenStrategy: chgen,
 			AccessTokenLifespan: time.Hour,
 		},
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
+		ScopeStrategy:            fosite.HierarchicScopeStrategy,
+		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 	}
 	for k, c := range []struct {
 		description string
@@ -63,11 +64,37 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 			},
 		},
 		{
+			description: "should fail because audience not valid",
+			expectErr:   fosite.ErrInvalidRequest,
+			mock: func() {
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
+				areq.EXPECT().GetRequestedScopes().Return([]string{})
+				areq.EXPECT().GetRequestedAudience().Return([]string{"https://www.ory.sh/not-api"})
+				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
+					GrantTypes: fosite.Arguments{"client_credentials"},
+					Audience:   []string{"https://www.ory.sh/api"},
+				})
+			},
+		},
+		{
+			description: "should fail because scope not valid",
+			expectErr:   fosite.ErrInvalidScope,
+			mock: func() {
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
+				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
+				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
+					GrantTypes: fosite.Arguments{"client_credentials"},
+					Scopes:     []string{"foo"},
+				})
+			},
+		},
+		{
 			description: "should pass",
 			mock: func() {
 				areq.EXPECT().GetSession().Return(new(fosite.DefaultSession))
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
+				areq.EXPECT().GetRequestedAudience().Return([]string{})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
 					GrantTypes: fosite.Arguments{"client_credentials"},
 					Scopes:     []string{"foo", "bar", "baz"},

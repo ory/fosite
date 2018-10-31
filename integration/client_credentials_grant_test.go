@@ -22,6 +22,10 @@
 package integration_test
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -51,20 +55,64 @@ func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStra
 		description string
 		setup       func()
 		err         bool
+		check       func(t *testing.T, r *http.Response)
+		params      url.Values
 	}{
+		{
+			description: "should fail because of ungranted scopes",
+			setup: func() {
+				oauthClient.Scopes = []string{"unknown"}
+			},
+			err: true,
+		},
+		{
+			description: "should fail because of ungranted audience",
+			params:      url.Values{"audience": {"https://www.ory.sh/not-api"}},
+			setup: func() {
+				oauthClient.Scopes = []string{"fosite"}
+			},
+			err: true,
+		},
+		{
+			params:      url.Values{"audience": {"https://www.ory.sh/api"}},
+			description: "should pass",
+			setup: func() {
+			},
+			check: func(t *testing.T, r *http.Response) {
+				var b fosite.AccessRequest
+				b.Client = new(fosite.DefaultClient)
+				b.Session = new(defaultSession)
+				require.NoError(t, json.NewDecoder(r.Body).Decode(&b))
+				assert.EqualValues(t, fosite.Arguments{"https://www.ory.sh/api"}, b.RequestedAudience)
+				assert.EqualValues(t, fosite.Arguments{"https://www.ory.sh/api"}, b.GrantedAudience)
+				assert.EqualValues(t, "my-client", b.Session.(*defaultSession).Subject)
+			},
+		},
 		{
 			description: "should pass",
 			setup: func() {
 			},
+			check: func(t *testing.T, r *http.Response) {
+				var b fosite.AccessRequest
+				b.Client = new(fosite.DefaultClient)
+				b.Session = new(defaultSession)
+				require.NoError(t, json.NewDecoder(r.Body).Decode(&b))
+				assert.EqualValues(t, fosite.Arguments{}, b.RequestedAudience)
+				assert.EqualValues(t, fosite.Arguments{}, b.GrantedAudience)
+				assert.EqualValues(t, "my-client", b.Session.(*defaultSession).Subject)
+			},
 		},
 	} {
-		c.setup()
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			c.setup()
 
-		token, err := oauthClient.Token(goauth.NoContext)
-		require.Equal(t, c.err, err != nil, "(%d) %s\n%s\n%s", k, c.description, c.err, err)
-		if !c.err {
-			assert.NotEmpty(t, token.AccessToken, "(%d) %s\n%s", k, c.description, token)
-		}
-		t.Logf("Passed test case %d", k)
+			oauthClient.EndpointParams = c.params
+			token, err := oauthClient.Token(goauth.NoContext)
+			require.Equal(t, c.err, err != nil, "(%d) %s\n%s\n%s", k, c.description, c.err, err)
+			if !c.err {
+				assert.NotEmpty(t, token.AccessToken, "(%d) %s\n%s", k, c.description, token)
+			}
+			t.Logf("Passed test case %d", k)
+		})
 	}
 }

@@ -81,6 +81,9 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// Override scopes
 	request.SetRequestedScopes(authorizeRequest.GetRequestedScopes())
 
+	// Override audiences
+	request.SetRequestedAudience(authorizeRequest.GetRequestedAudience())
+
 	// The authorization server MUST ensure that the authorization code was issued to the authenticated
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,
@@ -127,6 +130,10 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 
 	for _, scope := range authorizeRequest.GetGrantedScopes() {
 		requester.GrantScope(scope)
+	}
+
+	for _, audience := range authorizeRequest.GetGrantedAudience() {
+		requester.GrantAudience(audience)
 	}
 
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)

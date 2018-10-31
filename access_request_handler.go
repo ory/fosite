@@ -72,6 +72,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	accessRequest.SetRequestedScopes(removeEmpty(strings.Split(r.PostForm.Get("scope"), " ")))
+	accessRequest.SetRequestedAudience(removeEmpty(strings.Split(r.PostForm.Get("audience"), " ")))
 	accessRequest.GrantTypes = removeEmpty(strings.Split(r.PostForm.Get("grant_type"), " "))
 	if len(accessRequest.GrantTypes) < 1 {
 		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint(`Request parameter "grant_type"" is missing`))

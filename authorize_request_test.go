@@ -97,9 +97,9 @@ func TestAuthorizeRequest(t *testing.T) {
 		{
 			ar: &AuthorizeRequest{
 				Request: Request{
-					Client:      &DefaultClient{RedirectURIs: []string{"https://foobar.com/cb"}},
-					RequestedAt: time.Now().UTC(),
-					Scopes:      []string{"foo", "bar"},
+					Client:         &DefaultClient{RedirectURIs: []string{"https://foobar.com/cb"}},
+					RequestedAt:    time.Now().UTC(),
+					RequestedScope: []string{"foo", "bar"},
 				},
 				RedirectURI:   urlparse("https://foobar.com/cb"),
 				ResponseTypes: []string{"foo", "bar"},
@@ -112,7 +112,7 @@ func TestAuthorizeRequest(t *testing.T) {
 		assert.Equal(t, c.ar.RedirectURI, c.ar.GetRedirectURI(), "%d", k)
 		assert.Equal(t, c.ar.RequestedAt, c.ar.GetRequestedAt(), "%d", k)
 		assert.Equal(t, c.ar.ResponseTypes, c.ar.GetResponseTypes(), "%d", k)
-		assert.Equal(t, c.ar.Scopes, c.ar.GetRequestedScopes(), "%d", k)
+		assert.Equal(t, c.ar.RequestedScope, c.ar.GetRequestedScopes(), "%d", k)
 		assert.Equal(t, c.ar.State, c.ar.GetState(), "%d", k)
 		assert.Equal(t, c.isRedirValid, c.ar.IsRedirectURIValid(), "%d", k)
 
