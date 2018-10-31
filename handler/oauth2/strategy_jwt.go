@@ -164,6 +164,7 @@ func (h *DefaultJWTStrategy) generate(ctx context.Context, tokenType fosite.Toke
 			With(
 				jwtSession.GetExpiresAt(tokenType),
 				requester.GetGrantedScopes(),
+				requester.GetGrantedAudience(),
 			).
 			WithDefaults(
 				time.Now().UTC(),

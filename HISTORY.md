@@ -108,6 +108,15 @@ type fosite.Requester interface {
 }
 ```
 
+```
+type fosite/token/jwt.JWTClaimsContainer interface {
+-	// With returns a copy of itself with expiresAt and scope set to the given values.
+-	With(expiry time.Time, scope, audience []string) JWTClaimsContainer
+
++	// With returns a copy of itself with expiresAt, scope, audience set to the given values.
++	With(expiry time.Time, scope, audience []string) JWTClaimsContainer
+}
+
 ## 0.26.0
 
 This release makes it easier to define custom JWT Containers for access tokens when using the JWT strategy. To do that,

@@ -36,8 +36,8 @@ type JWTClaimsDefaults struct {
 }
 
 type JWTClaimsContainer interface {
-	// With returns a copy of itself with expiresAt and scope set to the given values.
-	With(expiry time.Time, scope []string) JWTClaimsContainer
+	// With returns a copy of itself with expiresAt, scope, audience set to the given values.
+	With(expiry time.Time, scope, audience []string) JWTClaimsContainer
 
 	// WithDefaults returns a copy of itself with issuedAt and issuer set to the given default values. If those
 	// values are already set in the claims, they will not be updated.
@@ -60,11 +60,11 @@ type JWTClaims struct {
 	Extra     map[string]interface{}
 }
 
-func (c *JWTClaims) With(expiry time.Time, scope []string) JWTClaimsContainer {
+func (c *JWTClaims) With(expiry time.Time, scope, audience []string) JWTClaimsContainer {
 	c.ExpiresAt = expiry
 	c.Scope = scope
+	c.Audience = audience
 	return c
-
 }
 
 func (c *JWTClaims) WithDefaults(iat time.Time, issuer string) JWTClaimsContainer {
