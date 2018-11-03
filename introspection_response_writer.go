@@ -212,7 +212,8 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 		IssuedAt  int64    `json:"iat,omitempty"`
 		Subject   string   `json:"sub,omitempty"`
 		Username  string   `json:"username,omitempty"`
-		Session   Session  `json:"sess,omitempty"`
+		// Session is not included per default because it might expose sensitive information.
+		// Session   Session  `json:"sess,omitempty"`
 	}{
 		Active:    true,
 		ClientID:  r.GetAccessRequester().GetClient().GetID(),
@@ -222,6 +223,7 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 		Subject:   r.GetAccessRequester().GetSession().GetSubject(),
 		Audience:  r.GetAccessRequester().GetGrantedAudience(),
 		Username:  r.GetAccessRequester().GetSession().GetUsername(),
+		// Session is not included because it might expose sensitive information.
 		// Session:   r.GetAccessRequester().GetSession(),
 	})
 }

@@ -105,7 +105,6 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 		}
 
 		for _, a := range ar.GetRequestedAudience() {
-			t.Logf("Granting audience: %s", a)
 			ar.GrantAudience(a)
 		}
 
@@ -119,7 +118,6 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 			oauth2.WriteAuthorizeError(rw, ar, err)
 			return
 		}
-		t.Logf("Requested audience3: %+v", ar)
 
 		oauth2.WriteAuthorizeResponse(rw, ar, response)
 	}

@@ -29,11 +29,10 @@ import (
 	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 
-	"github.com/ory/go-convenience/stringslice"
-	"github.com/ory/go-convenience/stringsx"
-
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
+	"github.com/ory/go-convenience/stringslice"
+	"github.com/ory/go-convenience/stringsx"
 )
 
 type OpenIDConnectRequestValidator struct {
