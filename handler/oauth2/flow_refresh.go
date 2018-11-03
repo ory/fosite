@@ -37,6 +37,9 @@ type RefreshTokenGrantHandler struct {
 
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration
+
+	ScopeStrategy            fosite.ScopeStrategy
+	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
@@ -77,8 +80,21 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	request.SetSession(originalRequest.GetSession().Clone())
 	request.SetRequestedScopes(originalRequest.GetRequestedScopes())
+	request.SetRequestedAudience(originalRequest.GetRequestedAudience())
+
 	for _, scope := range originalRequest.GetGrantedScopes() {
+		if !c.ScopeStrategy(request.GetClient().GetScopes(), scope) {
+			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
+		}
 		request.GrantScope(scope)
+	}
+
+	if err := c.AudienceMatchingStrategy(request.GetClient().GetAudience(), originalRequest.GetGrantedAudience()); err != nil {
+		return err
+	}
+
+	for _, audience := range originalRequest.GetGrantedAudience() {
+		request.GrantAudience(audience)
 	}
 
 	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan))

@@ -59,10 +59,12 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 // an access token, refresh token and authorize code validator.
 func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.RefreshTokenGrantHandler{
-		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
-		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
-		AccessTokenLifespan:    config.GetAccessTokenLifespan(),
+		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
+		TokenRevocationStorage:   storage.(oauth2.TokenRevocationStorage),
+		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 	}
 }
 

@@ -22,7 +22,10 @@
 package integration_test
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -37,13 +40,26 @@ import (
 	"github.com/ory/fosite/token/jwt"
 )
 
+type introspectionResponse struct {
+	Active    bool     `json:"active"`
+	ClientID  string   `json:"client_id,omitempty"`
+	Scope     string   `json:"scope,omitempty"`
+	Audience  []string `json:"aud,omitempty"`
+	ExpiresAt int64    `json:"exp,omitempty"`
+	IssuedAt  int64    `json:"iat,omitempty"`
+	Subject   string   `json:"sub,omitempty"`
+	Username  string   `json:"username,omitempty"`
+}
+
 func TestRefreshTokenFlow(t *testing.T) {
 	session := &defaultSession{
 		DefaultSession: &openid.DefaultSession{
 			Claims: &jwt.IDTokenClaims{
 				Subject: "peter",
 			},
-			Headers: &jwt.Headers{},
+			Headers:  &jwt.Headers{},
+			Subject:  "peter",
+			Username: "peteru",
 		},
 	}
 	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
@@ -53,11 +69,26 @@ func TestRefreshTokenFlow(t *testing.T) {
 	oauthClient := newOAuth2Client(ts)
 	state := "1234567890"
 	fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
+
+	refreshCheckClient := &fosite.DefaultClient{
+		ID:            "refresh-client",
+		Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
+		RedirectURIs:  []string{ts.URL + "/callback"},
+		ResponseTypes: []string{"id_token", "code", "token", "token code", "id_token code", "token id_token", "token code id_token"},
+		GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+		Scopes:        []string{"fosite", "offline", "openid"},
+		Audience:      []string{"https://www.ory.sh/api"},
+	}
+	fositeStore.Clients["refresh-client"] = refreshCheckClient
+
+	fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
 	for _, c := range []struct {
-		description string
-		setup       func()
-		pass        bool
-		check       func(original, refreshed *oauth2.Token)
+		description   string
+		setup         func()
+		pass          bool
+		params        []oauth2.AuthCodeOption
+		check         func(t *testing.T, original, refreshed *oauth2.Token, or, rr *introspectionResponse)
+		beforeRefresh func(t *testing.T)
 	}{
 		{
 			description: "should fail because refresh scope missing",
@@ -72,7 +103,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 				oauthClient.Scopes = []string{"offline"}
 			},
 			pass: true,
-			check: func(original, refreshed *oauth2.Token) {
+			check: func(t *testing.T, original, refreshed *oauth2.Token, or, rr *introspectionResponse) {
 				assert.NotEqual(t, original.RefreshToken, refreshed.RefreshToken)
 				assert.NotEqual(t, original.AccessToken, refreshed.AccessToken)
 				assert.Nil(t, refreshed.Extra("id_token"))
@@ -80,21 +111,81 @@ func TestRefreshTokenFlow(t *testing.T) {
 		},
 		{
 			description: "should pass and yield id token",
+			params:      []oauth2.AuthCodeOption{oauth2.SetAuthURLParam("audience", "https://www.ory.sh/api")},
 			setup: func() {
 				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
 			},
 			pass: true,
-			check: func(original, refreshed *oauth2.Token) {
+			check: func(t *testing.T, original, refreshed *oauth2.Token, or, rr *introspectionResponse) {
 				assert.NotEqual(t, original.RefreshToken, refreshed.RefreshToken)
 				assert.NotEqual(t, original.AccessToken, refreshed.AccessToken)
+				assert.NotEqual(t, original.Extra("id_token"), refreshed.Extra("id_token"))
 				assert.NotNil(t, refreshed.Extra("id_token"))
+
+				assert.NotEmpty(t, or.Audience)
+				assert.NotEmpty(t, or.ClientID)
+				assert.NotEmpty(t, or.Scope)
+				assert.NotEmpty(t, or.ExpiresAt)
+				assert.NotEmpty(t, or.IssuedAt)
+				assert.True(t, or.Active)
+				assert.EqualValues(t, "peter", or.Subject)
+				assert.EqualValues(t, "peteru", or.Username)
+
+				assert.EqualValues(t, or.Audience, rr.Audience)
+				assert.EqualValues(t, or.ClientID, rr.ClientID)
+				assert.EqualValues(t, or.Scope, rr.Scope)
+				assert.NotEqual(t, or.ExpiresAt, rr.ExpiresAt)
+				assert.True(t, or.ExpiresAt < rr.ExpiresAt)
+				assert.NotEqual(t, or.IssuedAt, rr.IssuedAt)
+				assert.True(t, or.IssuedAt < rr.IssuedAt)
+				assert.EqualValues(t, or.Active, rr.Active)
+				assert.EqualValues(t, or.Subject, rr.Subject)
+				assert.EqualValues(t, or.Username, rr.Username)
 			},
+		},
+		{
+			description: "should fail because scope is no longer allowed",
+			setup: func() {
+				oauthClient.ClientID = refreshCheckClient.ID
+				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
+			},
+			beforeRefresh: func(t *testing.T) {
+				refreshCheckClient.Scopes = []string{"offline", "openid"}
+			},
+			pass: false,
+		},
+		{
+			description: "should fail because audience is no longer allowed",
+			params:      []oauth2.AuthCodeOption{oauth2.SetAuthURLParam("audience", "https://www.ory.sh/api")},
+			setup: func() {
+				oauthClient.ClientID = refreshCheckClient.ID
+				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
+				refreshCheckClient.Scopes = []string{"fosite", "offline", "openid"}
+			},
+			beforeRefresh: func(t *testing.T) {
+				refreshCheckClient.Audience = []string{"https://www.not-ory.sh/api"}
+			},
+			pass: false,
 		},
 	} {
 		t.Run("case="+c.description, func(t *testing.T) {
 			c.setup()
 
-			resp, err := http.Get(oauthClient.AuthCodeURL(state))
+			var intro = func(token string, p interface{}) {
+				req, err := http.NewRequest("POST", ts.URL+"/introspect", strings.NewReader(url.Values{"token": {token}}.Encode()))
+				require.NoError(t, err)
+				req.SetBasicAuth("refresh-client", "foobar")
+				req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+				r, err := http.DefaultClient.Do(req)
+				require.NoError(t, err)
+				assert.Equal(t, http.StatusOK, r.StatusCode)
+
+				dec := json.NewDecoder(r.Body)
+				dec.DisallowUnknownFields()
+				require.NoError(t, dec.Decode(p))
+			}
+
+			resp, err := http.Get(oauthClient.AuthCodeURL(state, c.params...))
 			require.NoError(t, err)
 			require.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -106,14 +197,28 @@ func TestRefreshTokenFlow(t *testing.T) {
 			require.NoError(t, err)
 			require.NotEmpty(t, token.AccessToken)
 
+			var ob introspectionResponse
+			intro(token.AccessToken, &ob)
+
 			t.Logf("Token %s\n", token)
 			token.Expiry = token.Expiry.Add(-time.Hour * 24)
 
+			if c.beforeRefresh != nil {
+				c.beforeRefresh(t)
+			}
+
 			tokenSource := oauthClient.TokenSource(oauth2.NoContext, token)
+
+			// This sleep guarantees time difference in exp/iat
+			time.Sleep(time.Second * 2)
+
 			refreshed, err := tokenSource.Token()
 			if c.pass {
 				require.NoError(t, err)
-				c.check(token, refreshed)
+
+				var rb introspectionResponse
+				intro(refreshed.AccessToken, &rb)
+				c.check(t, token, refreshed, &ob, &rb)
 			} else {
 				require.Error(t, err)
 			}
