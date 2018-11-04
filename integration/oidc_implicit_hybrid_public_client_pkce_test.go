@@ -22,23 +22,23 @@
 package integration_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
-	"io/ioutil"
-	"encoding/json"
 	"strings"
 	"testing"
 
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	goauth "golang.org/x/oauth2"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	goauth "golang.org/x/oauth2"
 )
 
 func TestOIDCImplicitFlowPublicClientPKCE(t *testing.T) {
@@ -58,18 +58,18 @@ func TestOIDCImplicitFlowPublicClientPKCE(t *testing.T) {
 
 	oauthClient.ClientSecret = ""
 	oauthClient.ClientID = "public-client"
-	oauthClient.Scopes = []string {"openid"}
+	oauthClient.Scopes = []string{"openid"}
 
 	fositeStore.Clients["public-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
 
 	var state = "12345678901234567890"
 	for k, c := range []struct {
-		responseType   string
-		description    string
-		nonce          string
-		setup          func()
-		codeVerifier   string
-		codeChallenge  string
+		responseType  string
+		description   string
+		nonce         string
+		setup         func()
+		codeVerifier  string
+		codeChallenge string
 	}{
 		{
 
@@ -85,8 +85,8 @@ func TestOIDCImplicitFlowPublicClientPKCE(t *testing.T) {
 			c.setup()
 
 			var callbackURL *url.URL
-			authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type="+c.responseType, -1) + 
-								"&nonce=" + c.nonce + "&code_challenge_method=S256&code_challenge=" + c.codeChallenge
+			authURL := strings.Replace(oauthClient.AuthCodeURL(state), "response_type=code", "response_type="+c.responseType, -1) +
+				"&nonce=" + c.nonce + "&code_challenge_method=S256&code_challenge=" + c.codeChallenge
 			client := &http.Client{
 				CheckRedirect: func(req *http.Request, via []*http.Request) error {
 					callbackURL = req.URL
