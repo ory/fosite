@@ -75,10 +75,10 @@ func TestOIDCImplicitFlowPublicClientPKCE(t *testing.T) {
 
 			responseType:  "id_token%20code",
 			nonce:         "1111111111111111",
-			description:   "should pass id token (id_token code)",
+			description:   "should pass id token (id_token code) with PKCE applied.",
 			setup:         func() {},
-			codeVerifier:  "e7343b9b-ee08-47e3-b589-ccb60d124ff8-1adcba60-67b8-4f79-b092-f86249111fdc",
-			codeChallenge: "SGh1ow50h8eslWtS1oD5Sm2mvE2aXCa-1p3wf1xuSWM",
+			codeVerifier:  "e7343b9bee0847e3b589ccb60d124ff81adcba6067b84f79b092f86249111fdc",
+			codeChallenge: "J11vOtKUitab04a_N0Ogm0dQBytTgl0fgHzYk4xUryo",
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
@@ -106,7 +106,7 @@ func TestOIDCImplicitFlowPublicClientPKCE(t *testing.T) {
 			assert.NotEmpty(t, fragment.Get("id_token"))
 
 			resp, err = http.PostForm(oauthClient.Endpoint.TokenURL, url.Values{
-				"code":          {resp.Request.URL.Query().Get("code")},
+				"code":          {code},
 				"grant_type":    {"authorization_code"},
 				"client_id":     {"public-client"},
 				"redirect_uri":  {ts.URL + "/callback"},
