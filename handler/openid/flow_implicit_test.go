@@ -84,14 +84,14 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should not do anything because request requirements are not met",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{}
-				areq.GrantedScopes = fosite.Arguments{"openid"}
+				areq.GrantedScope = fosite.Arguments{"openid"}
 			},
 		},
 		{
 			description: "should not do anything because request requirements are not met",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
-				areq.Scopes = fosite.Arguments{"openid"}
+				areq.RequestedScope = fosite.Arguments{"openid"}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{},
 					ResponseTypes: fosite.Arguments{},
@@ -105,11 +105,11 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		//	description: "should not do anything because request requirements are not met",
 		//	setup: func() {
 		//		areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
-		//		areq.Scopes = fosite.Arguments{"openid"}
+		//		areq.RequestedScope = fosite.Arguments{"openid"}
 		//		areq.Client = &fosite.DefaultClient{
 		//			GrantTypes:    fosite.Arguments{"implicit"},
 		//			ResponseTypes: fosite.Arguments{},
-		//			Scopes:        []string{"openid", "fosite"},
+		//			RequestedScope:        []string{"openid", "fosite"},
 		//		}
 		//	},
 		//	expectErr: fosite.ErrInvalidGrant,
@@ -118,7 +118,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should not do anything because request requirements are not met",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
-				areq.Scopes = fosite.Arguments{"openid"}
+				areq.RequestedScope = fosite.Arguments{"openid"}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes: fosite.Arguments{"implicit"},
 					//ResponseTypes: fosite.Arguments{"token", "id_token"},
@@ -132,7 +132,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.Form = url.Values{"nonce": {"short"}}
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
-				areq.Scopes = fosite.Arguments{"openid"}
+				areq.RequestedScope = fosite.Arguments{"openid"}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"implicit"},
 					ResponseTypes: fosite.Arguments{"token", "id_token"},
@@ -146,7 +146,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			setup: func() {
 				areq.Form = url.Values{"nonce": {"long-enough"}}
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
-				areq.Scopes = fosite.Arguments{"openid"}
+				areq.RequestedScope = fosite.Arguments{"openid"}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"implicit"},
 					ResponseTypes: fosite.Arguments{"token", "id_token"},
@@ -194,7 +194,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				areq.ResponseTypes = fosite.Arguments{"id_token", "token"}
-				areq.Scopes = fosite.Arguments{"fosite", "openid"}
+				areq.RequestedScope = fosite.Arguments{"fosite", "openid"}
 			},
 			check: func() {
 				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))

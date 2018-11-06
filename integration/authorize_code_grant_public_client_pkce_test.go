@@ -138,7 +138,7 @@ func runAuthorizeCodeGrantWithPublicClientAndPKCETest(t *testing.T, strategy int
 				httpClient := oauthClient.Client(goauth.NoContext, &token)
 				resp, err = httpClient.Get(ts.URL + "/info")
 				require.NoError(t, err)
-				assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+				assert.Equal(t, http.StatusOK, resp.StatusCode)
 			}
 		})
 	}

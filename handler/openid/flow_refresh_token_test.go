@@ -52,7 +52,7 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 			areq: &fosite.AccessRequest{
 				GrantTypes: []string{"refresh_token"},
 				Request: fosite.Request{
-					GrantedScopes: []string{"something"},
+					GrantedScope: []string{"something"},
 				},
 			},
 			expectedErr: fosite.ErrUnknownRequest,
@@ -62,8 +62,8 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 			areq: &fosite.AccessRequest{
 				GrantTypes: []string{"refresh_token"},
 				Request: fosite.Request{
-					GrantedScopes: []string{"openid"},
-					Client:        &fosite.DefaultClient{},
+					GrantedScope: []string{"openid"},
+					Client:       &fosite.DefaultClient{},
 				},
 			},
 			expectedErr: fosite.ErrInvalidGrant,
@@ -73,7 +73,7 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 			areq: &fosite.AccessRequest{
 				GrantTypes: []string{"refresh_token"},
 				Request: fosite.Request{
-					GrantedScopes: []string{"openid"},
+					GrantedScope: []string{"openid"},
 					Client: &fosite.DefaultClient{
 						GrantTypes: []string{"refresh_token"},
 						//ResponseTypes: []string{"id_token"},
@@ -118,7 +118,7 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 			areq: &fosite.AccessRequest{
 				GrantTypes: []string{"refresh_token"},
 				Request: fosite.Request{
-					GrantedScopes: []string{"something"},
+					GrantedScope: []string{"something"},
 				},
 			},
 			expectedErr: fosite.ErrUnknownRequest,
@@ -129,7 +129,7 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 		//	areq: &fosite.AccessRequest{
 		//		GrantTypes: []string{"refresh_token"},
 		//		Request: fosite.Request{
-		//			GrantedScopes: []string{"openid"},
+		//			GrantedScope: []string{"openid"},
 		//			Client: &fosite.DefaultClient{
 		//				GrantTypes: []string{"refresh_token"},
 		//			},
@@ -142,7 +142,7 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 			areq: &fosite.AccessRequest{
 				GrantTypes: []string{"refresh_token"},
 				Request: fosite.Request{
-					GrantedScopes: []string{"openid"},
+					GrantedScope: []string{"openid"},
 					Client: &fosite.DefaultClient{
 						GrantTypes: []string{"refresh_token"},
 						//ResponseTypes: []string{"id_token"},
@@ -170,7 +170,7 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 			areq: &fosite.AccessRequest{
 				GrantTypes: []string{"refresh_token"},
 				Request: fosite.Request{
-					GrantedScopes: []string{"openid"},
+					GrantedScope: []string{"openid"},
 					Client: &fosite.DefaultClient{
 						GrantTypes: []string{"refresh_token"},
 						//ResponseTypes: []string{"id_token"},
@@ -188,7 +188,7 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 			areq: &fosite.AccessRequest{
 				GrantTypes: []string{"refresh_token"},
 				Request: fosite.Request{
-					GrantedScopes: []string{"openid"},
+					GrantedScope: []string{"openid"},
 					Client: &fosite.DefaultClient{
 						GrantTypes: []string{"refresh_token"},
 					},

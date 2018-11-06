@@ -48,6 +48,7 @@ var fositeStore = &storage.MemoryStore{
 			ResponseTypes: []string{"id_token", "code", "token", "token code", "id_token code", "token id_token", "token code id_token"},
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 			Scopes:        []string{"fosite", "offline", "openid"},
+			Audience:      []string{"https://www.ory.sh/api"},
 		},
 		"public-client": &fosite.DefaultClient{
 			ID:            "public-client",
@@ -57,6 +58,7 @@ var fositeStore = &storage.MemoryStore{
 			ResponseTypes: []string{"id_token", "code", "code id_token"},
 			GrantTypes:    []string{"refresh_token", "authorization_code"},
 			Scopes:        []string{"fosite", "offline", "openid"},
+			Audience:      []string{"https://www.ory.sh/api"},
 		},
 	},
 	Users: map[string]storage.MemoryUserRelation{

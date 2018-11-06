@@ -44,12 +44,13 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			h := AuthorizeExplicitGrantHandler{
-				CoreStorage:           store,
-				AuthorizeCodeStrategy: strategy,
-				AccessTokenStrategy:   strategy,
-				RefreshTokenStrategy:  strategy,
-				ScopeStrategy:         fosite.HierarchicScopeStrategy,
-				AccessTokenLifespan:   time.Minute,
+				CoreStorage:              store,
+				AuthorizeCodeStrategy:    strategy,
+				AccessTokenStrategy:      strategy,
+				RefreshTokenStrategy:     strategy,
+				ScopeStrategy:            fosite.HierarchicScopeStrategy,
+				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+				AccessTokenLifespan:      time.Minute,
 				//TokenRevocationStorage: store,
 			}
 			for _, c := range []struct {
@@ -112,9 +113,9 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 							Client: &fosite.DefaultClient{
 								GrantTypes: fosite.Arguments{"authorization_code"},
 							},
-							GrantedScopes: fosite.Arguments{"foo", "offline"},
-							Session:       &fosite.DefaultSession{},
-							RequestedAt:   time.Now().UTC(),
+							GrantedScope: fosite.Arguments{"foo", "offline"},
+							Session:      &fosite.DefaultSession{},
+							RequestedAt:  time.Now().UTC(),
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest) {
@@ -166,11 +167,12 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			h := AuthorizeExplicitGrantHandler{
-				CoreStorage:            store,
-				AuthorizeCodeStrategy:  hmacshaStrategy,
-				ScopeStrategy:          fosite.HierarchicScopeStrategy,
-				TokenRevocationStorage: store,
-				AuthCodeLifespan:       time.Minute,
+				CoreStorage:              store,
+				AuthorizeCodeStrategy:    hmacshaStrategy,
+				ScopeStrategy:            fosite.HierarchicScopeStrategy,
+				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+				TokenRevocationStorage:   store,
+				AuthCodeLifespan:         time.Minute,
 			}
 			for i, c := range []struct {
 				areq        *fosite.AccessRequest
@@ -239,8 +241,8 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					},
 					authreq: &fosite.AuthorizeRequest{
 						Request: fosite.Request{
-							Client: &fosite.DefaultClient{ID: "bar"},
-							Scopes: fosite.Arguments{"a", "b"},
+							Client:         &fosite.DefaultClient{ID: "bar"},
+							RequestedScope: fosite.Arguments{"a", "b"},
 						},
 					},
 					description: "should fail because client mismatch",
@@ -291,10 +293,10 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					},
 					authreq: &fosite.AuthorizeRequest{
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"authorization_code"}},
-							Session:     &fosite.DefaultSession{},
-							Scopes:      fosite.Arguments{"a", "b"},
-							RequestedAt: time.Now().UTC(),
+							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"authorization_code"}},
+							Session:        &fosite.DefaultSession{},
+							RequestedScope: fosite.Arguments{"a", "b"},
+							RequestedAt:    time.Now().UTC(),
 						},
 					},
 					description: "should pass",
@@ -314,9 +316,9 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 							Client: &fosite.DefaultClient{
 								GrantTypes: fosite.Arguments{"authorization_code"},
 							},
-							GrantedScopes: fosite.Arguments{"foo", "offline"},
-							Session:       &fosite.DefaultSession{},
-							RequestedAt:   time.Now().UTC(),
+							GrantedScope: fosite.Arguments{"foo", "offline"},
+							Session:      &fosite.DefaultSession{},
+							RequestedAt:  time.Now().UTC(),
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {

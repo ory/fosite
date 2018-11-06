@@ -31,7 +31,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"

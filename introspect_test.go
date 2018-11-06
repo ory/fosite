@@ -104,7 +104,7 @@ func TestIntrospect(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx context.Context, _ string, _ TokenType, accessRequest AccessRequester, _ []string) {
-					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
+					accessRequest.(*AccessRequest).GrantedScope = []string{"bar"}
 				}).Return(TokenType(""), nil)
 			},
 		},
@@ -113,7 +113,7 @@ func TestIntrospect(t *testing.T) {
 			scopes:      []string{"bar"},
 			setup: func() {
 				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx context.Context, _ string, _ TokenType, accessRequest AccessRequester, _ []string) {
-					accessRequest.(*AccessRequest).GrantedScopes = []string{"bar"}
+					accessRequest.(*AccessRequest).GrantedScope = []string{"bar"}
 				}).Return(TokenType(""), nil)
 			},
 		},

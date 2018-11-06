@@ -79,13 +79,13 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 				areq.Client = &fosite.DefaultClient{
 					ResponseTypes: fosite.Arguments{"code"},
 				}
-				areq.Scopes = fosite.Arguments{""}
+				areq.RequestedScope = fosite.Arguments{""}
 			},
 		},
 		{
 			description: "should fail because no code set",
 			setup: func() {
-				areq.GrantedScopes = fosite.Arguments{"openid"}
+				areq.GrantedScope = fosite.Arguments{"openid"}
 				areq.Form.Set("nonce", "11111111111111111111111111111")
 				aresp.EXPECT().GetCode().Return("")
 			},

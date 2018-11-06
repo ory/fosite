@@ -61,6 +61,16 @@ func (_mr *_MockAccessRequesterRecorder) GetGrantTypes() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantTypes")
 }
 
+func (_m *MockAccessRequester) GetGrantedAudience() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetGrantedAudience")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockAccessRequesterRecorder) GetGrantedAudience() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetGrantedAudience")
+}
+
 func (_m *MockAccessRequester) GetGrantedScopes() fosite.Arguments {
 	ret := _m.ctrl.Call(_m, "GetGrantedScopes")
 	ret0, _ := ret[0].(fosite.Arguments)
@@ -101,6 +111,16 @@ func (_mr *_MockAccessRequesterRecorder) GetRequestedAt() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedAt")
 }
 
+func (_m *MockAccessRequester) GetRequestedAudience() fosite.Arguments {
+	ret := _m.ctrl.Call(_m, "GetRequestedAudience")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+func (_mr *_MockAccessRequesterRecorder) GetRequestedAudience() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetRequestedAudience")
+}
+
 func (_m *MockAccessRequester) GetRequestedScopes() fosite.Arguments {
 	ret := _m.ctrl.Call(_m, "GetRequestedScopes")
 	ret0, _ := ret[0].(fosite.Arguments)
@@ -119,6 +139,14 @@ func (_m *MockAccessRequester) GetSession() fosite.Session {
 
 func (_mr *_MockAccessRequesterRecorder) GetSession() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetSession")
+}
+
+func (_m *MockAccessRequester) GrantAudience(_param0 string) {
+	_m.ctrl.Call(_m, "GrantAudience", _param0)
+}
+
+func (_mr *_MockAccessRequesterRecorder) GrantAudience(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GrantAudience", arg0)
 }
 
 func (_m *MockAccessRequester) GrantScope(_param0 string) {
@@ -153,6 +181,14 @@ func (_m *MockAccessRequester) SetID(_param0 string) {
 
 func (_mr *_MockAccessRequesterRecorder) SetID(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetID", arg0)
+}
+
+func (_m *MockAccessRequester) SetRequestedAudience(_param0 fosite.Arguments) {
+	_m.ctrl.Call(_m, "SetRequestedAudience", _param0)
+}
+
+func (_mr *_MockAccessRequesterRecorder) SetRequestedAudience(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetRequestedAudience", arg0)
 }
 
 func (_m *MockAccessRequester) SetRequestedScopes(_param0 fosite.Arguments) {

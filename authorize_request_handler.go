@@ -28,10 +28,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
+
 	"github.com/ory/go-convenience/stringslice"
 	"github.com/ory/go-convenience/stringsx"
-	"github.com/pkg/errors"
 )
 
 func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *AuthorizeRequest) error {
@@ -175,7 +176,7 @@ func (f *Fosite) validateAuthorizeRedirectURI(r *http.Request, request *Authoriz
 }
 
 func (f *Fosite) validateAuthorizeScope(r *http.Request, request *AuthorizeRequest) error {
-	scope := removeEmpty(strings.Split(request.Form.Get("scope"), " "))
+	scope := stringsx.Splitx(request.Form.Get("scope"), " ")
 	for _, permission := range scope {
 		if !f.ScopeStrategy(request.Client.GetScopes(), permission) {
 			return errors.WithStack(ErrInvalidScope.WithHintf(`The OAuth 2.0 Client is not allowed to request scope "%s".`, permission))
@@ -240,6 +241,10 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 
 	if err := f.validateAuthorizeScope(r, request); err != nil {
+		return request, err
+	}
+
+	if err := f.validateAuthorizeAudience(r, request); err != nil {
 		return request, err
 	}
 

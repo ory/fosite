@@ -29,14 +29,15 @@ import (
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeExplicitGrantHandler{
-		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
-		AuthorizeCodeStrategy:  strategy.(oauth2.AuthorizeCodeStrategy),
-		CoreStorage:            storage.(oauth2.CoreStorage),
-		AuthCodeLifespan:       config.GetAuthorizeCodeLifespan(),
-		AccessTokenLifespan:    config.GetAccessTokenLifespan(),
-		ScopeStrategy:          config.GetScopeStrategy(),
-		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
+		AuthorizeCodeStrategy:    strategy.(oauth2.AuthorizeCodeStrategy),
+		CoreStorage:              storage.(oauth2.CoreStorage),
+		AuthCodeLifespan:         config.GetAuthorizeCodeLifespan(),
+		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
+		TokenRevocationStorage:   storage.(oauth2.TokenRevocationStorage),
 	}
 }
 
@@ -49,7 +50,8 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 			AccessTokenLifespan: config.GetAccessTokenLifespan(),
 		},
-		ScopeStrategy: config.GetScopeStrategy(),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 	}
 }
 
@@ -57,10 +59,12 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 // an access token, refresh token and authorize code validator.
 func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.RefreshTokenGrantHandler{
-		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
-		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
-		AccessTokenLifespan:    config.GetAccessTokenLifespan(),
+		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
+		TokenRevocationStorage:   storage.(oauth2.TokenRevocationStorage),
+		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 	}
 }
 
@@ -68,10 +72,11 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
-		AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
-		AccessTokenLifespan: config.GetAccessTokenLifespan(),
-		ScopeStrategy:       config.GetScopeStrategy(),
+		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
+		AccessTokenStorage:       storage.(oauth2.AccessTokenStorage),
+		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 	}
 }
 
@@ -85,8 +90,9 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
 			AccessTokenLifespan: config.GetAccessTokenLifespan(),
 		},
-		RefreshTokenStrategy: strategy.(oauth2.RefreshTokenStrategy),
-		ScopeStrategy:        config.GetScopeStrategy(),
+		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 	}
 }
 

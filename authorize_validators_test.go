@@ -27,9 +27,10 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/ory/go-convenience/stringsx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ory/go-convenience/stringsx"
 )
 
 func TestValidateResponseTypes(t *testing.T) {

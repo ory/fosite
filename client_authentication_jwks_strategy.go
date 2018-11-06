@@ -21,13 +21,13 @@
 
 package fosite
 
-import "sync"
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/pkg/errors"
-	"gopkg.in/square/go-jose.v2"
+	jose "gopkg.in/square/go-jose.v2"
 )
 
 // JWKSFetcherStrategy is a strategy which pulls (optionally caches) JSON Web Key Sets from a location,

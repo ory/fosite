@@ -84,8 +84,8 @@ func (h *DefaultJWTStrategy) ValidateJWT(ctx context.Context, tokenType fosite.T
 			},
 			Subject: claims.Subject,
 		},
-		Scopes:        claims.Scope,
-		GrantedScopes: claims.Scope,
+		RequestedScope: claims.Scope,
+		GrantedScope:   claims.Scope,
 	}
 
 	return
@@ -164,6 +164,7 @@ func (h *DefaultJWTStrategy) generate(ctx context.Context, tokenType fosite.Toke
 			With(
 				jwtSession.GetExpiresAt(tokenType),
 				requester.GetGrantedScopes(),
+				requester.GetGrantedAudience(),
 			).
 			WithDefaults(
 				time.Now().UTC(),
