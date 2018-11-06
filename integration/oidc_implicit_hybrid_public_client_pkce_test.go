@@ -1,6 +1,4 @@
 /*
- * Copyright © 2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,8 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @author		Aeneas Rekkas <aeneas+oss@aeneas.io>
- * @copyright 	2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
+ * This program base on "oidc_implicit_hybrid_test.go" and "authorize_code_grant_public_client_pkce_test.go" of Aeneas Rekkas <aeneas+oss@aeneas.io>
+ *
+ * @author		Wenhao Ni <aeneas+oss@aeneas.io>
  * @license 	Apache-2.0
  *
  */
