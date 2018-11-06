@@ -123,11 +123,6 @@ func TestOIDCImplicitFlowPublicClientPKCE(t *testing.T) {
 
 			require.NotEmpty(t, token.AccessToken, "Got body: %s", string(body))
 
-			httpClient := oauthClient.Client(goauth.NoContext, &token)
-			resp, err = httpClient.Get(ts.URL + "/info")
-			require.NoError(t, err)
-			assert.Equal(t, http.StatusNoContent, resp.StatusCode)
-
 			t.Logf("Passed test case (%d) %s", k, c.description)
 		})
 	}
