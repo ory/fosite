@@ -45,7 +45,7 @@ type Handler struct {
 
 func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
-	if !ar.GetResponseTypes().Exact("code") {
+	if !ar.GetResponseTypes().Has("code") {
 		return nil
 	}
 
