@@ -186,6 +186,13 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
+			description: "should pass because AuthorizeCode's ExpiresAt is set, even if AuthorizeCodeLifespan is zero",
+			setup:       func() {},
+			check: func() {
+				assert.True(t, !areq.Session.GetExpiresAt(fosite.AuthorizeCode).IsZero())
+			},
+		},
+		{
 			description: "should pass",
 			setup:       func() {},
 			check: func() {
