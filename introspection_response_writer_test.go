@@ -22,11 +22,16 @@
 package fosite_test
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
@@ -60,4 +65,75 @@ func TestWriteIntrospectionResponse(t *testing.T) {
 	f.WriteIntrospectionResponse(rw, &IntrospectionResponse{
 		AccessRequester: NewAccessRequest(nil),
 	})
+}
+
+func TestWriteIntrospectionResponseBody(t *testing.T) {
+	f := new(Fosite)
+	ires := &IntrospectionResponse{}
+	rw := httptest.NewRecorder()
+
+	for _, c := range []struct {
+		description string
+		setup       func()
+		active      bool
+		hasExp      bool
+	}{
+		{
+			description: "should success for not expired access token",
+			setup: func() {
+				ires.Active = true
+				ires.TokenType = AccessToken
+				sess := &DefaultSession{}
+				sess.SetExpiresAt(ires.TokenType, time.Now().Add(time.Hour*2))
+				ires.AccessRequester = NewAccessRequest(sess)
+			},
+			active: true,
+			hasExp: true,
+		},
+		{
+			description: "should success for expired access token",
+			setup: func() {
+				ires.Active = false
+				ires.TokenType = AccessToken
+				sess := &DefaultSession{}
+				sess.SetExpiresAt(ires.TokenType, time.Now().Add(-time.Hour*2))
+				ires.AccessRequester = NewAccessRequest(sess)
+			},
+			active: false,
+			hasExp: false,
+		},
+		{
+			description: "should success for ExpiresAt not set access token",
+			setup: func() {
+				ires.Active = true
+				ires.TokenType = AccessToken
+				sess := &DefaultSession{}
+				sess.SetExpiresAt(ires.TokenType, time.Time{})
+				ires.AccessRequester = NewAccessRequest(sess)
+			},
+			active: true,
+			hasExp: false,
+		},
+	} {
+		t.Run(c.description, func(t *testing.T) {
+			c.setup()
+			f.WriteIntrospectionResponse(rw, ires)
+			var params struct {
+				Active bool   `json:"active"`
+				Exp    *int64 `json:"exp"`
+				Iat    *int64 `json:"iat"`
+			}
+			err := json.NewDecoder(rw.Body).Decode(&params)
+			require.NoError(t, err)
+			assert.Equal(t, c.active, params.Active)
+			if c.active {
+				assert.NotNil(t, params.Iat)
+				if c.hasExp {
+					assert.NotNil(t, params.Exp)
+				} else {
+					assert.Nil(t, params.Exp)
+				}
+			}
+		})
+	}
 }
