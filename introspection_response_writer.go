@@ -202,6 +202,11 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 		return
 	}
 
+	expiresAt := int64(0)
+	if !r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).IsZero() {
+		expiresAt = r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).Unix()
+	}
+
 	rw.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(rw).Encode(struct {
 		Active    bool     `json:"active"`
@@ -218,7 +223,7 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 		Active:    true,
 		ClientID:  r.GetAccessRequester().GetClient().GetID(),
 		Scope:     strings.Join(r.GetAccessRequester().GetGrantedScopes(), " "),
-		ExpiresAt: r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).Unix(),
+		ExpiresAt: expiresAt,
 		IssuedAt:  r.GetAccessRequester().GetRequestedAt().Unix(),
 		Subject:   r.GetAccessRequester().GetSession().GetSubject(),
 		Audience:  r.GetAccessRequester().GetGrantedAudience(),
