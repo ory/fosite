@@ -222,13 +222,14 @@ import "github.com/ory/fosite/storage"
 
 // This is the example storage that contains:
 // * an OAuth2 Client with id "my-client" and secret "foobar" capable of all oauth2 and open id connect grant and response types.
-// * a User for the resource owner password credentials grant type with usename "peter" and password "secret".
+// * a User for the resource owner password credentials grant type with username "peter" and password "secret".
 //
 // You will most likely replace this with your own logic once you set up a real world application.
-var storage = storage.NewMemoryStore()
+var storage = storage.NewExampleStore()
 
-// This secret is being used to sign access and refresh tokens as well as authorize codes.
-var secret = []byte{"my super secret password"}
+// This secret is being used to sign access and refresh tokens as well as
+// authorization codes. It must be exactly 32 bytes long.
+var secret = []byte("my super secret signing password")
 
 privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 if err != nil {
@@ -236,7 +237,7 @@ if err != nil {
 }
 
 // check the api docs of compose.Config for further configuration options
-var config = compose.Config {
+var config = &compose.Config {
   	AccessTokenLifespan: time.Minute * 30,
   	// ...
 }
@@ -275,9 +276,9 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// Now that the user is authorized, we set up a session. When validating / looking up tokens, we additionally get
 	// the session. You can store anything you want in it.
 
-    // The session will be persisted by the store and made available when e.g. validating tokens or handling token endpoint requests.
-    // The default OAuth2 and OpenID Connect handlers require the session to implement a few methods. Apart from that, the
-    // session struct can be anything you want it to be.
+	// The session will be persisted by the store and made available when e.g. validating tokens or handling token endpoint requests.
+	// The default OAuth2 and OpenID Connect handlers require the session to implement a few methods. Apart from that, the
+	// session struct can be anything you want it to be.
 	mySessionData := &fosite.DefaultSession{
 		Username: req.Form.Get("username"),
 	}
@@ -336,12 +337,12 @@ func someResourceProviderHandlerFunc(rw http.ResponseWriter, req *http.Request) 
 	mySessionData := new(fosite.DefaultSession)
 	requiredScope := "blogposts.create"
 
-	ar, err := oauth2Provider.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, mySessionData, requiredScope)
+	_, ar, err := oauth2Provider.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, mySessionData, requiredScope)
 	if err != nil {
 		// ...
 	}
 
-	// if now error occurred the token + scope is valid and you have access to:
+	// If no error occurred the token + scope is valid and you have access to:
 	// ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetScopes(), mySessionData.UserID, ar.GetRequestedAt(), ...
 }
 ```
