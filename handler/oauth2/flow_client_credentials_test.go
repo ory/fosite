@@ -80,6 +80,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because scope not valid",
 			expectErr:   fosite.ErrInvalidScope,
 			mock: func() {
+				areq.EXPECT().GrantScope("foo")
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
@@ -91,6 +92,9 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should pass",
 			mock: func() {
+				areq.EXPECT().GrantScope("foo")
+				areq.EXPECT().GrantScope("bar")
+				areq.EXPECT().GrantScope("baz.bar")
 				areq.EXPECT().GetSession().Return(new(fosite.DefaultSession))
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
