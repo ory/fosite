@@ -48,6 +48,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				TokenRevocationStorage:   store,
 				RefreshTokenStrategy:     strategy,
 				AccessTokenLifespan:      time.Hour,
+				RefreshTokenLifespan:     time.Hour,
 				ScopeStrategy:            fosite.HierarchicScopeStrategy,
 				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 			}
@@ -103,6 +104,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
 							Client:       &fosite.DefaultClient{ID: ""},
 							GrantedScope: []string{"offline"},
+							Session:      sess,
 						})
 						require.NoError(t, err)
 					},
@@ -163,6 +165,8 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.GrantedScope)
 						assert.Equal(t, fosite.Arguments{"foo", "bar", "offline"}, areq.RequestedScope)
 						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
+						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
+						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
 					},
 				},
 			} {

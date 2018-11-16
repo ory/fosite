@@ -31,6 +31,10 @@ type Config struct {
 	// AccessTokenLifespan sets how long an access token is going to be valid. Defaults to one hour.
 	AccessTokenLifespan time.Duration
 
+	// RefreshTokenLifespan sets how long a refresh token is going to be valid. Defaults to 30 days. Set to -1 for
+	// refresh tokens that never expire.
+	RefreshTokenLifespan time.Duration
+
 	// AuthorizeCodeLifespan sets how long an authorize code is going to be valid. Defaults to fifteen minutes.
 	AuthorizeCodeLifespan time.Duration
 
@@ -108,12 +112,21 @@ func (c *Config) GetIDTokenLifespan() time.Duration {
 	return c.IDTokenLifespan
 }
 
-// GetAccessTokenLifespan returns how long a refresh token should be valid. Defaults to one hour.
+// GetAccessTokenLifespan returns how long an access token should be valid. Defaults to one hour.
 func (c *Config) GetAccessTokenLifespan() time.Duration {
 	if c.AccessTokenLifespan == 0 {
 		return time.Hour
 	}
 	return c.AccessTokenLifespan
+}
+
+// GetRefreshTokenLifespan sets how long a refresh token is going to be valid. Defaults to 30 days. Set to -1 for
+// refresh tokens that never expire.
+func (c *Config) GetRefreshTokenLifespan() time.Duration {
+	if c.RefreshTokenLifespan == 0 {
+		return time.Hour * 24 * 30
+	}
+	return c.RefreshTokenLifespan
 }
 
 // GetHashCost returns the bcrypt cost factor. Defaults to 12.

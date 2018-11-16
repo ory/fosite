@@ -24,6 +24,7 @@ package integration_test
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -62,7 +63,9 @@ func TestRefreshTokenFlow(t *testing.T) {
 			Username: "peteru",
 		},
 	}
-	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+	fc := new(compose.Config)
+	fc.RefreshTokenLifespan = -1
+	f := compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 
@@ -84,22 +87,23 @@ func TestRefreshTokenFlow(t *testing.T) {
 	fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
 	for _, c := range []struct {
 		description   string
-		setup         func()
+		setup         func(t *testing.T)
 		pass          bool
 		params        []oauth2.AuthCodeOption
 		check         func(t *testing.T, original, refreshed *oauth2.Token, or, rr *introspectionResponse)
 		beforeRefresh func(t *testing.T)
+		mockServer    func(t *testing.T) *httptest.Server
 	}{
 		{
 			description: "should fail because refresh scope missing",
-			setup: func() {
+			setup: func(t *testing.T) {
 				oauthClient.Scopes = []string{"fosite"}
 			},
 			pass: false,
 		},
 		{
 			description: "should pass but not yield id token",
-			setup: func() {
+			setup: func(t *testing.T) {
 				oauthClient.Scopes = []string{"offline"}
 			},
 			pass: true,
@@ -112,7 +116,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 		{
 			description: "should pass and yield id token",
 			params:      []oauth2.AuthCodeOption{oauth2.SetAuthURLParam("audience", "https://www.ory.sh/api")},
-			setup: func() {
+			setup: func(t *testing.T) {
 				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
 			},
 			pass: true,
@@ -145,7 +149,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 		},
 		{
 			description: "should fail because scope is no longer allowed",
-			setup: func() {
+			setup: func(t *testing.T) {
 				oauthClient.ClientID = refreshCheckClient.ID
 				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
 			},
@@ -157,7 +161,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 		{
 			description: "should fail because audience is no longer allowed",
 			params:      []oauth2.AuthCodeOption{oauth2.SetAuthURLParam("audience", "https://www.ory.sh/api")},
-			setup: func() {
+			setup: func(t *testing.T) {
 				oauthClient.ClientID = refreshCheckClient.ID
 				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
 				refreshCheckClient.Scopes = []string{"fosite", "offline", "openid"}
@@ -167,9 +171,41 @@ func TestRefreshTokenFlow(t *testing.T) {
 			},
 			pass: false,
 		},
+		{
+			description: "should fail with expired refresh token",
+			setup: func(t *testing.T) {
+				fc = new(compose.Config)
+				fc.RefreshTokenLifespan = time.Nanosecond
+				f = compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+				ts = mockServer(t, f, session)
+
+				oauthClient = newOAuth2Client(ts)
+				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
+				fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
+			},
+			pass: false,
+		},
+		{
+			description: "should pass with limited but not expired refresh token",
+			setup: func(t *testing.T) {
+				fc = new(compose.Config)
+				fc.RefreshTokenLifespan = time.Minute
+				f = compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+				ts = mockServer(t, f, session)
+
+				oauthClient = newOAuth2Client(ts)
+				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
+				fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
+			},
+			beforeRefresh: func(t *testing.T) {
+				refreshCheckClient.Audience = []string{}
+			},
+			pass:  true,
+			check: func(t *testing.T, original, refreshed *oauth2.Token, or, rr *introspectionResponse) {},
+		},
 	} {
 		t.Run("case="+c.description, func(t *testing.T) {
-			c.setup()
+			c.setup(t)
 
 			var intro = func(token string, p interface{}) {
 				req, err := http.NewRequest("POST", ts.URL+"/introspect", strings.NewReader(url.Values{"token": {token}}.Encode()))

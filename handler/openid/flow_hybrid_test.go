@@ -82,6 +82,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			AuthorizeCodeStrategy: hmacStrategy,
 			AccessTokenLifespan:   time.Hour,
 			AuthCodeLifespan:      time.Hour,
+			RefreshTokenLifespan:  time.Hour,
 			AccessTokenStrategy:   hmacStrategy,
 			CoreStorage:           storage.NewMemoryStore(),
 		},
@@ -199,6 +200,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))
 				assert.NotEmpty(t, aresp.GetFragment().Get("code"))
 				assert.NotEmpty(t, aresp.GetFragment().Get("access_token"))
+				assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AuthorizeCode))
 			},
 		},
 	} {

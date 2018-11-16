@@ -26,10 +26,11 @@ import (
 	"encoding/base64"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/pkg/errors"
 )
 
 type OpenIDConnectHybridHandler struct {
@@ -94,7 +95,15 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 		}
 
-		ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthorizeExplicitGrantHandler.AuthCodeLifespan))
+		// This is not required because the auth code flow is being handled by oauth2/flow_authorize_code_token which in turn
+		// sets the proper access/refresh token lifetimes.
+		//
+		// if c.AuthorizeExplicitGrantHandler.RefreshTokenLifespan > -1 {
+		// 	 ar.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.AuthorizeExplicitGrantHandler.RefreshTokenLifespan).Round(time.Second))
+		// }
+
+		// This is required because we must limit the authorize code lifespan.
+		ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthorizeExplicitGrantHandler.AuthCodeLifespan).Round(time.Second))
 		if err := c.AuthorizeExplicitGrantHandler.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.AuthorizeExplicitGrantHandler.GetSanitationWhiteList())); err != nil {
 			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 		}

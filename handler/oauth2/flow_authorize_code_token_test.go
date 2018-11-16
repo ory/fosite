@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net/url"
 	"testing" //"time"
+
 	//"github.com/golang/mock/gomock"
 	"time"
 
@@ -130,7 +131,6 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						assert.NotEmpty(t, aresp.AccessToken)
 						assert.Equal(t, "bearer", aresp.TokenType)
 						assert.NotEmpty(t, aresp.GetExtra("refresh_token"))
-						assert.NotEmpty(t, aresp.GetExtra("refresh_token"))
 						assert.NotEmpty(t, aresp.GetExtra("expires_in"))
 						assert.Equal(t, "foo offline", aresp.GetExtra("scope"))
 					},
@@ -179,6 +179,7 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 				authreq     *fosite.AuthorizeRequest
 				description string
 				setup       func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest)
+				check       func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest)
 				expectErr   error
 			}{
 				{
@@ -321,6 +322,10 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 							RequestedAt:  time.Now().UTC(),
 						},
 					},
+					check: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
+						assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
+						assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
+					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
 						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
 						require.NoError(t, err)
@@ -345,6 +350,9 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						require.EqualError(t, errors.Cause(err), c.expectErr.Error(), "%+v", err)
 					} else {
 						require.NoError(t, err, "%+v", err)
+						if c.check != nil {
+							c.check(t, c.areq, c.authreq)
+						}
 					}
 				})
 			}

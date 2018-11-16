@@ -68,6 +68,56 @@ var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
 	}
 }
 
+var jwtValidCaseWithZeroRefreshExpiry = func(tokenType fosite.TokenType) *fosite.Request {
+	return &fosite.Request{
+		Client: &fosite.DefaultClient{
+			Secret: []byte("foobarfoobarfoobarfoobar"),
+		},
+		Session: &JWTSession{
+			JWTClaims: &jwt.JWTClaims{
+				Issuer:    "fosite",
+				Subject:   "peter",
+				Audience:  []string{"group0"},
+				IssuedAt:  time.Now().UTC(),
+				NotBefore: time.Now().UTC(),
+				Extra:     map[string]interface{}{"foo": "bar"},
+			},
+			JWTHeader: &jwt.Headers{
+				Extra: make(map[string]interface{}),
+			},
+			ExpiresAt: map[fosite.TokenType]time.Time{
+				tokenType:           time.Now().UTC().Add(time.Hour),
+				fosite.RefreshToken: {},
+			},
+		},
+	}
+}
+
+var jwtValidCaseWithRefreshExpiry = func(tokenType fosite.TokenType) *fosite.Request {
+	return &fosite.Request{
+		Client: &fosite.DefaultClient{
+			Secret: []byte("foobarfoobarfoobarfoobar"),
+		},
+		Session: &JWTSession{
+			JWTClaims: &jwt.JWTClaims{
+				Issuer:    "fosite",
+				Subject:   "peter",
+				Audience:  []string{"group0"},
+				IssuedAt:  time.Now().UTC(),
+				NotBefore: time.Now().UTC(),
+				Extra:     map[string]interface{}{"foo": "bar"},
+			},
+			JWTHeader: &jwt.Headers{
+				Extra: make(map[string]interface{}),
+			},
+			ExpiresAt: map[fosite.TokenType]time.Time{
+				tokenType:           time.Now().UTC().Add(time.Hour),
+				fosite.RefreshToken: time.Now().UTC().Add(time.Hour * 2).Round(time.Hour),
+			},
+		},
+	}
+}
+
 // returns an expired JWT type. The JWTClaims.ExpiresAt time is intentionally
 // left empty to ensure it is pulled from the session's ExpiresAt map for
 // the given fosite.TokenType.
@@ -108,6 +158,14 @@ func TestAccessToken(t *testing.T) {
 		{
 			r:    jwtExpiredCase(fosite.AccessToken),
 			pass: false,
+		},
+		{
+			r:    jwtValidCaseWithZeroRefreshExpiry(fosite.AccessToken),
+			pass: true,
+		},
+		{
+			r:    jwtValidCaseWithRefreshExpiry(fosite.AccessToken),
+			pass: true,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
