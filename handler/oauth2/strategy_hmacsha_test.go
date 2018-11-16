@@ -47,6 +47,7 @@ var hmacExpiredCase = fosite.Request{
 		ExpiresAt: map[fosite.TokenType]time.Time{
 			fosite.AccessToken:   time.Now().UTC().Add(-time.Hour),
 			fosite.AuthorizeCode: time.Now().UTC().Add(-time.Hour),
+			fosite.RefreshToken:  time.Now().UTC().Add(-time.Hour),
 		},
 	},
 }
@@ -59,6 +60,20 @@ var hmacValidCase = fosite.Request{
 		ExpiresAt: map[fosite.TokenType]time.Time{
 			fosite.AccessToken:   time.Now().UTC().Add(time.Hour),
 			fosite.AuthorizeCode: time.Now().UTC().Add(time.Hour),
+			fosite.RefreshToken:  time.Now().UTC().Add(time.Hour),
+		},
+	},
+}
+
+var hmacValidZeroTimeRefreshCase = fosite.Request{
+	Client: &fosite.DefaultClient{
+		Secret: []byte("foobarfoobarfoobarfoobar"),
+	},
+	Session: &fosite.DefaultSession{
+		ExpiresAt: map[fosite.TokenType]time.Time{
+			fosite.AccessToken:   time.Now().UTC().Add(time.Hour),
+			fosite.AuthorizeCode: time.Now().UTC().Add(time.Hour),
+			fosite.RefreshToken:  {},
 		},
 	},
 }
@@ -95,14 +110,34 @@ func TestHMACAccessToken(t *testing.T) {
 }
 
 func TestHMACRefreshToken(t *testing.T) {
-	token, signature, err := hmacshaStrategy.GenerateRefreshToken(nil, &hmacValidCase)
-	assert.NoError(t, err)
-	assert.Equal(t, strings.Split(token, ".")[1], signature)
+	for k, c := range []struct {
+		r    fosite.Request
+		pass bool
+	}{
+		{
+			r:    hmacValidCase,
+			pass: true,
+		},
+		{
+			r:    hmacExpiredCase,
+			pass: false,
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			token, signature, err := hmacshaStrategy.GenerateRefreshToken(nil, &c.r)
+			assert.NoError(t, err)
+			assert.Equal(t, strings.Split(token, ".")[1], signature)
 
-	validate := hmacshaStrategy.Enigma.Signature(token)
-	err = hmacshaStrategy.ValidateRefreshToken(nil, &hmacValidCase, token)
-	assert.NoError(t, err)
-	assert.Equal(t, signature, validate)
+			err = hmacshaStrategy.ValidateRefreshToken(nil, &c.r, token)
+			if c.pass {
+				assert.NoError(t, err)
+				validate := hmacshaStrategy.Enigma.Signature(token)
+				assert.Equal(t, signature, validate)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
 }
 
 func TestHMACAuthorizeCode(t *testing.T) {

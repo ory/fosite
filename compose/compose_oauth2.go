@@ -34,6 +34,7 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 		AuthorizeCodeStrategy:    strategy.(oauth2.AuthorizeCodeStrategy),
 		CoreStorage:              storage.(oauth2.CoreStorage),
 		AuthCodeLifespan:         config.GetAuthorizeCodeLifespan(),
+		RefreshTokenLifespan:     config.GetRefreshTokenLifespan(),
 		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
 		ScopeStrategy:            config.GetScopeStrategy(),
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
@@ -63,6 +64,7 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
 		TokenRevocationStorage:   storage.(oauth2.TokenRevocationStorage),
 		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		RefreshTokenLifespan:     config.GetRefreshTokenLifespan(),
 		ScopeStrategy:            config.GetScopeStrategy(),
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 	}
@@ -86,9 +88,10 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 	return &oauth2.ResourceOwnerPasswordCredentialsGrantHandler{
 		ResourceOwnerPasswordCredentialsGrantStorage: storage.(oauth2.ResourceOwnerPasswordCredentialsGrantStorage),
 		HandleHelper: &oauth2.HandleHelper{
-			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
-			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
-			AccessTokenLifespan: config.GetAccessTokenLifespan(),
+			AccessTokenStrategy:  strategy.(oauth2.AccessTokenStrategy),
+			AccessTokenStorage:   storage.(oauth2.AccessTokenStorage),
+			AccessTokenLifespan:  config.GetAccessTokenLifespan(),
+			RefreshTokenLifespan: config.GetRefreshTokenLifespan(),
 		},
 		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
 		ScopeStrategy:            config.GetScopeStrategy(),

@@ -46,6 +46,9 @@ type AuthorizeExplicitGrantHandler struct {
 	// AccessTokenLifespan defines the lifetime of an access token.
 	AccessTokenLifespan time.Duration
 
+	// RefreshTokenLifespan defines the lifetime of a refresh token. Leave to 0 for unlimited lifetime.
+	RefreshTokenLifespan time.Duration
+
 	ScopeStrategy            fosite.ScopeStrategy
 	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 

@@ -44,6 +44,7 @@ func NewOAuth2HMACStrategy(config *Config, secret []byte, rotatedSecrets [][]byt
 		},
 		AccessTokenLifespan:   config.GetAccessTokenLifespan(),
 		AuthorizeCodeLifespan: config.GetAuthorizeCodeLifespan(),
+		RefreshTokenLifespan:  config.GetRefreshTokenLifespan(),
 	}
 }
 

@@ -47,8 +47,9 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 	h := ResourceOwnerPasswordCredentialsGrantHandler{
 		ResourceOwnerPasswordCredentialsGrantStorage: store,
 		HandleHelper: &HandleHelper{
-			AccessTokenStorage:  store,
-			AccessTokenLifespan: time.Hour,
+			AccessTokenStorage:   store,
+			AccessTokenLifespan:  time.Hour,
+			RefreshTokenLifespan: time.Hour,
 		},
 		ScopeStrategy:            fosite.HierarchicScopeStrategy,
 		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
@@ -107,7 +108,9 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(nil)
 			},
 			check: func(areq *fosite.AccessRequest) {
-				assert.NotEmpty(t, areq.GetSession().GetExpiresAt(fosite.AccessToken))
+				//assert.NotEmpty(t, areq.GetSession().GetExpiresAt(fosite.AccessToken))
+				assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
+				assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
 			},
 		},
 	} {

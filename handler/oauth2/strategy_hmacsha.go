@@ -34,6 +34,7 @@ import (
 type HMACSHAStrategy struct {
 	Enigma                *enigma.HMACStrategy
 	AccessTokenLifespan   time.Duration
+	RefreshTokenLifespan  time.Duration
 	AuthorizeCodeLifespan time.Duration
 }
 
@@ -66,7 +67,15 @@ func (h HMACSHAStrategy) GenerateRefreshToken(_ context.Context, _ fosite.Reques
 	return h.Enigma.Generate()
 }
 
-func (h HMACSHAStrategy) ValidateRefreshToken(_ context.Context, _ fosite.Requester, token string) (err error) {
+func (h HMACSHAStrategy) ValidateRefreshToken(_ context.Context, r fosite.Requester, token string) (err error) {
+	var exp = r.GetSession().GetExpiresAt(fosite.RefreshToken)
+	if exp.IsZero() {
+		// Unlimited lifetime
+		return h.Enigma.Validate(token)
+	}
+	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
+		return errors.WithStack(fosite.ErrTokenExpired.WithHintf("Refresh token expired at \"%s\".", exp))
+	}
 	return h.Enigma.Validate(token)
 }
 

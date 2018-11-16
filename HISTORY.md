@@ -63,6 +63,13 @@ bumps (`0.1.0` -> `0.2.0`).
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+## 0.28.0
+
+This version (re-)introduces refresh token lifespans. Per default, this feature is enabled and set to 30 days.
+If a refresh token has not been used within 30 days, it will expire.
+
+To disable refresh token lifespans (previous behaviour), set `compose.Config.RefreshTokenLifespan = -1`.
+
 ## 0.27.0
 
 This PR adds the ability to specify a target audience for OAuth 2.0 Access Tokens.

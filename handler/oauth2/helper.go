@@ -29,9 +29,10 @@ import (
 )
 
 type HandleHelper struct {
-	AccessTokenStrategy AccessTokenStrategy
-	AccessTokenStorage  AccessTokenStorage
-	AccessTokenLifespan time.Duration
+	AccessTokenStrategy  AccessTokenStrategy
+	AccessTokenStorage   AccessTokenStorage
+	AccessTokenLifespan  time.Duration
+	RefreshTokenLifespan time.Duration
 }
 
 func (h *HandleHelper) IssueAccessToken(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
