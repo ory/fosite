@@ -25,12 +25,13 @@
 package hmac
 
 import (
+	"crypto/hmac"
+	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
 	"strings"
 	"sync"
 
-	"github.com/gtank/cryptopasta"
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
@@ -83,7 +84,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 		return "", "", errors.WithStack(err)
 	}
 
-	signature := cryptopasta.GenerateHMAC(tokenKey, &signingKey)
+	signature := generateHMAC(tokenKey, &signingKey)
 
 	encodedSignature := b64.EncodeToString(signature)
 	encodedToken := fmt.Sprintf("%s.%s", b64.EncodeToString(tokenKey), encodedSignature)
@@ -134,7 +135,8 @@ func (c *HMACStrategy) validate(secret []byte, token string) error {
 		return errors.WithStack(err)
 	}
 
-	if !cryptopasta.CheckHMAC(decodedTokenKey, decodedTokenSignature, &signingKey) {
+	expectedMAC := generateHMAC(decodedTokenKey, &signingKey)
+	if !hmac.Equal(expectedMAC, decodedTokenSignature) {
 		// Hash is invalid
 		return errors.WithStack(fosite.ErrTokenSignatureMismatch)
 	}
@@ -150,4 +152,10 @@ func (c *HMACStrategy) Signature(token string) string {
 	}
 
 	return split[1]
+}
+
+func generateHMAC(data []byte, key *[32]byte) []byte {
+	h := hmac.New(sha512.New512_256, key[:])
+	h.Write(data)
+	return h.Sum(nil)
 }
