@@ -91,12 +91,12 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 }
 
 // ComposeAllEnabled returns a fosite instance with all OAuth2 and OpenID Connect handlers enabled.
-func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *rsa.PrivateKey) fosite.OAuth2Provider {
+func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *rsa.PrivateKey, entropy int) fosite.OAuth2Provider {
 	return Compose(
 		config,
 		storage,
 		&CommonStrategy{
-			CoreStrategy:               NewOAuth2HMACStrategy(config, secret, nil),
+			CoreStrategy:               NewOAuth2HMACStrategy(config, secret, nil, entropy),
 			OpenIDConnectTokenStrategy: NewOpenIDConnectStrategy(config, key),
 			JWTStrategy: &jwt.RS256JWTStrategy{
 				PrivateKey: key,
