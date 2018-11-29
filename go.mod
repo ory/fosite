@@ -9,7 +9,6 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20181004151105-1babbf986f6f // indirect
 	github.com/gorilla/context v1.1.1 // indirect
 	github.com/gorilla/mux v1.6.2
-	github.com/gtank/cryptopasta v0.0.0-20170601214702-1f550f6f2f69
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/magiconair/properties v1.8.0
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
