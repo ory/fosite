@@ -55,7 +55,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 	validator := internal.NewMockTokenIntrospector(ctrl)
 	defer ctrl.Finish()
 
-	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewExampleStore(), []byte{}, nil).(*Fosite)
+	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewExampleStore(), []byte{}, nil, 32).(*Fosite)
 	httpreq := &http.Request{
 		Method: "POST",
 		Header: http.Header{},

@@ -65,7 +65,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 	}
 	fc := new(compose.Config)
 	fc.RefreshTokenLifespan = -1
-	f := compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+	f := compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey(), 32)
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 
@@ -176,7 +176,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 			setup: func(t *testing.T) {
 				fc = new(compose.Config)
 				fc.RefreshTokenLifespan = time.Nanosecond
-				f = compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+				f = compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey(), 32)
 				ts = mockServer(t, f, session)
 
 				oauthClient = newOAuth2Client(ts)
@@ -190,7 +190,7 @@ func TestRefreshTokenFlow(t *testing.T) {
 			setup: func(t *testing.T) {
 				fc = new(compose.Config)
 				fc.RefreshTokenLifespan = time.Minute
-				f = compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+				f = compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey(), 32)
 				ts = mockServer(t, f, session)
 
 				oauthClient = newOAuth2Client(ts)

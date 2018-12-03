@@ -65,7 +65,7 @@ func TestIntrospect(t *testing.T) {
 	validator := internal.NewMockTokenIntrospector(ctrl)
 	defer ctrl.Finish()
 
-	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewMemoryStore(), []byte{}, nil).(*Fosite)
+	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewMemoryStore(), []byte{}, nil, 32).(*Fosite)
 
 	req, _ := http.NewRequest("GET", "http://example.com/test", nil)
 	req.Header.Add("Authorization", "bearer some-token")

@@ -50,7 +50,7 @@ func TestOIDCImplicitFlowPublicClientPKCE(t *testing.T) {
 			Headers: &jwt.Headers{},
 		},
 	}
-	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey(), 32)
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 

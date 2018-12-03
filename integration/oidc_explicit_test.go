@@ -51,7 +51,7 @@ func newIDSession(j *jwt.IDTokenClaims) *defaultSession {
 }
 
 func TestOpenIDConnectExplicitFlow(t *testing.T) {
-	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey(), 32)
 
 	for k, c := range []struct {
 		description    string

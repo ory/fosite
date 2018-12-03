@@ -37,25 +37,40 @@ func TestGenerateFailsWithShortCredentials(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	cg := HMACStrategy{
-		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
+	for _, c := range []struct {
+		globalSecret    []byte
+		authCodeEntropy int
+	}{
+		{
+			globalSecret:    []byte("1234567890123456789012345678901234567890"),
+			authCodeEntropy: 32,
+		},
+		{
+			globalSecret:    []byte("1234567890123456789012345678901234567890"),
+			authCodeEntropy: 64,
+		},
+	} {
+		cg := HMACStrategy{
+			GlobalSecret:    c.globalSecret,
+			AuthCodeEntropy: c.authCodeEntropy,
+		}
+
+		token, signature, err := cg.Generate()
+		require.NoError(t, err)
+		require.NotEmpty(t, token)
+		require.NotEmpty(t, signature)
+		t.Logf("Token: %s\n Signature: %s", token, signature)
+
+		err = cg.Validate(token)
+		require.NoError(t, err)
+
+		validateSignature := cg.Signature(token)
+		assert.Equal(t, signature, validateSignature)
+
+		cg.GlobalSecret = []byte("baz")
+		err = cg.Validate(token)
+		require.Error(t, err)
 	}
-
-	token, signature, err := cg.Generate()
-	require.NoError(t, err)
-	require.NotEmpty(t, token)
-	require.NotEmpty(t, signature)
-	t.Logf("Token: %s\n Signature: %s", token, signature)
-
-	err = cg.Validate(token)
-	require.NoError(t, err)
-
-	validateSignature := cg.Signature(token)
-	assert.Equal(t, signature, validateSignature)
-
-	cg.GlobalSecret = []byte("baz")
-	err = cg.Validate(token)
-	require.Error(t, err)
 }
 
 func TestValidateSignatureRejects(t *testing.T) {
