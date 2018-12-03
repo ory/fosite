@@ -242,12 +242,7 @@ var config = &compose.Config {
   	// ...
 }
 
-// You can set size of HMAC entropy key for signing access and refresh token.
-// Minimum value for this parameter is 32, and anything above 32 is probably OK. 
-// Provided in bytes.
-var entropy = 32
-
-var oauth2Provider = compose.ComposeAllEnabled(config, storage, secret, privateKey, entropy)
+var oauth2Provider = compose.ComposeAllEnabled(config, storage, secret, privateKey)
 
 // The authorize endpoint is usually at "https://mydomain.com/oauth2/auth".
 func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
