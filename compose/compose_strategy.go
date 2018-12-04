@@ -41,6 +41,7 @@ func NewOAuth2HMACStrategy(config *Config, secret []byte, rotatedSecrets [][]byt
 		Enigma: &hmac.HMACStrategy{
 			GlobalSecret:         secret,
 			RotatedGlobalSecrets: rotatedSecrets,
+			TokenEntropy:         config.GetTokenEntropy(),
 		},
 		AccessTokenLifespan:   config.GetAccessTokenLifespan(),
 		AuthorizeCodeLifespan: config.GetAuthorizeCodeLifespan(),

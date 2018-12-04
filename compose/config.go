@@ -78,6 +78,10 @@ type Config struct {
 	// JWKSFetcherStrategy is responsible for fetching JSON Web Keys from remote URLs. This is required when the private_key_jwt
 	// client authentication method is used. Defaults to fosite.DefaultJWKSFetcherStrategy.
 	JWKSFetcher fosite.JWKSFetcherStrategy
+
+	// TokenEntropy indicates the entropy of the random string, used as the "message" part of the HMAC token.
+	// Defaults to 32.
+	TokenEntropy int
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
@@ -143,4 +147,12 @@ func (c *Config) GetJWKSFetcherStrategy() fosite.JWKSFetcherStrategy {
 		c.JWKSFetcher = fosite.NewDefaultJWKSFetcherStrategy()
 	}
 	return c.JWKSFetcher
+}
+
+// GetTokenEntropy returns the entropy of the "message" part of a HMAC Token. Defaults to 32.
+func (c *Config) GetTokenEntropy() int {
+	if c.TokenEntropy == 0 {
+		return 32
+	}
+	return c.TokenEntropy
 }

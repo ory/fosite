@@ -39,7 +39,7 @@ import (
 
 // HMACStrategy is responsible for generating and validating challenges.
 type HMACStrategy struct {
-	AuthCodeEntropy      int
+	TokenEntropy         int
 	GlobalSecret         []byte
 	RotatedGlobalSecrets [][]byte
 	sync.Mutex
@@ -68,8 +68,8 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	var signingKey [32]byte
 	copy(signingKey[:], c.GlobalSecret)
 
-	if c.AuthCodeEntropy < minimumEntropy {
-		c.AuthCodeEntropy = minimumEntropy
+	if c.TokenEntropy < minimumEntropy {
+		c.TokenEntropy = minimumEntropy
 	}
 
 	// When creating secrets not intended for usage by human users (e.g.,
@@ -79,7 +79,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	// constructed from a cryptographically strong random or pseudo-random
 	// number sequence (see [RFC4086] for best current practice) generated
 	// by the authorization server.
-	tokenKey, err := RandomBytes(c.AuthCodeEntropy)
+	tokenKey, err := RandomBytes(c.TokenEntropy)
 	if err != nil {
 		return "", "", errors.WithStack(err)
 	}
