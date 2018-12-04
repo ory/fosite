@@ -38,21 +38,21 @@ func TestGenerateFailsWithShortCredentials(t *testing.T) {
 
 func TestGenerate(t *testing.T) {
 	for _, c := range []struct {
-		globalSecret    []byte
-		authCodeEntropy int
+		globalSecret []byte
+		tokenEntropy int
 	}{
 		{
-			globalSecret:    []byte("1234567890123456789012345678901234567890"),
-			authCodeEntropy: 32,
+			globalSecret: []byte("1234567890123456789012345678901234567890"),
+			tokenEntropy: 32,
 		},
 		{
-			globalSecret:    []byte("1234567890123456789012345678901234567890"),
-			authCodeEntropy: 64,
+			globalSecret: []byte("1234567890123456789012345678901234567890"),
+			tokenEntropy: 64,
 		},
 	} {
 		cg := HMACStrategy{
-			GlobalSecret:    c.globalSecret,
-			AuthCodeEntropy: c.authCodeEntropy,
+			GlobalSecret: c.globalSecret,
+			TokenEntropy: c.tokenEntropy,
 		}
 
 		token, signature, err := cg.Generate()

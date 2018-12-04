@@ -36,16 +36,12 @@ type CommonStrategy struct {
 	jwt.JWTStrategy
 }
 
-func NewOAuth2HMACStrategy(config *Config, secret []byte, rotatedSecrets [][]byte, optionals ...interface{}) *oauth2.HMACSHAStrategy {
-	var entropy = 32
-	if len(optionals) > 0 {
-		entropy, _ = optionals[0].(int)
-	}
+func NewOAuth2HMACStrategy(config *Config, secret []byte, rotatedSecrets [][]byte) *oauth2.HMACSHAStrategy {
 	return &oauth2.HMACSHAStrategy{
 		Enigma: &hmac.HMACStrategy{
 			GlobalSecret:         secret,
 			RotatedGlobalSecrets: rotatedSecrets,
-			AuthCodeEntropy:      entropy,
+			TokenEntropy:         config.GetTokenEntropy(),
 		},
 		AccessTokenLifespan:   config.GetAccessTokenLifespan(),
 		AuthorizeCodeLifespan: config.GetAuthorizeCodeLifespan(),
