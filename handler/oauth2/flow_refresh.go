@@ -25,6 +25,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/ory/fosite/storage"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
@@ -124,20 +126,41 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	}
 
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(requester.GetRequestForm().Get("refresh_token"))
-	ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
+
+	ctx, err = storage.MaybeBeginTx(ctx, c.TokenRevocationStorage)
 	if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+	}
+
+	ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
+	if err != nil {
+		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
+			err = rollBackTxnErr
+		}
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
+		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
+			err = rollBackTxnErr
+		}
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	} else if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
+		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
+			err = rollBackTxnErr
+		}
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	storeReq := requester.Sanitize([]string{})
 	storeReq.SetID(ts.GetID())
 	if err := c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, storeReq); err != nil {
+		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
+			err = rollBackTxnErr
+		}
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	} else if err := c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq); err != nil {
+		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
+			err = rollBackTxnErr
+		}
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
@@ -146,5 +169,10 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
 	responder.SetExtra("refresh_token", refreshToken)
+
+	if err := storage.MaybeCommitTx(ctx, c.TokenRevocationStorage); err != nil {
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+	}
+
 	return nil
 }
