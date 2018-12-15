@@ -2,6 +2,7 @@
 
 mockgen -package internal -destination internal/hash.go github.com/ory/fosite Hasher
 mockgen -package internal -destination internal/storage.go github.com/ory/fosite Storage
+mockgen -package internal -destination internal/transactional.go github.com/ory/fosite/storage Transactional
 mockgen -package internal -destination internal/oauth2_storage.go github.com/ory/fosite/handler/oauth2 CoreStorage
 mockgen -package internal -destination internal/oauth2_strategy.go github.com/ory/fosite/handler/oauth2 CoreStrategy
 mockgen -package internal -destination internal/authorize_code_storage.go github.com/ory/fosite/handler/oauth2 AuthorizeCodeStorage
