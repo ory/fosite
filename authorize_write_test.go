@@ -115,6 +115,24 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				}, header)
 			},
 		},
+		{
+			setup: func() {
+				redir, _ := url.Parse("https://foobar.com/?foo=bar")
+				ar.EXPECT().GetRedirectURI().Return(redir)
+				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}, "scope": {"api:*"}})
+				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
+				resp.EXPECT().GetQuery().Return(url.Values{"bar": {"b+az"}, "scope": {"api:*"}})
+
+				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().WriteHeader(http.StatusFound)
+			},
+			expect: func() {
+				assert.Equal(t, http.Header{
+					"X-Bar":    {"baz"},
+					"Location": {"https://foobar.com/?bar=b%2Baz&foo=bar&scope=api%3A%2A#bar=baz&scope=api%3A%2A"},
+				}, header)
+			},
+		},
 	} {
 		t.Logf("Starting test case %d", k)
 		c.setup()
