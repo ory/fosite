@@ -27,6 +27,9 @@ import (
 	"net/url"
 	"testing" //"time"
 
+	"github.com/golang/mock/gomock"
+	"github.com/ory/fosite/internal"
+
 	//"github.com/golang/mock/gomock"
 	"time"
 
@@ -355,6 +358,231 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						}
 					}
 				})
+			}
+		})
+	}
+}
+
+func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
+	var mockTransactional *internal.MockTransactional
+	var mockCoreStore *internal.MockCoreStorage
+	strategy := hmacshaStrategy
+	request := &fosite.AccessRequest{
+		GrantTypes: fosite.Arguments{"authorization_code"},
+		Request: fosite.Request{
+			Client: &fosite.DefaultClient{
+				GrantTypes: fosite.Arguments{"authorization_code"},
+			},
+			GrantedScope: fosite.Arguments{"offline"},
+			Session:      &fosite.DefaultSession{},
+			RequestedAt:  time.Now().UTC(),
+		},
+	}
+	token, _, err := strategy.GenerateAuthorizeCode(nil, nil)
+	require.NoError(t, err)
+	request.Form = url.Values{"code": {token}}
+	response := fosite.NewAccessResponse()
+	propagatedContext := context.Background()
+
+	// some storage implementation that has support for transactions, notice the embedded type `storage.Transactional`
+	type transactionalStore struct {
+		storage.Transactional
+		CoreStorage
+	}
+
+	for _, testCase := range []struct {
+		description string
+		setup       func()
+		expectError error
+	}{
+		{
+			description: "transaction should be committed successfully if no errors occur",
+			setup: func() {
+				mockCoreStore.
+					EXPECT().
+					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(request, nil).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
+				mockCoreStore.
+					EXPECT().
+					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockCoreStore.
+					EXPECT().
+					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockCoreStore.
+					EXPECT().
+					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					Commit(propagatedContext).
+					Return(nil).
+					Times(1)
+			},
+		},
+		{
+			description: "transaction should be rolled back if `InvalidateAuthorizeCodeSession` returns an error",
+			setup: func() {
+				mockCoreStore.
+					EXPECT().
+					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(request, nil).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
+				mockCoreStore.
+					EXPECT().
+					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
+					Return(errors.New("Whoops, a nasty database error occurred!")).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					Rollback(propagatedContext).
+					Return(nil).
+					Times(1)
+			},
+			expectError: fosite.ErrServerError,
+		},
+		{
+			description: "transaction should be rolled back if `CreateAccessTokenSession` returns an error",
+			setup: func() {
+				mockCoreStore.
+					EXPECT().
+					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(request, nil).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
+				mockCoreStore.
+					EXPECT().
+					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockCoreStore.
+					EXPECT().
+					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
+					Return(errors.New("Whoops, a nasty database error occurred!")).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					Rollback(propagatedContext).
+					Return(nil).
+					Times(1)
+			},
+			expectError: fosite.ErrServerError,
+		},
+		{
+			description: "should result in a server error if transaction cannot be created",
+			setup: func() {
+				mockCoreStore.
+					EXPECT().
+					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(request, nil).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(nil, errors.New("Whoops, unable to create transaction!"))
+			},
+			expectError: fosite.ErrServerError,
+		},
+		{
+			description: "should result in a server error if transaction cannot be rolled back",
+			setup: func() {
+				mockCoreStore.
+					EXPECT().
+					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(request, nil).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
+				mockCoreStore.
+					EXPECT().
+					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
+					Return(errors.New("Whoops, a nasty database error occurred!")).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					Rollback(propagatedContext).
+					Return(errors.New("Whoops, unable to rollback transaction!")).
+					Times(1)
+			},
+			expectError: fosite.ErrServerError,
+		},
+		{
+			description: "should result in a server error if transaction cannot be committed",
+			setup: func() {
+				mockCoreStore.
+					EXPECT().
+					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
+					Return(request, nil).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
+				mockCoreStore.
+					EXPECT().
+					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockCoreStore.
+					EXPECT().
+					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockCoreStore.
+					EXPECT().
+					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					Commit(propagatedContext).
+					Return(errors.New("Whoops, unable to commit transaction!")).
+					Times(1)
+			},
+			expectError: fosite.ErrServerError,
+		},
+	} {
+		t.Run(fmt.Sprintf("scenario=%s", testCase.description), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockTransactional = internal.NewMockTransactional(ctrl)
+			mockCoreStore = internal.NewMockCoreStorage(ctrl)
+			testCase.setup()
+
+			handler := AuthorizeExplicitGrantHandler{
+				CoreStorage: transactionalStore{
+					mockTransactional,
+					mockCoreStore,
+				},
+				AccessTokenStrategy:      strategy,
+				RefreshTokenStrategy:     strategy,
+				AuthorizeCodeStrategy:    strategy,
+				ScopeStrategy:            fosite.HierarchicScopeStrategy,
+				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+				AuthCodeLifespan:         time.Minute,
+			}
+
+			if err := handler.PopulateTokenEndpointResponse(propagatedContext, request, response); testCase.expectError != nil {
+				assert.EqualError(t, errors.Cause(err), testCase.expectError.Error())
 			}
 		})
 	}
