@@ -50,9 +50,16 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 	}
 
 	// Implicit grants
-	redir.Fragment = resp.GetFragment().Encode()
+	// The endpoint URI MUST NOT include a fragment component.
+	redir.Fragment = ""
 
 	u := redir.String()
+
+	fr := resp.GetFragment()
+	if len(fr) > 0 {
+		u = u + "#" + fr.Encode()
+	}
+
 	u = plusMatch.ReplaceAllString(u, "%20")
 
 	// https://tools.ietf.org/html/rfc6749#section-4.1.1
