@@ -5,6 +5,11 @@ bumps (`0.1.0` -> `0.2.0`).
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
+- [0.28.0](#0280)
+- [0.27.0](#0270)
+  - [Conceptual Changes](#conceptual-changes)
+  - [API Changes](#api-changes)
+- [0.26.0](#0260)
 - [0.24.0](#0240)
   - [Breaking change(s)](#breaking-changes)
     - [`fosite/handler/oauth2.JWTStrategy`](#fositehandleroauth2jwtstrategy)
@@ -82,14 +87,14 @@ to keep using those values with existing refresh tokens.
 
 ### API Changes
 
-```
+```go
 type fosite.Client interface {
 +	// GetAudience returns the allowed audience(s) for this client.
 +	GetAudience() Arguments
 }
 ```
 
-```
+```go
 type fosite.Request struct {
 -   Scopes         Argument
 +   RequestedScope Argument
@@ -99,7 +104,7 @@ type fosite.Request struct {
 }
 ```
 
-```
+```go
 type fosite.Requester interface {
 +	// GetRequestedAudience returns the requested audiences for this request.
 +	GetRequestedAudience() (audience Arguments)
@@ -115,7 +120,7 @@ type fosite.Requester interface {
 }
 ```
 
-```
+```go
 type fosite/token/jwt.JWTClaimsContainer interface {
 -	// With returns a copy of itself with expiresAt and scope set to the given values.
 -	With(expiry time.Time, scope, audience []string) JWTClaimsContainer
@@ -123,12 +128,14 @@ type fosite/token/jwt.JWTClaimsContainer interface {
 +	// With returns a copy of itself with expiresAt, scope, audience set to the given values.
 +	With(expiry time.Time, scope, audience []string) JWTClaimsContainer
 }
+```
 
 ## 0.26.0
 
 This release makes it easier to define custom JWT Containers for access tokens when using the JWT strategy. To do that,
 the following signatures have changed:
 
+```go
 // github.com/ory/fosite/handler/oauth2
 type JWTSessionContainer interface {
 	// GetJWTClaims returns the claims.
@@ -140,7 +147,9 @@ type JWTSessionContainer interface {
 
 	fosite.Session
 }
+```
 
+```go
 + type JWTClaimsContainer interface {
 +	// With returns a copy of itself with expiresAt and scope set to the given values.
 +	With(expiry time.Time, scope []string) JWTClaimsContainer
