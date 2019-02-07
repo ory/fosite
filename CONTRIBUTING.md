@@ -17,7 +17,7 @@ There are many ways to help Fosite besides contributing code:
 
 - [Contributing Code](#contributing-code)
 - [Code Style](#code-style)
-- [Developer’s Certificate of Origin](#developer%E2%80%99s-certificate-of-origin)
+- [Developer’s Certificate of Origin](#developers-certificate-of-origin)
 - [Pull request procedure](#pull-request-procedure)
 - [Conduct](#conduct)
 
