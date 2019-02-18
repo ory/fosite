@@ -279,10 +279,6 @@ func (e *RFC6749Error) Reason() string {
 	return e.Hint
 }
 
-func (e *RFC6749Error) Details() []map[string]interface{} {
-	return []map[string]interface{}{}
-}
-
 func (e *RFC6749Error) StatusCode() int {
 	return e.Code
 }
