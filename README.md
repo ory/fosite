@@ -336,16 +336,15 @@ func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 
 func someResourceProviderHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	mySessionData := new(fosite.DefaultSession)
 	requiredScope := "blogposts.create"
 
-	_, ar, err := oauth2Provider.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, mySessionData, requiredScope)
+	_, ar, err := oauth2Provider.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, new(fosite.DefaultSession), requiredScope)
 	if err != nil {
 		// ...
 	}
 
 	// If no error occurred the token + scope is valid and you have access to:
-	// ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetScopes(), mySessionData.UserID, ar.GetRequestedAt(), ...
+	// ar.GetClient().GetID(), ar.GetGrantedScopes(), ar.GetScopes(), ar.GetSession().UserID, ar.GetRequestedAt(), ...
 }
 ```
 
