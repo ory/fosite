@@ -92,10 +92,19 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
-func (c *HMACStrategy) Validate(token string) error {
-	keys := append([][]byte{c.GlobalSecret}, c.RotatedGlobalSecrets...)
+func (c *HMACStrategy) Validate(token string) (err error) {
+	var keys [][]byte
+
+	if len(c.GlobalSecret) > 0 {
+		keys = append(keys, c.GlobalSecret)
+	}
+
+	if len(c.RotatedGlobalSecrets) > 0 {
+		keys = append(keys, c.RotatedGlobalSecrets...)
+	}
+
 	for _, key := range keys {
-		if err := c.validate(key, token); err == nil {
+		if err = c.validate(key, token); err == nil {
 			return nil
 		} else if errors.Cause(err) == fosite.ErrTokenSignatureMismatch {
 		} else {
@@ -103,7 +112,11 @@ func (c *HMACStrategy) Validate(token string) error {
 		}
 	}
 
-	return errors.New("a secret for signing HMAC-SHA256 is expected to be defined, but none were")
+	if err == nil {
+		return errors.New("a secret for signing HMAC-SHA256 is expected to be defined, but none were")
+	}
+
+	return err
 }
 
 func (c *HMACStrategy) validate(secret []byte, token string) error {

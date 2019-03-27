@@ -28,6 +28,7 @@ import (
 	"testing" //"time"
 
 	"github.com/golang/mock/gomock"
+
 	"github.com/ory/fosite/internal"
 
 	//"github.com/golang/mock/gomock"
