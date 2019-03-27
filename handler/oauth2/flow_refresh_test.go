@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+
 	"github.com/ory/fosite/internal"
 
 	"github.com/pkg/errors"

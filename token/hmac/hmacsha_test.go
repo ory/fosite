@@ -24,6 +24,8 @@ package hmac
 import (
 	"testing"
 
+	"github.com/ory/fosite"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -106,6 +108,7 @@ func TestValidateWithRotatedKey(t *testing.T) {
 	token, _, err := old.Generate()
 	require.NoError(t, err)
 
+	require.EqualError(t, now.Validate("thisisatoken.withaninvalidsignature"), fosite.ErrTokenSignatureMismatch.Error())
 	require.NoError(t, now.Validate(token))
 }
 
@@ -124,12 +127,7 @@ func TestValidateWithRotatedKeyInvalid(t *testing.T) {
 	token, _, err := old.Generate()
 	require.NoError(t, err)
 
-	require.Error(t, now.Validate(token))
+	require.EqualError(t, now.Validate(token), "secret for signing HMAC-SHA256 is expected to be 32 byte long, got 31 byte")
 
-	now = HMACStrategy{
-		GlobalSecret:         nil,
-		RotatedGlobalSecrets: [][]byte{},
-	}
-
-	require.Error(t, now.Validate(token))
+	require.EqualError(t, new(HMACStrategy).Validate(token), "a secret for signing HMAC-SHA256 is expected to be defined, but none were")
 }
