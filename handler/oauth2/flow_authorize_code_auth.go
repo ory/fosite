@@ -23,6 +23,7 @@ package oauth2
 
 import (
 	"context"
+	"net/url"
 	"strings"
 	"time"
 
@@ -57,6 +58,15 @@ type AuthorizeExplicitGrantHandler struct {
 	SanitationWhiteList []string
 
 	TokenRevocationStorage TokenRevocationStorage
+
+	IsRedirectURISecure func(*url.URL) bool
+}
+
+func (c *AuthorizeExplicitGrantHandler) secureChecker() func(*url.URL) bool {
+	if c.IsRedirectURISecure == nil {
+		c.IsRedirectURISecure = fosite.IsRedirectURISecure
+	}
+	return c.IsRedirectURISecure
 }
 
 func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -70,7 +80,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 	// 	 return errors.WithStack(fosite.ErrInvalidGrant)
 	// }
 
-	if !fosite.IsRedirectURISecure(ar.GetRedirectURI()) {
+	if !c.secureChecker()(ar.GetRedirectURI()) {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/."))
 	}
 

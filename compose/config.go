@@ -22,6 +22,7 @@
 package compose
 
 import (
+	"net/url"
 	"time"
 
 	"github.com/ory/fosite"
@@ -82,6 +83,9 @@ type Config struct {
 	// TokenEntropy indicates the entropy of the random string, used as the "message" part of the HMAC token.
 	// Defaults to 32.
 	TokenEntropy int
+
+	// RedirectSecureChecker is a function that returns true if the provided URL can be securely used as a redirect URL.
+	RedirectSecureChecker func(*url.URL) bool
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
@@ -155,4 +159,12 @@ func (c *Config) GetTokenEntropy() int {
 		return 32
 	}
 	return c.TokenEntropy
+}
+
+// GetTokenEntropy returns the entropy of the "message" part of a HMAC Token. Defaults to 32.
+func (c *Config) GetRedirectSecureChecker() func(*url.URL) bool {
+	if c.RedirectSecureChecker == nil {
+		return fosite.IsRedirectURISecure
+	}
+	return c.RedirectSecureChecker
 }
