@@ -82,6 +82,7 @@ func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy in
 			AuthCodeLifespan:      config.GetAuthorizeCodeLifespan(),
 			AccessTokenLifespan:   config.GetAccessTokenLifespan(),
 			RefreshTokenLifespan:  config.GetRefreshTokenLifespan(),
+			IsRedirectURISecure:   config.GetRedirectSecureChecker(),
 		},
 		ScopeStrategy: config.GetScopeStrategy(),
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{

@@ -39,6 +39,7 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 		ScopeStrategy:            config.GetScopeStrategy(),
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 		TokenRevocationStorage:   storage.(oauth2.TokenRevocationStorage),
+		IsRedirectURISecure:      config.GetRedirectSecureChecker(),
 	}
 }
 
