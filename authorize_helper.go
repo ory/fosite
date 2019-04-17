@@ -118,10 +118,10 @@ func IsValidRedirectURI(redirectURI *url.URL) bool {
 }
 
 func IsRedirectURISecure(redirectURI *url.URL) bool {
-	return !(redirectURI.Scheme == "http" && !isLocalhost(redirectURI))
+	return !(redirectURI.Scheme == "http" && !IsLocalhost(redirectURI))
 }
 
-func isLocalhost(redirectURI *url.URL) bool {
+func IsLocalhost(redirectURI *url.URL) bool {
 	hn := redirectURI.Hostname()
 	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "localhost"
 }
