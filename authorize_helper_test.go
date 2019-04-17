@@ -43,7 +43,7 @@ func TestIsLocalhost(t *testing.T) {
 		{expect: true, rawurl: "https://test.localhost"},
 	} {
 		u, _ := url.Parse(c.rawurl)
-		assert.Equal(t, c.expect, isLocalhost(u), "case %d", k)
+		assert.Equal(t, c.expect, IsLocalhost(u), "case %d", k)
 	}
 }
 
