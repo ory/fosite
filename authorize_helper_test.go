@@ -174,6 +174,8 @@ func TestIsRedirectURISecure(t *testing.T) {
 		{u: "https://google.com", err: false},
 		{u: "http://localhost", err: false},
 		{u: "http://test.localhost", err: false},
+		{u: "http://127.0.0.1/", err: false},
+		{u: "http://testlocalhost", err: true},
 		{u: "wta://auth", err: false},
 	} {
 		uu, err := url.Parse(c.u)

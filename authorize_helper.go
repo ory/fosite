@@ -122,6 +122,6 @@ func IsRedirectURISecure(redirectURI *url.URL) bool {
 }
 
 func isLocalhost(redirectURI *url.URL) bool {
-	host := strings.Split(redirectURI.Host, ":")[0]
-	return strings.HasSuffix(host, "localhost") || host == "127.0.0.1"
+	hn := redirectURI.Hostname()
+	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "localhost"
 }
