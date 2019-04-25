@@ -149,7 +149,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 
 		client, err := f.Store.GetClient(ctx, clientID)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to find OAuth 2.0 Client from HTTP basic authorization header."))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to find OAuth 2.0 Client from HTTP basic authorization header.").WithDebug(err.Error()))
 		}
 
 		// Enforce client authentication

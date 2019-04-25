@@ -228,7 +228,7 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	request.Form = r.Form
 	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	if err != nil {
-		return request, errors.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist."))
+		return request, errors.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithDebug(err.Error()))
 	}
 	request.Client = client
 
