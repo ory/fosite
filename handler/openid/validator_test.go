@@ -64,7 +64,7 @@ func TestValidatePrompt(t *testing.T) {
 				Claims: &jwt.IDTokenClaims{
 					Subject:     "foo",
 					RequestedAt: time.Now().UTC(),
-					AuthTime:    time.Now().UTC(),
+					AuthTime:    time.Now().UTC().Add(-time.Minute),
 				},
 			},
 		},
@@ -79,7 +79,7 @@ func TestValidatePrompt(t *testing.T) {
 				Claims: &jwt.IDTokenClaims{
 					Subject:     "foo",
 					RequestedAt: time.Now().UTC(),
-					AuthTime:    time.Now().UTC(),
+					AuthTime:    time.Now().UTC().Add(-time.Minute),
 				},
 			},
 		},
