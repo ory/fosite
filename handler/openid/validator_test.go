@@ -47,22 +47,54 @@ func TestValidatePrompt(t *testing.T) {
 	for k, tc := range []struct {
 		d           string
 		prompt      string
+		redirectURL string
 		isPublic    bool
 		expectErr   bool
 		idTokenHint string
 		s           *DefaultSession
 	}{
 		{
-			d:         "should fail because prompt=none should not work together with public clients",
-			prompt:    "none",
-			isPublic:  true,
-			expectErr: true,
+			d:           "should fail because prompt=none should not work together with public clients and non-http-localhost",
+			prompt:      "none",
+			isPublic:    true,
+			expectErr:   true,
+			redirectURL: "http://foo-bar/",
 			s: &DefaultSession{
 				Subject: "foo",
 				Claims: &jwt.IDTokenClaims{
 					Subject:     "foo",
 					RequestedAt: time.Now().UTC(),
-					AuthTime:    time.Now().UTC(),
+					AuthTime:    time.Now().UTC().Add(-time.Minute),
+				},
+			},
+		},
+		{
+			d:           "should fail because prompt=none should not work together with public clients",
+			prompt:      "none",
+			isPublic:    true,
+			expectErr:   false,
+			redirectURL: "http://localhost/",
+			s: &DefaultSession{
+				Subject: "foo",
+				Claims: &jwt.IDTokenClaims{
+					Subject:     "foo",
+					RequestedAt: time.Now().UTC(),
+					AuthTime:    time.Now().UTC().Add(-time.Minute),
+				},
+			},
+		},
+		{
+			d:           "should pass",
+			prompt:      "none",
+			isPublic:    true,
+			expectErr:   false,
+			redirectURL: "https://foo-bar/",
+			s: &DefaultSession{
+				Subject: "foo",
+				Claims: &jwt.IDTokenClaims{
+					Subject:     "foo",
+					RequestedAt: time.Now().UTC(),
+					AuthTime:    time.Now().UTC().Add(-time.Minute),
 				},
 			},
 		},
@@ -230,6 +262,7 @@ func TestValidatePrompt(t *testing.T) {
 					Client:  &fosite.DefaultClient{Public: tc.isPublic},
 					Session: tc.s,
 				},
+				RedirectURI: parse(tc.redirectURL),
 			})
 			if tc.expectErr {
 				assert.Error(t, err)
@@ -238,4 +271,9 @@ func TestValidatePrompt(t *testing.T) {
 			}
 		})
 	}
+}
+
+func parse(u string) *url.URL {
+	o, _ := url.Parse(u)
+	return o
 }

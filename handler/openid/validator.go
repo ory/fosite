@@ -74,12 +74,10 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 		//  unless the identity of the client can be proven, the request SHOULD
 		//  be processed as if no previous request had been approved.
 
-		// To make sure that we are not vulnerable to this type of attack, we will always require consent for public
-		// clients.
-
-		// If prompt is none - meaning that no consent should be requested, we must terminate with an error.
 		if stringslice.Has(prompt, "none") {
-			return errors.WithStack(fosite.ErrConsentRequired.WithHint("OAuth 2.0 Client is marked public and requires end-user consent, but \"prompt=none\" was requested."))
+			if !(req.GetRedirectURI().Scheme == "https" || (fosite.IsLocalhost(req.GetRedirectURI()) && req.GetRedirectURI().Scheme == "http")) {
+				return errors.WithStack(fosite.ErrConsentRequired.WithHint("OAuth 2.0 Client is marked public and redirect uri is not considered secure (https missing), but \"prompt=none\" was requested."))
+			}
 		}
 	}
 
