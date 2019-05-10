@@ -57,7 +57,7 @@ func (t *TokenEndpointHandlers) Append(h TokenEndpointHandler) {
 // TokenIntrospectionHandlers is a list of TokenValidator
 type TokenIntrospectionHandlers []TokenIntrospector
 
-// Add adds an AccessTokenValidator to this list. Ignores duplicates based on reflect.TypeOf.
+// Append adds an AccessTokenValidator to this list. Ignores duplicates based on reflect.TypeOf.
 func (t *TokenIntrospectionHandlers) Append(h TokenIntrospector) {
 	for _, this := range *t {
 		if reflect.TypeOf(this) == reflect.TypeOf(h) {
