@@ -40,6 +40,9 @@ type Session interface {
 	//  session.GetExpiresAt(fosite.AccessToken)
 	GetExpiresAt(key TokenType) time.Time
 
+
+	GetExpiresAtByClient(key TokenType, seconds int32) time.Time
+
 	// GetUsername returns the username, if set. This is optional and only used during token introspection.
 	GetUsername() string
 
@@ -73,6 +76,10 @@ func (s *DefaultSession) GetExpiresAt(key TokenType) time.Time {
 		return time.Time{}
 	}
 	return s.ExpiresAt[key]
+}
+
+func (s *DefaultSession) GetExpiresAtByClient(key TokenType, seconds int64) time.Time {
+	return time.Now().UTC().Add(time.Second * time.Duration(seconds))
 }
 
 func (s *DefaultSession) GetUsername() string {
