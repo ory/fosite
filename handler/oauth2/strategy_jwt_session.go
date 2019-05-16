@@ -83,7 +83,7 @@ func (s *JWTSession) GetExpiresAt(key fosite.TokenType) time.Time {
 
 
 func (s *JWTSession) GetExpiresAtByClient(key fosite.TokenType, seconds int32) time.Time {
-	return time.Now().Add(time.Second * time.Duration(seconds))
+	return time.Now().UTC().Add(time.Second * time.Duration(seconds))
 }
 
 
