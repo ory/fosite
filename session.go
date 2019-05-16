@@ -40,8 +40,7 @@ type Session interface {
 	//  session.GetExpiresAt(fosite.AccessToken)
 	GetExpiresAt(key TokenType) time.Time
 
-
-	GetExpiresAtByClient(key TokenType, seconds int32) time.Time
+	SetExpiresAtByClient(key TokenType, exp time.Time)
 
 	// GetUsername returns the username, if set. This is optional and only used during token introspection.
 	GetUsername() string

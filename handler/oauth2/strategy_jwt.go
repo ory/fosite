@@ -62,11 +62,6 @@ func (h *DefaultJWTStrategy) ValidateAccessToken(ctx context.Context, _ fosite.R
 	return err
 }
 
-func (h *DefaultJWTStrategy) ValidateAccessTokenByClient(ctx context.Context, _ fosite.Requester, token string, seconds int32) error {
-	_, err := h.validate(ctx, token)
-	return err
-}
-
 func (h *DefaultJWTStrategy) ValidateJWT(ctx context.Context, tokenType fosite.TokenType, token string) (requester fosite.Requester, err error) {
 	t, err := h.validate(ctx, token)
 	if err != nil {

@@ -36,6 +36,7 @@ type HandleHelper struct {
 }
 
 func (h *HandleHelper) IssueAccessToken(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+
 	token, signature, err := h.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
 		return err
@@ -43,9 +44,11 @@ func (h *HandleHelper) IssueAccessToken(ctx context.Context, requester fosite.Ac
 		return err
 	}
 
+	requester.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(time.Hour *time.Duration(1)))
+
 	responder.SetAccessToken(token)
 	responder.SetTokenType("bearer")
-	responder.SetExpiresIn(getExpiresInByClient(requester, fosite.AccessToken, h.AccessTokenLifespan, time.Now().UTC(), 3))
+	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, h.AccessTokenLifespan, time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
 	return nil
 }
@@ -55,12 +58,4 @@ func getExpiresIn(r fosite.Requester, key fosite.TokenType, defaultLifespan time
 		return defaultLifespan
 	}
 	return time.Duration(r.GetSession().GetExpiresAt(key).UnixNano() - now.UnixNano())
-}
-
-
-func getExpiresInByClient(r fosite.Requester, key fosite.TokenType, defaultLifespan time.Duration, now time.Time, expiryClientSeconds int32) time.Duration {
-	if r.GetSession().GetExpiresAtByClient(key, expiryClientSeconds).IsZero() {
-		return defaultLifespan
-	}
-	return time.Duration(r.GetSession().GetExpiresAtByClient(key, expiryClientSeconds).UnixNano() - now.UnixNano())
 }
