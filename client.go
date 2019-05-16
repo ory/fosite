@@ -48,6 +48,9 @@ type Client interface {
 
 	// GetAudience returns the allowed audience(s) for this client.
 	GetAudience() Arguments
+
+	//
+	GetAccessTokenExpiresAt() int64
 }
 
 // OpenIDConnectClient represents a client capable of performing OpenID Connect requests.
@@ -80,14 +83,15 @@ type OpenIDConnectClient interface {
 
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
-	ID            string   `json:"id"`
-	Secret        []byte   `json:"client_secret,omitempty"`
-	RedirectURIs  []string `json:"redirect_uris"`
-	GrantTypes    []string `json:"grant_types"`
-	ResponseTypes []string `json:"response_types"`
-	Scopes        []string `json:"scopes"`
-	Audience      []string `json:"audience"`
-	Public        bool     `json:"public"`
+	ID                   string   `json:"id"`
+	Secret               []byte   `json:"client_secret,omitempty"`
+	RedirectURIs         []string `json:"redirect_uris"`
+	GrantTypes           []string `json:"grant_types"`
+	ResponseTypes        []string `json:"response_types"`
+	Scopes               []string `json:"scopes"`
+	Audience             []string `json:"audience"`
+	Public               bool     `json:"public"`
+	AccessTokenExpiresAt int64    `json:"access_token_expires_at"`
 }
 
 type DefaultOpenIDConnectClient struct {
@@ -121,6 +125,10 @@ func (c *DefaultClient) GetHashedSecret() []byte {
 
 func (c *DefaultClient) GetScopes() Arguments {
 	return c.Scopes
+}
+
+func (c *DefaultClient) GetAccessTokenExpiresAt() int64 {
+	return c.AccessTokenExpiresAt
 }
 
 func (c *DefaultClient) GetGrantTypes() Arguments {

@@ -44,8 +44,6 @@ func (h *HandleHelper) IssueAccessToken(ctx context.Context, requester fosite.Ac
 		return err
 	}
 
-	requester.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(time.Hour *time.Duration(1)))
-
 	responder.SetAccessToken(token)
 	responder.SetTokenType("bearer")
 	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, h.AccessTokenLifespan, time.Now().UTC()))
