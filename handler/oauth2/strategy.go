@@ -41,7 +41,6 @@ type AccessTokenStrategy interface {
 	AccessTokenSignature(token string) string
 	GenerateAccessToken(ctx context.Context, requester fosite.Requester) (token string, signature string, err error)
 	ValidateAccessToken(ctx context.Context, requester fosite.Requester, token string) (err error)
-	ValidateAccessTokenByClient(ctx context.Context, requester fosite.Requester, token string, seconds int32) (err error)
 }
 
 type RefreshTokenStrategy interface {
