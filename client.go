@@ -49,7 +49,7 @@ type Client interface {
 	// GetAudience returns the allowed audience(s) for this client.
 	GetAudience() Arguments
 
-	//
+	// GetAccessTokenExpiresAt returns the access token expiry in nanoseconds
 	GetAccessTokenExpiresAt() int64
 }
 
