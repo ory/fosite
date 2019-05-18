@@ -39,6 +39,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 	store := internal.NewMockClientCredentialsGrantStorage(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	areq := internal.NewMockAccessRequester(ctrl)
+	client := internal.NewMockClient(ctrl)
 	defer ctrl.Finish()
 
 	h := ClientCredentialsGrantHandler{
@@ -71,9 +72,11 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetRequestedScopes().Return([]string{})
 				areq.EXPECT().GetRequestedAudience().Return([]string{"https://www.ory.sh/not-api"})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
-					GrantTypes: fosite.Arguments{"client_credentials"},
-					Audience:   []string{"https://www.ory.sh/api"},
+					GrantTypes:           fosite.Arguments{"client_credentials"},
+					Audience:             []string{"https://www.ory.sh/api"},
+					AccessTokenExpiresAt: 3600000000000,
 				}).MaxTimes(2)
+				client.EXPECT().GetAccessTokenExpiresAt().Return(3600000000000)
 			},
 		},
 		{
@@ -83,9 +86,11 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
-					GrantTypes: fosite.Arguments{"client_credentials"},
-					Scopes:     []string{"foo"},
+					GrantTypes:           fosite.Arguments{"client_credentials"},
+					Scopes:               []string{"foo"},
+					AccessTokenExpiresAt: 3600000000000,
 				}).MaxTimes(2)
+				client.EXPECT().GetAccessTokenExpiresAt().Return(3600000000000)
 			},
 		},
 		{
@@ -96,9 +101,11 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
 				areq.EXPECT().GetRequestedAudience().Return([]string{})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
-					GrantTypes: fosite.Arguments{"client_credentials"},
-					Scopes:     []string{"foo", "bar", "baz"},
+					GrantTypes:           fosite.Arguments{"client_credentials"},
+					Scopes:               []string{"foo", "bar", "baz"},
+					AccessTokenExpiresAt: 3600000000000,
 				}).MaxTimes(2)
+				client.EXPECT().GetAccessTokenExpiresAt().Return(3600000000000)
 			},
 		},
 	} {
