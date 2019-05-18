@@ -39,7 +39,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 	store := internal.NewMockClientCredentialsGrantStorage(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	areq := internal.NewMockAccessRequester(ctrl)
-	client := internal.NewMockClient(ctrl)
+	
 	defer ctrl.Finish()
 
 	h := ClientCredentialsGrantHandler{
