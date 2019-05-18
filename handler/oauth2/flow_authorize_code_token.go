@@ -110,7 +110,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	request.SetSession(authorizeRequest.GetSession())
 	request.SetID(authorizeRequest.GetID())
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(request.GetClient().GetAccessTokenExpiresAt()).Round(time.Second))
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(time.Nanosecond * time.Duration(request.GetClient().GetAccessTokenExpiresAt())).Round(time.Second))
 	if c.RefreshTokenLifespan > -1 {
 		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.RefreshTokenLifespan).Round(time.Second))
 	}
