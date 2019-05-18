@@ -73,7 +73,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
 					GrantTypes: fosite.Arguments{"client_credentials"},
 					Audience:   []string{"https://www.ory.sh/api"},
-				})
+				}).MaxTimes(2)
 			},
 		},
 		{
@@ -85,7 +85,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
 					GrantTypes: fosite.Arguments{"client_credentials"},
 					Scopes:     []string{"foo"},
-				})
+				}).MaxTimes(2)
 			},
 		},
 		{
@@ -98,7 +98,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
 					GrantTypes: fosite.Arguments{"client_credentials"},
 					Scopes:     []string{"foo", "bar", "baz"},
-				})
+				}).MaxTimes(2)
 			},
 		},
 	} {
