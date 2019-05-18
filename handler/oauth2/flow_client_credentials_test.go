@@ -76,7 +76,6 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 					Audience:             []string{"https://www.ory.sh/api"},
 					AccessTokenExpiresAt: 3600000000000,
 				}).MaxTimes(2)
-				client.EXPECT().GetAccessTokenExpiresAt().Return(int64(3600000000000))
 			},
 		},
 		{
@@ -90,7 +89,6 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 					Scopes:               []string{"foo"},
 					AccessTokenExpiresAt: 3600000000000,
 				}).MaxTimes(2)
-				client.EXPECT().GetAccessTokenExpiresAt().Return(int64(3600000000000))
 			},
 		},
 		{
@@ -99,13 +97,11 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetSession().Return(new(fosite.DefaultSession))
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"client_credentials"})
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
-				areq.EXPECT().GetRequestedAudience().Return([]string{})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
 					GrantTypes:           fosite.Arguments{"client_credentials"},
 					Scopes:               []string{"foo", "bar", "baz"},
 					AccessTokenExpiresAt: 3600000000000,
 				}).MaxTimes(2)
-				client.EXPECT().GetAccessTokenExpiresAt().Return(int64(3600000000000))
 			},
 		},
 	} {
