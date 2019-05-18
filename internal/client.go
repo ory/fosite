@@ -5,8 +5,8 @@
 package internal
 
 import (
-	fosite "github.com/ory/fosite"
 	gomock "github.com/golang/mock/gomock"
+	fosite "github.com/ory/fosite"
 	go_jose_v2 "gopkg.in/square/go-jose.v2"
 	reflect "reflect"
 )
