@@ -99,7 +99,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
 					GrantTypes:           fosite.Arguments{"client_credentials"},
-					Scopes:               []string{"foo", "bar", "baz"},
+					Scopes:               []string{"foo", "bar", "baz.bar"},
 					AccessTokenExpiresAt: 3600000000000,
 				}).MaxTimes(2)
 			},
