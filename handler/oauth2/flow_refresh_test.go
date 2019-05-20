@@ -210,6 +210,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			h := RefreshTokenGrantHandler{
 				TokenRevocationStorage:   store,
 				RefreshTokenStrategy:     strategy,
+				RefreshTokenLifespan:     time.Hour,
 				AccessTokenStrategy:      strategy,
 				AccessTokenLifespan:      time.Hour,
 				ScopeStrategy:            fosite.HierarchicScopeStrategy,
@@ -254,6 +255,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 						assert.Equal(t, "bearer", aresp.GetTokenType())
 						assert.NotEmpty(t, aresp.ToMap()["expires_in"])
 						assert.Equal(t, "foo bar", aresp.ToMap()["scope"])
+						assert.NotEmpty(t, aresp.GetExtra("refresh_token_expires_in"))
 					},
 				},
 			} {

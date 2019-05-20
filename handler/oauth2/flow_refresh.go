@@ -169,6 +169,9 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
 	responder.SetExtra("refresh_token", refreshToken)
+	if c.RefreshTokenLifespan > 0 {
+		responder.SetExtra("refresh_token_expires_in", int64(getExpiresIn(requester, fosite.RefreshToken, c.RefreshTokenLifespan, time.Now().UTC())/time.Second))
+	}
 
 	if err := storage.MaybeCommitTx(ctx, c.TokenRevocationStorage); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))

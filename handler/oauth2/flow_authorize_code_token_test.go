@@ -136,6 +136,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						assert.Equal(t, "bearer", aresp.TokenType)
 						assert.NotEmpty(t, aresp.GetExtra("refresh_token"))
 						assert.NotEmpty(t, aresp.GetExtra("expires_in"))
+						assert.Nil(t, aresp.GetExtra("refresh_token_expires_in"))
 						assert.Equal(t, "foo offline", aresp.GetExtra("scope"))
 					},
 				},

@@ -186,6 +186,9 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	responder.SetScopes(requester.GetGrantedScopes())
 	if refresh != "" {
 		responder.SetExtra("refresh_token", refresh)
+		if c.RefreshTokenLifespan > 0 {
+			responder.SetExtra("refresh_token_expires_in", int64(getExpiresIn(requester, fosite.RefreshToken, c.RefreshTokenLifespan, time.Now().UTC())/time.Second))
+		}
 	}
 
 	if err := storage.MaybeCommitTx(ctx, c.CoreStorage); err != nil {
