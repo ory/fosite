@@ -160,7 +160,7 @@ type OAuth2Provider interface {
 	WriteIntrospectionResponse(rw http.ResponseWriter, r IntrospectionResponder)
 }
 
-// IntrospectionResponse is the response object that will be returned when token introspection was successful,
+// IntrospectionResponder is the response object that will be returned when token introspection was successful,
 // for example when the client is allowed to perform token introspection. Refer to
 // https://tools.ietf.org/search/rfc7662#section-2.2 for more details.
 type IntrospectionResponder interface {
