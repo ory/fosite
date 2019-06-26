@@ -149,7 +149,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	var refresh, refreshSignature string
-	if authorizeRequest.GetGrantedScopes().HasOneOf("offline", "offline_access") {
+	if c.AlwaysProvideRefreshToken || authorizeRequest.GetGrantedScopes().HasOneOf("offline", "offline_access") {
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
 			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))

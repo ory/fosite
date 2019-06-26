@@ -86,6 +86,9 @@ type Config struct {
 
 	// RedirectSecureChecker is a function that returns true if the provided URL can be securely used as a redirect URL.
 	RedirectSecureChecker func(*url.URL) bool
+
+	// AlwaysProvideRefreshToken, if set to true, will cause token responses on authorization code grant exchange to always provide a refresh token. Otherwise refresh tokens are only provided on requests with the "offline" or "offline_access" scope.
+	AlwaysProvideRefreshToken bool
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
@@ -167,4 +170,9 @@ func (c *Config) GetRedirectSecureChecker() func(*url.URL) bool {
 		return fosite.IsRedirectURISecure
 	}
 	return c.RedirectSecureChecker
+}
+
+// GetAlwaysProvideRefreshToken returns true if a refresh token should always be returned in the response of a successful authorization code grant exchange.
+func (c *Config) GetAlwaysProvideRefreshToken() bool {
+	return c.AlwaysProvideRefreshToken
 }
