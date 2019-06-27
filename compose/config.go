@@ -87,8 +87,8 @@ type Config struct {
 	// RedirectSecureChecker is a function that returns true if the provided URL can be securely used as a redirect URL.
 	RedirectSecureChecker func(*url.URL) bool
 
-	// AlwaysProvideRefreshToken, if set to true, will cause token responses on authorization code grant exchange to always provide a refresh token. Otherwise refresh tokens are only provided on requests with the "offline" or "offline_access" scope.
-	AlwaysProvideRefreshToken bool
+	// RefreshTokenScopes defines which OAuth scopes will be given refresh tokens during the authorization code grant exchange. This defaults to "offline" and "offline_access". When set to an empty array, all exchanges will be given refresh tokens.
+	RefreshTokenScopes []string
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
@@ -172,7 +172,10 @@ func (c *Config) GetRedirectSecureChecker() func(*url.URL) bool {
 	return c.RedirectSecureChecker
 }
 
-// GetAlwaysProvideRefreshToken returns true if a refresh token should always be returned in the response of a successful authorization code grant exchange.
-func (c *Config) GetAlwaysProvideRefreshToken() bool {
-	return c.AlwaysProvideRefreshToken
+// GetRefreshTokenScopes returns which scopes will provide refresh tokens.
+func (c *Config) GetRefreshTokenScopes() []string {
+	if c.RefreshTokenScopes == nil {
+		return []string{"offline", "offline_access"}
+	}
+	return c.RefreshTokenScopes
 }

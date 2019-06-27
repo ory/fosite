@@ -197,7 +197,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				{
 					description: "should pass without offline scope when configured to allow refresh tokens",
 					setup: func() {
-						h.AlwaysProvideRefreshToken = true
+						h.RefreshTokenScopes = []string{}
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
 							ID:         "foo",
@@ -238,6 +238,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						RefreshTokenLifespan:     time.Hour,
 						ScopeStrategy:            fosite.HierarchicScopeStrategy,
 						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+						RefreshTokenScopes:       []string{"offline"},
 					}
 
 					areq = fosite.NewAccessRequest(&fosite.DefaultSession{})

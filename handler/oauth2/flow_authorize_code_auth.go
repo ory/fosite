@@ -61,7 +61,7 @@ type AuthorizeExplicitGrantHandler struct {
 
 	IsRedirectURISecure func(*url.URL) bool
 
-	AlwaysProvideRefreshToken bool
+	RefreshTokenScopes []string
 }
 
 func (c *AuthorizeExplicitGrantHandler) secureChecker() func(*url.URL) bool {

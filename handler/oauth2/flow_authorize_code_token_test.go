@@ -145,7 +145,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest) {
-						h.AlwaysProvideRefreshToken = true
+						h.RefreshTokenScopes = []string{}
 						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
 						require.NoError(t, err)
 						areq.Form.Add("code", code)
@@ -200,6 +200,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						ScopeStrategy:            fosite.HierarchicScopeStrategy,
 						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 						AccessTokenLifespan:      time.Minute,
+						RefreshTokenScopes:       []string{"offline"},
 					}
 
 					if c.setup != nil {

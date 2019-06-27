@@ -184,7 +184,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		{
 			description: "should pass - refresh token without offline scope",
 			setup: func() {
-				h.AlwaysProvideRefreshToken = true
+				h.RefreshTokenScopes = []string{}
 				areq.GrantTypes = fosite.Arguments{"password"}
 				rtstr.EXPECT().GenerateRefreshToken(nil, areq).Return(mockRT, "bar", nil)
 				store.EXPECT().CreateRefreshTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
@@ -208,6 +208,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 					AccessTokenLifespan: time.Hour,
 				},
 				RefreshTokenStrategy: rtstr,
+				RefreshTokenScopes:   []string{"offline"},
 			}
 			c.setup()
 			err := h.PopulateTokenEndpointResponse(nil, areq, aresp)

@@ -173,7 +173,7 @@ var config = &compose.Config{
 }
 ```
 
-**Note:** To issue refresh tokens with any of the grants, you need to include the `offline` scope in the OAuth2 request. Refresh tokens can also be turned on for all grants with the `AlwaysProvideRefreshToken` configuration.
+**Note:** To issue refresh tokens with any of the grants, you need to include the `offline` scope in the OAuth2 request. This can be modified by the `RefreshTokenScopes` compose configuration. When set to an empty array, _all_ grants will issue refresh tokens.
 
 #### `fosite.WildcardScopeStrategy`
 

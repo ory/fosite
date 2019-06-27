@@ -29,18 +29,18 @@ import (
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeExplicitGrantHandler{
-		AccessTokenStrategy:       strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:      strategy.(oauth2.RefreshTokenStrategy),
-		AuthorizeCodeStrategy:     strategy.(oauth2.AuthorizeCodeStrategy),
-		CoreStorage:               storage.(oauth2.CoreStorage),
-		AuthCodeLifespan:          config.GetAuthorizeCodeLifespan(),
-		RefreshTokenLifespan:      config.GetRefreshTokenLifespan(),
-		AccessTokenLifespan:       config.GetAccessTokenLifespan(),
-		ScopeStrategy:             config.GetScopeStrategy(),
-		AudienceMatchingStrategy:  config.GetAudienceStrategy(),
-		TokenRevocationStorage:    storage.(oauth2.TokenRevocationStorage),
-		IsRedirectURISecure:       config.GetRedirectSecureChecker(),
-		AlwaysProvideRefreshToken: config.GetAlwaysProvideRefreshToken(),
+		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
+		AuthorizeCodeStrategy:    strategy.(oauth2.AuthorizeCodeStrategy),
+		CoreStorage:              storage.(oauth2.CoreStorage),
+		AuthCodeLifespan:         config.GetAuthorizeCodeLifespan(),
+		RefreshTokenLifespan:     config.GetRefreshTokenLifespan(),
+		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
+		TokenRevocationStorage:   storage.(oauth2.TokenRevocationStorage),
+		IsRedirectURISecure:      config.GetRedirectSecureChecker(),
+		RefreshTokenScopes:       config.GetRefreshTokenScopes(),
 	}
 }
 
@@ -62,14 +62,14 @@ func OAuth2ClientCredentialsGrantFactory(config *Config, storage interface{}, st
 // an access token, refresh token and authorize code validator.
 func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.RefreshTokenGrantHandler{
-		AccessTokenStrategy:       strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:      strategy.(oauth2.RefreshTokenStrategy),
-		TokenRevocationStorage:    storage.(oauth2.TokenRevocationStorage),
-		AccessTokenLifespan:       config.GetAccessTokenLifespan(),
-		RefreshTokenLifespan:      config.GetRefreshTokenLifespan(),
-		ScopeStrategy:             config.GetScopeStrategy(),
-		AudienceMatchingStrategy:  config.GetAudienceStrategy(),
-		AlwaysProvideRefreshToken: config.GetAlwaysProvideRefreshToken(),
+		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
+		TokenRevocationStorage:   storage.(oauth2.TokenRevocationStorage),
+		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		RefreshTokenLifespan:     config.GetRefreshTokenLifespan(),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
+		RefreshTokenScopes:       config.GetRefreshTokenScopes(),
 	}
 }
 
@@ -96,10 +96,10 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 			AccessTokenLifespan:  config.GetAccessTokenLifespan(),
 			RefreshTokenLifespan: config.GetRefreshTokenLifespan(),
 		},
-		RefreshTokenStrategy:      strategy.(oauth2.RefreshTokenStrategy),
-		ScopeStrategy:             config.GetScopeStrategy(),
-		AudienceMatchingStrategy:  config.GetAudienceStrategy(),
-		AlwaysProvideRefreshToken: config.GetAlwaysProvideRefreshToken(),
+		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
+		RefreshTokenScopes:       config.GetRefreshTokenScopes(),
 	}
 }
 
