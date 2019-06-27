@@ -23,6 +23,8 @@ package oauth2
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ory/fosite/storage"
@@ -74,7 +76,9 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	if !(len(c.RefreshTokenScopes) == 0 || originalRequest.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...)) {
-		return errors.WithStack(fosite.ErrScopeNotGranted.WithHint("The OAuth 2.0 Client was not granted scope \"offline\" or \"offline_access\" and may thus not perform the \"refresh_token\" authorization grant."))
+		scopeNames := strings.Join(c.RefreshTokenScopes, " or ")
+		hint := fmt.Sprintf("The OAuth 2.0 Client was not granted scope %s and may thus not perform the \"refresh_token\" authorization grant.", scopeNames)
+		return errors.WithStack(fosite.ErrScopeNotGranted.WithHint(hint))
 
 	}
 
