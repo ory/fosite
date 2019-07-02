@@ -22,11 +22,13 @@
 package integration_test
 
 import (
+	"net/http"
 	"net/http/httptest"
+	"path"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
 
@@ -122,15 +124,50 @@ var jwtStrategy = &oauth2.DefaultJWTStrategy{
 	HMACSHAStrategy: hmacStrategy,
 }
 
-func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {
-	router := mux.NewRouter()
-	router.HandleFunc("/auth", authEndpointHandler(t, f, session))
-	router.HandleFunc("/token", tokenEndpointHandler(t, f))
-	router.HandleFunc("/callback", authCallbackHandler(t))
-	router.HandleFunc("/info", tokenInfoHandler(t, f, session))
-	router.HandleFunc("/introspect", tokenIntrospectionHandler(t, f, session))
-	router.HandleFunc("/revoke", tokenRevocationHandler(t, f, session))
-
-	ts := httptest.NewServer(router)
-	return ts
+// ShiftPath splits off the first component of p, which will be cleaned of
+// relative components before processing. head will never contain a slash and
+// tail will always be a rooted path without trailing slash.
+// see https://blog.merovius.de/2017/06/18/how-not-to-use-an-http-router.html
+// and https://gist.github.com/weatherglass/62bd8a704d4dfdc608fe5c5cb5a6980c#gistcomment-2161690 for the zero alloc code below
+func ShiftPath(p string) (head, tail string) {
+	if p == "" {
+		return "", "/"
+	}
+	p = strings.TrimPrefix(path.Clean(p), "/")
+	i := strings.Index(p, "/")
+	if i < 0 {
+		return p, "/"
+	}
+	return p[:i], p[i:]
 }
+
+type s struct {
+	t       *testing.T
+	f       fosite.OAuth2Provider
+	session fosite.Session
+}
+
+func (h *s) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var head string
+	head, r.URL.Path = ShiftPath(r.URL.Path)
+	switch head {
+	case "auth":
+		authEndpointHandler(h.t, h.f, h.session)
+	case "token":
+		tokenEndpointHandler(h.t, h.f)
+	case "callback":
+		authCallbackHandler(h.t)
+	case "info":
+		tokenInfoHandler(h.t, h.f, h.session)
+	case "introspect":
+		tokenIntrospectionHandler(h.t, h.f, h.session)
+	case "revoke":
+		tokenRevocationHandler(h.t, h.f, h.session)
+	}
+	http.Error(w, "Not Found", http.StatusNotFound)
+}
+
+func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {
+	return httptest.NewServer(&s{t: t, f: f, session: session})
+}
+
