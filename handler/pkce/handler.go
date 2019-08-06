@@ -49,12 +49,12 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 		return nil
 	}
 
-	if !ar.GetClient().IsPublic() {
-		return nil
-	}
-
 	challenge := ar.GetRequestForm().Get("code_challenge")
 	method := ar.GetRequestForm().Get("code_challenge_method")
+	if len(challenge+method) > 0 && !ar.GetClient().IsPublic() {
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf(`OAuth 2.0 Client "%s" is registered as a private client with a client secret. PKCE can only be performed with clients which do not have a client secret and are marked as public. You can mark a client as public by setting "token_endpoint_auth_method" to "none".`, ar.GetClient().GetID()))
+	}
+
 	if err := c.validate(challenge, method); err != nil {
 		return err
 	}
@@ -77,12 +77,12 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 
 func (c *Handler) validate(challenge, method string) error {
 	if c.Force && challenge == "" {
-		//If the server requires Proof Key for Code Exchange (PKCE) by OAuth
-		//public clients and the client does not send the "code_challenge" in
-		//the request, the authorization endpoint MUST return the authorization
-		//error response with the "error" value set to "invalid_request".  The
-		//"error_description" or the response of "error_uri" SHOULD explain the
-		//nature of error, e.g., code challenge required.
+		// If the server requires Proof Key for Code Exchange (PKCE) by OAuth
+		// public clients and the client does not send the "code_challenge" in
+		// the request, the authorization endpoint MUST return the authorization
+		// error response with the "error" value set to "invalid_request".  The
+		// "error_description" or the response of "error_uri" SHOULD explain the
+		// nature of error, e.g., code challenge required.
 
 		return errors.WithStack(fosite.ErrInvalidRequest.
 			WithHint("Public clients must include a code_challenge when performing the authorize code flow, but it is missing.").
@@ -93,12 +93,12 @@ func (c *Handler) validate(challenge, method string) error {
 		return nil
 	}
 
-	//If the server supporting PKCE does not support the requested
-	//transformation, the authorization endpoint MUST return the
-	//authorization error response with "error" value set to
-	//"invalid_request".  The "error_description" or the response of
-	//"error_uri" SHOULD explain the nature of error, e.g., transform
-	//algorithm not supported.
+	// If the server supporting PKCE does not support the requested
+	// transformation, the authorization endpoint MUST return the
+	// authorization error response with "error" value set to
+	// "invalid_request".  The "error_description" or the response of
+	// "error_uri" SHOULD explain the nature of error, e.g., transform
+	// algorithm not supported.
 	switch method {
 	case "S256":
 		break
@@ -123,6 +123,17 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
+	// code_verifier
+	// REQUIRED.  Code verifier
+	//
+	// The "code_challenge_method" is bound to the Authorization Code when
+	// the Authorization Code is issued.  That is the method that the token
+	// endpoint MUST use to verify the "code_verifier".
+	verifier := request.GetRequestForm().Get("code_verifier")
+	if len(verifier) > 0 && !request.GetClient().IsPublic() {
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf(`OAuth 2.0 Client "%s" is registered as a private client with a client secret. PKCE can only be performed with clients which do not have a client secret and are marked as public. You can mark a client as public by setting "token_endpoint_auth_method" to "none".`, request.GetClient().GetID()))
+	}
+
 	if !request.GetClient().IsPublic() {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -140,13 +151,6 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
-	//code_verifier
-	//REQUIRED.  Code verifier
-	//
-	//The "code_challenge_method" is bound to the Authorization Code when
-	//the Authorization Code is issued.  That is the method that the token
-	//endpoint MUST use to verify the "code_verifier".
-	verifier := request.GetRequestForm().Get("code_verifier")
 	challenge := authorizeRequest.GetRequestForm().Get("code_challenge")
 	method := authorizeRequest.GetRequestForm().Get("code_challenge_method")
 	if err := c.validate(challenge, method); err != nil {
@@ -157,36 +161,36 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return nil
 	}
 
-	//Upon receipt of the request at the token endpoint, the server
-	//verifies it by calculating the code challenge from the received
-	//"code_verifier" and comparing it with the previously associated
-	//"code_challenge", after first transforming it according to the
-	//"code_challenge_method" method specified by the client.
+	// Upon receipt of the request at the token endpoint, the server
+	// verifies it by calculating the code challenge from the received
+	// "code_verifier" and comparing it with the previously associated
+	// "code_challenge", after first transforming it according to the
+	// "code_challenge_method" method specified by the client.
 	//
-	//	If the "code_challenge_method" from Section 4.3 was "S256", the
-	//received "code_verifier" is hashed by SHA-256, base64url-encoded, and
-	//then compared to the "code_challenge", i.e.:
+	// 	If the "code_challenge_method" from Section 4.3 was "S256", the
+	// received "code_verifier" is hashed by SHA-256, base64url-encoded, and
+	// then compared to the "code_challenge", i.e.:
 	//
-	//BASE64URL-ENCODE(SHA256(ASCII(code_verifier))) == code_challenge
+	// BASE64URL-ENCODE(SHA256(ASCII(code_verifier))) == code_challenge
 	//
-	//If the "code_challenge_method" from Section 4.3 was "plain", they are
-	//compared directly, i.e.:
+	// If the "code_challenge_method" from Section 4.3 was "plain", they are
+	// compared directly, i.e.:
 	//
-	//code_verifier == code_challenge.
+	// code_verifier == code_challenge.
 	//
-	//	If the values are equal, the token endpoint MUST continue processing
-	//as normal (as defined by OAuth 2.0 [RFC6749]).  If the values are not
-	//equal, an error response indicating "invalid_grant" as described in
-	//Section 5.2 of [RFC6749] MUST be returned.
+	// 	If the values are equal, the token endpoint MUST continue processing
+	// as normal (as defined by OAuth 2.0 [RFC6749]).  If the values are not
+	// equal, an error response indicating "invalid_grant" as described in
+	// Section 5.2 of [RFC6749] MUST be returned.
 	switch method {
 	case "S256":
 		verifierLength := base64.RawURLEncoding.DecodedLen(len(verifier))
 
 		// NOTE: The code verifier SHOULD have enough entropy to make it
-		//	impractical to guess the value.  It is RECOMMENDED that the output of
-		//	a suitable random number generator be used to create a 32-octet
-		//	sequence.  The octet sequence is then base64url-encoded to produce a
-		//	43-octet URL safe string to use as the code verifier.
+		// 	impractical to guess the value.  It is RECOMMENDED that the output of
+		// 	a suitable random number generator be used to create a 32-octet
+		// 	sequence.  The octet sequence is then base64url-encoded to produce a
+		// 	43-octet URL safe string to use as the code verifier.
 		if verifierLength < 32 {
 			return errors.WithStack(fosite.ErrInsufficientEntropy.
 				WithHint("The PKCE code verifier must contain at least 32 octets."))

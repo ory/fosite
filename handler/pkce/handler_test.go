@@ -71,10 +71,10 @@ func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
 	r.ResponseTypes = fosite.Arguments{"code"}
-	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
+	require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
 	r.ResponseTypes = fosite.Arguments{"code", "id_token"}
-	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
+	require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
 	c.Public = true
 	h.EnablePlainChallengeMethod = true
@@ -123,10 +123,12 @@ func TestPKCEHandlerValidate(t *testing.T) {
 			expectErr: fosite.ErrUnknownRequest,
 		},
 		{
-			d:         "fails because not auth code flow",
-			grant:     "not_authorization_code",
-			expectErr: fosite.ErrUnknownRequest,
+			d:         "fails because pkce (challenge) does not work with private clients",
+			grant:     "authorization_code",
+			expectErr: fosite.ErrInvalidRequest,
 			client:    &fosite.DefaultClient{Public: false},
+			code:      "some-code",
+			verifier:  "verifier",
 		},
 		{
 			d:         "fails because invalid code",
@@ -240,7 +242,8 @@ func TestPKCEHandlerValidate(t *testing.T) {
 			if tc.expectErr == nil {
 				require.NoError(t, h.HandleTokenEndpointRequest(context.Background(), r))
 			} else {
-				require.EqualError(t, h.HandleTokenEndpointRequest(context.Background(), r), tc.expectErr.Error())
+				err := h.HandleTokenEndpointRequest(context.Background(), r)
+				require.EqualError(t, err, tc.expectErr.Error(), "%+v", err)
 			}
 		})
 	}
