@@ -25,6 +25,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 
@@ -215,5 +216,50 @@ func TestNewRevocationRequest(t *testing.T) {
 				assert.NoError(t, err)
 			}
 		})
+	}
+}
+
+func TestWriteRevocationResponse(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	store := internal.NewMockStorage(ctrl)
+	hasher := internal.NewMockHasher(ctrl)
+	defer ctrl.Finish()
+
+	fosite := &Fosite{Store: store, Hasher: hasher}
+
+	type args struct {
+		rw  *httptest.ResponseRecorder
+		err error
+	}
+	cases := []struct {
+		input      args
+		expectCode int
+	}{
+		{
+			input: args{
+				rw:  httptest.NewRecorder(),
+				err: ErrInvalidRequest,
+			},
+			expectCode: ErrInvalidRequest.Code,
+		},
+		{
+			input: args{
+				rw:  httptest.NewRecorder(),
+				err: ErrInvalidClient,
+			},
+			expectCode: ErrInvalidClient.Code,
+		},
+		{
+			input: args{
+				rw:  httptest.NewRecorder(),
+				err: nil,
+			},
+			expectCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range cases {
+		fosite.WriteRevocationResponse(tc.input.rw, tc.input.err)
+		assert.Equal(t, tc.expectCode, tc.input.rw.Code)
 	}
 }

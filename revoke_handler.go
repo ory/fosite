@@ -101,7 +101,16 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 
 	switch errors.Cause(err).Error() {
 	case ErrInvalidRequest.Error():
-		fallthrough
+		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+
+		js, err := json.Marshal(ErrInvalidRequest)
+		if err != nil {
+			http.Error(rw, fmt.Sprintf(`{"error": "%s"}`, err.Error()), http.StatusInternalServerError)
+			return
+		}
+
+		rw.WriteHeader(ErrInvalidRequest.Code)
+		rw.Write(js)
 	case ErrInvalidClient.Error():
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
