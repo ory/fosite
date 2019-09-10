@@ -51,9 +51,6 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 
 	challenge := ar.GetRequestForm().Get("code_challenge")
 	method := ar.GetRequestForm().Get("code_challenge_method")
-	if len(challenge+method) > 0 && !ar.GetClient().IsPublic() {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf(`OAuth 2.0 Client "%s" is registered as a private client with a client secret. PKCE can only be performed with clients which do not have a client secret and are marked as public. You can mark a client as public by setting "token_endpoint_auth_method" to "none".`, ar.GetClient().GetID()))
-	}
 
 	if err := c.validate(challenge, method); err != nil {
 		return err
@@ -130,13 +127,6 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	// the Authorization Code is issued.  That is the method that the token
 	// endpoint MUST use to verify the "code_verifier".
 	verifier := request.GetRequestForm().Get("code_verifier")
-	if len(verifier) > 0 && !request.GetClient().IsPublic() {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf(`OAuth 2.0 Client "%s" is registered as a private client with a client secret. PKCE can only be performed with clients which do not have a client secret and are marked as public. You can mark a client as public by setting "token_endpoint_auth_method" to "none".`, request.GetClient().GetID()))
-	}
-
-	if !request.GetClient().IsPublic() {
-		return errors.WithStack(fosite.ErrUnknownRequest)
-	}
 
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
