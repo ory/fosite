@@ -80,6 +80,10 @@ func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	h.EnablePlainChallengeMethod = true
 	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
+	c.Public = false
+	h.EnablePlainChallengeMethod = true
+	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
+
 	h.EnablePlainChallengeMethod = false
 	require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
@@ -123,12 +127,15 @@ func TestPKCEHandlerValidate(t *testing.T) {
 			expectErr: fosite.ErrUnknownRequest,
 		},
 		{
-			d:         "fails because pkce (challenge) does not work with private clients",
-			grant:     "authorization_code",
-			expectErr: fosite.ErrInvalidRequest,
-			client:    &fosite.DefaultClient{Public: false},
-			code:      "some-code",
-			verifier:  "verifier",
+			d:           "passes with private client",
+			grant:       "authorization_code",
+			challenge:   "foo",
+			verifier:    "foo",
+			method:      "plain",
+			client:      &fosite.DefaultClient{Public: false},
+			enablePlain: true,
+			force:       true,
+			code:        "valid-code-1",
 		},
 		{
 			d:         "fails because invalid code",
