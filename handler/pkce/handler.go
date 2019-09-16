@@ -33,7 +33,7 @@ import (
 )
 
 type Handler struct {
-	// If set to true, public clients must use PKCE.
+	// If set to true, clients must use PKCE.
 	Force bool
 
 	// Whether or not to allow the plain challenge method (S256 should be used whenever possible, plain is really discouraged).
@@ -75,15 +75,15 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 func (c *Handler) validate(challenge, method string) error {
 	if c.Force && challenge == "" {
 		// If the server requires Proof Key for Code Exchange (PKCE) by OAuth
-		// public clients and the client does not send the "code_challenge" in
+		// clients and the client does not send the "code_challenge" in
 		// the request, the authorization endpoint MUST return the authorization
 		// error response with the "error" value set to "invalid_request".  The
 		// "error_description" or the response of "error_uri" SHOULD explain the
 		// nature of error, e.g., code challenge required.
 
 		return errors.WithStack(fosite.ErrInvalidRequest.
-			WithHint("Public clients must include a code_challenge when performing the authorize code flow, but it is missing.").
-			WithDebug("The server is configured in a way that enforces PKCE for public clients."))
+			WithHint("Clients must include a code_challenge when performing the authorize code flow, but it is missing.").
+			WithDebug("The server is configured in a way that enforces PKCE for clients."))
 	}
 
 	if !c.Force && challenge == "" {
@@ -104,8 +104,8 @@ func (c *Handler) validate(challenge, method string) error {
 	case "":
 		if !c.EnablePlainChallengeMethod {
 			return errors.WithStack(fosite.ErrInvalidRequest.
-				WithHint("Public clients must use code_challenge_method=S256, plain is not allowed.").
-				WithDebug("The server is configured in a way that enforces PKCE S256 as challenge method for public clients."))
+				WithHint("Clients must use code_challenge_method=S256, plain is not allowed.").
+				WithDebug("The server is configured in a way that enforces PKCE S256 as challenge method for clients."))
 		}
 		break
 	default:
