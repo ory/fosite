@@ -62,7 +62,7 @@ type Config struct {
 	// AudienceMatchingStrategy sets the audience matching strategy that should be supported, defaults to fosite.DefaultsAudienceMatchingStrategy.
 	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 
-	// EnforcePKCE, if set to true, requires public clients to perform authorize code flows with PKCE. Defaults to false.
+	// EnforcePKCE, if set to true, requires clients to perform authorize code flows with PKCE. Defaults to false.
 	EnforcePKCE bool
 
 	// EnablePKCEPlainChallengeMethod sets whether or not to allow the plain challenge method (S256 should be used whenever possible, plain is really discouraged). Defaults to false.

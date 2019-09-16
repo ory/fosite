@@ -33,7 +33,7 @@ import (
 )
 
 type Handler struct {
-	// If set to true, public clients must use PKCE.
+	// If set to true, clients must use PKCE.
 	Force bool
 
 	// Whether or not to allow the plain challenge method (S256 should be used whenever possible, plain is really discouraged).
@@ -51,9 +51,6 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 
 	challenge := ar.GetRequestForm().Get("code_challenge")
 	method := ar.GetRequestForm().Get("code_challenge_method")
-	if len(challenge+method) > 0 && !ar.GetClient().IsPublic() {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf(`OAuth 2.0 Client "%s" is registered as a private client with a client secret. PKCE can only be performed with clients which do not have a client secret and are marked as public. You can mark a client as public by setting "token_endpoint_auth_method" to "none".`, ar.GetClient().GetID()))
-	}
 
 	if err := c.validate(challenge, method); err != nil {
 		return err
@@ -78,15 +75,15 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 func (c *Handler) validate(challenge, method string) error {
 	if c.Force && challenge == "" {
 		// If the server requires Proof Key for Code Exchange (PKCE) by OAuth
-		// public clients and the client does not send the "code_challenge" in
+		// clients and the client does not send the "code_challenge" in
 		// the request, the authorization endpoint MUST return the authorization
 		// error response with the "error" value set to "invalid_request".  The
 		// "error_description" or the response of "error_uri" SHOULD explain the
 		// nature of error, e.g., code challenge required.
 
 		return errors.WithStack(fosite.ErrInvalidRequest.
-			WithHint("Public clients must include a code_challenge when performing the authorize code flow, but it is missing.").
-			WithDebug("The server is configured in a way that enforces PKCE for public clients."))
+			WithHint("Clients must include a code_challenge when performing the authorize code flow, but it is missing.").
+			WithDebug("The server is configured in a way that enforces PKCE for clients."))
 	}
 
 	if !c.Force && challenge == "" {
@@ -107,8 +104,8 @@ func (c *Handler) validate(challenge, method string) error {
 	case "":
 		if !c.EnablePlainChallengeMethod {
 			return errors.WithStack(fosite.ErrInvalidRequest.
-				WithHint("Public clients must use code_challenge_method=S256, plain is not allowed.").
-				WithDebug("The server is configured in a way that enforces PKCE S256 as challenge method for public clients."))
+				WithHint("Clients must use code_challenge_method=S256, plain is not allowed.").
+				WithDebug("The server is configured in a way that enforces PKCE S256 as challenge method for clients."))
 		}
 		break
 	default:
@@ -130,13 +127,6 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	// the Authorization Code is issued.  That is the method that the token
 	// endpoint MUST use to verify the "code_verifier".
 	verifier := request.GetRequestForm().Get("code_verifier")
-	if len(verifier) > 0 && !request.GetClient().IsPublic() {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf(`OAuth 2.0 Client "%s" is registered as a private client with a client secret. PKCE can only be performed with clients which do not have a client secret and are marked as public. You can mark a client as public by setting "token_endpoint_auth_method" to "none".`, request.GetClient().GetID()))
-	}
-
-	if !request.GetClient().IsPublic() {
-		return errors.WithStack(fosite.ErrUnknownRequest)
-	}
 
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)

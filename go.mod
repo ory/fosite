@@ -29,3 +29,5 @@ require (
 	google.golang.org/appengine v1.2.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.1.9
 )
+
+go 1.13
