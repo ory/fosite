@@ -37,6 +37,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 	RefreshTokenStrategy     RefreshTokenStrategy
 	ScopeStrategy            fosite.ScopeStrategy
 	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
+	RefreshTokenScopes       []string
 
 	*HandleHelper
 }
@@ -92,7 +93,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 	}
 
 	var refresh, refreshSignature string
-	if requester.GetGrantedScopes().HasOneOf("offline", "offline_access") {
+	if len(c.RefreshTokenScopes) == 0 || requester.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...) {
 		var err error
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {

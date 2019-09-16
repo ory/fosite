@@ -40,6 +40,7 @@ func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strateg
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 		TokenRevocationStorage:   storage.(oauth2.TokenRevocationStorage),
 		IsRedirectURISecure:      config.GetRedirectSecureChecker(),
+		RefreshTokenScopes:       config.GetRefreshTokenScopes(),
 	}
 }
 
@@ -68,6 +69,7 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 		RefreshTokenLifespan:     config.GetRefreshTokenLifespan(),
 		ScopeStrategy:            config.GetScopeStrategy(),
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
+		RefreshTokenScopes:       config.GetRefreshTokenScopes(),
 	}
 }
 
@@ -97,6 +99,7 @@ func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage inter
 		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
 		ScopeStrategy:            config.GetScopeStrategy(),
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
+		RefreshTokenScopes:       config.GetRefreshTokenScopes(),
 	}
 }
 

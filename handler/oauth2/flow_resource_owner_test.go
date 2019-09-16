@@ -135,22 +135,14 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 	store := internal.NewMockResourceOwnerPasswordCredentialsGrantStorage(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	rtstr := internal.NewMockRefreshTokenStrategy(ctrl)
-	aresp := fosite.NewAccessResponse()
 	mockAT := "accesstoken.foo.bar"
 	mockRT := "refreshtoken.bar.foo"
 	defer ctrl.Finish()
 
-	areq := fosite.NewAccessRequest(nil)
+	var areq *fosite.AccessRequest
+	var aresp *fosite.AccessResponse
+	var h ResourceOwnerPasswordCredentialsGrantHandler
 
-	h := ResourceOwnerPasswordCredentialsGrantHandler{
-		ResourceOwnerPasswordCredentialsGrantStorage: store,
-		HandleHelper: &HandleHelper{
-			AccessTokenStorage:  store,
-			AccessTokenStrategy: chgen,
-			AccessTokenLifespan: time.Hour,
-		},
-		RefreshTokenStrategy: rtstr,
-	}
 	for k, c := range []struct {
 		description string
 		setup       func()
@@ -167,7 +159,6 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		{
 			description: "should pass",
 			setup: func() {
-				areq.Session = &fosite.DefaultSession{}
 				areq.GrantTypes = fosite.Arguments{"password"}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
@@ -190,8 +181,35 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				assert.NotNil(t, aresp.GetExtra("refresh_token"), "expected refresh token")
 			},
 		},
+		{
+			description: "should pass - refresh token without offline scope",
+			setup: func() {
+				h.RefreshTokenScopes = []string{}
+				areq.GrantTypes = fosite.Arguments{"password"}
+				rtstr.EXPECT().GenerateRefreshToken(nil, areq).Return(mockRT, "bar", nil)
+				store.EXPECT().CreateRefreshTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
+				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
+				store.EXPECT().CreateAccessTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
+			},
+			expect: func() {
+				assert.NotNil(t, aresp.GetExtra("refresh_token"), "expected refresh token")
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			areq = fosite.NewAccessRequest(nil)
+			aresp = fosite.NewAccessResponse()
+			areq.Session = &fosite.DefaultSession{}
+			h = ResourceOwnerPasswordCredentialsGrantHandler{
+				ResourceOwnerPasswordCredentialsGrantStorage: store,
+				HandleHelper: &HandleHelper{
+					AccessTokenStorage:  store,
+					AccessTokenStrategy: chgen,
+					AccessTokenLifespan: time.Hour,
+				},
+				RefreshTokenStrategy: rtstr,
+				RefreshTokenScopes:   []string{"offline"},
+			}
 			c.setup()
 			err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
 			if c.expectErr != nil {

@@ -60,6 +60,8 @@ type AuthorizeExplicitGrantHandler struct {
 	TokenRevocationStorage TokenRevocationStorage
 
 	IsRedirectURISecure func(*url.URL) bool
+
+	RefreshTokenScopes []string
 }
 
 func (c *AuthorizeExplicitGrantHandler) secureChecker() func(*url.URL) bool {

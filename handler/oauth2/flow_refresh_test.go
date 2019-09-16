@@ -50,14 +50,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 		t.Run("strategy="+k, func(t *testing.T) {
 
 			store := storage.NewMemoryStore()
-			h := RefreshTokenGrantHandler{
-				TokenRevocationStorage:   store,
-				RefreshTokenStrategy:     strategy,
-				AccessTokenLifespan:      time.Hour,
-				RefreshTokenLifespan:     time.Hour,
-				ScopeStrategy:            fosite.HierarchicScopeStrategy,
-				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-			}
+			var h RefreshTokenGrantHandler
 
 			for _, c := range []struct {
 				description string
@@ -175,8 +168,79 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
 					},
 				},
+				{
+					description: "should fail without offline scope",
+					setup: func() {
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClient{
+							ID:         "foo",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"foo", "bar"},
+						}
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+							Client:         areq.Client,
+							GrantedScope:   fosite.Arguments{"foo"},
+							RequestedScope: fosite.Arguments{"foo", "bar"},
+							Session:        sess,
+							Form:           url.Values{"foo": []string{"bar"}},
+							RequestedAt:    time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+						})
+						require.NoError(t, err)
+					},
+					expectErr: fosite.ErrScopeNotGranted,
+				},
+				{
+					description: "should pass without offline scope when configured to allow refresh tokens",
+					setup: func() {
+						h.RefreshTokenScopes = []string{}
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClient{
+							ID:         "foo",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"foo", "bar"},
+						}
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+							Client:         areq.Client,
+							GrantedScope:   fosite.Arguments{"foo"},
+							RequestedScope: fosite.Arguments{"foo", "bar"},
+							Session:        sess,
+							Form:           url.Values{"foo": []string{"bar"}},
+							RequestedAt:    time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+						})
+						require.NoError(t, err)
+					},
+					expect: func(t *testing.T) {
+						assert.NotEqual(t, sess, areq.Session)
+						assert.NotEqual(t, time.Now().UTC().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
+						assert.Equal(t, fosite.Arguments{"foo"}, areq.GrantedScope)
+						assert.Equal(t, fosite.Arguments{"foo", "bar"}, areq.RequestedScope)
+						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
+						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
+						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
+					},
+				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
+					h = RefreshTokenGrantHandler{
+						TokenRevocationStorage:   store,
+						RefreshTokenStrategy:     strategy,
+						AccessTokenLifespan:      time.Hour,
+						RefreshTokenLifespan:     time.Hour,
+						ScopeStrategy:            fosite.HierarchicScopeStrategy,
+						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+						RefreshTokenScopes:       []string{"offline"},
+					}
+
 					areq = fosite.NewAccessRequest(&fosite.DefaultSession{})
 					areq.Form = url.Values{}
 					c.setup()

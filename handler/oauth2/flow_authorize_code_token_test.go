@@ -48,16 +48,8 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			h := AuthorizeExplicitGrantHandler{
-				CoreStorage:              store,
-				AuthorizeCodeStrategy:    strategy,
-				AccessTokenStrategy:      strategy,
-				RefreshTokenStrategy:     strategy,
-				ScopeStrategy:            fosite.HierarchicScopeStrategy,
-				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-				AccessTokenLifespan:      time.Minute,
-				//TokenRevocationStorage: store,
-			}
+			var h AuthorizeExplicitGrantHandler
+
 			for _, c := range []struct {
 				areq        *fosite.AccessRequest
 				description string
@@ -130,7 +122,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 
 						require.NoError(t, store.CreateAuthorizeCodeSession(nil, sig, areq))
 					},
-					description: "should pass",
+					description: "should pass with offline scope and refresh token",
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
 						assert.Equal(t, "bearer", aresp.TokenType)
@@ -139,8 +131,78 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						assert.Equal(t, "foo offline", aresp.GetExtra("scope"))
 					},
 				},
+				{
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"authorization_code"},
+						Request: fosite.Request{
+							Form: url.Values{},
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"authorization_code"},
+							},
+							GrantedScope: fosite.Arguments{"foo"},
+							Session:      &fosite.DefaultSession{},
+							RequestedAt:  time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest) {
+						h.RefreshTokenScopes = []string{}
+						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
+						require.NoError(t, err)
+						areq.Form.Add("code", code)
+
+						require.NoError(t, store.CreateAuthorizeCodeSession(nil, sig, areq))
+					},
+					description: "should pass with refresh token always provided",
+					check: func(t *testing.T, aresp *fosite.AccessResponse) {
+						assert.NotEmpty(t, aresp.AccessToken)
+						assert.Equal(t, "bearer", aresp.TokenType)
+						assert.NotEmpty(t, aresp.GetExtra("refresh_token"))
+						assert.NotEmpty(t, aresp.GetExtra("expires_in"))
+						assert.Equal(t, "foo", aresp.GetExtra("scope"))
+					},
+				},
+				{
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"authorization_code"},
+						Request: fosite.Request{
+							Form: url.Values{},
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"authorization_code"},
+							},
+							GrantedScope: fosite.Arguments{"foo"},
+							Session:      &fosite.DefaultSession{},
+							RequestedAt:  time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest) {
+						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
+						require.NoError(t, err)
+						areq.Form.Add("code", code)
+
+						require.NoError(t, store.CreateAuthorizeCodeSession(nil, sig, areq))
+					},
+					description: "should not have refresh token",
+					check: func(t *testing.T, aresp *fosite.AccessResponse) {
+						assert.NotEmpty(t, aresp.AccessToken)
+						assert.Equal(t, "bearer", aresp.TokenType)
+						assert.Empty(t, aresp.GetExtra("refresh_token"))
+						assert.NotEmpty(t, aresp.GetExtra("expires_in"))
+						assert.Equal(t, "foo", aresp.GetExtra("scope"))
+					},
+				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
+					h = AuthorizeExplicitGrantHandler{
+						CoreStorage:              store,
+						AuthorizeCodeStrategy:    strategy,
+						AccessTokenStrategy:      strategy,
+						RefreshTokenStrategy:     strategy,
+						ScopeStrategy:            fosite.HierarchicScopeStrategy,
+						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+						AccessTokenLifespan:      time.Minute,
+						RefreshTokenScopes:       []string{"offline"},
+					}
+
 					if c.setup != nil {
 						c.setup(t, c.areq)
 					}
