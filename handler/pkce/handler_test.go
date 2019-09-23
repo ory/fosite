@@ -104,7 +104,7 @@ func TestPKCEHandlerValidate(t *testing.T) {
 	}
 	pc := &fosite.DefaultClient{Public: true}
 
-	s256verifier := "11111111111111111111111111111111111111111111111111111111111111111111"
+	s256verifier := "KGCt4m8AmjUvIR5ArTByrmehjtbxn1A49YpTZhsH8N7fhDr7LQayn9xx6mck"
 	hash := sha256.New()
 	hash.Write([]byte(s256verifier))
 	s256challenge := base64.RawURLEncoding.EncodeToString(hash.Sum([]byte{}))
@@ -129,8 +129,8 @@ func TestPKCEHandlerValidate(t *testing.T) {
 		{
 			d:           "passes with private client",
 			grant:       "authorization_code",
-			challenge:   "foo",
-			verifier:    "foo",
+			challenge:   "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
+			verifier:    "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
 			method:      "plain",
 			client:      &fosite.DefaultClient{Public: false},
 			enablePlain: true,
@@ -161,8 +161,8 @@ func TestPKCEHandlerValidate(t *testing.T) {
 		{
 			d:           "passes",
 			grant:       "authorization_code",
-			challenge:   "foo",
-			verifier:    "foo",
+			challenge:   "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
+			verifier:    "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
 			client:      pc,
 			enablePlain: true,
 			force:       true,
@@ -171,8 +171,8 @@ func TestPKCEHandlerValidate(t *testing.T) {
 		{
 			d:           "passes",
 			grant:       "authorization_code",
-			challenge:   "foo",
-			verifier:    "foo",
+			challenge:   "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
+			verifier:    "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
 			method:      "plain",
 			client:      pc,
 			enablePlain: true,
@@ -183,7 +183,7 @@ func TestPKCEHandlerValidate(t *testing.T) {
 			d:           "fails because challenge and verifier do not match",
 			grant:       "authorization_code",
 			challenge:   "not-foo",
-			verifier:    "foo",
+			verifier:    "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
 			method:      "plain",
 			client:      pc,
 			enablePlain: true,
@@ -193,33 +193,55 @@ func TestPKCEHandlerValidate(t *testing.T) {
 		{
 			d:           "fails because challenge and verifier do not match",
 			grant:       "authorization_code",
-			challenge:   "not-foo",
-			verifier:    "foo",
+			challenge:   "not-foonot-foonot-foonot-foonot-foonot-foonot-foonot-foo",
+			verifier:    "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
 			client:      pc,
 			enablePlain: true,
 			code:        "valid-code-8",
 			expectErr:   fosite.ErrInvalidGrant,
 		},
 		{
-			d:         "fails because verifier has low entropy",
+			d:         "fails because verifier is too short",
 			grant:     "authorization_code",
 			challenge: "foo",
 			verifier:  "foo",
 			method:    "S256",
 			client:    pc,
 			force:     true,
-			code:      "valid-code-9",
-			expectErr: fosite.ErrInsufficientEntropy,
+			code:      "valid-code-9a",
+			expectErr: fosite.ErrInvalidGrant,
 		},
 		{
-			d:         "fails because challenge and verifier do not match",
+			d:         "fails because verifier is too long",
 			grant:     "authorization_code",
-			challenge: "Zm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9v",
-			verifier:  "Zm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9v",
+			challenge: "foo",
+			verifier:  "foofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoofoo",
 			method:    "S256",
 			client:    pc,
 			force:     true,
 			code:      "valid-code-10",
+			expectErr: fosite.ErrInvalidGrant,
+		},
+		{
+			d:         "fails because verifier is malformed",
+			grant:     "authorization_code",
+			challenge: "foo",
+			verifier:  `(!"/$%Z&$T()/)OUZI>$"&=/T(PUOI>"%/)TUOI&/(O/()RGTE>=/(%"/()="$/)(=()=/R/()=))`,
+			method:    "S256",
+			client:    pc,
+			force:     true,
+			code:      "valid-code-11",
+			expectErr: fosite.ErrInvalidGrant,
+		},
+		{
+			d:         "fails because challenge and verifier do not match",
+			grant:     "authorization_code",
+			challenge: "Zm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9v",
+			verifier:  "Zm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9vZm9v",
+			method:    "S256",
+			client:    pc,
+			force:     true,
+			code:      "valid-code-12",
 			expectErr: fosite.ErrInvalidGrant,
 		},
 		{
@@ -230,7 +252,7 @@ func TestPKCEHandlerValidate(t *testing.T) {
 			method:    "S256",
 			client:    pc,
 			force:     true,
-			code:      "valid-code-11",
+			code:      "valid-code-13",
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {

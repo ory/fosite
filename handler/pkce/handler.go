@@ -25,6 +25,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	"regexp"
 
 	"github.com/pkg/errors"
 
@@ -42,6 +43,8 @@ type Handler struct {
 	AuthorizeCodeStrategy oauth2.AuthorizeCodeStrategy
 	Storage               PKCERequestStorage
 }
+
+var verifierWrongFormat = regexp.MustCompile("[^\\w\\.\\-~]")
 
 func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
@@ -151,6 +154,24 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return nil
 	}
 
+	// NOTE: The code verifier SHOULD have enough entropy to make it
+	// 	impractical to guess the value.  It is RECOMMENDED that the output of
+	// 	a suitable random number generator be used to create a 32-octet
+	// 	sequence.  The octet sequence is then base64url-encoded to produce a
+	// 	43-octet URL safe string to use as the code verifier.
+
+	// Validation
+	if len(verifier) < 43 {
+		return errors.WithStack(fosite.ErrInvalidGrant.
+			WithHint("The PKCE code verifier must be at least 43 characters."))
+	} else if len(verifier) > 128 {
+		return errors.WithStack(fosite.ErrInvalidGrant.
+			WithHint("The PKCE code verifier can not be longer than 128 characters."))
+	} else if verifierWrongFormat.MatchString(verifier) {
+		return errors.WithStack(fosite.ErrInvalidGrant.
+			WithHint(`The PKCE code verifier must only contain [a-Z] / [0-9] / "-" / "." / "_" / "~"`))
+	}
+
 	// Upon receipt of the request at the token endpoint, the server
 	// verifies it by calculating the code challenge from the received
 	// "code_verifier" and comparing it with the previously associated
@@ -174,23 +195,6 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	// Section 5.2 of [RFC6749] MUST be returned.
 	switch method {
 	case "S256":
-		verifierLength := base64.RawURLEncoding.DecodedLen(len(verifier))
-
-		// NOTE: The code verifier SHOULD have enough entropy to make it
-		// 	impractical to guess the value.  It is RECOMMENDED that the output of
-		// 	a suitable random number generator be used to create a 32-octet
-		// 	sequence.  The octet sequence is then base64url-encoded to produce a
-		// 	43-octet URL safe string to use as the code verifier.
-		if verifierLength < 32 {
-			return errors.WithStack(fosite.ErrInsufficientEntropy.
-				WithHint("The PKCE code verifier must contain at least 32 octets."))
-		}
-
-		verifierBytes := make([]byte, verifierLength)
-		if _, err := base64.RawURLEncoding.Decode(verifierBytes, []byte(verifier)); err != nil {
-			return errors.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to decode code_verifier using base64 url decoding without padding.").WithDebug(err.Error()))
-		}
-
 		hash := sha256.New()
 		if _, err := hash.Write([]byte(verifier)); err != nil {
 			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
