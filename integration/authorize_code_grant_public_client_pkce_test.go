@@ -35,7 +35,7 @@ import (
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
-	"github.com/ory/fosite/handler/oauth2" //"github.com/stretchr/testify/assert"
+	"github.com/ory/fosite/handler/oauth2" // "github.com/stretchr/testify/assert"
 )
 
 func TestAuthorizeCodeFlowWithPublicClientAndPKCE(t *testing.T) {
@@ -77,16 +77,16 @@ func runAuthorizeCodeGrantWithPublicClientAndPKCETest(t *testing.T, strategy int
 		{
 			description: "should pass",
 			setup: func() {
-				verifier = "somechallenge"
-				authCodeUrl = oauthClient.AuthCodeURL("12345678901234567890") + "&code_challenge=somechallenge"
+				verifier = "somechallengesomechallengesomechallengesomechallengesomechallengesomechallenge"
+				authCodeUrl = oauthClient.AuthCodeURL("12345678901234567890") + "&code_challenge=somechallengesomechallengesomechallengesomechallengesomechallengesomechallenge"
 			},
 			authStatusCode: http.StatusOK,
 		},
 		{
 			description: "should fail because the verifier is mismatching",
 			setup: func() {
-				verifier = "failchallenge"
-				authCodeUrl = oauthClient.AuthCodeURL("12345678901234567890") + "&code_challenge=somechallenge"
+				verifier = "failchallengefailchallengefailchallengefailchallengefailchallengefailchallengefailchallengefailchallenge"
+				authCodeUrl = oauthClient.AuthCodeURL("12345678901234567890") + "&code_challenge=somechallengesomechallengesomechallengesomechallengesomechallengesomechallengesomechallengesomechallenge"
 			},
 			authStatusCode:  http.StatusOK,
 			tokenStatusCode: http.StatusBadRequest,
@@ -103,9 +103,9 @@ func runAuthorizeCodeGrantWithPublicClientAndPKCETest(t *testing.T, strategy int
 
 			if resp.StatusCode == http.StatusOK {
 				// This should fail because no verifier was given
-				//_, err := oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
-				//require.Error(t, err)
-				//require.Empty(t, token.AccessToken)
+				// _, err := oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
+				// require.Error(t, err)
+				// require.Empty(t, token.AccessToken)
 				t.Logf("Got redirect url: %s", resp.Request.URL)
 
 				resp, err := http.PostForm(ts.URL+"/token", url.Values{
