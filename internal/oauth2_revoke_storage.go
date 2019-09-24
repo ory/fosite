@@ -111,7 +111,7 @@ func (mr *MockTokenRevocationStorageMockRecorder) GetRefreshTokenSession(arg0, a
 }
 
 // RevokeAccessToken mocks base method
-func (m *MockTokenRevocationStorage) RevokeAccessToken(arg0 context.Context, arg1 string) error {
+func (m *MockTokenRevocationStorage) RevokeAccessToken(arg0 context.Context, arg1 fosite.Requester) error {
 	ret := m.ctrl.Call(m, "RevokeAccessToken", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -123,7 +123,7 @@ func (mr *MockTokenRevocationStorageMockRecorder) RevokeAccessToken(arg0, arg1 i
 }
 
 // RevokeRefreshToken mocks base method
-func (m *MockTokenRevocationStorage) RevokeRefreshToken(arg0 context.Context, arg1 string) error {
+func (m *MockTokenRevocationStorage) RevokeRefreshToken(arg0 context.Context, arg1 fosite.Requester) error {
 	ret := m.ctrl.Call(m, "RevokeRefreshToken", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0

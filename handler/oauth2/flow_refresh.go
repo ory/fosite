@@ -143,12 +143,12 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 			err = rollBackTxnErr
 		}
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
-	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
+	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts); err != nil {
 		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
 			err = rollBackTxnErr
 		}
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
-	} else if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
+	} else if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, ts); err != nil {
 		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
 			err = rollBackTxnErr
 		}

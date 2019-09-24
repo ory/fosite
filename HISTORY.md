@@ -519,9 +519,9 @@ is an example of how to do that using only existing methods:
 func (s *MemoryStore) PersistRefreshTokenGrantSession(ctx context.Context, originalRefreshSignature, accessSignature, refreshSignature string, request fosite.Requester) error {
 	if ts, err := s.GetRefreshTokenSession(ctx, originalRefreshSignature, nil); err != nil {
 		return err
-	} else if err := s.RevokeAccessToken(ctx, ts.GetID()); err != nil {
+	} else if err := s.RevokeAccessToken(ctx, ts); err != nil {
 		return err
-	} else if err := s.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
+	} else if err := s.RevokeRefreshToken(ctx, ts); err != nil {
  		return err
  	} else if err := s.CreateAccessTokenSession(ctx, accessSignature, request); err != nil {
  		return err

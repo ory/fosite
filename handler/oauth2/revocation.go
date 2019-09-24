@@ -69,9 +69,8 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 		return errors.WithStack(fosite.ErrRevokationClientMismatch)
 	}
 
-	requestID := ar.GetID()
-	r.TokenRevocationStorage.RevokeRefreshToken(ctx, requestID)
-	r.TokenRevocationStorage.RevokeAccessToken(ctx, requestID)
+	r.TokenRevocationStorage.RevokeRefreshToken(ctx, ar)
+	r.TokenRevocationStorage.RevokeAccessToken(ctx, ar)
 
 	return nil
 }

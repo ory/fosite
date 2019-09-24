@@ -237,16 +237,16 @@ func (s *MemoryStore) Authenticate(_ context.Context, name string, secret string
 	return nil
 }
 
-func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) error {
-	if signature, exists := s.RefreshTokenRequestIDs[requestID]; exists {
+func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, req fosite.Requester) error {
+	if signature, exists := s.RefreshTokenRequestIDs[req.GetID()]; exists {
 		s.DeleteRefreshTokenSession(ctx, signature)
 		s.DeleteAccessTokenSession(ctx, signature)
 	}
 	return nil
 }
 
-func (s *MemoryStore) RevokeAccessToken(ctx context.Context, requestID string) error {
-	if signature, exists := s.AccessTokenRequestIDs[requestID]; exists {
+func (s *MemoryStore) RevokeAccessToken(ctx context.Context, req fosite.Requester) error {
+	if signature, exists := s.AccessTokenRequestIDs[req.GetID()]; exists {
 		s.DeleteAccessTokenSession(ctx, signature)
 	}
 	return nil
