@@ -165,6 +165,7 @@ func (a *Request) Merge(request Requester) {
 		a.GrantAudience(aud)
 	}
 
+	a.ID = request.GetID()
 	a.RequestedAt = request.GetRequestedAt()
 	a.Client = request.GetClient()
 	a.Session = request.GetSession()
