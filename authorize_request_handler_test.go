@@ -239,6 +239,8 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			ar, err := c.conf.NewAuthorizeRequest(context.Background(), c.r)
 			if c.expectedError != nil {
 				assert.EqualError(t, errors.Cause(err), c.expectedError.Error())
+				// https://github.com/ory/hydra/issues/1642
+				AssertObjectKeysEqual(t, &AuthorizeRequest{State: c.query.Get("state")}, ar, "State")
 			} else {
 				require.NoError(t, err)
 				AssertObjectKeysEqual(t, c.expect, ar, "ResponseTypes", "RequestedAudience", "RequestedScope", "Client", "RedirectURI", "State")
