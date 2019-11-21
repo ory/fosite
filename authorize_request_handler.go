@@ -226,6 +226,11 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 
 	request.Form = r.Form
+
+	// Save state to the request to be returned in error conditions (https://github.com/ory/hydra/issues/1642)
+	state := request.Form.Get("state")
+	request.State = state
+
 	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	if err != nil {
 		return request, errors.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithDebug(err.Error()))
@@ -262,12 +267,10 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	//
 	// https://tools.ietf.org/html/rfc6819#section-4.4.1.8
 	// The "state" parameter should not	be guessable
-	state := request.Form.Get("state")
 	if len(state) < MinParameterEntropy {
 		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
 		return request, errors.WithStack(ErrInvalidState.WithHintf(`Request parameter "state" must be at least be %d characters long to ensure sufficient entropy.`, MinParameterEntropy))
 	}
-	request.State = state
 
 	return request, nil
 }
