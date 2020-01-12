@@ -40,6 +40,9 @@ type Handler struct {
 	// Whether or not to allow the plain challenge method (S256 should be used whenever possible, plain is really discouraged).
 	EnablePlainChallengeMethod bool
 
+	// Whether or not to disable PKCE for confidential clients (enable PKCE for all clients is encouraged).
+	DisablePKCEForConfidentialClients bool
+
 	AuthorizeCodeStrategy oauth2.AuthorizeCodeStrategy
 	Storage               PKCERequestStorage
 }
@@ -55,7 +58,11 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 	challenge := ar.GetRequestForm().Get("code_challenge")
 	method := ar.GetRequestForm().Get("code_challenge_method")
 
-	if err := c.validate(challenge, method); err != nil {
+	if len(challenge+method) > 0 && !ar.GetClient().IsPublic() && c.DisablePKCEForConfidentialClients {
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf(`OAuth 2.0 Client "%s" is registered as a confidential client with a client secret. PKCE is disabled for confidential clients on this server. You can mark a client as public by setting "token_endpoint_auth_method" to "none".`, ar.GetClient().GetID()))
+	}
+
+	if err := c.validate(challenge, method, ar.GetClient().IsPublic()); err != nil {
 		return err
 	}
 
@@ -75,7 +82,11 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 	return nil
 }
 
-func (c *Handler) validate(challenge, method string) error {
+func (c *Handler) validate(challenge, method string, isPublic bool) error {
+	if !isPublic && c.DisablePKCEForConfidentialClients {
+		return nil
+	}
+
 	if c.Force && challenge == "" {
 		// If the server requires Proof Key for Code Exchange (PKCE) by OAuth
 		// clients and the client does not send the "code_challenge" in
@@ -131,6 +142,14 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	// endpoint MUST use to verify the "code_verifier".
 	verifier := request.GetRequestForm().Get("code_verifier")
 
+	if len(verifier) > 0 && !request.GetClient().IsPublic() && c.DisablePKCEForConfidentialClients {
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf(`OAuth 2.0 Client "%s" is registered as a confidential client with a client secret. PKCE is disabled for confidential clients on this server. You can mark a client as public by setting "token_endpoint_auth_method" to "none".`, request.GetClient().GetID()))
+	}
+
+	if !request.GetClient().IsPublic() && c.DisablePKCEForConfidentialClients {
+		return errors.WithStack(fosite.ErrUnknownRequest)
+	}
+
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, signature, request.GetSession())
@@ -146,7 +165,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 	challenge := authorizeRequest.GetRequestForm().Get("code_challenge")
 	method := authorizeRequest.GetRequestForm().Get("code_challenge_method")
-	if err := c.validate(challenge, method); err != nil {
+	if err := c.validate(challenge, method, request.GetClient().IsPublic()); err != nil {
 		return err
 	}
 

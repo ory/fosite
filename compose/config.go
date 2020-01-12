@@ -65,6 +65,9 @@ type Config struct {
 	// EnforcePKCE, if set to true, requires clients to perform authorize code flows with PKCE. Defaults to false.
 	EnforcePKCE bool
 
+	// DisablePKCEForConfidentialClients, if set to true, disables confidential clients to perform authorize code flows with PKCE. Defaults to false.
+	DisablePKCEForConfidentialClients bool
+
 	// EnablePKCEPlainChallengeMethod sets whether or not to allow the plain challenge method (S256 should be used whenever possible, plain is really discouraged). Defaults to false.
 	EnablePKCEPlainChallengeMethod bool
 

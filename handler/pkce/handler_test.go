@@ -76,16 +76,12 @@ func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	r.ResponseTypes = fosite.Arguments{"code", "id_token"}
 	require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
-	c.Public = true
 	h.EnablePlainChallengeMethod = true
 	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
-	c.Public = false
 	h.EnablePlainChallengeMethod = true
+	h.DisablePKCEForConfidentialClients = false
 	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
-
-	h.EnablePlainChallengeMethod = false
-	require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
 	r.Form.Set("code_challenge_method", "S256")
 	r.Form.Set("code_challenge", "")
@@ -94,6 +90,24 @@ func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 
 	r.Form.Set("code_challenge", "challenge")
 	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
+
+	c.Public = false
+	h.DisablePKCEForConfidentialClients = false
+	{
+		h.EnablePlainChallengeMethod = true
+		require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
+
+		h.EnablePlainChallengeMethod = false
+		require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
+	}
+	h.DisablePKCEForConfidentialClients = true
+	{
+		h.EnablePlainChallengeMethod = true
+		require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
+
+		h.EnablePlainChallengeMethod = false
+		require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
+	}
 }
 
 func TestPKCEHandlerValidate(t *testing.T) {
@@ -285,6 +299,7 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 		enablePlain bool
 		challenge   string
 		method      string
+		isPublic    bool
 		expectErr   bool
 	}{
 		{
@@ -294,10 +309,12 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 			d:         "should fail because plain is not enabled and method is empty which defaults to plain",
 			expectErr: true,
 			force:     true,
+			isPublic:  true,
 		},
 		{
 			d:           "should fail because force is enabled and no challenge was given",
 			force:       true,
+			isPublic:    true,
 			enablePlain: true,
 			expectErr:   true,
 			method:      "S256",
@@ -305,6 +322,7 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 		{
 			d:         "should fail because although force is enabled and a challenge was given, plain is disabled",
 			force:     true,
+			isPublic:  true,
 			expectErr: true,
 			method:    "plain",
 			challenge: "challenge",
@@ -312,12 +330,14 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 		{
 			d:         "should fail because although force is enabled and a challenge was given, plain is disabled and method is empty",
 			force:     true,
+			isPublic:  true,
 			expectErr: true,
 			challenge: "challenge",
 		},
 		{
 			d:         "should fail because invalid challenge method",
 			force:     true,
+			isPublic:  true,
 			expectErr: true,
 			method:    "invalid",
 			challenge: "challenge",
@@ -325,6 +345,7 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 		{
 			d:         "should pass because force is enabled with challenge given and method is S256",
 			force:     true,
+			isPublic:  true,
 			method:    "S256",
 			challenge: "challenge",
 		},
@@ -336,9 +357,9 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 			}
 
 			if tc.expectErr {
-				assert.Error(t, h.validate(tc.challenge, tc.method))
+				assert.Error(t, h.validate(tc.challenge, tc.method, tc.isPublic))
 			} else {
-				assert.NoError(t, h.validate(tc.challenge, tc.method))
+				assert.NoError(t, h.validate(tc.challenge, tc.method, tc.isPublic))
 			}
 		})
 	}

@@ -29,9 +29,10 @@ import (
 // OAuth2PKCEFactory creates a PKCE handler.
 func OAuth2PKCEFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &pkce.Handler{
-		AuthorizeCodeStrategy:      strategy.(oauth2.AuthorizeCodeStrategy),
-		Storage:                    storage.(pkce.PKCERequestStorage),
-		Force:                      config.EnforcePKCE,
-		EnablePlainChallengeMethod: config.EnablePKCEPlainChallengeMethod,
+		AuthorizeCodeStrategy:             strategy.(oauth2.AuthorizeCodeStrategy),
+		Storage:                           storage.(pkce.PKCERequestStorage),
+		Force:                             config.EnforcePKCE,
+		EnablePlainChallengeMethod:        config.EnablePKCEPlainChallengeMethod,
+		DisablePKCEForConfidentialClients: config.DisablePKCEForConfidentialClients,
 	}
 }
