@@ -160,7 +160,7 @@ There is an API documentation available at [godoc.org/ory/fosite](https://godoc.
 
 ### Scopes
 
-Fosite has two strategies for matching scopes. You can replace the default scope strategy if you need a custom
+Fosite has three strategies for matching scopes. You can replace the default scope strategy if you need a custom
 one by implementing `fosite.ScopeStrategy`.
 
 Using the composer, setting a strategy is easy:
@@ -194,6 +194,10 @@ This is the default strategy, and the safest one. It is best explained by lookin
 * `users.*.bar` does not `users.baz.baz.bar`
 
 To request `users.*`, a client must have exactly `users.*` as granted scope.
+
+#### `fosite.ExactScopeStrategy`
+
+This strategy is searching only for exact matches. It returns true iff the scope is granted.
 
 #### `fosite.HierarchicScopeStrategy`
 
