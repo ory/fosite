@@ -109,10 +109,15 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			description: "should pass",
 			setup: func() {
 				r := fosite.NewAuthorizeRequest()
-				r.Session = areq.Session
+				r.Session = &DefaultSession{
+					Claims: &jwt.IDTokenClaims{
+						Subject: "peter",
+					},
+					Headers: &jwt.Headers{},
+				}
 				r.GrantedScope = fosite.Arguments{"openid"}
 				r.Form.Set("nonce", "1111111111111111")
-				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).AnyTimes().Return(r, nil)
+				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).Return(r, nil)
 			},
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
@@ -127,14 +132,27 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		{
 			description: "should fail because missing subject claim",
 			setup: func() {
-				session.Claims.Subject = ""
+				r := fosite.NewAuthorizeRequest()
+				r.Session = &DefaultSession{
+					Claims: &jwt.IDTokenClaims{
+						Subject: "",
+					},
+					Headers: &jwt.Headers{},
+				}
+				r.GrantedScope = fosite.Arguments{"openid"}
+				r.Form.Set("nonce", "1111111111111111")
+				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).Return(r, nil)
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should fail because missing session",
 			setup: func() {
-				areq.Session = nil
+				r := fosite.NewAuthorizeRequest()
+				r.Session = nil
+				r.GrantedScope = fosite.Arguments{"openid"}
+				r.Form.Set("nonce", "1111111111111111")
+				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).Return(r, nil)
 			},
 			expectErr: fosite.ErrServerError,
 		},
