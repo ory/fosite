@@ -53,6 +53,7 @@ func TestRequest(t *testing.T) {
 
 func TestMergeRequest(t *testing.T) {
 	a := &Request{
+		ID:                "123",
 		RequestedAt:       time.Now().UTC(),
 		Client:            &DefaultClient{ID: "123"},
 		RequestedScope:    Arguments{"scope-3", "scope-4"},
@@ -80,6 +81,7 @@ func TestMergeRequest(t *testing.T) {
 	assert.EqualValues(t, a.GrantedAudience, b.GrantedAudience)
 	assert.EqualValues(t, a.Form, b.Form)
 	assert.EqualValues(t, a.Session, b.Session)
+	assert.EqualValues(t, a.ID, b.ID)
 }
 
 func TestSanitizeRequest(t *testing.T) {
