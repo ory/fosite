@@ -119,7 +119,7 @@ func (c *Handler) validate(challenge, method string) error {
 }
 
 func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !request.GetGrantTypes().Exact("authorization_code") {
+	if !request.GetGrantTypes().ExactOne("authorization_code") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 

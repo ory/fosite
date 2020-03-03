@@ -46,7 +46,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "password".
-	if !request.GetGrantTypes().Exact("password") {
+	if !request.GetGrantTypes().ExactOne("password") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -88,7 +88,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.3.3
 func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !requester.GetGrantTypes().Exact("password") {
+	if !requester.GetGrantTypes().ExactOne("password") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 

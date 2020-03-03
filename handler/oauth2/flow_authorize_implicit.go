@@ -49,7 +49,7 @@ type AuthorizeImplicitGrantTypeHandler struct {
 
 func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
-	if !ar.GetResponseTypes().Exact("token") {
+	if !ar.GetResponseTypes().ExactOne("token") {
 		return nil
 	}
 

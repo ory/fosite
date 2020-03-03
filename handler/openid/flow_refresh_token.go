@@ -35,7 +35,7 @@ type OpenIDConnectRefreshHandler struct {
 }
 
 func (c *OpenIDConnectRefreshHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !request.GetGrantTypes().Exact("refresh_token") {
+	if !request.GetGrantTypes().ExactOne("refresh_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -66,7 +66,7 @@ func (c *OpenIDConnectRefreshHandler) HandleTokenEndpointRequest(ctx context.Con
 }
 
 func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !requester.GetGrantTypes().Exact("refresh_token") {
+	if !requester.GetGrantTypes().ExactOne("refresh_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 

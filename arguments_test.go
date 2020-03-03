@@ -27,39 +27,66 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type exactTestCase struct {
+	args   Arguments
+	exact  string
+	expect bool
+}
+
+var exactTests = []exactTestCase{
+	{
+		args:   Arguments{"foo"},
+		exact:  "foo",
+		expect: true,
+	},
+	{
+		args:   Arguments{"foo", "bar"},
+		exact:  "foo",
+		expect: false,
+	},
+	{
+		args:   Arguments{"foo", "bar"},
+		exact:  "bar",
+		expect: false,
+	},
+	{
+		args:   Arguments{"foo", "bar"},
+		exact:  "baz",
+		expect: false,
+	},
+	{
+		args:   Arguments{},
+		exact:  "baz",
+		expect: false,
+	},
+}
+
 func TestArgumentsExact(t *testing.T) {
-	for k, c := range []struct {
-		args   Arguments
-		exact  string
-		expect bool
-	}{
+	testCases := append(exactTests, []exactTestCase{
 		{
-			args:   Arguments{"foo"},
-			exact:  "foo",
+			args:   Arguments{"foo", "bar"},
+			exact:  "foo bar",
 			expect: true,
 		},
-		{
-			args:   Arguments{"foo", "bar"},
-			exact:  "foo",
-			expect: false,
-		},
-		{
-			args:   Arguments{"foo", "bar"},
-			exact:  "bar",
-			expect: false,
-		},
-		{
-			args:   Arguments{"foo", "bar"},
-			exact:  "baz",
-			expect: false,
-		},
-		{
-			args:   Arguments{},
-			exact:  "baz",
-			expect: false,
-		},
-	} {
+	}...)
+
+	for k, c := range testCases {
 		assert.Equal(t, c.expect, c.args.Exact(c.exact), "%d", k)
+		t.Logf("Passed test case %d", k)
+	}
+}
+
+func TestArgumentsExactOne(t *testing.T) {
+	testCases := append(exactTests, []exactTestCase{
+		{
+			args:   Arguments{"foo", "bar"},
+			exact:  "foo bar",
+			expect: false,
+		},
+	}...)
+
+	for k, c := range testCases {
+		assert.Equal(t, c.expect, c.args.ExactOne(c.exact), "%d", k)
 		t.Logf("Passed test case %d", k)
 	}
 }
@@ -116,53 +143,78 @@ func TestArgumentsHas(t *testing.T) {
 	}
 }
 
+type matchesTestCase struct {
+	args   Arguments
+	is     []string
+	expect bool
+}
+
+var matchesTests = []matchesTestCase{
+	{
+		args:   Arguments{"foo", "foo"},
+		is:     []string{"foo"},
+		expect: false,
+	},
+	{
+		args:   Arguments{"foo", "foo"},
+		is:     []string{"bar", "foo"},
+		expect: false,
+	},
+	{
+		args:   Arguments{"foo", "bar"},
+		is:     []string{"bar", "foo", "baz"},
+		expect: false,
+	},
+	{
+		args:   Arguments{"foo", "bar"},
+		is:     []string{"foo"},
+		expect: false,
+	},
+	{
+		args:   Arguments{"foo", "bar"},
+		is:     []string{"bar", "bar"},
+		expect: false,
+	},
+	{
+		args:   Arguments{"foo", "bar"},
+		is:     []string{"baz"},
+		expect: false,
+	},
+	{
+		args:   Arguments{},
+		is:     []string{"baz"},
+		expect: false,
+	},
+}
+
+func TestArgumentsMatchesExact(t *testing.T) {
+	testCases := append(matchesTests, []matchesTestCase{
+		{
+			args:   Arguments{"foo", "bar"},
+			is:     []string{"bar", "foo"},
+			expect: false,
+		},
+	}...)
+	for k, c := range testCases {
+		assert.Equal(t, c.expect, c.args.MatchesExact(c.is...), "%d", k)
+		t.Logf("Passed test case %d", k)
+	}
+}
+
 func TestArgumentsMatches(t *testing.T) {
-	for k, c := range []struct {
-		args   Arguments
-		is     []string
-		expect bool
-	}{
+	testCases := append(matchesTests, []matchesTestCase{
 		{
 			args:   Arguments{"foo", "bar"},
 			is:     []string{"foo", "bar"},
 			expect: true,
 		},
 		{
-			args:   Arguments{"foo", "foo"},
-			is:     []string{"foo"},
-			expect: false,
-		},
-		{
-			args:   Arguments{"foo", "foo"},
+			args:   Arguments{"foo", "bar"},
 			is:     []string{"bar", "foo"},
-			expect: false,
+			expect: true,
 		},
-		{
-			args:   Arguments{"foo", "bar"},
-			is:     []string{"bar", "foo", "baz"},
-			expect: false,
-		},
-		{
-			args:   Arguments{"foo", "bar"},
-			is:     []string{"foo"},
-			expect: false,
-		},
-		{
-			args:   Arguments{"foo", "bar"},
-			is:     []string{"bar", "bar"},
-			expect: false,
-		},
-		{
-			args:   Arguments{"foo", "bar"},
-			is:     []string{"baz"},
-			expect: false,
-		},
-		{
-			args:   Arguments{},
-			is:     []string{"baz"},
-			expect: false,
-		},
-	} {
+	}...)
+	for k, c := range testCases {
 		assert.Equal(t, c.expect, c.args.Matches(c.is...), "%d", k)
 		t.Logf("Passed test case %d", k)
 	}

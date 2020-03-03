@@ -54,7 +54,7 @@ type RefreshTokenGrantHandler struct {
 func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "refresh_token".
-	if !request.GetGrantTypes().Exact("refresh_token") {
+	if !request.GetGrantTypes().ExactOne("refresh_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -116,7 +116,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-6
 func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !requester.GetGrantTypes().Exact("refresh_token") {
+	if !requester.GetGrantTypes().ExactOne("refresh_token") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
