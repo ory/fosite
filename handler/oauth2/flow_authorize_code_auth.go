@@ -73,7 +73,7 @@ func (c *AuthorizeExplicitGrantHandler) secureChecker() func(*url.URL) bool {
 
 func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
-	if !ar.GetResponseTypes().Exact("code") {
+	if !ar.GetResponseTypes().ExactOne("code") {
 		return nil
 	}
 

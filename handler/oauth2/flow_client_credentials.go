@@ -40,7 +40,7 @@ type ClientCredentialsGrantHandler struct {
 func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
-	if !request.GetGrantTypes().Exact("client_credentials") {
+	if !request.GetGrantTypes().ExactOne("client_credentials") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -69,7 +69,7 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.4.3
 func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
-	if !request.GetGrantTypes().Exact("client_credentials") {
+	if !request.GetGrantTypes().ExactOne("client_credentials") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 

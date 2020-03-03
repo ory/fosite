@@ -37,7 +37,7 @@ import (
 func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code".
-	if !request.GetGrantTypes().Exact("authorization_code") {
+	if !request.GetGrantTypes().ExactOne("authorization_code") {
 		return errors.WithStack(errors.WithStack(fosite.ErrUnknownRequest))
 	}
 
@@ -121,7 +121,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code", as this is the explicit grant handler.
-	if !requester.GetGrantTypes().Exact("authorization_code") {
+	if !requester.GetGrantTypes().ExactOne("authorization_code") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 

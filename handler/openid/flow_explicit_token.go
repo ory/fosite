@@ -34,7 +34,7 @@ func (c *OpenIDConnectExplicitHandler) HandleTokenEndpointRequest(ctx context.Co
 }
 
 func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !requester.GetGrantTypes().Exact("authorization_code") {
+	if !requester.GetGrantTypes().ExactOne("authorization_code") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
 
