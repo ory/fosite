@@ -154,6 +154,46 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			url:     "https://bar.com/cb123",
 			isError: true,
 		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"http://[::1]"}},
+			url:      "http://[::1]:1024",
+			isError:  false,
+			expected: "http://[::1]:1024",
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"http://[::1]"}},
+			url:      "http://[::1]:1024/cb",
+			isError:  false,
+			expected: "http://[::1]:1024/cb",
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"http://[::1]"}},
+			url:     "http://foo.bar/bar",
+			isError: true,
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
+			url:      "http://127.0.0.1:1024",
+			isError:  false,
+			expected: "http://127.0.0.1:1024",
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
+			url:      "http://127.0.0.1:64000/cb",
+			isError:  false,
+			expected: "http://127.0.0.1:64000/cb",
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
+			url:      "http://127.0.0.1",
+			isError:  false,
+			expected: "http://127.0.0.1",
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
+			url:     "http://foo.bar/bar",
+			isError: true,
+		},
 	} {
 		redir, err := MatchRedirectURIWithClientRedirectURIs(c.url, c.client)
 		assert.Equal(t, c.isError, err != nil, "%d: %s", k, err)
