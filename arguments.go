@@ -57,6 +57,23 @@ func (r Arguments) HasOneOf(items ...string) bool {
 	return false
 }
 
+// Deprecated: Use ExactOne, Matches or MatchesExact
 func (r Arguments) Exact(name string) bool {
 	return name == strings.Join(r, " ")
+}
+
+func (r Arguments) ExactOne(name string) bool {
+	return len(r) == 1 && r[0] == name
+}
+
+func (r Arguments) MatchesExact(items ...string) bool {
+	if len(r) != len(items) {
+		return false
+	}
+	for i, item := range items {
+		if item != r[i] {
+			return false
+		}
+	}
+	return false
 }
