@@ -112,14 +112,13 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 // Loopback redirect URIs use the "http" scheme and are constructed with
 // the loopback IP literal and whatever port the client is listening on.
 func isMatchingRedirectURI(uri string, haystack []string) bool {
-	requested, err := url.Parse(strings.ToLower(uri))
+	requested, err := url.Parse(uri)
 	if err != nil {
 		return false
 	}
 
 	for _, b := range haystack {
-		l := strings.ToLower(b)
-		if l == requested.String() || isLoopbackURI(requested, l) {
+		if strings.ToLower(b) == strings.ToLower(uri) || isLoopbackURI(requested, b) {
 			return true
 		}
 	}

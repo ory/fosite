@@ -200,6 +200,12 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			expected: "http://127.0.0.1",
 		},
 		{
+			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1/Cb"}},
+			url:      "http://127.0.0.1:8080/Cb",
+			isError:  false,
+			expected: "http://127.0.0.1:8080/Cb",
+		},
+		{
 			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
 			url:     "http://foo.bar/bar",
 			isError: true,
