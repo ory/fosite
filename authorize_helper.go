@@ -23,6 +23,7 @@ package fosite
 
 import (
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
@@ -83,7 +84,7 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 			// If no redirect_uri was given and the client has exactly one valid redirect_uri registered, use that instead
 			return redirectURIFromClient, nil
 		}
-	} else if rawurl != "" && StringInSlice(rawurl, client.GetRedirectURIs()) {
+	} else if rawurl != "" && isMatchingRedirectURI(rawurl, client.GetRedirectURIs()) {
 		// If a redirect_uri was given and the clients knows it (simple string comparison!)
 		// return it.
 		if parsed, err := url.Parse(rawurl); err == nil && IsValidRedirectURI(parsed) {
@@ -93,6 +94,59 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 	}
 
 	return nil, errors.WithStack(ErrInvalidRequest.WithHint(`The "redirect_uri" parameter does not match any of the OAuth 2.0 Client's pre-registered redirect urls.`))
+}
+
+// Match a requested  redirect URI against a pool of registered client URIs
+//
+// Test a given redirect URI against a pool of URIs provided by a registered client.
+// If the OAuth 2.0 Client has loopback URIs registered either an IPv4 URI http://127.0.0.1 or
+// an IPv6 URI http://[::1] a client is allowed to request a dynamic port and the server MUST accept
+// it as a valid redirection uri.
+//
+// https://tools.ietf.org/html/rfc8252#section-7.3
+// Native apps that are able to open a port on the loopback network
+// interface without needing special permissions (typically, those on
+// desktop operating systems) can use the loopback interface to receive
+// the OAuth redirect.
+//
+// Loopback redirect URIs use the "http" scheme and are constructed with
+// the loopback IP literal and whatever port the client is listening on.
+func isMatchingRedirectURI(uri string, haystack []string) bool {
+	requested, err := url.Parse(uri)
+	if err != nil {
+		return false
+	}
+
+	for _, b := range haystack {
+		if strings.ToLower(b) == strings.ToLower(uri) || isLoopbackURI(requested, b) {
+			return true
+		}
+	}
+	return false
+}
+
+func isLoopbackURI(requested *url.URL, registeredURI string) bool {
+	registered, err := url.Parse(registeredURI)
+	if err != nil {
+		return false
+	}
+
+	if registered.Scheme != "http" || !isLoopbackAddress(registered.Host) {
+		return false
+	}
+
+	if requested.Scheme == "http" && isLoopbackAddress(requested.Host) && registered.Path == requested.Path {
+		return true
+	}
+
+	return false
+}
+
+// Check if address is either an IPv4 loopback or an IPv6 loopback-
+// An optional port is ignored
+func isLoopbackAddress(address string) bool {
+	match, _ := regexp.MatchString("^(127.0.0.1|\\[::1\\])(:?)(\\d*)$", address)
+	return match
 }
 
 // IsValidRedirectURI validates a redirect_uri as specified in:
