@@ -112,21 +112,41 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 // Loopback redirect URIs use the "http" scheme and are constructed with
 // the loopback IP literal and whatever port the client is listening on.
 func isMatchingRedirectURI(uri string, haystack []string) bool {
+	requested, err := url.Parse(strings.ToLower(uri))
+	if err != nil {
+		return false
+	}
+
 	for _, b := range haystack {
 		l := strings.ToLower(b)
-		if l == strings.ToLower(uri) || isLoopbackURI(uri, l) {
+		if l == requested.String() || isLoopbackURI(requested, l) {
 			return true
 		}
 	}
 	return false
 }
 
-func isLoopbackURI(uri string, registeredURI string) bool {
-	if registeredURI != "http://127.0.0.1" && registeredURI != "http://[::1]" {
+func isLoopbackURI(requested *url.URL, registeredURI string) bool {
+	registered, err := url.Parse(registeredURI)
+	if err != nil {
 		return false
 	}
 
-	match, _ := regexp.MatchString("http://(127.0.0.1|\\[::1\\]):?(\\d+)?", uri)
+	if registered.Scheme != "http" || !isLoopbackAddress(registered.Host) {
+		return false
+	}
+
+	if requested.Scheme == "http" && isLoopbackAddress(requested.Host) && registered.Path == requested.Path {
+		return true
+	}
+
+	return false
+}
+
+// Check if address is either an IPv4 loopback or an IPv6 loopback-
+// An optional port is ignored
+func isLoopbackAddress(address string) bool {
+	match, _ := regexp.MatchString("^(127.0.0.1|\\[::1\\])(:?)(\\d*)$", address)
 	return match
 }
 

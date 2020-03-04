@@ -161,7 +161,12 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			expected: "http://[::1]:1024",
 		},
 		{
-			client:   &DefaultClient{RedirectURIs: []string{"http://[::1]"}},
+			client:  &DefaultClient{RedirectURIs: []string{"http://[::1]"}},
+			url:     "http://[::1]:1024/cb",
+			isError: true,
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"http://[::1]/cb"}},
 			url:      "http://[::1]:1024/cb",
 			isError:  false,
 			expected: "http://[::1]:1024/cb",
@@ -178,10 +183,15 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			expected: "http://127.0.0.1:1024",
 		},
 		{
-			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
+			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1/cb"}},
 			url:      "http://127.0.0.1:64000/cb",
 			isError:  false,
 			expected: "http://127.0.0.1:64000/cb",
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
+			url:     "http://127.0.0.1:64000/cb",
+			isError: true,
 		},
 		{
 			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
@@ -192,6 +202,11 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 		{
 			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
 			url:     "http://foo.bar/bar",
+			isError: true,
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
+			url:     ":/invalid.uri)bar",
 			isError: true,
 		},
 	} {
