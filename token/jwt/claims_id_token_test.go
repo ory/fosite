@@ -42,6 +42,7 @@ var idTokenClaims = &IDTokenClaims{
 	AccessTokenHash:                     "foobar",
 	CodeHash:                            "barfoo",
 	AuthenticationContextClassReference: "acr",
+	AuthenticationMethodsReference:      "amr",
 	Extra: map[string]interface{}{
 		"foo": "bar",
 		"baz": "bar",
@@ -73,5 +74,6 @@ func TestIDTokenClaimsToMap(t *testing.T) {
 		"c_hash":    idTokenClaims.CodeHash,
 		"auth_time": idTokenClaims.AuthTime.Unix(),
 		"acr":       idTokenClaims.AuthenticationContextClassReference,
+		"amr":       idTokenClaims.AuthenticationMethodsReference,
 	}, idTokenClaims.ToMap())
 }
