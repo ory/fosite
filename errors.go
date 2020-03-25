@@ -32,7 +32,10 @@ var (
 	// ErrInvalidatedAuthorizeCode is an error indicating that an authorization code has been
 	// used previously.
 	ErrInvalidatedAuthorizeCode = errors.New("Authorization code has ben invalidated")
-	ErrUnknownRequest           = &RFC6749Error{
+	// ErrSerializationFailure is an error indicating that the transactional capable storage could not guarantee
+	// consistency of Update & Delete operations on the same rows between multiple sessions.
+	ErrSerializationFailure = errors.New("The request could not be completed due to concurrent access")
+	ErrUnknownRequest       = &RFC6749Error{
 		Name:        errUnknownErrorName,
 		Description: "The handler is not responsible for this request",
 		Code:        http.StatusBadRequest,

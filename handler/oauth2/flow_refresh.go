@@ -27,11 +27,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/fosite/storage"
-
-	"github.com/pkg/errors"
-
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/storage"
+	"github.com/pkg/errors"
 )
 
 type RefreshTokenGrantHandler struct {
@@ -139,34 +137,22 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 
 	ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
 	if err != nil {
-		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
-			err = rollBackTxnErr
-		}
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return handleRefreshTokenEndpointResponseStorageError(ctx, c.TokenRevocationStorage, err)
 	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
-		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
-			err = rollBackTxnErr
-		}
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return handleRefreshTokenEndpointResponseStorageError(ctx, c.TokenRevocationStorage, err)
 	} else if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
-		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
-			err = rollBackTxnErr
-		}
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return handleRefreshTokenEndpointResponseStorageError(ctx, c.TokenRevocationStorage, err)
 	}
 
 	storeReq := requester.Sanitize([]string{})
 	storeReq.SetID(ts.GetID())
+
 	if err := c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, storeReq); err != nil {
-		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
-			err = rollBackTxnErr
-		}
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
-	} else if err := c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq); err != nil {
-		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
-			err = rollBackTxnErr
-		}
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return handleRefreshTokenEndpointResponseStorageError(ctx, c.TokenRevocationStorage, err)
+	}
+
+	if err := c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq); err != nil {
+		return handleRefreshTokenEndpointResponseStorageError(ctx, c.TokenRevocationStorage, err)
 	}
 
 	responder.SetAccessToken(accessToken)
@@ -180,4 +166,26 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	}
 
 	return nil
+}
+
+func handleRefreshTokenEndpointResponseStorageError(ctx context.Context, store TokenRevocationStorage, storageErr error) (err error) {
+	defer func() {
+		if rbErr := storage.MaybeRollbackTx(ctx, store); rbErr != nil {
+			err = errors.WithStack(fosite.ErrServerError.WithDebug(rbErr.Error()))
+		}
+	}()
+
+	if errors.Cause(storageErr) == fosite.ErrSerializationFailure {
+		return errors.WithStack(fosite.ErrInvalidRequest.
+			WithDebugf(storageErr.Error()).
+			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))
+	}
+
+	if errors.Cause(storageErr) == fosite.ErrNotFound {
+		return errors.WithStack(fosite.ErrInvalidRequest.
+			WithDebugf(storageErr.Error()).
+			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))
+	}
+
+	return errors.WithStack(fosite.ErrServerError.WithDebug(storageErr.Error()))
 }
