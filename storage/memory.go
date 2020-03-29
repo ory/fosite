@@ -23,6 +23,7 @@ package storage
 
 import (
 	"context"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -35,14 +36,15 @@ type MemoryUserRelation struct {
 }
 
 type MemoryStore struct {
-	Clients        map[string]fosite.Client
-	AuthorizeCodes map[string]StoreAuthorizeCode
-	IDSessions     map[string]fosite.Requester
-	AccessTokens   map[string]fosite.Requester
-	Implicit       map[string]fosite.Requester
-	RefreshTokens  map[string]fosite.Requester
-	PKCES          map[string]fosite.Requester
-	Users          map[string]MemoryUserRelation
+	Clients         map[string]fosite.Client
+	AuthorizeCodes  map[string]StoreAuthorizeCode
+	IDSessions      map[string]fosite.Requester
+	AccessTokens    map[string]fosite.Requester
+	Implicit        map[string]fosite.Requester
+	RefreshTokens   map[string]fosite.Requester
+	PKCES           map[string]fosite.Requester
+	Users           map[string]MemoryUserRelation
+	BlacklistedJTIs map[string]time.Time
 	// In-memory request ID to token signatures
 	AccessTokenRequestIDs  map[string]string
 	RefreshTokenRequestIDs map[string]string
@@ -60,6 +62,7 @@ func NewMemoryStore() *MemoryStore {
 		Users:                  make(map[string]MemoryUserRelation),
 		AccessTokenRequestIDs:  make(map[string]string),
 		RefreshTokenRequestIDs: make(map[string]string),
+		BlacklistedJTIs:        make(map[string]time.Time),
 	}
 }
 
@@ -131,6 +134,30 @@ func (s *MemoryStore) GetClient(_ context.Context, id string) (fosite.Client, er
 		return nil, fosite.ErrNotFound
 	}
 	return cl, nil
+}
+
+func (s *MemoryStore) ClientAssertionJWTValid(_ context.Context, jti string) error {
+	if exp, exists := s.BlacklistedJTIs[jti]; exists && exp.After(time.Now()) {
+		return fosite.ErrJTIKnown
+	}
+
+	return nil
+}
+
+func (s *MemoryStore) SetClientAssertionJWT(_ context.Context, jti string, exp time.Time) error {
+	// delete expired jtis
+	for j, e := range s.BlacklistedJTIs {
+		if e.Before(time.Now()) {
+			delete(s.BlacklistedJTIs, j)
+		}
+	}
+
+	if _, exists := s.BlacklistedJTIs[jti]; exists {
+		return fosite.ErrJTIKnown
+	}
+
+	s.BlacklistedJTIs[jti] = exp
+	return nil
 }
 
 func (s *MemoryStore) CreateAuthorizeCodeSession(_ context.Context, code string, req fosite.Requester) error {

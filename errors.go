@@ -206,6 +206,11 @@ var (
 		Name:        errInvalidRequestObject,
 		Code:        http.StatusBadRequest,
 	}
+	ErrJTIKnown = &RFC6749Error{
+		Description: "The jti was already used.",
+		Name:        errJTIKnownName,
+		Code:        http.StatusBadRequest,
+	}
 )
 
 const (
@@ -242,6 +247,7 @@ const (
 	errRequestNotSupportedName      = "request_not_supported"
 	errRequestURINotSupportedName   = "request_uri_not_supported"
 	errRegistrationNotSupportedName = "registration_not_supported"
+	errJTIKnownName                 = "jti_known"
 )
 
 func ErrorToRFC6749Error(err error) *RFC6749Error {

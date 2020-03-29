@@ -36,6 +36,7 @@ func (m *MockTransactional) EXPECT() *MockTransactionalMockRecorder {
 
 // BeginTX mocks base method
 func (m *MockTransactional) BeginTX(arg0 context.Context) (context.Context, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BeginTX", arg0)
 	ret0, _ := ret[0].(context.Context)
 	ret1, _ := ret[1].(error)
@@ -44,11 +45,13 @@ func (m *MockTransactional) BeginTX(arg0 context.Context) (context.Context, erro
 
 // BeginTX indicates an expected call of BeginTX
 func (mr *MockTransactionalMockRecorder) BeginTX(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginTX", reflect.TypeOf((*MockTransactional)(nil).BeginTX), arg0)
 }
 
 // Commit mocks base method
 func (m *MockTransactional) Commit(arg0 context.Context) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Commit", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -56,11 +59,13 @@ func (m *MockTransactional) Commit(arg0 context.Context) error {
 
 // Commit indicates an expected call of Commit
 func (mr *MockTransactionalMockRecorder) Commit(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockTransactional)(nil).Commit), arg0)
 }
 
 // Rollback mocks base method
 func (m *MockTransactional) Rollback(arg0 context.Context) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Rollback", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -68,5 +73,6 @@ func (m *MockTransactional) Rollback(arg0 context.Context) error {
 
 // Rollback indicates an expected call of Rollback
 func (mr *MockTransactionalMockRecorder) Rollback(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockTransactional)(nil).Rollback), arg0)
 }

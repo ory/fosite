@@ -24,9 +24,11 @@ package fosite
 import (
 	"context"
 	"crypto/rsa"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
@@ -142,14 +144,36 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 			return nil, errors.WithStack(ErrInvalidClient.WithHint("Unable to type assert claims from request parameter \"client_assertion\".").WithDebugf(`Got claims of type %T but expected type "*jwt.MapClaims".`, token.Claims))
 		}
 
+		var jti string
 		if !claims.VerifyIssuer(clientID, true) {
 			return nil, errors.WithStack(ErrInvalidClient.WithHint("Claim \"iss\" from \"client_assertion\" must match the \"client_id\" of the OAuth 2.0 Client."))
 		} else if f.TokenURL == "" {
 			return nil, errors.WithStack(ErrMisconfiguration.WithHint("The authorization server's token endpoint URL has not been set."))
 		} else if sub, ok := (*claims)["sub"].(string); !ok || sub != clientID {
 			return nil, errors.WithStack(ErrInvalidClient.WithHint("Claim \"sub\" from \"client_assertion\" must match the \"client_id\" of the OAuth 2.0 Client."))
-		} else if jti, ok := (*claims)["jti"].(string); !ok || len(jti) == 0 {
+		} else if jti, ok = (*claims)["jti"].(string); !ok || len(jti) == 0 {
 			return nil, errors.WithStack(ErrInvalidClient.WithHint("Claim \"jti\" from \"client_assertion\" must be set but is not."))
+		} else if f.Store.ClientAssertionJWTValid(context.Background(), jti) != nil {
+			return nil, errors.WithStack(ErrJTIKnown.WithHint("Claim \"jti\" from \"client_assertion\" MUST only be used once."))
+		}
+
+		// type conversion according to jwt.MapClaims.VerifyExpiresAt
+		var expiry int64
+		err = nil
+		switch exp := (*claims)["exp"].(type) {
+		case float64:
+			expiry = int64(exp)
+		case json.Number:
+			expiry, err = exp.Int64()
+		default:
+			err = ErrInvalidClient.WithHint("Unable to type assert the expiry time from claims. This should not happen as we validate the expiry time already earlier with token.Claims.Valid()")
+		}
+
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		if err := f.Store.SetClientAssertionJWT(context.Background(), jti, time.Unix(expiry, 0)); err != nil {
+			return nil, err
 		}
 
 		if auds, ok := (*claims)["aud"].([]interface{}); !ok {

@@ -38,6 +38,7 @@ func (m *MockTokenIntrospector) EXPECT() *MockTokenIntrospectorMockRecorder {
 
 // IntrospectToken mocks base method
 func (m *MockTokenIntrospector) IntrospectToken(arg0 context.Context, arg1 string, arg2 fosite.TokenType, arg3 fosite.AccessRequester, arg4 []string) (fosite.TokenType, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IntrospectToken", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(fosite.TokenType)
 	ret1, _ := ret[1].(error)
@@ -46,5 +47,6 @@ func (m *MockTokenIntrospector) IntrospectToken(arg0 context.Context, arg1 strin
 
 // IntrospectToken indicates an expected call of IntrospectToken
 func (mr *MockTokenIntrospectorMockRecorder) IntrospectToken(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IntrospectToken", reflect.TypeOf((*MockTokenIntrospector)(nil).IntrospectToken), arg0, arg1, arg2, arg3, arg4)
 }

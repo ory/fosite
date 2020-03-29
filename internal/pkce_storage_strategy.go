@@ -38,6 +38,7 @@ func (m *MockPKCERequestStorage) EXPECT() *MockPKCERequestStorageMockRecorder {
 
 // CreatePKCERequestSession mocks base method
 func (m *MockPKCERequestStorage) CreatePKCERequestSession(arg0 context.Context, arg1 string, arg2 fosite.Requester) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePKCERequestSession", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -45,11 +46,13 @@ func (m *MockPKCERequestStorage) CreatePKCERequestSession(arg0 context.Context, 
 
 // CreatePKCERequestSession indicates an expected call of CreatePKCERequestSession
 func (mr *MockPKCERequestStorageMockRecorder) CreatePKCERequestSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePKCERequestSession", reflect.TypeOf((*MockPKCERequestStorage)(nil).CreatePKCERequestSession), arg0, arg1, arg2)
 }
 
 // DeletePKCERequestSession mocks base method
 func (m *MockPKCERequestStorage) DeletePKCERequestSession(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePKCERequestSession", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -57,11 +60,13 @@ func (m *MockPKCERequestStorage) DeletePKCERequestSession(arg0 context.Context, 
 
 // DeletePKCERequestSession indicates an expected call of DeletePKCERequestSession
 func (mr *MockPKCERequestStorageMockRecorder) DeletePKCERequestSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePKCERequestSession", reflect.TypeOf((*MockPKCERequestStorage)(nil).DeletePKCERequestSession), arg0, arg1)
 }
 
 // GetPKCERequestSession mocks base method
 func (m *MockPKCERequestStorage) GetPKCERequestSession(arg0 context.Context, arg1 string, arg2 fosite.Session) (fosite.Requester, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPKCERequestSession", arg0, arg1, arg2)
 	ret0, _ := ret[0].(fosite.Requester)
 	ret1, _ := ret[1].(error)
@@ -70,5 +75,6 @@ func (m *MockPKCERequestStorage) GetPKCERequestSession(arg0 context.Context, arg
 
 // GetPKCERequestSession indicates an expected call of GetPKCERequestSession
 func (mr *MockPKCERequestStorageMockRecorder) GetPKCERequestSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPKCERequestSession", reflect.TypeOf((*MockPKCERequestStorage)(nil).GetPKCERequestSession), arg0, arg1, arg2)
 }

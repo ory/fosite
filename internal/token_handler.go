@@ -38,6 +38,7 @@ func (m *MockTokenEndpointHandler) EXPECT() *MockTokenEndpointHandlerMockRecorde
 
 // HandleTokenEndpointRequest mocks base method
 func (m *MockTokenEndpointHandler) HandleTokenEndpointRequest(arg0 context.Context, arg1 fosite.AccessRequester) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HandleTokenEndpointRequest", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -45,11 +46,13 @@ func (m *MockTokenEndpointHandler) HandleTokenEndpointRequest(arg0 context.Conte
 
 // HandleTokenEndpointRequest indicates an expected call of HandleTokenEndpointRequest
 func (mr *MockTokenEndpointHandlerMockRecorder) HandleTokenEndpointRequest(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleTokenEndpointRequest", reflect.TypeOf((*MockTokenEndpointHandler)(nil).HandleTokenEndpointRequest), arg0, arg1)
 }
 
 // PopulateTokenEndpointResponse mocks base method
 func (m *MockTokenEndpointHandler) PopulateTokenEndpointResponse(arg0 context.Context, arg1 fosite.AccessRequester, arg2 fosite.AccessResponder) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PopulateTokenEndpointResponse", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -57,5 +60,6 @@ func (m *MockTokenEndpointHandler) PopulateTokenEndpointResponse(arg0 context.Co
 
 // PopulateTokenEndpointResponse indicates an expected call of PopulateTokenEndpointResponse
 func (mr *MockTokenEndpointHandlerMockRecorder) PopulateTokenEndpointResponse(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PopulateTokenEndpointResponse", reflect.TypeOf((*MockTokenEndpointHandler)(nil).PopulateTokenEndpointResponse), arg0, arg1, arg2)
 }

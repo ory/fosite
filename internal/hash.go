@@ -36,6 +36,7 @@ func (m *MockHasher) EXPECT() *MockHasherMockRecorder {
 
 // Compare mocks base method
 func (m *MockHasher) Compare(arg0 context.Context, arg1, arg2 []byte) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Compare", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -43,11 +44,13 @@ func (m *MockHasher) Compare(arg0 context.Context, arg1, arg2 []byte) error {
 
 // Compare indicates an expected call of Compare
 func (mr *MockHasherMockRecorder) Compare(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Compare", reflect.TypeOf((*MockHasher)(nil).Compare), arg0, arg1, arg2)
 }
 
 // Hash mocks base method
 func (m *MockHasher) Hash(arg0 context.Context, arg1 []byte) ([]byte, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Hash", arg0, arg1)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
@@ -56,5 +59,6 @@ func (m *MockHasher) Hash(arg0 context.Context, arg1 []byte) ([]byte, error) {
 
 // Hash indicates an expected call of Hash
 func (mr *MockHasherMockRecorder) Hash(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Hash", reflect.TypeOf((*MockHasher)(nil).Hash), arg0, arg1)
 }

@@ -7,6 +7,7 @@ package internal
 import (
 	context "context"
 	reflect "reflect"
+	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 
@@ -36,8 +37,23 @@ func (m *MockStorage) EXPECT() *MockStorageMockRecorder {
 	return m.recorder
 }
 
+// ClientAssertionJWTValid mocks base method
+func (m *MockStorage) ClientAssertionJWTValid(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ClientAssertionJWTValid", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ClientAssertionJWTValid indicates an expected call of ClientAssertionJWTValid
+func (mr *MockStorageMockRecorder) ClientAssertionJWTValid(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClientAssertionJWTValid", reflect.TypeOf((*MockStorage)(nil).ClientAssertionJWTValid), arg0, arg1)
+}
+
 // GetClient mocks base method
 func (m *MockStorage) GetClient(arg0 context.Context, arg1 string) (fosite.Client, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetClient", arg0, arg1)
 	ret0, _ := ret[0].(fosite.Client)
 	ret1, _ := ret[1].(error)
@@ -46,5 +62,20 @@ func (m *MockStorage) GetClient(arg0 context.Context, arg1 string) (fosite.Clien
 
 // GetClient indicates an expected call of GetClient
 func (mr *MockStorageMockRecorder) GetClient(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClient", reflect.TypeOf((*MockStorage)(nil).GetClient), arg0, arg1)
+}
+
+// SetClientAssertionJWT mocks base method
+func (m *MockStorage) SetClientAssertionJWT(arg0 context.Context, arg1 string, arg2 time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetClientAssertionJWT", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetClientAssertionJWT indicates an expected call of SetClientAssertionJWT
+func (mr *MockStorageMockRecorder) SetClientAssertionJWT(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClientAssertionJWT", reflect.TypeOf((*MockStorage)(nil).SetClientAssertionJWT), arg0, arg1, arg2)
 }

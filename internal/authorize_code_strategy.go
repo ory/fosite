@@ -38,6 +38,7 @@ func (m *MockAuthorizeCodeStrategy) EXPECT() *MockAuthorizeCodeStrategyMockRecor
 
 // AuthorizeCodeSignature mocks base method
 func (m *MockAuthorizeCodeStrategy) AuthorizeCodeSignature(arg0 string) string {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AuthorizeCodeSignature", arg0)
 	ret0, _ := ret[0].(string)
 	return ret0
@@ -45,11 +46,13 @@ func (m *MockAuthorizeCodeStrategy) AuthorizeCodeSignature(arg0 string) string {
 
 // AuthorizeCodeSignature indicates an expected call of AuthorizeCodeSignature
 func (mr *MockAuthorizeCodeStrategyMockRecorder) AuthorizeCodeSignature(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthorizeCodeSignature", reflect.TypeOf((*MockAuthorizeCodeStrategy)(nil).AuthorizeCodeSignature), arg0)
 }
 
 // GenerateAuthorizeCode mocks base method
 func (m *MockAuthorizeCodeStrategy) GenerateAuthorizeCode(arg0 context.Context, arg1 fosite.Requester) (string, string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateAuthorizeCode", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
@@ -59,11 +62,13 @@ func (m *MockAuthorizeCodeStrategy) GenerateAuthorizeCode(arg0 context.Context, 
 
 // GenerateAuthorizeCode indicates an expected call of GenerateAuthorizeCode
 func (mr *MockAuthorizeCodeStrategyMockRecorder) GenerateAuthorizeCode(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateAuthorizeCode", reflect.TypeOf((*MockAuthorizeCodeStrategy)(nil).GenerateAuthorizeCode), arg0, arg1)
 }
 
 // ValidateAuthorizeCode mocks base method
 func (m *MockAuthorizeCodeStrategy) ValidateAuthorizeCode(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateAuthorizeCode", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -71,5 +76,6 @@ func (m *MockAuthorizeCodeStrategy) ValidateAuthorizeCode(arg0 context.Context, 
 
 // ValidateAuthorizeCode indicates an expected call of ValidateAuthorizeCode
 func (mr *MockAuthorizeCodeStrategyMockRecorder) ValidateAuthorizeCode(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateAuthorizeCode", reflect.TypeOf((*MockAuthorizeCodeStrategy)(nil).ValidateAuthorizeCode), arg0, arg1, arg2)
 }

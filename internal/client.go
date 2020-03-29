@@ -37,6 +37,7 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 
 // GetAudience mocks base method
 func (m *MockClient) GetAudience() fosite.Arguments {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAudience")
 	ret0, _ := ret[0].(fosite.Arguments)
 	return ret0
@@ -44,11 +45,13 @@ func (m *MockClient) GetAudience() fosite.Arguments {
 
 // GetAudience indicates an expected call of GetAudience
 func (mr *MockClientMockRecorder) GetAudience() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAudience", reflect.TypeOf((*MockClient)(nil).GetAudience))
 }
 
 // GetGrantTypes mocks base method
 func (m *MockClient) GetGrantTypes() fosite.Arguments {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGrantTypes")
 	ret0, _ := ret[0].(fosite.Arguments)
 	return ret0
@@ -56,11 +59,13 @@ func (m *MockClient) GetGrantTypes() fosite.Arguments {
 
 // GetGrantTypes indicates an expected call of GetGrantTypes
 func (mr *MockClientMockRecorder) GetGrantTypes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGrantTypes", reflect.TypeOf((*MockClient)(nil).GetGrantTypes))
 }
 
 // GetHashedSecret mocks base method
 func (m *MockClient) GetHashedSecret() []byte {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHashedSecret")
 	ret0, _ := ret[0].([]byte)
 	return ret0
@@ -68,11 +73,13 @@ func (m *MockClient) GetHashedSecret() []byte {
 
 // GetHashedSecret indicates an expected call of GetHashedSecret
 func (mr *MockClientMockRecorder) GetHashedSecret() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHashedSecret", reflect.TypeOf((*MockClient)(nil).GetHashedSecret))
 }
 
 // GetID mocks base method
 func (m *MockClient) GetID() string {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetID")
 	ret0, _ := ret[0].(string)
 	return ret0
@@ -80,11 +87,13 @@ func (m *MockClient) GetID() string {
 
 // GetID indicates an expected call of GetID
 func (mr *MockClientMockRecorder) GetID() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetID", reflect.TypeOf((*MockClient)(nil).GetID))
 }
 
 // GetRedirectURIs mocks base method
 func (m *MockClient) GetRedirectURIs() []string {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRedirectURIs")
 	ret0, _ := ret[0].([]string)
 	return ret0
@@ -92,11 +101,13 @@ func (m *MockClient) GetRedirectURIs() []string {
 
 // GetRedirectURIs indicates an expected call of GetRedirectURIs
 func (mr *MockClientMockRecorder) GetRedirectURIs() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRedirectURIs", reflect.TypeOf((*MockClient)(nil).GetRedirectURIs))
 }
 
 // GetResponseTypes mocks base method
 func (m *MockClient) GetResponseTypes() fosite.Arguments {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetResponseTypes")
 	ret0, _ := ret[0].(fosite.Arguments)
 	return ret0
@@ -104,11 +115,13 @@ func (m *MockClient) GetResponseTypes() fosite.Arguments {
 
 // GetResponseTypes indicates an expected call of GetResponseTypes
 func (mr *MockClientMockRecorder) GetResponseTypes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponseTypes", reflect.TypeOf((*MockClient)(nil).GetResponseTypes))
 }
 
 // GetScopes mocks base method
 func (m *MockClient) GetScopes() fosite.Arguments {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetScopes")
 	ret0, _ := ret[0].(fosite.Arguments)
 	return ret0
@@ -116,11 +129,13 @@ func (m *MockClient) GetScopes() fosite.Arguments {
 
 // GetScopes indicates an expected call of GetScopes
 func (mr *MockClientMockRecorder) GetScopes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopes", reflect.TypeOf((*MockClient)(nil).GetScopes))
 }
 
 // IsPublic mocks base method
 func (m *MockClient) IsPublic() bool {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsPublic")
 	ret0, _ := ret[0].(bool)
 	return ret0
@@ -128,5 +143,6 @@ func (m *MockClient) IsPublic() bool {
 
 // IsPublic indicates an expected call of IsPublic
 func (mr *MockClientMockRecorder) IsPublic() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPublic", reflect.TypeOf((*MockClient)(nil).IsPublic))
 }

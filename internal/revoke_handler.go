@@ -38,6 +38,7 @@ func (m *MockRevocationHandler) EXPECT() *MockRevocationHandlerMockRecorder {
 
 // RevokeToken mocks base method
 func (m *MockRevocationHandler) RevokeToken(arg0 context.Context, arg1 string, arg2 fosite.TokenType, arg3 fosite.Client) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RevokeToken", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -45,5 +46,6 @@ func (m *MockRevocationHandler) RevokeToken(arg0 context.Context, arg1 string, a
 
 // RevokeToken indicates an expected call of RevokeToken
 func (mr *MockRevocationHandlerMockRecorder) RevokeToken(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeToken", reflect.TypeOf((*MockRevocationHandler)(nil).RevokeToken), arg0, arg1, arg2, arg3)
 }

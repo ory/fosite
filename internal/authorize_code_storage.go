@@ -38,6 +38,7 @@ func (m *MockAuthorizeCodeStorage) EXPECT() *MockAuthorizeCodeStorageMockRecorde
 
 // CreateAuthorizeCodeSession mocks base method
 func (m *MockAuthorizeCodeStorage) CreateAuthorizeCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Requester) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAuthorizeCodeSession", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -45,11 +46,13 @@ func (m *MockAuthorizeCodeStorage) CreateAuthorizeCodeSession(arg0 context.Conte
 
 // CreateAuthorizeCodeSession indicates an expected call of CreateAuthorizeCodeSession
 func (mr *MockAuthorizeCodeStorageMockRecorder) CreateAuthorizeCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuthorizeCodeSession", reflect.TypeOf((*MockAuthorizeCodeStorage)(nil).CreateAuthorizeCodeSession), arg0, arg1, arg2)
 }
 
 // GetAuthorizeCodeSession mocks base method
 func (m *MockAuthorizeCodeStorage) GetAuthorizeCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Session) (fosite.Requester, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAuthorizeCodeSession", arg0, arg1, arg2)
 	ret0, _ := ret[0].(fosite.Requester)
 	ret1, _ := ret[1].(error)
@@ -58,11 +61,13 @@ func (m *MockAuthorizeCodeStorage) GetAuthorizeCodeSession(arg0 context.Context,
 
 // GetAuthorizeCodeSession indicates an expected call of GetAuthorizeCodeSession
 func (mr *MockAuthorizeCodeStorageMockRecorder) GetAuthorizeCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthorizeCodeSession", reflect.TypeOf((*MockAuthorizeCodeStorage)(nil).GetAuthorizeCodeSession), arg0, arg1, arg2)
 }
 
 // InvalidateAuthorizeCodeSession mocks base method
 func (m *MockAuthorizeCodeStorage) InvalidateAuthorizeCodeSession(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InvalidateAuthorizeCodeSession", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -70,5 +75,6 @@ func (m *MockAuthorizeCodeStorage) InvalidateAuthorizeCodeSession(arg0 context.C
 
 // InvalidateAuthorizeCodeSession indicates an expected call of InvalidateAuthorizeCodeSession
 func (mr *MockAuthorizeCodeStorageMockRecorder) InvalidateAuthorizeCodeSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvalidateAuthorizeCodeSession", reflect.TypeOf((*MockAuthorizeCodeStorage)(nil).InvalidateAuthorizeCodeSession), arg0, arg1)
 }

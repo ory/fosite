@@ -214,7 +214,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
@@ -226,7 +226,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "client_secret_jwt"},
 			form: url.Values{"client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
@@ -239,7 +239,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": []string{"token-url-2", "token-url"},
@@ -251,7 +251,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": []string{"token-url-1", "token-url-2"},
@@ -264,7 +264,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
@@ -276,7 +276,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateHSAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
@@ -289,7 +289,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateNoneAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
@@ -302,7 +302,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeysURI: ts.URL, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
@@ -314,7 +314,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "not-bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
@@ -327,7 +327,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "not-bar",
 				"jti": "12345",
 				"aud": "token-url",
@@ -340,7 +340,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"aud": "token-url",
 			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
@@ -352,7 +352,7 @@ func TestAuthenticateClient(t *testing.T) {
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
 				"sub": "bar",
-				"exp": time.Now().Add(time.Hour),
+				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "not-token-url",
@@ -384,4 +384,54 @@ func TestAuthenticateClient(t *testing.T) {
 			assert.EqualValues(t, tc.client, c)
 		})
 	}
+}
+
+func TestAuthenticateClientTwice(t *testing.T) {
+	const at = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+
+	key := internal.MustRSAKey()
+	client := &DefaultOpenIDConnectClient{
+		DefaultClient: &DefaultClient{
+			ID:     "bar",
+			Secret: []byte("secret"),
+		},
+		JSONWebKeys: &jose.JSONWebKeySet{
+			Keys: []jose.JSONWebKey{
+				{
+					KeyID: "kid-foo",
+					Use:   "sig",
+					Key:   &key.PublicKey,
+				},
+			},
+		},
+		TokenEndpointAuthMethod: "private_key_jwt",
+	}
+	store := storage.NewMemoryStore()
+	store.Clients[client.ID] = client
+
+	hasher := &BCrypt{WorkFactor: 6}
+	f := &Fosite{
+		JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
+		Store:               store,
+		Hasher:              hasher,
+		TokenURL:            "token-url",
+	}
+
+	formValues := url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+		"sub": "bar",
+		"exp": time.Now().Add(time.Hour).Unix(),
+		"iss": "bar",
+		"jti": "12345",
+		"aud": "token-url",
+	}, key, "kid-foo")}, "client_assertion_type": []string{at}}
+
+	c, err := f.AuthenticateClient(nil, new(http.Request), formValues)
+	require.NoError(t, err, "%#v", err)
+	assert.Equal(t, client, c)
+
+	// replay the request and expect it to fail
+	c, err = f.AuthenticateClient(nil, new(http.Request), formValues)
+	require.Error(t, err)
+	assert.EqualError(t, err, ErrJTIKnown.Error())
+	assert.Nil(t, c)
 }

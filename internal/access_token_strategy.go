@@ -38,6 +38,7 @@ func (m *MockAccessTokenStrategy) EXPECT() *MockAccessTokenStrategyMockRecorder 
 
 // AccessTokenSignature mocks base method
 func (m *MockAccessTokenStrategy) AccessTokenSignature(arg0 string) string {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AccessTokenSignature", arg0)
 	ret0, _ := ret[0].(string)
 	return ret0
@@ -45,11 +46,13 @@ func (m *MockAccessTokenStrategy) AccessTokenSignature(arg0 string) string {
 
 // AccessTokenSignature indicates an expected call of AccessTokenSignature
 func (mr *MockAccessTokenStrategyMockRecorder) AccessTokenSignature(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccessTokenSignature", reflect.TypeOf((*MockAccessTokenStrategy)(nil).AccessTokenSignature), arg0)
 }
 
 // GenerateAccessToken mocks base method
 func (m *MockAccessTokenStrategy) GenerateAccessToken(arg0 context.Context, arg1 fosite.Requester) (string, string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateAccessToken", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
@@ -59,11 +62,13 @@ func (m *MockAccessTokenStrategy) GenerateAccessToken(arg0 context.Context, arg1
 
 // GenerateAccessToken indicates an expected call of GenerateAccessToken
 func (mr *MockAccessTokenStrategyMockRecorder) GenerateAccessToken(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateAccessToken", reflect.TypeOf((*MockAccessTokenStrategy)(nil).GenerateAccessToken), arg0, arg1)
 }
 
 // ValidateAccessToken mocks base method
 func (m *MockAccessTokenStrategy) ValidateAccessToken(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateAccessToken", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -71,5 +76,6 @@ func (m *MockAccessTokenStrategy) ValidateAccessToken(arg0 context.Context, arg1
 
 // ValidateAccessToken indicates an expected call of ValidateAccessToken
 func (mr *MockAccessTokenStrategyMockRecorder) ValidateAccessToken(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateAccessToken", reflect.TypeOf((*MockAccessTokenStrategy)(nil).ValidateAccessToken), arg0, arg1, arg2)
 }
