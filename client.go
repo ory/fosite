@@ -38,6 +38,8 @@ type Client interface {
 	GetGrantTypes() Arguments
 
 	// GetResponseTypes returns the client's allowed response types.
+	// All allowed combinations of response types have to be listed, each combination having
+	// response types of the combination separated by a space.
 	GetResponseTypes() Arguments
 
 	// GetScopes returns the scopes this client is allowed to request.
