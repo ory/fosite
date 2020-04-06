@@ -138,7 +138,7 @@ func (c *DefaultClient) GetGrantTypes() Arguments {
 func (c *DefaultClient) GetResponseTypes() Arguments {
 	// https://openid.net/specs/openid-connect-registration-1_0.html#ClientMetadata
 	//
-	// <JSON array containing a list of the OAuth 2.0 response_type values that the Client is declaring
+	// JSON array containing a list of the OAuth 2.0 response_type values that the Client is declaring
 	// that it will restrict itself to using. If omitted, the default is that the Client will use
 	// only the code Response Type.
 	if len(c.ResponseTypes) == 0 {

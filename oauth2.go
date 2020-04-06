@@ -186,7 +186,7 @@ type Requester interface {
 	// GetRequestedAt returns the time the request was created.
 	GetRequestedAt() (requestedAt time.Time)
 
-	// GetClient returns the requests client.
+	// GetClient returns the request's client.
 	GetClient() (client Client)
 
 	// GetRequestedScopes returns the request's scopes.
@@ -198,7 +198,7 @@ type Requester interface {
 	// SetRequestedScopes sets the request's scopes.
 	SetRequestedScopes(scopes Arguments)
 
-	// SetRequestedAudience sets the requested audienc.
+	// SetRequestedAudience sets the requested audience.
 	SetRequestedAudience(audience Arguments)
 
 	// AppendRequestedScope appends a scope to the request.
@@ -207,7 +207,7 @@ type Requester interface {
 	// GetGrantScopes returns all granted scopes.
 	GetGrantedScopes() (grantedScopes Arguments)
 
-	// GetGrantedAudience returns all granted scopes.
+	// GetGrantedAudience returns all granted audiences.
 	GetGrantedAudience() (grantedAudience Arguments)
 
 	// GrantScope marks a request's scope as granted.
