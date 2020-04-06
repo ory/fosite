@@ -79,7 +79,7 @@ func NewExampleStore() *MemoryStore {
 				ID:            "my-client",
 				Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 				RedirectURIs:  []string{"http://localhost:3846/callback"},
-				ResponseTypes: []string{"id_token", "code", "token"},
+				ResponseTypes: []string{"id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"},
 				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 				Scopes:        []string{"fosite", "openid", "photos", "offline"},
 			},
@@ -87,7 +87,7 @@ func NewExampleStore() *MemoryStore {
 				ID:            "encoded:client",
 				Secret:        []byte(`$2a$10$A7M8b65dSSKGHF0H2sNkn.9Z0hT8U1Nv6OWPV3teUUaczXkVkxuDS`), // = "encoded&password"
 				RedirectURIs:  []string{"http://localhost:3846/callback"},
-				ResponseTypes: []string{"id_token", "code", "token"},
+				ResponseTypes: []string{"id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"},
 				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 				Scopes:        []string{"fosite", "openid", "photos", "offline"},
 			},
