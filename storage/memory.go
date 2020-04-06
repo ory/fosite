@@ -187,11 +187,6 @@ func (s *MemoryStore) InvalidateAuthorizeCodeSession(ctx context.Context, code s
 	return nil
 }
 
-func (s *MemoryStore) DeleteAuthorizeCodeSession(_ context.Context, code string) error {
-	delete(s.AuthorizeCodes, code)
-	return nil
-}
-
 func (s *MemoryStore) CreatePKCERequestSession(_ context.Context, code string, req fosite.Requester) error {
 	s.PKCES[code] = req
 	return nil
@@ -245,11 +240,6 @@ func (s *MemoryStore) GetRefreshTokenSession(_ context.Context, signature string
 
 func (s *MemoryStore) DeleteRefreshTokenSession(_ context.Context, signature string) error {
 	delete(s.RefreshTokens, signature)
-	return nil
-}
-
-func (s *MemoryStore) CreateImplicitAccessTokenSession(_ context.Context, code string, req fosite.Requester) error {
-	s.Implicit[code] = req
 	return nil
 }
 
