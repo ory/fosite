@@ -40,7 +40,6 @@ type MemoryStore struct {
 	AuthorizeCodes  map[string]StoreAuthorizeCode
 	IDSessions      map[string]fosite.Requester
 	AccessTokens    map[string]fosite.Requester
-	Implicit        map[string]fosite.Requester
 	RefreshTokens   map[string]fosite.Requester
 	PKCES           map[string]fosite.Requester
 	Users           map[string]MemoryUserRelation
@@ -56,7 +55,6 @@ func NewMemoryStore() *MemoryStore {
 		AuthorizeCodes:         make(map[string]StoreAuthorizeCode),
 		IDSessions:             make(map[string]fosite.Requester),
 		AccessTokens:           make(map[string]fosite.Requester),
-		Implicit:               make(map[string]fosite.Requester),
 		RefreshTokens:          make(map[string]fosite.Requester),
 		PKCES:                  make(map[string]fosite.Requester),
 		Users:                  make(map[string]MemoryUserRelation),
