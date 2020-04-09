@@ -219,7 +219,7 @@ type Requester interface {
 	// GetSession returns a pointer to the request's session or nil if none is set.
 	GetSession() (session Session)
 
-	// GetSession sets the request's session pointer.
+	// SetSession sets the request's session pointer.
 	SetSession(session Session)
 
 	// GetRequestForm returns the request's form input.
