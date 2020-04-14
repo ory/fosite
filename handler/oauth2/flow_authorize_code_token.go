@@ -90,7 +90,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,
 	if authorizeRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
 	}
 
 	// ensure that the "redirect_uri" parameter is present if the
@@ -99,7 +99,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// their values are identical.
 	forcedRedirectURI := authorizeRequest.GetRequestForm().Get("redirect_uri")
 	if forcedRedirectURI != "" && forcedRedirectURI != request.GetRequestForm().Get("redirect_uri") {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("The \"redirect_uri\" from this request does not match the one from the authorize request."))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The \"redirect_uri\" from this request does not match the one from the authorize request."))
 	}
 
 	// Checking of POST client_id skipped, because:

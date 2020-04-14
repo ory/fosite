@@ -320,7 +320,7 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 
 						require.NoError(t, store.CreateAuthorizeCodeSession(nil, signature, authreq))
 					},
-					expectErr: fosite.ErrInvalidRequest,
+					expectErr: fosite.ErrInvalidGrant,
 				},
 				{
 					areq: &fosite.AccessRequest{
@@ -346,7 +346,7 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 
 						require.NoError(t, store.CreateAuthorizeCodeSession(nil, signature, authreq))
 					},
-					expectErr: fosite.ErrInvalidRequest,
+					expectErr: fosite.ErrInvalidGrant,
 				},
 				{
 					areq: &fosite.AccessRequest{
