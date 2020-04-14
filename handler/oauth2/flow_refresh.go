@@ -65,7 +65,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(refresh)
 	originalRequest, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, request.GetSession())
 	if errors.Cause(err) == fosite.ErrNotFound {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The refresh token has not been found."))
 	} else if err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	} else if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, originalRequest, refresh); err != nil {
@@ -83,7 +83,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
 	if originalRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("The OAuth 2.0 Client ID from this request does not match the ID during the initial token issuance."))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the ID during the initial token issuance."))
 	}
 
 	request.SetSession(originalRequest.GetSession().Clone())

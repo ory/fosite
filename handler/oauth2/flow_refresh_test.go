@@ -73,7 +73,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 						areq.Form.Add("refresh_token", "some.refreshtokensig")
 					},
-					expectErr: fosite.ErrInvalidRequest,
+					expectErr: fosite.ErrInvalidGrant,
 				},
 				{
 					description: "should fail because token is valid but does not exist",
@@ -85,7 +85,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						require.NoError(t, err)
 						areq.Form.Add("refresh_token", token)
 					},
-					expectErr: fosite.ErrInvalidRequest,
+					expectErr: fosite.ErrInvalidGrant,
 				},
 				{
 					description: "should fail because client mismatches",
@@ -107,7 +107,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						})
 						require.NoError(t, err)
 					},
-					expectErr: fosite.ErrInvalidRequest,
+					expectErr: fosite.ErrInvalidGrant,
 				},
 				{
 					description: "should fail because offline scope has been granted but client no longer allowed to request it",
