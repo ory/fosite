@@ -110,7 +110,6 @@ func (c *Handler) validate(challenge, method string) error {
 				WithHint("Clients must use code_challenge_method=S256, plain is not allowed.").
 				WithDebug("The server is configured in a way that enforces PKCE S256 as challenge method for clients."))
 		}
-		break
 	default:
 		return errors.WithStack(fosite.ErrInvalidRequest.
 			WithHint("The code_challenge_method is not supported, use S256 instead."))

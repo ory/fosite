@@ -69,7 +69,6 @@ var fositeStore = &storage.MemoryStore{
 	},
 	AuthorizeCodes:         map[string]storage.StoreAuthorizeCode{},
 	PKCES:                  map[string]fosite.Requester{},
-	Implicit:               map[string]fosite.Requester{},
 	AccessTokens:           map[string]fosite.Requester{},
 	RefreshTokens:          map[string]fosite.Requester{},
 	IDSessions:             map[string]fosite.Requester{},
@@ -92,8 +91,9 @@ func newOAuth2Client(ts *httptest.Server) *goauth.Config {
 		RedirectURL:  ts.URL + "/callback",
 		Scopes:       []string{"fosite"},
 		Endpoint: goauth.Endpoint{
-			TokenURL: ts.URL + "/token",
-			AuthURL:  ts.URL + "/auth",
+			TokenURL:  ts.URL + "/token",
+			AuthURL:   ts.URL + "/auth",
+			AuthStyle: goauth.AuthStyleInHeader,
 		},
 	}
 }

@@ -3,21 +3,14 @@ language: go
 go_import_path: github.com/ory/fosite
 
 go:
-  - 1.11.x
-
-env:
-  - GO111MODULE=on
+  - "1.14"
 
 install:
-  - go get github.com/mattn/goveralls golang.org/x/tools/cmd/cover github.com/pierrre/gotestcover github.com/bradfitz/goimports
+  - go install github.com/mattn/goveralls
+  - go install github.com/ory/go-acc
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
 
 script:
-  - curl -L https://git.io/vp6lP | sh
-  - mv ./bin/* $GOPATH/bin
-  - gometalinter --disable-all --enable=gofmt --enable=vet --vendor ./...
-  - touch ./coverage.tmp
-  - |
-    echo 'mode: atomic' > coverage.txt
-  - |
-    go list ./... | grep -v /vendor | grep -v /internal | xargs -n1 -I{} sh -c 'go test -race -covermode=atomic -coverprofile=coverage.tmp -coverpkg $(go list ./... | grep -v /vendor | grep -v /internal | tr "\n" ",") {} && tail -n +2 coverage.tmp >> coverage.txt || exit 255' && rm coverage.tmp
+  - golangci-lint run
+  - go-acc -o coverage.txt ./... -- -failfast -timeout=20m
   - goveralls -coverprofile="coverage.txt"
