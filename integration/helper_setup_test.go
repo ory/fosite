@@ -91,8 +91,8 @@ func newOAuth2Client(ts *httptest.Server) *goauth.Config {
 		RedirectURL:  ts.URL + "/callback",
 		Scopes:       []string{"fosite"},
 		Endpoint: goauth.Endpoint{
-			TokenURL: ts.URL + "/token",
-			AuthURL:  ts.URL + "/auth",
+			TokenURL:  ts.URL + "/token",
+			AuthURL:   ts.URL + "/auth",
 			AuthStyle: goauth.AuthStyleInHeader,
 		},
 	}
