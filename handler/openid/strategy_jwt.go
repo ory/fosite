@@ -173,12 +173,10 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 			if claims.AuthTime.After(claims.RequestedAt) {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because prompt was set to \"none\" but auth_time happened after the authorization request was registered, indicating that the user was logged in during this request which is not allowed."))
 			}
-			break
 		case "login":
 			if claims.AuthTime.Before(claims.RequestedAt) {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because prompt was set to \"login\" but auth_time happened before the authorization request was registered, indicating that the user was not re-authenticated which is forbidden."))
 			}
-			break
 		}
 
 		// If acr_values was requested but no acr value was provided in the ID token, fall back to level 0 which means least

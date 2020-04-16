@@ -27,6 +27,7 @@ import (
 )
 
 func MustRSAKey() *rsa.PrivateKey {
+	// #nosec
 	key, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
 		panic(err)
