@@ -108,7 +108,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
-								GrantTypes: fosite.Arguments{"authorization_code"},
+								GrantTypes: fosite.Arguments{"authorization_code", "refresh_token"},
 							},
 							GrantedScope: fosite.Arguments{"foo", "offline"},
 							Session:      &fosite.DefaultSession{},
@@ -137,7 +137,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
-								GrantTypes: fosite.Arguments{"authorization_code"},
+								GrantTypes: fosite.Arguments{"authorization_code", "refresh_token"},
 							},
 							GrantedScope: fosite.Arguments{"foo"},
 							Session:      &fosite.DefaultSession{},
@@ -159,6 +159,36 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						assert.NotEmpty(t, aresp.GetExtra("refresh_token"))
 						assert.NotEmpty(t, aresp.GetExtra("expires_in"))
 						assert.Equal(t, "foo", aresp.GetExtra("scope"))
+					},
+				},
+				{
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"authorization_code"},
+						Request: fosite.Request{
+							Form: url.Values{},
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"authorization_code"},
+							},
+							GrantedScope: fosite.Arguments{},
+							Session:      &fosite.DefaultSession{},
+							RequestedAt:  time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest) {
+						h.RefreshTokenScopes = []string{}
+						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
+						require.NoError(t, err)
+						areq.Form.Add("code", code)
+
+						require.NoError(t, store.CreateAuthorizeCodeSession(nil, sig, areq))
+					},
+					description: "should pass with no refresh token",
+					check: func(t *testing.T, aresp *fosite.AccessResponse) {
+						assert.NotEmpty(t, aresp.AccessToken)
+						assert.Equal(t, "bearer", aresp.TokenType)
+						assert.Empty(t, aresp.GetExtra("refresh_token"))
+						assert.NotEmpty(t, aresp.GetExtra("expires_in"))
+						assert.Empty(t, aresp.GetExtra("scope"))
 					},
 				},
 				{
@@ -434,7 +464,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		GrantTypes: fosite.Arguments{"authorization_code"},
 		Request: fosite.Request{
 			Client: &fosite.DefaultClient{
-				GrantTypes: fosite.Arguments{"authorization_code"},
+				GrantTypes: fosite.Arguments{"authorization_code", "refresh_token"},
 			},
 			GrantedScope: fosite.Arguments{"offline"},
 			Session:      &fosite.DefaultSession{},
