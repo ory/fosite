@@ -37,6 +37,9 @@ type Handler struct {
 	// If set to true, clients must use PKCE.
 	Force bool
 
+	// If set to true, public clients must use PKCE.
+	ForceForPublicClients bool
+
 	// Whether or not to allow the plain challenge method (S256 should be used whenever possible, plain is really discouraged).
 	EnablePlainChallengeMethod bool
 
@@ -54,8 +57,9 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 
 	challenge := ar.GetRequestForm().Get("code_challenge")
 	method := ar.GetRequestForm().Get("code_challenge_method")
+	client := ar.GetClient()
 
-	if err := c.validate(challenge, method); err != nil {
+	if err := c.validate(challenge, method, client); err != nil {
 		return err
 	}
 
@@ -75,21 +79,24 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 	return nil
 }
 
-func (c *Handler) validate(challenge, method string) error {
-	if c.Force && challenge == "" {
+func (c *Handler) validate(challenge, method string, client fosite.Client) error {
+	if challenge == "" {
 		// If the server requires Proof Key for Code Exchange (PKCE) by OAuth
 		// clients and the client does not send the "code_challenge" in
 		// the request, the authorization endpoint MUST return the authorization
 		// error response with the "error" value set to "invalid_request".  The
 		// "error_description" or the response of "error_uri" SHOULD explain the
 		// nature of error, e.g., code challenge required.
-
-		return errors.WithStack(fosite.ErrInvalidRequest.
-			WithHint("Clients must include a code_challenge when performing the authorize code flow, but it is missing.").
-			WithDebug("The server is configured in a way that enforces PKCE for clients."))
-	}
-
-	if !c.Force && challenge == "" {
+		if c.Force {
+			return errors.WithStack(fosite.ErrInvalidRequest.
+				WithHint("Clients must include a code_challenge when performing the authorize code flow, but it is missing.").
+				WithDebug("The server is configured in a way that enforces PKCE for clients."))
+		}
+		if c.ForceForPublicClients && client.IsPublic() {
+			return errors.WithStack(fosite.ErrInvalidRequest.
+				WithHint("This client must include a code_challenge when performing the authorize code flow, but it is missing.").
+				WithDebug("The server is configured in a way that enforces PKCE for this client."))
+		}
 		return nil
 	}
 
@@ -145,7 +152,8 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 	challenge := authorizeRequest.GetRequestForm().Get("code_challenge")
 	method := authorizeRequest.GetRequestForm().Get("code_challenge_method")
-	if err := c.validate(challenge, method); err != nil {
+	client := authorizeRequest.GetClient()
+	if err := c.validate(challenge, method, client); err != nil {
 		return err
 	}
 
