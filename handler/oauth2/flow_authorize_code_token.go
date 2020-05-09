@@ -118,6 +118,18 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	return nil
 }
 
+func canIssueRefreshToken(c *AuthorizeExplicitGrantHandler, request fosite.Requester) bool {
+	// Require one of the refresh token scopes, if set.
+	if len(c.RefreshTokenScopes) > 0 && !request.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...) {
+		return false
+	}
+	// Do not issue a refresh token to clients that cannot use the refresh token grant type.
+	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
+		return false
+	}
+	return true
+}
+
 func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code", as this is the explicit grant handler.
@@ -149,7 +161,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	var refresh, refreshSignature string
-	if len(c.RefreshTokenScopes) == 0 || authorizeRequest.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...) {
+	if canIssueRefreshToken(c, authorizeRequest) {
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
 			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
