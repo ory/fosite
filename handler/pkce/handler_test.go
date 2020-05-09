@@ -282,10 +282,12 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 	for k, tc := range []struct {
 		d           string
 		force       bool
+		forcePublic bool
 		enablePlain bool
 		challenge   string
 		method      string
 		expectErr   bool
+		client      *fosite.DefaultClient
 	}{
 		{
 			d: "should pass because pkce is not enforced",
@@ -299,6 +301,13 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 			d:           "should fail because force is enabled and no challenge was given",
 			force:       true,
 			enablePlain: true,
+			expectErr:   true,
+			method:      "S256",
+		},
+		{
+			d:           "should fail because forcePublic is enabled, the client is public, and no challenge was given",
+			forcePublic: true,
+			client:      &fosite.DefaultClient{Public: true},
 			expectErr:   true,
 			method:      "S256",
 		},
@@ -328,17 +337,25 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 			method:    "S256",
 			challenge: "challenge",
 		},
+		{
+			d:           "should pass because forcePublic is enabled with challenge given and method is S256",
+			forcePublic: true,
+			client:      &fosite.DefaultClient{Public: true},
+			method:      "S256",
+			challenge:   "challenge",
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			h := &Handler{
 				Force:                      tc.force,
+				ForceForPublicClients:      tc.forcePublic,
 				EnablePlainChallengeMethod: tc.enablePlain,
 			}
 
 			if tc.expectErr {
-				assert.Error(t, h.validate(tc.challenge, tc.method))
+				assert.Error(t, h.validate(tc.challenge, tc.method, tc.client))
 			} else {
-				assert.NoError(t, h.validate(tc.challenge, tc.method))
+				assert.NoError(t, h.validate(tc.challenge, tc.method, tc.client))
 			}
 		})
 	}
