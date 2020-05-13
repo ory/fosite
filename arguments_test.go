@@ -151,6 +151,21 @@ type matchesTestCase struct {
 
 var matchesTests = []matchesTestCase{
 	{
+		args:   Arguments{},
+		is:     []string{},
+		expect: true,
+	},
+	{
+		args:   Arguments{"foo", "bar"},
+		is:     []string{"foo", "bar"},
+		expect: true,
+	},
+	{
+		args:   Arguments{"Foo", "Bar"},
+		is:     []string{"Foo", "Bar"},
+		expect: true,
+	},
+	{
 		args:   Arguments{"foo", "foo"},
 		is:     []string{"foo"},
 		expect: false,
@@ -189,10 +204,23 @@ var matchesTests = []matchesTestCase{
 
 func TestArgumentsMatchesExact(t *testing.T) {
 	testCases := append(matchesTests, []matchesTestCase{
+		// should fail if items are out of order
 		{
 			args:   Arguments{"foo", "bar"},
 			is:     []string{"bar", "foo"},
 			expect: false,
+		},
+		// should fail due to case-sensitivity.
+		{
+			args:   Arguments{"fOo", "bar"},
+			is:     []string{"foo", "BaR"},
+			expect: false,
+		},
+		// duplicate items should return allowed.
+		{
+			args:   Arguments{"foo", "foo"},
+			is:     []string{"foo", "foo"},
+			expect: true,
 		},
 	}...)
 	for k, c := range testCases {
@@ -203,15 +231,28 @@ func TestArgumentsMatchesExact(t *testing.T) {
 
 func TestArgumentsMatches(t *testing.T) {
 	testCases := append(matchesTests, []matchesTestCase{
-		{
-			args:   Arguments{"foo", "bar"},
-			is:     []string{"foo", "bar"},
-			expect: true,
-		},
+		// should match if items are out of order.
 		{
 			args:   Arguments{"foo", "bar"},
 			is:     []string{"bar", "foo"},
 			expect: true,
+		},
+		// should allow case-insensitive matching.
+		{
+			args:   Arguments{"fOo", "bar"},
+			is:     []string{"foo", "BaR"},
+			expect: true,
+		},
+		// should return non-matching if duplicate items exist.
+		{
+			args:   Arguments{"foo", "bar"},
+			is:     []string{"FOO", "FOO", "bar"},
+			expect: false,
+		},
+		{
+			args:   Arguments{"foo", "foo"},
+			is:     []string{"foo", "foo"},
+			expect: false,
 		},
 	}...)
 	for k, c := range testCases {
