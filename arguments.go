@@ -46,7 +46,7 @@ func (r Arguments) Matches(items ...string) bool {
 	return len(found) == len(r)
 }
 
-// HasOneOf checks, in a case-insensitive manner, that all of the items
+// Has checks, in a case-insensitive manner, that all of the items
 // provided exists in arguments.
 func (r Arguments) Has(items ...string) bool {
 	for _, item := range items {
