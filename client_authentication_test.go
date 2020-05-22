@@ -80,8 +80,9 @@ func TestAuthenticateClient(t *testing.T) {
 	barSecret, err := hasher.Hash(context.TODO(), []byte("bar"))
 	require.NoError(t, err)
 
-	// a secret containing literal characters that would be affected by double-URL-decoding.
-	percentSecret, err := hasher.Hash(context.TODO(), []byte("%66%6F%6F"))
+	// a secret containing various special characters
+	complexSecretRaw := "foo %66%6F%6F@$<§!✓"
+	complexSecret, err := hasher.Hash(context.TODO(), []byte(complexSecretRaw))
 	require.NoError(t, err)
 
 	key := internal.MustRSAKey()
@@ -132,9 +133,9 @@ func TestAuthenticateClient(t *testing.T) {
 			r:      new(http.Request),
 		},
 		{
-			d:      "should pass with client ID and secret containing literal % characters",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo%20bar", Secret: percentSecret}, TokenEndpointAuthMethod: "client_secret_post"},
-			form:   url.Values{"client_id": []string{"foo%20bar"}, "client_secret": []string{"%66%6F%6F"}},
+			d:      "should pass with client credentials containing special characters",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "!foo%20bar", Secret: complexSecret}, TokenEndpointAuthMethod: "client_secret_post"},
+			form:   url.Values{"client_id": []string{"!foo%20bar"}, "client_secret": []string{complexSecretRaw}},
 			r:      new(http.Request),
 		},
 		{
