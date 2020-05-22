@@ -139,6 +139,12 @@ func TestAuthenticateClient(t *testing.T) {
 			r:      new(http.Request),
 		},
 		{
+			d:      "should pass with client credentials containing special characters via basic auth",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo — bar! +<&>*", Secret: complexSecret}, TokenEndpointAuthMethod: "client_secret_basic"},
+			form:   url.Values{},
+			r:      &http.Request{Header: http.Header{"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte(url.QueryEscape("foo — bar! +<&>*")+":"+url.QueryEscape(complexSecretRaw)))}}},
+		},
+		{
 			d:         "should fail because auth method is not none",
 			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Public: true}, TokenEndpointAuthMethod: "client_secret_basic"},
 			form:      url.Values{"client_id": []string{"foo"}},
