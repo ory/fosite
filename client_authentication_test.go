@@ -66,6 +66,16 @@ func mustGenerateNoneAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.Priv
 	return tokenString
 }
 
+// returns an http basic authorization header, encoded using application/x-www-form-urlencoded
+func clientBasicAuthHeader(clientID, clientSecret string) http.Header {
+	creds := url.QueryEscape(clientID) + ":" + url.QueryEscape(clientSecret)
+	return http.Header{
+		"Authorization": {
+			"Basic " + base64.StdEncoding.EncodeToString([]byte(creds)),
+		},
+	}
+}
+
 func TestAuthenticateClient(t *testing.T) {
 	const at = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
@@ -78,6 +88,11 @@ func TestAuthenticateClient(t *testing.T) {
 	}
 
 	barSecret, err := hasher.Hash(context.TODO(), []byte("bar"))
+	require.NoError(t, err)
+
+	// a secret containing various special characters
+	complexSecretRaw := "foo %66%6F%6F@$<§!✓"
+	complexSecret, err := hasher.Hash(context.TODO(), []byte(complexSecretRaw))
 	require.NoError(t, err)
 
 	key := internal.MustRSAKey()
@@ -128,6 +143,18 @@ func TestAuthenticateClient(t *testing.T) {
 			r:      new(http.Request),
 		},
 		{
+			d:      "should pass with client credentials containing special characters",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "!foo%20bar", Secret: complexSecret}, TokenEndpointAuthMethod: "client_secret_post"},
+			form:   url.Values{"client_id": []string{"!foo%20bar"}, "client_secret": []string{complexSecretRaw}},
+			r:      new(http.Request),
+		},
+		{
+			d:      "should pass with client credentials containing special characters via basic auth",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo — bar! +<&>*", Secret: complexSecret}, TokenEndpointAuthMethod: "client_secret_basic"},
+			form:   url.Values{},
+			r:      &http.Request{Header: clientBasicAuthHeader("foo — bar! +<&>*", complexSecretRaw)},
+		},
+		{
 			d:         "should fail because auth method is not none",
 			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Public: true}, TokenEndpointAuthMethod: "client_secret_basic"},
 			form:      url.Values{"client_id": []string{"foo"}},
@@ -158,20 +185,20 @@ func TestAuthenticateClient(t *testing.T) {
 			d:      "should pass because client is confidential and id and secret match in header",
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_basic"},
 			form:   url.Values{},
-			r:      &http.Request{Header: http.Header{"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte("foo:bar"))}}},
+			r:      &http.Request{Header: clientBasicAuthHeader("foo", "bar")},
 		},
 		{
 			d:         "should fail because auth method is not client_secret_basic",
 			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_post"},
 			form:      url.Values{},
-			r:         &http.Request{Header: http.Header{"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte("foo:bar"))}}},
+			r:         &http.Request{Header: clientBasicAuthHeader("foo", "bar")},
 			expectErr: ErrInvalidClient,
 		},
 		{
 			d:         "should fail because client is confidential and secret does not match in header",
 			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_basic"},
 			form:      url.Values{},
-			r:         &http.Request{Header: http.Header{"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte("foo:baz"))}}},
+			r:         &http.Request{Header: clientBasicAuthHeader("foo", "baz")},
 			expectErr: ErrInvalidClient,
 		},
 		{
