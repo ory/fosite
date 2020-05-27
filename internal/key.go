@@ -22,6 +22,8 @@
 package internal
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 )
@@ -29,6 +31,14 @@ import (
 func MustRSAKey() *rsa.PrivateKey {
 	// #nosec
 	key, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		panic(err)
+	}
+	return key
+}
+
+func MustECDSAKey() *ecdsa.PrivateKey {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		panic(err)
 	}

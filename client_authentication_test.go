@@ -23,6 +23,7 @@ package fosite_test
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
@@ -44,8 +45,16 @@ import (
 	"github.com/ory/fosite/storage"
 )
 
-func mustGenerateAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
+func mustGenerateRSAAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token.Header["kid"] = kid
+	tokenString, err := token.SignedString(key)
+	require.NoError(t, err)
+	return tokenString
+}
+
+func mustGenerateECDSAAssertion(t *testing.T, claims jwt.MapClaims, key *ecdsa.PrivateKey, kid string) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
 	token.Header["kid"] = kid
 	tokenString, err := token.SignedString(key)
 	require.NoError(t, err)
@@ -95,20 +104,31 @@ func TestAuthenticateClient(t *testing.T) {
 	complexSecret, err := hasher.Hash(context.TODO(), []byte(complexSecretRaw))
 	require.NoError(t, err)
 
-	key := internal.MustRSAKey()
-	jwks := &jose.JSONWebKeySet{
+	rsaKey := internal.MustRSAKey()
+	rsaJwks := &jose.JSONWebKeySet{
 		Keys: []jose.JSONWebKey{
 			{
 				KeyID: "kid-foo",
 				Use:   "sig",
-				Key:   &key.PublicKey,
+				Key:   &rsaKey.PublicKey,
+			},
+		},
+	}
+
+	ecdsaKey := internal.MustECDSAKey()
+	ecdsaJwks := &jose.JSONWebKeySet{
+		Keys: []jose.JSONWebKey{
+			{
+				KeyID: "kid-foo",
+				Use:   "sig",
+				Key:   &ecdsaKey.PublicKey,
 			},
 		},
 	}
 
 	var h http.HandlerFunc
 	h = func(w http.ResponseWriter, r *http.Request) {
-		require.NoError(t, json.NewEncoder(w).Encode(jwks))
+		require.NoError(t, json.NewEncoder(w).Encode(rsaJwks))
 	}
 	ts := httptest.NewServer(h)
 	defer ts.Close()
@@ -237,153 +257,165 @@ func TestAuthenticateClient(t *testing.T) {
 			expectErr: ErrInvalidRequest,
 		},
 		{
-			d:      "should pass with proper assertion when JWKs are set within the client and client_id is not set in the request",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
-			form: url.Values{"client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			d:      "should pass with proper RSA assertion when JWKs are set within the client and client_id is not set in the request",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
+			r: new(http.Request),
+		},
+		{
+			d:      "should pass with proper ECDSA assertion when JWKs are set within the client and client_id is not set in the request",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: ecdsaJwks, TokenEndpointAuthMethod: "private_key_jwt", TokenEndpointAuthSigningAlgorithm: "ES256"},
+			form: url.Values{"client_assertion": {mustGenerateECDSAAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"iss": "bar",
+				"jti": "12345",
+				"aud": "token-url",
+			}, ecdsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r: new(http.Request),
 		},
 		{
 			d:      "should fail because token auth method is not private_key_jwt",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "client_secret_jwt"},
-			form: url.Values{"client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "client_secret_jwt"},
+			form: url.Values{"client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
 		{
 			d:      "should pass with proper assertion when JWKs are set within the client and client_id is not set in the request (aud is array)",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
-			form: url.Values{"client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": []string{"token-url-2", "token-url"},
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r: new(http.Request),
 		},
 		{
 			d:      "should fail because audience (array) does not match token url",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
-			form: url.Values{"client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": []string{"token-url-1", "token-url-2"},
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
 		{
 			d:      "should pass with proper assertion when JWKs are set within the client",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
-			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r: new(http.Request),
 		},
 		{
 			d:      "should fail because JWT algorithm is HS256",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateHSAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
 		{
 			d:      "should fail because JWT algorithm is none",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateNoneAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
 		{
 			d:      "should pass with proper assertion when JWKs URI is set",
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeysURI: ts.URL, TokenEndpointAuthMethod: "private_key_jwt"},
-			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r: new(http.Request),
 		},
 		{
 			d:      "should fail because client_assertion sub does not match client",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
-			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "not-bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
 		{
 			d:      "should fail because client_assertion iss does not match client",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
-			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "not-bar",
 				"jti": "12345",
 				"aud": "token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
 		{
 			d:      "should fail because client_assertion jti is not set",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
-			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"aud": "token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
 		{
 			d:      "should fail because client_assertion aud is not set",
-			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: jwks, TokenEndpointAuthMethod: "private_key_jwt"},
-			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
 				"jti": "12345",
 				"aud": "not-token-url",
-			}, key, "kid-foo")}, "client_assertion_type": []string{at}},
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
@@ -444,7 +476,7 @@ func TestAuthenticateClientTwice(t *testing.T) {
 		TokenURL:            "token-url",
 	}
 
-	formValues := url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateAssertion(t, jwt.MapClaims{
+	formValues := url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
 		"sub": "bar",
 		"exp": time.Now().Add(time.Hour).Unix(),
 		"iss": "bar",
