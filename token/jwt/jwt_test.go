@@ -23,6 +23,7 @@ package jwt
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -40,13 +41,30 @@ var header = &Headers{
 }
 
 func TestHash(t *testing.T) {
-	j := RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
+	for k, tc := range []struct {
+		d        string
+		strategy JWTStrategy
+	}{
+		{
+			d: "RS256JWTStrategy",
+			strategy: &RS256JWTStrategy{
+				PrivateKey: internal.MustRSAKey(),
+			},
+		},
+		{
+			d: "ES256JWTStrategy",
+			strategy: &ES256JWTStrategy{
+				PrivateKey: internal.MustECDSAKey(),
+			},
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d/strategy=%s", k, tc.d), func(t *testing.T) {
+			in := []byte("foo")
+			out, err := tc.strategy.Hash(context.TODO(), in)
+			assert.NoError(t, err)
+			assert.NotEqual(t, in, out)
+		})
 	}
-	in := []byte("foo")
-	out, err := j.Hash(context.TODO(), in)
-	assert.NoError(t, err)
-	assert.NotEqual(t, in, out)
 }
 
 func TestAssign(t *testing.T) {
@@ -77,72 +95,110 @@ func TestAssign(t *testing.T) {
 }
 
 func TestGenerateJWT(t *testing.T) {
-	claims := &JWTClaims{
-		ExpiresAt: time.Now().UTC().Add(time.Hour),
+	for k, tc := range []struct {
+		d        string
+		strategy JWTStrategy
+		resetKey func(strategy JWTStrategy)
+	}{
+		{
+			d: "RS256JWTStrategy",
+			strategy: &RS256JWTStrategy{
+				PrivateKey: internal.MustRSAKey(),
+			},
+			resetKey: func(strategy JWTStrategy) {
+				strategy.(*RS256JWTStrategy).PrivateKey = internal.MustRSAKey()
+			},
+		},
+		{
+			d: "ES256JWTStrategy",
+			strategy: &ES256JWTStrategy{
+				PrivateKey: internal.MustECDSAKey(),
+			},
+			resetKey: func(strategy JWTStrategy) {
+				strategy.(*ES256JWTStrategy).PrivateKey = internal.MustECDSAKey()
+			},
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d/strategy=%s", k, tc.d), func(t *testing.T) {
+			claims := &JWTClaims{
+				ExpiresAt: time.Now().UTC().Add(time.Hour),
+			}
+
+			token, sig, err := tc.strategy.Generate(context.TODO(), claims.ToMapClaims(), header)
+			require.NoError(t, err)
+			require.NotNil(t, token)
+
+			sig, err = tc.strategy.Validate(context.TODO(), token)
+			require.NoError(t, err)
+
+			sig, err = tc.strategy.Validate(context.TODO(), token+"."+"0123456789")
+			require.Error(t, err)
+
+			partToken := strings.Split(token, ".")[2]
+
+			sig, err = tc.strategy.Validate(context.TODO(), partToken)
+			require.Error(t, err)
+
+			// Reset private key
+			tc.resetKey(tc.strategy)
+
+			// Lets validate the exp claim
+			claims = &JWTClaims{
+				ExpiresAt: time.Now().UTC().Add(-time.Hour),
+			}
+			token, sig, err = tc.strategy.Generate(context.TODO(), claims.ToMapClaims(), header)
+			require.NoError(t, err)
+			require.NotNil(t, token)
+			//t.Logf("%s.%s", token, sig)
+
+			sig, err = tc.strategy.Validate(context.TODO(), token)
+			require.Error(t, err)
+
+			// Lets validate the nbf claim
+			claims = &JWTClaims{
+				NotBefore: time.Now().UTC().Add(time.Hour),
+			}
+			token, sig, err = tc.strategy.Generate(context.TODO(), claims.ToMapClaims(), header)
+			require.NoError(t, err)
+			require.NotNil(t, token)
+			//t.Logf("%s.%s", token, sig)
+			sig, err = tc.strategy.Validate(context.TODO(), token)
+			require.Error(t, err)
+			require.Empty(t, sig, "%s", err)
+		})
 	}
-
-	j := RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
-	}
-
-	token, sig, err := j.Generate(context.TODO(), claims.ToMapClaims(), header)
-	require.NoError(t, err)
-	require.NotNil(t, token)
-
-	sig, err = j.Validate(context.TODO(), token)
-	require.NoError(t, err)
-
-	sig, err = j.Validate(context.TODO(), token+"."+"0123456789")
-	require.Error(t, err)
-
-	partToken := strings.Split(token, ".")[2]
-
-	sig, err = j.Validate(context.TODO(), partToken)
-	require.Error(t, err)
-
-	// Reset private key
-	j.PrivateKey = internal.MustRSAKey()
-
-	// Lets validate the exp claim
-	claims = &JWTClaims{
-		ExpiresAt: time.Now().UTC().Add(-time.Hour),
-	}
-	token, sig, err = j.Generate(context.TODO(), claims.ToMapClaims(), header)
-	require.NoError(t, err)
-	require.NotNil(t, token)
-	//t.Logf("%s.%s", token, sig)
-
-	sig, err = j.Validate(context.TODO(), token)
-	require.Error(t, err)
-
-	// Lets validate the nbf claim
-	claims = &JWTClaims{
-		NotBefore: time.Now().UTC().Add(time.Hour),
-	}
-	token, sig, err = j.Generate(context.TODO(), claims.ToMapClaims(), header)
-	require.NoError(t, err)
-	require.NotNil(t, token)
-	//t.Logf("%s.%s", token, sig)
-	sig, err = j.Validate(context.TODO(), token)
-	require.Error(t, err)
-	require.Empty(t, sig, "%s", err)
 }
 
 func TestValidateSignatureRejectsJWT(t *testing.T) {
-	var err error
-	j := RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
-	}
-
-	for k, c := range []string{
-		"",
-		" ",
-		"foo.bar",
-		"foo.",
-		".foo",
+	for k, tc := range []struct {
+		d        string
+		strategy JWTStrategy
+	}{
+		{
+			d: "RS256JWTStrategy",
+			strategy: &RS256JWTStrategy{
+				PrivateKey: internal.MustRSAKey(),
+			},
+		},
+		{
+			d: "ES256JWTStrategy",
+			strategy: &ES256JWTStrategy{
+				PrivateKey: internal.MustECDSAKey(),
+			},
+		},
 	} {
-		_, err = j.Validate(context.TODO(), c)
-		assert.Error(t, err)
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d/strategy=%s", k, tc.d), func(t *testing.T) {
+			for k, c := range []string{
+				"",
+				" ",
+				"foo.bar",
+				"foo.",
+				".foo",
+			} {
+				_, err := tc.strategy.Validate(context.TODO(), c)
+				assert.Error(t, err)
+				t.Logf("Passed test case %d", k)
+			}
+		})
 	}
 }
