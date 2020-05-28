@@ -94,11 +94,12 @@ type DefaultClient struct {
 
 type DefaultOpenIDConnectClient struct {
 	*DefaultClient
-	JSONWebKeysURI                string              `json:"jwks_uri"`
-	JSONWebKeys                   *jose.JSONWebKeySet `json:"jwks"`
-	TokenEndpointAuthMethod       string              `json:"token_endpoint_auth_method"`
-	RequestURIs                   []string            `json:"request_uris"`
-	RequestObjectSigningAlgorithm string              `json:"request_object_signing_alg"`
+	JSONWebKeysURI                    string              `json:"jwks_uri"`
+	JSONWebKeys                       *jose.JSONWebKeySet `json:"jwks"`
+	TokenEndpointAuthMethod           string              `json:"token_endpoint_auth_method"`
+	RequestURIs                       []string            `json:"request_uris"`
+	RequestObjectSigningAlgorithm     string              `json:"request_object_signing_alg"`
+	TokenEndpointAuthSigningAlgorithm string              `json:"token_endpoint_auth_signing_alg"`
 }
 
 func (c *DefaultClient) GetID() string {
@@ -158,7 +159,11 @@ func (c *DefaultOpenIDConnectClient) GetJSONWebKeys() *jose.JSONWebKeySet {
 }
 
 func (c *DefaultOpenIDConnectClient) GetTokenEndpointAuthSigningAlgorithm() string {
-	return "RS256"
+	if c.TokenEndpointAuthSigningAlgorithm == "" {
+		return "RS256"
+	} else {
+		return c.TokenEndpointAuthSigningAlgorithm
+	}
 }
 
 func (c *DefaultOpenIDConnectClient) GetRequestObjectSigningAlgorithm() string {

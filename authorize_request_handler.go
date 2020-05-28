@@ -103,21 +103,21 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 		switch t.Method.(type) {
 		case *jwt.SigningMethodRSA:
-			key, err := f.findClientPublicJWK(oidcClient, t)
+			key, err := f.findClientPublicJWK(oidcClient, t, true)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve signing key from OAuth 2.0 Client because %s.", err))
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve RSA signing key from OAuth 2.0 Client because %s.", err))
 			}
 			return key, nil
 		case *jwt.SigningMethodECDSA:
-			key, err := f.findClientPublicJWK(oidcClient, t)
+			key, err := f.findClientPublicJWK(oidcClient, t, false)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve signing key from OAuth 2.0 Client because %s.", err))
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve ECDSA signing key from OAuth 2.0 Client because %s.", err))
 			}
 			return key, nil
 		case *jwt.SigningMethodRSAPSS:
-			key, err := f.findClientPublicJWK(oidcClient, t)
+			key, err := f.findClientPublicJWK(oidcClient, t, true)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve signing key from OAuth 2.0 Client because %s.", err))
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve RSA signing key from OAuth 2.0 Client because %s.", err))
 			}
 			return key, nil
 		default:

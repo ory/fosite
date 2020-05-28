@@ -23,6 +23,7 @@ package fosite
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
@@ -37,9 +38,9 @@ import (
 
 const clientAssertionJWTBearerType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
-func (f *Fosite) findClientPublicJWK(oidcClient OpenIDConnectClient, t *jwt.Token) (interface{}, error) {
+func (f *Fosite) findClientPublicJWK(oidcClient OpenIDConnectClient, t *jwt.Token, expectsRSAKey bool) (interface{}, error) {
 	if set := oidcClient.GetJSONWebKeys(); set != nil {
-		return findPublicKey(t, set)
+		return findPublicKey(t, set, expectsRSAKey)
 	}
 
 	if location := oidcClient.GetJSONWebKeysURI(); len(location) > 0 {
@@ -48,7 +49,7 @@ func (f *Fosite) findClientPublicJWK(oidcClient OpenIDConnectClient, t *jwt.Toke
 			return nil, err
 		}
 
-		if key, err := findPublicKey(t, keys); err == nil {
+		if key, err := findPublicKey(t, keys, expectsRSAKey); err == nil {
 			return key, nil
 		}
 
@@ -57,7 +58,7 @@ func (f *Fosite) findClientPublicJWK(oidcClient OpenIDConnectClient, t *jwt.Toke
 			return nil, err
 		}
 
-		return findPublicKey(t, keys)
+		return findPublicKey(t, keys, expectsRSAKey)
 	}
 
 	return nil, errors.WithStack(ErrInvalidClient.WithHint("The OAuth 2.0 Client has no JSON Web Keys set registered, but they are needed to complete the request."))
@@ -115,11 +116,11 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 			}
 
 			if _, ok := t.Method.(*jwt.SigningMethodRSA); ok {
-				return f.findClientPublicJWK(oidcClient, t)
+				return f.findClientPublicJWK(oidcClient, t, true)
 			} else if _, ok := t.Method.(*jwt.SigningMethodECDSA); ok {
-				return f.findClientPublicJWK(oidcClient, t)
+				return f.findClientPublicJWK(oidcClient, t, false)
 			} else if _, ok := t.Method.(*jwt.SigningMethodRSAPSS); ok {
-				return f.findClientPublicJWK(oidcClient, t)
+				return f.findClientPublicJWK(oidcClient, t, true)
 			} else if _, ok := t.Method.(*jwt.SigningMethodHMAC); ok {
 				return nil, errors.WithStack(ErrInvalidClient.WithHint("This authorization server does not support client authentication method \"client_secret_jwt\"."))
 			}
@@ -231,7 +232,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 	return client, nil
 }
 
-func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet) (*rsa.PublicKey, error) {
+func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool) (interface{}, error) {
 	kid, ok := t.Header["kid"].(string)
 	if !ok {
 		return nil, errors.WithStack(ErrInvalidRequest.WithHint("The JSON Web Token must contain a kid header value but did not."))
@@ -246,12 +247,22 @@ func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet) (*rsa.PublicKey, error
 		if key.Use != "sig" {
 			continue
 		}
-		if k, ok := key.Key.(*rsa.PublicKey); ok {
-			return k, nil
+		if expectsRSAKey {
+			if k, ok := key.Key.(*rsa.PublicKey); ok {
+				return k, nil
+			}
+		} else {
+			if k, ok := key.Key.(*ecdsa.PublicKey); ok {
+				return k, nil
+			}
 		}
 	}
 
-	return nil, errors.WithStack(ErrInvalidRequest.WithHintf("Unable to find RSA public key with use=\"sig\" for kid \"%s\" in JSON Web Key Set.", kid))
+	if expectsRSAKey {
+		return nil, errors.WithStack(ErrInvalidRequest.WithHintf("Unable to find RSA public key with use=\"sig\" for kid \"%s\" in JSON Web Key Set.", kid))
+	} else {
+		return nil, errors.WithStack(ErrInvalidRequest.WithHintf("Unable to find ECDSA public key with use=\"sig\" for kid \"%s\" in JSON Web Key Set.", kid))
+	}
 }
 
 func clientCredentialsFromRequest(r *http.Request, form url.Values) (clientID, clientSecret string, err error) {
