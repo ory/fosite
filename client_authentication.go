@@ -102,17 +102,22 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 			}
 
 			switch oidcClient.GetTokenEndpointAuthMethod() {
+			case "private_key_jwt":
+				break
+			case "none":
+				return nil, errors.WithStack(ErrInvalidClient.WithHint("This requested OAuth 2.0 client does not support client authentication, however \"client_assertion\" was provided in the request."))
 			case "client_secret_post":
 				fallthrough
 			case "client_secret_basic":
-				return nil, errors.WithStack(ErrInvalidClient.WithHintf("The OAuth 2.0 Request uses the \"client_secret_jwt\" authentication method, but the OAuth 2.0 Client only supports the \"%s\" client authentication method. You must configure the OAuth 2.0 client's \"token_endpoint_auth_method\" value to accept \"client_secret_jwt\".", oidcClient.GetTokenEndpointAuthMethod()))
+				return nil, errors.WithStack(ErrInvalidClient.WithHintf("This requested OAuth 2.0 client only supports client authentication method \"%s\", however \"client_assertion\" was provided in the request.", oidcClient.GetTokenEndpointAuthMethod()))
 			case "client_secret_jwt":
-				return nil, errors.WithStack(ErrInvalidClient.WithHint("This requested OAuth 2.0 client only supports client authentication method \"client_secret_jwt\", however that method is not supported by this server."))
-			case "private_key_jwt":
+				fallthrough
+			default:
+				return nil, errors.WithStack(ErrInvalidClient.WithHintf("This requested OAuth 2.0 client only supports client authentication method \"%s\", however that method is not supported by this server.", oidcClient.GetTokenEndpointAuthMethod()))
 			}
 
 			if oidcClient.GetTokenEndpointAuthSigningAlgorithm() != fmt.Sprintf("%s", t.Header["alg"]) {
-				return nil, errors.WithStack(ErrInvalidClient.WithHintf(`The "client_assertion"" uses signing algorithm "%s", but the requested OAuth 2.0 Client enforces signing algorithm "%s".`, t.Header["alg"], oidcClient.GetTokenEndpointAuthSigningAlgorithm()))
+				return nil, errors.WithStack(ErrInvalidClient.WithHintf(`The "client_assertion" uses signing algorithm "%s", but the requested OAuth 2.0 Client enforces signing algorithm "%s".`, t.Header["alg"], oidcClient.GetTokenEndpointAuthSigningAlgorithm()))
 			}
 
 			if _, ok := t.Method.(*jwt.SigningMethodRSA); ok {
@@ -125,7 +130,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 				return nil, errors.WithStack(ErrInvalidClient.WithHint("This authorization server does not support client authentication method \"client_secret_jwt\"."))
 			}
 
-			return nil, errors.WithStack(ErrInvalidClient.WithHintf("The client_assertion request parameter uses unsupported signing algorithm \"%s\".", t.Header["alg"]))
+			return nil, errors.WithStack(ErrInvalidClient.WithHintf(`The "client_assertion" request parameter uses unsupported signing algorithm "%s".`, t.Header["alg"]))
 		})
 		if err != nil {
 			// Do not re-process already enhanced errors
