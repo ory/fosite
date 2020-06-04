@@ -71,9 +71,9 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return accessRequest, errors.New("Session must not be nil")
 	}
 
-	accessRequest.SetRequestedScopes(removeEmpty(strings.Split(r.PostForm.Get("scope"), " ")))
-	accessRequest.SetRequestedAudience(removeEmpty(strings.Split(r.PostForm.Get("audience"), " ")))
-	accessRequest.GrantTypes = removeEmpty(strings.Split(r.PostForm.Get("grant_type"), " "))
+	accessRequest.SetRequestedScopes(RemoveEmpty(strings.Split(r.PostForm.Get("scope"), " ")))
+	accessRequest.SetRequestedAudience(RemoveEmpty(strings.Split(r.PostForm.Get("audience"), " ")))
+	accessRequest.GrantTypes = RemoveEmpty(strings.Split(r.PostForm.Get("grant_type"), " "))
 	if len(accessRequest.GrantTypes) < 1 {
 		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint(`Request parameter "grant_type"" is missing`))
 	}

@@ -35,7 +35,7 @@ func StringInSlice(needle string, haystack []string) bool {
 	return false
 }
 
-func removeEmpty(args []string) (ret []string) {
+func RemoveEmpty(args []string) (ret []string) {
 	for _, v := range args {
 		v = strings.TrimSpace(v)
 		if v != "" {
