@@ -158,7 +158,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 		}
 	}
 
-	tt, ar, err := f.IntrospectToken(ctx, token, TokenType(tokenType), session, strings.Split(scope, " ")...)
+	tt, ar, err := f.IntrospectToken(ctx, token, TokenType(tokenType), session, RemoveEmpty(strings.Split(scope, " "))...)
 	if err != nil {
 		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInactiveToken.WithHint("An introspection strategy indicated that the token is inactive.").WithDebug(err.Error()))
 	}
