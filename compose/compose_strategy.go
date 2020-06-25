@@ -22,6 +22,7 @@
 package compose
 
 import (
+	"crypto/ecdsa"
 	"crypto/rsa"
 
 	"github.com/ory/fosite/handler/oauth2"
@@ -58,6 +59,15 @@ func NewOAuth2JWTStrategy(key *rsa.PrivateKey, strategy *oauth2.HMACSHAStrategy)
 	}
 }
 
+func NewOAuth2JWTECDSAStrategy(key *ecdsa.PrivateKey, strategy *oauth2.HMACSHAStrategy) *oauth2.DefaultJWTStrategy {
+	return &oauth2.DefaultJWTStrategy{
+		JWTStrategy: &jwt.ES256JWTStrategy{
+			PrivateKey: key,
+		},
+		HMACSHAStrategy: strategy,
+	}
+}
+
 func NewOAuth2JWTStrategyWithIssuer(key *rsa.PrivateKey, strategy *oauth2.HMACSHAStrategy, issuer string) *oauth2.DefaultJWTStrategy {
 	return &oauth2.DefaultJWTStrategy{
 		JWTStrategy: &jwt.RS256JWTStrategy{
@@ -68,9 +78,29 @@ func NewOAuth2JWTStrategyWithIssuer(key *rsa.PrivateKey, strategy *oauth2.HMACSH
 	}
 }
 
+func NewOAuth2JWTECDSAStrategyWithIssuer(key *ecdsa.PrivateKey, strategy *oauth2.HMACSHAStrategy, issuer string) *oauth2.DefaultJWTStrategy {
+	return &oauth2.DefaultJWTStrategy{
+		JWTStrategy: &jwt.ES256JWTStrategy{
+			PrivateKey: key,
+		},
+		HMACSHAStrategy: strategy,
+		Issuer: issuer,
+	}
+}
+
 func NewOpenIDConnectStrategy(config *Config, key *rsa.PrivateKey) *openid.DefaultStrategy {
 	return &openid.DefaultStrategy{
 		JWTStrategy: &jwt.RS256JWTStrategy{
+			PrivateKey: key,
+		},
+		Expiry: config.GetIDTokenLifespan(),
+		Issuer: config.IDTokenIssuer,
+	}
+}
+
+func NewOpenIDConnectECDSAStrategy(config *Config, key *ecdsa.PrivateKey) *openid.DefaultStrategy {
+	return &openid.DefaultStrategy{
+		JWTStrategy: &jwt.ES256JWTStrategy{
 			PrivateKey: key,
 		},
 		Expiry: config.GetIDTokenLifespan(),
