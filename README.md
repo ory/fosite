@@ -311,6 +311,10 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 // The token endpoint is usually at "https://mydomain.com/oauth2/token"
 func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
+
+	// Create an empty session object that will be passed to storage implementation to populate (unmarshal) the session into.
+	// By passing an empty session object as a "prototype" to the store, the store can use the underlying type to unmarshal the value into it.
+	// For an example of storage implementation that takes advantage of that, see SQL Store (fosite_store_sql.go) from ory/Hydra project.
 	mySessionData := new(fosite.DefaultSession)
 
 	// This will create an access request object and iterate through the registered TokenEndpointHandlers to validate the request.
