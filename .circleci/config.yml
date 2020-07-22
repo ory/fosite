@@ -1,0 +1,45 @@
+version: 2.1
+
+orbs:
+  changelog: ory/changelog@0.1.3
+  nancy: ory/nancy@0.0.12
+  golangci: ory/golangci@0.0.4
+
+jobs:
+  test:
+    docker:
+      - image: circleci/golang:1.14
+    working_directory: /go/src/github.com/ory/fosite
+    steps:
+      - checkout
+      - setup_remote_docker
+      -
+        run: GO111MODULE=off go get github.com/mattn/goveralls github.com/ory/go-acc
+      -
+        restore_cache:
+          keys:
+            - go-v1-{{ checksum "go.sum" }}
+      -
+        run: go mod download
+      -
+        save_cache:
+          key: go-v1-{{ checksum "go.sum" }}
+          paths:
+            - "/go/pkg/mod"
+      -
+        run: go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m
+
+workflows:
+  tbr:
+    jobs:
+      - nancy/test
+      - test
+      - golangci/lint
+      - changelog/generate:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: master
