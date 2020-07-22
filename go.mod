@@ -8,6 +8,7 @@ require (
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.0 // indirect
 	github.com/gorilla/mux v1.7.3
+	github.com/gorilla/websocket v1.4.2
 	github.com/magiconair/properties v1.8.1
 	github.com/mattn/goveralls v0.0.6
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
