@@ -14,7 +14,7 @@ jobs:
       - checkout
       - setup_remote_docker
       -
-        run: GO111MODULE=off go get github.com/mattn/goveralls github.com/ory/go-acc
+        run: go install github.com/mattn/goveralls github.com/ory/go-acc
       -
         restore_cache:
           keys:
