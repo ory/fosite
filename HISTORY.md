@@ -1,5 +1,6 @@
-This is a list of breaking changes. As long as `1.0.0` is not released, breaking changes will be addressed as minor version
-bumps (`0.1.0` -> `0.2.0`).
+**THIS DOCUMENT HAS MOVED**
+
+This file is no longer being updated and kept for historical reasons. Please check the [CHANGELOG](changelog.md) instead!
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
