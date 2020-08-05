@@ -92,7 +92,7 @@ func TestSanitizeRequest(t *testing.T) {
 		GrantedScope:   []string{"asdf"},
 		Form: url.Values{
 			"foo": []string{"fasdf"},
-			"bar": []string{"fasdf", "fasdf"},
+			"bar": []string{"fasdf", "faaaa"},
 			"baz": []string{"fasdf"},
 		},
 		Session: new(DefaultSession),
@@ -100,13 +100,16 @@ func TestSanitizeRequest(t *testing.T) {
 
 	b := a.Sanitize([]string{"bar", "baz"})
 	assert.NotEqual(t, a.Form.Encode(), b.GetRequestForm().Encode())
+
 	assert.Empty(t, b.GetRequestForm().Get("foo"))
 	assert.Equal(t, "fasdf", b.GetRequestForm().Get("bar"))
+	assert.Equal(t, []string{"fasdf", "faaaa"}, b.GetRequestForm()["bar"])
 	assert.Equal(t, "fasdf", b.GetRequestForm().Get("baz"))
 
-	assert.Equal(t, "fasdf", a.GetRequestForm().Get("bar"))
-	assert.Equal(t, "fasdf", a.GetRequestForm().Get("baz"))
 	assert.Equal(t, "fasdf", a.GetRequestForm().Get("foo"))
+	assert.Equal(t, "fasdf", a.GetRequestForm().Get("bar"))
+	assert.Equal(t, []string{"fasdf", "faaaa"}, a.GetRequestForm()["bar"])
+	assert.Equal(t, "fasdf", a.GetRequestForm().Get("baz"))
 }
 
 func TestIdentifyRequest(t *testing.T) {
