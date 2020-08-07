@@ -186,8 +186,8 @@ func (a *Request) Sanitize(allowedParameters []string) Requester {
 	b.ID = a.GetID()
 	b.Form = url.Values{}
 	for k := range a.Form {
-		if _, ok := allowed[k]; ok {
-			b.Form.Add(k, a.Form.Get(k))
+		if allowed[k] {
+			b.Form[k] = a.Form[k]
 		}
 	}
 
