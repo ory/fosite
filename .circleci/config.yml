@@ -14,8 +14,6 @@ jobs:
       - checkout
       - setup_remote_docker
       -
-        run: go install github.com/mattn/goveralls github.com/ory/go-acc
-      -
         restore_cache:
           keys:
             - go-github-ory-fosite-v1-{{ checksum "go.sum" }}
@@ -26,8 +24,8 @@ jobs:
           key: go-github-ory-fosite-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
-      -
-        run: go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m
+      - run: go install github.com/mattn/goveralls github.com/ory/go-acc
+      - run: go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m
 
 workflows:
   tbr:
