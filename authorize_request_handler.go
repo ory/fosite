@@ -267,9 +267,9 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	//
 	// https://tools.ietf.org/html/rfc6819#section-4.4.1.8
 	// The "state" parameter should not	be guessable
-	if len(state) < MinParameterEntropy {
-		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
-		return request, errors.WithStack(ErrInvalidState.WithHintf(`Request parameter "state" must be at least be %d characters long to ensure sufficient entropy.`, MinParameterEntropy))
+	if len(state) < f.GetMinParameterEntropy() {
+		// We're assuming that using less then, by default, 8 characters for the state can not be considered "unguessable"
+		return request, errors.WithStack(ErrInvalidState.WithHintf(`Request parameter "state" must be at least be %d characters long to ensure sufficient entropy.`, f.GetMinParameterEntropy()))
 	}
 
 	return request, nil

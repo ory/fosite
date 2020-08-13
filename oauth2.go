@@ -28,8 +28,6 @@ import (
 	"time"
 )
 
-const MinParameterEntropy = 8
-
 type TokenType string
 
 const (

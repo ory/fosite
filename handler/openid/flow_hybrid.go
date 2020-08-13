@@ -42,6 +42,8 @@ type OpenIDConnectHybridHandler struct {
 	OpenIDConnectRequestStorage       OpenIDConnectRequestStorage
 
 	Enigma *jwt.RS256JWTStrategy
+
+	MinParameterEntropy int
 }
 
 func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -64,8 +66,8 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter \"nonce\" must be set when using the OpenID Connect Hybrid Flow."))
-	} else if len(nonce) < fosite.MinParameterEntropy {
-		return errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter \"nonce\" is set but does not satisfy the minimum entropy of %d characters.", fosite.MinParameterEntropy))
+	} else if len(nonce) < c.MinParameterEntropy {
+		return errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter \"nonce\" is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
 	}
 
 	sess, ok := ar.GetSession().(Session)

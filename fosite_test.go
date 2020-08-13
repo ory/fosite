@@ -63,3 +63,13 @@ func TestAuthorizedRequestValidators(t *testing.T) {
 	require.Len(t, hs, 1)
 	assert.Equal(t, hs[0], h)
 }
+
+func TestMinParameterEntropy(t *testing.T) {
+	f := Fosite{}
+	assert.Equal(t, MinParameterEntropy, f.GetMinParameterEntropy())
+
+	f = Fosite{
+		MinParameterEntropy: 42,
+	}
+	assert.Equal(t, 42, f.GetMinParameterEntropy())
+}
