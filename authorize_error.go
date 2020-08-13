@@ -49,17 +49,21 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	}
 
 	redirectURI := ar.GetRedirectURI()
+	error_description := rfcerr.Description
 	query := url.Values{}
 	query.Add("error", rfcerr.Name)
-	query.Add("error_description", rfcerr.Description)
 	query.Add("state", ar.GetState())
-	if f.SendDebugMessagesToClients && rfcerr.Debug != "" {
-		query.Add("error_debug", rfcerr.Debug)
-	}
-
+	// We expose both error hint and debug strings through standard error description, too
+	// (they are non-standard fields and some clients do not show them).
 	if rfcerr.Hint != "" {
 		query.Add("error_hint", rfcerr.Hint)
+		error_description += ": " + rfcerr.Hint
 	}
+	if f.SendDebugMessagesToClients && rfcerr.Debug != "" {
+		query.Add("error_debug", rfcerr.Debug)
+		error_description += " (" + rfcerr.Debug + ")"
+	}
+	query.Add("error_description", error_description)
 
 	if !(len(ar.GetResponseTypes()) == 0 || ar.GetResponseTypes().ExactOne("code")) && errors.Cause(err) != ErrUnsupportedResponseType {
 		redirectURI.Fragment = query.Encode()

@@ -34,9 +34,18 @@ func (f *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err
 func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-	rfcerr := ErrorToRFC6749Error(err)
+	// We dereference to make a copy and do not change passed err when it is already RFC6749Error.
+	rfcerr := *ErrorToRFC6749Error(err)
 	if !f.SendDebugMessagesToClients {
 		rfcerr.Debug = ""
+	}
+	// We expose both error hint and debug strings through standard error description, too
+	// (they are non-standard fields and some clients do not show them).
+	if rfcerr.Hint != "" {
+		rfcerr.Description += ": " + rfcerr.Hint
+	}
+	if rfcerr.Debug != "" {
+		rfcerr.Description += " (" + rfcerr.Debug + ")"
 	}
 
 	js, err := json.Marshal(rfcerr)
