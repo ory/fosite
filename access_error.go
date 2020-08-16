@@ -33,6 +33,8 @@ func (f *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err
 
 func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
 
 	rfcerr := ErrorToRFC6749Error(err)
 	if !f.SendDebugMessagesToClients {
