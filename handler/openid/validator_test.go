@@ -36,6 +36,13 @@ import (
 )
 
 func TestValidatePrompt(t *testing.T) {
+	var j = &DefaultStrategy{
+		JWTStrategy: &jwt.RS256JWTStrategy{
+			PrivateKey: key,
+		},
+		MinParameterEntropy: fosite.MinParameterEntropy,
+	}
+
 	v := NewOpenIDConnectRequestValidator(nil, j)
 
 	var genIDToken = func(c jwt.IDTokenClaims) string {

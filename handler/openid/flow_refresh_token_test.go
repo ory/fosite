@@ -95,6 +95,13 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 }
 
 func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T) {
+	var j = &DefaultStrategy{
+		JWTStrategy: &jwt.RS256JWTStrategy{
+			PrivateKey: key,
+		},
+		MinParameterEntropy: fosite.MinParameterEntropy,
+	}
+
 	h := &OpenIDConnectRefreshHandler{
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: j,

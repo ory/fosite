@@ -92,6 +92,9 @@ type Config struct {
 
 	// RefreshTokenScopes defines which OAuth scopes will be given refresh tokens during the authorization code grant exchange. This defaults to "offline" and "offline_access". When set to an empty array, all exchanges will be given refresh tokens.
 	RefreshTokenScopes []string
+
+	// MinParameterEntropy controls the minimum size of state and nonce parameters. Defaults to fosite.MinParameterEntropy.
+	MinParameterEntropy int
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
@@ -181,4 +184,13 @@ func (c *Config) GetRefreshTokenScopes() []string {
 		return []string{"offline", "offline_access"}
 	}
 	return c.RefreshTokenScopes
+}
+
+// GetMinParameterEntropy returns MinParameterEntropy if set. Defaults to fosite.MinParameterEntropy.
+func (c *Config) GetMinParameterEntropy() int {
+	if c.MinParameterEntropy == 0 {
+		return fosite.MinParameterEntropy
+	} else {
+		return c.MinParameterEntropy
+	}
 }

@@ -74,7 +74,7 @@ func NewOAuth2JWTStrategyWithIssuer(key *rsa.PrivateKey, strategy *oauth2.HMACSH
 			PrivateKey: key,
 		},
 		HMACSHAStrategy: strategy,
-		Issuer: issuer,
+		Issuer:          issuer,
 	}
 }
 
@@ -84,7 +84,7 @@ func NewOAuth2JWTECDSAStrategyWithIssuer(key *ecdsa.PrivateKey, strategy *oauth2
 			PrivateKey: key,
 		},
 		HMACSHAStrategy: strategy,
-		Issuer: issuer,
+		Issuer:          issuer,
 	}
 }
 
@@ -93,8 +93,9 @@ func NewOpenIDConnectStrategy(config *Config, key *rsa.PrivateKey) *openid.Defau
 		JWTStrategy: &jwt.RS256JWTStrategy{
 			PrivateKey: key,
 		},
-		Expiry: config.GetIDTokenLifespan(),
-		Issuer: config.IDTokenIssuer,
+		Expiry:              config.GetIDTokenLifespan(),
+		Issuer:              config.IDTokenIssuer,
+		MinParameterEntropy: config.GetMinParameterEntropy(),
 	}
 }
 
@@ -103,7 +104,8 @@ func NewOpenIDConnectECDSAStrategy(config *Config, key *ecdsa.PrivateKey) *openi
 		JWTStrategy: &jwt.ES256JWTStrategy{
 			PrivateKey: key,
 		},
-		Expiry: config.GetIDTokenLifespan(),
-		Issuer: config.IDTokenIssuer,
+		Expiry:              config.GetIDTokenLifespan(),
+		Issuer:              config.IDTokenIssuer,
+		MinParameterEntropy: config.GetMinParameterEntropy(),
 	}
 }
