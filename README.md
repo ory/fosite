@@ -267,7 +267,7 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// Normally, this would be the place where you would check if the user is logged in and gives his consent.
 	// We're simplifying things and just checking if the request includes a valid username and password
 	if req.Form.Get("username") != "peter" {
-		rw.Header().Set("Content-Type", "text/html; charset=utf-8")
+		rw.Header().Set("Content-Type", "text/html;charset=UTF-8")
 		rw.Write([]byte(`<h1>Login page</h1>`))
 		rw.Write([]byte(`
 			<p>Howdy! This is the log in page. For this example, it is enough to supply the username.</p>
