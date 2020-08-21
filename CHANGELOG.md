@@ -296,7 +296,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...c80d0d42a34f8cf664d44c687d7cfea576a0b232) (2020-08-21)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...48a3daf45bd1885c4412eeb9b2bc3117b6075de9) (2020-08-21)
 
 
 ### Code Refactoring
@@ -307,6 +307,7 @@
 ### Documentation
 
 * Add empty session example explanation ([#450](https://github.com/ory/fosite/issues/450)) ([36d65cb](https://github.com/ory/fosite/commit/36d65cbc061ff6cae38e90b0a6954646c8daf5d7))
+* Better section reference for GetRedirectURIFromRequestValues ([#463](https://github.com/ory/fosite/issues/463)) ([48a3daf](https://github.com/ory/fosite/commit/48a3daf45bd1885c4412eeb9b2bc3117b6075de9))
 * Deprecate history.md ([b0d5fea](https://github.com/ory/fosite/commit/b0d5feacfcbeedf609563fa8567bd0e031b179b5)), closes [/github.com/ory/fosite/issues/414#issuecomment-662538622](https://github.com//github.com/ory/fosite/issues/414/issues/issuecomment-662538622)
 
 
