@@ -70,12 +70,12 @@ func TestWriteAuthorizeError(t *testing.T) {
 			err: ErrInvalidGrant,
 			mock: func(rw *MockResponseWriter, req *MockAuthorizeRequester) {
 				req.EXPECT().IsRedirectURIValid().Return(false)
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().AnyTimes().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusBadRequest)
 				rw.EXPECT().Write(gomock.Any())
 			},
 			checkHeader: func(t *testing.T, k int) {
-				assert.Equal(t, "application/json", header.Get("Content-Type"))
+				assert.Equal(t, "application/json;charset=UTF-8", header.Get("Content-Type"))
 			},
 		},
 		{

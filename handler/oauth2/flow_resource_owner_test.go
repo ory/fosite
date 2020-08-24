@@ -68,7 +68,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because because scope missing",
+			description: "should fail because scope missing",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}, Scopes: []string{}}
@@ -77,7 +77,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			expectErr: fosite.ErrInvalidScope,
 		},
 		{
-			description: "should fail because because audience missing",
+			description: "should fail because audience missing",
 			setup: func() {
 				areq.RequestedAudience = fosite.Arguments{"https://www.ory.sh/api"}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}, Scopes: []string{"foo-scope"}}
@@ -85,7 +85,15 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			expectErr: fosite.ErrInvalidRequest,
 		},
 		{
-			description: "should fail because because invalid credentials",
+			description: "should fail because invalid grant_type specified",
+			setup: func() {
+				areq.GrantTypes = fosite.Arguments{"password"}
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"authoriation_code"}, Scopes: []string{"foo-scope"}}
+			},
+			expectErr: fosite.ErrUnauthorizedClient,
+		},
+		{
+			description: "should fail because invalid credentials",
 			setup: func() {
 				areq.Form.Set("username", "peter")
 				areq.Form.Set("password", "pan")
@@ -93,10 +101,10 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(fosite.ErrNotFound)
 			},
-			expectErr: fosite.ErrRequestUnauthorized,
+			expectErr: fosite.ErrInvalidGrant,
 		},
 		{
-			description: "should fail because because error on lookup",
+			description: "should fail because error on lookup",
 			setup: func() {
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(errors.New(""))
 			},
@@ -114,7 +122,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
 			c.setup()
 			err := h.HandleTokenEndpointRequest(nil, areq)
 
