@@ -9,7 +9,7 @@ https://github.com/ory/meta/blob/master/templates/repository/CONTRIBUTING.md
 -->
 
 
-# Contributing to ORY Fosite
+# Contributing to ORY {{Project}}
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -28,9 +28,9 @@ https://github.com/ory/meta/blob/master/templates/repository/CONTRIBUTING.md
 
 ## Introduction
 
-Please note: We take ORY Fosite's security and our users' trust very
-seriously. If you believe you have found a security issue in ORY Fosite,
-please responsibly disclose by contacting us at hi@ory.sh.
+Please note: We take ORY {{Project}}'s security and our users' trust very
+seriously. If you believe you have found a security issue in ORY {{Project}},
+please responsibly disclose by contacting us at office@ory.sh.
 
 First: if you're unsure or afraid of anything, just ask or submit the issue or
 pull request anyways. You won't be yelled at for giving it your best effort. The
@@ -40,7 +40,7 @@ the way of that.
 
 That said, if you want to ensure that a pull request is likely to be merged,
 talk to us! You can find out our thoughts and ensure that your contribution
-won't clash or be obviated by ORY Fosite's normal direction. A great way to
+won't clash or be obviated by ORY {{Project}}'s normal direction. A great way to
 do this is via the [ORY Community](https://community.ory.sh/) or join the
 [ORY Chat](https://www.ory.sh/chat).
 
@@ -48,7 +48,7 @@ do this is via the [ORY Community](https://community.ory.sh/) or join the
 
 Unless you are fixing a known bug, we **strongly** recommend discussing it with
 the core team via a GitHub issue or [in our chat](https://www.ory.sh/chat)
-before getting started to ensure your work is consistent with ORY Fosite's
+before getting started to ensure your work is consistent with ORY {{Project}}'s
 roadmap and architecture.
 
 All contributions are made via pull request. Note that **all patches from all
@@ -132,7 +132,7 @@ community a safe place for you and we've got your back.
 - Private harassment is also unacceptable. No matter who you are, if you feel
   you have been or are being harassed or made uncomfortable by a community
   member, please contact one of the channel ops or a member of the ORY
-  Fosite core team immediately.
+  {{Project}} core team immediately.
 - Likewise any spamming, trolling, flaming, baiting or other attention-stealing
   behaviour is not welcome.
 
