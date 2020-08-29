@@ -74,7 +74,7 @@ func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("client_credentials") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"client_credentials\"."))
+		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"client_credentials\"."))
 	}
 
 	return c.IssueAccessToken(ctx, request, response)

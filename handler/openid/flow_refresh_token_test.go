@@ -66,7 +66,7 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 					Client:       &fosite.DefaultClient{},
 				},
 			},
-			expectedErr: fosite.ErrInvalidGrant,
+			expectedErr: fosite.ErrUnauthorizedClient,
 		},
 		{
 			description: "should pass",

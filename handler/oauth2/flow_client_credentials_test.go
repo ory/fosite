@@ -144,11 +144,11 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because client not allowed",
-			expectErr:   fosite.ErrInvalidGrant,
+			description: "should fail because grant_type not allowed",
+			expectErr:   fosite.ErrUnauthorizedClient,
 			mock: func() {
 				areq.GrantTypes = fosite.Arguments{"client_credentials"}
-				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"foo"}}
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"authorization_code"}}
 			},
 		},
 		{
