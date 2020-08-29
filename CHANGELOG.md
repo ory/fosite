@@ -297,11 +297,14 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...1627c6ab31cb151f01671cd3403bc3c7de6fcfbd) (2020-08-29)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...3c30c0d9f1e62b237acc845d5b3a42d1ea9a80c0) (2020-08-29)
 
 
 ### Bug Fixes
 
+* Align error returned when a grant_type was requested that's not allowed for a client ([#467](https://github.com/ory/fosite/issues/467)) ([3c30c0d](https://github.com/ory/fosite/commit/3c30c0d9f1e62b237acc845d5b3a42d1ea9a80c0)), closes [/tools.ietf.org/html/rfc6749#section-5](https://github.com//tools.ietf.org/html/rfc6749/issues/section-5):
+
+    > Returned error was 'invalid_grant'.
 * All responses now contain headers to not cache them ([#465](https://github.com/ory/fosite/issues/465)) ([2012cb7](https://github.com/ory/fosite/commit/2012cb7ec6feb504d1faa6e393fce8d25edafebb))
 * No cache headers followup ([#466](https://github.com/ory/fosite/issues/466)) ([1627c6a](https://github.com/ory/fosite/commit/1627c6ab31cb151f01671cd3403bc3c7de6fcfbd))
 
