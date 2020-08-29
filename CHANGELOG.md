@@ -4,38 +4,39 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-21)](#unreleased-2020-08-21)
+- [Unreleased (2020-08-29)](#unreleased-2020-08-29)
+    - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
   - [0.32.2 (2020-06-22)](#0322-2020-06-22)
     - [Features](#features-1)
   - [0.32.1 (2020-06-05)](#0321-2020-06-05)
-    - [Bug Fixes](#bug-fixes)
+    - [Bug Fixes](#bug-fixes-1)
     - [Features](#features-2)
 - [0.32.0 (2020-05-28)](#0320-2020-05-28)
-    - [Bug Fixes](#bug-fixes-1)
+    - [Bug Fixes](#bug-fixes-2)
     - [Documentation](#documentation-1)
     - [Features](#features-3)
   - [0.31.3 (2020-05-09)](#0313-2020-05-09)
-    - [Bug Fixes](#bug-fixes-2)
+    - [Bug Fixes](#bug-fixes-3)
     - [Features](#features-4)
   - [0.31.2 (2020-04-16)](#0312-2020-04-16)
-    - [Bug Fixes](#bug-fixes-3)
-  - [0.31.1 (2020-04-16)](#0311-2020-04-16)
     - [Bug Fixes](#bug-fixes-4)
+  - [0.31.1 (2020-04-16)](#0311-2020-04-16)
+    - [Bug Fixes](#bug-fixes-5)
     - [Documentation](#documentation-2)
 - [0.31.0 (2020-03-29)](#0310-2020-03-29)
     - [Unclassified](#unclassified)
   - [0.30.6 (2020-03-26)](#0306-2020-03-26)
-    - [Bug Fixes](#bug-fixes-5)
+    - [Bug Fixes](#bug-fixes-6)
     - [Documentation](#documentation-3)
   - [0.30.5 (2020-03-25)](#0305-2020-03-25)
-    - [Bug Fixes](#bug-fixes-6)
-  - [0.30.4 (2020-03-17)](#0304-2020-03-17)
     - [Bug Fixes](#bug-fixes-7)
-  - [0.30.3 (2020-03-04)](#0303-2020-03-04)
+  - [0.30.4 (2020-03-17)](#0304-2020-03-17)
     - [Bug Fixes](#bug-fixes-8)
+  - [0.30.3 (2020-03-04)](#0303-2020-03-04)
+    - [Bug Fixes](#bug-fixes-9)
     - [Documentation](#documentation-4)
     - [Features](#features-5)
   - [0.30.2 (2019-11-21)](#0302-2019-11-21)
@@ -296,7 +297,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...48a3daf45bd1885c4412eeb9b2bc3117b6075de9) (2020-08-21)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...1627c6ab31cb151f01671cd3403bc3c7de6fcfbd) (2020-08-29)
+
+
+### Bug Fixes
+
+* All responses now contain headers to not cache them ([#465](https://github.com/ory/fosite/issues/465)) ([2012cb7](https://github.com/ory/fosite/commit/2012cb7ec6feb504d1faa6e393fce8d25edafebb))
+* No cache headers followup ([#466](https://github.com/ory/fosite/issues/466)) ([1627c6a](https://github.com/ory/fosite/commit/1627c6ab31cb151f01671cd3403bc3c7de6fcfbd))
 
 
 ### Code Refactoring
@@ -313,6 +320,7 @@
 
 ### Features
 
+* Make MinParameterEntropy configurable ([#461](https://github.com/ory/fosite/issues/461)) ([2c793e6](https://github.com/ory/fosite/commit/2c793e6c010ac6cbc552200197ae1262d91c2bda)), closes [#267](https://github.com/ory/fosite/issues/267)
 * New compose strategies for ES256 ([#446](https://github.com/ory/fosite/issues/446)) ([39053ee](https://github.com/ory/fosite/commit/39053eedaa687fe1d8dbe8b928fb98cd5ce8c021))
 
 
