@@ -59,6 +59,13 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 	aresp := fosite.NewAccessResponse()
 	areq := fosite.NewAccessRequest(session)
 
+	var j = &DefaultStrategy{
+		JWTStrategy: &jwt.RS256JWTStrategy{
+			PrivateKey: key,
+		},
+		MinParameterEntropy: fosite.MinParameterEntropy,
+	}
+
 	h := &OpenIDConnectExplicitHandler{
 		OpenIDConnectRequestStorage: store,
 		IDTokenHandleHelper: &IDTokenHandleHelper{

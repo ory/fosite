@@ -61,7 +61,9 @@ func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
 		return
 	}
 
-	rw.Header().Set("Content-Type", "application/json")
+	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
 	_ = json.NewEncoder(rw).Encode(struct {
 		Active bool `json:"active"`
 	}{Active: false})
@@ -207,7 +209,9 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 		expiresAt = r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).Unix()
 	}
 
-	rw.Header().Set("Content-Type", "application/json")
+	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
 	_ = json.NewEncoder(rw).Encode(struct {
 		Active    bool     `json:"active"`
 		ClientID  string   `json:"client_id,omitempty"`

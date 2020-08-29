@@ -39,6 +39,8 @@ type OpenIDConnectImplicitHandler struct {
 	OpenIDConnectRequestValidator *OpenIDConnectRequestValidator
 
 	RS256JWTStrategy *jwt.RS256JWTStrategy
+
+	MinParameterEntropy int
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -61,9 +63,9 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	//}
 
 	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter \"nonce\" must be set when using the OpenID Connect Hybrid Flow."))
-	} else if len(nonce) < fosite.MinParameterEntropy {
-		return errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter \"nonce\" is set but does not satisfy the minimum entropy of %d characters.", fosite.MinParameterEntropy))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter \"nonce\" must be set when using the OpenID Connect Implicit Flow."))
+	} else if len(nonce) < c.MinParameterEntropy {
+		return errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter \"nonce\" is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
 	}
 
 	client := ar.GetClient()

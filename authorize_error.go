@@ -30,6 +30,9 @@ import (
 )
 
 func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
+
 	rfcerr := ErrorToRFC6749Error(err)
 	if !ar.IsRedirectURIValid() {
 		if !f.SendDebugMessagesToClients {
@@ -42,7 +45,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 			return
 		}
 
-		rw.Header().Set("Content-Type", "application/json")
+		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 		rw.WriteHeader(rfcerr.Code)
 		rw.Write(js)
 		return

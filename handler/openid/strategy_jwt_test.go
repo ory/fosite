@@ -34,6 +34,13 @@ import (
 )
 
 func TestJWTStrategy_GenerateIDToken(t *testing.T) {
+	var j = &DefaultStrategy{
+		JWTStrategy: &jwt.RS256JWTStrategy{
+			PrivateKey: key,
+		},
+		MinParameterEntropy: fosite.MinParameterEntropy,
+	}
+
 	var req *fosite.AccessRequest
 	for k, c := range []struct {
 		description string

@@ -101,7 +101,7 @@ var (
 	}
 	ErrInvalidState = &RFC6749Error{
 		Name:        errInvalidStateName,
-		Description: fmt.Sprintf("The state is missing or has less than %d characters and is therefore considered too weak", MinParameterEntropy),
+		Description: "The state is missing or does not have enough characters and is therefore considered too weak",
 		Code:        http.StatusBadRequest,
 	}
 	ErrMisconfiguration = &RFC6749Error{
@@ -111,7 +111,7 @@ var (
 	}
 	ErrInsufficientEntropy = &RFC6749Error{
 		Name:        errInsufficientEntropyName,
-		Description: fmt.Sprintf("The request used a security parameter (e.g., anti-replay, anti-csrf) with insufficient entropy (minimum of %d characters)", MinParameterEntropy),
+		Description: "The request used a security parameter (e.g., anti-replay, anti-csrf) with insufficient entropy",
 		Code:        http.StatusBadRequest,
 	}
 	ErrNotFound = &RFC6749Error{

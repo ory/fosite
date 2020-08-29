@@ -59,7 +59,9 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
-					"Location": []string{"https://foobar.com/?foo=bar"},
+					"Location":      []string{"https://foobar.com/?foo=bar"},
+					"Cache-Control": []string{"no-store"},
+					"Pragma":        []string{"no-cache"},
 				}, header)
 			},
 		},
@@ -76,7 +78,9 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
-					"Location": []string{"https://foobar.com/?foo=bar#bar=baz"},
+					"Location":      []string{"https://foobar.com/?foo=bar#bar=baz"},
+					"Cache-Control": []string{"no-store"},
+					"Pragma":        []string{"no-cache"},
 				}, header)
 			},
 		},
@@ -93,7 +97,9 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
-					"Location": []string{"https://foobar.com/?bar=baz&foo=bar#bar=baz"},
+					"Location":      []string{"https://foobar.com/?bar=baz&foo=bar#bar=baz"},
+					"Cache-Control": []string{"no-store"},
+					"Pragma":        []string{"no-cache"},
 				}, header)
 			},
 		},
@@ -110,8 +116,10 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
-					"X-Bar":    {"baz"},
-					"Location": {"https://foobar.com/?bar=b%2Baz&foo=bar&scope=a%20b#bar=baz&scope=a%20b"},
+					"X-Bar":         {"baz"},
+					"Location":      {"https://foobar.com/?bar=b%2Baz&foo=bar&scope=a%20b#bar=baz&scope=a%20b"},
+					"Cache-Control": []string{"no-store"},
+					"Pragma":        []string{"no-cache"},
 				}, header)
 			},
 		},
@@ -128,8 +136,10 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
-					"X-Bar":    {"baz"},
-					"Location": {"https://foobar.com/?bar=b%2Baz&foo=bar&scope=api%3A%2A#bar=baz&scope=api%3A%2A"},
+					"X-Bar":         {"baz"},
+					"Location":      {"https://foobar.com/?bar=b%2Baz&foo=bar&scope=api%3A%2A#bar=baz&scope=api%3A%2A"},
+					"Cache-Control": []string{"no-store"},
+					"Pragma":        []string{"no-cache"},
 				}, header)
 			},
 		},

@@ -38,6 +38,7 @@ var strat = &DefaultStrategy{
 	JWTStrategy: &jwt.RS256JWTStrategy{
 		PrivateKey: internal.MustRSAKey(),
 	},
+	MinParameterEntropy: fosite.MinParameterEntropy,
 }
 
 var fooErr = errors.New("foo")

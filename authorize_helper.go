@@ -33,7 +33,7 @@ import (
 // GetRedirectURIFromRequestValues extracts the redirect_uri from values but does not do any sort of validation.
 //
 // Considered specifications
-// * https://tools.ietf.org/html/rfc6749#section-3.1
+// * https://tools.ietf.org/html/rfc6749#section-3.1.2
 //   The endpoint URI MAY include an
 //   "application/x-www-form-urlencoded" formatted (per Appendix B) query
 //   component ([RFC3986] Section 3.4), which MUST be retained when adding

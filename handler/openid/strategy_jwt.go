@@ -123,6 +123,8 @@ type DefaultStrategy struct {
 
 	Expiry time.Duration
 	Issuer string
+
+	MinParameterEntropy int
 }
 
 func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.Requester) (token string, err error) {
@@ -222,9 +224,9 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	nonce := requester.GetRequestForm().Get("nonce")
 	// OPTIONAL. String value used to associate a Client session with an ID Token, and to mitigate replay attacks.
 	if len(nonce) == 0 {
-	} else if len(nonce) > 0 && len(nonce) < fosite.MinParameterEntropy {
-		// We're assuming that using less then 8 characters for the state can not be considered "unguessable"
-		return "", errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter \"nonce\" is set but does not satisfy the minimum entropy of %d characters.", fosite.MinParameterEntropy))
+	} else if len(nonce) > 0 && len(nonce) < h.MinParameterEntropy {
+		// We're assuming that using less then, by default, 8 characters for the state can not be considered "unguessable"
+		return "", errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter \"nonce\" is set but does not satisfy the minimum entropy of %d characters.", h.MinParameterEntropy))
 	}
 
 	claims.Nonce = nonce
