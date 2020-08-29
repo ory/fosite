@@ -94,6 +94,9 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 // purpose of the revocation request, invalidating the particular token,
 // is already achieved.
 func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
+
 	if err == nil {
 		rw.WriteHeader(http.StatusOK)
 		return
@@ -102,8 +105,6 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 	switch errors.Cause(err).Error() {
 	case ErrInvalidRequest.Error():
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
-		rw.Header().Set("Cache-Control", "no-store")
-		rw.Header().Set("Pragma", "no-cache")
 
 		js, err := json.Marshal(ErrInvalidRequest)
 		if err != nil {
@@ -115,8 +116,6 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 		rw.Write(js)
 	case ErrInvalidClient.Error():
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
-		rw.Header().Set("Cache-Control", "no-store")
-		rw.Header().Set("Pragma", "no-cache")
 
 		js, err := json.Marshal(ErrInvalidClient)
 		if err != nil {

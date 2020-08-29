@@ -30,11 +30,11 @@ import (
 )
 
 func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
+
 	rfcerr := ErrorToRFC6749Error(err)
 	if !ar.IsRedirectURIValid() {
-		rw.Header().Set("Cache-Control", "no-store")
-		rw.Header().Set("Pragma", "no-cache")
-
 		if !f.SendDebugMessagesToClients {
 			rfcerr.Debug = ""
 		}

@@ -62,6 +62,9 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 
 	u = plusMatch.ReplaceAllString(u, "%20")
 
+	wh.Set("Cache-Control", "no-store")
+	wh.Set("Pragma", "no-cache")
+
 	// https://tools.ietf.org/html/rfc6749#section-4.1.1
 	// When a decision is established, the authorization server directs the
 	// user-agent to the provided client redirection URI using an HTTP

@@ -70,12 +70,14 @@ func TestWriteAuthorizeError(t *testing.T) {
 			err: ErrInvalidGrant,
 			mock: func(rw *MockResponseWriter, req *MockAuthorizeRequester) {
 				req.EXPECT().IsRedirectURIValid().Return(false)
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusBadRequest)
 				rw.EXPECT().Write(gomock.Any())
 			},
 			checkHeader: func(t *testing.T, k int) {
-				assert.Equal(t, "application/json", header.Get("Content-Type"))
+				assert.Equal(t, "application/json;charset=UTF-8", header.Get("Content-Type"))
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -86,13 +88,15 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
 				a, _ := url.Parse("https://foobar.com/?error=invalid_request&error_debug=with-debug&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate")
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b)
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -102,13 +106,15 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
 				a, _ := url.Parse("https://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate")
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b)
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -118,13 +124,15 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
 				a, _ := url.Parse("https://foobar.com/?error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&foo=bar&state=foostate")
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b)
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -134,13 +142,15 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"foobar"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
 				a, _ := url.Parse("https://foobar.com/?foo=bar#error=unsupported_grant_type&error_description=The+authorization+grant+type+is+not+supported+by+the+authorization+server&state=foostate")
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b)
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -150,7 +160,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
@@ -158,6 +168,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				a.Fragment = "error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate"
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b)
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -167,7 +179,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
@@ -175,6 +187,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				a.Fragment = "error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate"
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a.String(), b.String())
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -184,7 +198,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
@@ -192,6 +206,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				a.Fragment = "error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate"
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a, b)
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -201,7 +217,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
@@ -209,6 +225,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				a.Fragment = "error=invalid_request&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate"
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a.String(), b.String())
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -219,7 +237,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
@@ -227,6 +245,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				a.Fragment = "error=invalid_request&error_debug=with-debug&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate"
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a.String(), b.String())
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -237,7 +257,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"id_token"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
@@ -245,6 +265,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				a.Fragment = "error=invalid_request&error_debug=with-debug&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate"
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a.String(), b.String())
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 		{
@@ -255,7 +277,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
-				rw.EXPECT().Header().Return(header)
+				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
 			checkHeader: func(t *testing.T, k int) {
@@ -263,6 +285,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				a.Fragment = "error=invalid_request&error_debug=with-debug&error_description=The+request+is+missing+a+required+parameter%2C+includes+an+invalid+parameter+value%2C+includes+a+parameter+more+than+once%2C+or+is+otherwise+malformed&error_hint=Make+sure+that+the+various+parameters+are+correct%2C+be+aware+of+case+sensitivity+and+trim+your+parameters.+Make+sure+that+the+client+you+are+using+has+exactly+whitelisted+the+redirect_uri+you+specified.&state=foostate"
 				b, _ := url.Parse(header.Get("Location"))
 				assert.Equal(t, a.String(), b.String())
+				assert.Equal(t, "no-store", header.Get("Cache-Control"))
+				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
 	} {
