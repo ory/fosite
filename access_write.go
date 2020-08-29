@@ -27,6 +27,9 @@ import (
 )
 
 func (f *Fosite) WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder) {
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
+
 	js, err := json.Marshal(responder.ToMap())
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -34,8 +37,6 @@ func (f *Fosite) WriteAccessResponse(rw http.ResponseWriter, requester AccessReq
 	}
 
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	rw.Header().Set("Cache-Control", "no-store")
-	rw.Header().Set("Pragma", "no-cache")
 
 	rw.WriteHeader(http.StatusOK)
 	rw.Write(js)
