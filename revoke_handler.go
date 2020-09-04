@@ -94,6 +94,9 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 // purpose of the revocation request, invalidating the particular token,
 // is already achieved.
 func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
+
 	if err == nil {
 		rw.WriteHeader(http.StatusOK)
 		return

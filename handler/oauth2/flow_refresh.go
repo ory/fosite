@@ -58,7 +58,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"refresh_token\"."))
+		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"refresh_token\"."))
 	}
 
 	refresh := request.GetRequestForm().Get("refresh_token")

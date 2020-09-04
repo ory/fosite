@@ -102,4 +102,18 @@ type Fosite struct {
 	// data may be exposed, depending on your implementation of Fosite. Such sensitive data might include database error
 	// codes or other information. Proceed with caution!
 	SendDebugMessagesToClients bool
+
+	// MinParameterEntropy controls the minimum size of state and nonce parameters. Defaults to fosite.MinParameterEntropy.
+	MinParameterEntropy int
+}
+
+const MinParameterEntropy = 8
+
+// GetMinParameterEntropy returns MinParameterEntropy if set. Defaults to fosite.MinParameterEntropy.
+func (f *Fosite) GetMinParameterEntropy() int {
+	if f.MinParameterEntropy == 0 {
+		return MinParameterEntropy
+	} else {
+		return f.MinParameterEntropy
+	}
 }

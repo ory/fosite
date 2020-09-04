@@ -5,4 +5,4 @@
 *.exe
 cover.out
 vendor/
-package.json
+node_modules/

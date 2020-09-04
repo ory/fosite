@@ -290,7 +290,7 @@ func TestAuthenticateClient(t *testing.T) {
 				"jti": "12345",
 				"aud": "token-url",
 			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
-			r: new(http.Request),
+			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
 		{

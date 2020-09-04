@@ -295,7 +295,7 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					description: "should fail because client is not granted this grant type",
-					expectErr:   fosite.ErrInvalidGrant,
+					expectErr:   fosite.ErrUnauthorizedClient,
 				},
 				{
 					areq: &fosite.AccessRequest{
