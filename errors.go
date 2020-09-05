@@ -22,8 +22,10 @@
 package fosite
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/pkg/errors"
 )
@@ -163,7 +165,7 @@ var (
 	}
 	ErrRevokationClientMismatch = &RFC6749Error{
 		Name:        errRevokationClientMismatchName,
-		Description: "Token was not issued to the client making the revokation request",
+		Description: "Token was not issued to the client making the revocation request",
 		Code:        http.StatusBadRequest,
 	}
 	ErrLoginRequired = &RFC6749Error{
@@ -265,11 +267,11 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 }
 
 type RFC6749Error struct {
-	Name        string `json:"error"`
-	Description string `json:"error_description"`
-	Hint        string `json:"error_hint,omitempty"`
-	Code        int    `json:"status_code,omitempty"`
-	Debug       string `json:"error_debug,omitempty"`
+	Name        string
+	Description string
+	Hint        string
+	Code        int
+	Debug       string
 }
 
 func (e *RFC6749Error) Status() string {
@@ -316,4 +318,73 @@ func (e *RFC6749Error) WithDescription(description string) *RFC6749Error {
 	err := *e
 	err.Description = description
 	return &err
+}
+
+func (e *RFC6749Error) Sanitize() *RFC6749Error {
+	err := *e
+	err.Debug = ""
+	return &err
+}
+
+// GetDescription returns a more description description, combined with hint and debug (when available).
+func (e *RFC6749Error) GetDescription() string {
+	description := e.Description
+	if e.Hint != "" {
+		description += "\n\n" + e.Hint
+	}
+	if e.Debug != "" {
+		description += "\n\n" + e.Debug
+	}
+	return description
+}
+
+// RFC6749ErrorJson is a helper struct for JSON encoding/decoding of RFC6749Error.
+type RFC6749ErrorJson struct {
+	Name        string `json:"error"`
+	Verbose     string `json:"error_verbose"`
+	Description string `json:"error_description"`
+	Hint        string `json:"error_hint,omitempty"`
+	Code        int    `json:"status_code,omitempty"`
+	Debug       string `json:"error_debug,omitempty"`
+}
+
+func (e *RFC6749Error) UnmarshalJSON(b []byte) error {
+	var data RFC6749ErrorJson
+
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
+
+	e.Name = data.Name
+	e.Description = data.Verbose
+	e.Hint = data.Hint
+	e.Code = data.Code
+	e.Debug = data.Debug
+
+	return nil
+}
+
+func (e RFC6749Error) MarshalJSON() ([]byte, error) {
+	data := RFC6749ErrorJson{
+		Name: e.Name,
+		Verbose: e.Description,
+		Description: e.GetDescription(),
+		Hint: e.Hint,
+		Code: e.Code,
+		Debug: e.Debug,
+	}
+	return json.Marshal(data)
+}
+
+func (e *RFC6749Error) ToValues() url.Values {
+	values := url.Values{}
+	values.Add("error", e.Name)
+	values.Add("error_description", e.GetDescription())
+	if e.Hint != "" {
+		values.Add("error_hint", e.Hint)
+	}
+	if e.Debug != "" {
+		values.Add("error_debug", e.Debug)
+	}
+	return values
 }

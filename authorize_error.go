@@ -23,10 +23,9 @@ package fosite
 
 import (
 	"encoding/json"
-	"net/http"
-	"net/url"
-
+	"fmt"
 	"github.com/pkg/errors"
+	"net/http"
 )
 
 func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
@@ -34,14 +33,18 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	rw.Header().Set("Pragma", "no-cache")
 
 	rfcerr := ErrorToRFC6749Error(err)
-	if !ar.IsRedirectURIValid() {
-		if !f.SendDebugMessagesToClients {
-			rfcerr.Debug = ""
-		}
+	if !f.SendDebugMessagesToClients {
+		rfcerr = rfcerr.Sanitize()
+	}
 
+	if !ar.IsRedirectURIValid() {
 		js, err := json.MarshalIndent(rfcerr, "", "\t")
 		if err != nil {
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
+			if !f.SendDebugMessagesToClients {
+				http.Error(rw, fmt.Sprintf(`{\n\t"error": "server_error",\n\t"error_description": "%s"\n}`, err.Error()), http.StatusInternalServerError)
+			} else {
+				http.Error(rw, `{\n\t"error": "server_error"\n}`, http.StatusInternalServerError)
+			}
 			return
 		}
 
@@ -52,21 +55,8 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	}
 
 	redirectURI := ar.GetRedirectURI()
-	error_description := rfcerr.Description
-	query := url.Values{}
-	query.Add("error", rfcerr.Name)
+	query := rfcerr.ToValues()
 	query.Add("state", ar.GetState())
-	// We expose both error hint and debug strings through standard error description, too
-	// (they are non-standard fields and some clients do not show them).
-	if rfcerr.Hint != "" {
-		query.Add("error_hint", rfcerr.Hint)
-		error_description += ": " + rfcerr.Hint
-	}
-	if f.SendDebugMessagesToClients && rfcerr.Debug != "" {
-		query.Add("error_debug", rfcerr.Debug)
-		error_description += " (" + rfcerr.Debug + ")"
-	}
-	query.Add("error_description", error_description)
 
 	if !(len(ar.GetResponseTypes()) == 0 || ar.GetResponseTypes().ExactOne("code")) && errors.Cause(err) != ErrUnsupportedResponseType {
 		redirectURI.Fragment = query.Encode()

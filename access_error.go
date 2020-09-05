@@ -36,23 +36,18 @@ func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
 
-	// We dereference to make a copy and do not change passed err when it is already RFC6749Error.
-	rfcerr := *ErrorToRFC6749Error(err)
+	rfcerr := ErrorToRFC6749Error(err)
 	if !f.SendDebugMessagesToClients {
-		rfcerr.Debug = ""
-	}
-	// We expose both error hint and debug strings through standard error description, too
-	// (they are non-standard fields and some clients do not show them).
-	if rfcerr.Hint != "" {
-		rfcerr.Description += ": " + rfcerr.Hint
-	}
-	if rfcerr.Debug != "" {
-		rfcerr.Description += " (" + rfcerr.Debug + ")"
+		rfcerr = rfcerr.Sanitize()
 	}
 
-	js, err := json.Marshal(rfcerr)
+	js, err := json.MarshalIndent(rfcerr, "", "\t")
 	if err != nil {
-		http.Error(rw, fmt.Sprintf(`{"error": "%s"}`, err.Error()), http.StatusInternalServerError)
+		if !f.SendDebugMessagesToClients {
+			http.Error(rw, fmt.Sprintf(`{\n\t"error": "server_error",\n\t"error_description": "%s"\n}`, err.Error()), http.StatusInternalServerError)
+		} else {
+			http.Error(rw, `{\n\t"error": "server_error"\n}`, http.StatusInternalServerError)
+		}
 		return
 	}
 
