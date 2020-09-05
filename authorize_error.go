@@ -39,6 +39,8 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	}
 
 	if !ar.IsRedirectURIValid() {
+		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+
 		js, err := json.MarshalIndent(rfcerr, "", "\t")
 		if err != nil {
 			if f.SendDebugMessagesToClients {
@@ -49,7 +51,6 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 			return
 		}
 
-		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 		rw.WriteHeader(rfcerr.Code)
 		rw.Write(js)
 		return
