@@ -40,7 +40,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	if !ar.IsRedirectURIValid() {
 		js, err := json.MarshalIndent(rfcerr, "", "\t")
 		if err != nil {
-			if !f.SendDebugMessagesToClients {
+			if f.SendDebugMessagesToClients {
 				http.Error(rw, fmt.Sprintf(`{\n\t"error": "server_error",\n\t"error_description": "%s"\n}`, err.Error()), http.StatusInternalServerError)
 			} else {
 				http.Error(rw, `{\n\t"error": "server_error"\n}`, http.StatusInternalServerError)
