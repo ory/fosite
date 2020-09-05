@@ -366,12 +366,12 @@ func (e *RFC6749Error) UnmarshalJSON(b []byte) error {
 
 func (e RFC6749Error) MarshalJSON() ([]byte, error) {
 	data := RFC6749ErrorJson{
-		Name: e.Name,
-		Verbose: e.Description,
+		Name:        e.Name,
+		Verbose:     e.Description,
 		Description: e.GetDescription(),
-		Hint: e.Hint,
-		Code: e.Code,
-		Debug: e.Debug,
+		Hint:        e.Hint,
+		Code:        e.Code,
+		Debug:       e.Debug,
 	}
 	return json.Marshal(data)
 }

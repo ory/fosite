@@ -99,7 +99,7 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 				assert.Equal(t, expectDescription, params.Description)
 				assert.Empty(t, params.Debug)
 			} else {
-				assert.Equal(t, expectDescription + " (" + c.expectDebugMessage + ")", params.Description)
+				assert.Equal(t, expectDescription+" ("+c.expectDebugMessage+")", params.Description)
 				assert.Equal(t, c.expectDebugMessage, params.Debug)
 			}
 		})
