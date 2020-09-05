@@ -55,11 +55,16 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	}
 
 	redirectURI := ar.GetRedirectURI()
+
+	// The endpoint URI MUST NOT include a fragment component.
+	redirectURI.Fragment = ""
+
 	query := rfcerr.ToValues()
 	query.Add("state", ar.GetState())
 
+	var redirectURIString string
 	if !(len(ar.GetResponseTypes()) == 0 || ar.GetResponseTypes().ExactOne("code")) && errors.Cause(err) != ErrUnsupportedResponseType {
-		redirectURI.Fragment = query.Encode()
+		redirectURIString = redirectURI.String() + "#" + query.Encode()
 	} else {
 		for key, values := range redirectURI.Query() {
 			for _, value := range values {
@@ -67,8 +72,9 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 			}
 		}
 		redirectURI.RawQuery = query.Encode()
+		redirectURIString = redirectURI.String()
 	}
 
-	rw.Header().Add("Location", redirectURI.String())
+	rw.Header().Add("Location", redirectURIString)
 	rw.WriteHeader(http.StatusFound)
 }
