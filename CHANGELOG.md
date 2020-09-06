@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-08-31)](#unreleased-2020-08-31)
+- [Unreleased (2020-09-06)](#unreleased-2020-09-06)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -297,7 +297,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...3c30c0d9f1e62b237acc845d5b3a42d1ea9a80c0) (2020-08-31)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...46871476b1f47cefc09888615f70dd9fdd5af8b3) (2020-09-06)
 
 
 ### Bug Fixes
@@ -323,6 +323,7 @@
 
 ### Features
 
+* Add locking to memory storage ([#471](https://github.com/ory/fosite/issues/471)) ([4687147](https://github.com/ory/fosite/commit/46871476b1f47cefc09888615f70dd9fdd5af8b3))
 * Make MinParameterEntropy configurable ([#461](https://github.com/ory/fosite/issues/461)) ([2c793e6](https://github.com/ory/fosite/commit/2c793e6c010ac6cbc552200197ae1262d91c2bda)), closes [#267](https://github.com/ory/fosite/issues/267)
 * New compose strategies for ES256 ([#446](https://github.com/ory/fosite/issues/446)) ([39053ee](https://github.com/ory/fosite/commit/39053eedaa687fe1d8dbe8b928fb98cd5ce8c021))
 
