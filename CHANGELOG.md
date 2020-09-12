@@ -4,7 +4,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-06)](#unreleased-2020-09-06)
+- [Unreleased (2020-09-12)](#unreleased-2020-09-12)
+  - [0.32.3 (2020-09-12)](#0323-2020-09-12)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
@@ -297,11 +298,17 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...46871476b1f47cefc09888615f70dd9fdd5af8b3) (2020-09-06)
+# Unreleased (2020-09-12)
+
+No significant changes have been made for this release.
+
+
+## [0.32.3](https://github.com/ory/fosite/compare/v0.32.2...v0.32.3) (2020-09-12)
 
 
 ### Bug Fixes
 
+* Add missing OAuth2TokenRevocationFactory to ComposeAllEnabled ([#472](https://github.com/ory/fosite/issues/472)) ([88587fd](https://github.com/ory/fosite/commit/88587fde8fc92137660383c401250e492716c396))
 * Align error returned when a grant_type was requested that's not allowed for a client ([#467](https://github.com/ory/fosite/issues/467)) ([3c30c0d](https://github.com/ory/fosite/commit/3c30c0d9f1e62b237acc845d5b3a42d1ea9a80c0)), closes [/tools.ietf.org/html/rfc6749#section-5](https://github.com//tools.ietf.org/html/rfc6749/issues/section-5):
 
     > Returned error was 'invalid_grant'.
