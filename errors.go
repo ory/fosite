@@ -241,7 +241,7 @@ const (
 	errScopeNotGrantedName         = "scope_not_granted"
 	errTokenClaimName              = "token_claim"
 	errTokenInactiveName           = "token_inactive"
-	// errAuthorizaionCodeInactiveName = "authorization_code_inactive"
+	// errAuthorizationCodeInactiveName = "authorization_code_inactive"
 	errUnknownErrorName             = "error"
 	errRevokationClientMismatchName = "revokation_client_mismatch"
 	errRequestNotSupportedName      = "request_not_supported"
