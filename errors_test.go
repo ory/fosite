@@ -28,8 +28,8 @@ import (
 )
 
 func TestAddDebug(t *testing.T) {
-	err := ErrRevokationClientMismatch.WithDebug("debug")
-	assert.NotEqual(t, err, ErrRevokationClientMismatch)
-	assert.Empty(t, ErrRevokationClientMismatch.Debug)
+	err := ErrRevocationClientMismatch.WithDebug("debug")
+	assert.NotEqual(t, err, ErrRevocationClientMismatch)
+	assert.Empty(t, ErrRevocationClientMismatch.Debug)
 	assert.NotEmpty(t, err.Debug)
 }
