@@ -62,8 +62,8 @@ func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType To
 		if err == nil {
 			found = true
 			foundTokenType = tt
-		} else if err.Error() == ErrUnknownRequest.Error() || errors.Cause(err).Error() == ErrUnknownRequest.Error() {
-			// Nothing to do
+		} else if errors.Is(err, ErrUnknownRequest) {
+			// do nothing
 		} else {
 			rfcerr := ErrorToRFC6749Error(err)
 			return "", nil, errors.WithStack(rfcerr)

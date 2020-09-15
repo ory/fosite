@@ -64,11 +64,11 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 	token := r.PostForm.Get("token")
 	tokenTypeHint := TokenType(r.PostForm.Get("token_type_hint"))
 
-	var found bool
+	var found = false
 	for _, loader := range f.RevocationHandlers {
 		if err := loader.RevokeToken(ctx, token, tokenTypeHint, client); err == nil {
 			found = true
-		} else if errors.Cause(err).Error() == ErrUnknownRequest.Error() {
+		} else if errors.Is(err, ErrUnknownRequest) {
 			// do nothing
 		} else if err != nil {
 			return err

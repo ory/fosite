@@ -34,7 +34,9 @@ func (f *Fosite) NewAccessResponse(ctx context.Context, requester AccessRequeste
 	response := NewAccessResponse()
 	for _, tk = range f.TokenEndpointHandlers {
 		if err = tk.PopulateTokenEndpointResponse(ctx, requester, response); err == nil {
-		} else if errors.Cause(err).Error() == ErrUnknownRequest.Error() {
+			// do nothing
+		} else if errors.Is(err, ErrUnknownRequest) {
+			// do nothing
 		} else if err != nil {
 			return nil, err
 		}

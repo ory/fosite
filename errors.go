@@ -338,6 +338,11 @@ func (e *RFC6749Error) GetDescription() string {
 	return description
 }
 
+// Is returns true if the target error is equal to the current error. Used by errors.Is.
+func (e *RFC6749Error) Is(target error) bool {
+	return e.Error() == target.Error()
+}
+
 // RFC6749ErrorJson is a helper struct for JSON encoding/decoding of RFC6749Error.
 type RFC6749ErrorJson struct {
 	Name        string `json:"error"`
