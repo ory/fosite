@@ -60,7 +60,7 @@ func (h *Headers) Get(key string) interface{} {
 	return h.Extra[key]
 }
 
-// ToMapClaims will return a jwt-go MapClaims representaion
+// ToMapClaims will return a jwt-go MapClaims representation
 func (h Headers) ToMapClaims() jwt.MapClaims {
 	return h.ToMap()
 }
