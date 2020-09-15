@@ -41,12 +41,12 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	if !ar.IsRedirectURIValid() {
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-		js, err := json.MarshalIndent(rfcerr, "", "\t")
+		js, err := json.Marshal(rfcerr)
 		if err != nil {
 			if f.SendDebugMessagesToClients {
-				http.Error(rw, fmt.Sprintf(`{\n\t"error": "server_error",\n\t"error_description": "%s"\n}`, err.Error()), http.StatusInternalServerError)
+				http.Error(rw, fmt.Sprintf(`{"error":"server_error","error_description":"%s"}`, err.Error()), http.StatusInternalServerError)
 			} else {
-				http.Error(rw, `{\n\t"error": "server_error"\n}`, http.StatusInternalServerError)
+				http.Error(rw, `{"error":"server_error"}`, http.StatusInternalServerError)
 			}
 			return
 		}

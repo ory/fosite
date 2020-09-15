@@ -41,12 +41,12 @@ func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 		rfcerr = rfcerr.Sanitize()
 	}
 
-	js, err := json.MarshalIndent(rfcerr, "", "\t")
+	js, err := json.Marshal(rfcerr)
 	if err != nil {
 		if f.SendDebugMessagesToClients {
-			http.Error(rw, fmt.Sprintf(`{\n\t"error": "server_error",\n\t"error_description": "%s"\n}`, err.Error()), http.StatusInternalServerError)
+			http.Error(rw, fmt.Sprintf(`{"error":"server_error","error_description":"%s"}`, err.Error()), http.StatusInternalServerError)
 		} else {
-			http.Error(rw, `{\n\t"error": "server_error"\n}`, http.StatusInternalServerError)
+			http.Error(rw, `{"error":"server_error"}`, http.StatusInternalServerError)
 		}
 		return
 	}
