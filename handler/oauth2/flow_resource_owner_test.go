@@ -88,7 +88,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			description: "should fail because invalid grant_type specified",
 			setup: func() {
 				areq.GrantTypes = fosite.Arguments{"password"}
-				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"authoriation_code"}, Scopes: []string{"foo-scope"}}
+				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"authorization_code"}, Scopes: []string{"foo-scope"}}
 			},
 			expectErr: fosite.ErrUnauthorizedClient,
 		},
