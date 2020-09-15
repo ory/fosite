@@ -57,7 +57,7 @@ func TestRevokeToken(t *testing.T) {
 	}{
 		{
 			description: "should fail - token was issued to another client",
-			expectErr:   fosite.ErrRevokationClientMismatch,
+			expectErr:   fosite.ErrRevocationClientMismatch,
 			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
