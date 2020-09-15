@@ -61,11 +61,11 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 		debug := ""
 		if revErr := c.TokenRevocationStorage.RevokeAccessToken(ctx, reqID); revErr != nil {
 			hint += " Additionally, an error occurred during processing the access token revocation."
-			debug += "Revokation of access_token lead to error " + revErr.Error() + "."
+			debug += "Revocation of access_token lead to error " + revErr.Error() + "."
 		}
 		if revErr := c.TokenRevocationStorage.RevokeRefreshToken(ctx, reqID); revErr != nil {
 			hint += " Additionally, an error occurred during processing the refresh token revocation."
-			debug += "Revokation of refresh_token lead to error " + revErr.Error() + "."
+			debug += "Revocation of refresh_token lead to error " + revErr.Error() + "."
 		}
 		return errors.WithStack(fosite.ErrInvalidGrant.WithHint(hint).WithDebug(debug))
 	} else if err != nil && errors.Cause(err).Error() == fosite.ErrNotFound.Error() {

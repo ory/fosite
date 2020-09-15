@@ -163,8 +163,8 @@ var (
 		Hint:        "Token validation failed.",
 		Code:        http.StatusUnauthorized,
 	}
-	ErrRevokationClientMismatch = &RFC6749Error{
-		Name:        errRevokationClientMismatchName,
+	ErrRevocationClientMismatch = &RFC6749Error{
+		Name:        errRevocationClientMismatchName,
 		Description: "Token was not issued to the client making the revocation request",
 		Code:        http.StatusBadRequest,
 	}
@@ -243,9 +243,9 @@ const (
 	errScopeNotGrantedName         = "scope_not_granted"
 	errTokenClaimName              = "token_claim"
 	errTokenInactiveName           = "token_inactive"
-	// errAuthorizaionCodeInactiveName = "authorization_code_inactive"
+	// errAuthorizationCodeInactiveName = "authorization_code_inactive"
 	errUnknownErrorName             = "error"
-	errRevokationClientMismatchName = "revokation_client_mismatch"
+	errRevocationClientMismatchName = "revocation_client_mismatch"
 	errRequestNotSupportedName      = "request_not_supported"
 	errRequestURINotSupportedName   = "request_uri_not_supported"
 	errRegistrationNotSupportedName = "registration_not_supported"
