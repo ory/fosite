@@ -4,11 +4,13 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-12)](#unreleased-2020-09-12)
-  - [0.32.3 (2020-09-12)](#0323-2020-09-12)
-    - [Bug Fixes](#bug-fixes)
+- [Unreleased (2020-09-15)](#unreleased-2020-09-15)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
+  - [0.32.3 (2020-09-12)](#0323-2020-09-12)
+    - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring-1)
+    - [Documentation](#documentation-1)
     - [Features](#features)
   - [0.32.2 (2020-06-22)](#0322-2020-06-22)
     - [Features](#features-1)
@@ -17,7 +19,7 @@
     - [Features](#features-2)
 - [0.32.0 (2020-05-28)](#0320-2020-05-28)
     - [Bug Fixes](#bug-fixes-2)
-    - [Documentation](#documentation-1)
+    - [Documentation](#documentation-2)
     - [Features](#features-3)
   - [0.31.3 (2020-05-09)](#0313-2020-05-09)
     - [Bug Fixes](#bug-fixes-3)
@@ -26,19 +28,19 @@
     - [Bug Fixes](#bug-fixes-4)
   - [0.31.1 (2020-04-16)](#0311-2020-04-16)
     - [Bug Fixes](#bug-fixes-5)
-    - [Documentation](#documentation-2)
+    - [Documentation](#documentation-3)
 - [0.31.0 (2020-03-29)](#0310-2020-03-29)
     - [Unclassified](#unclassified)
   - [0.30.6 (2020-03-26)](#0306-2020-03-26)
     - [Bug Fixes](#bug-fixes-6)
-    - [Documentation](#documentation-3)
+    - [Documentation](#documentation-4)
   - [0.30.5 (2020-03-25)](#0305-2020-03-25)
     - [Bug Fixes](#bug-fixes-7)
   - [0.30.4 (2020-03-17)](#0304-2020-03-17)
     - [Bug Fixes](#bug-fixes-8)
   - [0.30.3 (2020-03-04)](#0303-2020-03-04)
     - [Bug Fixes](#bug-fixes-9)
-    - [Documentation](#documentation-4)
+    - [Documentation](#documentation-5)
     - [Features](#features-5)
   - [0.30.2 (2019-11-21)](#0302-2019-11-21)
     - [Unclassified](#unclassified-1)
@@ -47,10 +49,10 @@
 - [0.30.0 (2019-09-16)](#0300-2019-09-16)
     - [Unclassified](#unclassified-3)
   - [0.29.8 (2019-08-29)](#0298-2019-08-29)
-    - [Documentation](#documentation-5)
+    - [Documentation](#documentation-6)
     - [Unclassified](#unclassified-4)
   - [0.29.7 (2019-08-06)](#0297-2019-08-06)
-    - [Documentation](#documentation-6)
+    - [Documentation](#documentation-7)
     - [Unclassified](#unclassified-5)
   - [0.29.6 (2019-04-26)](#0296-2019-04-26)
     - [Unclassified](#unclassified-6)
@@ -69,7 +71,7 @@
 - [0.28.0 (2018-11-16)](#0280-2018-11-16)
     - [Unclassified](#unclassified-13)
   - [0.27.4 (2018-11-12)](#0274-2018-11-12)
-    - [Documentation](#documentation-7)
+    - [Documentation](#documentation-8)
     - [Unclassified](#unclassified-14)
   - [0.27.3 (2018-11-08)](#0273-2018-11-08)
     - [Unclassified](#unclassified-15)
@@ -84,7 +86,7 @@
 - [0.26.0 (2018-10-24)](#0260-2018-10-24)
     - [Unclassified](#unclassified-20)
   - [0.25.1 (2018-10-23)](#0251-2018-10-23)
-    - [Documentation](#documentation-8)
+    - [Documentation](#documentation-9)
     - [Unclassified](#unclassified-21)
 - [0.25.0 (2018-10-08)](#0250-2018-10-08)
     - [Unclassified](#unclassified-22)
@@ -105,7 +107,7 @@
   - [0.21.1 (2018-07-22)](#0211-2018-07-22)
     - [Unclassified](#unclassified-30)
 - [0.21.0 (2018-06-23)](#0210-2018-06-23)
-    - [Documentation](#documentation-9)
+    - [Documentation](#documentation-10)
     - [Unclassified](#unclassified-31)
   - [0.20.3 (2018-06-07)](#0203-2018-06-07)
     - [Unclassified](#unclassified-32)
@@ -142,10 +144,10 @@
   - [0.17.1 (2018-04-22)](#0171-2018-04-22)
     - [Unclassified](#unclassified-48)
 - [0.17.0 (2018-04-08)](#0170-2018-04-08)
-    - [Documentation](#documentation-10)
+    - [Documentation](#documentation-11)
     - [Unclassified](#unclassified-49)
   - [0.16.5 (2018-03-17)](#0165-2018-03-17)
-    - [Documentation](#documentation-11)
+    - [Documentation](#documentation-12)
     - [Unclassified](#unclassified-50)
   - [0.16.4 (2018-02-07)](#0164-2018-02-07)
     - [Unclassified](#unclassified-51)
@@ -170,7 +172,7 @@
   - [0.15.1 (2017-12-10)](#0151-2017-12-10)
     - [Unclassified](#unclassified-61)
 - [0.15.0 (2017-12-09)](#0150-2017-12-09)
-    - [Documentation](#documentation-12)
+    - [Documentation](#documentation-13)
     - [Unclassified](#unclassified-62)
   - [0.14.2 (2017-12-06)](#0142-2017-12-06)
     - [Unclassified](#unclassified-63)
@@ -185,10 +187,10 @@
 - [0.12.0 (2017-10-25)](#0120-2017-10-25)
     - [Unclassified](#unclassified-68)
   - [0.11.4 (2017-10-10)](#0114-2017-10-10)
-    - [Documentation](#documentation-13)
+    - [Documentation](#documentation-14)
     - [Unclassified](#unclassified-69)
   - [0.11.3 (2017-08-21)](#0113-2017-08-21)
-    - [Documentation](#documentation-14)
+    - [Documentation](#documentation-15)
     - [Unclassified](#unclassified-70)
   - [0.11.2 (2017-07-09)](#0112-2017-07-09)
     - [Unclassified](#unclassified-71)
@@ -201,7 +203,7 @@
   - [0.9.7 (2017-06-28)](#097-2017-06-28)
     - [Unclassified](#unclassified-75)
   - [0.9.6 (2017-06-21)](#096-2017-06-21)
-    - [Documentation](#documentation-15)
+    - [Documentation](#documentation-16)
     - [Unclassified](#unclassified-76)
   - [0.9.5 (2017-06-08)](#095-2017-06-08)
     - [Unclassified](#unclassified-77)
@@ -214,13 +216,13 @@
   - [0.9.1 (2017-06-04)](#091-2017-06-04)
     - [Unclassified](#unclassified-81)
 - [0.9.0 (2017-06-03)](#090-2017-06-03)
-    - [Documentation](#documentation-16)
+    - [Documentation](#documentation-17)
     - [Unclassified](#unclassified-82)
 - [0.8.0 (2017-05-18)](#080-2017-05-18)
-    - [Documentation](#documentation-17)
+    - [Documentation](#documentation-18)
     - [Unclassified](#unclassified-83)
 - [0.7.0 (2017-05-03)](#070-2017-05-03)
-    - [Documentation](#documentation-18)
+    - [Documentation](#documentation-19)
     - [Unclassified](#unclassified-84)
   - [0.6.19 (2017-05-03)](#0619-2017-05-03)
     - [Unclassified](#unclassified-85)
@@ -241,7 +243,7 @@
   - [0.6.10 (2016-12-29)](#0610-2016-12-29)
     - [Unclassified](#unclassified-93)
   - [0.6.9 (2016-12-29)](#069-2016-12-29)
-    - [Documentation](#documentation-19)
+    - [Documentation](#documentation-20)
     - [Unclassified](#unclassified-94)
   - [0.6.8 (2016-12-20)](#068-2016-12-20)
     - [Unclassified](#unclassified-95)
@@ -264,7 +266,7 @@
 - [0.5.0 (2016-10-17)](#050-2016-10-17)
     - [Unclassified](#unclassified-104)
 - [0.4.0 (2016-10-16)](#040-2016-10-16)
-    - [Documentation](#documentation-20)
+    - [Documentation](#documentation-21)
     - [Unclassified](#unclassified-105)
   - [0.3.6 (2016-10-07)](#036-2016-10-07)
     - [Unclassified](#unclassified-106)
@@ -273,7 +275,7 @@
   - [0.3.4 (2016-10-04)](#034-2016-10-04)
     - [Unclassified](#unclassified-108)
   - [0.3.3 (2016-10-03)](#033-2016-10-03)
-    - [Documentation](#documentation-21)
+    - [Documentation](#documentation-22)
     - [Unclassified](#unclassified-109)
   - [0.3.2 (2016-09-22)](#032-2016-09-22)
     - [Unclassified](#unclassified-110)
@@ -292,15 +294,24 @@
 - [0.2.0 (2016-08-06)](#020-2016-08-06)
     - [Unclassified](#unclassified-117)
 - [0.1.0 (2016-08-01)](#010-2016-08-01)
-    - [Code Refactoring](#code-refactoring-1)
-    - [Documentation](#documentation-22)
+    - [Code Refactoring](#code-refactoring-2)
+    - [Documentation](#documentation-23)
     - [Unclassified](#unclassified-118)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Unreleased (2020-09-12)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.32.3...23cc9c1d29f35a73acbf05fe6b505b692f6fe49c) (2020-09-15)
 
-No significant changes have been made for this release.
+
+### Code Refactoring
+
+* Fix inconsistent spelling of revocation ([#477](https://github.com/ory/fosite/issues/477)) ([7a55edb](https://github.com/ory/fosite/commit/7a55edbb67738a721c5f1a8f58d2db67f6738f65))
+
+
+### Documentation
+
+* Fix minor typos ([#475](https://github.com/ory/fosite/issues/475)) ([23cc9c1](https://github.com/ory/fosite/commit/23cc9c1d29f35a73acbf05fe6b505b692f6fe49c))
+
 
 
 ## [0.32.3](https://github.com/ory/fosite/compare/v0.32.2...v0.32.3) (2020-09-12)
@@ -509,7 +520,7 @@ No significant changes have been made for this release.
 * Add ExactOne and MatchesExact to Arguments ([#399](https://github.com/ory/fosite/issues/399)) ([cf23400](https://github.com/ory/fosite/commit/cf23400930e63a6d5244262d284ddc79943775e6)):
 
     > Previously Arguments.Exact had vague semantic where
-    > it couldn't distinguish between value with a space and multiple
+    > it coudln't distinguish between value with a space and multiple
     > values. Split it into 2 functions with clear semantic.
     > 
     > Old .Exact() remains for compatibility and marked as deprecated
@@ -968,9 +979,9 @@ No significant changes have been made for this release.
 
 ### Unclassified
 
-* Resolves several issues related to revocation  ([#281](https://github.com/ory/fosite/issues/281)) ([72bff7f](https://github.com/ory/fosite/commit/72bff7f33ee8c3a4a8806cc266ca7299ff1785d4)), closes [#278](https://github.com/ory/fosite/issues/278) [#280](https://github.com/ory/fosite/issues/280):
+* Resolves several issues related to revokation  ([#281](https://github.com/ory/fosite/issues/281)) ([72bff7f](https://github.com/ory/fosite/commit/72bff7f33ee8c3a4a8806cc266ca7299ff1785d4)), closes [#278](https://github.com/ory/fosite/issues/278) [#280](https://github.com/ory/fosite/issues/280):
 
-    > This patch resolves several issues related to token revocation as well as duplicate authorize code usage:
+    > This patch resolves several issues related to token revokation as well as duplicate authorize code usage:
     > 
     > * oauth2: Revoking access or refresh tokens should revoke past and future tokens too
     > * oauth2: Revoke access and refresh tokens when authorize code is used twice
@@ -1114,7 +1125,7 @@ No significant changes have been made for this release.
 
 ### Documentation
 
-* Fixes example errors in README ([#257](https://github.com/ory/fosite/issues/257)) ([b138f59](https://github.com/ory/fosite/commit/b138f5997d535151b3541a15b8c4f7a304cea4eb))
+* Fixes eaxmple errors in README ([#257](https://github.com/ory/fosite/issues/257)) ([b138f59](https://github.com/ory/fosite/commit/b138f5997d535151b3541a15b8c4f7a304cea4eb))
 * Updates banner in readme ([#253](https://github.com/ory/fosite/issues/253)) ([07ac5b8](https://github.com/ory/fosite/commit/07ac5b89878e07fd54edf267f23ebc7059c8bb48))
 
 
@@ -1293,11 +1304,11 @@ No significant changes have been made for this release.
 
 * Upgrades history.md ([87c37c3](https://github.com/ory/fosite/commit/87c37c3d6929b1edd2ab52a28d51ed1890628f51))
 * Improves test coverage report by removing internal package from it ([831f56a](https://github.com/ory/fosite/commit/831f56a9e6774b1e80c13cd301583edea6378245))
-* Resolves test issues and reverts auth code revocation patch ([59fc47b](https://github.com/ory/fosite/commit/59fc47bbeb8093ab3652149ef6789a4e1564e1d8))
+* Resolves test issues and reverts auth code revokation patch ([59fc47b](https://github.com/ory/fosite/commit/59fc47bbeb8093ab3652149ef6789a4e1564e1d8))
 * Improves error debug messages across the project ([7ec8d19](https://github.com/ory/fosite/commit/7ec8d19815d10913ef8cfd8ced9b9794f578dbf4))
 * Allows client credentials in POST body and solves public client auth ([392c191](https://github.com/ory/fosite/commit/392c191bc1859ca57e3d0cf4d2b996d5ab382530)), closes [#231](https://github.com/ory/fosite/issues/231) [#217](https://github.com/ory/fosite/issues/217)
 * Updates mocks and mock generation ([1f9d07d](https://github.com/ory/fosite/commit/1f9d07d15e8f70986ed12cfb3ac9fac4a6e7e278))
-* handler/oauth2: Adds token revocation on authorize code reuse ([2341dec](https://github.com/ory/fosite/commit/2341dec8febeda9da535dc898c7d19aa3ecc8c00))
+* handler/oauth2: Adds token revokation on authorize code reuse ([2341dec](https://github.com/ory/fosite/commit/2341dec8febeda9da535dc898c7d19aa3ecc8c00))
 * handler/oauth2: Improves authorization code error handling ([d6e0fbd](https://github.com/ory/fosite/commit/d6e0fbd9bdde624fa2e9feada3dec5b4266c4b9e))
 
 
@@ -1336,7 +1347,7 @@ No significant changes have been made for this release.
 
 ### Unclassified
 
-* handler/oauth2: Client IDs in revocation requests must match now (#226) ([83136a3](https://github.com/ory/fosite/commit/83136a3ed5ed99b3a525f0ad87d693eadf273e8a)), closes [#226](https://github.com/ory/fosite/issues/226) [#225](https://github.com/ory/fosite/issues/225)
+* handler/oauth2: Client IDs in revokation requests must match now (#226) ([83136a3](https://github.com/ory/fosite/commit/83136a3ed5ed99b3a525f0ad87d693eadf273e8a)), closes [#226](https://github.com/ory/fosite/issues/226) [#225](https://github.com/ory/fosite/issues/225)
 * Update go version ([#220](https://github.com/ory/fosite/issues/220)) ([ff751ee](https://github.com/ory/fosite/commit/ff751ee3691f79886ccfc6afa3936c2c3b506a9e))
 * Add license header to all source files (#222) ([dd9398e](https://github.com/ory/fosite/commit/dd9398ea0553b07d63022af50ee2090d1616c5a9)), closes [#222](https://github.com/ory/fosite/issues/222) [#221](https://github.com/ory/fosite/issues/221)
 
@@ -1908,7 +1919,7 @@ No significant changes have been made for this release.
 
 ### Unclassified
 
-* HierarchicScopeStrategy wrongly accepts missing scopes ([7faee6b](https://github.com/ory/fosite/commit/7faee6bbd53ee762ddfe194fb2ea5e7d0205e46d))
+* HierarchicScopeStrategy worngly accepts missing scopes ([7faee6b](https://github.com/ory/fosite/commit/7faee6bbd53ee762ddfe194fb2ea5e7d0205e46d))
 * Jwt-go is now v3.0.0 ([#77](https://github.com/ory/fosite/issues/77)) ([76ef7ea](https://github.com/ory/fosite/commit/76ef7ea8f51735d63476cd91e1f9a9f367d544cb))
 
 
@@ -2048,14 +2059,14 @@ No significant changes have been made for this release.
 * Clean-up fosite-example/main.go link in README.md ([497ff80](https://github.com/ory/fosite/commit/497ff807a10a9fb41b697c5f91ed9eeb26375b24)):
 
     > The README url to the suggested example was broken.
-* Added jti as parameter to claims helper to provide better interface to developers ([bde3822](https://github.com/ory/fosite/commit/bde38221ed4d32c2f175a60540ac529b306a2ced))
+* Added jti as parameter to claims helper to privide better interface to developers ([bde3822](https://github.com/ory/fosite/commit/bde38221ed4d32c2f175a60540ac529b306a2ced))
 * Added missing jti claim ([26f41a0](https://github.com/ory/fosite/commit/26f41a06689bd12f7165044a2de7d9332fea3759))
 * Added NOTE ([64516f8](https://github.com/ory/fosite/commit/64516f8e2e0154f46358723d710447380f6d5dc2))
 * Removed unnecessary print. Added bugfix from Arekkas. ([96458b6](https://github.com/ory/fosite/commit/96458b6cf8ee46edbef35598b6d3d877fb63ff87))
 * Example updated ([5022339](https://github.com/ory/fosite/commit/50223396d01d742b1a0a3f0be1252e339cf22985))
 * Api refactor ([d936c91](https://github.com/ory/fosite/commit/d936c914253c58297dcc462a14fb6ddb87bfcac4))
 * Added working example of jwt token ([9410fca](https://github.com/ory/fosite/commit/9410fca73dfb00f1dc1e3aa6ec580554ec3daaba))
-* Added tests. Still need to verify implementation with test ([1ebdd88](https://github.com/ory/fosite/commit/1ebdd88746c875bff1a6d074437c5742c812a200))
+* Added tests. Still need to verify implemtation with test ([1ebdd88](https://github.com/ory/fosite/commit/1ebdd88746c875bff1a6d074437c5742c812a200))
 * WIP ([caaa43a](https://github.com/ory/fosite/commit/caaa43a184a66b78972fa3725d3636837da1cd68))
 * readme ([c97d844](https://github.com/ory/fosite/commit/c97d84471bc3941e479a79ef2eed4b1ddc07f21c))
 * readme ([fe24f26](https://github.com/ory/fosite/commit/fe24f261de60711d91c016c435ce83938d367609))
@@ -2091,7 +2102,7 @@ No significant changes have been made for this release.
 * Finalized token endpoint api ([8de3f10](https://github.com/ory/fosite/commit/8de3f10d89b47ad0d23cf13b425442393f51e104))
 * Fixed tests ([8bf73e3](https://github.com/ory/fosite/commit/8bf73e3bb4b12e098f63b1007d4ce9a25e0221b7))
 * Fixed tests refactor broke ([5da857b](https://github.com/ory/fosite/commit/5da857b4bcf76b3cc87aa5c9c1f8ee2c0c814992))
-* Fixed wrongfully set constant ErrTemporaryUnavailableName ([71a9105](https://github.com/ory/fosite/commit/71a9105a1e4afde3eed0a3ef80239140f6674d15)), closes [#9](https://github.com/ory/fosite/issues/9)
+* Fixed wrongfully set constant ErrTemporaryUnvailableName ([71a9105](https://github.com/ory/fosite/commit/71a9105a1e4afde3eed0a3ef80239140f6674d15)), closes [#9](https://github.com/ory/fosite/issues/9)
 * Implemented all core grant types ([ce0a849](https://github.com/ory/fosite/commit/ce0a8496942259d6fe518104bab0dfd3dfea9856))
 * Implemented and documented examples ([8c625c9](https://github.com/ory/fosite/commit/8c625c9cd1e9854eddecafc36e4502577c113ef0))
 * Implemented new token generator based on hmac-sha256 ([01f9ede](https://github.com/ory/fosite/commit/01f9ede7e69588caf12940979a1fc0586d5aac3c)), closes [#11](https://github.com/ory/fosite/issues/11)
