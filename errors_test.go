@@ -24,6 +24,7 @@ package fosite
 import (
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,4 +33,14 @@ func TestAddDebug(t *testing.T) {
 	assert.NotEqual(t, err, ErrRevocationClientMismatch)
 	assert.Empty(t, ErrRevocationClientMismatch.Debug)
 	assert.NotEmpty(t, err.Debug)
+}
+
+func TestIs(t *testing.T) {
+	assert.True(t, errors.Is(ErrUnknownRequest, ErrUnknownRequest))
+	assert.True(t, errors.Is(ErrUnknownRequest, &RFC6749Error{
+		Name: errUnknownErrorName,
+	}))
+	assert.True(t, errors.Is(&RFC6749Error{
+		Name: errUnknownErrorName,
+	}, ErrUnknownRequest))
 }

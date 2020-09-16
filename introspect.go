@@ -53,18 +53,18 @@ func AccessTokenFromRequest(req *http.Request) string {
 }
 
 func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType TokenType, session Session, scopes ...string) (TokenType, AccessRequester, error) {
-	var found bool = false
+	var found = false
 	var foundTokenType TokenType = ""
 
 	ar := NewAccessRequest(session)
 	for _, validator := range f.TokenIntrospectionHandlers {
 		tt, err := validator.IntrospectToken(ctx, token, tokenType, ar, scopes)
-		if err := errors.Cause(err); err == nil {
+		if err == nil {
 			found = true
 			foundTokenType = tt
-		} else if err.Error() == ErrUnknownRequest.Error() {
-			// Nothing to do
-		} else if err != nil {
+		} else if errors.Is(err, ErrUnknownRequest) {
+			// do nothing
+		} else {
 			rfcerr := ErrorToRFC6749Error(err)
 			return "", nil, errors.WithStack(rfcerr)
 		}
