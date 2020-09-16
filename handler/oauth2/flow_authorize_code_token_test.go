@@ -241,7 +241,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 					err := h.PopulateTokenEndpointResponse(nil, c.areq, aresp)
 
 					if c.expectErr != nil {
-						require.EqualError(t, errors.Cause(err), c.expectErr.Error(), "%+v", err)
+						require.EqualError(t, err, c.expectErr.Error(), "%+v", err)
 					} else {
 						require.NoError(t, err, "%+v", err)
 					}
@@ -443,7 +443,7 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 
 					err := h.HandleTokenEndpointRequest(context.Background(), c.areq)
 					if c.expectErr != nil {
-						require.EqualError(t, errors.Cause(err), c.expectErr.Error(), "%+v", err)
+						require.EqualError(t, err, c.expectErr.Error(), "%+v", err)
 					} else {
 						require.NoError(t, err, "%+v", err)
 						if c.check != nil {
@@ -675,7 +675,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			}
 
 			if err := handler.PopulateTokenEndpointResponse(propagatedContext, request, response); testCase.expectError != nil {
-				assert.EqualError(t, errors.Cause(err), testCase.expectError.Error())
+				assert.EqualError(t, err, testCase.expectError.Error())
 			}
 		})
 	}

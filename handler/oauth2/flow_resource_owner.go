@@ -69,10 +69,10 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	password := request.GetRequestForm().Get("password")
 	if username == "" || password == "" {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Username or password are missing from the POST body."))
-	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Cause(err) == fosite.ErrNotFound {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to authenticate the provided username and password credentials.").WithDebug(err.Error()))
+	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Is(err, fosite.ErrNotFound) {
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to authenticate the provided username and password credentials.").WithCause(err).WithDebug(err.Error()))
 	} else if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	// Credentials must not be passed around, potentially leaking to the database!
@@ -97,9 +97,9 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 		var err error
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester.Sanitize([]string{})); err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		}
 	}
 

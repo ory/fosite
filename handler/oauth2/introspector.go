@@ -82,7 +82,7 @@ func (c *CoreValidator) introspectAccessToken(ctx context.Context, token string,
 	sig := c.CoreStrategy.AccessTokenSignature(token)
 	or, err := c.CoreStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession())
 	if err != nil {
-		return errors.WithStack(fosite.ErrRequestUnauthorized.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrRequestUnauthorized.WithCause(err).WithDebug(err.Error()))
 	} else if err := c.CoreStrategy.ValidateAccessToken(ctx, or, token); err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (c *CoreValidator) introspectRefreshToken(ctx context.Context, token string
 	or, err := c.CoreStorage.GetRefreshTokenSession(ctx, sig, accessRequest.GetSession())
 
 	if err != nil {
-		return errors.WithStack(fosite.ErrRequestUnauthorized.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrRequestUnauthorized.WithCause(err).WithDebug(err.Error()))
 	} else if err := c.CoreStrategy.ValidateRefreshToken(ctx, or, token); err != nil {
 		return err
 	}

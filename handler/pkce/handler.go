@@ -73,7 +73,7 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 		"code_challenge",
 		"code_challenge_method",
 	})); err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	return nil
@@ -140,14 +140,14 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, signature, request.GetSession())
-	if errors.Cause(err) == fosite.ErrNotFound {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to find initial PKCE data tied to this request").WithDebug(err.Error()))
+	if errors.Is(err, fosite.ErrNotFound) {
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to find initial PKCE data tied to this request").WithCause(err).WithDebug(err.Error()))
 	} else if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	if err := c.Storage.DeletePKCERequestSession(ctx, signature); err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	challenge := authorizeRequest.GetRequestForm().Get("code_challenge")
@@ -204,7 +204,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	case "S256":
 		hash := sha256.New()
 		if _, err := hash.Write([]byte(verifier)); err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		}
 
 		if base64.RawURLEncoding.EncodeToString(hash.Sum([]byte{})) != challenge {

@@ -253,9 +253,8 @@ const (
 )
 
 func ErrorToRFC6749Error(err error) *RFC6749Error {
-	if e, ok := err.(*RFC6749Error); ok {
-		return e
-	} else if e, ok := errors.Cause(err).(*RFC6749Error); ok {
+	var e *RFC6749Error
+	if errors.As(err, &e) {
 		return e
 	}
 	return &RFC6749Error{
@@ -263,6 +262,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 		Description: "The error is unrecognizable.",
 		Debug:       err.Error(),
 		Code:        http.StatusInternalServerError,
+		cause:       err,
 	}
 }
 
@@ -272,6 +272,7 @@ type RFC6749Error struct {
 	Hint        string
 	Code        int
 	Debug       string
+	cause       error
 }
 
 func (e *RFC6749Error) Status() string {
@@ -292,6 +293,14 @@ func (e *RFC6749Error) Reason() string {
 
 func (e *RFC6749Error) StatusCode() int {
 	return e.Code
+}
+
+func (e *RFC6749Error) Cause() error {
+	return e.cause
+}
+
+func (e *RFC6749Error) Unwrap() error {
+	return e.cause
 }
 
 func (e *RFC6749Error) WithHintf(hint string, args ...interface{}) *RFC6749Error {
@@ -317,6 +326,12 @@ func (e *RFC6749Error) WithDebugf(debug string, args ...interface{}) *RFC6749Err
 func (e *RFC6749Error) WithDescription(description string) *RFC6749Error {
 	err := *e
 	err.Description = description
+	return &err
+}
+
+func (e *RFC6749Error) WithCause(cause error) *RFC6749Error {
+	err := *e
+	err.cause = cause
 	return &err
 }
 

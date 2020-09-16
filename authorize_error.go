@@ -70,7 +70,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	query.Add("state", ar.GetState())
 
 	var redirectURIString string
-	if !(len(ar.GetResponseTypes()) == 0 || ar.GetResponseTypes().ExactOne("code")) && errors.Cause(err) != ErrUnsupportedResponseType {
+	if !(len(ar.GetResponseTypes()) == 0 || ar.GetResponseTypes().ExactOne("code")) && !errors.Is(err, ErrUnsupportedResponseType) {
 		redirectURIString = redirectURI.String() + "#" + query.Encode()
 	} else {
 		for key, values := range redirectURI.Query() {

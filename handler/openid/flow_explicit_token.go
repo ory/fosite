@@ -39,10 +39,10 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 	}
 
 	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, requester.GetRequestForm().Get("code"), requester)
-	if errors.Cause(err) == ErrNoSessionFound {
-		return errors.WithStack(fosite.ErrUnknownRequest.WithDebug(err.Error()))
+	if errors.Is(err, ErrNoSessionFound) {
+		return errors.WithStack(fosite.ErrUnknownRequest.WithCause(err).WithDebug(err.Error()))
 	} else if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	if !authorize.GetGrantedScopes().Has("openid") {

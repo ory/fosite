@@ -497,11 +497,12 @@ func TestAuthenticateClient(t *testing.T) {
 			}
 
 			if err != nil {
-				switch e := errors.Cause(err).(type) {
-				case *jwt.ValidationError:
-					t.Logf("Error is: %s", e.Inner)
-				case *RFC6749Error:
-					t.Logf("Debug is: %s", e.Debug)
+				var validationError *jwt.ValidationError
+				var rfcError *RFC6749Error
+				if errors.As(err, &validationError) {
+					t.Logf("Error is: %s", validationError.Inner)
+				} else if errors.As(err, &rfcError) {
+					t.Logf("Debug is: %s", rfcError.Debug)
 				}
 			}
 			require.NoError(t, err)
