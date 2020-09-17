@@ -126,15 +126,16 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 	})
 	if err != nil {
 		// Do not re-process already enhanced errors
-		if e, ok := errors.Cause(err).(*jwt.ValidationError); ok {
+		var e *jwt.ValidationError
+		if errors.As(err, &e) {
 			if e.Inner != nil {
 				return e.Inner
 			}
-			return errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to verify the request object's signature.").WithDebug(err.Error()))
+			return errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to verify the request object's signature.").WithCause(err).WithDebug(err.Error()))
 		}
 		return err
 	} else if err := token.Claims.Valid(); err != nil {
-		return errors.WithStack(ErrInvalidRequestObject.WithHint("Unable to verify the request object because its claims could not be validated, check if the expiry time is set correctly.").WithDebug(err.Error()))
+		return errors.WithStack(ErrInvalidRequestObject.WithHint("Unable to verify the request object because its claims could not be validated, check if the expiry time is set correctly.").WithCause(err).WithDebug(err.Error()))
 	}
 
 	claims, ok := token.Claims.(*jwt.MapClaims)
@@ -222,7 +223,7 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 
 	if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return request, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithDebug(err.Error()))
+		return request, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithCause(err).WithDebug(err.Error()))
 	}
 
 	request.Form = r.Form
@@ -233,7 +234,7 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 
 	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	if err != nil {
-		return request, errors.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithDebug(err.Error()))
+		return request, errors.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithCause(err).WithDebug(err.Error()))
 	}
 	request.Client = client
 

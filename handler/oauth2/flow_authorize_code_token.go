@@ -48,7 +48,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
-	if errors.Cause(err) == fosite.ErrInvalidatedAuthorizeCode {
+	if errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) {
 		if authorizeRequest == nil {
 			return fosite.ErrServerError.
 				WithHint("Misconfigured code lead to an error that prohibited the OAuth 2.0 Framework from processing this request.").
@@ -68,16 +68,16 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 			debug += "Revocation of refresh_token lead to error " + revErr.Error() + "."
 		}
 		return errors.WithStack(fosite.ErrInvalidGrant.WithHint(hint).WithDebug(debug))
-	} else if err != nil && errors.Cause(err).Error() == fosite.ErrNotFound.Error() {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug(err.Error()))
+	} else if err != nil && errors.Is(err, fosite.ErrNotFound) {
+		return errors.WithStack(fosite.ErrInvalidGrant.WithCause(err).WithDebug(err.Error()))
 	} else if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	// The authorization server MUST verify that the authorization code is valid
 	// This needs to happen after store retrieval for the session to be hydrated properly
 	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithCause(err).WithDebug(err.Error()))
 	}
 
 	// Override scopes
@@ -141,10 +141,10 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	} else if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
 		// This needs to happen after store retrieval for the session to be hydrated properly
-		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithCause(err).WithDebug(err.Error()))
 	}
 
 	for _, scope := range authorizeRequest.GetGrantedScopes() {
@@ -157,38 +157,38 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	var refresh, refreshSignature string
 	if canIssueRefreshToken(c, authorizeRequest) {
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		}
 	}
 
 	ctx, err = storage.MaybeBeginTx(ctx, c.CoreStorage)
 	if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	if err := c.CoreStorage.InvalidateAuthorizeCodeSession(ctx, signature); err != nil {
 		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
 			err = rollBackTxnErr
 		}
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	} else if err := c.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
 		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
 			err = rollBackTxnErr
 		}
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	} else if refreshSignature != "" {
 		if err := c.CoreStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester.Sanitize([]string{})); err != nil {
 			if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
 				err = rollBackTxnErr
 			}
-			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		}
 	}
 
@@ -201,7 +201,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	if err := storage.MaybeCommitTx(ctx, c.CoreStorage); err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	return nil

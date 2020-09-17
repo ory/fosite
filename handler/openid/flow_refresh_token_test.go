@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	jwtgo "github.com/dgrijalva/jwt-go"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -86,7 +85,7 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 		t.Run("case="+c.description, func(t *testing.T) {
 			err := h.HandleTokenEndpointRequest(nil, c.areq)
 			if c.expectedErr != nil {
-				require.EqualError(t, errors.Cause(err), c.expectedErr.Error(), "%v", err)
+				require.EqualError(t, err, c.expectedErr.Error(), "%v", err)
 			} else {
 				require.NoError(t, err)
 			}
@@ -208,7 +207,7 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 			aresp := fosite.NewAccessResponse()
 			err := h.PopulateTokenEndpointResponse(nil, c.areq, aresp)
 			if c.expectedErr != nil {
-				require.EqualError(t, errors.Cause(err), c.expectedErr.Error(), "%v", err)
+				require.EqualError(t, err, c.expectedErr.Error(), "%v", err)
 			} else {
 				require.NoError(t, err)
 			}

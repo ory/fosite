@@ -64,14 +64,14 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	refresh := request.GetRequestForm().Get("refresh_token")
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(refresh)
 	originalRequest, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, request.GetSession())
-	if errors.Cause(err) == fosite.ErrNotFound {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithDebugf("The refresh token has not been found: %s", err))
+	if errors.Is(err, fosite.ErrNotFound) {
+		return errors.WithStack(fosite.ErrInvalidGrant.WithCause(err).WithDebugf("The refresh token has not been found: %s", err.Error()))
 	} else if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	} else if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, originalRequest, refresh); err != nil {
 		// The authorization server MUST ... validate the refresh token.
 		// This needs to happen after store retrieval for the session to be hydrated properly
-		return errors.WithStack(fosite.ErrInvalidRequest.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithCause(err).WithDebug(err.Error()))
 	}
 
 	if !(len(c.RefreshTokenScopes) == 0 || originalRequest.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...)) {
@@ -121,19 +121,19 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 
 	accessToken, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	refreshToken, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 	if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(requester.GetRequestForm().Get("refresh_token"))
 
 	ctx, err = storage.MaybeBeginTx(ctx, c.TokenRevocationStorage)
 	if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
 	ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
@@ -178,13 +178,13 @@ func handleRefreshTokenEndpointResponseStorageError(ctx context.Context, rollbac
 		}
 	}()
 
-	if errors.Cause(storageErr) == fosite.ErrSerializationFailure {
+	if errors.Is(storageErr, fosite.ErrSerializationFailure) {
 		return errors.WithStack(fosite.ErrInvalidRequest.
 			WithDebugf(storageErr.Error()).
 			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))
 	}
 
-	if errors.Cause(storageErr) == fosite.ErrNotFound {
+	if errors.Is(storageErr, fosite.ErrNotFound) {
 		return errors.WithStack(fosite.ErrInvalidRequest.
 			WithDebugf(storageErr.Error()).
 			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))

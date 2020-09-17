@@ -20,14 +20,14 @@ func DefaultAudienceMatchingStrategy(haystack []string, needle []string) error {
 	for _, n := range needle {
 		nu, err := url.Parse(n)
 		if err != nil {
-			return errors.WithStack(ErrInvalidRequest.WithHintf(`Unable to parse requested audience "%s".`, n).WithDebug(err.Error()))
+			return errors.WithStack(ErrInvalidRequest.WithHintf(`Unable to parse requested audience "%s".`, n).WithCause(err).WithDebug(err.Error()))
 		}
 
 		var found bool
 		for _, h := range haystack {
 			hu, err := url.Parse(h)
 			if err != nil {
-				return errors.WithStack(ErrInvalidRequest.WithHintf(`Unable to parse whitelisted audience "%s".`, h).WithDebug(err.Error()))
+				return errors.WithStack(ErrInvalidRequest.WithHintf(`Unable to parse whitelisted audience "%s".`, h).WithCause(err).WithDebug(err.Error()))
 			}
 
 			allowedPath := strings.TrimRight(hu.Path, "/")

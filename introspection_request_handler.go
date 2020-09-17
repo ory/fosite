@@ -113,7 +113,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 	if r.Method != "POST" {
 		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithHintf("HTTP method is \"%s\", expected \"POST\".", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithDebug(err.Error()))
+		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithCause(err).WithDebug(err.Error()))
 	} else if len(r.PostForm) == 0 {
 		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
 	}
@@ -139,17 +139,17 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 
 		clientID, err := url.QueryUnescape(id)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to decode OAuth 2.0 Client ID from HTTP basic authorization header, make sure it is properly encoded.").WithDebug(err.Error()))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to decode OAuth 2.0 Client ID from HTTP basic authorization header, make sure it is properly encoded.").WithCause(err).WithDebug(err.Error()))
 		}
 
 		clientSecret, err := url.QueryUnescape(secret)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to decode OAuth 2.0 Client Secret from HTTP basic authorization header, make sure it is properly encoded.").WithDebug(err.Error()))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to decode OAuth 2.0 Client Secret from HTTP basic authorization header, make sure it is properly encoded.").WithCause(err).WithDebug(err.Error()))
 		}
 
 		client, err := f.Store.GetClient(ctx, clientID)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to find OAuth 2.0 Client from HTTP basic authorization header.").WithDebug(err.Error()))
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to find OAuth 2.0 Client from HTTP basic authorization header.").WithCause(err).WithDebug(err.Error()))
 		}
 
 		// Enforce client authentication
@@ -160,7 +160,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 
 	tt, ar, err := f.IntrospectToken(ctx, token, TokenType(tokenType), session, RemoveEmpty(strings.Split(scope, " "))...)
 	if err != nil {
-		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInactiveToken.WithHint("An introspection strategy indicated that the token is inactive.").WithDebug(err.Error()))
+		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInactiveToken.WithHint("An introspection strategy indicated that the token is inactive.").WithCause(err).WithDebug(err.Error()))
 	}
 
 	return &IntrospectionResponse{

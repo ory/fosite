@@ -28,6 +28,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
@@ -68,7 +69,9 @@ func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite
 		_, resp, err := oauth2.IntrospectToken(ctx, fosite.AccessTokenFromRequest(req), fosite.AccessToken, session)
 		if err != nil {
 			t.Logf("Info request failed because: %+v", err)
-			http.Error(rw, errors.Cause(err).(*fosite.RFC6749Error).Description, errors.Cause(err).(*fosite.RFC6749Error).Code)
+			var e *fosite.RFC6749Error
+			require.True(t, errors.As(err, &e))
+			http.Error(rw, e.Description, e.Code)
 			return
 		}
 

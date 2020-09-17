@@ -27,7 +27,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -96,7 +95,7 @@ func TestNewAccessResponse(t *testing.T) {
 			ar, err := f.NewAccessResponse(nil, nil)
 
 			if c.expectErr != nil {
-				assert.EqualError(t, errors.Cause(err), c.expectErr.Error())
+				assert.EqualError(t, err, c.expectErr.Error())
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, ar, c.expect)

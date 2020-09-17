@@ -141,7 +141,8 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 	}
 
 	tokenHint, err := v.Strategy.Decode(ctx, idTokenHint)
-	if ve, ok := errors.Cause(err).(*jwtgo.ValidationError); ok && ve.Errors == jwtgo.ValidationErrorExpired {
+	var ve *jwtgo.ValidationError
+	if errors.As(err, &ve) && ve.Errors == jwtgo.ValidationErrorExpired {
 		// Expired tokens are ok
 	} else if err != nil {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("Failed to validate OpenID Connect request as decoding id token from id_token_hint parameter failed because %s.", err.Error()))

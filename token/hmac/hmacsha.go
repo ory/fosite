@@ -106,7 +106,7 @@ func (c *HMACStrategy) Validate(token string) (err error) {
 	for _, key := range keys {
 		if err = c.validate(key, token); err == nil {
 			return nil
-		} else if errors.Cause(err) == fosite.ErrTokenSignatureMismatch {
+		} else if errors.Is(err, fosite.ErrTokenSignatureMismatch) {
 		} else {
 			return err
 		}
