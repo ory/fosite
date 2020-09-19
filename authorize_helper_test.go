@@ -215,6 +215,12 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			url:     ":/invalid.uri)bar",
 			isError: true,
 		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"web+application://callback"}},
+			url:      "web+application://callback",
+			isError:  false,
+			expected: "web+application://callback",
+		},
 	} {
 		redir, err := MatchRedirectURIWithClientRedirectURIs(c.url, c.client)
 		assert.Equal(t, c.isError, err != nil, "%d: %s", k, err)
