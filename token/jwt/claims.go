@@ -66,7 +66,7 @@ func ToTime(i interface{}) time.Time {
 	return time.Time{}
 }
 
-// Filter will filter out elemets based on keys in a given input map na key-slice
+// Filter will filter out elements based on keys in a given input map na key-slice
 func Filter(elements map[string]interface{}, keys ...string) map[string]interface{} {
 	var keyIdx = make(map[string]bool)
 	var result = make(map[string]interface{})

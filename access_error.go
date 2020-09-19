@@ -25,6 +25,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 func (f *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err error) {
@@ -38,12 +39,20 @@ func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 
 	rfcerr := ErrorToRFC6749Error(err)
 	if !f.SendDebugMessagesToClients {
-		rfcerr.Debug = ""
+		rfcerr = rfcerr.Sanitize()
 	}
 
 	js, err := json.Marshal(rfcerr)
 	if err != nil {
-		http.Error(rw, fmt.Sprintf(`{"error": "%s"}`, err.Error()), http.StatusInternalServerError)
+		if f.SendDebugMessagesToClients {
+			// Poor man's JSON encoding. We do not want to use full JSON encoding because we just had an error.
+			errorMessage := err.Error()
+			errorMessage = strings.ReplaceAll(errorMessage, `\`, `\\`)
+			errorMessage = strings.ReplaceAll(errorMessage, `"`, `\"`)
+			http.Error(rw, fmt.Sprintf(`{"error":"server_error","error_description":"%s"}`, errorMessage), http.StatusInternalServerError)
+		} else {
+			http.Error(rw, `{"error":"server_error"}`, http.StatusInternalServerError)
+		}
 		return
 	}
 

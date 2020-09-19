@@ -23,8 +23,9 @@ package fosite
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"net/url"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -34,38 +35,43 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	rw.Header().Set("Pragma", "no-cache")
 
 	rfcerr := ErrorToRFC6749Error(err)
-	if !ar.IsRedirectURIValid() {
-		if !f.SendDebugMessagesToClients {
-			rfcerr.Debug = ""
-		}
+	if !f.SendDebugMessagesToClients {
+		rfcerr = rfcerr.Sanitize()
+	}
 
-		js, err := json.MarshalIndent(rfcerr, "", "\t")
+	if !ar.IsRedirectURIValid() {
+		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+
+		js, err := json.Marshal(rfcerr)
 		if err != nil {
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
+			if f.SendDebugMessagesToClients {
+				// Poor man's JSON encoding. We do not want to use full JSON encoding because we just had an error.
+				errorMessage := err.Error()
+				errorMessage = strings.ReplaceAll(errorMessage, `\`, `\\`)
+				errorMessage = strings.ReplaceAll(errorMessage, `"`, `\"`)
+				http.Error(rw, fmt.Sprintf(`{"error":"server_error","error_description":"%s"}`, errorMessage), http.StatusInternalServerError)
+			} else {
+				http.Error(rw, `{"error":"server_error"}`, http.StatusInternalServerError)
+			}
 			return
 		}
 
-		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 		rw.WriteHeader(rfcerr.Code)
 		rw.Write(js)
 		return
 	}
 
 	redirectURI := ar.GetRedirectURI()
-	query := url.Values{}
-	query.Add("error", rfcerr.Name)
-	query.Add("error_description", rfcerr.Description)
+
+	// The endpoint URI MUST NOT include a fragment component.
+	redirectURI.Fragment = ""
+
+	query := rfcerr.ToValues()
 	query.Add("state", ar.GetState())
-	if f.SendDebugMessagesToClients && rfcerr.Debug != "" {
-		query.Add("error_debug", rfcerr.Debug)
-	}
 
-	if rfcerr.Hint != "" {
-		query.Add("error_hint", rfcerr.Hint)
-	}
-
-	if !(len(ar.GetResponseTypes()) == 0 || ar.GetResponseTypes().ExactOne("code")) && errors.Cause(err) != ErrUnsupportedResponseType {
-		redirectURI.Fragment = query.Encode()
+	var redirectURIString string
+	if !(len(ar.GetResponseTypes()) == 0 || ar.GetResponseTypes().ExactOne("code")) && !errors.Is(err, ErrUnsupportedResponseType) {
+		redirectURIString = redirectURI.String() + "#" + query.Encode()
 	} else {
 		for key, values := range redirectURI.Query() {
 			for _, value := range values {
@@ -73,8 +79,9 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 			}
 		}
 		redirectURI.RawQuery = query.Encode()
+		redirectURIString = redirectURI.String()
 	}
 
-	rw.Header().Add("Location", redirectURI.String())
+	rw.Header().Add("Location", redirectURIString)
 	rw.WriteHeader(http.StatusFound)
 }

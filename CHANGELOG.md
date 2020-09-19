@@ -4,41 +4,49 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-06)](#unreleased-2020-09-06)
-    - [Bug Fixes](#bug-fixes)
+- [Unreleased (2020-09-17)](#unreleased-2020-09-17)
+    - [Features](#features)
+- [0.33.0 (2020-09-16)](#0330-2020-09-16)
+    - [Features](#features-1)
+    - [BREAKING CHANGES](#breaking-changes)
+  - [0.32.4 (2020-09-15)](#0324-2020-09-15)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
-    - [Features](#features)
+  - [0.32.3 (2020-09-12)](#0323-2020-09-12)
+    - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring-1)
+    - [Documentation](#documentation-1)
+    - [Features](#features-2)
   - [0.32.2 (2020-06-22)](#0322-2020-06-22)
-    - [Features](#features-1)
+    - [Features](#features-3)
   - [0.32.1 (2020-06-05)](#0321-2020-06-05)
     - [Bug Fixes](#bug-fixes-1)
-    - [Features](#features-2)
+    - [Features](#features-4)
 - [0.32.0 (2020-05-28)](#0320-2020-05-28)
     - [Bug Fixes](#bug-fixes-2)
-    - [Documentation](#documentation-1)
-    - [Features](#features-3)
+    - [Documentation](#documentation-2)
+    - [Features](#features-5)
   - [0.31.3 (2020-05-09)](#0313-2020-05-09)
     - [Bug Fixes](#bug-fixes-3)
-    - [Features](#features-4)
+    - [Features](#features-6)
   - [0.31.2 (2020-04-16)](#0312-2020-04-16)
     - [Bug Fixes](#bug-fixes-4)
   - [0.31.1 (2020-04-16)](#0311-2020-04-16)
     - [Bug Fixes](#bug-fixes-5)
-    - [Documentation](#documentation-2)
+    - [Documentation](#documentation-3)
 - [0.31.0 (2020-03-29)](#0310-2020-03-29)
     - [Unclassified](#unclassified)
   - [0.30.6 (2020-03-26)](#0306-2020-03-26)
     - [Bug Fixes](#bug-fixes-6)
-    - [Documentation](#documentation-3)
+    - [Documentation](#documentation-4)
   - [0.30.5 (2020-03-25)](#0305-2020-03-25)
     - [Bug Fixes](#bug-fixes-7)
   - [0.30.4 (2020-03-17)](#0304-2020-03-17)
     - [Bug Fixes](#bug-fixes-8)
   - [0.30.3 (2020-03-04)](#0303-2020-03-04)
     - [Bug Fixes](#bug-fixes-9)
-    - [Documentation](#documentation-4)
-    - [Features](#features-5)
+    - [Documentation](#documentation-5)
+    - [Features](#features-7)
   - [0.30.2 (2019-11-21)](#0302-2019-11-21)
     - [Unclassified](#unclassified-1)
   - [0.30.1 (2019-09-23)](#0301-2019-09-23)
@@ -46,10 +54,10 @@
 - [0.30.0 (2019-09-16)](#0300-2019-09-16)
     - [Unclassified](#unclassified-3)
   - [0.29.8 (2019-08-29)](#0298-2019-08-29)
-    - [Documentation](#documentation-5)
+    - [Documentation](#documentation-6)
     - [Unclassified](#unclassified-4)
   - [0.29.7 (2019-08-06)](#0297-2019-08-06)
-    - [Documentation](#documentation-6)
+    - [Documentation](#documentation-7)
     - [Unclassified](#unclassified-5)
   - [0.29.6 (2019-04-26)](#0296-2019-04-26)
     - [Unclassified](#unclassified-6)
@@ -68,7 +76,7 @@
 - [0.28.0 (2018-11-16)](#0280-2018-11-16)
     - [Unclassified](#unclassified-13)
   - [0.27.4 (2018-11-12)](#0274-2018-11-12)
-    - [Documentation](#documentation-7)
+    - [Documentation](#documentation-8)
     - [Unclassified](#unclassified-14)
   - [0.27.3 (2018-11-08)](#0273-2018-11-08)
     - [Unclassified](#unclassified-15)
@@ -83,7 +91,7 @@
 - [0.26.0 (2018-10-24)](#0260-2018-10-24)
     - [Unclassified](#unclassified-20)
   - [0.25.1 (2018-10-23)](#0251-2018-10-23)
-    - [Documentation](#documentation-8)
+    - [Documentation](#documentation-9)
     - [Unclassified](#unclassified-21)
 - [0.25.0 (2018-10-08)](#0250-2018-10-08)
     - [Unclassified](#unclassified-22)
@@ -104,7 +112,7 @@
   - [0.21.1 (2018-07-22)](#0211-2018-07-22)
     - [Unclassified](#unclassified-30)
 - [0.21.0 (2018-06-23)](#0210-2018-06-23)
-    - [Documentation](#documentation-9)
+    - [Documentation](#documentation-10)
     - [Unclassified](#unclassified-31)
   - [0.20.3 (2018-06-07)](#0203-2018-06-07)
     - [Unclassified](#unclassified-32)
@@ -141,10 +149,10 @@
   - [0.17.1 (2018-04-22)](#0171-2018-04-22)
     - [Unclassified](#unclassified-48)
 - [0.17.0 (2018-04-08)](#0170-2018-04-08)
-    - [Documentation](#documentation-10)
+    - [Documentation](#documentation-11)
     - [Unclassified](#unclassified-49)
   - [0.16.5 (2018-03-17)](#0165-2018-03-17)
-    - [Documentation](#documentation-11)
+    - [Documentation](#documentation-12)
     - [Unclassified](#unclassified-50)
   - [0.16.4 (2018-02-07)](#0164-2018-02-07)
     - [Unclassified](#unclassified-51)
@@ -169,7 +177,7 @@
   - [0.15.1 (2017-12-10)](#0151-2017-12-10)
     - [Unclassified](#unclassified-61)
 - [0.15.0 (2017-12-09)](#0150-2017-12-09)
-    - [Documentation](#documentation-12)
+    - [Documentation](#documentation-13)
     - [Unclassified](#unclassified-62)
   - [0.14.2 (2017-12-06)](#0142-2017-12-06)
     - [Unclassified](#unclassified-63)
@@ -184,10 +192,10 @@
 - [0.12.0 (2017-10-25)](#0120-2017-10-25)
     - [Unclassified](#unclassified-68)
   - [0.11.4 (2017-10-10)](#0114-2017-10-10)
-    - [Documentation](#documentation-13)
+    - [Documentation](#documentation-14)
     - [Unclassified](#unclassified-69)
   - [0.11.3 (2017-08-21)](#0113-2017-08-21)
-    - [Documentation](#documentation-14)
+    - [Documentation](#documentation-15)
     - [Unclassified](#unclassified-70)
   - [0.11.2 (2017-07-09)](#0112-2017-07-09)
     - [Unclassified](#unclassified-71)
@@ -200,7 +208,7 @@
   - [0.9.7 (2017-06-28)](#097-2017-06-28)
     - [Unclassified](#unclassified-75)
   - [0.9.6 (2017-06-21)](#096-2017-06-21)
-    - [Documentation](#documentation-15)
+    - [Documentation](#documentation-16)
     - [Unclassified](#unclassified-76)
   - [0.9.5 (2017-06-08)](#095-2017-06-08)
     - [Unclassified](#unclassified-77)
@@ -213,13 +221,13 @@
   - [0.9.1 (2017-06-04)](#091-2017-06-04)
     - [Unclassified](#unclassified-81)
 - [0.9.0 (2017-06-03)](#090-2017-06-03)
-    - [Documentation](#documentation-16)
+    - [Documentation](#documentation-17)
     - [Unclassified](#unclassified-82)
 - [0.8.0 (2017-05-18)](#080-2017-05-18)
-    - [Documentation](#documentation-17)
+    - [Documentation](#documentation-18)
     - [Unclassified](#unclassified-83)
 - [0.7.0 (2017-05-03)](#070-2017-05-03)
-    - [Documentation](#documentation-18)
+    - [Documentation](#documentation-19)
     - [Unclassified](#unclassified-84)
   - [0.6.19 (2017-05-03)](#0619-2017-05-03)
     - [Unclassified](#unclassified-85)
@@ -240,7 +248,7 @@
   - [0.6.10 (2016-12-29)](#0610-2016-12-29)
     - [Unclassified](#unclassified-93)
   - [0.6.9 (2016-12-29)](#069-2016-12-29)
-    - [Documentation](#documentation-19)
+    - [Documentation](#documentation-20)
     - [Unclassified](#unclassified-94)
   - [0.6.8 (2016-12-20)](#068-2016-12-20)
     - [Unclassified](#unclassified-95)
@@ -263,7 +271,7 @@
 - [0.5.0 (2016-10-17)](#050-2016-10-17)
     - [Unclassified](#unclassified-104)
 - [0.4.0 (2016-10-16)](#040-2016-10-16)
-    - [Documentation](#documentation-20)
+    - [Documentation](#documentation-21)
     - [Unclassified](#unclassified-105)
   - [0.3.6 (2016-10-07)](#036-2016-10-07)
     - [Unclassified](#unclassified-106)
@@ -272,7 +280,7 @@
   - [0.3.4 (2016-10-04)](#034-2016-10-04)
     - [Unclassified](#unclassified-108)
   - [0.3.3 (2016-10-03)](#033-2016-10-03)
-    - [Documentation](#documentation-21)
+    - [Documentation](#documentation-22)
     - [Unclassified](#unclassified-109)
   - [0.3.2 (2016-09-22)](#032-2016-09-22)
     - [Unclassified](#unclassified-110)
@@ -291,17 +299,55 @@
 - [0.2.0 (2016-08-06)](#020-2016-08-06)
     - [Unclassified](#unclassified-117)
 - [0.1.0 (2016-08-01)](#010-2016-08-01)
-    - [Code Refactoring](#code-refactoring-1)
-    - [Documentation](#documentation-22)
+    - [Code Refactoring](#code-refactoring-2)
+    - [Documentation](#documentation-23)
     - [Unclassified](#unclassified-118)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.32.2...46871476b1f47cefc09888615f70dd9fdd5af8b3) (2020-09-06)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.33.0...b53f8f58f0b9889d044cf9a8e2604316f0559ff6) (2020-09-17)
+
+
+### Features
+
+* Errors now wrap underlying errors ([#479](https://github.com/ory/fosite/issues/479)) ([b53f8f5](https://github.com/ory/fosite/commit/b53f8f58f0b9889d044cf9a8e2604316f0559ff6)), closes [#458](https://github.com/ory/fosite/issues/458)
+
+
+
+# [0.33.0](https://github.com/ory/fosite/compare/v0.32.4...v0.33.0) (2020-09-16)
+
+
+### Features
+
+* Error_hint and error_debug are now exposed through error_description ([#460](https://github.com/ory/fosite/issues/460)) ([8daab21](https://github.com/ory/fosite/commit/8daab21f97c513101d224a7ad7a44b871440be57))
+
+
+### BREAKING CHANGES
+
+* Merges the error description with error hint and error debug, making it easier to consume error messages in standardized OAuth2 clients.
+
+
+
+## [0.32.4](https://github.com/ory/fosite/compare/v0.32.3...v0.32.4) (2020-09-15)
+
+
+### Code Refactoring
+
+* Fix inconsistent spelling of revocation ([#477](https://github.com/ory/fosite/issues/477)) ([7a55edb](https://github.com/ory/fosite/commit/7a55edbb67738a721c5f1a8f58d2db67f6738f65))
+
+
+### Documentation
+
+* Fix minor typos ([#475](https://github.com/ory/fosite/issues/475)) ([23cc9c1](https://github.com/ory/fosite/commit/23cc9c1d29f35a73acbf05fe6b505b692f6fe49c))
+
+
+
+## [0.32.3](https://github.com/ory/fosite/compare/v0.32.2...v0.32.3) (2020-09-12)
 
 
 ### Bug Fixes
 
+* Add missing OAuth2TokenRevocationFactory to ComposeAllEnabled ([#472](https://github.com/ory/fosite/issues/472)) ([88587fd](https://github.com/ory/fosite/commit/88587fde8fc92137660383c401250e492716c396))
 * Align error returned when a grant_type was requested that's not allowed for a client ([#467](https://github.com/ory/fosite/issues/467)) ([3c30c0d](https://github.com/ory/fosite/commit/3c30c0d9f1e62b237acc845d5b3a42d1ea9a80c0)), closes [/tools.ietf.org/html/rfc6749#section-5](https://github.com//tools.ietf.org/html/rfc6749/issues/section-5):
 
     > Returned error was 'invalid_grant'.

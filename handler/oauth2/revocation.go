@@ -66,7 +66,7 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 	}
 
 	if ar.GetClient().GetID() != client.GetID() {
-		return errors.WithStack(fosite.ErrRevokationClientMismatch)
+		return errors.WithStack(fosite.ErrRevocationClientMismatch)
 	}
 
 	requestID := ar.GetID()

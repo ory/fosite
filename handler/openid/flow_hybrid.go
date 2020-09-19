@@ -94,7 +94,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 		code, signature, err := c.AuthorizeExplicitGrantHandler.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 		if err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		}
 
 		// This is not required because the auth code flow is being handled by oauth2/flow_authorize_code_token which in turn
@@ -107,7 +107,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		// This is required because we must limit the authorize code lifespan.
 		ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthorizeExplicitGrantHandler.AuthCodeLifespan).Round(time.Second))
 		if err := c.AuthorizeExplicitGrantHandler.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.AuthorizeExplicitGrantHandler.GetSanitationWhiteList())); err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		}
 
 		resp.AddFragment("code", code)
@@ -121,7 +121,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 		if ar.GetGrantedScopes().Has("openid") {
 			if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar.Sanitize(oidcParameters)); err != nil {
-				return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+				return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 			}
 		}
 	}

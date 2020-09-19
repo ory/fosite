@@ -80,7 +80,7 @@ func TestGenerateIDToken(t *testing.T) {
 	} {
 		c.setup()
 		token, err := h.generateIDToken(nil, ar)
-		assert.True(t, errors.Cause(err) == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
+		assert.True(t, err == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if err == nil {
 			assert.NotEmpty(t, token, "(%d) %s", k, c.description)
 		}

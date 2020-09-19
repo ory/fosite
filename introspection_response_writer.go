@@ -55,8 +55,7 @@ func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
 		return
 	}
 
-	switch errors.Cause(err).Error() {
-	case ErrInvalidRequest.Error(), ErrRequestUnauthorized.Error():
+	if errors.Is(err, ErrInvalidRequest) || errors.Is(err, ErrRequestUnauthorized) {
 		f.writeJsonError(rw, err)
 		return
 	}

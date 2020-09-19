@@ -27,7 +27,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -135,7 +134,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					aresp := fosite.NewAuthorizeResponse()
 					err := h.HandleAuthorizeEndpointRequest(nil, c.areq, aresp)
 					if c.expectErr != nil {
-						require.EqualError(t, errors.Cause(err), c.expectErr.Error())
+						require.EqualError(t, err, c.expectErr.Error())
 					} else {
 						require.NoError(t, err)
 					}

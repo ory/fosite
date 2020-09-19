@@ -247,7 +247,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 					err := h.HandleTokenEndpointRequest(nil, areq)
 					if c.expectErr != nil {
-						require.EqualError(t, errors.Cause(err), c.expectErr.Error())
+						require.EqualError(t, err, c.expectErr.Error())
 					} else {
 						require.NoError(t, err)
 					}
@@ -331,7 +331,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 
 					err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
 					if c.expectErr != nil {
-						assert.EqualError(t, errors.Cause(err), c.expectErr.Error())
+						assert.EqualError(t, err, c.expectErr.Error())
 					} else {
 						assert.NoError(t, err)
 					}
@@ -869,7 +869,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 			}
 
 			if err := handler.PopulateTokenEndpointResponse(propagatedContext, request, response); testCase.expectError != nil {
-				assert.EqualError(t, errors.Cause(err), testCase.expectError.Error())
+				assert.EqualError(t, err, testCase.expectError.Error())
 			}
 		})
 	}

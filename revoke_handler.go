@@ -51,7 +51,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 	if r.Method != "POST" {
 		return errors.WithStack(ErrInvalidRequest.WithHintf("HTTP method is \"%s\", expected \"POST\".", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithDebug(err.Error()))
+		return errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithCause(err).WithDebug(err.Error()))
 	} else if len(r.PostForm) == 0 {
 		return errors.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
 	}
@@ -64,11 +64,11 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 	token := r.PostForm.Get("token")
 	tokenTypeHint := TokenType(r.PostForm.Get("token_type_hint"))
 
-	var found bool
+	var found = false
 	for _, loader := range f.RevocationHandlers {
 		if err := loader.RevokeToken(ctx, token, tokenTypeHint, client); err == nil {
 			found = true
-		} else if errors.Cause(err).Error() == ErrUnknownRequest.Error() {
+		} else if errors.Is(err, ErrUnknownRequest) {
 			// do nothing
 		} else if err != nil {
 			return err
@@ -102,8 +102,7 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 		return
 	}
 
-	switch errors.Cause(err).Error() {
-	case ErrInvalidRequest.Error():
+	if errors.Is(err, ErrInvalidRequest) {
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 		js, err := json.Marshal(ErrInvalidRequest)
@@ -114,7 +113,7 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 
 		rw.WriteHeader(ErrInvalidRequest.Code)
 		rw.Write(js)
-	case ErrInvalidClient.Error():
+	} else if errors.Is(err, ErrInvalidClient) {
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 		js, err := json.Marshal(ErrInvalidClient)
@@ -125,7 +124,7 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 
 		rw.WriteHeader(ErrInvalidClient.Code)
 		rw.Write(js)
-	default:
+	} else {
 		// 200 OK
 		rw.WriteHeader(http.StatusOK)
 	}

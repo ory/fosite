@@ -61,7 +61,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	if r.Method != "POST" {
 		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHintf("HTTP method is \"%s\", expected \"POST\".", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithDebug(err.Error()))
+		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithCause(err).WithDebug(err.Error()))
 	} else if len(r.PostForm) == 0 {
 		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
 	}
@@ -84,11 +84,11 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 	accessRequest.Client = client
 
-	var found bool = false
+	var found = false
 	for _, loader := range f.TokenEndpointHandlers {
 		if err := loader.HandleTokenEndpointRequest(ctx, accessRequest); err == nil {
 			found = true
-		} else if errors.Cause(err).Error() == ErrUnknownRequest.Error() {
+		} else if errors.Is(err, ErrUnknownRequest) {
 			// do nothing
 		} else if err != nil {
 			return accessRequest, err

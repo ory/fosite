@@ -93,7 +93,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 
 			client, err = f.Store.GetClient(ctx, clientID)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
+				return nil, errors.WithStack(ErrInvalidClient.WithCause(err).WithDebug(err.Error()))
 			}
 
 			oidcClient, ok := client.(OpenIDConnectClient)
@@ -134,15 +134,16 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 		})
 		if err != nil {
 			// Do not re-process already enhanced errors
-			if e, ok := errors.Cause(err).(*jwt.ValidationError); ok {
+			var e *jwt.ValidationError
+			if errors.As(err, &e) {
 				if e.Inner != nil {
 					return nil, e.Inner
 				}
-				return nil, errors.WithStack(ErrInvalidClient.WithHint("Unable to verify the integrity of the \"client_assertion\" value.").WithDebug(err.Error()))
+				return nil, errors.WithStack(ErrInvalidClient.WithHint("Unable to verify the integrity of the \"client_assertion\" value.").WithCause(err).WithDebug(err.Error()))
 			}
 			return nil, err
 		} else if err := token.Claims.Valid(); err != nil {
-			return nil, errors.WithStack(ErrInvalidClient.WithHint("Unable to verify the request object because its claims could not be validated, check if the expiry time is set correctly.").WithDebug(err.Error()))
+			return nil, errors.WithStack(ErrInvalidClient.WithHint("Unable to verify the request object because its claims could not be validated, check if the expiry time is set correctly.").WithCause(err).WithDebug(err.Error()))
 		}
 
 		claims, ok := token.Claims.(*jwt.MapClaims)
@@ -212,7 +213,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 
 	client, err := f.Store.GetClient(ctx, clientID)
 	if err != nil {
-		return nil, errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
+		return nil, errors.WithStack(ErrInvalidClient.WithCause(err).WithDebug(err.Error()))
 	}
 
 	if oidcClient, ok := client.(OpenIDConnectClient); !ok {
@@ -231,7 +232,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 
 	// Enforce client authentication
 	if err := f.Hasher.Compare(ctx, client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-		return nil, errors.WithStack(ErrInvalidClient.WithDebug(err.Error()))
+		return nil, errors.WithStack(ErrInvalidClient.WithCause(err).WithDebug(err.Error()))
 	}
 
 	return client, nil
@@ -274,9 +275,9 @@ func clientCredentialsFromRequest(r *http.Request, form url.Values) (clientID, c
 	if id, secret, ok := r.BasicAuth(); !ok {
 		return clientCredentialsFromRequestBody(form, true)
 	} else if clientID, err = url.QueryUnescape(id); err != nil {
-		return "", "", errors.WithStack(ErrInvalidRequest.WithHint(`The client id in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded".`).WithDebug(err.Error()))
+		return "", "", errors.WithStack(ErrInvalidRequest.WithHint(`The client id in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded".`).WithCause(err).WithDebug(err.Error()))
 	} else if clientSecret, err = url.QueryUnescape(secret); err != nil {
-		return "", "", errors.WithStack(ErrInvalidRequest.WithHint(`The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded".`).WithDebug(err.Error()))
+		return "", "", errors.WithStack(ErrInvalidRequest.WithHint(`The client secret in the HTTP authorization header could not be decoded from "application/x-www-form-urlencoded".`).WithCause(err).WithDebug(err.Error()))
 	}
 
 	return clientID, clientSecret, nil
