@@ -22,9 +22,11 @@
 package fosite
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStringInSlice(t *testing.T) {
@@ -42,5 +44,15 @@ func TestStringInSlice(t *testing.T) {
 	} {
 		assert.Equal(t, c.ok, StringInSlice(c.needle, c.haystack), "%d", k)
 		t.Logf("Passed test case %d", k)
+	}
+}
+
+func TestEscapeJSONString(t *testing.T) {
+	for _, str := range []string{"", "foobar", `foo"bar`, `foo\bar`, "foo\n\tbar"} {
+		escaped := EscapeJSONString(str)
+		var unmarshaled string
+		err := json.Unmarshal([]byte(`"` + escaped + `"`), &unmarshaled)
+		require.NoError(t, err, str)
+		assert.Equal(t, str, unmarshaled, str)
 	}
 }
