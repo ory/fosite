@@ -4,7 +4,8 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-17)](#unreleased-2020-09-17)
+- [Unreleased (2020-09-20)](#unreleased-2020-09-20)
+    - [Bug Fixes](#bug-fixes)
     - [Features](#features)
 - [0.33.0 (2020-09-16)](#0330-2020-09-16)
     - [Features](#features-1)
@@ -13,38 +14,38 @@
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
   - [0.32.3 (2020-09-12)](#0323-2020-09-12)
-    - [Bug Fixes](#bug-fixes)
+    - [Bug Fixes](#bug-fixes-1)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-1)
     - [Features](#features-2)
   - [0.32.2 (2020-06-22)](#0322-2020-06-22)
     - [Features](#features-3)
   - [0.32.1 (2020-06-05)](#0321-2020-06-05)
-    - [Bug Fixes](#bug-fixes-1)
+    - [Bug Fixes](#bug-fixes-2)
     - [Features](#features-4)
 - [0.32.0 (2020-05-28)](#0320-2020-05-28)
-    - [Bug Fixes](#bug-fixes-2)
+    - [Bug Fixes](#bug-fixes-3)
     - [Documentation](#documentation-2)
     - [Features](#features-5)
   - [0.31.3 (2020-05-09)](#0313-2020-05-09)
-    - [Bug Fixes](#bug-fixes-3)
+    - [Bug Fixes](#bug-fixes-4)
     - [Features](#features-6)
   - [0.31.2 (2020-04-16)](#0312-2020-04-16)
-    - [Bug Fixes](#bug-fixes-4)
-  - [0.31.1 (2020-04-16)](#0311-2020-04-16)
     - [Bug Fixes](#bug-fixes-5)
+  - [0.31.1 (2020-04-16)](#0311-2020-04-16)
+    - [Bug Fixes](#bug-fixes-6)
     - [Documentation](#documentation-3)
 - [0.31.0 (2020-03-29)](#0310-2020-03-29)
     - [Unclassified](#unclassified)
   - [0.30.6 (2020-03-26)](#0306-2020-03-26)
-    - [Bug Fixes](#bug-fixes-6)
+    - [Bug Fixes](#bug-fixes-7)
     - [Documentation](#documentation-4)
   - [0.30.5 (2020-03-25)](#0305-2020-03-25)
-    - [Bug Fixes](#bug-fixes-7)
-  - [0.30.4 (2020-03-17)](#0304-2020-03-17)
     - [Bug Fixes](#bug-fixes-8)
-  - [0.30.3 (2020-03-04)](#0303-2020-03-04)
+  - [0.30.4 (2020-03-17)](#0304-2020-03-17)
     - [Bug Fixes](#bug-fixes-9)
+  - [0.30.3 (2020-03-04)](#0303-2020-03-04)
+    - [Bug Fixes](#bug-fixes-10)
     - [Documentation](#documentation-5)
     - [Features](#features-7)
   - [0.30.2 (2019-11-21)](#0302-2019-11-21)
@@ -305,7 +306,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.33.0...b53f8f58f0b9889d044cf9a8e2604316f0559ff6) (2020-09-17)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.33.0...0943a1095a209fdfb2f8a29524b676ee9c9650a1) (2020-09-20)
+
+
+### Bug Fixes
+
+* Full JSON escaping ([#481](https://github.com/ory/fosite/issues/481)) ([0943a10](https://github.com/ory/fosite/commit/0943a1095a209fdfb2f8a29524b676ee9c9650a1))
 
 
 ### Features
