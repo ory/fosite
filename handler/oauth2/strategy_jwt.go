@@ -38,6 +38,19 @@ type DefaultJWTStrategy struct {
 	jwt.JWTStrategy
 	HMACSHAStrategy *HMACSHAStrategy
 	Issuer          string
+	ScopeField      jwt.JWTScopeFieldEnum
+}
+
+func (h DefaultJWTStrategy) WithIssuer(issuer string) DefaultJWTStrategy {
+	strategy := h
+	strategy.Issuer = issuer
+	return strategy
+}
+
+func (h DefaultJWTStrategy) WithScopeField(scopeField jwt.JWTScopeFieldEnum) DefaultJWTStrategy {
+	strategy := h
+	strategy.ScopeField = scopeField
+	return strategy
 }
 
 func (h DefaultJWTStrategy) signature(token string) string {
@@ -68,7 +81,9 @@ func (h *DefaultJWTStrategy) ValidateJWT(ctx context.Context, tokenType fosite.T
 		return nil, err
 	}
 
-	claims := jwt.JWTClaims{}
+	claims := jwt.JWTClaims{
+		ScopeField: h.ScopeField,
+	}
 	claims.FromMapClaims(t.Claims.(jwtx.MapClaims))
 
 	requester = &fosite.Request{
@@ -170,6 +185,9 @@ func (h *DefaultJWTStrategy) generate(ctx context.Context, tokenType fosite.Toke
 			WithDefaults(
 				time.Now().UTC(),
 				h.Issuer,
+			).
+			WithScopeField(
+				h.ScopeField,
 			)
 
 		return h.JWTStrategy.Generate(ctx, claims.ToMapClaims(), jwtSession.GetJWTHeader())

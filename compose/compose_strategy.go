@@ -68,26 +68,6 @@ func NewOAuth2JWTECDSAStrategy(key *ecdsa.PrivateKey, strategy *oauth2.HMACSHASt
 	}
 }
 
-func NewOAuth2JWTStrategyWithIssuer(key *rsa.PrivateKey, strategy *oauth2.HMACSHAStrategy, issuer string) *oauth2.DefaultJWTStrategy {
-	return &oauth2.DefaultJWTStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: key,
-		},
-		HMACSHAStrategy: strategy,
-		Issuer:          issuer,
-	}
-}
-
-func NewOAuth2JWTECDSAStrategyWithIssuer(key *ecdsa.PrivateKey, strategy *oauth2.HMACSHAStrategy, issuer string) *oauth2.DefaultJWTStrategy {
-	return &oauth2.DefaultJWTStrategy{
-		JWTStrategy: &jwt.ES256JWTStrategy{
-			PrivateKey: key,
-		},
-		HMACSHAStrategy: strategy,
-		Issuer:          issuer,
-	}
-}
-
 func NewOpenIDConnectStrategy(config *Config, key *rsa.PrivateKey) *openid.DefaultStrategy {
 	return &openid.DefaultStrategy{
 		JWTStrategy: &jwt.RS256JWTStrategy{

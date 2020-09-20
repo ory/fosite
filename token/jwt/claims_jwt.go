@@ -22,10 +22,21 @@
 package jwt
 
 import (
+	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pborman/uuid"
+)
+
+// Enum for different types of scope encoding.
+type JWTScopeFieldEnum int
+
+const (
+	JWTScopeFieldUnset JWTScopeFieldEnum = iota
+	JWTScopeFieldList
+	JWTScopeFieldString
+	JWTScopeFieldBoth
 )
 
 type JWTClaimsDefaults struct {
@@ -43,39 +54,51 @@ type JWTClaimsContainer interface {
 	// values are already set in the claims, they will not be updated.
 	WithDefaults(iat time.Time, issuer string) JWTClaimsContainer
 
+	// WithScopeField configures how a scope field should be represented in JWT.
+	WithScopeField(scopeField JWTScopeFieldEnum) JWTClaimsContainer
+
 	// ToMapClaims returns the claims as a github.com/dgrijalva/jwt-go.MapClaims type.
 	ToMapClaims() jwt.MapClaims
 }
 
 // JWTClaims represent a token's claims.
 type JWTClaims struct {
-	Subject   string
-	Issuer    string
-	Audience  []string
-	JTI       string
-	IssuedAt  time.Time
-	NotBefore time.Time
-	ExpiresAt time.Time
-	Scope     []string
-	Extra     map[string]interface{}
+	Subject    string
+	Issuer     string
+	Audience   []string
+	JTI        string
+	IssuedAt   time.Time
+	NotBefore  time.Time
+	ExpiresAt  time.Time
+	Scope      []string
+	Extra      map[string]interface{}
+	ScopeField JWTScopeFieldEnum
 }
 
 func (c *JWTClaims) With(expiry time.Time, scope, audience []string) JWTClaimsContainer {
-	c.ExpiresAt = expiry
-	c.Scope = scope
-	c.Audience = audience
-	return c
+	claims := *c
+	claims.ExpiresAt = expiry
+	claims.Scope = scope
+	claims.Audience = audience
+	return &claims
 }
 
 func (c *JWTClaims) WithDefaults(iat time.Time, issuer string) JWTClaimsContainer {
-	if c.IssuedAt.IsZero() {
-		c.IssuedAt = iat
+	claims := *c
+	if claims.IssuedAt.IsZero() {
+		claims.IssuedAt = iat
 	}
 
-	if c.Issuer == "" {
-		c.Issuer = issuer
+	if claims.Issuer == "" {
+		claims.Issuer = issuer
 	}
-	return c
+	return &claims
+}
+
+func (c *JWTClaims) WithScopeField(scopeField JWTScopeFieldEnum) JWTClaimsContainer {
+	claims := *c
+	claims.ScopeField = scopeField
+	return &claims
 }
 
 // ToMap will transform the headers to a map structure
@@ -102,7 +125,13 @@ func (c *JWTClaims) ToMap() map[string]interface{} {
 	ret["exp"] = float64(c.ExpiresAt.Unix()) // jwt-go does not support int64 as datatype
 
 	if c.Scope != nil {
-		ret["scp"] = c.Scope
+		// ScopeField default (when value is JWTScopeFieldUnset) is the list for backwards compatibility with old versions of fosite.
+		if c.ScopeField == JWTScopeFieldUnset || c.ScopeField == JWTScopeFieldList || c.ScopeField == JWTScopeFieldBoth {
+			ret["scp"] = c.Scope
+		}
+		if c.ScopeField == JWTScopeFieldString || c.ScopeField == JWTScopeFieldBoth {
+			ret["scope"] = strings.Join(c.Scope, " ")
+		}
 	}
 
 	return ret
@@ -156,12 +185,31 @@ func (c *JWTClaims) FromMap(m map[string]interface{}) {
 			switch v.(type) {
 			case []string:
 				c.Scope = v.([]string)
+				if c.ScopeField == JWTScopeFieldString {
+					c.ScopeField = JWTScopeFieldBoth
+				} else if c.ScopeField == JWTScopeFieldUnset {
+					c.ScopeField = JWTScopeFieldList
+				}
 			case []interface{}:
 				c.Scope = make([]string, len(v.([]interface{})))
 				for i, vi := range v.([]interface{}) {
 					if s, ok := vi.(string); ok {
 						c.Scope[i] = s
 					}
+				}
+				if c.ScopeField == JWTScopeFieldString {
+					c.ScopeField = JWTScopeFieldBoth
+				} else if c.ScopeField == JWTScopeFieldUnset {
+					c.ScopeField = JWTScopeFieldList
+				}
+			}
+		case "scope":
+			if s, ok := v.(string); ok {
+				c.Scope = strings.Split(s, " ")
+				if c.ScopeField == JWTScopeFieldList {
+					c.ScopeField = JWTScopeFieldBoth
+				} else if c.ScopeField == JWTScopeFieldUnset {
+					c.ScopeField = JWTScopeFieldString
 				}
 			}
 		default:
