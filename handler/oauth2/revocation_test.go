@@ -57,7 +57,7 @@ func TestRevokeToken(t *testing.T) {
 	}{
 		{
 			description: "should fail - token was issued to another client",
-			expectErr:   fosite.ErrRevocationClientMismatch,
+			expectErr:   fosite.ErrUnauthorizedClient,
 			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
@@ -134,8 +134,8 @@ func TestRevokeToken(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail - refresh token discovery first; both tokens not found",
-			expectErr:   fosite.ErrNotFound,
+			description: "should pass - refresh token discovery first; both tokens not found",
+			expectErr:   nil,
 			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
@@ -148,8 +148,8 @@ func TestRevokeToken(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail - access token discovery first; both tokens not found",
-			expectErr:   fosite.ErrNotFound,
+			description: "should pass - access token discovery first; both tokens not found",
+			expectErr:   nil,
 			client:      &fosite.DefaultClient{ID: "bar"},
 			mock: func() {
 				token = "foo"
@@ -161,8 +161,68 @@ func TestRevokeToken(t *testing.T) {
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 			},
 		},
+		{
+			description: "should fail - store error for access token get",
+			expectErr:   fosite.ErrTemporarilyUnavailable,
+			client:      &fosite.DefaultClient{ID: "bar"},
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.AccessToken
+				atStrat.EXPECT().AccessTokenSignature(token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("random error"))
+
+				rtStrat.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
+			},
+		},
+		{
+			description: "should fail - store error for refresh token get",
+			expectErr:   fosite.ErrTemporarilyUnavailable,
+			client:      &fosite.DefaultClient{ID: "bar"},
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.RefreshToken
+				atStrat.EXPECT().AccessTokenSignature(token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
+
+				rtStrat.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("random error"))
+			},
+		},
+		{
+			description: "should fail - store error for access token revoke",
+			expectErr:   fosite.ErrTemporarilyUnavailable,
+			client:      &fosite.DefaultClient{ID: "bar"},
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.AccessToken
+				atStrat.EXPECT().AccessTokenSignature(token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
+
+				ar.EXPECT().GetID()
+				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
+				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any()).Return(fosite.ErrNotFound)
+				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any()).Return(fmt.Errorf("random error"))
+			},
+		},
+		{
+			description: "should fail - store error for refresh token revoke",
+			expectErr:   fosite.ErrTemporarilyUnavailable,
+			client:      &fosite.DefaultClient{ID: "bar"},
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.RefreshToken
+				rtStrat.EXPECT().RefreshTokenSignature(token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
+
+				ar.EXPECT().GetID()
+				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
+				store.EXPECT().RevokeRefreshToken(gomock.Any(), gomock.Any()).Return(fmt.Errorf("random error"))
+				store.EXPECT().RevokeAccessToken(gomock.Any(), gomock.Any()).Return(fosite.ErrNotFound)
+			},
+		},
 	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
 			c.mock()
 			err := h.RevokeToken(nil, token, tokenType, c.client)
 

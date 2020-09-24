@@ -6,7 +6,6 @@ linters:
     - deadcode
     - unused
     - structcheck
-    - errcheck
     - gosimple
     - bodyclose
     - staticcheck

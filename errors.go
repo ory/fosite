@@ -163,11 +163,6 @@ var (
 		Hint:        "Token validation failed.",
 		Code:        http.StatusUnauthorized,
 	}
-	ErrRevocationClientMismatch = &RFC6749Error{
-		Name:        errRevocationClientMismatchName,
-		Description: "Token was not issued to the client making the revocation request",
-		Code:        http.StatusBadRequest,
-	}
 	ErrLoginRequired = &RFC6749Error{
 		Name:        errLoginRequired,
 		Description: "The Authorization Server requires End-User authentication",
