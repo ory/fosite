@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-20)](#unreleased-2020-09-20)
+- [Unreleased (2020-09-24)](#unreleased-2020-09-24)
     - [Bug Fixes](#bug-fixes)
     - [Features](#features)
 - [0.33.0 (2020-09-16)](#0330-2020-09-16)
@@ -306,12 +306,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.33.0...0943a1095a209fdfb2f8a29524b676ee9c9650a1) (2020-09-20)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.33.0...aead1499deb8b08f48bcc196a88e5715702b5431) (2020-09-24)
 
 
 ### Bug Fixes
 
 * Full JSON escaping ([#481](https://github.com/ory/fosite/issues/481)) ([0943a10](https://github.com/ory/fosite/commit/0943a1095a209fdfb2f8a29524b676ee9c9650a1))
+* Ignore x/net false positives ([#483](https://github.com/ory/fosite/issues/483)) ([aead149](https://github.com/ory/fosite/commit/aead1499deb8b08f48bcc196a88e5715702b5431))
 
 
 ### Features
