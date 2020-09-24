@@ -39,7 +39,11 @@ func (i *IDTokenHandleHelper) GetAccessTokenHash(ctx context.Context, requester 
 
 	buffer := bytes.NewBufferString(token)
 	hash := sha256.New()
-	hash.Write(buffer.Bytes())
+	// sha256.digest.Write() always returns nil for err, the panic should never happen
+	_, err := hash.Write(buffer.Bytes())
+	if err != nil {
+		panic(err)
+	}
 	hashBuf := bytes.NewBuffer(hash.Sum([]byte{}))
 	len := hashBuf.Len()
 

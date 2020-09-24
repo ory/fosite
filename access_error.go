@@ -53,5 +53,6 @@ func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 	}
 
 	rw.WriteHeader(rfcerr.Code)
-	rw.Write(js)
+	// ignoring the error because the connection is broken when it happens
+	_, _ = rw.Write(js)
 }

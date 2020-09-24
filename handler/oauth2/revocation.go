@@ -57,21 +57,32 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 	}
 
 	var ar fosite.Requester
-	var err error
-	if ar, err = discoveryFuncs[0](); err != nil {
-		ar, err = discoveryFuncs[1]()
+	var err1, err2 error
+	if ar, err1 = discoveryFuncs[0](); err1 != nil {
+		ar, err2 = discoveryFuncs[1]()
 	}
-	if err != nil {
-		return err
+	// err2 can only be not nil if first err1 was not nil
+	if err2 != nil {
+		return storeErrorsToRevocationError(err1, err2)
 	}
 
 	if ar.GetClient().GetID() != client.GetID() {
-		return errors.WithStack(fosite.ErrRevocationClientMismatch)
+		return errors.WithStack(fosite.ErrUnauthorizedClient)
 	}
 
 	requestID := ar.GetID()
-	r.TokenRevocationStorage.RevokeRefreshToken(ctx, requestID)
-	r.TokenRevocationStorage.RevokeAccessToken(ctx, requestID)
+	err1 = r.TokenRevocationStorage.RevokeRefreshToken(ctx, requestID)
+	err2 = r.TokenRevocationStorage.RevokeAccessToken(ctx, requestID)
 
-	return nil
+	return storeErrorsToRevocationError(err1, err2)
+}
+
+func storeErrorsToRevocationError(err1, err2 error) error {
+	// both errors are 404 or nil <=> the token is revoked
+	if (errors.Is(err1, fosite.ErrNotFound) || err1 == nil) && (errors.Is(err2, fosite.ErrNotFound) || err2 == nil) {
+		return nil
+	}
+
+	// there was an unexpected error => the token may still exist and the client should retry later
+	return errors.WithStack(fosite.ErrTemporarilyUnavailable)
 }

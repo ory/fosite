@@ -28,13 +28,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddDebug(t *testing.T) {
-	err := ErrRevocationClientMismatch.WithDebug("debug")
-	assert.NotEqual(t, err, ErrRevocationClientMismatch)
-	assert.Empty(t, ErrRevocationClientMismatch.Debug)
-	assert.NotEmpty(t, err.Debug)
-}
-
 func TestIs(t *testing.T) {
 	assert.True(t, errors.Is(ErrUnknownRequest, ErrUnknownRequest))
 	assert.True(t, errors.Is(ErrUnknownRequest, &RFC6749Error{

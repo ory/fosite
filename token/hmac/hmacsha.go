@@ -169,6 +169,10 @@ func (c *HMACStrategy) Signature(token string) string {
 
 func generateHMAC(data []byte, key *[32]byte) []byte {
 	h := hmac.New(sha512.New512_256, key[:])
-	h.Write(data)
+	// sha512.digest.Write() always returns nil for err, the panic should never happen
+	_, err := h.Write(data)
+	if err != nil {
+		panic(err)
+	}
 	return h.Sum(nil)
 }
