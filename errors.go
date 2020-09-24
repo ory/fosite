@@ -240,7 +240,6 @@ const (
 	errTokenInactiveName           = "token_inactive"
 	// errAuthorizationCodeInactiveName = "authorization_code_inactive"
 	errUnknownErrorName             = "error"
-	errRevocationClientMismatchName = "revocation_client_mismatch"
 	errRequestNotSupportedName      = "request_not_supported"
 	errRequestURINotSupportedName   = "request_uri_not_supported"
 	errRegistrationNotSupportedName = "registration_not_supported"
