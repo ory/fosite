@@ -41,16 +41,14 @@ import (
 func GetRedirectURIFromRequestValues(values url.Values) (string, error) {
 	// rfc6749 3.1.   Authorization Endpoint
 	// The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component
-	redirectURI, err := url.Parse(values.Get("redirect_uri"))
+	rawRedirectURI := values.Get("redirect_uri")
+	redirectURI, err := url.Parse(rawRedirectURI)
 	if err != nil {
 		return "", errors.WithStack(ErrInvalidRequest.WithHint(`The "redirect_uri" parameter is malformed or missing.`).WithCause(err).WithDebug(err.Error()))
+	} else if rawRedirectURI != "" && (redirectURI.Scheme == "" || redirectURI.Host == "") {
+		return "", errors.WithStack(ErrInvalidRequest.WithHint(`The "redirect_uri" parameter with malformed http scheme or host.`))
 	}
-	rawQuery, err := url.QueryUnescape(redirectURI.RawQuery)
 
-	if err != nil {
-		return "", errors.WithStack(ErrInvalidRequest.WithHint(`The "redirect_uri" parameter is malformed`).WithDebug(err.Error()))
-	}
-	redirectURI.RawQuery = rawQuery
 	return redirectURI.String(), nil
 }
 

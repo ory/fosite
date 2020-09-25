@@ -61,7 +61,7 @@ func TestGetRedirectURI(t *testing.T) {
 	}{
 		{in: "", isError: false, expected: ""},
 		{in: "https://google.com/", isError: false, expected: "https://google.com/"},
-		{in: "https://google.com/?foo=bar%20foo+baz", isError: false, expected: "https://google.com/?foo=bar foo baz"},
+		{in: "https//google.com/foo=bar foo baz", isError: true, expected: "https://google.com/?foo=bar foo baz"},
 	} {
 		values := url.Values{}
 		values.Set("redirect_uri", c.in)
