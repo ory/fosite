@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -37,12 +36,13 @@ func (m *MockTokenIntrospector) EXPECT() *MockTokenIntrospectorMockRecorder {
 }
 
 // IntrospectToken mocks base method
-func (m *MockTokenIntrospector) IntrospectToken(arg0 context.Context, arg1 string, arg2 fosite.TokenType, arg3 fosite.AccessRequester, arg4 []string) (fosite.TokenType, error) {
+func (m *MockTokenIntrospector) IntrospectToken(arg0 context.Context, arg1 string, arg2 fosite.TokenType, arg3 fosite.AccessRequester, arg4 []string) (fosite.TokenType, fosite.AccessTokenType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IntrospectToken", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(fosite.TokenType)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(fosite.AccessTokenType)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // IntrospectToken indicates an expected call of IntrospectToken

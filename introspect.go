@@ -30,7 +30,7 @@ import (
 )
 
 type TokenIntrospector interface {
-	IntrospectToken(ctx context.Context, token string, tokenType TokenType, accessRequest AccessRequester, scopes []string) (TokenType, error)
+	IntrospectToken(ctx context.Context, token string, tokenUse TokenUse, accessRequest AccessRequester, scopes []string) (TokenUse, AccessTokenType, error)
 }
 
 func AccessTokenFromRequest(req *http.Request) string {
@@ -52,27 +52,29 @@ func AccessTokenFromRequest(req *http.Request) string {
 	return split[1]
 }
 
-func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenType TokenType, session Session, scopes ...string) (TokenType, AccessRequester, error) {
+func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenUse TokenUse, session Session, scopes ...string) (TokenUse, AccessTokenType, AccessRequester, error) {
 	var found = false
-	var foundTokenType TokenType = ""
+	var foundTokenUse TokenUse = ""
+	var foundAccessTokenType AccessTokenType = ""
 
 	ar := NewAccessRequest(session)
 	for _, validator := range f.TokenIntrospectionHandlers {
-		tt, err := validator.IntrospectToken(ctx, token, tokenType, ar, scopes)
+		tu, att, err := validator.IntrospectToken(ctx, token, tokenUse, ar, scopes)
 		if err == nil {
 			found = true
-			foundTokenType = tt
+			foundTokenUse = tu
+			foundAccessTokenType = att
 		} else if errors.Is(err, ErrUnknownRequest) {
 			// do nothing
 		} else {
 			rfcerr := ErrorToRFC6749Error(err)
-			return "", nil, errors.WithStack(rfcerr)
+			return "", "", nil, errors.WithStack(rfcerr)
 		}
 	}
 
 	if !found {
-		return "", nil, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to find a suitable validation strategy for the token, thus it is invalid."))
+		return "", "", nil, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to find a suitable validation strategy for the token, thus it is invalid."))
 	}
 
-	return foundTokenType, ar, nil
+	return foundTokenUse, foundAccessTokenType, ar, nil
 }
