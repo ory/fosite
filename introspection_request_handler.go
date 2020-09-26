@@ -119,14 +119,14 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 	}
 
 	token := r.PostForm.Get("token")
-	tokenType := r.PostForm.Get("token_type_hint")
+	tokenTypeHint := r.PostForm.Get("token_type_hint")
 	scope := r.PostForm.Get("scope")
 	if clientToken := AccessTokenFromRequest(r); clientToken != "" {
 		if token == clientToken {
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Bearer and introspection token are identical."))
 		}
 
-		if tt, _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
+		if tt, _, _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("HTTP Authorization header missing, malformed, or credentials used are invalid."))
 		} else if tt != "" && tt != AccessToken {
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHintf("HTTP Authorization header did not provide a token of type \"access_token\", got type \"%s\".", tt))
@@ -158,7 +158,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 		}
 	}
 
-	tt, ar, err := f.IntrospectToken(ctx, token, TokenType(tokenType), session, RemoveEmpty(strings.Split(scope, " "))...)
+	tt, att, ar, err := f.IntrospectToken(ctx, token, TokenType(tokenTypeHint), session, RemoveEmpty(strings.Split(scope, " "))...)
 	if err != nil {
 		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInactiveToken.WithHint("An introspection strategy indicated that the token is inactive.").WithCause(err).WithDebug(err.Error()))
 	}
@@ -167,13 +167,15 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 		Active:          true,
 		AccessRequester: ar,
 		TokenType:       tt,
+		AccessTokenType: att,
 	}, nil
 }
 
 type IntrospectionResponse struct {
 	Active          bool            `json:"active"`
 	AccessRequester AccessRequester `json:"extra"`
-	TokenType       TokenType       `json:"token_type,omitempty"`
+	TokenType       TokenType       `json:"token_use,omitempty"`
+	AccessTokenType AccessTokenType `json:"token_type,omitempty"`
 }
 
 func (r *IntrospectionResponse) IsActive() bool {
@@ -186,4 +188,8 @@ func (r *IntrospectionResponse) GetAccessRequester() AccessRequester {
 
 func (r *IntrospectionResponse) GetTokenType() TokenType {
 	return r.TokenType
+}
+
+func (r *IntrospectionResponse) GetAccessTokenType() AccessTokenType {
+	return r.AccessTokenType
 }
