@@ -401,7 +401,7 @@ go get -d github.com/ory/fosite
 cd $GOPATH/src/github.com/ory/fosite
 git status
 git remote add myfork <url-to-your-fork>
-go test ./..
+go test ./...
 ```
 
 Simple, right? Now you are ready to go! Make sure to run `go test ./...` often, detecting problems with your code
