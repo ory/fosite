@@ -174,7 +174,8 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 type IntrospectionResponse struct {
 	Active          bool            `json:"active"`
 	AccessRequester AccessRequester `json:"extra"`
-	TokenType       TokenType       `json:"token_use,omitempty"`
+	TokenUse       TokenUse       `json:"token_use,omitempty"`
+	AccessTokenType Type `json:"token_type,omitempty"`
 	AccessTokenType AccessTokenType `json:"token_type,omitempty"`
 }
 
