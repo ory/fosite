@@ -23,6 +23,7 @@ package openid
 
 import (
 	"context"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -38,6 +39,7 @@ import (
 type OpenIDConnectRequestValidator struct {
 	AllowedPrompt []string
 	Strategy      jwt.JWTStrategy
+	IsRedirectURISecure func(*url.URL) bool
 }
 
 func NewOpenIDConnectRequestValidator(prompt []string, strategy jwt.JWTStrategy) *OpenIDConnectRequestValidator {
@@ -49,6 +51,19 @@ func NewOpenIDConnectRequestValidator(prompt []string, strategy jwt.JWTStrategy)
 		AllowedPrompt: prompt,
 		Strategy:      strategy,
 	}
+}
+
+func (v *OpenIDConnectRequestValidator) WithRedirectSecureChecker(checker func(*url.URL) bool) *OpenIDConnectRequestValidator {
+	validator := *v
+	validator.IsRedirectURISecure = checker
+	return &validator
+}
+
+func (v *OpenIDConnectRequestValidator) secureChecker() func(*url.URL) bool {
+	if v.IsRedirectURISecure == nil {
+		v.IsRedirectURISecure = fosite.IsRedirectURISecure
+	}
+	return v.IsRedirectURISecure
 }
 
 func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req fosite.AuthorizeRequester) error {
@@ -75,7 +90,7 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 		//  be processed as if no previous request had been approved.
 
 		if stringslice.Has(prompt, "none") {
-			if !(req.GetRedirectURI().Scheme == "https" || (fosite.IsLocalhost(req.GetRedirectURI()) && req.GetRedirectURI().Scheme == "http")) {
+			if !v.secureChecker()(req.GetRedirectURI()) {
 				return errors.WithStack(fosite.ErrConsentRequired.WithHint("OAuth 2.0 Client is marked public and redirect uri is not considered secure (https missing), but \"prompt=none\" was requested."))
 			}
 		}

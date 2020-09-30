@@ -131,10 +131,6 @@ func isLoopbackURI(requested *url.URL, registeredURI string) bool {
 		return false
 	}
 
-	if registered.Scheme != "http" || !isLoopbackAddress(registered.Host) {
-		return false
-	}
-
 	if requested.Scheme == "http" && isLoopbackAddress(requested.Host) && registered.Path == requested.Path {
 		return true
 	}
@@ -172,10 +168,10 @@ func IsValidRedirectURI(redirectURI *url.URL) bool {
 }
 
 func IsRedirectURISecure(redirectURI *url.URL) bool {
-	return !(redirectURI.Scheme == "http" && !IsLocalhost(redirectURI))
+	return redirectURI.Scheme == "https" || (redirectURI.Scheme == "http" && IsLocalhost(redirectURI))
 }
 
 func IsLocalhost(redirectURI *url.URL) bool {
 	hn := redirectURI.Hostname()
-	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "localhost"
+	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "::1" || hn == "localhost"
 }

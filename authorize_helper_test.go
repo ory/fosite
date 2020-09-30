@@ -236,8 +236,11 @@ func TestIsRedirectURISecure(t *testing.T) {
 		{u: "http://localhost", err: false},
 		{u: "http://test.localhost", err: false},
 		{u: "http://127.0.0.1/", err: false},
+		{u: "http://[::1]/", err: false},
+		{u: "http://127.0.0.1:8080/", err: false},
+		{u: "http://[::1]:8080/", err: false},
 		{u: "http://testlocalhost", err: true},
-		{u: "wta://auth", err: false},
+		{u: "wta://auth", err: true},
 	} {
 		uu, err := url.Parse(c.u)
 		require.NoError(t, err)
