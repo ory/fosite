@@ -22,6 +22,7 @@
 package fosite
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -43,4 +44,20 @@ func RemoveEmpty(args []string) (ret []string) {
 		}
 	}
 	return
+}
+
+// EscapeJSONString does a poor man's JSON encoding. Useful when we do not want to use full JSON encoding
+// because we just had an error doing the JSON encoding. The characters that MUST be escaped: quotation mark,
+// reverse solidus, and the control characters (U+0000 through U+001F).
+// See: https://tools.ietf.org/html/std90#section-7
+func EscapeJSONString(str string) string {
+	// Escape reverse solidus.
+	str = strings.ReplaceAll(str, `\`, `\\`)
+	// Escape control characters.
+	for r := rune(0); r < ' '; r++ {
+		str = strings.ReplaceAll(str, string(r), fmt.Sprintf(`\u%04x`, r))
+	}
+	// Escape quotation mark.
+	str = strings.ReplaceAll(str, `"`, `\"`)
+	return str
 }

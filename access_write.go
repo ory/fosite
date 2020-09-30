@@ -39,5 +39,5 @@ func (f *Fosite) WriteAccessResponse(rw http.ResponseWriter, requester AccessReq
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 	rw.WriteHeader(http.StatusOK)
-	rw.Write(js)
+	_, _ = rw.Write(js)
 }

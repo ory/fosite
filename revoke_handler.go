@@ -112,7 +112,7 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 		}
 
 		rw.WriteHeader(ErrInvalidRequest.Code)
-		rw.Write(js)
+		_, _ = rw.Write(js)
 	} else if errors.Is(err, ErrInvalidClient) {
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
@@ -123,7 +123,7 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 		}
 
 		rw.WriteHeader(ErrInvalidClient.Code)
-		rw.Write(js)
+		_, _ = rw.Write(js)
 	} else {
 		// 200 OK
 		rw.WriteHeader(http.StatusOK)
