@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-28)](#unreleased-2020-09-28)
+- [Unreleased (2020-10-01)](#unreleased-2020-10-01)
     - [Documentation](#documentation)
 - [0.34.0 (2020-09-24)](#0340-2020-09-24)
     - [Bug Fixes](#bug-fixes)
@@ -310,7 +310,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.34.0...a82224430292b2f209d011f107998273d568912b) (2020-09-28)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.34.0...a82224430292b2f209d011f107998273d568912b) (2020-10-01)
 
 
 ### Documentation
