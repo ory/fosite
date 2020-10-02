@@ -88,7 +88,7 @@ func TestIntrospect(t *testing.T) {
 			scopes:      []string{"foo"},
 			setup: func() {
 				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
-				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), AccessTokenType(""), ErrUnknownRequest)
+				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), ErrUnknownRequest)
 			},
 			expectErr: ErrRequestUnauthorized,
 		},
@@ -96,16 +96,16 @@ func TestIntrospect(t *testing.T) {
 			description: "should fail",
 			scopes:      []string{"foo"},
 			setup: func() {
-				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenType(""), AccessTokenType(""), ErrInvalidClient)
+				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), ErrInvalidClient)
 			},
 			expectErr: ErrInvalidClient,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx context.Context, _ string, _ TokenType, accessRequest AccessRequester, _ []string) {
+				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx context.Context, _ string, _ TokenUse, accessRequest AccessRequester, _ []string) {
 					accessRequest.(*AccessRequest).GrantedScope = []string{"bar"}
-				}).Return(TokenType(""), AccessTokenType(""), nil)
+				}).Return(TokenUse(""), AccessTokenType(""), nil)
 			},
 		},
 		{
@@ -114,7 +114,7 @@ func TestIntrospect(t *testing.T) {
 			setup: func() {
 				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx context.Context, _ string, _ TokenType, accessRequest AccessRequester, _ []string) {
 					accessRequest.(*AccessRequest).GrantedScope = []string{"bar"}
-				}).Return(TokenType(""), AccessTokenType(""), nil)
+				}).Return(TokenUse(""), AccessTokenType(""), nil)
 			},
 		},
 	} {

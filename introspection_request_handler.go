@@ -126,10 +126,10 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Bearer and introspection token are identical."))
 		}
 
-		if tt, _, _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
+		if tu, _, _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
 			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("HTTP Authorization header missing, malformed, or credentials used are invalid."))
-		} else if tt != "" && tt != AccessToken {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHintf("HTTP Authorization header did not provide a token of type \"access_token\", got type \"%s\".", tt))
+		} else if tu != "" && tu != AccessToken {
+			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHintf("HTTP Authorization header did not provide a token of type \"access_token\", got type \"%s\".", tu))
 		}
 	} else {
 		id, secret, ok := r.BasicAuth()
@@ -158,7 +158,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 		}
 	}
 
-	tt, att, ar, err := f.IntrospectToken(ctx, token, TokenType(tokenTypeHint), session, RemoveEmpty(strings.Split(scope, " "))...)
+	tu, att, ar, err := f.IntrospectToken(ctx, token, TokenUse(tokenTypeHint), session, RemoveEmpty(strings.Split(scope, " "))...)
 	if err != nil {
 		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInactiveToken.WithHint("An introspection strategy indicated that the token is inactive.").WithCause(err).WithDebug(err.Error()))
 	}
@@ -166,7 +166,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 	return &IntrospectionResponse{
 		Active:          true,
 		AccessRequester: ar,
-		TokenType:       tt,
+		TokenUse:        tu,
 		AccessTokenType: att,
 	}, nil
 }
@@ -174,7 +174,7 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 type IntrospectionResponse struct {
 	Active          bool            `json:"active"`
 	AccessRequester AccessRequester `json:"extra"`
-	TokenType       TokenType       `json:"token_use,omitempty"`
+	TokenUse        TokenUse        `json:"token_use,omitempty"`
 	AccessTokenType AccessTokenType `json:"token_type,omitempty"`
 }
 
@@ -186,8 +186,8 @@ func (r *IntrospectionResponse) GetAccessRequester() AccessRequester {
 	return r.AccessRequester
 }
 
-func (r *IntrospectionResponse) GetTokenType() TokenType {
-	return r.TokenType
+func (r *IntrospectionResponse) GetTokenUse() TokenUse {
+	return r.TokenUse
 }
 
 func (r *IntrospectionResponse) GetAccessTokenType() AccessTokenType {

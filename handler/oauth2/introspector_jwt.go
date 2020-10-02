@@ -39,7 +39,7 @@ type StatelessJWTValidator struct {
 	ScopeStrategy fosite.ScopeStrategy
 }
 
-func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token string, tokenType fosite.TokenType, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenType, fosite.AccessTokenType, error) {
+func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token string, tokenUse fosite.TokenUse, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenUse, fosite.AccessTokenType, error) {
 	or, err := v.JWTAccessTokenStrategy.ValidateJWT(ctx, fosite.AccessToken, token)
 	if err != nil {
 		return "", "", err
