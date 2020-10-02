@@ -59,14 +59,14 @@ func TestIntrospectionResponseTokenUse(t *testing.T) {
 		description string
 		setup       func()
 		expectedTU  TokenUse
-		expectedATT AccessTokenType
+		expectedATT string
 	}{
 		{
 			description: "introspecting access token",
 			setup: func() {
 				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
-				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), nil)
-				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(AccessToken), BearerAccessToken, nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(AccessToken, nil)
 			},
 			expectedATT: BearerAccessToken,
 			expectedTU:  AccessToken,
@@ -75,10 +75,10 @@ func TestIntrospectionResponseTokenUse(t *testing.T) {
 			description: "introspecting refresh token",
 			setup: func() {
 				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
-				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), nil)
-				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(RefreshToken), AccessTokenType(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(RefreshToken, nil)
 			},
-			expectedATT: AccessTokenType(""),
+			expectedATT: "",
 			expectedTU:  RefreshToken,
 		},
 	} {
@@ -139,8 +139,8 @@ func TestNewIntrospectionRequest(t *testing.T) {
 						"token": []string{"introspect-token"},
 					},
 				}
-				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), nil)
-				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), newErr)
+				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), newErr)
 			},
 			isActive:  false,
 			expectErr: ErrInactiveToken,
@@ -158,8 +158,8 @@ func TestNewIntrospectionRequest(t *testing.T) {
 						"token": []string{"introspect-token"},
 					},
 				}
-				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), nil)
-				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
 			},
 			isActive: true,
 		},
@@ -177,7 +177,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 						"token": []string{"introspect-token"},
 					},
 				}
-				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
 			},
 			isActive: true,
 		},
@@ -195,7 +195,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 						"token": []string{"introspect-token"},
 					},
 				}
-				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), AccessTokenType(""), nil)
+				validator.EXPECT().IntrospectToken(context.TODO(), "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
 			},
 			isActive: true,
 		},

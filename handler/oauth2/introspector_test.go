@@ -104,7 +104,7 @@ func TestIntrospectToken(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c.setup()
-			tu, _, err := v.IntrospectToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq, []string{})
+			tu, err := v.IntrospectToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq, []string{})
 
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())
