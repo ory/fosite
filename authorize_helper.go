@@ -30,28 +30,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GetRedirectURIFromRequestValues extracts the redirect_uri from values but does not do any sort of validation.
-//
-// Considered specifications
-// * https://tools.ietf.org/html/rfc6749#section-3.1.2
-//   The endpoint URI MAY include an
-//   "application/x-www-form-urlencoded" formatted (per Appendix B) query
-//   component ([RFC3986] Section 3.4), which MUST be retained when adding
-//   additional query parameters.
-func GetRedirectURIFromRequestValues(values url.Values) (string, error) {
-	// rfc6749 3.1.   Authorization Endpoint
-	// The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component
-	rawRedirectURI := values.Get("redirect_uri")
-	redirectURI, err := url.Parse(rawRedirectURI)
-	if err != nil {
-		return "", errors.WithStack(ErrInvalidRequest.WithHint(`The "redirect_uri" parameter is malformed or missing.`).WithCause(err).WithDebug(err.Error()))
-	} else if rawRedirectURI != "" && (redirectURI.Scheme == "" || redirectURI.Host == "") {
-		return "", errors.WithStack(ErrInvalidRequest.WithHint(`The "redirect_uri" parameter with malformed http scheme or host.`))
-	}
-
-	return redirectURI.String(), nil
-}
-
 // MatchRedirectURIWithClientRedirectURIs if the given uri is a registered redirect uri. Does not perform
 // uri validation.
 //
