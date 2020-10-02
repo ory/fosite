@@ -12,6 +12,7 @@ on:
 
 jobs:
   find_closed_references:
+    if: github.repository_owner == 'ory'
     runs-on: ubuntu-latest
     name: Find closed references
     steps:
