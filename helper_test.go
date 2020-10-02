@@ -51,7 +51,7 @@ func TestEscapeJSONString(t *testing.T) {
 	for _, str := range []string{"", "foobar", `foo"bar`, `foo\bar`, "foo\n\tbar"} {
 		escaped := EscapeJSONString(str)
 		var unmarshaled string
-		err := json.Unmarshal([]byte(`"` + escaped + `"`), &unmarshaled)
+		err := json.Unmarshal([]byte(`"`+escaped+`"`), &unmarshaled)
 		require.NoError(t, err, str)
 		assert.Equal(t, str, unmarshaled, str)
 	}
