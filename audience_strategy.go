@@ -49,7 +49,7 @@ func DefaultAudienceMatchingStrategy(haystack []string, needle []string) error {
 }
 
 func (f *Fosite) validateAuthorizeAudience(r *http.Request, request *AuthorizeRequest) error {
-	audience := stringsx.Splitx(request.Form.Get("audience"), " ")
+	audience := RemoveEmpty(stringsx.Splitx(request.Form.Get("audience"), " "))
 
 	if err := f.AudienceMatchingStrategy(request.Client.GetAudience(), audience); err != nil {
 		return err
