@@ -6,6 +6,7 @@
 
 - [Unreleased (2020-10-06)](#unreleased-2020-10-06)
     - [Bug Fixes](#bug-fixes)
+    - [BREAKING CHANGES](#breaking-changes)
   - [0.34.1 (2020-10-02)](#0341-2020-10-02)
     - [Bug Fixes](#bug-fixes-1)
     - [Documentation](#documentation)
@@ -13,10 +14,10 @@
     - [Bug Fixes](#bug-fixes-2)
     - [Features](#features)
     - [Unclassified](#unclassified)
-    - [BREAKING CHANGES](#breaking-changes)
+    - [BREAKING CHANGES](#breaking-changes-1)
 - [0.33.0 (2020-09-16)](#0330-2020-09-16)
     - [Features](#features-1)
-    - [BREAKING CHANGES](#breaking-changes-1)
+    - [BREAKING CHANGES](#breaking-changes-2)
   - [0.32.4 (2020-09-15)](#0324-2020-09-15)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-1)
@@ -313,7 +314,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.34.1...6e49c57c8f7a46a78eda4d3091765d631f427845) (2020-10-06)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.34.1...4b81316a1dbb0c5246bac39ecbaff749b00e4efa) (2020-10-06)
 
 
 ### Bug Fixes
@@ -324,7 +325,13 @@
     > 
     > 
     > Co-authored-by: ajanthan <ca52ca6fe18c44787827017e14ca2d0c3c5bdb58>
+* Rename TokenType to TokenUse in introspection ([#486](https://github.com/ory/fosite/issues/486)) ([4b81316](https://github.com/ory/fosite/commit/4b81316a1dbb0c5246bac39ecbaff749b00e4efa)), closes [ory/hydra#1762](https://github.com/ory/hydra/issues/1762)
 * Return allowed redirect url with preference ([f0badc4](https://github.com/ory/fosite/commit/f0badc4919e00fa179dd54edcbd7385fac14fa19))
+
+
+### BREAKING CHANGES
+
+* Type `fosite.TokenType` has been renamed to `fosite.TokenUse`.
 
 
 
