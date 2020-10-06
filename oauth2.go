@@ -30,7 +30,6 @@ import (
 
 type TokenUse = TokenType
 
-//type TokenUse string
 type TokenType string
 
 const (
