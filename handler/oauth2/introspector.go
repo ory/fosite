@@ -36,7 +36,7 @@ type CoreValidator struct {
 	DisableRefreshTokenValidation bool
 }
 
-func (c *CoreValidator) IntrospectToken(ctx context.Context, token string, tokenType fosite.TokenType, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenType, error) {
+func (c *CoreValidator) IntrospectToken(ctx context.Context, token string, tokenUse fosite.TokenUse, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenUse, error) {
 	if c.DisableRefreshTokenValidation {
 		if err := c.introspectAccessToken(ctx, token, accessRequest, scopes); err != nil {
 			return "", err
@@ -45,7 +45,7 @@ func (c *CoreValidator) IntrospectToken(ctx context.Context, token string, token
 	}
 
 	var err error
-	switch tokenType {
+	switch tokenUse {
 	case fosite.RefreshToken:
 		if err = c.introspectRefreshToken(ctx, token, accessRequest, scopes); err == nil {
 			return fosite.RefreshToken, nil

@@ -52,7 +52,7 @@ func TestIntrospectToken(t *testing.T) {
 		description string
 		setup       func()
 		expectErr   error
-		expectTT    fosite.TokenType
+		expectTU    fosite.TokenUse
 	}{
 		{
 			description: "should fail because no bearer token set",
@@ -99,18 +99,18 @@ func TestIntrospectToken(t *testing.T) {
 			setup: func() {
 				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(nil)
 			},
-			expectTT: fosite.AccessToken,
+			expectTU: fosite.AccessToken,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c.setup()
-			tt, err := v.IntrospectToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq, []string{})
+			tu, err := v.IntrospectToken(nil, fosite.AccessTokenFromRequest(httpreq), fosite.AccessToken, areq, []string{})
 
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, c.expectTT, tt)
+				assert.Equal(t, c.expectTU, tu)
 			}
 		})
 	}
