@@ -313,11 +313,17 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.34.1...f0badc4919e00fa179dd54edcbd7385fac14fa19) (2020-10-06)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.34.1...6e49c57c8f7a46a78eda4d3091765d631f427845) (2020-10-06)
 
 
 ### Bug Fixes
 
+* Redirct_url with query escape character outside of query is failing ([#480](https://github.com/ory/fosite/issues/480)) ([6e49c57](https://github.com/ory/fosite/commit/6e49c57c8f7a46a78eda4d3091765d631f427845)):
+
+    > See https://github.com/ory/hydra/issues/2055
+    > 
+    > 
+    > Co-authored-by: ajanthan <ca52ca6fe18c44787827017e14ca2d0c3c5bdb58>
 * Return allowed redirect url with preference ([f0badc4](https://github.com/ory/fosite/commit/f0badc4919e00fa179dd54edcbd7385fac14fa19))
 
 
