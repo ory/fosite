@@ -37,8 +37,8 @@ import (
 )
 
 type OpenIDConnectRequestValidator struct {
-	AllowedPrompt []string
-	Strategy      jwt.JWTStrategy
+	AllowedPrompt       []string
+	Strategy            jwt.JWTStrategy
 	IsRedirectURISecure func(*url.URL) bool
 }
 
@@ -54,9 +54,8 @@ func NewOpenIDConnectRequestValidator(prompt []string, strategy jwt.JWTStrategy)
 }
 
 func (v *OpenIDConnectRequestValidator) WithRedirectSecureChecker(checker func(*url.URL) bool) *OpenIDConnectRequestValidator {
-	validator := *v
-	validator.IsRedirectURISecure = checker
-	return &validator
+	v.IsRedirectURISecure = checker
+	return v
 }
 
 func (v *OpenIDConnectRequestValidator) secureChecker() func(*url.URL) bool {
