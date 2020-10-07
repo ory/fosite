@@ -47,33 +47,6 @@ func TestIsLocalhost(t *testing.T) {
 	}
 }
 
-// Test for
-// * https://tools.ietf.org/html/rfc6749#section-3.1.2
-//   The endpoint URI MAY include an
-//   "application/x-www-form-urlencoded" formatted (per Appendix B) query
-//   component ([RFC3986] Section 3.4), which MUST be retained when adding
-//   additional query parameters.
-func TestGetRedirectURI(t *testing.T) {
-	for k, c := range []struct {
-		in       string
-		isError  bool
-		expected string
-	}{
-		{in: "", isError: false, expected: ""},
-		{in: "https://google.com/", isError: false, expected: "https://google.com/"},
-		{in: "https://google.com/?foo=bar%20foo+baz", isError: false, expected: "https://google.com/?foo=bar foo baz"},
-	} {
-		values := url.Values{}
-		values.Set("redirect_uri", c.in)
-		res, err := GetRedirectURIFromRequestValues(values)
-		assert.Equal(t, c.isError, err != nil, "%s", err)
-		if err == nil {
-			assert.Equal(t, c.expected, res)
-		}
-		t.Logf("Passed test case %d", k)
-	}
-}
-
 // rfc6749 10.6.
 // Authorization Code Redirection URI Manipulation
 // The authorization server	MUST require public clients and SHOULD require confidential clients
@@ -138,18 +111,6 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			expected: "https://bar.com/cb",
 		},
 		{
-			client:   &DefaultClient{RedirectURIs: []string{"https://bar.Com/cb"}},
-			url:      "https://bar.com/cb",
-			isError:  false,
-			expected: "https://bar.com/cb",
-		},
-		{
-			client:   &DefaultClient{RedirectURIs: []string{"https://bar.com/cb"}},
-			url:      "https://bar.Com/cb",
-			isError:  false,
-			expected: "https://bar.Com/cb",
-		},
-		{
 			client:  &DefaultClient{RedirectURIs: []string{"https://bar.com/cb"}},
 			url:     "https://bar.com/cb123",
 			isError: true,
@@ -157,8 +118,8 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 		{
 			client:   &DefaultClient{RedirectURIs: []string{"http://[::1]"}},
 			url:      "http://[::1]:1024",
-			isError:  false,
 			expected: "http://[::1]:1024",
+			isError:  false,
 		},
 		{
 			client:  &DefaultClient{RedirectURIs: []string{"http://[::1]"}},
@@ -168,8 +129,8 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 		{
 			client:   &DefaultClient{RedirectURIs: []string{"http://[::1]/cb"}},
 			url:      "http://[::1]:1024/cb",
-			isError:  false,
 			expected: "http://[::1]:1024/cb",
+			isError:  false,
 		},
 		{
 			client:  &DefaultClient{RedirectURIs: []string{"http://[::1]"}},
@@ -179,14 +140,14 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 		{
 			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
 			url:      "http://127.0.0.1:1024",
-			isError:  false,
 			expected: "http://127.0.0.1:1024",
+			isError:  false,
 		},
 		{
 			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1/cb"}},
 			url:      "http://127.0.0.1:64000/cb",
-			isError:  false,
 			expected: "http://127.0.0.1:64000/cb",
+			isError:  false,
 		},
 		{
 			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
@@ -196,14 +157,14 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 		{
 			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
 			url:      "http://127.0.0.1",
-			isError:  false,
 			expected: "http://127.0.0.1",
+			isError:  false,
 		},
 		{
 			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1/Cb"}},
 			url:      "http://127.0.0.1:8080/Cb",
-			isError:  false,
 			expected: "http://127.0.0.1:8080/Cb",
+			isError:  false,
 		},
 		{
 			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1"}},
@@ -215,9 +176,57 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			url:     ":/invalid.uri)bar",
 			isError: true,
 		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1:8080/cb"}},
+			url:     "http://127.0.0.1:8080/Cb",
+			isError: true,
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1:8080/cb"}},
+			url:     "http://127.0.0.1:8080/cb?foo=bar",
+			isError: true,
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"http://127.0.0.1:8080/cb?foo=bar"}},
+			url:      "http://127.0.0.1:8080/cb?foo=bar",
+			expected: "http://127.0.0.1:8080/cb?foo=bar",
+			isError:  false,
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1:8080/cb?foo=bar"}},
+			url:     "http://127.0.0.1:8080/cb?baz=bar&foo=bar",
+			isError: true,
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1:8080/cb?foo=bar&baz=bar"}},
+			url:     "http://127.0.0.1:8080/cb?baz=bar&foo=bar",
+			isError: true,
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"https://www.ory.sh/cb"}},
+			url:     "http://127.0.0.1:8080/cb",
+			isError: true,
+		},
+		{
+			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1:8080/cb"}},
+			url:     "https://www.ory.sh/cb",
+			isError: true,
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"web+application://callback"}},
+			url:      "web+application://callback",
+			isError:  false,
+			expected: "web+application://callback",
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"https://google.com/?foo=bar%20foo+baz"}},
+			url:      "https://google.com/?foo=bar%20foo+baz",
+			isError:  false,
+			expected: "https://google.com/?foo=bar%20foo+baz",
+		},
 	} {
 		redir, err := MatchRedirectURIWithClientRedirectURIs(c.url, c.client)
-		assert.Equal(t, c.isError, err != nil, "%d: %s", k, err)
+		assert.Equal(t, c.isError, err != nil, "%d: %+v", k, c)
 		if err == nil {
 			require.NotNil(t, redir, "%d", k)
 			assert.Equal(t, c.expected, redir.String(), "%d", k)

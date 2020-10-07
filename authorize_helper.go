@@ -30,24 +30,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// GetRedirectURIFromRequestValues extracts the redirect_uri from values but does not do any sort of validation.
-//
-// Considered specifications
-// * https://tools.ietf.org/html/rfc6749#section-3.1.2
-//   The endpoint URI MAY include an
-//   "application/x-www-form-urlencoded" formatted (per Appendix B) query
-//   component ([RFC3986] Section 3.4), which MUST be retained when adding
-//   additional query parameters.
-func GetRedirectURIFromRequestValues(values url.Values) (string, error) {
-	// rfc6749 3.1.   Authorization Endpoint
-	// The endpoint URI MAY include an "application/x-www-form-urlencoded" formatted (per Appendix B) query component
-	redirectURI, err := url.QueryUnescape(values.Get("redirect_uri"))
-	if err != nil {
-		return "", errors.WithStack(ErrInvalidRequest.WithHint(`The "redirect_uri" parameter is malformed or missing.`).WithCause(err).WithDebug(err.Error()))
-	}
-	return redirectURI, nil
-}
-
 // MatchRedirectURIWithClientRedirectURIs if the given uri is a registered redirect uri. Does not perform
 // uri validation.
 //
@@ -84,10 +66,10 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 			// If no redirect_uri was given and the client has exactly one valid redirect_uri registered, use that instead
 			return redirectURIFromClient, nil
 		}
-	} else if rawurl != "" && isMatchingRedirectURI(rawurl, client.GetRedirectURIs()) {
+	} else if redirectTo, ok := isMatchingRedirectURI(rawurl, client.GetRedirectURIs()); rawurl != "" && ok {
 		// If a redirect_uri was given and the clients knows it (simple string comparison!)
 		// return it.
-		if parsed, err := url.Parse(rawurl); err == nil && IsValidRedirectURI(parsed) {
+		if parsed, err := url.Parse(redirectTo); err == nil && IsValidRedirectURI(parsed) {
 			// If no redirect_uri was given and the client has exactly one valid redirect_uri registered, use that instead
 			return parsed, nil
 		}
@@ -111,31 +93,45 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 //
 // Loopback redirect URIs use the "http" scheme and are constructed with
 // the loopback IP literal and whatever port the client is listening on.
-func isMatchingRedirectURI(uri string, haystack []string) bool {
+func isMatchingRedirectURI(uri string, haystack []string) (string, bool) {
 	requested, err := url.Parse(uri)
 	if err != nil {
-		return false
+		return "", false
 	}
 
 	for _, b := range haystack {
-		if strings.ToLower(b) == strings.ToLower(uri) || isLoopbackURI(requested, b) {
-			return true
+		if b == uri {
+			return b, true
+		} else if isMatchingAsLoopback(requested, b) {
+			// We have to return the requested URL here because otherwise the port might get lost (see isMatchingAsLoopback)
+			// description.
+			return uri, true
 		}
 	}
-	return false
+	return "", false
 }
 
-func isLoopbackURI(requested *url.URL, registeredURI string) bool {
+func isMatchingAsLoopback(requested *url.URL, registeredURI string) bool {
 	registered, err := url.Parse(registeredURI)
 	if err != nil {
 		return false
 	}
 
-	if registered.Scheme != "http" || !isLoopbackAddress(registered.Host) {
-		return false
-	}
-
-	if requested.Scheme == "http" && isLoopbackAddress(requested.Host) && registered.Path == requested.Path {
+	// Native apps that are able to open a port on the loopback network
+	// interface without needing special permissions (typically, those on
+	// desktop operating systems) can use the loopback interface to receive
+	// the OAuth redirect.
+	//
+	// Loopback redirect URIs use the "http" scheme and are constructed with
+	// the loopback IP literal and whatever port the client is listening on.
+	//
+	// Source: https://tools.ietf.org/html/rfc8252#section-7.3
+	if requested.Scheme == "http" &&
+		isLoopbackAddress(requested.Host) &&
+		registered.Hostname() == requested.Hostname() &&
+		// The port is skipped here - see codedoc above!
+		registered.Path == requested.Path &&
+		registered.RawQuery == requested.RawQuery {
 		return true
 	}
 

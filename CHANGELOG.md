@@ -4,51 +4,57 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-24)](#unreleased-2020-09-24)
+- [Unreleased (2020-10-06)](#unreleased-2020-10-06)
     - [Bug Fixes](#bug-fixes)
+    - [BREAKING CHANGES](#breaking-changes)
+  - [0.34.1 (2020-10-02)](#0341-2020-10-02)
+    - [Bug Fixes](#bug-fixes-1)
+    - [Documentation](#documentation)
+- [0.34.0 (2020-09-24)](#0340-2020-09-24)
+    - [Bug Fixes](#bug-fixes-2)
     - [Features](#features)
     - [Unclassified](#unclassified)
-    - [BREAKING CHANGES](#breaking-changes)
+    - [BREAKING CHANGES](#breaking-changes-1)
 - [0.33.0 (2020-09-16)](#0330-2020-09-16)
     - [Features](#features-1)
-    - [BREAKING CHANGES](#breaking-changes-1)
+    - [BREAKING CHANGES](#breaking-changes-2)
   - [0.32.4 (2020-09-15)](#0324-2020-09-15)
     - [Code Refactoring](#code-refactoring)
-    - [Documentation](#documentation)
-  - [0.32.3 (2020-09-12)](#0323-2020-09-12)
-    - [Bug Fixes](#bug-fixes-1)
-    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-1)
+  - [0.32.3 (2020-09-12)](#0323-2020-09-12)
+    - [Bug Fixes](#bug-fixes-3)
+    - [Code Refactoring](#code-refactoring-1)
+    - [Documentation](#documentation-2)
     - [Features](#features-2)
   - [0.32.2 (2020-06-22)](#0322-2020-06-22)
     - [Features](#features-3)
   - [0.32.1 (2020-06-05)](#0321-2020-06-05)
-    - [Bug Fixes](#bug-fixes-2)
+    - [Bug Fixes](#bug-fixes-4)
     - [Features](#features-4)
 - [0.32.0 (2020-05-28)](#0320-2020-05-28)
-    - [Bug Fixes](#bug-fixes-3)
-    - [Documentation](#documentation-2)
+    - [Bug Fixes](#bug-fixes-5)
+    - [Documentation](#documentation-3)
     - [Features](#features-5)
   - [0.31.3 (2020-05-09)](#0313-2020-05-09)
-    - [Bug Fixes](#bug-fixes-4)
+    - [Bug Fixes](#bug-fixes-6)
     - [Features](#features-6)
   - [0.31.2 (2020-04-16)](#0312-2020-04-16)
-    - [Bug Fixes](#bug-fixes-5)
+    - [Bug Fixes](#bug-fixes-7)
   - [0.31.1 (2020-04-16)](#0311-2020-04-16)
-    - [Bug Fixes](#bug-fixes-6)
-    - [Documentation](#documentation-3)
+    - [Bug Fixes](#bug-fixes-8)
+    - [Documentation](#documentation-4)
 - [0.31.0 (2020-03-29)](#0310-2020-03-29)
     - [Unclassified](#unclassified-1)
   - [0.30.6 (2020-03-26)](#0306-2020-03-26)
-    - [Bug Fixes](#bug-fixes-7)
-    - [Documentation](#documentation-4)
-  - [0.30.5 (2020-03-25)](#0305-2020-03-25)
-    - [Bug Fixes](#bug-fixes-8)
-  - [0.30.4 (2020-03-17)](#0304-2020-03-17)
     - [Bug Fixes](#bug-fixes-9)
-  - [0.30.3 (2020-03-04)](#0303-2020-03-04)
-    - [Bug Fixes](#bug-fixes-10)
     - [Documentation](#documentation-5)
+  - [0.30.5 (2020-03-25)](#0305-2020-03-25)
+    - [Bug Fixes](#bug-fixes-10)
+  - [0.30.4 (2020-03-17)](#0304-2020-03-17)
+    - [Bug Fixes](#bug-fixes-11)
+  - [0.30.3 (2020-03-04)](#0303-2020-03-04)
+    - [Bug Fixes](#bug-fixes-12)
+    - [Documentation](#documentation-6)
     - [Features](#features-7)
   - [0.30.2 (2019-11-21)](#0302-2019-11-21)
     - [Unclassified](#unclassified-2)
@@ -57,10 +63,10 @@
 - [0.30.0 (2019-09-16)](#0300-2019-09-16)
     - [Unclassified](#unclassified-4)
   - [0.29.8 (2019-08-29)](#0298-2019-08-29)
-    - [Documentation](#documentation-6)
+    - [Documentation](#documentation-7)
     - [Unclassified](#unclassified-5)
   - [0.29.7 (2019-08-06)](#0297-2019-08-06)
-    - [Documentation](#documentation-7)
+    - [Documentation](#documentation-8)
     - [Unclassified](#unclassified-6)
   - [0.29.6 (2019-04-26)](#0296-2019-04-26)
     - [Unclassified](#unclassified-7)
@@ -79,7 +85,7 @@
 - [0.28.0 (2018-11-16)](#0280-2018-11-16)
     - [Unclassified](#unclassified-14)
   - [0.27.4 (2018-11-12)](#0274-2018-11-12)
-    - [Documentation](#documentation-8)
+    - [Documentation](#documentation-9)
     - [Unclassified](#unclassified-15)
   - [0.27.3 (2018-11-08)](#0273-2018-11-08)
     - [Unclassified](#unclassified-16)
@@ -94,7 +100,7 @@
 - [0.26.0 (2018-10-24)](#0260-2018-10-24)
     - [Unclassified](#unclassified-21)
   - [0.25.1 (2018-10-23)](#0251-2018-10-23)
-    - [Documentation](#documentation-9)
+    - [Documentation](#documentation-10)
     - [Unclassified](#unclassified-22)
 - [0.25.0 (2018-10-08)](#0250-2018-10-08)
     - [Unclassified](#unclassified-23)
@@ -115,7 +121,7 @@
   - [0.21.1 (2018-07-22)](#0211-2018-07-22)
     - [Unclassified](#unclassified-31)
 - [0.21.0 (2018-06-23)](#0210-2018-06-23)
-    - [Documentation](#documentation-10)
+    - [Documentation](#documentation-11)
     - [Unclassified](#unclassified-32)
   - [0.20.3 (2018-06-07)](#0203-2018-06-07)
     - [Unclassified](#unclassified-33)
@@ -152,10 +158,10 @@
   - [0.17.1 (2018-04-22)](#0171-2018-04-22)
     - [Unclassified](#unclassified-49)
 - [0.17.0 (2018-04-08)](#0170-2018-04-08)
-    - [Documentation](#documentation-11)
+    - [Documentation](#documentation-12)
     - [Unclassified](#unclassified-50)
   - [0.16.5 (2018-03-17)](#0165-2018-03-17)
-    - [Documentation](#documentation-12)
+    - [Documentation](#documentation-13)
     - [Unclassified](#unclassified-51)
   - [0.16.4 (2018-02-07)](#0164-2018-02-07)
     - [Unclassified](#unclassified-52)
@@ -180,7 +186,7 @@
   - [0.15.1 (2017-12-10)](#0151-2017-12-10)
     - [Unclassified](#unclassified-62)
 - [0.15.0 (2017-12-09)](#0150-2017-12-09)
-    - [Documentation](#documentation-13)
+    - [Documentation](#documentation-14)
     - [Unclassified](#unclassified-63)
   - [0.14.2 (2017-12-06)](#0142-2017-12-06)
     - [Unclassified](#unclassified-64)
@@ -195,10 +201,10 @@
 - [0.12.0 (2017-10-25)](#0120-2017-10-25)
     - [Unclassified](#unclassified-69)
   - [0.11.4 (2017-10-10)](#0114-2017-10-10)
-    - [Documentation](#documentation-14)
+    - [Documentation](#documentation-15)
     - [Unclassified](#unclassified-70)
   - [0.11.3 (2017-08-21)](#0113-2017-08-21)
-    - [Documentation](#documentation-15)
+    - [Documentation](#documentation-16)
     - [Unclassified](#unclassified-71)
   - [0.11.2 (2017-07-09)](#0112-2017-07-09)
     - [Unclassified](#unclassified-72)
@@ -211,7 +217,7 @@
   - [0.9.7 (2017-06-28)](#097-2017-06-28)
     - [Unclassified](#unclassified-76)
   - [0.9.6 (2017-06-21)](#096-2017-06-21)
-    - [Documentation](#documentation-16)
+    - [Documentation](#documentation-17)
     - [Unclassified](#unclassified-77)
   - [0.9.5 (2017-06-08)](#095-2017-06-08)
     - [Unclassified](#unclassified-78)
@@ -224,13 +230,13 @@
   - [0.9.1 (2017-06-04)](#091-2017-06-04)
     - [Unclassified](#unclassified-82)
 - [0.9.0 (2017-06-03)](#090-2017-06-03)
-    - [Documentation](#documentation-17)
+    - [Documentation](#documentation-18)
     - [Unclassified](#unclassified-83)
 - [0.8.0 (2017-05-18)](#080-2017-05-18)
-    - [Documentation](#documentation-18)
+    - [Documentation](#documentation-19)
     - [Unclassified](#unclassified-84)
 - [0.7.0 (2017-05-03)](#070-2017-05-03)
-    - [Documentation](#documentation-19)
+    - [Documentation](#documentation-20)
     - [Unclassified](#unclassified-85)
   - [0.6.19 (2017-05-03)](#0619-2017-05-03)
     - [Unclassified](#unclassified-86)
@@ -251,7 +257,7 @@
   - [0.6.10 (2016-12-29)](#0610-2016-12-29)
     - [Unclassified](#unclassified-94)
   - [0.6.9 (2016-12-29)](#069-2016-12-29)
-    - [Documentation](#documentation-20)
+    - [Documentation](#documentation-21)
     - [Unclassified](#unclassified-95)
   - [0.6.8 (2016-12-20)](#068-2016-12-20)
     - [Unclassified](#unclassified-96)
@@ -274,7 +280,7 @@
 - [0.5.0 (2016-10-17)](#050-2016-10-17)
     - [Unclassified](#unclassified-105)
 - [0.4.0 (2016-10-16)](#040-2016-10-16)
-    - [Documentation](#documentation-21)
+    - [Documentation](#documentation-22)
     - [Unclassified](#unclassified-106)
   - [0.3.6 (2016-10-07)](#036-2016-10-07)
     - [Unclassified](#unclassified-107)
@@ -283,7 +289,7 @@
   - [0.3.4 (2016-10-04)](#034-2016-10-04)
     - [Unclassified](#unclassified-109)
   - [0.3.3 (2016-10-03)](#033-2016-10-03)
-    - [Documentation](#documentation-22)
+    - [Documentation](#documentation-23)
     - [Unclassified](#unclassified-110)
   - [0.3.2 (2016-09-22)](#032-2016-09-22)
     - [Unclassified](#unclassified-111)
@@ -303,12 +309,61 @@
     - [Unclassified](#unclassified-118)
 - [0.1.0 (2016-08-01)](#010-2016-08-01)
     - [Code Refactoring](#code-refactoring-2)
-    - [Documentation](#documentation-23)
+    - [Documentation](#documentation-24)
     - [Unclassified](#unclassified-119)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.33.0...03dd55813f5521985f7dd64277b7ba0cf1441319) (2020-09-24)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.34.1...4b81316a1dbb0c5246bac39ecbaff749b00e4efa) (2020-10-06)
+
+
+### Bug Fixes
+
+* Redirct_url with query escape character outside of query is failing ([#480](https://github.com/ory/fosite/issues/480)) ([6e49c57](https://github.com/ory/fosite/commit/6e49c57c8f7a46a78eda4d3091765d631f427845)):
+
+    > See https://github.com/ory/hydra/issues/2055
+    > 
+    > 
+    > Co-authored-by: ajanthan <ca52ca6fe18c44787827017e14ca2d0c3c5bdb58>
+* Rename TokenType to TokenUse in introspection ([#486](https://github.com/ory/fosite/issues/486)) ([4b81316](https://github.com/ory/fosite/commit/4b81316a1dbb0c5246bac39ecbaff749b00e4efa)), closes [ory/hydra#1762](https://github.com/ory/hydra/issues/1762)
+* Return allowed redirect url with preference ([f0badc4](https://github.com/ory/fosite/commit/f0badc4919e00fa179dd54edcbd7385fac14fa19))
+
+
+### BREAKING CHANGES
+
+* Type `fosite.TokenType` has been renamed to `fosite.TokenUse`.
+
+
+
+## [0.34.1](https://github.com/ory/fosite/compare/v0.34.0...v0.34.1) (2020-10-02)
+
+
+### Bug Fixes
+
+* Make redirect URL checking more strict ([cdee51e](https://github.com/ory/fosite/commit/cdee51ebe721bfc8acca0fd0b86b030ca70867bf)):
+
+    > The OAuth 2.0 Client's Redirect URL and the Redirect URL used in the OAuth 2.0 flow do not check if the query string is equal:
+    > 
+    > 1. Registering a client with allowed redirect URL `https://example.com/callback`
+    > 2. Performing OAuth2 flow and requesting redirect URL `https://example.com/callback?bar=foo`
+    > 3. Instead of an error, the browser is redirected to `https://example.com/callback?bar=foo` with a potentially successful OAuth2 response.
+    > 
+    > Additionally, matching Redirect URLs used `strings.ToLower` normalization:
+    > 
+    > 1. Registering a client with allowed redirect URL `https://example.com/callback`
+    > 2. Performing OAuth2 flow and requesting redirect URL `https://example.com/CALLBACK`
+    > 3. Instead of an error, the browser is redirected to `https://example.com/CALLBACK ` with a potentially successful OAuth2 response.
+    > 
+    > This patch addresses all of these issues and adds regression tests to keep the implementation secure in future releases.
+
+
+### Documentation
+
+* Added missing dot ([#487](https://github.com/ory/fosite/issues/487)) ([a822244](https://github.com/ory/fosite/commit/a82224430292b2f209d011f107998273d568912b))
+
+
+
+# [0.34.0](https://github.com/ory/fosite/compare/v0.33.0...v0.34.0) (2020-09-24)
 
 
 ### Bug Fixes
