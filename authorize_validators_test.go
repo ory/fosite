@@ -25,12 +25,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/go-convenience/stringsx"
 )
 
 func TestValidateResponseTypes(t *testing.T) {
@@ -96,7 +95,7 @@ func TestValidateResponseTypes(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				assert.EqualValues(t, stringsx.Splitx(tc.rt, " "), ar.GetResponseTypes())
+				assert.EqualValues(t, RemoveEmpty(strings.Split(tc.rt, " ")), ar.GetResponseTypes())
 			}
 		})
 	}
