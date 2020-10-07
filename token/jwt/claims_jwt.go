@@ -76,29 +76,26 @@ type JWTClaims struct {
 }
 
 func (c *JWTClaims) With(expiry time.Time, scope, audience []string) JWTClaimsContainer {
-	claims := *c
-	claims.ExpiresAt = expiry
-	claims.Scope = scope
-	claims.Audience = audience
-	return &claims
+	c.ExpiresAt = expiry
+	c.Scope = scope
+	c.Audience = audience
+	return c
 }
 
 func (c *JWTClaims) WithDefaults(iat time.Time, issuer string) JWTClaimsContainer {
-	claims := *c
-	if claims.IssuedAt.IsZero() {
-		claims.IssuedAt = iat
+	if c.IssuedAt.IsZero() {
+		c.IssuedAt = iat
 	}
 
-	if claims.Issuer == "" {
-		claims.Issuer = issuer
+	if c.Issuer == "" {
+		c.Issuer = issuer
 	}
-	return &claims
+	return c
 }
 
 func (c *JWTClaims) WithScopeField(scopeField JWTScopeFieldEnum) JWTClaimsContainer {
-	claims := *c
-	claims.ScopeField = scopeField
-	return &claims
+	c.ScopeField = scopeField
+	return c
 }
 
 // ToMap will transform the headers to a map structure

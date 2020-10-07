@@ -41,16 +41,14 @@ type DefaultJWTStrategy struct {
 	ScopeField      jwt.JWTScopeFieldEnum
 }
 
-func (h DefaultJWTStrategy) WithIssuer(issuer string) DefaultJWTStrategy {
-	strategy := h
-	strategy.Issuer = issuer
-	return strategy
+func (h *DefaultJWTStrategy) WithIssuer(issuer string) *DefaultJWTStrategy {
+	h.Issuer = issuer
+	return h
 }
 
-func (h DefaultJWTStrategy) WithScopeField(scopeField jwt.JWTScopeFieldEnum) DefaultJWTStrategy {
-	strategy := h
-	strategy.ScopeField = scopeField
-	return strategy
+func (h *DefaultJWTStrategy) WithScopeField(scopeField jwt.JWTScopeFieldEnum) *DefaultJWTStrategy {
+	h.ScopeField = scopeField
+	return h
 }
 
 func (h DefaultJWTStrategy) signature(token string) string {

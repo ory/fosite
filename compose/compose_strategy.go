@@ -68,6 +68,16 @@ func NewOAuth2JWTECDSAStrategy(key *ecdsa.PrivateKey, strategy *oauth2.HMACSHASt
 	}
 }
 
+// Deprecated: Use NewOAuth2JWTStrategy(key, strategy).WithIssuer(issuer) instead.
+func NewOAuth2JWTStrategyWithIssuer(key *rsa.PrivateKey, strategy *oauth2.HMACSHAStrategy, issuer string) *oauth2.DefaultJWTStrategy {
+	return NewOAuth2JWTStrategy(key, strategy).WithIssuer(issuer)
+}
+
+// Deprecated: Use NewOAuth2JWTECDSAStrategy(key, strategy).WithIssuer(issuer) instead.
+func NewOAuth2JWTECDSAStrategyWithIssuer(key *ecdsa.PrivateKey, strategy *oauth2.HMACSHAStrategy, issuer string) *oauth2.DefaultJWTStrategy {
+	return NewOAuth2JWTECDSAStrategy(key, strategy).WithIssuer(issuer)
+}
+
 func NewOpenIDConnectStrategy(config *Config, key *rsa.PrivateKey) *openid.DefaultStrategy {
 	return &openid.DefaultStrategy{
 		JWTStrategy: &jwt.RS256JWTStrategy{
