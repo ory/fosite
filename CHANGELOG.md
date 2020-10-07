@@ -4,52 +4,56 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-09-28)](#unreleased-2020-09-28)
+- [Unreleased (2020-10-06)](#unreleased-2020-10-06)
+    - [Bug Fixes](#bug-fixes)
+    - [BREAKING CHANGES](#breaking-changes)
+  - [0.34.1 (2020-10-02)](#0341-2020-10-02)
+    - [Bug Fixes](#bug-fixes-1)
     - [Documentation](#documentation)
 - [0.34.0 (2020-09-24)](#0340-2020-09-24)
-    - [Bug Fixes](#bug-fixes)
+    - [Bug Fixes](#bug-fixes-2)
     - [Features](#features)
     - [Unclassified](#unclassified)
-    - [BREAKING CHANGES](#breaking-changes)
+    - [BREAKING CHANGES](#breaking-changes-1)
 - [0.33.0 (2020-09-16)](#0330-2020-09-16)
     - [Features](#features-1)
-    - [BREAKING CHANGES](#breaking-changes-1)
+    - [BREAKING CHANGES](#breaking-changes-2)
   - [0.32.4 (2020-09-15)](#0324-2020-09-15)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-1)
   - [0.32.3 (2020-09-12)](#0323-2020-09-12)
-    - [Bug Fixes](#bug-fixes-1)
+    - [Bug Fixes](#bug-fixes-3)
     - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-2)
     - [Features](#features-2)
   - [0.32.2 (2020-06-22)](#0322-2020-06-22)
     - [Features](#features-3)
   - [0.32.1 (2020-06-05)](#0321-2020-06-05)
-    - [Bug Fixes](#bug-fixes-2)
+    - [Bug Fixes](#bug-fixes-4)
     - [Features](#features-4)
 - [0.32.0 (2020-05-28)](#0320-2020-05-28)
-    - [Bug Fixes](#bug-fixes-3)
+    - [Bug Fixes](#bug-fixes-5)
     - [Documentation](#documentation-3)
     - [Features](#features-5)
   - [0.31.3 (2020-05-09)](#0313-2020-05-09)
-    - [Bug Fixes](#bug-fixes-4)
+    - [Bug Fixes](#bug-fixes-6)
     - [Features](#features-6)
   - [0.31.2 (2020-04-16)](#0312-2020-04-16)
-    - [Bug Fixes](#bug-fixes-5)
+    - [Bug Fixes](#bug-fixes-7)
   - [0.31.1 (2020-04-16)](#0311-2020-04-16)
-    - [Bug Fixes](#bug-fixes-6)
+    - [Bug Fixes](#bug-fixes-8)
     - [Documentation](#documentation-4)
 - [0.31.0 (2020-03-29)](#0310-2020-03-29)
     - [Unclassified](#unclassified-1)
   - [0.30.6 (2020-03-26)](#0306-2020-03-26)
-    - [Bug Fixes](#bug-fixes-7)
+    - [Bug Fixes](#bug-fixes-9)
     - [Documentation](#documentation-5)
   - [0.30.5 (2020-03-25)](#0305-2020-03-25)
-    - [Bug Fixes](#bug-fixes-8)
-  - [0.30.4 (2020-03-17)](#0304-2020-03-17)
-    - [Bug Fixes](#bug-fixes-9)
-  - [0.30.3 (2020-03-04)](#0303-2020-03-04)
     - [Bug Fixes](#bug-fixes-10)
+  - [0.30.4 (2020-03-17)](#0304-2020-03-17)
+    - [Bug Fixes](#bug-fixes-11)
+  - [0.30.3 (2020-03-04)](#0303-2020-03-04)
+    - [Bug Fixes](#bug-fixes-12)
     - [Documentation](#documentation-6)
     - [Features](#features-7)
   - [0.30.2 (2019-11-21)](#0302-2019-11-21)
@@ -310,7 +314,47 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.34.0...a82224430292b2f209d011f107998273d568912b) (2020-09-28)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.34.1...4b81316a1dbb0c5246bac39ecbaff749b00e4efa) (2020-10-06)
+
+
+### Bug Fixes
+
+* Redirct_url with query escape character outside of query is failing ([#480](https://github.com/ory/fosite/issues/480)) ([6e49c57](https://github.com/ory/fosite/commit/6e49c57c8f7a46a78eda4d3091765d631f427845)):
+
+    > See https://github.com/ory/hydra/issues/2055
+    > 
+    > 
+    > Co-authored-by: ajanthan <ca52ca6fe18c44787827017e14ca2d0c3c5bdb58>
+* Rename TokenType to TokenUse in introspection ([#486](https://github.com/ory/fosite/issues/486)) ([4b81316](https://github.com/ory/fosite/commit/4b81316a1dbb0c5246bac39ecbaff749b00e4efa)), closes [ory/hydra#1762](https://github.com/ory/hydra/issues/1762)
+* Return allowed redirect url with preference ([f0badc4](https://github.com/ory/fosite/commit/f0badc4919e00fa179dd54edcbd7385fac14fa19))
+
+
+### BREAKING CHANGES
+
+* Type `fosite.TokenType` has been renamed to `fosite.TokenUse`.
+
+
+
+## [0.34.1](https://github.com/ory/fosite/compare/v0.34.0...v0.34.1) (2020-10-02)
+
+
+### Bug Fixes
+
+* Make redirect URL checking more strict ([cdee51e](https://github.com/ory/fosite/commit/cdee51ebe721bfc8acca0fd0b86b030ca70867bf)):
+
+    > The OAuth 2.0 Client's Redirect URL and the Redirect URL used in the OAuth 2.0 flow do not check if the query string is equal:
+    > 
+    > 1. Registering a client with allowed redirect URL `https://example.com/callback`
+    > 2. Performing OAuth2 flow and requesting redirect URL `https://example.com/callback?bar=foo`
+    > 3. Instead of an error, the browser is redirected to `https://example.com/callback?bar=foo` with a potentially successful OAuth2 response.
+    > 
+    > Additionally, matching Redirect URLs used `strings.ToLower` normalization:
+    > 
+    > 1. Registering a client with allowed redirect URL `https://example.com/callback`
+    > 2. Performing OAuth2 flow and requesting redirect URL `https://example.com/CALLBACK`
+    > 3. Instead of an error, the browser is redirected to `https://example.com/CALLBACK ` with a potentially successful OAuth2 response.
+    > 
+    > This patch addresses all of these issues and adds regression tests to keep the implementation secure in future releases.
 
 
 ### Documentation

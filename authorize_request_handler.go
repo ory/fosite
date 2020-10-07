@@ -160,10 +160,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 func (f *Fosite) validateAuthorizeRedirectURI(r *http.Request, request *AuthorizeRequest) error {
 	// Fetch redirect URI from request
-	rawRedirURI, err := GetRedirectURIFromRequestValues(request.Form)
-	if err != nil {
-		return err
-	}
+	rawRedirURI := request.Form.Get("redirect_uri")
 
 	// Validate redirect uri
 	redirectURI, err := MatchRedirectURIWithClientRedirectURIs(rawRedirURI, request.Client)

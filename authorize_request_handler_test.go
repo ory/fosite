@@ -49,6 +49,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 	defer ctrl.Finish()
 
 	redir, _ := url.Parse("https://foo.bar/cb")
+	specialCharRedir, _ := url.Parse("web+application://callback")
 	for k, c := range []struct {
 		desc          string
 		conf          *Fosite
@@ -218,6 +219,41 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				Request: Request{
 					Client: &DefaultClient{
 						ResponseTypes: []string{"code token"}, RedirectURIs: []string{"https://foo.bar/cb"},
+						Scopes:   []string{"foo", "bar"},
+						Audience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+					},
+					RequestedScope:    []string{"foo", "bar"},
+					RequestedAudience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+				},
+			},
+		},
+		/* redirect_uri with special character in protocol*/
+		{
+			desc: "redirect_uri with special character",
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			query: url.Values{
+				"redirect_uri":  {"web+application://callback"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+				"audience":      {"https://cloud.ory.sh/api https://www.ory.sh/api"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					ResponseTypes: []string{"code token"},
+					RedirectURIs:  []string{"web+application://callback"},
+					Scopes:        []string{"foo", "bar"},
+					Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+				}, nil)
+			},
+			expect: &AuthorizeRequest{
+				RedirectURI:   specialCharRedir,
+				ResponseTypes: []string{"code", "token"},
+				State:         "strong-state",
+				Request: Request{
+					Client: &DefaultClient{
+						ResponseTypes: []string{"code token"}, RedirectURIs: []string{"web+application://callback"},
 						Scopes:   []string{"foo", "bar"},
 						Audience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
 					},
