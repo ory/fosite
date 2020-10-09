@@ -82,9 +82,9 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 			description: "should success for not expired access token",
 			setup: func() {
 				ires.Active = true
-				ires.TokenType = AccessToken
+				ires.TokenUse = AccessToken
 				sess := &DefaultSession{}
-				sess.SetExpiresAt(ires.TokenType, time.Now().Add(time.Hour*2))
+				sess.SetExpiresAt(ires.TokenUse, time.Now().Add(time.Hour*2))
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
 			active: true,
@@ -94,9 +94,9 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 			description: "should success for expired access token",
 			setup: func() {
 				ires.Active = false
-				ires.TokenType = AccessToken
+				ires.TokenUse = AccessToken
 				sess := &DefaultSession{}
-				sess.SetExpiresAt(ires.TokenType, time.Now().Add(-time.Hour*2))
+				sess.SetExpiresAt(ires.TokenUse, time.Now().Add(-time.Hour*2))
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
 			active: false,
@@ -106,9 +106,9 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 			description: "should success for ExpiresAt not set access token",
 			setup: func() {
 				ires.Active = true
-				ires.TokenType = AccessToken
+				ires.TokenUse = AccessToken
 				sess := &DefaultSession{}
-				sess.SetExpiresAt(ires.TokenType, time.Time{})
+				sess.SetExpiresAt(ires.TokenUse, time.Time{})
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
 			active: true,

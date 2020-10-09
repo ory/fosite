@@ -49,33 +49,6 @@ func TestIsLocalhost(t *testing.T) {
 	}
 }
 
-// Test for
-// * https://tools.ietf.org/html/rfc6749#section-3.1.2
-//   The endpoint URI MAY include an
-//   "application/x-www-form-urlencoded" formatted (per Appendix B) query
-//   component ([RFC3986] Section 3.4), which MUST be retained when adding
-//   additional query parameters.
-func TestGetRedirectURI(t *testing.T) {
-	for k, c := range []struct {
-		in       string
-		isError  bool
-		expected string
-	}{
-		{in: "", isError: false, expected: ""},
-		{in: "https://google.com/", isError: false, expected: "https://google.com/"},
-		{in: "https://google.com/?foo=bar%20foo+baz", isError: false, expected: "https://google.com/?foo=bar foo baz"},
-	} {
-		values := url.Values{}
-		values.Set("redirect_uri", c.in)
-		res, err := GetRedirectURIFromRequestValues(values)
-		assert.Equal(t, c.isError, err != nil, "%s", err)
-		if err == nil {
-			assert.Equal(t, c.expected, res)
-		}
-		t.Logf("Passed test case %d", k)
-	}
-}
-
 // rfc6749 10.6.
 // Authorization Code Redirection URI Manipulation
 // The authorization server	MUST require public clients and SHOULD require confidential clients
@@ -240,6 +213,18 @@ func TestDoesClientWhiteListRedirect(t *testing.T) {
 			client:  &DefaultClient{RedirectURIs: []string{"http://127.0.0.1:8080/cb"}},
 			url:     "https://www.ory.sh/cb",
 			isError: true,
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"web+application://callback"}},
+			url:      "web+application://callback",
+			isError:  false,
+			expected: "web+application://callback",
+		},
+		{
+			client:   &DefaultClient{RedirectURIs: []string{"https://google.com/?foo=bar%20foo+baz"}},
+			url:      "https://google.com/?foo=bar%20foo+baz",
+			isError:  false,
+			expected: "https://google.com/?foo=bar%20foo+baz",
 		},
 	} {
 		redir, err := MatchRedirectURIWithClientRedirectURIs(c.url, c.client)
