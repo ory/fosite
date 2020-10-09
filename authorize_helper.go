@@ -22,9 +22,16 @@
 package fosite
 
 import (
+	"html/template"
+	"io"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
+
+	"golang.org/x/net/html"
+	goauth "golang.org/x/oauth2"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/pkg/errors"
@@ -174,4 +181,119 @@ func IsRedirectURISecure(redirectURI *url.URL) bool {
 func IsLocalhost(redirectURI *url.URL) bool {
 	hn := redirectURI.Hostname()
 	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "localhost"
+}
+
+func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, rw io.Writer) {
+	t := template.Must(template.New("form_post").Parse(`<html>
+   <head>
+      <title>Submit This Form</title>
+   </head>
+   <body onload="javascript:document.forms[0].submit()">
+      <form method="post" action="{{ .RedirURL }}">
+         {{ range $key,$value := .Parameters }}
+		<input type="hidden" name="{{$key}}" value="{{index $value 0}}"/>
+         {{ end }}
+      </form>
+   </body>
+</html>`))
+
+	_ = t.Execute(rw, struct {
+		RedirURL   string
+		Parameters url.Values
+	}{
+		RedirURL:   redirectURL,
+		Parameters: parameters,
+	})
+}
+func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizationCode, stateFromServer, iDToken string, token goauth.Token, rFC6749Error RFC6749Error, err error) {
+
+	token = goauth.Token{}
+	rFC6749Error = RFC6749Error{}
+
+	doc, err := html.Parse(resp)
+	if err != nil {
+		return "", "", "", token, rFC6749Error, err
+	}
+	//doc>html>body
+	body := findBody(doc.FirstChild.FirstChild)
+	if body.Data != "body" {
+		return "", "", "", token, rFC6749Error, errors.New("Malformed html")
+	}
+	htmlEvent := body.Attr[0].Key
+	if htmlEvent != "onload" {
+		return "", "", "", token, rFC6749Error, errors.New("onload event is missing")
+	}
+	onLoadFunc := body.Attr[0].Val
+	if onLoadFunc != "javascript:document.forms[0].submit()" {
+		return "", "", "", token, rFC6749Error, errors.New("onload function is missing")
+	}
+	form := getNextNoneTextNode(body.FirstChild)
+	if form.Data != "form" {
+		return "", "", "", token, rFC6749Error, errors.New("html form is missing")
+	}
+	for _, attr := range form.Attr {
+		if attr.Key == "method" {
+			if attr.Val != "post" {
+				return "", "", "", token, rFC6749Error, errors.New("html form post method is missing")
+			}
+		} else {
+			if attr.Val != redirectURL {
+				return "", "", "", token, rFC6749Error, errors.New("html form post url is wrong")
+			}
+		}
+	}
+
+	for node := getNextNoneTextNode(form.FirstChild); node != nil; node = getNextNoneTextNode(node.NextSibling) {
+		var k, v string
+		for _, attr := range node.Attr {
+			if attr.Key == "name" {
+				k = attr.Val
+			} else if attr.Key == "value" {
+				v = attr.Val
+			}
+
+		}
+		switch k {
+		case "state":
+			stateFromServer = v
+		case "code":
+			authorizationCode = v
+		case "expires_in":
+			expires, err := strconv.Atoi(v)
+			if err != nil {
+				return "", "", "", token, rFC6749Error, err
+			}
+			token.Expiry = time.Now().UTC().Add(time.Duration(expires) * time.Second)
+		case "access_token":
+			token.AccessToken = v
+		case "token_type":
+			token.TokenType = v
+		case "refresh_token":
+			token.RefreshToken = v
+		case "error":
+			rFC6749Error.Name = v
+		case "error_description":
+			rFC6749Error.Description = v
+		case "id_token":
+			iDToken = v
+		}
+	}
+	return
+}
+
+func getNextNoneTextNode(node *html.Node) *html.Node {
+	nextNode := node.NextSibling
+	if nextNode != nil && nextNode.Type == html.TextNode {
+		nextNode = getNextNoneTextNode(node.NextSibling)
+	}
+	return nextNode
+}
+func findBody(node *html.Node) *html.Node {
+	if node != nil {
+		if node.Data == "body" {
+			return node
+		}
+		return findBody(node.NextSibling)
+	}
+	return nil
 }

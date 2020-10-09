@@ -110,10 +110,15 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.GetSanitationWhiteList())); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
-
-	resp.AddQuery("code", code)
-	resp.AddQuery("state", ar.GetState())
-	resp.AddQuery("scope", strings.Join(ar.GetGrantedScopes(), " "))
+	if ar.GetRequestForm().Get("response_mode") == "form_post" {
+		resp.AddForm("code", code)
+		resp.AddForm("state", ar.GetState())
+		resp.AddForm("scope", strings.Join(ar.GetGrantedScopes(), " "))
+	} else {
+		resp.AddQuery("code", code)
+		resp.AddQuery("state", ar.GetState())
+		resp.AddQuery("scope", strings.Join(ar.GetGrantedScopes(), " "))
+	}
 	ar.SetResponseTypeHandled("code")
 	return nil
 }

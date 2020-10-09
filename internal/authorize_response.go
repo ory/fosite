@@ -35,6 +35,18 @@ func (m *MockAuthorizeResponder) EXPECT() *MockAuthorizeResponderMockRecorder {
 	return m.recorder
 }
 
+// AddForm mocks base method
+func (m *MockAuthorizeResponder) AddForm(arg0, arg1 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AddForm", arg0, arg1)
+}
+
+// AddForm indicates an expected call of AddForm
+func (mr *MockAuthorizeResponderMockRecorder) AddForm(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddForm", reflect.TypeOf((*MockAuthorizeResponder)(nil).AddForm), arg0, arg1)
+}
+
 // AddFragment mocks base method
 func (m *MockAuthorizeResponder) AddFragment(arg0, arg1 string) {
 	m.ctrl.T.Helper()
@@ -83,6 +95,20 @@ func (m *MockAuthorizeResponder) GetCode() string {
 func (mr *MockAuthorizeResponderMockRecorder) GetCode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCode", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetCode))
+}
+
+// GetForm mocks base method
+func (m *MockAuthorizeResponder) GetForm() url.Values {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetForm")
+	ret0, _ := ret[0].(url.Values)
+	return ret0
+}
+
+// GetForm indicates an expected call of GetForm
+func (mr *MockAuthorizeResponderMockRecorder) GetForm() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetForm", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetForm))
 }
 
 // GetFragment mocks base method

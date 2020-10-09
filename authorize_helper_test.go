@@ -22,6 +22,8 @@
 package fosite
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/url"
 	"testing"
 
@@ -252,4 +254,15 @@ func TestIsRedirectURISecure(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, !c.err, IsRedirectURISecure(uu), "case %d", d)
 	}
+}
+
+func TestWriteAuthorizeFormPostResponse(t *testing.T) {
+	var responseBuffer bytes.Buffer
+	redirectURL := "https://localhost:8080/cb"
+	parameters := url.Values{"code": {"lshr755nsg39fgur"}, "state": {"924659540232"}}
+	WriteAuthorizeFormPostResponse(redirectURL, parameters, &responseBuffer)
+	code, state, _, _, _, err := ParseFormPostResponse(redirectURL, ioutil.NopCloser(bytes.NewReader(responseBuffer.Bytes())))
+	assert.NoError(t, err)
+	assert.Equal(t, parameters.Get("code"), code)
+	assert.Equal(t, parameters.Get("state"), state)
 }

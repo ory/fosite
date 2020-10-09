@@ -91,14 +91,24 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		}
 
 		ar.SetResponseTypeHandled("token")
-		hash, err := c.RS256JWTStrategy.Hash(ctx, []byte(resp.GetFragment().Get("access_token")))
+		var accessToken string
+		if ar.GetRequestForm().Get("response_mode") == "form_post" {
+			accessToken = resp.GetForm().Get("access_token")
+		} else {
+			accessToken = resp.GetFragment().Get("access_token")
+		}
+		hash, err := c.RS256JWTStrategy.Hash(ctx, []byte(accessToken))
 		if err != nil {
 			return err
 		}
 
 		claims.AccessTokenHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]))
 	} else {
-		resp.AddFragment("state", ar.GetState())
+		if ar.GetRequestForm().Get("response_mode") == "form_post" {
+			resp.AddForm("state", ar.GetState())
+		} else {
+			resp.AddFragment("state", ar.GetState())
+		}
 	}
 
 	if err := c.IssueImplicitIDToken(ctx, ar, resp); err != nil {

@@ -321,4 +321,10 @@ type AuthorizeResponder interface {
 
 	// AddHeader adds a key value pair to the response's url fragment
 	AddFragment(key, value string)
+
+	// GetForm returns form with parameters
+	GetForm() (form url.Values)
+
+	// AddForm adds a key value pair to the form post request
+	AddForm(key, value string)
 }
