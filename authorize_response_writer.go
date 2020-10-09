@@ -34,6 +34,7 @@ func (f *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester
 		Header:   http.Header{},
 		Query:    url.Values{},
 		Fragment: url.Values{},
+		Form:     url.Values{},
 	}
 
 	ar.SetSession(session)

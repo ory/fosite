@@ -32,15 +32,6 @@ var (
 )
 
 func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
-	redir := ar.GetRedirectURI()
-
-	// Explicit grants
-	q := redir.Query()
-	rq := resp.GetQuery()
-	for k := range rq {
-		q.Set(k, rq.Get(k))
-	}
-	redir.RawQuery = q.Encode()
 
 	// Set custom headers, e.g. "X-MySuperCoolCustomHeader" or "X-DONT-CACHE-ME"...
 	wh := rw.Header()
@@ -49,27 +40,46 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 		wh.Set(k, rh.Get(k))
 	}
 
-	// Implicit grants
-	// The endpoint URI MUST NOT include a fragment component.
-	redir.Fragment = ""
-
-	u := redir.String()
-
-	fr := resp.GetFragment()
-	if len(fr) > 0 {
-		u = u + "#" + fr.Encode()
-	}
-
-	u = plusMatch.ReplaceAllString(u, "%20")
-
 	wh.Set("Cache-Control", "no-store")
 	wh.Set("Pragma", "no-cache")
 
-	// https://tools.ietf.org/html/rfc6749#section-4.1.1
-	// When a decision is established, the authorization server directs the
-	// user-agent to the provided client redirection URI using an HTTP
-	// redirection response, or by other means available to it via the
-	// user-agent.
-	wh.Set("Location", u)
-	rw.WriteHeader(http.StatusFound)
+	redir := ar.GetRedirectURI()
+	form := resp.GetForm()
+
+	if len(form) > 0 {
+		//form_post
+		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
+		WriteAuthorizeFormPostResponse(redir.String(), form, rw)
+	} else {
+
+		// Explicit grants
+		q := redir.Query()
+		rq := resp.GetQuery()
+		for k := range rq {
+			q.Set(k, rq.Get(k))
+		}
+		redir.RawQuery = q.Encode()
+
+		// Implicit grants
+		// The endpoint URI MUST NOT include a fragment component.
+		redir.Fragment = ""
+
+		u := redir.String()
+
+		fr := resp.GetFragment()
+		if len(fr) > 0 {
+			u = u + "#" + fr.Encode()
+		}
+
+		u = plusMatch.ReplaceAllString(u, "%20")
+
+		// https://tools.ietf.org/html/rfc6749#section-4.1.1
+		// When a decision is established, the authorization server directs the
+		// user-agent to the provided client redirection URI using an HTTP
+		// redirection response, or by other means available to it via the
+		// user-agent.
+		wh.Set("Location", u)
+		rw.WriteHeader(http.StatusFound)
+	}
+
 }

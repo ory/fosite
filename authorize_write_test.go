@@ -53,6 +53,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetFragment().Return(url.Values{})
 				resp.EXPECT().GetHeader().Return(http.Header{})
 				resp.EXPECT().GetQuery().Return(url.Values{})
+				resp.EXPECT().GetForm().Return(url.Values{})
 
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
@@ -72,6 +73,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}})
 				resp.EXPECT().GetHeader().Return(http.Header{})
 				resp.EXPECT().GetQuery().Return(url.Values{})
+				resp.EXPECT().GetForm().Return(url.Values{})
 
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
@@ -91,6 +93,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}})
 				resp.EXPECT().GetHeader().Return(http.Header{})
 				resp.EXPECT().GetQuery().Return(url.Values{"bar": {"baz"}})
+				resp.EXPECT().GetForm().Return(url.Values{})
 
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
@@ -110,6 +113,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}, "scope": {"a b"}})
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
 				resp.EXPECT().GetQuery().Return(url.Values{"bar": {"b+az"}, "scope": {"a b"}})
+				resp.EXPECT().GetForm().Return(url.Values{})
 
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
@@ -130,6 +134,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetFragment().Return(url.Values{"bar": {"baz"}, "scope": {"api:*"}})
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
 				resp.EXPECT().GetQuery().Return(url.Values{"bar": {"b+az"}, "scope": {"api:*"}})
+				resp.EXPECT().GetForm().Return(url.Values{})
 
 				rw.EXPECT().Header().Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
@@ -141,6 +146,20 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 					"Cache-Control": []string{"no-store"},
 					"Pragma":        []string{"no-cache"},
 				}, header)
+			},
+		},
+		{
+			setup: func() {
+				redir, _ := url.Parse("https://foobar.com/?foo=bar")
+				ar.EXPECT().GetRedirectURI().Return(redir)
+				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
+				resp.EXPECT().GetForm().Return(url.Values{"code": {"poz65kqoneu"}, "state": {"qm6dnsrn"}})
+
+				rw.EXPECT().Header().Return(header).AnyTimes()
+				rw.EXPECT().Write(gomock.Any()).AnyTimes()
+			},
+			expect: func() {
+				assert.Equal(t, "text/html;charset=UTF-8", header.Get("Content-Type"))
 			},
 		},
 	} {

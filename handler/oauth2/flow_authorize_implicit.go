@@ -94,12 +94,20 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar.Sanitize([]string{})); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
+	if ar.GetRequestForm().Get("response_mode") == "form_post" {
+		resp.AddForm("access_token", token)
+		resp.AddForm("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC())/time.Second), 10))
+		resp.AddForm("token_type", "bearer")
+		resp.AddForm("state", ar.GetState())
+		resp.AddForm("scope", strings.Join(ar.GetGrantedScopes(), " "))
+	} else {
+		resp.AddFragment("access_token", token)
+		resp.AddFragment("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC())/time.Second), 10))
+		resp.AddFragment("token_type", "bearer")
+		resp.AddFragment("state", ar.GetState())
+		resp.AddFragment("scope", strings.Join(ar.GetGrantedScopes(), " "))
+	}
 
-	resp.AddFragment("access_token", token)
-	resp.AddFragment("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC())/time.Second), 10))
-	resp.AddFragment("token_type", "bearer")
-	resp.AddFragment("state", ar.GetState())
-	resp.AddFragment("scope", strings.Join(ar.GetGrantedScopes(), " "))
 	ar.SetResponseTypeHandled("token")
 
 	return nil

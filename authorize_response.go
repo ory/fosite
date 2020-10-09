@@ -31,6 +31,7 @@ type AuthorizeResponse struct {
 	Header   http.Header
 	Query    url.Values
 	Fragment url.Values
+	Form     url.Values
 	code     string
 }
 
@@ -39,6 +40,7 @@ func NewAuthorizeResponse() *AuthorizeResponse {
 		Header:   http.Header{},
 		Query:    url.Values{},
 		Fragment: url.Values{},
+		Form:     url.Values{},
 	}
 }
 
@@ -62,6 +64,10 @@ func (a *AuthorizeResponse) GetFragment() url.Values {
 	return a.Fragment
 }
 
+func (a *AuthorizeResponse) GetForm() url.Values {
+	return a.Form
+}
+
 func (a *AuthorizeResponse) AddQuery(key, value string) {
 	if key == "code" {
 		a.code = value
@@ -74,4 +80,11 @@ func (a *AuthorizeResponse) AddFragment(key, value string) {
 		a.code = value
 	}
 	a.Fragment.Add(key, value)
+}
+
+func (a *AuthorizeResponse) AddForm(key, value string) {
+	if key == "code" {
+		a.code = value
+	}
+	a.Form.Add(key, value)
 }
