@@ -43,6 +43,7 @@ var jwtClaims = &JWTClaims{
 		"foo": "bar",
 		"baz": "bar",
 	},
+	ScopeField: JWTScopeFieldList,
 }
 
 var jwtClaimsMap = map[string]interface{}{
@@ -88,4 +89,27 @@ func TestClaimsFromMap(t *testing.T) {
 	var claims JWTClaims
 	claims.FromMap(jwtClaimsMap)
 	assert.Equal(t, jwtClaims, &claims)
+}
+
+func TestScopeFieldString(t *testing.T) {
+	jwtClaimsWithString := jwtClaims.WithScopeField(JWTScopeFieldString)
+	// Making a copy of jwtClaimsMap.
+	jwtClaimsMapWithString := jwtClaims.ToMap()
+	delete(jwtClaimsMapWithString, "scp")
+	jwtClaimsMapWithString["scope"] = "email offline"
+	assert.Equal(t, jwtClaimsMapWithString, map[string]interface{}(jwtClaimsWithString.ToMapClaims()))
+	var claims JWTClaims
+	claims.FromMap(jwtClaimsMapWithString)
+	assert.Equal(t, jwtClaimsWithString, &claims)
+}
+
+func TestScopeFieldBoth(t *testing.T) {
+	jwtClaimsWithBoth := jwtClaims.WithScopeField(JWTScopeFieldBoth)
+	// Making a copy of jwtClaimsMap.
+	jwtClaimsMapWithBoth := jwtClaims.ToMap()
+	jwtClaimsMapWithBoth["scope"] = "email offline"
+	assert.Equal(t, jwtClaimsMapWithBoth, map[string]interface{}(jwtClaimsWithBoth.ToMapClaims()))
+	var claims JWTClaims
+	claims.FromMap(jwtClaimsMapWithBoth)
+	assert.Equal(t, jwtClaimsWithBoth, &claims)
 }

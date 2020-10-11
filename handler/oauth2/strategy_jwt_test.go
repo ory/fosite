@@ -22,6 +22,8 @@
 package oauth2
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -45,7 +47,7 @@ var j = &DefaultJWTStrategy{
 // left empty to ensure it is pulled from the session's ExpiresAt map for
 // the given fosite.TokenType.
 var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
-	return &fosite.Request{
+	r := &fosite.Request{
 		Client: &fosite.DefaultClient{
 			Secret: []byte("foobarfoobarfoobarfoobar"),
 		},
@@ -66,10 +68,14 @@ var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
 			},
 		},
 	}
+	r.SetRequestedScopes([]string{"email", "offline"})
+	r.GrantScope("email")
+	r.GrantScope("offline")
+	return r
 }
 
 var jwtValidCaseWithZeroRefreshExpiry = func(tokenType fosite.TokenType) *fosite.Request {
-	return &fosite.Request{
+	r := &fosite.Request{
 		Client: &fosite.DefaultClient{
 			Secret: []byte("foobarfoobarfoobarfoobar"),
 		},
@@ -91,10 +97,14 @@ var jwtValidCaseWithZeroRefreshExpiry = func(tokenType fosite.TokenType) *fosite
 			},
 		},
 	}
+	r.SetRequestedScopes([]string{"email", "offline"})
+	r.GrantScope("email")
+	r.GrantScope("offline")
+	return r
 }
 
 var jwtValidCaseWithRefreshExpiry = func(tokenType fosite.TokenType) *fosite.Request {
-	return &fosite.Request{
+	r := &fosite.Request{
 		Client: &fosite.DefaultClient{
 			Secret: []byte("foobarfoobarfoobarfoobar"),
 		},
@@ -116,13 +126,17 @@ var jwtValidCaseWithRefreshExpiry = func(tokenType fosite.TokenType) *fosite.Req
 			},
 		},
 	}
+	r.SetRequestedScopes([]string{"email", "offline"})
+	r.GrantScope("email")
+	r.GrantScope("offline")
+	return r
 }
 
 // returns an expired JWT type. The JWTClaims.ExpiresAt time is intentionally
 // left empty to ensure it is pulled from the session's ExpiresAt map for
 // the given fosite.TokenType.
 var jwtExpiredCase = func(tokenType fosite.TokenType) *fosite.Request {
-	return &fosite.Request{
+	r := &fosite.Request{
 		Client: &fosite.DefaultClient{
 			Secret: []byte("foobarfoobarfoobarfoobar"),
 		},
@@ -144,46 +158,73 @@ var jwtExpiredCase = func(tokenType fosite.TokenType) *fosite.Request {
 			},
 		},
 	}
+	r.SetRequestedScopes([]string{"email", "offline"})
+	r.GrantScope("email")
+	r.GrantScope("offline")
+	return r
 }
 
 func TestAccessToken(t *testing.T) {
-	for k, c := range []struct {
-		r    *fosite.Request
-		pass bool
-	}{
-		{
-			r:    jwtValidCase(fosite.AccessToken),
-			pass: true,
-		},
-		{
-			r:    jwtExpiredCase(fosite.AccessToken),
-			pass: false,
-		},
-		{
-			r:    jwtValidCaseWithZeroRefreshExpiry(fosite.AccessToken),
-			pass: true,
-		},
-		{
-			r:    jwtValidCaseWithRefreshExpiry(fosite.AccessToken),
-			pass: true,
-		},
+	for s, scopeField := range []jwt.JWTScopeFieldEnum{
+		jwt.JWTScopeFieldList,
+		jwt.JWTScopeFieldString,
+		jwt.JWTScopeFieldBoth,
 	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			token, signature, err := j.GenerateAccessToken(nil, c.r)
-			assert.NoError(t, err)
-
-			parts := strings.Split(token, ".")
-			require.Len(t, parts, 3, "%s - %v", token, parts)
-			assert.Equal(t, parts[2], signature)
-
-			validate := j.signature(token)
-			err = j.ValidateAccessToken(nil, c.r, token)
-			if c.pass {
+		for k, c := range []struct {
+			r    *fosite.Request
+			pass bool
+		}{
+			{
+				r:    jwtValidCase(fosite.AccessToken),
+				pass: true,
+			},
+			{
+				r:    jwtExpiredCase(fosite.AccessToken),
+				pass: false,
+			},
+			{
+				r:    jwtValidCaseWithZeroRefreshExpiry(fosite.AccessToken),
+				pass: true,
+			},
+			{
+				r:    jwtValidCaseWithRefreshExpiry(fosite.AccessToken),
+				pass: true,
+			},
+		} {
+			t.Run(fmt.Sprintf("case=%d/%d", s, k), func(t *testing.T) {
+				jWithField := j.WithScopeField(scopeField)
+				token, signature, err := jWithField.GenerateAccessToken(nil, c.r)
 				assert.NoError(t, err)
-				assert.Equal(t, signature, validate)
-			} else {
-				assert.Error(t, err)
-			}
-		})
+
+				parts := strings.Split(token, ".")
+				require.Len(t, parts, 3, "%s - %v", token, parts)
+				assert.Equal(t, parts[2], signature)
+
+				rawPayload, err := base64.RawURLEncoding.DecodeString(parts[1])
+				require.NoError(t, err)
+				var payload map[string]interface{}
+				err = json.Unmarshal(rawPayload, &payload)
+				require.NoError(t, err)
+				if scopeField == jwt.JWTScopeFieldList || scopeField == jwt.JWTScopeFieldBoth {
+					scope, ok := payload["scp"]
+					require.True(t, ok)
+					assert.Equal(t, []interface{}{"email", "offline"}, scope)
+				}
+				if scopeField == jwt.JWTScopeFieldString || scopeField == jwt.JWTScopeFieldBoth {
+					scope, ok := payload["scope"]
+					require.True(t, ok)
+					assert.Equal(t, "email offline", scope)
+				}
+
+				validate := jWithField.signature(token)
+				err = jWithField.ValidateAccessToken(nil, c.r, token)
+				if c.pass {
+					assert.NoError(t, err)
+					assert.Equal(t, signature, validate)
+				} else {
+					assert.Error(t, err)
+				}
+			})
+		}
 	}
 }
