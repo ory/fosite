@@ -25,6 +25,7 @@ import (
 	"context"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	jwtgo "github.com/dgrijalva/jwt-go"
@@ -33,7 +34,6 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/go-convenience/stringslice"
-	"github.com/ory/go-convenience/stringsx"
 )
 
 type OpenIDConnectRequestValidator struct {
@@ -67,7 +67,7 @@ func (v *OpenIDConnectRequestValidator) secureChecker() func(*url.URL) bool {
 
 func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req fosite.AuthorizeRequester) error {
 	// prompt is case sensitive!
-	prompt := stringsx.Splitx(req.GetRequestForm().Get("prompt"), " ")
+	prompt := fosite.RemoveEmpty(strings.Split(req.GetRequestForm().Get("prompt"), " "))
 
 	if req.GetClient().IsPublic() {
 		// Threat: Malicious Client Obtains Existing Authorization by Fraud

@@ -262,6 +262,41 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				},
 			},
 		},
+		/* audience with double spaces between values */
+		{
+			desc: "audience with double spaces between values",
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+				"audience":      {"https://cloud.ory.sh/api  https://www.ory.sh/api"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					ResponseTypes: []string{"code token"},
+					RedirectURIs:  []string{"https://foo.bar/cb"},
+					Scopes:        []string{"foo", "bar"},
+					Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+				}, nil)
+			},
+			expect: &AuthorizeRequest{
+				RedirectURI:   redir,
+				ResponseTypes: []string{"code", "token"},
+				State:         "strong-state",
+				Request: Request{
+					Client: &DefaultClient{
+						ResponseTypes: []string{"code token"}, RedirectURIs: []string{"https://foo.bar/cb"},
+						Scopes:   []string{"foo", "bar"},
+						Audience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+					},
+					RequestedScope:    []string{"foo", "bar"},
+					RequestedAudience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+				},
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c.mock()
