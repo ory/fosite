@@ -170,7 +170,7 @@ func (c *Config) GetTokenEntropy() int {
 	return c.TokenEntropy
 }
 
-// GetTokenEntropy returns the entropy of the "message" part of a HMAC Token. Defaults to 32.
+// GetRedirectSecureChecker returns the checker to check if redirect URI is secure. Defaults to fosite.IsRedirectURISecure.
 func (c *Config) GetRedirectSecureChecker() func(*url.URL) bool {
 	if c.RedirectSecureChecker == nil {
 		return fosite.IsRedirectURISecure

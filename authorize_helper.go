@@ -171,7 +171,14 @@ func IsRedirectURISecure(redirectURI *url.URL) bool {
 	return !(redirectURI.Scheme == "http" && !IsLocalhost(redirectURI))
 }
 
+// IsRedirectURISecureStrict is stricter than IsRedirectURISecure and it does not allow custom-scheme
+// URLs because they can be hijacked for native apps. Use claimed HTTPS redirects instead.
+// See discussion in https://github.com/ory/fosite/pull/489.
+func IsRedirectURISecureStrict(redirectURI *url.URL) bool {
+	return redirectURI.Scheme == "https" || (redirectURI.Scheme == "http" && IsLocalhost(redirectURI))
+}
+
 func IsLocalhost(redirectURI *url.URL) bool {
 	hn := redirectURI.Hostname()
-	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "localhost"
+	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "::1" || hn == "localhost"
 }
