@@ -61,7 +61,7 @@ func TestValidatePrompt(t *testing.T) {
 		s           *DefaultSession
 	}{
 		{
-			d:           "should fail because prompt=none should not work together with public clients and non-http-localhost",
+			d:           "should fail because prompt=none should not work together with public clients and http non-localhost",
 			prompt:      "none",
 			isPublic:    true,
 			expectErr:   true,
@@ -76,7 +76,7 @@ func TestValidatePrompt(t *testing.T) {
 			},
 		},
 		{
-			d:           "should fail because prompt=none should not work together with public clients",
+			d:           "should pass because prompt=none works for public clients and http localhost",
 			prompt:      "none",
 			isPublic:    true,
 			expectErr:   false,

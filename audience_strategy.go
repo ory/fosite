@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/go-convenience/stringsx"
 )
 
 type AudienceMatchingStrategy func(haystack []string, needle []string) error
@@ -49,7 +47,7 @@ func DefaultAudienceMatchingStrategy(haystack []string, needle []string) error {
 }
 
 func (f *Fosite) validateAuthorizeAudience(r *http.Request, request *AuthorizeRequest) error {
-	audience := stringsx.Splitx(request.Form.Get("audience"), " ")
+	audience := RemoveEmpty(strings.Split(request.Form.Get("audience"), " "))
 
 	if err := f.AudienceMatchingStrategy(request.Client.GetAudience(), audience); err != nil {
 		return err

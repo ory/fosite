@@ -247,6 +247,9 @@ func TestIsRedirectURISecure(t *testing.T) {
 		{u: "http://localhost", err: false},
 		{u: "http://test.localhost", err: false},
 		{u: "http://127.0.0.1/", err: false},
+		{u: "http://[::1]/", err: false},
+		{u: "http://127.0.0.1:8080/", err: false},
+		{u: "http://[::1]:8080/", err: false},
 		{u: "http://testlocalhost", err: true},
 		{u: "wta://auth", err: false},
 	} {
@@ -265,4 +268,26 @@ func TestWriteAuthorizeFormPostResponse(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, parameters.Get("code"), code)
 	assert.Equal(t, parameters.Get("state"), state)
+}
+
+func TestIsRedirectURISecureStrict(t *testing.T) {
+	for d, c := range []struct {
+		u   string
+		err bool
+	}{
+		{u: "http://google.com", err: true},
+		{u: "https://google.com", err: false},
+		{u: "http://localhost", err: false},
+		{u: "http://test.localhost", err: false},
+		{u: "http://127.0.0.1/", err: false},
+		{u: "http://[::1]/", err: false},
+		{u: "http://127.0.0.1:8080/", err: false},
+		{u: "http://[::1]:8080/", err: false},
+		{u: "http://testlocalhost", err: true},
+		{u: "wta://auth", err: true},
+	} {
+		uu, err := url.Parse(c.u)
+		require.NoError(t, err)
+		assert.Equal(t, !c.err, IsRedirectURISecureStrict(uu), "case %d", d)
+	}
 }

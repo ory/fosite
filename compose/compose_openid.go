@@ -36,7 +36,8 @@ func OpenIDConnectExplicitFactory(config *Config, storage interface{}, strategy 
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)).
+			WithRedirectSecureChecker(config.GetRedirectSecureChecker()),
 	}
 }
 
@@ -65,8 +66,9 @@ func OpenIDConnectImplicitFactory(config *Config, storage interface{}, strategy 
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)),
-		MinParameterEntropy:           config.GetMinParameterEntropy(),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)).
+			WithRedirectSecureChecker(config.GetRedirectSecureChecker()),
+		MinParameterEntropy: config.GetMinParameterEntropy(),
 	}
 }
 
@@ -94,8 +96,9 @@ func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy in
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestStorage:   storage.(openid.OpenIDConnectRequestStorage),
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)),
-		MinParameterEntropy:           config.GetMinParameterEntropy(),
+		OpenIDConnectRequestStorage: storage.(openid.OpenIDConnectRequestStorage),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)).
+			WithRedirectSecureChecker(config.GetRedirectSecureChecker()),
+		MinParameterEntropy: config.GetMinParameterEntropy(),
 	}
 }

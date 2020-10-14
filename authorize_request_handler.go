@@ -32,11 +32,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/go-convenience/stringslice"
-	"github.com/ory/go-convenience/stringsx"
 )
 
 func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *AuthorizeRequest) error {
-	var scope Arguments = stringsx.Splitx(request.Form.Get("scope"), " ")
+	var scope Arguments = RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
 
 	// Even if a scope parameter is present in the Request Object value, a scope parameter MUST always be passed using
 	// the OAuth 2.0 request syntax containing the openid scope value to indicate to the underlying OAuth 2.0 logic that this is an OpenID Connect request.
@@ -147,7 +146,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 		request.Form.Set(k, fmt.Sprintf("%s", v))
 	}
 
-	claimScope := stringsx.Splitx(request.Form.Get("scope"), " ")
+	claimScope := RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
 	for _, s := range scope {
 		if !stringslice.Has(claimScope, s) {
 			claimScope = append(claimScope, s)
@@ -174,7 +173,7 @@ func (f *Fosite) validateAuthorizeRedirectURI(r *http.Request, request *Authoriz
 }
 
 func (f *Fosite) validateAuthorizeScope(r *http.Request, request *AuthorizeRequest) error {
-	scope := stringsx.Splitx(request.Form.Get("scope"), " ")
+	scope := RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
 	for _, permission := range scope {
 		if !f.ScopeStrategy(request.Client.GetScopes(), permission) {
 			return errors.WithStack(ErrInvalidScope.WithHintf(`The OAuth 2.0 Client is not allowed to request scope "%s".`, permission))
@@ -191,14 +190,14 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	// values, where the order of values does not matter (e.g., response
 	// type "a b" is the same as "b a").  The meaning of such composite
 	// response types is defined by their respective specifications.
-	responseTypes := RemoveEmpty(stringsx.Splitx(r.Form.Get("response_type"), " "))
+	responseTypes := RemoveEmpty(strings.Split(r.Form.Get("response_type"), " "))
 	if len(responseTypes) == 0 {
 		return errors.WithStack(ErrUnsupportedResponseType.WithHint(`The request is missing the "response_type"" parameter.`))
 	}
 
 	var found bool
 	for _, t := range request.GetClient().GetResponseTypes() {
-		if Arguments(responseTypes).Matches(RemoveEmpty(stringsx.Splitx(t, " "))...) {
+		if Arguments(responseTypes).Matches(RemoveEmpty(strings.Split(t, " "))...) {
 			found = true
 			break
 		}
