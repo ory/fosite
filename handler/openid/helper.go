@@ -64,11 +64,7 @@ func (i *IDTokenHandleHelper) IssueImplicitIDToken(ctx context.Context, ar fosit
 	if err != nil {
 		return err
 	}
-	if ar.GetRequestForm().Get("response_mode") == "form_post" {
-		resp.AddForm("id_token", token)
-	} else {
-		resp.AddFragment("id_token", token)
-	}
+	resp.AddParameter("id_token", token)
 	return nil
 }
 

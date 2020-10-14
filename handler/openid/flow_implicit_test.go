@@ -204,9 +204,9 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 				return makeOpenIDConnectImplicitHandler(fosite.MinParameterEntropy)
 			},
 			check: func() {
-				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))
-				assert.NotEmpty(t, aresp.GetFragment().Get("state"))
-				assert.Empty(t, aresp.GetFragment().Get("access_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("id_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("state"))
+				assert.Empty(t, aresp.GetParameters().Get("access_token"))
 			},
 		},
 		{
@@ -216,9 +216,9 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 				return makeOpenIDConnectImplicitHandler(fosite.MinParameterEntropy)
 			},
 			check: func() {
-				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))
-				assert.NotEmpty(t, aresp.GetFragment().Get("state"))
-				assert.NotEmpty(t, aresp.GetFragment().Get("access_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("id_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("state"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
 			},
 		},
 		{
@@ -229,9 +229,9 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 				return makeOpenIDConnectImplicitHandler(fosite.MinParameterEntropy)
 			},
 			check: func() {
-				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))
-				assert.NotEmpty(t, aresp.GetFragment().Get("state"))
-				assert.NotEmpty(t, aresp.GetFragment().Get("access_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("id_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("state"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
 			},
 		},
 		{
@@ -241,9 +241,9 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 				return makeOpenIDConnectImplicitHandler(4)
 			},
 			check: func() {
-				assert.NotEmpty(t, aresp.GetFragment().Get("id_token"))
-				assert.NotEmpty(t, aresp.GetFragment().Get("state"))
-				assert.NotEmpty(t, aresp.GetFragment().Get("access_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("id_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("state"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
 			},
 		},
 	} {

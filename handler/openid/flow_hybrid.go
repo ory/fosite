@@ -109,14 +109,15 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		if err := c.AuthorizeExplicitGrantHandler.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.AuthorizeExplicitGrantHandler.GetSanitationWhiteList())); err != nil {
 			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		}
-		if ar.GetRequestForm().Get("response_mode") == "form_post" {
-			resp.AddForm("code", code)
-		} else {
-			resp.AddFragment("code", code)
+
+		resp.AddParameter("code", code)
+		if ar.GetResponseMode() == fosite.ResponseModeNone {
+			ar.SetResponseMode(fosite.ResponseModeFragment)
 		}
+
 		ar.SetResponseTypeHandled("code")
 
-		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetCode()))
+		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetParameters().Get("code")))
 		if err != nil {
 			return err
 		}
@@ -136,25 +137,16 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 			return errors.WithStack(err)
 		}
 		ar.SetResponseTypeHandled("token")
-		var accessToken string
-		if ar.GetRequestForm().Get("response_mode") == "form_post" {
-			accessToken = resp.GetForm().Get("access_token")
-		} else {
-			accessToken = resp.GetFragment().Get("access_token")
-		}
-		hash, err := c.Enigma.Hash(ctx, []byte(accessToken))
+
+		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetParameters().Get("access_token")))
 		if err != nil {
 			return err
 		}
 		claims.AccessTokenHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2]))
 	}
 
-	if resp.GetFragment().Get("state") == "" {
-		if ar.GetRequestForm().Get("response_mode") == "form_post" {
-			resp.AddForm("state", ar.GetState())
-		} else {
-			resp.AddFragment("state", ar.GetState())
-		}
+	if resp.GetParameters().Get("state") == "" {
+		resp.AddParameter("state", ar.GetState())
 	}
 
 	if !ar.GetGrantedScopes().Has("openid") || !ar.GetResponseTypes().Has("id_token") {

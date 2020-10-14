@@ -29,20 +29,15 @@ import (
 
 func TestAuthorizeResponse(t *testing.T) {
 	ar := NewAuthorizeResponse()
-	ar.AddFragment("foo", "bar")
-	ar.AddQuery("foo", "baz")
+	ar.AddParameter("foo", "bar")
+	ar.AddParameter("bar", "bar")
+
 	ar.AddHeader("foo", "foo")
-	ar.AddForm("bar", "bar")
 
-	ar.AddFragment("code", "bar")
+	ar.AddParameter("code", "bar")
 	assert.Equal(t, "bar", ar.GetCode())
-	ar.AddQuery("code", "baz")
-	assert.Equal(t, "baz", ar.GetCode())
-	ar.AddForm("code", "baz")
-	assert.Equal(t, "baz", ar.GetCode())
 
-	assert.Equal(t, "bar", ar.GetFragment().Get("foo"))
-	assert.Equal(t, "baz", ar.GetQuery().Get("foo"))
+	assert.Equal(t, "bar", ar.GetParameters().Get("foo"))
 	assert.Equal(t, "foo", ar.GetHeader().Get("foo"))
-	assert.Equal(t, "bar", ar.GetForm().Get("bar"))
+	assert.Equal(t, "bar", ar.GetParameters().Get("bar"))
 }

@@ -37,6 +37,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+var formPostTemplate = template.Must(template.New("form_post").Parse(`<html>
+   <head>
+      <title>Submit This Form</title>
+   </head>
+   <body onload="javascript:document.forms[0].submit()">
+      <form method="post" action="{{ .RedirURL }}">
+         {{ range $key,$value := .Parameters }}
+		<input type="hidden" name="{{$key}}" value="{{index $value 0}}"/>
+         {{ end }}
+      </form>
+   </body>
+</html>`))
+
 // MatchRedirectURIWithClientRedirectURIs if the given uri is a registered redirect uri. Does not perform
 // uri validation.
 //
@@ -184,20 +197,7 @@ func IsLocalhost(redirectURI *url.URL) bool {
 }
 
 func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, rw io.Writer) {
-	t := template.Must(template.New("form_post").Parse(`<html>
-   <head>
-      <title>Submit This Form</title>
-   </head>
-   <body onload="javascript:document.forms[0].submit()">
-      <form method="post" action="{{ .RedirURL }}">
-         {{ range $key,$value := .Parameters }}
-		<input type="hidden" name="{{$key}}" value="{{index $value 0}}"/>
-         {{ end }}
-      </form>
-   </body>
-</html>`))
-
-	_ = t.Execute(rw, struct {
+	_ = formPostTemplate.Execute(rw, struct {
 		RedirURL   string
 		Parameters url.Values
 	}{

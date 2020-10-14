@@ -211,6 +211,23 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	request.ResponseTypes = responseTypes
 	return nil
 }
+func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest) error {
+	responseMode := r.Form.Get("response_mode")
+
+	switch responseMode {
+	case string(ResponseModeNone):
+		request.ResponseMode = ResponseModeNone
+	case string(ResponseModeFragment):
+		request.ResponseMode = ResponseModeFragment
+	case string(ResponseModeQuery):
+		request.ResponseMode = ResponseModeQuery
+	case string(ResponseModePost):
+		request.ResponseMode = ResponseModePost
+	default:
+		return errors.WithStack(ErrUnsupportedResponseType.WithHintf("Request with unsupported response_mode \"%s\".", responseMode))
+	}
+	return nil
+}
 
 func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	request := &AuthorizeRequest{
@@ -256,6 +273,10 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 
 	if err := f.validateResponseTypes(r, request); err != nil {
+		return request, err
+	}
+
+	if err := f.validateResponseMode(r, request); err != nil {
 		return request, err
 	}
 

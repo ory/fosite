@@ -28,19 +28,15 @@ import (
 
 // AuthorizeResponse is an implementation of AuthorizeResponder
 type AuthorizeResponse struct {
-	Header   http.Header
-	Query    url.Values
-	Fragment url.Values
-	Form     url.Values
-	code     string
+	Header     http.Header
+	Parameters url.Values
+	code       string
 }
 
 func NewAuthorizeResponse() *AuthorizeResponse {
 	return &AuthorizeResponse{
-		Header:   http.Header{},
-		Query:    url.Values{},
-		Fragment: url.Values{},
-		Form:     url.Values{},
+		Header:     http.Header{},
+		Parameters: url.Values{},
 	}
 }
 
@@ -56,35 +52,13 @@ func (a *AuthorizeResponse) AddHeader(key, value string) {
 	a.Header.Add(key, value)
 }
 
-func (a *AuthorizeResponse) GetQuery() url.Values {
-	return a.Query
+func (a *AuthorizeResponse) GetParameters() url.Values {
+	return a.Parameters
 }
 
-func (a *AuthorizeResponse) GetFragment() url.Values {
-	return a.Fragment
-}
-
-func (a *AuthorizeResponse) GetForm() url.Values {
-	return a.Form
-}
-
-func (a *AuthorizeResponse) AddQuery(key, value string) {
+func (a *AuthorizeResponse) AddParameter(key, value string) {
 	if key == "code" {
 		a.code = value
 	}
-	a.Query.Add(key, value)
-}
-
-func (a *AuthorizeResponse) AddFragment(key, value string) {
-	if key == "code" {
-		a.code = value
-	}
-	a.Fragment.Add(key, value)
-}
-
-func (a *AuthorizeResponse) AddForm(key, value string) {
-	if key == "code" {
-		a.code = value
-	}
-	a.Form.Add(key, value)
+	a.Parameters.Add(key, value)
 }

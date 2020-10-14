@@ -91,23 +91,17 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		}
 
 		ar.SetResponseTypeHandled("token")
-		var accessToken string
-		if ar.GetRequestForm().Get("response_mode") == "form_post" {
-			accessToken = resp.GetForm().Get("access_token")
-		} else {
-			accessToken = resp.GetFragment().Get("access_token")
-		}
-		hash, err := c.RS256JWTStrategy.Hash(ctx, []byte(accessToken))
+		hash, err := c.RS256JWTStrategy.Hash(ctx, []byte(resp.GetParameters().Get("access_token")))
 		if err != nil {
 			return err
 		}
 
 		claims.AccessTokenHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]))
 	} else {
-		if ar.GetRequestForm().Get("response_mode") == "form_post" {
-			resp.AddForm("state", ar.GetState())
-		} else {
-			resp.AddFragment("state", ar.GetState())
+
+		resp.AddParameter("state", ar.GetState())
+		if ar.GetResponseMode() == fosite.ResponseModeNone {
+			ar.SetResponseMode(fosite.ResponseModeFragment)
 		}
 	}
 

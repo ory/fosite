@@ -31,10 +31,8 @@ import (
 
 func (f *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester, session Session) (AuthorizeResponder, error) {
 	var resp = &AuthorizeResponse{
-		Header:   http.Header{},
-		Query:    url.Values{},
-		Fragment: url.Values{},
-		Form:     url.Values{},
+		Header:     http.Header{},
+		Parameters: url.Values{},
 	}
 
 	ar.SetSession(session)

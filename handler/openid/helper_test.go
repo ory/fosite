@@ -117,7 +117,7 @@ func TestIssueImplicitToken(t *testing.T) {
 		Subject: "peter",
 	}, Headers: &jwt.Headers{}})
 
-	resp.EXPECT().AddFragment("id_token", gomock.Any())
+	resp.EXPECT().AddParameter("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 	err := h.IssueImplicitIDToken(nil, ar, resp)
 	assert.NoError(t, err)

@@ -44,42 +44,40 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 	wh.Set("Pragma", "no-cache")
 
 	redir := ar.GetRedirectURI()
-	form := resp.GetForm()
 
-	if len(form) > 0 {
+	switch ar.GetResponseMode() {
+	case ResponseModePost:
 		//form_post
 		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
-		WriteAuthorizeFormPostResponse(redir.String(), form, rw)
-	} else {
-
+		WriteAuthorizeFormPostResponse(redir.String(), resp.GetParameters(), rw)
+	case ResponseModeQuery, ResponseModeNone:
 		// Explicit grants
 		q := redir.Query()
-		rq := resp.GetQuery()
+		rq := resp.GetParameters()
 		for k := range rq {
 			q.Set(k, rq.Get(k))
 		}
 		redir.RawQuery = q.Encode()
-
+		sendRedirect(redir.String(), rw)
+	case ResponseModeFragment:
 		// Implicit grants
 		// The endpoint URI MUST NOT include a fragment component.
 		redir.Fragment = ""
 
 		u := redir.String()
-
-		fr := resp.GetFragment()
-		if len(fr) > 0 {
-			u = u + "#" + fr.Encode()
-		}
-
+		fr := resp.GetParameters()
+		u = u + "#" + fr.Encode()
 		u = plusMatch.ReplaceAllString(u, "%20")
-
-		// https://tools.ietf.org/html/rfc6749#section-4.1.1
-		// When a decision is established, the authorization server directs the
-		// user-agent to the provided client redirection URI using an HTTP
-		// redirection response, or by other means available to it via the
-		// user-agent.
-		wh.Set("Location", u)
-		rw.WriteHeader(http.StatusFound)
+		sendRedirect(u, rw)
 	}
+}
 
+// https://tools.ietf.org/html/rfc6749#section-4.1.1
+// When a decision is established, the authorization server directs the
+// user-agent to the provided client redirection URI using an HTTP
+// redirection response, or by other means available to it via the
+// user-agent.
+func sendRedirect(url string, rw http.ResponseWriter) {
+	rw.Header().Set("Location", url)
+	rw.WriteHeader(http.StatusFound)
 }

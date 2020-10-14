@@ -35,30 +35,6 @@ func (m *MockAuthorizeResponder) EXPECT() *MockAuthorizeResponderMockRecorder {
 	return m.recorder
 }
 
-// AddForm mocks base method
-func (m *MockAuthorizeResponder) AddForm(arg0, arg1 string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "AddForm", arg0, arg1)
-}
-
-// AddForm indicates an expected call of AddForm
-func (mr *MockAuthorizeResponderMockRecorder) AddForm(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddForm", reflect.TypeOf((*MockAuthorizeResponder)(nil).AddForm), arg0, arg1)
-}
-
-// AddFragment mocks base method
-func (m *MockAuthorizeResponder) AddFragment(arg0, arg1 string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "AddFragment", arg0, arg1)
-}
-
-// AddFragment indicates an expected call of AddFragment
-func (mr *MockAuthorizeResponderMockRecorder) AddFragment(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFragment", reflect.TypeOf((*MockAuthorizeResponder)(nil).AddFragment), arg0, arg1)
-}
-
 // AddHeader mocks base method
 func (m *MockAuthorizeResponder) AddHeader(arg0, arg1 string) {
 	m.ctrl.T.Helper()
@@ -71,16 +47,16 @@ func (mr *MockAuthorizeResponderMockRecorder) AddHeader(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddHeader", reflect.TypeOf((*MockAuthorizeResponder)(nil).AddHeader), arg0, arg1)
 }
 
-// AddQuery mocks base method
-func (m *MockAuthorizeResponder) AddQuery(arg0, arg1 string) {
+// AddParameter mocks base method
+func (m *MockAuthorizeResponder) AddParameter(arg0, arg1 string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "AddQuery", arg0, arg1)
+	m.ctrl.Call(m, "AddParameter", arg0, arg1)
 }
 
-// AddQuery indicates an expected call of AddQuery
-func (mr *MockAuthorizeResponderMockRecorder) AddQuery(arg0, arg1 interface{}) *gomock.Call {
+// AddParameter indicates an expected call of AddParameter
+func (mr *MockAuthorizeResponderMockRecorder) AddParameter(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddQuery", reflect.TypeOf((*MockAuthorizeResponder)(nil).AddQuery), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddParameter", reflect.TypeOf((*MockAuthorizeResponder)(nil).AddParameter), arg0, arg1)
 }
 
 // GetCode mocks base method
@@ -97,34 +73,6 @@ func (mr *MockAuthorizeResponderMockRecorder) GetCode() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCode", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetCode))
 }
 
-// GetForm mocks base method
-func (m *MockAuthorizeResponder) GetForm() url.Values {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetForm")
-	ret0, _ := ret[0].(url.Values)
-	return ret0
-}
-
-// GetForm indicates an expected call of GetForm
-func (mr *MockAuthorizeResponderMockRecorder) GetForm() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetForm", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetForm))
-}
-
-// GetFragment mocks base method
-func (m *MockAuthorizeResponder) GetFragment() url.Values {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFragment")
-	ret0, _ := ret[0].(url.Values)
-	return ret0
-}
-
-// GetFragment indicates an expected call of GetFragment
-func (mr *MockAuthorizeResponderMockRecorder) GetFragment() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFragment", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetFragment))
-}
-
 // GetHeader mocks base method
 func (m *MockAuthorizeResponder) GetHeader() http.Header {
 	m.ctrl.T.Helper()
@@ -139,16 +87,16 @@ func (mr *MockAuthorizeResponderMockRecorder) GetHeader() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeader", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetHeader))
 }
 
-// GetQuery mocks base method
-func (m *MockAuthorizeResponder) GetQuery() url.Values {
+// GetParameters mocks base method
+func (m *MockAuthorizeResponder) GetParameters() url.Values {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQuery")
+	ret := m.ctrl.Call(m, "GetParameters")
 	ret0, _ := ret[0].(url.Values)
 	return ret0
 }
 
-// GetQuery indicates an expected call of GetQuery
-func (mr *MockAuthorizeResponderMockRecorder) GetQuery() *gomock.Call {
+// GetParameters indicates an expected call of GetParameters
+func (mr *MockAuthorizeResponderMockRecorder) GetParameters() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuery", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetQuery))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParameters", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetParameters))
 }

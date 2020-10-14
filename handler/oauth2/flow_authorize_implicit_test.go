@@ -118,11 +118,11 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 
 				store.EXPECT().CreateAccessTokenSession(nil, "ats", gomock.Eq(areq.Sanitize([]string{}))).AnyTimes().Return(nil)
 
-				aresp.EXPECT().AddFragment("access_token", "access.ats")
-				aresp.EXPECT().AddFragment("expires_in", gomock.Any())
-				aresp.EXPECT().AddFragment("token_type", "bearer")
-				aresp.EXPECT().AddFragment("state", "state")
-				aresp.EXPECT().AddFragment("scope", "scope")
+				aresp.EXPECT().AddParameter("access_token", "access.ats")
+				aresp.EXPECT().AddParameter("expires_in", gomock.Any())
+				aresp.EXPECT().AddParameter("token_type", "bearer")
+				aresp.EXPECT().AddParameter("state", "state")
+				aresp.EXPECT().AddParameter("scope", "scope")
 			},
 			expectErr: nil,
 		},

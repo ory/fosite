@@ -122,11 +122,11 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					},
 					description: "should pass",
 					expect: func(t *testing.T, areq *fosite.AuthorizeRequest, aresp *fosite.AuthorizeResponse) {
-						code := aresp.GetQuery().Get("code")
+						code := aresp.GetParameters().Get("code")
 						assert.NotEmpty(t, code)
 
-						assert.Equal(t, strings.Join(areq.GrantedScope, " "), aresp.GetQuery().Get("scope"))
-						assert.Equal(t, areq.State, aresp.GetQuery().Get("state"))
+						assert.Equal(t, strings.Join(areq.GrantedScope, " "), aresp.GetParameters().Get("scope"))
+						assert.Equal(t, areq.State, aresp.GetParameters().Get("state"))
 					},
 				},
 			} {

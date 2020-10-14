@@ -10,7 +10,6 @@ import (
 	time "time"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -189,6 +188,20 @@ func (mr *MockAuthorizeRequesterMockRecorder) GetRequestedScopes() *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRequestedScopes", reflect.TypeOf((*MockAuthorizeRequester)(nil).GetRequestedScopes))
 }
 
+// GetResponseMode mocks base method
+func (m *MockAuthorizeRequester) GetResponseMode() fosite.ResponseModeType {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetResponseMode")
+	ret0, _ := ret[0].(fosite.ResponseModeType)
+	return ret0
+}
+
+// GetResponseMode indicates an expected call of GetResponseMode
+func (mr *MockAuthorizeRequesterMockRecorder) GetResponseMode() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponseMode", reflect.TypeOf((*MockAuthorizeRequester)(nil).GetResponseMode))
+}
+
 // GetResponseTypes mocks base method
 func (m *MockAuthorizeRequester) GetResponseTypes() fosite.Arguments {
 	m.ctrl.T.Helper()
@@ -329,6 +342,18 @@ func (m *MockAuthorizeRequester) SetRequestedScopes(arg0 fosite.Arguments) {
 func (mr *MockAuthorizeRequesterMockRecorder) SetRequestedScopes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRequestedScopes", reflect.TypeOf((*MockAuthorizeRequester)(nil).SetRequestedScopes), arg0)
+}
+
+// SetResponseMode mocks base method
+func (m *MockAuthorizeRequester) SetResponseMode(arg0 fosite.ResponseModeType) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetResponseMode", arg0)
+}
+
+// SetResponseMode indicates an expected call of SetResponseMode
+func (mr *MockAuthorizeRequesterMockRecorder) SetResponseMode(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetResponseMode", reflect.TypeOf((*MockAuthorizeRequester)(nil).SetResponseMode), arg0)
 }
 
 // SetResponseTypeHandled mocks base method

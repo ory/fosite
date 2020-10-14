@@ -25,12 +25,22 @@ import (
 	"net/url"
 )
 
+type ResponseModeType string
+
+const (
+	ResponseModeNone     = ResponseModeType("")
+	ResponseModePost     = ResponseModeType("form_post")
+	ResponseModeQuery    = ResponseModeType("query")
+	ResponseModeFragment = ResponseModeType("fragment")
+)
+
 // AuthorizeRequest is an implementation of AuthorizeRequester
 type AuthorizeRequest struct {
-	ResponseTypes        Arguments `json:"responseTypes" gorethink:"responseTypes"`
-	RedirectURI          *url.URL  `json:"redirectUri" gorethink:"redirectUri"`
-	State                string    `json:"state" gorethink:"state"`
-	HandledResponseTypes Arguments `json:"handledResponseTypes" gorethink:"handledResponseTypes"`
+	ResponseTypes        Arguments        `json:"responseTypes" gorethink:"responseTypes"`
+	RedirectURI          *url.URL         `json:"redirectUri" gorethink:"redirectUri"`
+	State                string           `json:"state" gorethink:"state"`
+	HandledResponseTypes Arguments        `json:"handledResponseTypes" gorethink:"handledResponseTypes"`
+	ResponseMode         ResponseModeType `json:"ResponseMode" gorethink:"ResponseMode"`
 
 	Request
 }
@@ -41,6 +51,7 @@ func NewAuthorizeRequest() *AuthorizeRequest {
 		RedirectURI:          &url.URL{},
 		HandledResponseTypes: Arguments{},
 		Request:              *NewRequest(),
+		ResponseMode:         ResponseModeQuery,
 	}
 }
 
@@ -85,4 +96,12 @@ func (d *AuthorizeRequest) DidHandleAllResponseTypes() bool {
 	}
 
 	return len(d.ResponseTypes) > 0
+}
+
+func (d *AuthorizeRequest) GetResponseMode() ResponseModeType {
+	return d.ResponseMode
+}
+
+func (d *AuthorizeRequest) SetResponseMode(responseMode ResponseModeType) {
+	d.ResponseMode = responseMode
 }

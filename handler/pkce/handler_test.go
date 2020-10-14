@@ -62,7 +62,7 @@ func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	c := &fosite.DefaultClient{}
 	r.Client = c
 
-	w.AddQuery("code", "foo")
+	w.AddParameter("code", "foo")
 
 	r.Form.Add("code_challenge", "challenge")
 	r.Form.Add("code_challenge_method", "plain")
