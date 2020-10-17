@@ -39,7 +39,11 @@ import (
 const defaultExpiryTime = time.Hour
 
 type Session interface {
+	// IDTokenClaims returns a pointer to claims which will be modified in-place by handlers.
+	// Session should store this pointer and return always the same pointer.
 	IDTokenClaims() *jwt.IDTokenClaims
+	// IDTokenHeaders returns a pointer to header values which will be modified in-place by handlers.
+	// Session should store this pointer and return always the same pointer.
 	IDTokenHeaders() *jwt.Headers
 
 	fosite.Session
