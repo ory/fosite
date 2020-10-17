@@ -23,7 +23,6 @@ package openid
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -193,7 +192,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 			if errors.As(err, &ve) && ve.Errors == jwtgo.ValidationErrorExpired {
 				// Expired ID Tokens are allowed as values to id_token_hint
 			} else if err != nil {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug(fmt.Sprintf("Unable to decode id token from id_token_hint parameter because %s.", err.Error())))
+				return "", errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebugf("Unable to decode id token from id_token_hint parameter because %s.", err.Error()))
 			}
 
 			if hintClaims, ok := tokenHint.Claims.(jwtgo.MapClaims); !ok {
@@ -201,7 +200,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 			} else if hintSub, _ := hintClaims["sub"].(string); hintSub == "" {
 				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Provided id token from id_token_hint does not have a subject."))
 			} else if hintSub != claims.Subject {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug(fmt.Sprintf("Subject from authorization mismatches id token subject from id_token_hint.")))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Subject from authorization mismatches id token subject from id_token_hint."))
 			}
 		}
 	}
