@@ -100,7 +100,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		// reload client from storage to ensure that may_act is up to date in case of eventual revocation
 		delegatingClient, err = c.Store.GetClient(ctx, originalRequest.GetDelegatingClient().GetID())
 		if err != nil {
-			errors.WithStack(fosite.ErrInvalidClient.WithHint("The delegating OAuth2 Client does not exist.").WithDebug(err.Error()))
+			return errors.WithStack(fosite.ErrInvalidClient.WithHint("The delegating OAuth2 Client does not exist."))
 		}
 		// keep delegating client for following refresh requests
 		request.SetDelegatingClient(delegatingClient)

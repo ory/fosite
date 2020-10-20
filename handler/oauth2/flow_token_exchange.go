@@ -96,7 +96,7 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 	}
 
 	if err != nil {
-		errors.WithStack(fosite.ErrInvalidClient.WithHint("The delegating OAuth2 Client does not exist.").WithDebug(err.Error()))
+		return errors.WithStack(fosite.ErrInvalidClient.WithHint("The delegating OAuth2 Client does not exist."))
 	}
 
 	// check if delegating client allows the current client to perform an exchange on its tokens
