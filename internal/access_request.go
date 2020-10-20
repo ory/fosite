@@ -10,7 +10,6 @@ import (
 	time "time"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -61,6 +60,20 @@ func (m *MockAccessRequester) GetClient() fosite.Client {
 func (mr *MockAccessRequesterMockRecorder) GetClient() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClient", reflect.TypeOf((*MockAccessRequester)(nil).GetClient))
+}
+
+// GetDelegatingClient mocks base method
+func (m *MockAccessRequester) GetDelegatingClient() fosite.Client {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDelegatingClient")
+	ret0, _ := ret[0].(fosite.Client)
+	return ret0
+}
+
+// GetDelegatingClient indicates an expected call of GetDelegatingClient
+func (mr *MockAccessRequesterMockRecorder) GetDelegatingClient() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDelegatingClient", reflect.TypeOf((*MockAccessRequester)(nil).GetDelegatingClient))
 }
 
 // GetGrantTypes mocks base method
@@ -237,6 +250,18 @@ func (m *MockAccessRequester) Sanitize(arg0 []string) fosite.Requester {
 func (mr *MockAccessRequesterMockRecorder) Sanitize(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sanitize", reflect.TypeOf((*MockAccessRequester)(nil).Sanitize), arg0)
+}
+
+// SetDelegatingClient mocks base method
+func (m *MockAccessRequester) SetDelegatingClient(arg0 fosite.Client) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDelegatingClient", arg0)
+}
+
+// SetDelegatingClient indicates an expected call of SetDelegatingClient
+func (mr *MockAccessRequesterMockRecorder) SetDelegatingClient(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDelegatingClient", reflect.TypeOf((*MockAccessRequester)(nil).SetDelegatingClient), arg0)
 }
 
 // SetID mocks base method

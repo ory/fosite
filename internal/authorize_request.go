@@ -10,7 +10,6 @@ import (
 	time "time"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -75,6 +74,20 @@ func (m *MockAuthorizeRequester) GetClient() fosite.Client {
 func (mr *MockAuthorizeRequesterMockRecorder) GetClient() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClient", reflect.TypeOf((*MockAuthorizeRequester)(nil).GetClient))
+}
+
+// GetDelegatingClient mocks base method
+func (m *MockAuthorizeRequester) GetDelegatingClient() fosite.Client {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDelegatingClient")
+	ret0, _ := ret[0].(fosite.Client)
+	return ret0
+}
+
+// GetDelegatingClient indicates an expected call of GetDelegatingClient
+func (mr *MockAuthorizeRequesterMockRecorder) GetDelegatingClient() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDelegatingClient", reflect.TypeOf((*MockAuthorizeRequester)(nil).GetDelegatingClient))
 }
 
 // GetGrantedAudience mocks base method

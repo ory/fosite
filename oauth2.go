@@ -236,12 +236,17 @@ type Requester interface {
 
 	// Sanitize returns a sanitized clone of the request which can be used for storage.
 	Sanitize(allowedParameters []string) Requester
+
+	// GetDelegatingClient returns the client that provided the original token (subject token) in a token exchange flow.
+	GetDelegatingClient() (client Client)
 }
 
 // AccessRequester is a token endpoint's request context.
 type AccessRequester interface {
 	// GetGrantType returns the requests grant type.
 	GetGrantTypes() (grantTypes Arguments)
+
+	SetDelegatingClient(client Client)
 
 	Requester
 }
@@ -289,7 +294,10 @@ type AccessResponder interface {
 	// SetTokenType set's the responses mandatory token type
 	SetTokenType(tokenType string)
 
-	// SetAccessToken returns the responses access token.
+	// SetIssueTokenType sets the responses mandatory type of the issued token in a token exchange (rfc8693#section-2.2)
+	SetIssuedTokenType(tokenType string)
+
+	// GetAccessToken returns the responses access token.
 	GetAccessToken() (token string)
 
 	// GetTokenType returns the responses token type.

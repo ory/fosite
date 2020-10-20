@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -89,6 +88,20 @@ func (m *MockClient) GetID() string {
 func (mr *MockClientMockRecorder) GetID() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetID", reflect.TypeOf((*MockClient)(nil).GetID))
+}
+
+// GetMayAct mocks base method
+func (m *MockClient) GetMayAct() fosite.Arguments {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMayAct")
+	ret0, _ := ret[0].(fosite.Arguments)
+	return ret0
+}
+
+// GetMayAct indicates an expected call of GetMayAct
+func (mr *MockClientMockRecorder) GetMayAct() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMayAct", reflect.TypeOf((*MockClient)(nil).GetMayAct))
 }
 
 // GetRedirectURIs mocks base method

@@ -17,6 +17,10 @@
  * @copyright 	2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
  * @license 	Apache-2.0
  *
+ *
+ * Changes:
+ *  - 2020 Miguel Paulos Nunes <Miguel.PaulosNunes@bosch.io>
+ *
  */
 
 package fosite
@@ -50,6 +54,9 @@ type Client interface {
 
 	// GetAudience returns the allowed audience(s) for this client.
 	GetAudience() Arguments
+
+	// GetMayAct returns the allowed exchange actor(s) for this client
+	GetMayAct() Arguments
 }
 
 // OpenIDConnectClient represents a client capable of performing OpenID Connect requests.
@@ -90,6 +97,7 @@ type DefaultClient struct {
 	Scopes        []string `json:"scopes"`
 	Audience      []string `json:"audience"`
 	Public        bool     `json:"public"`
+	MayAct        []string `json:"may_act"`
 }
 
 type DefaultOpenIDConnectClient struct {
@@ -148,6 +156,10 @@ func (c *DefaultClient) GetResponseTypes() Arguments {
 		return Arguments{"code"}
 	}
 	return Arguments(c.ResponseTypes)
+}
+
+func (c *DefaultClient) GetMayAct() Arguments {
+	return c.MayAct
 }
 
 func (c *DefaultOpenIDConnectClient) GetJSONWebKeysURI() string {

@@ -17,11 +17,15 @@
  * @copyright 	2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
  * @license 	Apache-2.0
  *
+ * Changes:
+ *  - 2020 Miguel Paulos Nunes <Miguel.PaulosNunes@bosch.io>, Olaf Märker <Olaf.Maerker@bosch.io>
+ *
  */
 
 package compose
 
 import (
+	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 )
 
@@ -70,6 +74,7 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 		ScopeStrategy:            config.GetScopeStrategy(),
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 		RefreshTokenScopes:       config.GetRefreshTokenScopes(),
+		Store:                    storage.(fosite.Storage),
 	}
 }
 
@@ -82,6 +87,24 @@ func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strateg
 		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
 		ScopeStrategy:            config.GetScopeStrategy(),
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
+	}
+}
+
+// OAuth2TokenExchangeFactory creates an OAuth2 token exchange handler and registers
+// an access token, refresh token and authorize code validator.
+func OAuth2TokenExchangeFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.TokenExchangeGrantHandler{
+		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
+		AccessTokenStorage:       storage.(oauth2.AccessTokenStorage),
+		AccessTokenLifespan:      config.GetAccessTokenLifespan(),
+		ScopeStrategy:            config.GetScopeStrategy(),
+		AudienceMatchingStrategy: config.GetAudienceStrategy(),
+		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
+		RefreshTokenLifespan:     config.GetRefreshTokenLifespan(),
+		RefreshTokenScopes:       config.GetRefreshTokenScopes(),
+		CoreStorage:              storage.(oauth2.CoreStorage),
+		CoreStrategy:             strategy.(oauth2.CoreStrategy),
+		Store:                    storage.(fosite.Storage),
 	}
 }
 

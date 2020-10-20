@@ -17,6 +17,9 @@
  * @copyright 	2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
  * @license 	Apache-2.0
  *
+ * Changes:
+ *  - 2020 Olaf Märker <Olaf.Maerker@bosch.io>
+ *
  */
 
 package fosite
@@ -40,4 +43,8 @@ func NewAccessRequest(session Session) *AccessRequest {
 
 func (a *AccessRequest) GetGrantTypes() Arguments {
 	return a.GrantTypes
+}
+
+func (a *AccessRequest) SetDelegatingClient(client Client) {
+	a.DelegatingClient = client
 }
