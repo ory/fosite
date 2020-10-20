@@ -159,15 +159,15 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 	if errors.As(err, &ve) && ve.Errors == jwtgo.ValidationErrorExpired {
 		// Expired tokens are ok
 	} else if err != nil {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("Failed to validate OpenID Connect request as decoding id token from id_token_hint parameter failed because %s.", err.Error()))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Failed to validate OpenID Connect request as decoding id token from id_token_hint parameter failed.").WithCause(err).WithDebug(err.Error()))
 	}
 
 	if hintClaims, ok := tokenHint.Claims.(jwtgo.MapClaims); !ok {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Failed to validate OpenID Connect request as decoding id token from id_token_hint to *jwt.StandardClaims failed."))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Failed to validate OpenID Connect request as decoding id token from id_token_hint to jwtgo.MapClaims failed."))
 	} else if hintSub, _ := hintClaims["sub"].(string); hintSub == "" {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Failed to validate OpenID Connect request because provided id token from id_token_hint does not have a subject."))
 	} else if hintSub != claims.Subject {
-		return errors.WithStack(fosite.ErrLoginRequired.WithHintf("Failed to validate OpenID Connect request because subject from ID token session claims does not subject from id_token_hint."))
+		return errors.WithStack(fosite.ErrLoginRequired.WithHint("Failed to validate OpenID Connect request because the subject from provided id token from id_token_hint does not match the current session's subject."))
 	}
 
 	return nil
