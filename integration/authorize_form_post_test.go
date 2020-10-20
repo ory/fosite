@@ -72,23 +72,6 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 		check        func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err fosite.RFC6749Error)
 		responseType string
 	}{
-		//{
-		//	description: "should fail because of audience",
-		//	responseType:      []goauth.AuthCodeOption{goauth.SetAuthURLParam("audience", "https://www.ory.sh/not-api")},
-		//	setup: func() {
-		//		state = "12345678901234567890"
-		//	},
-		//	authStatusCode: http.StatusNotAcceptable,
-		//},
-		//{
-		//	description: "should fail because of scope",
-		//	responseType:      []goauth.AuthCodeOption{},
-		//	setup: func() {
-		//		oauthClient.Scopes = []string{"not-exist"}
-		//		state = "12345678901234567890"
-		//	},
-		//	authStatusCode: http.StatusNotAcceptable,
-		//},
 		{
 			description:  "implicit grant test with form_post",
 			responseType: "token",
