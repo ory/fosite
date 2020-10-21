@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -36,21 +38,12 @@ import (
 
 func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockAccessTokenStorage(ctrl)
-	chgen := internal.NewMockAccessTokenStrategy(ctrl)
-	aresp := internal.NewMockAuthorizeResponder(ctrl)
 	defer ctrl.Finish()
 
 	areq := fosite.NewAuthorizeRequest()
 	areq.Session = new(fosite.DefaultSession)
+	h, store, chgen, aresp := makeAuthorizeImplicitGrantTypeHandler(ctrl)
 
-	h := AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStorage:       store,
-		AccessTokenStrategy:      chgen,
-		AccessTokenLifespan:      time.Hour,
-		ScopeStrategy:            fosite.HierarchicScopeStrategy,
-		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-	}
 	for k, c := range []struct {
 		description string
 		setup       func()
@@ -137,4 +130,50 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 			}
 		})
 	}
+}
+func makeAuthorizeImplicitGrantTypeHandler(ctrl *gomock.Controller) (AuthorizeImplicitGrantTypeHandler,
+	*internal.MockAccessTokenStorage, *internal.MockAccessTokenStrategy, *internal.MockAuthorizeResponder) {
+	store := internal.NewMockAccessTokenStorage(ctrl)
+	chgen := internal.NewMockAccessTokenStrategy(ctrl)
+	aresp := internal.NewMockAuthorizeResponder(ctrl)
+
+	h := AuthorizeImplicitGrantTypeHandler{
+		AccessTokenStorage:       store,
+		AccessTokenStrategy:      chgen,
+		AccessTokenLifespan:      time.Hour,
+		ScopeStrategy:            fosite.HierarchicScopeStrategy,
+		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+	}
+
+	return h, store, chgen, aresp
+}
+
+func TestDefaultResponseMode_AuthorizeImplicit_EndpointHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	areq := fosite.NewAuthorizeRequest()
+	areq.Session = new(fosite.DefaultSession)
+	h, store, chgen, aresp := makeAuthorizeImplicitGrantTypeHandler(ctrl)
+
+	areq.State = "state"
+	areq.GrantedScope = fosite.Arguments{"scope"}
+	areq.ResponseTypes = fosite.Arguments{"token"}
+	areq.Client = &fosite.DefaultClient{
+		GrantTypes:    fosite.Arguments{"implicit"},
+		ResponseTypes: fosite.Arguments{"token"},
+	}
+
+	store.EXPECT().CreateAccessTokenSession(nil, "ats", gomock.Eq(areq.Sanitize([]string{}))).AnyTimes().Return(nil)
+
+	aresp.EXPECT().AddParameter("access_token", "access.ats")
+	aresp.EXPECT().AddParameter("expires_in", gomock.Any())
+	aresp.EXPECT().AddParameter("token_type", "bearer")
+	aresp.EXPECT().AddParameter("state", "state")
+	aresp.EXPECT().AddParameter("scope", "scope")
+	chgen.EXPECT().GenerateAccessToken(nil, areq).AnyTimes().Return("access.ats", "ats", nil)
+
+	err := h.HandleAuthorizeEndpointRequest(nil, areq, aresp)
+	assert.NoError(t, err)
+	assert.Equal(t, fosite.ResponseModeFragment, areq.GetResponseMode())
 }

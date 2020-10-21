@@ -51,7 +51,7 @@ func NewAuthorizeRequest() *AuthorizeRequest {
 		RedirectURI:          &url.URL{},
 		HandledResponseTypes: Arguments{},
 		Request:              *NewRequest(),
-		ResponseMode:         ResponseModeQuery,
+		ResponseMode:         ResponseModeNone,
 	}
 }
 

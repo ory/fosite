@@ -246,6 +246,21 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
 			},
 		},
+		{
+			description: "default responseMode check",
+			setup: func() OpenIDConnectImplicitHandler {
+				areq.Form.Set("nonce", "some-random-foo-nonce-wow")
+				areq.ResponseTypes = fosite.Arguments{"id_token", "token"}
+				areq.RequestedScope = fosite.Arguments{"fosite", "openid"}
+				return makeOpenIDConnectImplicitHandler(fosite.MinParameterEntropy)
+			},
+			check: func() {
+				assert.NotEmpty(t, aresp.GetParameters().Get("id_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("state"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
+				assert.Equal(t, fosite.ResponseModeFragment, areq.GetResponseMode())
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			h := c.setup()

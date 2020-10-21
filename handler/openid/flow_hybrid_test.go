@@ -255,6 +255,19 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 				assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AuthorizeCode))
 			},
 		},
+		{
+			description: "Default responseMode check",
+			setup: func() OpenIDConnectHybridHandler {
+				return makeOpenIDConnectHybridHandler(fosite.MinParameterEntropy)
+			},
+			check: func() {
+				assert.NotEmpty(t, aresp.GetParameters().Get("id_token"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("code"))
+				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
+				assert.Equal(t, fosite.ResponseModeFragment, areq.GetResponseMode())
+				assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AuthorizeCode))
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			h := c.setup()

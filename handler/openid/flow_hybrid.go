@@ -54,7 +54,9 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	if !(ar.GetResponseTypes().Matches("token", "id_token", "code") || ar.GetResponseTypes().Matches("token", "code") || ar.GetResponseTypes().Matches("id_token", "code")) {
 		return nil
 	}
-
+	if ar.GetResponseMode() == fosite.ResponseModeNone {
+		ar.SetResponseMode(fosite.ResponseModeFragment)
+	}
 	// Disabled because this is already handled at the authorize_request_handler
 	//if ar.GetResponseTypes().Matches("token") && !ar.GetClient().GetResponseTypes().Has("token") {
 	//	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the token response type"))
@@ -111,10 +113,6 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		}
 
 		resp.AddParameter("code", code)
-		if ar.GetResponseMode() == fosite.ResponseModeNone {
-			ar.SetResponseMode(fosite.ResponseModeFragment)
-		}
-
 		ar.SetResponseTypeHandled("code")
 
 		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetParameters().Get("code")))
