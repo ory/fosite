@@ -43,14 +43,20 @@ func TestWriteIntrospectionError(t *testing.T) {
 	defer c.Finish()
 
 	rw := internal.NewMockResponseWriter(c)
-
-	rw.EXPECT().WriteHeader(http.StatusUnauthorized) //[]byte("{\"active\":\"false\"}"))
+	rw.EXPECT().WriteHeader(http.StatusUnauthorized)
 	rw.EXPECT().Header().AnyTimes().Return(http.Header{})
 	rw.EXPECT().Write(gomock.Any())
 	f.WriteIntrospectionError(rw, errors.WithStack(ErrRequestUnauthorized))
 
+	rw.EXPECT().WriteHeader(http.StatusBadRequest)
+	rw.EXPECT().Write(gomock.Any())
+	f.WriteIntrospectionError(rw, errors.WithStack(ErrInvalidRequest))
+
 	rw.EXPECT().Write([]byte("{\"active\":false}\n"))
 	f.WriteIntrospectionError(rw, errors.New(""))
+
+	rw.EXPECT().Write([]byte("{\"active\":false}\n"))
+	f.WriteIntrospectionError(rw, errors.WithStack(ErrInactiveToken.WithCause(ErrRequestUnauthorized)))
 
 	f.WriteIntrospectionError(rw, nil)
 }
@@ -123,6 +129,7 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				Exp    *int64 `json:"exp"`
 				Iat    *int64 `json:"iat"`
 			}
+			assert.Equal(t, 200, rw.Code)
 			err := json.NewDecoder(rw.Body).Decode(&params)
 			require.NoError(t, err)
 			assert.Equal(t, c.active, params.Active)
