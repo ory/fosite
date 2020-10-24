@@ -43,8 +43,8 @@ func TestIntrospectJWT(t *testing.T) {
 	}
 
 	v := &StatelessJWTValidator{
-		JWTAccessTokenStrategy: strat,
-		ScopeStrategy:          fosite.HierarchicScopeStrategy,
+		JWTStrategy:   strat,
+		ScopeStrategy: fosite.HierarchicScopeStrategy,
 	}
 
 	for k, c := range []struct {
@@ -137,7 +137,7 @@ func BenchmarkIntrospectJWT(b *testing.B) {
 	}
 
 	v := &StatelessJWTValidator{
-		JWTAccessTokenStrategy: strat,
+		JWTStrategy: strat,
 	}
 
 	jwt := jwtValidCase(fosite.AccessToken)

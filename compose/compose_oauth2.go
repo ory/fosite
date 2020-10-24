@@ -23,6 +23,7 @@ package compose
 
 import (
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/token/jwt"
 )
 
 // OAuth2AuthorizeExplicitFactory creates an OAuth2 authorize code grant ("authorize explicit flow") handler and registers
@@ -132,7 +133,7 @@ func OAuth2TokenIntrospectionFactory(config *Config, storage interface{}, strate
 // If you need revocation, you can validate JWTs statefully, using the other factories.
 func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.StatelessJWTValidator{
-		JWTAccessTokenStrategy: strategy.(oauth2.JWTAccessTokenStrategy),
-		ScopeStrategy:          config.GetScopeStrategy(),
+		JWTStrategy:   strategy.(jwt.JWTStrategy),
+		ScopeStrategy: config.GetScopeStrategy(),
 	}
 }

@@ -23,38 +23,74 @@ package oauth2
 
 import (
 	"context"
+	"time"
 
-	"github.com/pkg/errors"
+	jwtx "github.com/dgrijalva/jwt-go"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/token/jwt"
 )
 
-type JWTAccessTokenStrategy interface {
-	AccessTokenStrategy
-	JWTStrategy
-}
-
 type StatelessJWTValidator struct {
-	JWTAccessTokenStrategy
+	jwt.JWTStrategy
 	ScopeStrategy fosite.ScopeStrategy
 }
 
 func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token string, tokenUse fosite.TokenUse, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenUse, error) {
-	or, err := v.JWTAccessTokenStrategy.ValidateJWT(ctx, fosite.AccessToken, token)
+	t, err := validate(ctx, v.JWTStrategy, token)
 	if err != nil {
 		return "", err
 	}
 
-	for _, scope := range scopes {
-		if scope == "" {
-			continue
-		}
+	// TODO: From here we assume it is an access token, but how do we know it is really and that is not an ID token?
 
-		if !v.ScopeStrategy(or.GetGrantedScopes(), scope) {
-			return "", errors.WithStack(fosite.ErrInvalidScope)
+	mapClaims := t.Claims.(jwtx.MapClaims)
+	claims := jwt.JWTClaims{}
+	claims.FromMapClaims(mapClaims)
+
+	// claims.Scope is what has been granted to the given JWT.
+	if err := matchScopes(v.ScopeStrategy, claims.Scope, scopes); err != nil {
+		return fosite.AccessToken, err
+	}
+
+	requestedAt := claims.IssuedAt
+	rat, ok := mapClaims["rat"]
+	if ok {
+		switch rat.(type) {
+		case float64:
+			requestedAt = time.Unix(int64(rat.(float64)), 0).UTC()
+		case int64:
+			requestedAt = time.Unix(rat.(int64), 0).UTC()
 		}
 	}
 
-	accessRequest.Merge(or)
+	requester := &fosite.Request{
+		ID:          accessRequest.GetID(),
+		RequestedAt: requestedAt,
+		// TODO: Should this client be the client which requested the introspection or the client which obtained the JWT?
+		Client: accessRequest.GetClient(),
+		// We do not really know which scopes were requested, so we set them to granted.
+		RequestedScope: claims.Scope,
+		GrantedScope:   claims.Scope,
+		Form:           accessRequest.GetRequestForm(),
+		// TODO: Is it OK that this is JWTSession or should we allow custom session objects?
+		Session: &JWTSession{
+			JWTClaims: &claims,
+			JWTHeader: &jwt.Headers{
+				Extra: t.Header,
+			},
+			ExpiresAt: map[fosite.TokenType]time.Time{
+				fosite.AccessToken: claims.ExpiresAt,
+			},
+			Subject: claims.Subject,
+			// TODO: What about username?
+		},
+		// We do not really know which audiences were requested, so we set them to granted.
+		RequestedAudience: claims.Audience,
+		GrantedAudience:   claims.Audience,
+	}
+
+	accessRequest.Merge(requester)
+
 	return fosite.AccessToken, nil
 }
