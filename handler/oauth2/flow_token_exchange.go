@@ -74,7 +74,7 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 	form := request.GetRequestForm()
 	subjectToken := form.Get("subject_token")
 	if subjectToken == "" {
-		return errors.WithStack(fosite.ErrInvalidRequestObject.WithHintf("Mandatory parameter subject_token is missing."))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("Mandatory parameter subject_token is missing."))
 	}
 
 	// From https://tools.ietf.org/html/rfc8693#section-2.1:
@@ -85,11 +85,11 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 	//		parameter.
 	subjectTokenType := form.Get("subject_token_type")
 	if subjectTokenType == "" {
-		return errors.WithStack(fosite.ErrInvalidRequestObject.WithHintf("Mandatory parameter subject_token_type is missing."))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("Mandatory parameter subject_token_type is missing."))
 	}
 
 	if subjectTokenType != "urn:ietf:params:oauth:token-type:access_token" {
-		return errors.WithStack(fosite.ErrInvalidRequestObject.WithHintf("Currently only subject_token_type urn:ietf:params:oauth:token-type:access_token is supported"))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("Currently only \"subject_token_type=urn:ietf:params:oauth:token-type:access_token\" is supported but got \"%s\".", subjectTokenType))
 	}
 
 	sig := c.CoreStrategy.AccessTokenSignature(subjectToken)
