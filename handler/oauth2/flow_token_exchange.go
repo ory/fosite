@@ -49,8 +49,11 @@ type TokenExchangeGrantHandler struct {
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc8693#section-2.1 (currently impersonation only)
 func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	// grant_type REQUIRED.
-	// Value MUST be set to "urn:ietf:params:oauth:grant-type:token-exchange".
+	// From https://tools.ietf.org/html/rfc8693#section-2.1:
+	//
+	//	grant_type
+	//		REQUIRED. The value "urn:ietf:params:oauth:grant-type:token-
+	//		exchange" indicates that a token exchange is being performed.
 	if !request.GetGrantTypes().ExactOne("urn:ietf:params:oauth:grant-type:token-exchange") {
 		return errors.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -61,14 +64,25 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"urn:ietf:params:oauth:grant-type:token-exchange\"."))
 	}
 
-	// subject_token REQUIRED
+	// From https://tools.ietf.org/html/rfc8693#section-2.1:
+	//
+	//	subject_token
+	//		REQUIRED.  A security token that represents the identity of the
+	//		party on behalf of whom the request is being made.  Typically, the
+	//		subject of this token will be the subject of the security token
+	//		issued in response to the request.
 	form := request.GetRequestForm()
 	subjectToken := form.Get("subject_token")
 	if subjectToken == "" {
 		return errors.WithStack(fosite.ErrInvalidRequestObject.WithHintf("Mandatory parameter subject_token is missing."))
 	}
 
-	// subject_token_type REQUIRED
+	// From https://tools.ietf.org/html/rfc8693#section-2.1:
+	//
+	//	subject_token_type
+	//		REQUIRED.  An identifier, as described in Section 3, that
+	//		indicates the type of the security token in the "subject_token"
+	//		parameter.
 	subjectTokenType := form.Get("subject_token_type")
 	if subjectTokenType == "" {
 		return errors.WithStack(fosite.ErrInvalidRequestObject.WithHintf("Mandatory parameter subject_token_type is missing."))
