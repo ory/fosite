@@ -36,6 +36,56 @@ type StatelessJWTValidator struct {
 	ScopeStrategy fosite.ScopeStrategy
 }
 
+// AccessTokenJWTToRequest tries to reconstruct fosite.Request from a JWT.
+func AccessTokenJWTToRequest(token *jwtx.Token) fosite.Requester {
+	mapClaims := token.Claims.(jwtx.MapClaims)
+	claims := jwt.JWTClaims{}
+	claims.FromMapClaims(mapClaims)
+
+	requestedAt := claims.IssuedAt
+	requestedAtClaim, ok := mapClaims["rat"]
+	if ok {
+		switch requestedAtClaim.(type) {
+		case float64:
+			requestedAt = time.Unix(int64(requestedAtClaim.(float64)), 0).UTC()
+		case int64:
+			requestedAt = time.Unix(requestedAtClaim.(int64), 0).UTC()
+		}
+	}
+
+	clientId := ""
+	clientIdClaim, ok := mapClaims["client_id"]
+	if ok {
+		switch clientIdClaim.(type) {
+		case string:
+			clientId = clientIdClaim.(string)
+		}
+	}
+
+	return &fosite.Request{
+		RequestedAt: requestedAt,
+		Client: &fosite.DefaultClient{
+			ID: clientId,
+		},
+		// We do not really know which scopes were requested, so we set them to granted.
+		RequestedScope: claims.Scope,
+		GrantedScope:   claims.Scope,
+		Session: &JWTSession{
+			JWTClaims: &claims,
+			JWTHeader: &jwt.Headers{
+				Extra: token.Header,
+			},
+			ExpiresAt: map[fosite.TokenType]time.Time{
+				fosite.AccessToken: claims.ExpiresAt,
+			},
+			Subject: claims.Subject,
+		},
+		// We do not really know which audiences were requested, so we set them to granted.
+		RequestedAudience: claims.Audience,
+		GrantedAudience:   claims.Audience,
+	}
+}
+
 func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token string, tokenUse fosite.TokenUse, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenUse, error) {
 	t, err := validate(ctx, v.JWTStrategy, token)
 	if err != nil {
@@ -44,50 +94,10 @@ func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token strin
 
 	// TODO: From here we assume it is an access token, but how do we know it is really and that is not an ID token?
 
-	mapClaims := t.Claims.(jwtx.MapClaims)
-	claims := jwt.JWTClaims{}
-	claims.FromMapClaims(mapClaims)
+	requester := AccessTokenJWTToRequest(t)
 
-	// claims.Scope is what has been granted to the given JWT.
-	if err := matchScopes(v.ScopeStrategy, claims.Scope, scopes); err != nil {
+	if err := matchScopes(v.ScopeStrategy, requester.GetGrantedScopes(), scopes); err != nil {
 		return fosite.AccessToken, err
-	}
-
-	requestedAt := claims.IssuedAt
-	rat, ok := mapClaims["rat"]
-	if ok {
-		switch rat.(type) {
-		case float64:
-			requestedAt = time.Unix(int64(rat.(float64)), 0).UTC()
-		case int64:
-			requestedAt = time.Unix(rat.(int64), 0).UTC()
-		}
-	}
-
-	requester := &fosite.Request{
-		ID:          accessRequest.GetID(),
-		RequestedAt: requestedAt,
-		// TODO: Should this client be the client which requested the introspection or the client which obtained the JWT?
-		Client: accessRequest.GetClient(),
-		// We do not really know which scopes were requested, so we set them to granted.
-		RequestedScope: claims.Scope,
-		GrantedScope:   claims.Scope,
-		Form:           accessRequest.GetRequestForm(),
-		// TODO: Is it OK that this is JWTSession or should we allow custom session objects?
-		Session: &JWTSession{
-			JWTClaims: &claims,
-			JWTHeader: &jwt.Headers{
-				Extra: t.Header,
-			},
-			ExpiresAt: map[fosite.TokenType]time.Time{
-				fosite.AccessToken: claims.ExpiresAt,
-			},
-			Subject: claims.Subject,
-			// TODO: What about username?
-		},
-		// We do not really know which audiences were requested, so we set them to granted.
-		RequestedAudience: claims.Audience,
-		GrantedAudience:   claims.Audience,
 	}
 
 	accessRequest.Merge(requester)
