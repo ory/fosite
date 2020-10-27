@@ -74,7 +74,7 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because subject_token not set",
-			expectErr:   fosite.ErrInvalidRequestObject.WithHint("Mandatory parameter subject_token is missing."),
+			expectErr:   fosite.ErrInvalidRequest.WithHint("Mandatory parameter subject_token is missing."),
 			mock: func() {
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"urn:ietf:params:oauth:grant-type:token-exchange"})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
@@ -87,7 +87,7 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because subject_token_type not set",
-			expectErr:   fosite.ErrInvalidRequestObject.WithHint("Mandatory parameter subject_token_type is missing."),
+			expectErr:   fosite.ErrInvalidRequest.WithHint("Mandatory parameter subject_token_type is missing."),
 			mock: func() {
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"urn:ietf:params:oauth:grant-type:token-exchange"})
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
