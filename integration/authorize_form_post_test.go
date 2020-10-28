@@ -69,7 +69,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 	for k, c := range []struct {
 		description  string
 		setup        func()
-		check        func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err fosite.RFC6749Error)
+		check        func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string)
 		responseType string
 	}{
 		{
@@ -78,7 +78,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 			},
-			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err fosite.RFC6749Error) {
+			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
 				assert.NotEmpty(t, token.TokenType)
 				assert.NotEmpty(t, token.AccessToken)
@@ -91,7 +91,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 			},
-			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err fosite.RFC6749Error) {
+			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
 				assert.NotEmpty(t, code)
 			},
@@ -103,7 +103,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
 			},
-			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err fosite.RFC6749Error) {
+			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
 				assert.NotEmpty(t, code)
 				assert.NotEmpty(t, token.TokenType)
@@ -118,7 +118,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
 			},
-			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err fosite.RFC6749Error) {
+			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
 				assert.NotEmpty(t, code)
 				assert.NotEmpty(t, iDToken)
@@ -134,7 +134,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
 			},
-			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err fosite.RFC6749Error) {
+			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
 				assert.NotEmpty(t, code)
 				assert.NotEmpty(t, iDToken)
@@ -146,10 +146,10 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 			},
-			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err fosite.RFC6749Error) {
+			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
-				assert.NotEmpty(t, err.Name)
-				assert.NotEmpty(t, err.Description)
+				assert.NotEmpty(t, err["Name"])
+				assert.NotEmpty(t, err["Description"])
 			},
 		},
 	} {
@@ -164,7 +164,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 			resp, err := client.Get(authURL)
 			require.NoError(t, err)
 			require.Equal(t, http.StatusOK, resp.StatusCode)
-			code, state, token, iDToken, errResp, err := fosite.ParseFormPostResponse(fositeStore.Clients["my-client"].GetRedirectURIs()[0], resp.Body)
+			code, state, token, iDToken, errResp, err := internal.ParseFormPostResponse(fositeStore.Clients["my-client"].GetRedirectURIs()[0], resp.Body)
 			require.NoError(t, err)
 			c.check(t, state, code, iDToken, token, errResp)
 		})
