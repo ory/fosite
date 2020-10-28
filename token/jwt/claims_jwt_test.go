@@ -75,7 +75,7 @@ func TestAssert(t *testing.T) {
 		ToMapClaims().Valid())
 	assert.NotNil(t, (&JWTClaims{NotBefore: time.Now().UTC().Add(time.Hour)}).
 		ToMapClaims().Valid())
-	assert.NotNil(t, (&JWTClaims{NotBefore: time.Now().UTC().Add(-time.Hour)}).
+	assert.Nil(t, (&JWTClaims{NotBefore: time.Now().UTC().Add(-time.Hour)}).
 		ToMapClaims().Valid())
 	assert.Nil(t, (&JWTClaims{ExpiresAt: time.Now().UTC().Add(time.Hour),
 		NotBefore: time.Now().UTC().Add(-time.Hour)}).ToMapClaims().Valid())
