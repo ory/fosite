@@ -63,10 +63,10 @@ func (mr *MockRequesterMockRecorder) GetClient() *gomock.Call {
 }
 
 // GetDelegatingClient mocks base method
-func (m *MockRequester) GetDelegatingClient() fosite.Client {
+func (m *MockRequester) GetDelegatingClient() fosite.TokenExchangeClient {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDelegatingClient")
-	ret0, _ := ret[0].(fosite.Client)
+	ret0, _ := ret[0].(fosite.TokenExchangeClient)
 	return ret0
 }
 

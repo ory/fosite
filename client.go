@@ -54,9 +54,13 @@ type Client interface {
 
 	// GetAudience returns the allowed audience(s) for this client.
 	GetAudience() Arguments
+}
 
+type TokenExchangeClient interface {
 	// GetMayAct returns the allowed exchange actor(s) for this client
 	GetMayAct() Arguments
+
+	Client
 }
 
 // OpenIDConnectClient represents a client capable of performing OpenID Connect requests.

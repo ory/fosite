@@ -63,10 +63,10 @@ func (mr *MockAccessRequesterMockRecorder) GetClient() *gomock.Call {
 }
 
 // GetDelegatingClient mocks base method
-func (m *MockAccessRequester) GetDelegatingClient() fosite.Client {
+func (m *MockAccessRequester) GetDelegatingClient() fosite.TokenExchangeClient {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDelegatingClient")
-	ret0, _ := ret[0].(fosite.Client)
+	ret0, _ := ret[0].(fosite.TokenExchangeClient)
 	return ret0
 }
 
@@ -253,7 +253,7 @@ func (mr *MockAccessRequesterMockRecorder) Sanitize(arg0 interface{}) *gomock.Ca
 }
 
 // SetDelegatingClient mocks base method
-func (m *MockAccessRequester) SetDelegatingClient(arg0 fosite.Client) {
+func (m *MockAccessRequester) SetDelegatingClient(arg0 fosite.TokenExchangeClient) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetDelegatingClient", arg0)
 }

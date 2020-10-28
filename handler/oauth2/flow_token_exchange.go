@@ -100,17 +100,23 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 		return err
 	}
 
-	var delegatingClient fosite.Client = nil
+	var delegatingClientId string
 	// reload client from storage to ensure that may_act is up to date in case of eventual revocation
 	if or.GetDelegatingClient() == nil {
 		// first exchange request has no delegating client set
-		delegatingClient, err = c.Store.GetClient(ctx, or.GetClient().GetID())
+		delegatingClientId = or.GetClient().GetID()
 	} else {
-		delegatingClient, err = c.Store.GetClient(ctx, or.GetDelegatingClient().GetID())
+		delegatingClientId = or.GetDelegatingClient().GetID()
 	}
 
+	dClient, err := c.Store.GetClient(ctx, delegatingClientId)
 	if err != nil {
 		return errors.WithStack(fosite.ErrInvalidClient.WithHint("The delegating OAuth2 Client does not exist."))
+	}
+
+	delegatingClient, ok := dClient.(fosite.TokenExchangeClient)
+	if !ok {
+		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to perform a token exchange for the given subject token."))
 	}
 
 	// check if delegating client allows the current client to perform an exchange on its tokens

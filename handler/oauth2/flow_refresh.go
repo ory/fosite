@@ -102,6 +102,12 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		if err != nil {
 			return errors.WithStack(fosite.ErrInvalidClient.WithHint("The delegating OAuth2 Client does not exist."))
 		}
+
+		delegatingClient, ok := delegatingClient.(fosite.TokenExchangeClient)
+		if !ok {
+			return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to perform a token exchange for the given subject token."))
+		}
+
 		// keep delegating client for following refresh requests
 		request.SetDelegatingClient(delegatingClient)
 
@@ -113,7 +119,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	for _, scope := range originalRequest.GetGrantedScopes() {
 		if !c.ScopeStrategy(request.GetClient().GetScopes(), scope) &&
-			// if it is a refresh of an exchanged token, check scopes against those of the delegating client
+			// if it is a refresh of an exchanged token, check scopes against those of the delegating client too
 			(delegatingClient == nil || !c.ScopeStrategy(delegatingClient.GetScopes(), scope)) {
 			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
 		}
