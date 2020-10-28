@@ -85,6 +85,7 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 		setup       func()
 		active      bool
 		hasExp      bool
+		hasExtra    bool
 	}{
 		{
 			description: "should success for not expired access token",
@@ -95,8 +96,9 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				sess.SetExpiresAt(ires.TokenUse, time.Now().Add(time.Hour*2))
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
-			active: true,
-			hasExp: true,
+			active:   true,
+			hasExp:   true,
+			hasExtra: false,
 		},
 		{
 			description: "should success for expired access token",
@@ -107,8 +109,9 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				sess.SetExpiresAt(ires.TokenUse, time.Now().Add(-time.Hour*2))
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
-			active: false,
-			hasExp: false,
+			active:   false,
+			hasExp:   false,
+			hasExtra: false,
 		},
 		{
 			description: "should success for ExpiresAt not set access token",
@@ -119,8 +122,23 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				sess.SetExpiresAt(ires.TokenUse, time.Time{})
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
-			active: true,
-			hasExp: false,
+			active:   true,
+			hasExp:   false,
+			hasExtra: false,
+		},
+		{
+			description: "should output extra claims",
+			setup: func() {
+				ires.Active = true
+				ires.TokenUse = AccessToken
+				sess := &DefaultSession{}
+				sess.GetExtraClaims()["extra"] = "foobar"
+				sess.SetExpiresAt(ires.TokenUse, time.Time{})
+				ires.AccessRequester = NewAccessRequest(sess)
+			},
+			active:   true,
+			hasExp:   false,
+			hasExtra: true,
 		},
 	} {
 		t.Run(c.description, func(t *testing.T) {
@@ -130,6 +148,7 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				Active bool   `json:"active"`
 				Exp    *int64 `json:"exp"`
 				Iat    *int64 `json:"iat"`
+				Extra  string `json:"extra"`
 			}
 			assert.Equal(t, 200, rw.Code)
 			err := json.NewDecoder(rw.Body).Decode(&params)
@@ -141,6 +160,11 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 					assert.NotNil(t, params.Exp)
 				} else {
 					assert.Nil(t, params.Exp)
+				}
+				if c.hasExtra {
+					assert.Equal(t, params.Extra, "foobar")
+				} else {
+					assert.Empty(t, params.Extra)
 				}
 			}
 		})
