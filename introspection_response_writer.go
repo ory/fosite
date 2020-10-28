@@ -24,6 +24,7 @@ package fosite
 import (
 	"encoding/json"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -204,35 +205,46 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 		return
 	}
 
-	expiresAt := int64(0)
+	response := map[string]interface{}{
+		"active": true,
+	}
+
+	extraClaimsSession, ok := r.GetAccessRequester().GetSession().(ExtraClaimsSession)
+	if ok {
+		extraClaims := extraClaimsSession.GetExtraClaims()
+		if extraClaims != nil {
+			for name, value := range extraClaims {
+				if !reflect.ValueOf(value).IsZero() {
+					response[name] = value
+				}
+			}
+		}
+	}
+
 	if !r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).IsZero() {
-		expiresAt = r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).Unix()
+		response["exp"] = r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).Unix()
+	}
+	if r.GetAccessRequester().GetClient().GetID() != "" {
+		response["client_id"] = r.GetAccessRequester().GetClient().GetID()
+	}
+	if len(r.GetAccessRequester().GetGrantedScopes()) > 0 {
+		response["scope"] = strings.Join(r.GetAccessRequester().GetGrantedScopes(), " ")
+	}
+	if !r.GetAccessRequester().GetRequestedAt().IsZero() {
+		response["iat"] = r.GetAccessRequester().GetRequestedAt().Unix()
+	}
+	if r.GetAccessRequester().GetSession().GetSubject() != "" {
+		response["sub"] = r.GetAccessRequester().GetSession().GetSubject()
+	}
+	if len(r.GetAccessRequester().GetGrantedAudience()) > 0 {
+		response["aud"] = r.GetAccessRequester().GetGrantedAudience()
+	}
+	if r.GetAccessRequester().GetSession().GetUsername() != "" {
+		response["username"] = r.GetAccessRequester().GetSession().GetUsername()
 	}
 
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
-	_ = json.NewEncoder(rw).Encode(struct {
-		Active    bool     `json:"active"`
-		ClientID  string   `json:"client_id,omitempty"`
-		Scope     string   `json:"scope,omitempty"`
-		Audience  []string `json:"aud,omitempty"`
-		ExpiresAt int64    `json:"exp,omitempty"`
-		IssuedAt  int64    `json:"iat,omitempty"`
-		Subject   string   `json:"sub,omitempty"`
-		Username  string   `json:"username,omitempty"`
-		// Session is not included per default because it might expose sensitive information.
-		// Session   Session  `json:"sess,omitempty"`
-	}{
-		Active:    true,
-		ClientID:  r.GetAccessRequester().GetClient().GetID(),
-		Scope:     strings.Join(r.GetAccessRequester().GetGrantedScopes(), " "),
-		ExpiresAt: expiresAt,
-		IssuedAt:  r.GetAccessRequester().GetRequestedAt().Unix(),
-		Subject:   r.GetAccessRequester().GetSession().GetSubject(),
-		Audience:  r.GetAccessRequester().GetGrantedAudience(),
-		Username:  r.GetAccessRequester().GetSession().GetUsername(),
-		// Session is not included because it might expose sensitive information.
-		// Session:   r.GetAccessRequester().GetSession(),
-	})
+	_ = json.NewEncoder(rw).Encode(response)
 }

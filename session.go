@@ -55,6 +55,7 @@ type DefaultSession struct {
 	ExpiresAt map[TokenType]time.Time
 	Username  string
 	Subject   string
+	Extra     map[string]interface{}
 }
 
 func (s *DefaultSession) SetExpiresAt(key TokenType, exp time.Time) {
@@ -96,4 +97,25 @@ func (s *DefaultSession) Clone() Session {
 	}
 
 	return deepcopy.Copy(s).(Session)
+}
+
+// ExtraClaimsSession provides an interface for session to store any extra claims.
+type ExtraClaimsSession interface {
+	// GetExtraClaims returns a map to store extra claims.
+	// The returned value can be modified in-place.
+	GetExtraClaims() map[string]interface{}
+}
+
+// GetExtraClaims implements ExtraClaimsSession for DefaultSession.
+// The returned value can be modified in-place.
+func (s *DefaultSession) GetExtraClaims() map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+
+	if s.Extra == nil {
+		s.Extra = make(map[string]interface{})
+	}
+
+	return s.Extra
 }
