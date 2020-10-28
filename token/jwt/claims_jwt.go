@@ -102,14 +102,25 @@ func (c *JWTClaims) WithScopeField(scopeField JWTScopeFieldEnum) JWTClaimsContai
 func (c *JWTClaims) ToMap() map[string]interface{} {
 	var ret = Copy(c.Extra)
 
-	ret["jti"] = c.JTI
-	if c.JTI == "" {
+	if c.Subject != "" {
+		ret["sub"] = c.Subject
+	}
+
+	if c.Issuer != "" {
+		ret["iss"] = c.Issuer
+	}
+
+	if c.JTI != "" {
+		ret["jti"] = c.JTI
+	} else {
 		ret["jti"] = uuid.New()
 	}
 
-	ret["sub"] = c.Subject
-	ret["iss"] = c.Issuer
-	ret["aud"] = c.Audience
+	if len(c.Audience) > 0 {
+		ret["aud"] = c.Audience
+	} else {
+		ret["aud"] = []string{}
+	}
 
 	if !c.IssuedAt.IsZero() {
 		ret["iat"] = float64(c.IssuedAt.Unix()) // jwt-go does not support int64 as datatype
@@ -119,7 +130,9 @@ func (c *JWTClaims) ToMap() map[string]interface{} {
 		ret["nbf"] = float64(c.NotBefore.Unix()) // jwt-go does not support int64 as datatype
 	}
 
-	ret["exp"] = float64(c.ExpiresAt.Unix()) // jwt-go does not support int64 as datatype
+	if !c.ExpiresAt.IsZero() {
+		ret["exp"] = float64(c.ExpiresAt.Unix()) // jwt-go does not support int64 as datatype
+	}
 
 	if c.Scope != nil {
 		// ScopeField default (when value is JWTScopeFieldUnset) is the list for backwards compatibility with old versions of fosite.

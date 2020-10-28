@@ -49,14 +49,37 @@ type IDTokenClaims struct {
 // ToMap will transform the headers to a map structure
 func (c *IDTokenClaims) ToMap() map[string]interface{} {
 	var ret = Copy(c.Extra)
-	ret["sub"] = c.Subject
-	ret["iss"] = c.Issuer
-	ret["jti"] = c.JTI
+
+	if c.Subject != "" {
+		ret["sub"] = c.Subject
+	}
+
+	if c.Issuer != "" {
+		ret["iss"] = c.Issuer
+	}
+
+	if c.JTI != "" {
+		ret["jti"] = c.JTI
+	} else {
+		ret["jti"] = uuid.New()
+	}
 
 	if len(c.Audience) > 0 {
 		ret["aud"] = c.Audience
 	} else {
 		ret["aud"] = []string{}
+	}
+
+	if !c.IssuedAt.IsZero() {
+		ret["iat"] = float64(c.IssuedAt.Unix()) // jwt-go does not support int64 as datatype
+	}
+
+	if !c.ExpiresAt.IsZero() {
+		ret["exp"] = float64(c.ExpiresAt.Unix()) // jwt-go does not support int64 as datatype
+	}
+
+	if !c.RequestedAt.IsZero() {
+		ret["rat"] = float64(c.RequestedAt.Unix()) // jwt-go does not support int64 as datatype
 	}
 
 	if len(c.Nonce) >= 0 {
@@ -67,16 +90,12 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 		ret["at_hash"] = c.AccessTokenHash
 	}
 
-	if len(c.JTI) == 0 {
-		ret["jti"] = uuid.New()
-	}
-
 	if len(c.CodeHash) > 0 {
 		ret["c_hash"] = c.CodeHash
 	}
 
 	if !c.AuthTime.IsZero() {
-		ret["auth_time"] = c.AuthTime.Unix()
+		ret["auth_time"] = float64(c.AuthTime.Unix()) // jwt-go does not support int64 as datatype
 	}
 
 	if len(c.AuthenticationContextClassReference) > 0 {
@@ -87,9 +106,6 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 		ret["amr"] = c.AuthenticationMethodsReference
 	}
 
-	ret["iat"] = float64(c.IssuedAt.Unix())
-	ret["exp"] = float64(c.ExpiresAt.Unix())
-	ret["rat"] = float64(c.RequestedAt.Unix())
 	return ret
 
 }
