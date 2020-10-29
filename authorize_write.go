@@ -43,7 +43,7 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 	case ResponseModePost:
 		//form_post
 		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
-		WriteAuthorizeFormPostResponse(redir.String(), resp.GetParameters(), rw)
+		WriteAuthorizeFormPostResponse(redir.String(), resp.GetParameters(), GetPostFormHTMLTemplate(*f), rw)
 	case ResponseModeQuery, ResponseModeDefault:
 		// Explicit grants
 		q := redir.Query()

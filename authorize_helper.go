@@ -33,14 +33,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-var formPostTemplate = template.Must(template.New("form_post").Parse(`<html>
+var FormPostDefaultTemplate = template.Must(template.New("form_post").Parse(`<html>
    <head>
       <title>Submit This Form</title>
    </head>
    <body onload="javascript:document.forms[0].submit()">
       <form method="post" action="{{ .RedirURL }}">
          {{ range $key,$value := .Parameters }}
-		<input type="hidden" name="{{$key}}" value="{{index $value 0}}"/>
+            {{ range $parameter:= $value}}
+		      <input type="hidden" name="{{$key}}" value="{{$parameter}}"/>
+            {{end}}
          {{ end }}
       </form>
    </body>
@@ -199,8 +201,8 @@ func IsLocalhost(redirectURI *url.URL) bool {
 	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "::1" || hn == "localhost"
 }
 
-func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, rw io.Writer) {
-	_ = formPostTemplate.Execute(rw, struct {
+func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, template *template.Template, rw io.Writer) {
+	_ = template.Execute(rw, struct {
 		RedirURL   string
 		Parameters url.Values
 	}{
@@ -219,8 +221,13 @@ func URLSetFragment(source *url.URL, fragment url.Values) {
 			}
 		}
 	}
-	//f=fragment.Encode()
-	//f=plusMatch.ReplaceAllString(f," ")
-	//f=encodedPlusMatch.ReplaceAllString(f,"+")
 	source.Fragment = f
+}
+
+func GetPostFormHTMLTemplate(f Fosite) *template.Template {
+	formPostHTMLTemplate := f.FormPostHTMLTemplate
+	if formPostHTMLTemplate == nil {
+		formPostHTMLTemplate = FormPostDefaultTemplate
+	}
+	return formPostHTMLTemplate
 }

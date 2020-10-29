@@ -66,7 +66,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	var redirectURIString string
 	if ar.GetResponseMode() == ResponseModePost {
 		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
-		WriteAuthorizeFormPostResponse(redirectURI.String(), query, rw)
+		WriteAuthorizeFormPostResponse(redirectURI.String(), query, GetPostFormHTMLTemplate(*f), rw)
 		return
 	} else if ar.GetResponseMode() == ResponseModeFragment {
 		redirectURIString = redirectURI.String() + "#" + query.Encode()

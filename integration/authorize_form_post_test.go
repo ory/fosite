@@ -164,7 +164,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 			resp, err := client.Get(authURL)
 			require.NoError(t, err)
 			require.Equal(t, http.StatusOK, resp.StatusCode)
-			code, state, token, iDToken, errResp, err := internal.ParseFormPostResponse(fositeStore.Clients["my-client"].GetRedirectURIs()[0], resp.Body)
+			code, state, token, iDToken, _, errResp, err := internal.ParseFormPostResponse(fositeStore.Clients["my-client"].GetRedirectURIs()[0], resp.Body)
 			require.NoError(t, err)
 			c.check(t, state, code, iDToken, token, errResp)
 		})

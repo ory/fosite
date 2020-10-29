@@ -151,7 +151,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				redir, _ := url.Parse("https://foobar.com/?foo=bar")
 				ar.EXPECT().GetRedirectURI().Return(redir)
 				ar.EXPECT().GetResponseMode().Return(ResponseModeFragment)
-				resp.EXPECT().GetParameters().Return(url.Values{"bar": {"baz"}, "scope": {"api:*"}})
+				resp.EXPECT().GetParameters().Return(url.Values{"scope": {"api:*"}})
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
 
 				rw.EXPECT().Header().Return(header).Times(2)
@@ -160,7 +160,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			expect: func() {
 				assert.Equal(t, http.Header{
 					"X-Bar":         {"baz"},
-					"Location":      {"https://foobar.com/?foo=bar#bar=baz&scope=api:*"},
+					"Location":      {"https://foobar.com/?foo=bar#scope=api:*"},
 					"Cache-Control": []string{"no-store"},
 					"Pragma":        []string{"no-cache"},
 				}, header)

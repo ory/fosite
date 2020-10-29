@@ -264,14 +264,41 @@ func TestIsRedirectURISecure(t *testing.T) {
 }
 
 func TestWriteAuthorizeFormPostResponse(t *testing.T) {
-	var responseBuffer bytes.Buffer
-	redirectURL := "https://localhost:8080/cb"
-	parameters := url.Values{"code": {"lshr755nsg39fgur"}, "state": {"924659540232"}}
-	fosite.WriteAuthorizeFormPostResponse(redirectURL, parameters, &responseBuffer)
-	code, state, _, _, _, err := internal.ParseFormPostResponse(redirectURL, ioutil.NopCloser(bytes.NewReader(responseBuffer.Bytes())))
-	assert.NoError(t, err)
-	assert.Equal(t, parameters.Get("code"), code)
-	assert.Equal(t, parameters.Get("state"), state)
+	for d, c := range []struct {
+		parameters url.Values
+		check      func(code string, state string, customParams url.Values, d int)
+	}{
+		{
+			parameters: url.Values{"code": {"lshr755nsg39fgur"}, "state": {"924659540232"}},
+			check: func(code string, state string, customParams url.Values, d int) {
+				assert.Equal(t, "lshr755nsg39fgur", code, "case %d", d)
+				assert.Equal(t, "924659540232", state, "case %d", d)
+			},
+		},
+		{
+			parameters: url.Values{"code": {"1234"}, "custom": {"test2", "test3"}},
+			check: func(code string, state string, customParams url.Values, d int) {
+				assert.Equal(t, "1234", code, "case %d", d)
+				assert.Equal(t, []string{"test2", "test3"}, customParams["custom"], "case %d", d)
+			},
+		},
+		{
+			parameters: url.Values{"code": {"1234"}, "custom": {"<b>Bold</b>"}},
+			check: func(code string, state string, customParams url.Values, d int) {
+				assert.Equal(t, "1234", code, "case %d", d)
+				assert.Equal(t, "<b>Bold</b>", customParams.Get("custom"), "case %d", d)
+			},
+		},
+	} {
+		var responseBuffer bytes.Buffer
+		redirectURL := "https://localhost:8080/cb"
+		//parameters :=
+		fosite.WriteAuthorizeFormPostResponse(redirectURL, c.parameters, fosite.FormPostDefaultTemplate, &responseBuffer)
+		code, state, _, _, customParams, _, err := internal.ParseFormPostResponse(redirectURL, ioutil.NopCloser(bytes.NewReader(responseBuffer.Bytes())))
+		assert.NoError(t, err, "case %d", d)
+		c.check(code, state, customParams, d)
+
+	}
 }
 
 func TestIsRedirectURISecureStrict(t *testing.T) {

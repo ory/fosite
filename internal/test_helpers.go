@@ -23,6 +23,7 @@ package internal
 
 import (
 	"errors"
+	"net/url"
 
 	"io"
 	"strconv"
@@ -32,40 +33,41 @@ import (
 	goauth "golang.org/x/oauth2"
 )
 
-func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizationCode, stateFromServer, iDToken string, token goauth.Token, rFC6749Error map[string]string, err error) {
+func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizationCode, stateFromServer, iDToken string, token goauth.Token, customParameters url.Values, rFC6749Error map[string]string, err error) {
 
 	token = goauth.Token{}
 	rFC6749Error = map[string]string{}
+	customParameters = url.Values{}
 
 	doc, err := html.Parse(resp)
 	if err != nil {
-		return "", "", "", token, rFC6749Error, err
+		return "", "", "", token, customParameters, rFC6749Error, err
 	}
 	//doc>html>body
 	body := findBody(doc.FirstChild.FirstChild)
 	if body.Data != "body" {
-		return "", "", "", token, rFC6749Error, errors.New("Malformed html")
+		return "", "", "", token, customParameters, rFC6749Error, errors.New("Malformed html")
 	}
 	htmlEvent := body.Attr[0].Key
 	if htmlEvent != "onload" {
-		return "", "", "", token, rFC6749Error, errors.New("onload event is missing")
+		return "", "", "", token, customParameters, rFC6749Error, errors.New("onload event is missing")
 	}
 	onLoadFunc := body.Attr[0].Val
 	if onLoadFunc != "javascript:document.forms[0].submit()" {
-		return "", "", "", token, rFC6749Error, errors.New("onload function is missing")
+		return "", "", "", token, customParameters, rFC6749Error, errors.New("onload function is missing")
 	}
 	form := getNextNoneTextNode(body.FirstChild)
 	if form.Data != "form" {
-		return "", "", "", token, rFC6749Error, errors.New("html form is missing")
+		return "", "", "", token, customParameters, rFC6749Error, errors.New("html form is missing")
 	}
 	for _, attr := range form.Attr {
 		if attr.Key == "method" {
 			if attr.Val != "post" {
-				return "", "", "", token, rFC6749Error, errors.New("html form post method is missing")
+				return "", "", "", token, customParameters, rFC6749Error, errors.New("html form post method is missing")
 			}
 		} else {
 			if attr.Val != redirectURL {
-				return "", "", "", token, rFC6749Error, errors.New("html form post url is wrong")
+				return "", "", "", token, customParameters, rFC6749Error, errors.New("html form post url is wrong")
 			}
 		}
 	}
@@ -88,7 +90,7 @@ func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizatio
 		case "expires_in":
 			expires, err := strconv.Atoi(v)
 			if err != nil {
-				return "", "", "", token, rFC6749Error, err
+				return "", "", "", token, customParameters, rFC6749Error, err
 			}
 			token.Expiry = time.Now().UTC().Add(time.Duration(expires) * time.Second)
 		case "access_token":
@@ -103,6 +105,8 @@ func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizatio
 			rFC6749Error["Description"] = v
 		case "id_token":
 			iDToken = v
+		default:
+			customParameters.Add(k, v)
 		}
 	}
 	return
