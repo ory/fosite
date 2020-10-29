@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-10-28)](#unreleased-2020-10-28)
+- [Unreleased (2020-10-29)](#unreleased-2020-10-29)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -322,12 +322,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.35.1...47f2a31fbed137b58e4866f78ec8b9f591134f98) (2020-10-28)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.35.1...a6bfb921ebc746ba7a1215e32fb42a2c0530a2bf) (2020-10-29)
 
 
 ### Bug Fixes
 
 * Always return non-error response for inactive tokens ([#517](https://github.com/ory/fosite/issues/517)) ([5f2cae3](https://github.com/ory/fosite/commit/5f2cae3eabb83da898e1b5515176e65dda4da862))
+* Modernized JWT stateless introspection ([#519](https://github.com/ory/fosite/issues/519)) ([a6bfb92](https://github.com/ory/fosite/commit/a6bfb921ebc746ba7a1215e32fb42a2c0530a2bf))
 * Reset jti and hash ID token claims on refresh ([#523](https://github.com/ory/fosite/issues/523)) ([ce2de73](https://github.com/ory/fosite/commit/ce2de73ff979b02be32d850c1c695067a35576c7))
 
 
