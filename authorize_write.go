@@ -53,12 +53,14 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 		}
 		redir.RawQuery = q.Encode()
 		sendRedirect(redir.String(), rw)
+		return
 	case ResponseModeFragment:
 		// Implicit grants
 		// The endpoint URI MUST NOT include a fragment component.
 		redir.Fragment = ""
 		URLSetFragment(redir, resp.GetParameters())
 		sendRedirect(redir.String(), rw)
+		return
 	}
 }
 
