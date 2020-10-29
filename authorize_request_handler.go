@@ -65,7 +65,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 	assertion := request.Form.Get("request")
 	if location := request.Form.Get("request_uri"); len(location) > 0 {
 		if !stringslice.Has(oidcClient.GetRequestURIs(), location) {
-			return errors.WithStack(ErrInvalidRequestURI.WithHint(fmt.Sprintf("Request URI \"%s\" is not whitelisted by the OAuth 2.0 Client.", location)))
+			return errors.WithStack(ErrInvalidRequestURI.WithHintf("Request URI \"%s\" is not whitelisted by the OAuth 2.0 Client.", location))
 		}
 
 		hc := f.HTTPClient
@@ -75,7 +75,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 		response, err := hc.Get(location)
 		if err != nil {
-			return errors.WithStack(ErrInvalidRequestURI.WithHintf(`Unable to fetch OpenID Connect request parameters from "request_uri" because %s.`, err.Error()))
+			return errors.WithStack(ErrInvalidRequestURI.WithHint(`Unable to fetch OpenID Connect request parameters from "request_uri".`).WithCause(err).WithDebug(err.Error()))
 		}
 		defer response.Body.Close()
 
@@ -85,7 +85,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 		body, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			return errors.WithStack(ErrInvalidRequestURI.WithHintf(`Unable to fetch OpenID Connect request parameters from "request_uri" because error %s occurred during body parsing.`, err))
+			return errors.WithStack(ErrInvalidRequestURI.WithHint(`Unable to fetch OpenID Connect request parameters from "request_uri" because error occurred during body parsing.`).WithCause(err).WithDebug(err.Error()))
 		}
 
 		assertion = string(body)
@@ -104,19 +104,19 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 		case *jwt.SigningMethodRSA:
 			key, err := f.findClientPublicJWK(oidcClient, t, true)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve RSA signing key from OAuth 2.0 Client because %s.", err))
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithHint("Unable to retrieve RSA signing key from OAuth 2.0 Client.").WithCause(err).WithDebug(err.Error()))
 			}
 			return key, nil
 		case *jwt.SigningMethodECDSA:
 			key, err := f.findClientPublicJWK(oidcClient, t, false)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve ECDSA signing key from OAuth 2.0 Client because %s.", err))
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithHint("Unable to retrieve ECDSA signing key from OAuth 2.0 Client.").WithCause(err).WithDebug(err.Error()))
 			}
 			return key, nil
 		case *jwt.SigningMethodRSAPSS:
 			key, err := f.findClientPublicJWK(oidcClient, t, true)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve RSA signing key from OAuth 2.0 Client because %s.", err))
+				return nil, errors.WithStack(ErrInvalidRequestObject.WithHint("Unable to retrieve RSA signing key from OAuth 2.0 Client.").WithCause(err).WithDebug(err.Error()))
 			}
 			return key, nil
 		default:
@@ -130,7 +130,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 			if e.Inner != nil {
 				return e.Inner
 			}
-			return errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to verify the request object's signature.").WithCause(err).WithDebug(err.Error()))
+			return errors.WithStack(ErrInvalidRequestObject.WithHint("Unable to verify the request object's signature.").WithCause(err).WithDebug(err.Error()))
 		}
 		return err
 	} else if err := token.Claims.Valid(); err != nil {

@@ -33,10 +33,6 @@ type CoreStrategy interface {
 	AuthorizeCodeStrategy
 }
 
-type JWTStrategy interface {
-	ValidateJWT(ctx context.Context, tokenType fosite.TokenType, token string) (requester fosite.Requester, err error)
-}
-
 type AccessTokenStrategy interface {
 	AccessTokenSignature(token string) string
 	GenerateAccessToken(ctx context.Context, requester fosite.Requester) (token string, signature string, err error)

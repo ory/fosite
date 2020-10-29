@@ -173,7 +173,7 @@ func handleRefreshTokenEndpointResponseStorageError(ctx context.Context, rollbac
 	defer func() {
 		if rollback {
 			if rbErr := storage.MaybeRollbackTx(ctx, store); rbErr != nil {
-				err = errors.WithStack(fosite.ErrServerError.WithDebug(rbErr.Error()))
+				err = errors.WithStack(fosite.ErrServerError.WithCause(rbErr).WithDebug(rbErr.Error()))
 			}
 		}
 	}()
@@ -190,5 +190,5 @@ func handleRefreshTokenEndpointResponseStorageError(ctx context.Context, rollbac
 			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))
 	}
 
-	return errors.WithStack(fosite.ErrServerError.WithDebug(storageErr.Error()))
+	return errors.WithStack(fosite.ErrServerError.WithCause(storageErr).WithDebug(storageErr.Error()))
 }
