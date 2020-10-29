@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/ory/fosite"
@@ -293,4 +294,38 @@ func TestIsRedirectURISecureStrict(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, !c.err, fosite.IsRedirectURISecureStrict(uu), "case %d", d)
 	}
+}
+
+func TestURLSetFragment(t *testing.T) {
+	for d, c := range []struct {
+		u string
+		a string
+		f url.Values
+	}{
+		{u: "http://google.com", a: "http://google.com#code=567060896", f: url.Values{"code": []string{"567060896"}}},
+		{u: "http://google.com", a: "http://google.com#code=567060896&scope=read", f: url.Values{"code": []string{"567060896"}, "scope": []string{"read"}}},
+		{u: "http://google.com", a: "http://google.com#code=567060896&scope=read%20mail", f: url.Values{"code": []string{"567060896j"}, "scope": []string{"read mail"}}},
+		{u: "http://google.com", a: "http://google.com#code=567060896&scope=read+write", f: url.Values{"code": []string{"567060896"}, "scope": []string{"read+write"}}},
+		{u: "http://google.com", a: "http://google.com#code=567060896&scope=api:*", f: url.Values{"code": []string{"567060896"}, "scope": []string{"api:*"}}},
+		{u: "https://google.com?foo=bar", a: "https://google.com?foo=bar#code=567060896", f: url.Values{"code": []string{"567060896"}}},
+		{u: "http://localhost?foo=bar&baz=foo", a: "http://localhost?foo=bar&baz=foo#code=567060896", f: url.Values{"code": []string{"567060896"}}},
+	} {
+		uu, err := url.Parse(c.u)
+		require.NoError(t, err)
+		fosite.URLSetFragment(uu, c.f)
+		tURL, err := url.Parse(uu.String())
+		require.NoError(t, err)
+		r := ParseURLFragment(tURL.Fragment)
+		assert.Equal(t, c.f.Get("code"), r.Get("code"), "case %d", d)
+		assert.Equal(t, c.f.Get("scope"), r.Get("scope"), "case %d", d)
+	}
+}
+func ParseURLFragment(fragment string) url.Values {
+	r := url.Values{}
+	kvs := strings.Split(fragment, "&")
+	for _, kv := range kvs {
+		kva := strings.Split(kv, "=")
+		r.Add(kva[0], kva[1])
+	}
+	return r
 }

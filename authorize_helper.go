@@ -22,6 +22,7 @@
 package fosite
 
 import (
+	"fmt"
 	"html/template"
 	"io"
 	"net/url"
@@ -206,4 +207,20 @@ func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, r
 		RedirURL:   redirectURL,
 		Parameters: parameters,
 	})
+}
+func URLSetFragment(source *url.URL, fragment url.Values) {
+	var f string
+	for k, v := range fragment {
+		for _, vv := range v {
+			if len(f) != 0 {
+				f += fmt.Sprintf("&%s=%s", k, vv)
+			} else {
+				f += fmt.Sprintf("%s=%s", k, vv)
+			}
+		}
+	}
+	//f=fragment.Encode()
+	//f=plusMatch.ReplaceAllString(f," ")
+	//f=encodedPlusMatch.ReplaceAllString(f,"+")
+	source.Fragment = f
 }

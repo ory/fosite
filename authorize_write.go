@@ -23,12 +23,6 @@ package fosite
 
 import (
 	"net/http"
-	"regexp"
-)
-
-var (
-	// scopeMatch = regexp.MustCompile("scope=[^\\&]+.*$")
-	plusMatch = regexp.MustCompile("\\+")
 )
 
 func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
@@ -63,12 +57,8 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 		// Implicit grants
 		// The endpoint URI MUST NOT include a fragment component.
 		redir.Fragment = ""
-
-		u := redir.String()
-		fr := resp.GetParameters()
-		u = u + "#" + fr.Encode()
-		u = plusMatch.ReplaceAllString(u, "%20")
-		sendRedirect(u, rw)
+		URLSetFragment(redir, resp.GetParameters())
+		sendRedirect(redir.String(), rw)
 	}
 }
 
