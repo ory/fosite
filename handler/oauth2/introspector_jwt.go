@@ -23,38 +23,84 @@ package oauth2
 
 import (
 	"context"
+	"time"
 
-	"github.com/pkg/errors"
+	jwtx "github.com/dgrijalva/jwt-go"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/token/jwt"
 )
 
-type JWTAccessTokenStrategy interface {
-	AccessTokenStrategy
-	JWTStrategy
-}
-
 type StatelessJWTValidator struct {
-	JWTAccessTokenStrategy
+	jwt.JWTStrategy
 	ScopeStrategy fosite.ScopeStrategy
 }
 
+// AccessTokenJWTToRequest tries to reconstruct fosite.Request from a JWT.
+func AccessTokenJWTToRequest(token *jwtx.Token) fosite.Requester {
+	mapClaims := token.Claims.(jwtx.MapClaims)
+	claims := jwt.JWTClaims{}
+	claims.FromMapClaims(mapClaims)
+
+	requestedAt := claims.IssuedAt
+	requestedAtClaim, ok := mapClaims["rat"]
+	if ok {
+		switch requestedAtClaim.(type) {
+		case float64:
+			requestedAt = time.Unix(int64(requestedAtClaim.(float64)), 0).UTC()
+		case int64:
+			requestedAt = time.Unix(requestedAtClaim.(int64), 0).UTC()
+		}
+	}
+
+	clientId := ""
+	clientIdClaim, ok := mapClaims["client_id"]
+	if ok {
+		switch clientIdClaim.(type) {
+		case string:
+			clientId = clientIdClaim.(string)
+		}
+	}
+
+	return &fosite.Request{
+		RequestedAt: requestedAt,
+		Client: &fosite.DefaultClient{
+			ID: clientId,
+		},
+		// We do not really know which scopes were requested, so we set them to granted.
+		RequestedScope: claims.Scope,
+		GrantedScope:   claims.Scope,
+		Session: &JWTSession{
+			JWTClaims: &claims,
+			JWTHeader: &jwt.Headers{
+				Extra: token.Header,
+			},
+			ExpiresAt: map[fosite.TokenType]time.Time{
+				fosite.AccessToken: claims.ExpiresAt,
+			},
+			Subject: claims.Subject,
+		},
+		// We do not really know which audiences were requested, so we set them to granted.
+		RequestedAudience: claims.Audience,
+		GrantedAudience:   claims.Audience,
+	}
+}
+
 func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token string, tokenUse fosite.TokenUse, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenUse, error) {
-	or, err := v.JWTAccessTokenStrategy.ValidateJWT(ctx, fosite.AccessToken, token)
+	t, err := validate(ctx, v.JWTStrategy, token)
 	if err != nil {
 		return "", err
 	}
 
-	for _, scope := range scopes {
-		if scope == "" {
-			continue
-		}
+	// TODO: From here we assume it is an access token, but how do we know it is really and that is not an ID token?
 
-		if !v.ScopeStrategy(or.GetGrantedScopes(), scope) {
-			return "", errors.WithStack(fosite.ErrInvalidScope)
-		}
+	requester := AccessTokenJWTToRequest(t)
+
+	if err := matchScopes(v.ScopeStrategy, requester.GetGrantedScopes(), scopes); err != nil {
+		return fosite.AccessToken, err
 	}
 
-	accessRequest.Merge(or)
+	accessRequest.Merge(requester)
+
 	return fosite.AccessToken, nil
 }
