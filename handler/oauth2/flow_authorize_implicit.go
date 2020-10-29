@@ -52,7 +52,7 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 	if !ar.GetResponseTypes().ExactOne("token") {
 		return nil
 	}
-	if ar.GetResponseMode() == fosite.ResponseModeNone {
+	if ar.GetResponseMode() == fosite.ResponseModeDefault {
 		ar.SetResponseMode(fosite.ResponseModeFragment)
 	}
 	// Disabled because this is already handled at the authorize_request_handler

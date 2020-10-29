@@ -50,7 +50,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			setup: func() {
 				redir, _ := url.Parse("https://foobar.com/?foo=bar")
 				ar.EXPECT().GetRedirectURI().Return(redir)
-				ar.EXPECT().GetResponseMode().Return(ResponseModeNone)
+				ar.EXPECT().GetResponseMode().Return(ResponseModeDefault)
 				resp.EXPECT().GetParameters().Return(url.Values{})
 				resp.EXPECT().GetHeader().Return(http.Header{})
 

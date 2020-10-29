@@ -51,7 +51,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return nil
 	}
 
-	if ar.GetResponseMode() == fosite.ResponseModeNone {
+	if ar.GetResponseMode() == fosite.ResponseModeDefault {
 		ar.SetResponseMode(fosite.ResponseModeFragment)
 	}
 

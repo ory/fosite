@@ -107,7 +107,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeNone).Times(2)
+				req.EXPECT().GetResponseMode().Return(ResponseModeDefault).Times(2)
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},

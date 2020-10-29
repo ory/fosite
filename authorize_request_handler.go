@@ -214,8 +214,8 @@ func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest
 	responseMode := r.Form.Get("response_mode")
 
 	switch responseMode {
-	case string(ResponseModeNone):
-		request.ResponseMode = ResponseModeNone
+	case string(ResponseModeDefault):
+		request.ResponseMode = ResponseModeDefault
 	case string(ResponseModeFragment):
 		request.ResponseMode = ResponseModeFragment
 	case string(ResponseModeQuery):

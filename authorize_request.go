@@ -28,7 +28,7 @@ import (
 type ResponseModeType string
 
 const (
-	ResponseModeNone     = ResponseModeType("")
+	ResponseModeDefault  = ResponseModeType("")
 	ResponseModePost     = ResponseModeType("form_post")
 	ResponseModeQuery    = ResponseModeType("query")
 	ResponseModeFragment = ResponseModeType("fragment")
@@ -51,7 +51,7 @@ func NewAuthorizeRequest() *AuthorizeRequest {
 		RedirectURI:          &url.URL{},
 		HandledResponseTypes: Arguments{},
 		Request:              *NewRequest(),
-		ResponseMode:         ResponseModeNone,
+		ResponseMode:         ResponseModeDefault,
 	}
 }
 
