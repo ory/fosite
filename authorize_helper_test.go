@@ -276,6 +276,13 @@ func TestWriteAuthorizeFormPostResponse(t *testing.T) {
 			},
 		},
 		{
+			parameters: url.Values{"code": {"lshr75*ns-39f+ur"}, "state": {"9a:* <&)"}},
+			check: func(code string, state string, customParams url.Values, d int) {
+				assert.Equal(t, "lshr75*ns-39f+ur", code, "case %d", d)
+				assert.Equal(t, "9a:* <&)", state, "case %d", d)
+			},
+		},
+		{
 			parameters: url.Values{"code": {"1234"}, "custom": {"test2", "test3"}},
 			check: func(code string, state string, customParams url.Values, d int) {
 				assert.Equal(t, "1234", code, "case %d", d)
