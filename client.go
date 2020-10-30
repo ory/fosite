@@ -80,6 +80,13 @@ type OpenIDConnectClient interface {
 	GetTokenEndpointAuthSigningAlgorithm() string
 }
 
+// ResponseModeClient represents a client capable of handling response_mode
+type ResponseModeClient interface {
+
+	// GetResponseMode returns the response modes that client is allowed to send
+	GetResponseMode() []ResponseModeType
+}
+
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
 	ID            string   `json:"id"`
@@ -100,6 +107,11 @@ type DefaultOpenIDConnectClient struct {
 	RequestURIs                       []string            `json:"request_uris"`
 	RequestObjectSigningAlgorithm     string              `json:"request_object_signing_alg"`
 	TokenEndpointAuthSigningAlgorithm string              `json:"token_endpoint_auth_signing_alg"`
+}
+
+type DefaultResponseModeClient struct {
+	*DefaultClient
+	ResponseMode []ResponseModeType `json:"response_mode"`
 }
 
 func (c *DefaultClient) GetID() string {
@@ -176,4 +188,8 @@ func (c *DefaultOpenIDConnectClient) GetTokenEndpointAuthMethod() string {
 
 func (c *DefaultOpenIDConnectClient) GetRequestURIs() []string {
 	return c.RequestURIs
+}
+
+func (c *DefaultResponseModeClient) GetResponseMode() []ResponseModeType {
+	return c.ResponseMode
 }

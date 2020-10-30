@@ -210,7 +210,7 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	request.ResponseTypes = responseTypes
 	return nil
 }
-func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest) error {
+func (f *Fosite) ParseResponseMode(r *http.Request, request *AuthorizeRequest) error {
 	responseMode := r.Form.Get("response_mode")
 
 	switch responseMode {
@@ -223,7 +223,26 @@ func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest
 	case string(ResponseModePost):
 		request.ResponseMode = ResponseModePost
 	default:
-		return errors.WithStack(ErrUnsupportedResponseType.WithHintf("Request with unsupported response_mode \"%s\".", responseMode))
+		return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("Request with unsupported response_mode \"%s\".", responseMode))
+	}
+	return nil
+}
+func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest) error {
+	if request.ResponseMode != ResponseModeDefault {
+		var found bool
+		responseModeClient, ok := request.GetClient().(ResponseModeClient)
+		if !ok {
+			return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("The request has response_mode \"%s\". set but registered OAuth 2.0 client doesn't support response_mode", r.Form.Get("response_mode")))
+		}
+		for _, t := range responseModeClient.GetResponseMode() {
+			if request.ResponseMode == t {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("The client is not allowed to request response_mode \"%s\".", r.Form.Get("response_mode")))
+		}
 	}
 	return nil
 }
@@ -245,7 +264,7 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	state := request.Form.Get("state")
 	request.State = state
 
-	if err := f.validateResponseMode(r, request); err != nil {
+	if err := f.ParseResponseMode(r, request); err != nil {
 		return request, err
 	}
 
@@ -254,6 +273,10 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 		return request, errors.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithCause(err).WithDebug(err.Error()))
 	}
 	request.Client = client
+
+	if err := f.validateResponseMode(r, request); err != nil {
+		return request, err
+	}
 
 	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(request); err != nil {
 		return request, err

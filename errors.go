@@ -71,6 +71,11 @@ var (
 		Description: "The authorization server does not support obtaining a token using this method",
 		Code:        http.StatusBadRequest,
 	}
+	ErrUnsupportedResponseMode = &RFC6749Error{
+		Name:        errUnsupportedResponseModeName,
+		Description: "The authorization server does not support obtaining response using this response mode",
+		Code:        http.StatusBadRequest,
+	}
 	ErrInvalidScope = &RFC6749Error{
 		Name:        errInvalidScopeName,
 		Description: "The requested scope is invalid, unknown, or malformed",
@@ -222,6 +227,7 @@ const (
 	errUnauthorizedClientName      = "unauthorized_client"
 	errAccessDeniedName            = "access_denied"
 	errUnsupportedResponseTypeName = "unsupported_response_type"
+	errUnsupportedResponseModeName = "unsupported_response_mode"
 	errInvalidScopeName            = "invalid_scope"
 	errServerErrorName             = "server_error"
 	errTemporarilyUnavailableName  = "temporarily_unavailable"
