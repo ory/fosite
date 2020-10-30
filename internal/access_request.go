@@ -62,20 +62,6 @@ func (mr *MockAccessRequesterMockRecorder) GetClient() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClient", reflect.TypeOf((*MockAccessRequester)(nil).GetClient))
 }
 
-// GetDelegatingClient mocks base method
-func (m *MockAccessRequester) GetDelegatingClient() fosite.TokenExchangeClient {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDelegatingClient")
-	ret0, _ := ret[0].(fosite.TokenExchangeClient)
-	return ret0
-}
-
-// GetDelegatingClient indicates an expected call of GetDelegatingClient
-func (mr *MockAccessRequesterMockRecorder) GetDelegatingClient() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDelegatingClient", reflect.TypeOf((*MockAccessRequester)(nil).GetDelegatingClient))
-}
-
 // GetGrantTypes mocks base method
 func (m *MockAccessRequester) GetGrantTypes() fosite.Arguments {
 	m.ctrl.T.Helper()
@@ -202,6 +188,20 @@ func (mr *MockAccessRequesterMockRecorder) GetSession() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSession", reflect.TypeOf((*MockAccessRequester)(nil).GetSession))
 }
 
+// GetSubjectTokenClient mocks base method
+func (m *MockAccessRequester) GetSubjectTokenClient() fosite.TokenExchangeClient {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSubjectTokenClient")
+	ret0, _ := ret[0].(fosite.TokenExchangeClient)
+	return ret0
+}
+
+// GetSubjectTokenClient indicates an expected call of GetSubjectTokenClient
+func (mr *MockAccessRequesterMockRecorder) GetSubjectTokenClient() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubjectTokenClient", reflect.TypeOf((*MockAccessRequester)(nil).GetSubjectTokenClient))
+}
+
 // GrantAudience mocks base method
 func (m *MockAccessRequester) GrantAudience(arg0 string) {
 	m.ctrl.T.Helper()
@@ -250,18 +250,6 @@ func (m *MockAccessRequester) Sanitize(arg0 []string) fosite.Requester {
 func (mr *MockAccessRequesterMockRecorder) Sanitize(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sanitize", reflect.TypeOf((*MockAccessRequester)(nil).Sanitize), arg0)
-}
-
-// SetDelegatingClient mocks base method
-func (m *MockAccessRequester) SetDelegatingClient(arg0 fosite.TokenExchangeClient) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetDelegatingClient", arg0)
-}
-
-// SetDelegatingClient indicates an expected call of SetDelegatingClient
-func (mr *MockAccessRequesterMockRecorder) SetDelegatingClient(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDelegatingClient", reflect.TypeOf((*MockAccessRequester)(nil).SetDelegatingClient), arg0)
 }
 
 // SetID mocks base method

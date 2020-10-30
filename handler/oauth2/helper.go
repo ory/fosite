@@ -45,12 +45,12 @@ func (h *HandleHelper) IssueAccessToken(ctx context.Context, requester fosite.Ac
 
 	responder.SetAccessToken(token)
 	responder.SetTokenType("bearer")
-	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, h.AccessTokenLifespan, time.Now().UTC()))
+	responder.SetExpiresIn(GetExpiresIn(requester, fosite.AccessToken, h.AccessTokenLifespan, time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
 	return nil
 }
 
-func getExpiresIn(r fosite.Requester, key fosite.TokenType, defaultLifespan time.Duration, now time.Time) time.Duration {
+func GetExpiresIn(r fosite.Requester, key fosite.TokenType, defaultLifespan time.Duration, now time.Time) time.Duration {
 	if r.GetSession().GetExpiresAt(key).IsZero() {
 		return defaultLifespan
 	}

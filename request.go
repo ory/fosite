@@ -30,16 +30,16 @@ import (
 
 // Request is an implementation of Requester
 type Request struct {
-	ID                string              `json:"id" gorethink:"id"`
-	RequestedAt       time.Time           `json:"requestedAt" gorethink:"requestedAt"`
-	Client            Client              `json:"client" gorethink:"client"`
-	RequestedScope    Arguments           `json:"scopes" gorethink:"scopes"`
-	GrantedScope      Arguments           `json:"grantedScopes" gorethink:"grantedScopes"`
-	Form              url.Values          `json:"form" gorethink:"form"`
-	Session           Session             `json:"session" gorethink:"session"`
-	RequestedAudience Arguments           `json:"requestedAudience"`
-	GrantedAudience   Arguments           `json:"grantedAudience"`
-	DelegatingClient  TokenExchangeClient `json:"delegatingClient" gorethink:"delegatingClient"`
+	ID                 string              `json:"id" gorethink:"id"`
+	RequestedAt        time.Time           `json:"requestedAt" gorethink:"requestedAt"`
+	Client             Client              `json:"client" gorethink:"client"`
+	RequestedScope     Arguments           `json:"scopes" gorethink:"scopes"`
+	GrantedScope       Arguments           `json:"grantedScopes" gorethink:"grantedScopes"`
+	Form               url.Values          `json:"form" gorethink:"form"`
+	Session            Session             `json:"session" gorethink:"session"`
+	RequestedAudience  Arguments           `json:"requestedAudience"`
+	GrantedAudience    Arguments           `json:"grantedAudience"`
+	SubjectTokenClient TokenExchangeClient `json:"subjectTokenClient" gorethink:"subjectTokenClient"`
 }
 
 func NewRequest() *Request {
@@ -174,7 +174,7 @@ func (a *Request) Merge(request Requester) {
 	for k, v := range request.GetRequestForm() {
 		a.Form[k] = v
 	}
-	a.DelegatingClient = request.GetDelegatingClient()
+	a.SubjectTokenClient = request.GetSubjectTokenClient()
 }
 
 func (a *Request) Sanitize(allowedParameters []string) Requester {
@@ -196,6 +196,6 @@ func (a *Request) Sanitize(allowedParameters []string) Requester {
 	return b
 }
 
-func (a *Request) GetDelegatingClient() (client TokenExchangeClient) {
-	return a.DelegatingClient
+func (a *Request) GetSubjectTokenClient() (client TokenExchangeClient) {
+	return a.SubjectTokenClient
 }

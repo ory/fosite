@@ -230,7 +230,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 					},
 				},
 				{
-					description: "should pass with scopes from delegating client",
+					description: "should pass with the scopes from subject token client",
 					setup: func() {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
@@ -238,27 +238,27 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 							GrantTypes: fosite.Arguments{"refresh_token"},
 							Scopes:     []string{"foo", "offline"},
 						}
-						delegatingClient := &fosite.DefaultClient{
+						subjectTokenClient := &fosite.DefaultClient{
 							ID:         "bar",
 							GrantTypes: fosite.Arguments{"refresh_token"},
 							Scopes:     []string{"bar"},
 							MayAct:     []string{"foo"},
 						}
-						areq.DelegatingClient = delegatingClient
-						store.Clients[delegatingClient.ID] = delegatingClient
+						areq.SubjectTokenClient = subjectTokenClient
+						store.Clients[subjectTokenClient.ID] = subjectTokenClient
 
 						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
 						require.NoError(t, err)
 
 						areq.Form.Add("refresh_token", token)
 						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
-							Client:           areq.Client,
-							GrantedScope:     fosite.Arguments{"foo", "bar", "offline"},
-							RequestedScope:   fosite.Arguments{"foo", "bar", "offline"},
-							Session:          sess,
-							Form:             url.Values{"foo": []string{"bar"}},
-							RequestedAt:      time.Now().UTC().Add(-time.Hour).Round(time.Hour),
-							DelegatingClient: delegatingClient,
+							Client:             areq.Client,
+							GrantedScope:       fosite.Arguments{"foo", "bar", "offline"},
+							RequestedScope:     fosite.Arguments{"foo", "bar", "offline"},
+							Session:            sess,
+							Form:               url.Values{"foo": []string{"bar"}},
+							RequestedAt:        time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+							SubjectTokenClient: subjectTokenClient,
 						})
 						require.NoError(t, err)
 					},
@@ -273,7 +273,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 					},
 				},
 				{
-					description: "should fail because delegating client removed may_act for client",
+					description: "should fail because the subject token client removed may_act for client",
 					setup: func() {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
@@ -281,33 +281,33 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 							GrantTypes: fosite.Arguments{"refresh_token"},
 							Scopes:     []string{"foo", "offline"},
 						}
-						originalDelegatingClient := &fosite.DefaultClient{
+						subjectTokenClient := &fosite.DefaultClient{
 							ID:         "bar",
 							GrantTypes: fosite.Arguments{"refresh_token"},
 							Scopes:     []string{"bar"},
 							MayAct:     []string{"foo"},
 						}
-						areq.DelegatingClient = originalDelegatingClient
+						areq.SubjectTokenClient = subjectTokenClient
 
-						updatedDelegatingClient := &fosite.DefaultClient{
+						updatedSubjectTokenClient := &fosite.DefaultClient{
 							ID:         "bar",
 							GrantTypes: fosite.Arguments{"refresh_token"},
 							Scopes:     []string{"bar"},
 						}
-						store.Clients[updatedDelegatingClient.ID] = updatedDelegatingClient
+						store.Clients[updatedSubjectTokenClient.ID] = updatedSubjectTokenClient
 
 						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
 						require.NoError(t, err)
 
 						areq.Form.Add("refresh_token", token)
 						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
-							Client:           areq.Client,
-							GrantedScope:     fosite.Arguments{"foo", "bar", "offline"},
-							RequestedScope:   fosite.Arguments{"foo", "bar", "offline"},
-							Session:          sess,
-							Form:             url.Values{"foo": []string{"bar"}},
-							RequestedAt:      time.Now().UTC().Add(-time.Hour).Round(time.Hour),
-							DelegatingClient: originalDelegatingClient,
+							Client:             areq.Client,
+							GrantedScope:       fosite.Arguments{"foo", "bar", "offline"},
+							RequestedScope:     fosite.Arguments{"foo", "bar", "offline"},
+							Session:            sess,
+							Form:               url.Values{"foo": []string{"bar"}},
+							RequestedAt:        time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+							SubjectTokenClient: subjectTokenClient,
 						})
 						require.NoError(t, err)
 					},

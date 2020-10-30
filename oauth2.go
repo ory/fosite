@@ -237,8 +237,8 @@ type Requester interface {
 	// Sanitize returns a sanitized clone of the request which can be used for storage.
 	Sanitize(allowedParameters []string) Requester
 
-	// GetDelegatingClient returns the client that provided the original token (subject token) in a token exchange flow.
-	GetDelegatingClient() (client TokenExchangeClient)
+	// GetSubjectTokenClient returns the client from the subject token in a token exchange flow.
+	GetSubjectTokenClient() (client TokenExchangeClient)
 }
 
 // AccessRequester is a token endpoint's request context.
@@ -246,9 +246,13 @@ type AccessRequester interface {
 	// GetGrantType returns the requests grant type.
 	GetGrantTypes() (grantTypes Arguments)
 
-	SetDelegatingClient(client TokenExchangeClient)
-
 	Requester
+}
+
+type TokenExchangeAccessRequester interface {
+	SetSubjectTokenClient(client TokenExchangeClient)
+
+	AccessRequester
 }
 
 // AuthorizeRequester is an authorize endpoint's request context.

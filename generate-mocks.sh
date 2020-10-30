@@ -27,5 +27,6 @@ mockgen -package internal -destination internal/access_request.go github.com/ory
 mockgen -package internal -destination internal/access_response.go github.com/ory/fosite AccessResponder
 mockgen -package internal -destination internal/authorize_request.go github.com/ory/fosite AuthorizeRequester
 mockgen -package internal -destination internal/authorize_response.go github.com/ory/fosite AuthorizeResponder
+mockgen -package internal -destination internal/token_exchange_request.go github.com/ory/fosite TokenExchangeAccessRequester
 
 goimports -w internal/

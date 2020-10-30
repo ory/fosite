@@ -19,10 +19,11 @@
  *
  */
 
-package oauth2
+package rfc8693
 
 import (
 	"context"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/storage"
 	"time"
 
@@ -34,16 +35,16 @@ import (
 // TokenExchangeGrantHandler is a response handler for the Token Exchange grant
 // as defined in https://tools.ietf.org/html/rfc8693
 type TokenExchangeGrantHandler struct {
-	AccessTokenStrategy      AccessTokenStrategy
-	AccessTokenStorage       AccessTokenStorage
+	AccessTokenStrategy      oauth2.AccessTokenStrategy
+	AccessTokenStorage       oauth2.AccessTokenStorage
 	AccessTokenLifespan      time.Duration
 	ScopeStrategy            fosite.ScopeStrategy
 	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
-	RefreshTokenStrategy     RefreshTokenStrategy
+	RefreshTokenStrategy     oauth2.RefreshTokenStrategy
 	RefreshTokenLifespan     time.Duration
 	RefreshTokenScopes       []string
-	CoreStrategy
-	CoreStorage
+	oauth2.CoreStrategy
+	oauth2.CoreStorage
 	Store fosite.Storage
 }
 
@@ -98,30 +99,36 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 		return err
 	}
 
-	var delegatingClientId string
-	// reload client from storage to ensure that may_act is up to date in case of eventual revocation
-	if or.GetDelegatingClient() == nil {
-		// first exchange request has no delegating client set
-		delegatingClientId = or.GetClient().GetID()
+	var subjectTokenClientId string
+	if or.GetSubjectTokenClient() == nil {
+		// first exchange request has no subjects token client set
+		subjectTokenClientId = or.GetClient().GetID()
 	} else {
-		delegatingClientId = or.GetDelegatingClient().GetID()
+		subjectTokenClientId = or.GetSubjectTokenClient().GetID()
 	}
 
-	dClient, err := c.Store.GetClient(ctx, delegatingClientId)
+	// reload client from storage to ensure that may_act is up to date in case of eventual revocation
+	subjectTokenClient, err := c.Store.GetClient(ctx, subjectTokenClientId)
 	if err != nil {
-		return errors.WithStack(fosite.ErrInvalidClient.WithHint("The delegating OAuth2 Client does not exist."))
+		return errors.WithStack(fosite.ErrInvalidClient.WithHint("The subjects token OAuth2 Client does not exist."))
 	}
 
-	delegatingClient, ok := dClient.(fosite.TokenExchangeClient)
+	delegatingClient, ok := subjectTokenClient.(fosite.TokenExchangeClient)
 	if !ok {
 		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to perform a token exchange for the given subject token."))
 	}
 
-	// check if delegating client allows the current client to perform an exchange on its tokens
+	// check if the subjects token client allows the current client to perform an exchange on its tokens
 	if !delegatingClient.GetMayAct().HasOneOf(client.GetID()) {
 		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to perform a token exchange for the given subject token."))
 	}
-	request.SetDelegatingClient(delegatingClient)
+
+	tokenExchangeRequest, ok := request.(fosite.TokenExchangeAccessRequester)
+	if !ok {
+		return errors.WithStack(fosite.ErrInvalidRequestObject)
+	}
+
+	tokenExchangeRequest.SetSubjectTokenClient(delegatingClient)
 
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) &&
@@ -180,7 +187,7 @@ func (c *TokenExchangeGrantHandler) PopulateTokenEndpointResponse(ctx context.Co
 
 	response.SetAccessToken(token)
 	response.SetTokenType("bearer")
-	response.SetExpiresIn(getExpiresIn(request, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC()))
+	response.SetExpiresIn(oauth2.GetExpiresIn(request, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC()))
 	response.SetScopes(request.GetGrantedScopes())
 	response.SetIssuedTokenType("urn:ietf:params:oauth:token-type:access_token")
 

@@ -19,7 +19,7 @@
  *
  */
 
-package oauth2
+package rfc8693
 
 import (
 	"fmt"
@@ -42,7 +42,7 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockClientCredentialsGrantStorage(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
-	areq := internal.NewMockAccessRequester(ctrl)
+	areq := internal.NewMockTokenExchangeAccessRequester(ctrl)
 	delegatedAreq := internal.NewMockAccessRequester(ctrl)
 	coreStore := internal.NewMockCoreStorage(ctrl)
 	coreChgen := internal.NewMockCoreStrategy(ctrl)
@@ -114,9 +114,9 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 				coreStore.EXPECT().GetAccessTokenSession(nil, "1234", nil).Return(delegatedAreq, nil)
 				coreChgen.EXPECT().ValidateAccessToken(nil, delegatedAreq, "ABCD.1234").Return(nil)
 
-				delegatingClient := &fosite.DefaultClient{}
-				delegatedAreq.EXPECT().GetDelegatingClient().Times(2).Return(delegatingClient)
-				storage.EXPECT().GetClient(nil, "").Return(delegatingClient, nil)
+				subjectTokenClient := &fosite.DefaultClient{}
+				delegatedAreq.EXPECT().GetSubjectTokenClient().Times(2).Return(subjectTokenClient)
+				storage.EXPECT().GetClient(nil, "").Return(subjectTokenClient, nil)
 			},
 		},
 		{
@@ -137,13 +137,13 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 				coreStore.EXPECT().GetAccessTokenSession(nil, "1234", nil).Return(delegatedAreq, nil)
 				coreChgen.EXPECT().ValidateAccessToken(nil, delegatedAreq, "ABCD.1234").Return(nil)
 
-				delegatingClient := &fosite.DefaultClient{
+				subjectTokenClient := &fosite.DefaultClient{
 					MayAct: []string{"exchange-client"},
 				}
-				delegatedAreq.EXPECT().GetDelegatingClient().Return(nil)
-				delegatedAreq.EXPECT().GetClient().Return(delegatingClient)
-				storage.EXPECT().GetClient(nil, "").Return(delegatingClient, nil)
-				areq.EXPECT().SetDelegatingClient(delegatingClient)
+				delegatedAreq.EXPECT().GetSubjectTokenClient().Return(nil)
+				delegatedAreq.EXPECT().GetClient().Return(subjectTokenClient)
+				storage.EXPECT().GetClient(nil, "").Return(subjectTokenClient, nil)
+				areq.EXPECT().SetSubjectTokenClient(subjectTokenClient)
 
 				areq.EXPECT().GetRequestedScopes().Return([]string{})
 				areq.EXPECT().GetRequestedAudience().Return([]string{"https://www.ory.sh/not-api"})
@@ -162,12 +162,12 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 				coreStore.EXPECT().GetAccessTokenSession(nil, "1234", nil).Return(delegatedAreq, nil)
 				coreChgen.EXPECT().ValidateAccessToken(nil, delegatedAreq, "ABCD.1234").Return(nil)
 
-				delegatingClient := &fosite.DefaultClient{
+				subjectTokenClient := &fosite.DefaultClient{
 					MayAct: []string{"exchange-client"},
 				}
-				delegatedAreq.EXPECT().GetDelegatingClient().Times(2).Return(delegatingClient)
-				storage.EXPECT().GetClient(nil, "").Return(delegatingClient, nil)
-				areq.EXPECT().SetDelegatingClient(delegatingClient)
+				delegatedAreq.EXPECT().GetSubjectTokenClient().Times(2).Return(subjectTokenClient)
+				storage.EXPECT().GetClient(nil, "").Return(subjectTokenClient, nil)
+				areq.EXPECT().SetSubjectTokenClient(subjectTokenClient)
 
 				delegatedAreq.EXPECT().GetGrantedScopes()
 
@@ -194,12 +194,12 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 				coreStore.EXPECT().GetAccessTokenSession(nil, "1234", session).Return(delegatedAreq, nil)
 				coreChgen.EXPECT().ValidateAccessToken(nil, delegatedAreq, "ABCD.1234").Return(nil)
 
-				delegatingClient := &fosite.DefaultClient{
+				subjectTokenClient := &fosite.DefaultClient{
 					MayAct: []string{"exchange-client"},
 				}
-				delegatedAreq.EXPECT().GetDelegatingClient().Times(2).Return(delegatingClient)
-				storage.EXPECT().GetClient(nil, "").Return(delegatingClient, nil)
-				areq.EXPECT().SetDelegatingClient(delegatingClient)
+				delegatedAreq.EXPECT().GetSubjectTokenClient().Times(2).Return(subjectTokenClient)
+				storage.EXPECT().GetClient(nil, "").Return(subjectTokenClient, nil)
+				areq.EXPECT().SetSubjectTokenClient(subjectTokenClient)
 
 				areq.EXPECT().GetRequestedScopes().Return([]string{"foo", "bar", "baz.bar"})
 				areq.EXPECT().GetRequestedAudience().Return([]string{})

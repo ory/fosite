@@ -27,6 +27,7 @@ package compose
 import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/rfc8693"
 )
 
 // OAuth2AuthorizeExplicitFactory creates an OAuth2 authorize code grant ("authorize explicit flow") handler and registers
@@ -93,7 +94,7 @@ func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strateg
 // OAuth2TokenExchangeFactory creates an OAuth2 token exchange handler and registers
 // an access token, refresh token and authorize code validator.
 func OAuth2TokenExchangeFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
-	return &oauth2.TokenExchangeGrantHandler{
+	return &rfc8693.TokenExchangeGrantHandler{
 		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
 		AccessTokenStorage:       storage.(oauth2.AccessTokenStorage),
 		AccessTokenLifespan:      config.GetAccessTokenLifespan(),

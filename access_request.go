@@ -45,6 +45,6 @@ func (a *AccessRequest) GetGrantTypes() Arguments {
 	return a.GrantTypes
 }
 
-func (a *AccessRequest) SetDelegatingClient(client TokenExchangeClient) {
-	a.DelegatingClient = client
+func (a *AccessRequest) SetSubjectTokenClient(client TokenExchangeClient) {
+	a.SubjectTokenClient = client
 }

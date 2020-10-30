@@ -41,7 +41,7 @@ func TestGetExpiresIn(t *testing.T) {
 			fosite.AccessToken: now.Add(time.Hour),
 		},
 	})
-	assert.Equal(t, time.Hour, getExpiresIn(r, fosite.AccessToken, time.Millisecond, now))
+	assert.Equal(t, time.Hour, GetExpiresIn(r, fosite.AccessToken, time.Millisecond, now))
 }
 
 func TestIssueAccessToken(t *testing.T) {
