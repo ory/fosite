@@ -17,6 +17,9 @@
  * @copyright 	2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
  * @license 	Apache-2.0
  *
+ * Changes:
+ *  - 2020 Olaf Märker <Olaf.Maerker@bosch.io>
+ *
  */
 
 package compose
@@ -110,6 +113,7 @@ func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *
 		OAuth2ClientCredentialsGrantFactory,
 		OAuth2RefreshTokenGrantFactory,
 		OAuth2ResourceOwnerPasswordCredentialsFactory,
+		OAuth2TokenExchangeFactory,
 
 		OpenIDConnectExplicitFactory,
 		OpenIDConnectImplicitFactory,

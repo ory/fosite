@@ -229,6 +229,90 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
 					},
 				},
+				{
+					description: "should pass with scopes from delegating client",
+					setup: func() {
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClient{
+							ID:         "foo",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"foo", "offline"},
+						}
+						delegatingClient := &fosite.DefaultClient{
+							ID:         "bar",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"bar"},
+							MayAct:     []string{"foo"},
+						}
+						areq.DelegatingClient = delegatingClient
+						store.Clients[delegatingClient.ID] = delegatingClient
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+							Client:           areq.Client,
+							GrantedScope:     fosite.Arguments{"foo", "bar", "offline"},
+							RequestedScope:   fosite.Arguments{"foo", "bar", "offline"},
+							Session:          sess,
+							Form:             url.Values{"foo": []string{"bar"}},
+							RequestedAt:      time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+							DelegatingClient: delegatingClient,
+						})
+						require.NoError(t, err)
+					},
+					expect: func(t *testing.T) {
+						assert.NotEqual(t, sess, areq.Session)
+						assert.NotEqual(t, time.Now().UTC().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
+						assert.Equal(t, fosite.Arguments{"foo", "bar", "offline"}, areq.GrantedScope)
+						assert.Equal(t, fosite.Arguments{"foo", "bar", "offline"}, areq.RequestedScope)
+						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
+						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
+						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
+					},
+				},
+				{
+					description: "should fail because delegating client removed may_act for client",
+					setup: func() {
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClient{
+							ID:         "foo",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"foo", "offline"},
+						}
+						originalDelegatingClient := &fosite.DefaultClient{
+							ID:         "bar",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"bar"},
+							MayAct:     []string{"foo"},
+						}
+						areq.DelegatingClient = originalDelegatingClient
+
+						updatedDelegatingClient := &fosite.DefaultClient{
+							ID:         "bar",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"bar"},
+						}
+						store.Clients[updatedDelegatingClient.ID] = updatedDelegatingClient
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+							Client:           areq.Client,
+							GrantedScope:     fosite.Arguments{"foo", "bar", "offline"},
+							RequestedScope:   fosite.Arguments{"foo", "bar", "offline"},
+							Session:          sess,
+							Form:             url.Values{"foo": []string{"bar"}},
+							RequestedAt:      time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+							DelegatingClient: originalDelegatingClient,
+						})
+						require.NoError(t, err)
+					},
+					expectErr: fosite.ErrUnauthorizedClient,
+				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
 					h = RefreshTokenGrantHandler{
@@ -239,6 +323,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						ScopeStrategy:            fosite.HierarchicScopeStrategy,
 						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 						RefreshTokenScopes:       []string{"offline"},
+						Store:                    store,
 					}
 
 					areq = fosite.NewAccessRequest(&fosite.DefaultSession{})

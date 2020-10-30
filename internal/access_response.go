@@ -9,7 +9,6 @@ import (
 	time "time"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -112,6 +111,18 @@ func (m *MockAccessResponder) SetExtra(arg0 string, arg1 interface{}) {
 func (mr *MockAccessResponderMockRecorder) SetExtra(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetExtra", reflect.TypeOf((*MockAccessResponder)(nil).SetExtra), arg0, arg1)
+}
+
+// SetIssuedTokenType mocks base method
+func (m *MockAccessResponder) SetIssuedTokenType(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetIssuedTokenType", arg0)
+}
+
+// SetIssuedTokenType indicates an expected call of SetIssuedTokenType
+func (mr *MockAccessResponderMockRecorder) SetIssuedTokenType(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetIssuedTokenType", reflect.TypeOf((*MockAccessResponder)(nil).SetIssuedTokenType), arg0)
 }
 
 // SetScopes mocks base method

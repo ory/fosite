@@ -17,6 +17,9 @@
  * @copyright 	2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
  * @license 	Apache-2.0
  *
+ * Changes:
+ *  - 2020 Miguel Paulos Nunes <Miguel.PaulosNunes@bosch.io>
+ *
  */
 
 package fosite
@@ -60,6 +63,10 @@ func (a *AccessResponse) SetAccessToken(token string) {
 
 func (a *AccessResponse) SetTokenType(name string) {
 	a.TokenType = name
+}
+
+func (a *AccessResponse) SetIssuedTokenType(tokenType string) {
+	a.SetExtra("issued_token_type", tokenType)
 }
 
 func (a *AccessResponse) GetAccessToken() string {
