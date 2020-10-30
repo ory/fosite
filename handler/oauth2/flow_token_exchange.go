@@ -86,9 +86,7 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 	subjectTokenType := form.Get("subject_token_type")
 	if subjectTokenType == "" {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("Mandatory parameter subject_token_type is missing."))
-	}
-
-	if subjectTokenType != "urn:ietf:params:oauth:token-type:access_token" {
+	} else if subjectTokenType != "urn:ietf:params:oauth:token-type:access_token" {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("Currently only \"subject_token_type=urn:ietf:params:oauth:token-type:access_token\" is supported but got \"%s\".", subjectTokenType))
 	}
 
