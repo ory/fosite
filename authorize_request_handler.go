@@ -220,8 +220,8 @@ func (f *Fosite) ParseResponseMode(r *http.Request, request *AuthorizeRequest) e
 		request.ResponseMode = ResponseModeFragment
 	case string(ResponseModeQuery):
 		request.ResponseMode = ResponseModeQuery
-	case string(ResponseModePost):
-		request.ResponseMode = ResponseModePost
+	case string(ResponseModeFormPost):
+		request.ResponseMode = ResponseModeFormPost
 	default:
 		return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("Request with unsupported response_mode \"%s\".", responseMode))
 	}
@@ -274,10 +274,6 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 	request.Client = client
 
-	if err := f.validateResponseMode(r, request); err != nil {
-		return request, err
-	}
-
 	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(request); err != nil {
 		return request, err
 	}
@@ -299,6 +295,10 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 
 	if err := f.validateResponseTypes(r, request); err != nil {
+		return request, err
+	}
+
+	if err := f.validateResponseMode(r, request); err != nil {
 		return request, err
 	}
 

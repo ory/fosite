@@ -301,7 +301,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModePost).Times(1)
+				req.EXPECT().GetResponseMode().Return(ResponseModeFormPost).Times(1)
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().Write(gomock.Any()).AnyTimes()
 			},

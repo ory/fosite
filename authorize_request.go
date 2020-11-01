@@ -29,7 +29,7 @@ type ResponseModeType string
 
 const (
 	ResponseModeDefault  = ResponseModeType("")
-	ResponseModePost     = ResponseModeType("form_post")
+	ResponseModeFormPost = ResponseModeType("form_post")
 	ResponseModeQuery    = ResponseModeType("query")
 	ResponseModeFragment = ResponseModeType("fragment")
 )

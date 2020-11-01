@@ -101,6 +101,8 @@ func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizatio
 			token.RefreshToken = v
 		case "error":
 			rFC6749Error["Name"] = v
+		case "error_hint":
+			rFC6749Error["Hint"] = v
 		case "error_description":
 			rFC6749Error["Description"] = v
 		case "id_token":

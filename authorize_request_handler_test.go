@@ -446,7 +446,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 						ResponseTypes: []string{"code token"},
 						Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
 					},
-					ResponseMode: []ResponseModeType{ResponseModePost},
+					ResponseMode: []ResponseModeType{ResponseModeFormPost},
 				}, nil)
 			},
 			expect: &AuthorizeRequest{
@@ -461,7 +461,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 							ResponseTypes: []string{"code token"},
 							Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
 						},
-						ResponseMode: []ResponseModeType{ResponseModePost},
+						ResponseMode: []ResponseModeType{ResponseModeFormPost},
 					},
 					RequestedScope:    []string{"foo", "bar"},
 					RequestedAudience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},

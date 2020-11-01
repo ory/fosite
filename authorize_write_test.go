@@ -170,7 +170,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			setup: func() {
 				redir, _ := url.Parse("https://foobar.com/?foo=bar")
 				ar.EXPECT().GetRedirectURI().Return(redir)
-				ar.EXPECT().GetResponseMode().Return(ResponseModePost)
+				ar.EXPECT().GetResponseMode().Return(ResponseModeFormPost)
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
 				resp.EXPECT().GetParameters().Return(url.Values{"code": {"poz65kqoneu"}, "state": {"qm6dnsrn"}})
 

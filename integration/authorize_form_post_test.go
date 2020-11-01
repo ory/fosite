@@ -41,15 +41,15 @@ import (
 	"github.com/ory/fosite/handler/oauth2"
 )
 
-func TestAuthorizeFormPostImplicitFlow(t *testing.T) {
+func TestAuthorizeFormPostResponseMode(t *testing.T) {
 	for _, strategy := range []oauth2.AccessTokenStrategy{
 		hmacStrategy,
 	} {
-		runTestAuthorizeFormPostImplicitGrant(t, strategy)
+		runTestAuthorizeFormPostResponseMode(t, strategy)
 	}
 }
 
-func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
+func runTestAuthorizeFormPostResponseMode(t *testing.T, strategy interface{}) {
 	session := &defaultSession{
 		DefaultSession: &openid.DefaultSession{
 			Claims: &jwt.IDTokenClaims{
@@ -67,7 +67,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 	defaultClient.RedirectURIs[0] = ts.URL + "/callback"
 	responseModeClient := &fosite.DefaultResponseModeClient{
 		DefaultClient: defaultClient,
-		ResponseMode:  []fosite.ResponseModeType{fosite.ResponseModePost},
+		ResponseMode:  []fosite.ResponseModeType{fosite.ResponseModeFormPost},
 	}
 	fositeStore.Clients["response-mode-client"] = responseModeClient
 	oauthClient.ClientID = "response-mode-client"
@@ -185,7 +185,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 			resp, err := client.Get(authURL)
 			require.NoError(t, err)
 			require.Equal(t, http.StatusOK, resp.StatusCode)
-			code, state, token, iDToken, _, errResp, err := internal.ParseFormPostResponse(fositeStore.Clients["my-client"].GetRedirectURIs()[0], resp.Body)
+			code, state, token, iDToken, _, errResp, err := internal.ParseFormPostResponse(fositeStore.Clients["response-mode-client"].GetRedirectURIs()[0], resp.Body)
 			require.NoError(t, err)
 			c.check(t, state, code, iDToken, token, errResp)
 		})
