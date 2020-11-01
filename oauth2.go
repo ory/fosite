@@ -268,11 +268,14 @@ type AuthorizeRequester interface {
 	// GetState returns the request's state.
 	GetState() (state string)
 
-	//GetResponseMode returns response_mode of the authorization request
+	// GetResponseMode returns response_mode of the authorization request
 	GetResponseMode() ResponseModeType
 
-	//SetResponseMode sets response mode of the authorization request
-	SetResponseMode(responseMode ResponseModeType)
+	// SetDefaultResponseMode sets default response mode for a response type in a flow
+	SetDefaultResponseMode(responseMode ResponseModeType)
+
+	// GetDefaultResponseMode gets default response mode for a response type in a flow
+	GetDefaultResponseMode() ResponseModeType
 
 	Requester
 }

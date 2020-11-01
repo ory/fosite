@@ -127,34 +127,6 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 
 						assert.Equal(t, strings.Join(areq.GrantedScope, " "), aresp.GetParameters().Get("scope"))
 						assert.Equal(t, areq.State, aresp.GetParameters().Get("state"))
-					},
-				},
-				{
-					areq: &fosite.AuthorizeRequest{
-						ResponseTypes: fosite.Arguments{"code"},
-						Request: fosite.Request{
-							Client: &fosite.DefaultClient{
-								ResponseTypes: fosite.Arguments{"code"},
-								RedirectURIs:  []string{"https://asdf.de/cb"},
-								Audience:      []string{"https://www.ory.sh/api"},
-							},
-							RequestedAudience: []string{"https://www.ory.sh/api"},
-							GrantedScope:      fosite.Arguments{"a", "b"},
-							Session: &fosite.DefaultSession{
-								ExpiresAt: map[fosite.TokenType]time.Time{fosite.AccessToken: time.Now().UTC().Add(time.Hour)},
-							},
-							RequestedAt: time.Now().UTC(),
-						},
-						State:       "superstate",
-						RedirectURI: parseUrl("https://asdf.de/cb"),
-					},
-					description: "Default responseMode check",
-					expect: func(t *testing.T, areq *fosite.AuthorizeRequest, aresp *fosite.AuthorizeResponse) {
-						code := aresp.GetParameters().Get("code")
-						assert.NotEmpty(t, code)
-
-						assert.Equal(t, strings.Join(areq.GrantedScope, " "), aresp.GetParameters().Get("scope"))
-						assert.Equal(t, areq.State, aresp.GetParameters().Get("state"))
 						assert.Equal(t, fosite.ResponseModeQuery, areq.GetResponseMode())
 					},
 				},

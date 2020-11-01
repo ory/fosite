@@ -80,20 +80,34 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 		responseType string
 	}{
 		{
-			description:  "implicit grant test with form_post",
-			responseType: "token",
+			description:  "implicit grant #1 test with form_post",
+			responseType: "id_token%20token",
 			setup: func() {
 				state = "12345678901234567890"
+				oauthClient.Scopes = []string{"openid"}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
 				assert.NotEmpty(t, token.TokenType)
 				assert.NotEmpty(t, token.AccessToken)
 				assert.NotEmpty(t, token.Expiry)
+				assert.NotEmpty(t, iDToken)
 			},
 		},
 		{
-			description:  "explicit grant test with form_post",
+			description:  "implicit grant #2 test with form_post",
+			responseType: "id_token",
+			setup: func() {
+				state = "12345678901234567890"
+				oauthClient.Scopes = []string{"openid"}
+			},
+			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
+				assert.EqualValues(t, state, stateFromServer)
+				assert.NotEmpty(t, iDToken)
+			},
+		},
+		{
+			description:  "Authorization code grant test with form_post",
 			responseType: "code",
 			setup: func() {
 				state = "12345678901234567890"
@@ -104,7 +118,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 			},
 		},
 		{
-			description:  "oidc grant test with form_post",
+			description:  "Hybrid #1 grant test with form_post",
 			responseType: "token%20code",
 			setup: func() {
 				state = "12345678901234567890"
@@ -119,7 +133,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 			},
 		},
 		{
-			description:  "hybrid grant test with form_post",
+			description:  "Hybrid #2 grant test with form_post",
 			responseType: "token%20id_token%20code",
 			setup: func() {
 				state = "12345678901234567890"
@@ -135,7 +149,7 @@ func runTestAuthorizeFormPostImplicitGrant(t *testing.T, strategy interface{}) {
 			},
 		},
 		{
-			description:  "hybrid grant test with form_post",
+			description:  "Hybrid #3 grant test with form_post",
 			responseType: "id_token%20code",
 			setup: func() {
 				state = "12345678901234567890"

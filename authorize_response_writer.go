@@ -46,5 +46,9 @@ func (f *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester
 		return nil, errors.WithStack(ErrUnsupportedResponseType)
 	}
 
+	if ar.GetDefaultResponseMode() == ResponseModeFragment && ar.GetResponseMode() == ResponseModeQuery {
+		return nil, ErrUnsupportedResponseMode.WithHintf("Insecure response_mode \"%s\" for the response_type \"%s\".", ar.GetResponseMode(), ar.GetResponseTypes())
+	}
+
 	return resp, nil
 }

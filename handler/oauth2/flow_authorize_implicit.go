@@ -52,9 +52,9 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 	if !ar.GetResponseTypes().ExactOne("token") {
 		return nil
 	}
-	if ar.GetResponseMode() == fosite.ResponseModeDefault {
-		ar.SetResponseMode(fosite.ResponseModeFragment)
-	}
+
+	ar.SetDefaultResponseMode(fosite.ResponseModeFragment)
+
 	// Disabled because this is already handled at the authorize_request_handler
 	// if !ar.GetClient().GetResponseTypes().Has("token") {
 	// 	 return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token"))

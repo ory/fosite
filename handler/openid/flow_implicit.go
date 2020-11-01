@@ -51,9 +51,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return nil
 	}
 
-	if ar.GetResponseMode() == fosite.ResponseModeDefault {
-		ar.SetResponseMode(fosite.ResponseModeFragment)
-	}
+	ar.SetDefaultResponseMode(fosite.ResponseModeFragment)
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"implicit\"."))

@@ -77,9 +77,8 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 		return nil
 	}
 
-	if ar.GetResponseMode() == fosite.ResponseModeDefault {
-		ar.SetResponseMode(fosite.ResponseModeQuery)
-	}
+	ar.SetDefaultResponseMode(fosite.ResponseModeQuery)
+
 	// Disabled because this is already handled at the authorize_request_handler
 	// if !ar.GetClient().GetResponseTypes().Has("code") {
 	// 	 return errors.WithStack(fosite.ErrInvalidGrant)

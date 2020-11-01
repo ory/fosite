@@ -41,6 +41,7 @@ type AuthorizeRequest struct {
 	State                string           `json:"state" gorethink:"state"`
 	HandledResponseTypes Arguments        `json:"handledResponseTypes" gorethink:"handledResponseTypes"`
 	ResponseMode         ResponseModeType `json:"ResponseMode" gorethink:"ResponseMode"`
+	DefaultResponseMode  ResponseModeType `json:"DefaultResponseMode" gorethink:"DefaultResponseMode"`
 
 	Request
 }
@@ -102,6 +103,13 @@ func (d *AuthorizeRequest) GetResponseMode() ResponseModeType {
 	return d.ResponseMode
 }
 
-func (d *AuthorizeRequest) SetResponseMode(responseMode ResponseModeType) {
-	d.ResponseMode = responseMode
+func (d *AuthorizeRequest) SetDefaultResponseMode(defaultResponseMode ResponseModeType) {
+	if d.ResponseMode == ResponseModeDefault {
+		d.ResponseMode = defaultResponseMode
+	}
+	d.DefaultResponseMode = defaultResponseMode
+}
+
+func (d *AuthorizeRequest) GetDefaultResponseMode() ResponseModeType {
+	return d.DefaultResponseMode
 }
