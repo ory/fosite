@@ -110,9 +110,10 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 		// keep the subjects token client for following refresh requests
 		tokenExchangeRequest, ok := request.(fosite.TokenExchangeAccessRequester)
-		if ok {
-			tokenExchangeRequest.SetSubjectTokenClient(subjectTokenClient)
+		if !ok {
+			return errors.WithStack(fosite.ErrInvalidRequestObject)
 		}
+		tokenExchangeRequest.SetSubjectTokenClient(subjectTokenClient)
 
 		// check if the subjects token client (still) has may_act claim for current client
 		if !subjectTokenClient.GetMayAct().HasOneOf(request.GetClient().GetID()) {
