@@ -239,12 +239,16 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 }
 
 func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool) (interface{}, error) {
-	kid, ok := t.Header["kid"].(string)
-	if !ok {
-		return nil, errors.WithStack(ErrInvalidRequest.WithHint("The JSON Web Token must contain a kid header value but did not."))
+	keys := set.Keys
+	if len(keys) == 0 {
+		return nil, errors.WithStack(ErrInvalidRequest.WithHintf("The retrieved JSON Web Key Set does not contain any keys."))
 	}
 
-	keys := set.Key(kid)
+	kid, ok := t.Header["kid"].(string)
+	if ok {
+		keys = set.Key(kid)
+	}
+
 	if len(keys) == 0 {
 		return nil, errors.WithStack(ErrInvalidRequest.WithHintf("The JSON Web Token uses signing key with kid '%s', which could not be found.", kid))
 	}
