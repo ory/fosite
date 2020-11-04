@@ -176,7 +176,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 			WithHint("The PKCE code verifier can not be longer than 128 characters."))
 	} else if verifierWrongFormat.MatchString(verifier) {
 		return errors.WithStack(fosite.ErrInvalidGrant.
-			WithHint(`The PKCE code verifier must only contain [a-Z] / [0-9] / "-" / "." / "_" / "~"`))
+			WithHint("The PKCE code verifier must only contain [a-Z], [0-9], '-', '.', '_', '~'."))
 	}
 
 	// Upon receipt of the request at the token endpoint, the server
