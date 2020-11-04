@@ -69,39 +69,8 @@ func (h *DefaultJWTStrategy) GenerateAccessToken(ctx context.Context, requester 
 }
 
 func (h *DefaultJWTStrategy) ValidateAccessToken(ctx context.Context, _ fosite.Requester, token string) error {
-	_, err := h.validate(ctx, token)
+	_, err := validate(ctx, h.JWTStrategy, token)
 	return err
-}
-
-func (h *DefaultJWTStrategy) ValidateJWT(ctx context.Context, tokenType fosite.TokenType, token string) (requester fosite.Requester, err error) {
-	t, err := h.validate(ctx, token)
-	if err != nil {
-		return nil, err
-	}
-
-	claims := jwt.JWTClaims{
-		ScopeField: h.ScopeField,
-	}
-	claims.FromMapClaims(t.Claims.(jwtx.MapClaims))
-
-	requester = &fosite.Request{
-		Client:      &fosite.DefaultClient{},
-		RequestedAt: claims.IssuedAt,
-		Session: &JWTSession{
-			JWTClaims: &claims,
-			JWTHeader: &jwt.Headers{
-				Extra: make(map[string]interface{}),
-			},
-			ExpiresAt: map[fosite.TokenType]time.Time{
-				tokenType: claims.ExpiresAt,
-			},
-			Subject: claims.Subject,
-		},
-		RequestedScope: claims.Scope,
-		GrantedScope:   claims.Scope,
-	}
-
-	return
 }
 
 func (h DefaultJWTStrategy) RefreshTokenSignature(token string) string {
@@ -128,8 +97,8 @@ func (h *DefaultJWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosi
 	return h.HMACSHAStrategy.ValidateAuthorizeCode(ctx, req, token)
 }
 
-func (h *DefaultJWTStrategy) validate(ctx context.Context, token string) (t *jwtx.Token, err error) {
-	t, err = h.JWTStrategy.Decode(ctx, token)
+func validate(ctx context.Context, jwtStrategy jwt.JWTStrategy, token string) (t *jwtx.Token, err error) {
+	t, err = jwtStrategy.Decode(ctx, token)
 
 	if err == nil {
 		err = t.Claims.Valid()

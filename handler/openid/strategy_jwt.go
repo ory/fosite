@@ -196,15 +196,15 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 			if errors.As(err, &ve) && ve.Errors == jwtgo.ValidationErrorExpired {
 				// Expired ID Tokens are allowed as values to id_token_hint
 			} else if err != nil {
-				return "", errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebugf("Unable to decode id token from id_token_hint parameter because %s.", err.Error()))
+				return "", errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebugf("Unable to decode id token from 'id_token_hint' parameter because %s.", err.Error()))
 			}
 
 			if hintClaims, ok := tokenHint.Claims.(jwtgo.MapClaims); !ok {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Unable to decode id token from id_token_hint to *jwt.StandardClaims."))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Unable to decode id token from 'id_token_hint' to *jwt.StandardClaims."))
 			} else if hintSub, _ := hintClaims["sub"].(string); hintSub == "" {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Provided id token from id_token_hint does not have a subject."))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Provided id token from 'id_token_hint' does not have a subject."))
 			} else if hintSub != claims.Subject {
-				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Subject from authorization mismatches id token subject from id_token_hint."))
+				return "", errors.WithStack(fosite.ErrServerError.WithDebug("Subject from authorization mismatches id token subject from 'id_token_hint'."))
 			}
 		}
 	}
@@ -230,7 +230,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	if len(nonce) == 0 {
 	} else if len(nonce) > 0 && len(nonce) < h.MinParameterEntropy {
 		// We're assuming that using less then, by default, 8 characters for the state can not be considered "unguessable"
-		return "", errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter \"nonce\" is set but does not satisfy the minimum entropy of %d characters.", h.MinParameterEntropy))
+		return "", errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", h.MinParameterEntropy))
 	}
 
 	claims.Nonce = nonce
