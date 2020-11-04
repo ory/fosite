@@ -34,6 +34,14 @@ import (
 	"github.com/ory/go-convenience/stringslice"
 )
 
+func wrapSigningKeyFailure(outer *RFC6749Error, inner error) *RFC6749Error {
+	outer = outer.WithCause(inner).WithDebug(inner.Error())
+	if e := new(RFC6749Error); errors.As(inner, &e) {
+		return outer.WithHintf("%s %s", outer.Reason(), e.Reason())
+	}
+	return outer
+}
+
 func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *AuthorizeRequest) error {
 	var scope Arguments = RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
 
@@ -109,19 +117,22 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 		case *jwt.SigningMethodRSA:
 			key, err := f.findClientPublicJWK(oidcClient, t, true)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve RSA signing key from OAuth 2.0 Client because: %s.", err).WithCause(err).WithDebug(err.Error()))
+				return nil, wrapSigningKeyFailure(
+					ErrInvalidRequestObject.WithHint("Unable to retrieve RSA signing key from OAuth 2.0 Client."), err)
 			}
 			return key, nil
 		case *jwt.SigningMethodECDSA:
 			key, err := f.findClientPublicJWK(oidcClient, t, false)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve ECDSA signing key from OAuth 2.0 Client because: %s.", err).WithCause(err).WithDebug(err.Error()))
+				return nil, wrapSigningKeyFailure(
+					ErrInvalidRequestObject.WithHint("Unable to retrieve ECDSA signing key from OAuth 2.0 Client."), err)
 			}
 			return key, nil
 		case *jwt.SigningMethodRSAPSS:
 			key, err := f.findClientPublicJWK(oidcClient, t, true)
 			if err != nil {
-				return nil, errors.WithStack(ErrInvalidRequestObject.WithHintf("Unable to retrieve RSA signing key from OAuth 2.0 Client because: %s.", err).WithCause(err).WithDebug(err.Error()))
+				return nil, wrapSigningKeyFailure(
+					ErrInvalidRequestObject.WithHint("Unable to retrieve RSA signing key from OAuth 2.0 Client."), err)
 			}
 			return key, nil
 		default:
