@@ -24,7 +24,6 @@ package fosite
 import (
 	"encoding/json"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -214,7 +213,11 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 		extraClaims := extraClaimsSession.GetExtraClaims()
 		if extraClaims != nil {
 			for name, value := range extraClaims {
-				if !reflect.ValueOf(value).IsZero() {
+				switch name {
+				// We do not allow these to be set through extra claims.
+				case "exp", "client_id", "scope", "iat", "sub", "aud", "username":
+					break
+				default:
 					response[name] = value
 				}
 			}
