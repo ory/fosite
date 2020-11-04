@@ -55,7 +55,6 @@ var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
 			JWTClaims: &jwt.JWTClaims{
 				Issuer:    "fosite",
 				Subject:   "peter",
-				Audience:  []string{"group0"},
 				IssuedAt:  time.Now().UTC(),
 				NotBefore: time.Now().UTC(),
 				Extra:     map[string]interface{}{"foo": "bar"},
@@ -71,6 +70,8 @@ var jwtValidCase = func(tokenType fosite.TokenType) *fosite.Request {
 	r.SetRequestedScopes([]string{"email", "offline"})
 	r.GrantScope("email")
 	r.GrantScope("offline")
+	r.SetRequestedAudience([]string{"group0"})
+	r.GrantAudience("group0")
 	return r
 }
 
@@ -83,7 +84,6 @@ var jwtValidCaseWithZeroRefreshExpiry = func(tokenType fosite.TokenType) *fosite
 			JWTClaims: &jwt.JWTClaims{
 				Issuer:    "fosite",
 				Subject:   "peter",
-				Audience:  []string{"group0"},
 				IssuedAt:  time.Now().UTC(),
 				NotBefore: time.Now().UTC(),
 				Extra:     map[string]interface{}{"foo": "bar"},
@@ -100,6 +100,8 @@ var jwtValidCaseWithZeroRefreshExpiry = func(tokenType fosite.TokenType) *fosite
 	r.SetRequestedScopes([]string{"email", "offline"})
 	r.GrantScope("email")
 	r.GrantScope("offline")
+	r.SetRequestedAudience([]string{"group0"})
+	r.GrantAudience("group0")
 	return r
 }
 
@@ -112,7 +114,6 @@ var jwtValidCaseWithRefreshExpiry = func(tokenType fosite.TokenType) *fosite.Req
 			JWTClaims: &jwt.JWTClaims{
 				Issuer:    "fosite",
 				Subject:   "peter",
-				Audience:  []string{"group0"},
 				IssuedAt:  time.Now().UTC(),
 				NotBefore: time.Now().UTC(),
 				Extra:     map[string]interface{}{"foo": "bar"},
@@ -129,6 +130,8 @@ var jwtValidCaseWithRefreshExpiry = func(tokenType fosite.TokenType) *fosite.Req
 	r.SetRequestedScopes([]string{"email", "offline"})
 	r.GrantScope("email")
 	r.GrantScope("offline")
+	r.SetRequestedAudience([]string{"group0"})
+	r.GrantAudience("group0")
 	return r
 }
 
@@ -144,11 +147,10 @@ var jwtExpiredCase = func(tokenType fosite.TokenType) *fosite.Request {
 			JWTClaims: &jwt.JWTClaims{
 				Issuer:    "fosite",
 				Subject:   "peter",
-				Audience:  []string{"group0"},
 				IssuedAt:  time.Now().UTC(),
 				NotBefore: time.Now().UTC(),
 				ExpiresAt: time.Now().UTC().Add(-time.Minute),
-				Extra:     make(map[string]interface{}),
+				Extra:     map[string]interface{}{"foo": "bar"},
 			},
 			JWTHeader: &jwt.Headers{
 				Extra: make(map[string]interface{}),
@@ -161,6 +163,8 @@ var jwtExpiredCase = func(tokenType fosite.TokenType) *fosite.Request {
 	r.SetRequestedScopes([]string{"email", "offline"})
 	r.GrantScope("email")
 	r.GrantScope("offline")
+	r.SetRequestedAudience([]string{"group0"})
+	r.GrantAudience("group0")
 	return r
 }
 
@@ -215,6 +219,16 @@ func TestAccessToken(t *testing.T) {
 					require.True(t, ok)
 					assert.Equal(t, "email offline", scope)
 				}
+
+				extraClaimsSession, ok := c.r.GetSession().(fosite.ExtraClaimsSession)
+				require.True(t, ok)
+				claims := extraClaimsSession.GetExtraClaims()
+				assert.Equal(t, "bar", claims["foo"])
+				// Returned, but will be ignored by the introspect handler.
+				assert.Equal(t, "peter", claims["sub"])
+				assert.Equal(t, []string{"group0"}, claims["aud"])
+				// Scope field is always a string.
+				assert.Equal(t, "email offline", claims["scope"])
 
 				validate := jWithField.signature(token)
 				err = jWithField.ValidateAccessToken(nil, c.r, token)
