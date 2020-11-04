@@ -131,6 +131,10 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				ires.TokenUse = AccessToken
 				sess := &DefaultSession{}
 				sess.GetExtraClaims()["extra"] = "foobar"
+				// We try to set these, but they should be ignored.
+				for _, field := range []string{"exp", "client_id", "scope", "iat", "sub", "aud", "username"} {
+					sess.GetExtraClaims()[field] = "invalid"
+				}
 				sess.SetExpiresAt(ires.TokenUse, time.Time{})
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
@@ -143,10 +147,15 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 			c.setup()
 			f.WriteIntrospectionResponse(rw, ires)
 			var params struct {
-				Active bool   `json:"active"`
-				Exp    *int64 `json:"exp"`
-				Iat    *int64 `json:"iat"`
-				Extra  string `json:"extra"`
+				Active   bool   `json:"active"`
+				Exp      *int64 `json:"exp"`
+				Iat      *int64 `json:"iat"`
+				Extra    string `json:"extra"`
+				ClientId string `json:"client_id"`
+				Scope    string `json:"scope"`
+				Subject  string `json:"sub"`
+				Audience string `json:"aud"`
+				Username string `json:"username"`
 			}
 			assert.Equal(t, 200, rw.Code)
 			err := json.NewDecoder(rw.Body).Decode(&params)
@@ -164,6 +173,13 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				} else {
 					assert.Empty(t, params.Extra)
 				}
+				assert.NotEqual(t, "invalid", params.Exp)
+				assert.NotEqual(t, "invalid", params.ClientId)
+				assert.NotEqual(t, "invalid", params.Scope)
+				assert.NotEqual(t, "invalid", params.Iat)
+				assert.NotEqual(t, "invalid", params.Subject)
+				assert.NotEqual(t, "invalid", params.Audience)
+				assert.NotEqual(t, "invalid", params.Username)
 			}
 		})
 	}
