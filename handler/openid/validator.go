@@ -96,12 +96,12 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 	}
 
 	if !isWhitelisted(prompt, v.AllowedPrompt) {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf(`Used unknown value "%s" for prompt parameter`, prompt))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("Used unknown value '%s' for prompt parameter", prompt))
 	}
 
 	if stringslice.Has(prompt, "none") && len(prompt) > 1 {
 		// If this parameter contains none with any other value, an error is returned.
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter \"prompt\" was set to \"none\", but contains other values as well which is not allowed."))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'prompt' was set to 'none', but contains other values as well which is not allowed."))
 	}
 
 	maxAge, err := strconv.ParseInt(req.GetRequestForm().Get("max_age"), 10, 64)
@@ -139,13 +139,13 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 			return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because because auth_time is missing from session."))
 		}
 		if claims.AuthTime.After(claims.RequestedAt) {
-			return errors.WithStack(fosite.ErrLoginRequired.WithHint("Failed to validate OpenID Connect request because prompt was set to \"none\" but auth_time happened after the authorization request was registered, indicating that the user was logged in during this request which is not allowed."))
+			return errors.WithStack(fosite.ErrLoginRequired.WithHint("Failed to validate OpenID Connect request because prompt was set to 'none' but auth_time happened after the authorization request was registered, indicating that the user was logged in during this request which is not allowed."))
 		}
 	}
 
 	if stringslice.Has(prompt, "login") {
 		if claims.AuthTime.Before(claims.RequestedAt) {
-			return errors.WithStack(fosite.ErrLoginRequired.WithHint("Failed to validate OpenID Connect request because prompt was set to \"login\" but auth_time happened before the authorization request was registered, indicating that the user was not re-authenticated which is forbidden."))
+			return errors.WithStack(fosite.ErrLoginRequired.WithHint("Failed to validate OpenID Connect request because prompt was set to 'login' but auth_time happened before the authorization request was registered, indicating that the user was not re-authenticated which is forbidden."))
 		}
 	}
 

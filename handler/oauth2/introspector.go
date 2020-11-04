@@ -71,7 +71,7 @@ func matchScopes(ss fosite.ScopeStrategy, granted, scopes []string) error {
 		}
 
 		if !ss(granted, scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The request scope \"%s\" has not been granted or is not allowed to be requested.", scope))
+			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The request scope '%s' has not been granted or is not allowed to be requested.", scope))
 		}
 	}
 

@@ -52,7 +52,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"implicit\"."))
+		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
 	}
 
 	// Disabled because this is already handled at the authorize_request_handler
@@ -63,15 +63,15 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	//}
 
 	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter \"nonce\" must be set when using the OpenID Connect Implicit Flow."))
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'nonce' must be set when using the OpenID Connect Implicit Flow."))
 	} else if len(nonce) < c.MinParameterEntropy {
-		return errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter \"nonce\" is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
+		return errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
+			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 

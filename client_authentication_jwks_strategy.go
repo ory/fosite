@@ -60,17 +60,17 @@ func (s *DefaultJWKSFetcherStrategy) Resolve(location string, forceRefresh bool)
 	if !ok || forceRefresh {
 		response, err := s.client.Get(location)
 		if err != nil {
-			return nil, errors.WithStack(ErrServerError.WithHintf(`Unable to fetch JSON Web Keys from location "%s".`, location).WithCause(err).WithDebug(err.Error()))
+			return nil, errors.WithStack(ErrServerError.WithHintf("Unable to fetch JSON Web Keys from location '%s' because: %s.", location, err).WithCause(err).WithDebug(err.Error()))
 		}
 		defer response.Body.Close()
 
 		if response.StatusCode < 200 || response.StatusCode >= 400 {
-			return nil, errors.WithStack(ErrServerError.WithHintf(`Expected successful status code from location "%s", but received code "%d".`, location, response.StatusCode))
+			return nil, errors.WithStack(ErrServerError.WithHintf("Expected successful status code from location '%s' but received code %d.", location, response.StatusCode))
 		}
 
 		var set jose.JSONWebKeySet
 		if err := json.NewDecoder(response.Body).Decode(&set); err != nil {
-			return nil, errors.WithStack(ErrServerError.WithHintf("Unable to decode JSON Web Keys from location \"%s\".", location).WithCause(err).WithDebug(err.Error()))
+			return nil, errors.WithStack(ErrServerError.WithHintf("Unable to decode JSON Web Keys from location '%s' because: %s.", location, err).WithCause(err).WithDebug(err.Error()))
 		}
 
 		s.keys[location] = set

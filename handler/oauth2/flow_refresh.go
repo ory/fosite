@@ -58,7 +58,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"refresh_token\"."))
+		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant 'refresh_token'."))
 	}
 
 	refresh := request.GetRequestForm().Get("refresh_token")
@@ -76,7 +76,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	if !(len(c.RefreshTokenScopes) == 0 || originalRequest.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...)) {
 		scopeNames := strings.Join(c.RefreshTokenScopes, " or ")
-		hint := fmt.Sprintf("The OAuth 2.0 Client was not granted scope %s and may thus not perform the \"refresh_token\" authorization grant.", scopeNames)
+		hint := fmt.Sprintf("The OAuth 2.0 Client was not granted scope %s and may thus not perform the 'refresh_token' authorization grant.", scopeNames)
 		return errors.WithStack(fosite.ErrScopeNotGranted.WithHint(hint))
 
 	}
@@ -92,7 +92,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	for _, scope := range originalRequest.GetGrantedScopes() {
 		if !c.ScopeStrategy(request.GetClient().GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
+			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 		request.GrantScope(scope)
 	}

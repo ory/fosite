@@ -51,13 +51,13 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("password") {
-		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The client is not allowed to use authorization grant \"password\"."))
+		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The client is not allowed to use authorization grant 'password'."))
 	}
 
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope \"%s\".", scope))
+			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
