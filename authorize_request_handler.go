@@ -158,6 +158,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 		}
 	}
 
+	request.State = request.Form.Get("state")
 	request.Form.Set("scope", strings.Join(claimScope, " "))
 	return nil
 }
@@ -230,8 +231,7 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	request.Form = r.Form
 
 	// Save state to the request to be returned in error conditions (https://github.com/ory/hydra/issues/1642)
-	state := request.Form.Get("state")
-	request.State = state
+	request.State = request.Form.Get("state")
 
 	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	if err != nil {
@@ -269,7 +269,7 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	//
 	// https://tools.ietf.org/html/rfc6819#section-4.4.1.8
 	// The "state" parameter should not	be guessable
-	if len(state) < f.GetMinParameterEntropy() {
+	if len(request.State) < f.GetMinParameterEntropy() {
 		// We're assuming that using less then, by default, 8 characters for the state can not be considered "unguessable"
 		return request, errors.WithStack(ErrInvalidState.WithHintf("Request parameter 'state' must be at least be %d characters long to ensure sufficient entropy.", f.GetMinParameterEntropy()))
 	}
