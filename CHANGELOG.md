@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-10-29)](#unreleased-2020-10-29)
+- [Unreleased (2020-11-04)](#unreleased-2020-11-04)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -322,14 +322,28 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.35.1...a6bfb921ebc746ba7a1215e32fb42a2c0530a2bf) (2020-10-29)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.35.1...6d2092da1e8699e43fd6dccb4c3a33b885cec7f8) (2020-11-04)
 
 
 ### Bug Fixes
 
+* Allow all request object algs when client value is unset ([1d14636](https://github.com/ory/fosite/commit/1d14636e61b2047e5eee6d1d740249b819fc0794)):
+
+    > Allows all request object signing algorithms when the client has not explicitly allowed a certain algorithm. This follows the spec:
+    > 
+    > > *request_object_signing_alg - OPTIONAL. JWS [JWS] alg algorithm [JWA] that MUST be used for signing Request Objects sent to the OP. All Request Objects from this Client MUST be rejected, if not signed with this algorithm. Request Objects are described in Section 6.1 of OpenID Connect Core 1.0 [OpenID.Core]. This algorithm MUST be used both when the Request Object is passed by value (using the request parameter) and when it is passed by reference (using the request_uri parameter). Servers SHOULD support RS256. The value none MAY be used. The default, if omitted, is that any algorithm supported by the OP and the RP MAY be used.
 * Always return non-error response for inactive tokens ([#517](https://github.com/ory/fosite/issues/517)) ([5f2cae3](https://github.com/ory/fosite/commit/5f2cae3eabb83da898e1b5515176e65dda4da862))
+* Do not accidentally leak jwks fetching errors ([6d2092d](https://github.com/ory/fosite/commit/6d2092da1e8699e43fd6dccb4c3a33b885cec7f8)), closes [/github.com/ory/fosite/pull/526#discussion_r517491738](https://github.com//github.com/ory/fosite/pull/526/issues/discussion_r517491738)
+* Kid header is not required for key lookup ([27cc5c0](https://github.com/ory/fosite/commit/27cc5c0e935ecb8bca23dd8c2670c8a93f7b829d))
 * Modernized JWT stateless introspection ([#519](https://github.com/ory/fosite/issues/519)) ([a6bfb92](https://github.com/ory/fosite/commit/a6bfb921ebc746ba7a1215e32fb42a2c0530a2bf))
+* Only use allowed characters in error_description ([431f9a5](https://github.com/ory/fosite/commit/431f9a56ed03648ea4ef637fe6c2b6d74e765dad)), closes [#525](https://github.com/ory/fosite/issues/525):
+
+    > Replace LF and quotes with `.` and `'` to match allowed and recommended character set defined in various RFCs.
+* Prevent debug details from leaking during key lookup ([c0598fb](https://github.com/ory/fosite/commit/c0598fb8d8ce75b7f0ad645420caea641e64a4d2)), closes [/github.com/ory/fosite/pull/526#discussion_r517490461](https://github.com//github.com/ory/fosite/pull/526/issues/discussion_r517490461)
 * Reset jti and hash ID token claims on refresh ([#523](https://github.com/ory/fosite/issues/523)) ([ce2de73](https://github.com/ory/fosite/commit/ce2de73ff979b02be32d850c1c695067a35576c7))
+* Use state from request object ([8cac1a0](https://github.com/ory/fosite/commit/8cac1a00a6f87523b88fea6962ab1194049cbacd)):
+
+    > Resolves failing OIDC conformity test "oidcc-request-uri-unsigned".
 
 
 ### Documentation
