@@ -31,6 +31,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/pkg/errors"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,7 +41,9 @@ import (
 
 func mustGenerateAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	token.Header["kid"] = kid
+	if kid != "" {
+		token.Header["kid"] = kid
+	}
 	tokenString, err := token.SignedString(key)
 	require.NoError(t, err)
 	return tokenString
@@ -76,7 +80,8 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 	}
 
 	validRequestObject := mustGenerateAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz"}, key, "kid-foo")
-	validNoneRequestObject := mustGenerateNoneAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz"})
+	validRequestObjectWithoutKid := mustGenerateAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz"}, key, "")
+	validNoneRequestObject := mustGenerateNoneAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz", "state": "some-state"})
 
 	var reqH http.HandlerFunc = func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte(validRequestObject))
@@ -96,8 +101,9 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 		form   url.Values
 		d      string
 
-		expectErr  error
-		expectForm url.Values
+		expectErr       error
+		expectErrReason string
+		expectForm      url.Values
 	}{
 		{
 			d:          "should pass because no request context given and not openid",
@@ -144,24 +150,32 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			expectForm: url.Values{"scope": {"openid"}},
 		},
 		{
-			d:          "should fail because kid does not exist",
-			form:       url.Values{"scope": {"openid"}, "request": {mustGenerateAssertion(t, jwt.MapClaims{}, key, "does-not-exists")}},
-			client:     &DefaultOpenIDConnectClient{JSONWebKeys: jwks, RequestObjectSigningAlgorithm: "RS256"},
-			expectErr:  ErrInvalidRequestObject,
-			expectForm: url.Values{"scope": {"openid"}},
+			d:               "should fail because kid does not exist",
+			form:            url.Values{"scope": {"openid"}, "request": {mustGenerateAssertion(t, jwt.MapClaims{}, key, "does-not-exists")}},
+			client:          &DefaultOpenIDConnectClient{JSONWebKeys: jwks, RequestObjectSigningAlgorithm: "RS256"},
+			expectErr:       ErrInvalidRequestObject,
+			expectErrReason: "Unable to retrieve RSA signing key from OAuth 2.0 Client. The JSON Web Token uses signing key with kid 'does-not-exists', which could not be found.",
+			expectForm:      url.Values{"scope": {"openid"}},
 		},
 		{
-			d:          "should fail because not RS256 token",
-			form:       url.Values{"scope": {"openid"}, "request": {mustGenerateHSAssertion(t, jwt.MapClaims{})}},
-			client:     &DefaultOpenIDConnectClient{JSONWebKeys: jwks, RequestObjectSigningAlgorithm: "RS256"},
-			expectErr:  ErrInvalidRequestObject,
-			expectForm: url.Values{"scope": {"openid"}},
+			d:               "should fail because not RS256 token",
+			form:            url.Values{"scope": {"openid"}, "request": {mustGenerateHSAssertion(t, jwt.MapClaims{})}},
+			client:          &DefaultOpenIDConnectClient{JSONWebKeys: jwks, RequestObjectSigningAlgorithm: "RS256"},
+			expectErr:       ErrInvalidRequestObject,
+			expectErrReason: "The request object uses signing algorithm 'HS256', but the requested OAuth 2.0 Client enforces signing algorithm 'RS256'.",
+			expectForm:      url.Values{"scope": {"openid"}},
 		},
 		{
 			d:          "should pass and set request parameters properly",
 			form:       url.Values{"scope": {"openid"}, "request": {validRequestObject}},
 			client:     &DefaultOpenIDConnectClient{JSONWebKeys: jwks, RequestObjectSigningAlgorithm: "RS256"},
 			expectForm: url.Values{"scope": {"foo openid"}, "request": {validRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
+		},
+		{
+			d:          "should pass even if kid is unset",
+			form:       url.Values{"scope": {"openid"}, "request": {validRequestObjectWithoutKid}},
+			client:     &DefaultOpenIDConnectClient{JSONWebKeys: jwks, RequestObjectSigningAlgorithm: "RS256"},
+			expectForm: url.Values{"scope": {"foo openid"}, "request": {validRequestObjectWithoutKid}, "foo": {"bar"}, "baz": {"baz"}},
 		},
 		{
 			d:          "should fail because request uri is not whitelisted",
@@ -180,7 +194,13 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			d:          "should pass when request object uses algorithm none",
 			form:       url.Values{"scope": {"openid"}, "request": {validNoneRequestObject}},
 			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "none"},
-			expectForm: url.Values{"scope": {"foo openid"}, "request": {validNoneRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
+			expectForm: url.Values{"state": {"some-state"}, "scope": {"foo openid"}, "request": {validNoneRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
+		},
+		{
+			d:          "should pass when request object uses algorithm none and the client did not explicitly allow any algorithm",
+			form:       url.Values{"scope": {"openid"}, "request": {validNoneRequestObject}},
+			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL},
+			expectForm: url.Values{"state": {"some-state"}, "scope": {"foo openid"}, "request": {validNoneRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
@@ -194,6 +214,11 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			err := f.authorizeRequestParametersFromOpenIDConnectRequest(req)
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error(), "%+v", err)
+				if tc.expectErrReason != "" {
+					real := new(RFC6749Error)
+					require.True(t, errors.As(err, &real))
+					assert.EqualValues(t, real.Reason(), tc.expectErrReason)
+				}
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, len(tc.expectForm), len(req.Form))
