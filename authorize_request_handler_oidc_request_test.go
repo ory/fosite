@@ -182,6 +182,12 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "none"},
 			expectForm: url.Values{"scope": {"foo openid"}, "request": {validNoneRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
 		},
+		{
+			d:          "should pass when request object uses algorithm none and the client did not explicitly allow any algorithm",
+			form:       url.Values{"scope": {"openid"}, "request": {validNoneRequestObject}},
+			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL},
+			expectForm: url.Values{"scope": {"foo openid"}, "request": {validNoneRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			req := &AuthorizeRequest{
