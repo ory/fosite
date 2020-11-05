@@ -164,7 +164,7 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 	}
 
 	if err := c.AudienceMatchingStrategy(client.GetAudience(), request.GetRequestedAudience()); err != nil {
-		return err
+		return errors.WithStack(fosite.ErrInvalidTarget.WithCause(err).WithHint(errors.Unwrap(err).(*fosite.RFC6749Error).Hint))
 	}
 
 	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan))

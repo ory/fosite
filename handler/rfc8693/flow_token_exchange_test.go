@@ -121,7 +121,7 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because audience not valid",
-			expectErr:   fosite.ErrInvalidRequest.WithHint("Requested audience \"https://www.ory.sh/not-api\" has not been whitelisted by the OAuth 2.0 Client."),
+			expectErr:   fosite.ErrInvalidTarget.WithHint("Requested audience \"https://www.ory.sh/not-api\" has not been whitelisted by the OAuth 2.0 Client."),
 			mock: func() {
 				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"urn:ietf:params:oauth:grant-type:token-exchange"})
 				query, _ := url.ParseQuery("subject_token=ABCD.1234&subject_token_type=urn:ietf:params:oauth:token-type:access_token")
