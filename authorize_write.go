@@ -26,7 +26,6 @@ import (
 )
 
 func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
-
 	// Set custom headers, e.g. "X-MySuperCoolCustomHeader" or "X-DONT-CACHE-ME"...
 	wh := rw.Header()
 	rh := resp.GetHeader()
@@ -38,12 +37,12 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 	wh.Set("Pragma", "no-cache")
 
 	redir := ar.GetRedirectURI()
-
 	switch ar.GetResponseMode() {
 	case ResponseModeFormPost:
 		//form_post
 		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
 		WriteAuthorizeFormPostResponse(redir.String(), resp.GetParameters(), GetPostFormHTMLTemplate(*f), rw)
+		return
 	case ResponseModeQuery, ResponseModeDefault:
 		// Explicit grants
 		q := redir.Query()

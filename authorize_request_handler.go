@@ -256,7 +256,7 @@ func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest
 	}
 
 	var found bool
-	for _, t := range responseModeClient.GetResponseMode() {
+	for _, t := range responseModeClient.GetResponseModes() {
 		if request.ResponseMode == t {
 			found = true
 			break

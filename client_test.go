@@ -51,6 +51,6 @@ func TestDefaultClient(t *testing.T) {
 }
 
 func TestDefaultResponseModeClient_GetResponseMode(t *testing.T) {
-	rc := &DefaultResponseModeClient{ResponseMode: []ResponseModeType{ResponseModeFragment}}
-	assert.Equal(t, []ResponseModeType{ResponseModeFragment}, rc.GetResponseMode())
+	rc := &DefaultResponseModeClient{ResponseModes: []ResponseModeType{ResponseModeFragment}}
+	assert.Equal(t, []ResponseModeType{ResponseModeFragment}, rc.GetResponseModes())
 }

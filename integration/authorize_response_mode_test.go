@@ -32,28 +32,20 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/pkg/errors"
+
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/pkg/errors"
 
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
-	"github.com/ory/fosite/handler/oauth2"
 )
 
-func TestAuthorizeResponseMode(t *testing.T) {
-	for _, strategy := range []oauth2.AccessTokenStrategy{
-		hmacStrategy,
-	} {
-		runTestAuthorizeResponseMode(t, strategy)
-	}
-}
-
-func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
+func TestAuthorizeResponseModes(t *testing.T) {
 	session := &defaultSession{
 		DefaultSession: &openid.DefaultSession{
 			Claims: &jwt.IDTokenClaims{
@@ -71,7 +63,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 	defaultClient.RedirectURIs[0] = ts.URL + "/callback"
 	responseModeClient := &fosite.DefaultResponseModeClient{
 		DefaultClient: defaultClient,
-		ResponseMode:  []fosite.ResponseModeType{},
+		ResponseModes: []fosite.ResponseModeType{},
 	}
 	fositeStore.Clients["response-mode-client"] = responseModeClient
 	oauthClient.ClientID = "response-mode-client"
@@ -91,7 +83,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
-				responseModeClient.ResponseMode = []fosite.ResponseModeType{fosite.ResponseModeQuery}
+				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeQuery}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.NotEmpty(t, err["Name"])
@@ -106,7 +98,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
-				responseModeClient.ResponseMode = []fosite.ResponseModeType{fosite.ResponseModeFormPost}
+				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeFormPost}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
@@ -123,7 +115,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
-				responseModeClient.ResponseMode = []fosite.ResponseModeType{fosite.ResponseModeQuery}
+				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeQuery}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.NotEmpty(t, err["Name"])
@@ -137,7 +129,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 			responseMode: "fragment",
 			setup: func() {
 				state = "12345678901234567890"
-				responseModeClient.ResponseMode = []fosite.ResponseModeType{fosite.ResponseModeFragment}
+				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeFragment}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
@@ -150,7 +142,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 			responseMode: "form_post",
 			setup: func() {
 				state = "12345678901234567890"
-				responseModeClient.ResponseMode = []fosite.ResponseModeType{fosite.ResponseModeFormPost}
+				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeFormPost}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
@@ -164,7 +156,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
-				responseModeClient.ResponseMode = []fosite.ResponseModeType{fosite.ResponseModeQuery}
+				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeQuery}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				//assert.EqualValues(t, state, stateFromServer)
@@ -180,7 +172,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 			setup: func() {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
-				responseModeClient.ResponseMode = []fosite.ResponseModeType{fosite.ResponseModeFormPost}
+				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeFormPost}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
@@ -230,6 +222,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 		})
 	}
 }
+
 func getParameters(t *testing.T, param url.Values) (code, state, iDToken string, token goauth.Token, errResp map[string]string) {
 	errResp = make(map[string]string)
 	if param.Get("error") != "" {

@@ -82,9 +82,8 @@ type OpenIDConnectClient interface {
 
 // ResponseModeClient represents a client capable of handling response_mode
 type ResponseModeClient interface {
-
 	// GetResponseMode returns the response modes that client is allowed to send
-	GetResponseMode() []ResponseModeType
+	GetResponseModes() []ResponseModeType
 }
 
 // DefaultClient is a simple default implementation of the Client interface.
@@ -111,7 +110,7 @@ type DefaultOpenIDConnectClient struct {
 
 type DefaultResponseModeClient struct {
 	*DefaultClient
-	ResponseMode []ResponseModeType `json:"response_mode"`
+	ResponseModes []ResponseModeType `json:"response_modes"`
 }
 
 func (c *DefaultClient) GetID() string {
@@ -190,6 +189,6 @@ func (c *DefaultOpenIDConnectClient) GetRequestURIs() []string {
 	return c.RequestURIs
 }
 
-func (c *DefaultResponseModeClient) GetResponseMode() []ResponseModeType {
-	return c.ResponseMode
+func (c *DefaultResponseModeClient) GetResponseModes() []ResponseModeType {
+	return c.ResponseModes
 }

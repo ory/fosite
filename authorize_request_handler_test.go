@@ -378,7 +378,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				"response_mode": {"unknown"},
 			},
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"},ResponseTypes: []string{"code token"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"}, ResponseTypes: []string{"code token"}}, nil)
 			},
 			expectedError: ErrUnsupportedResponseMode,
 		},
@@ -418,7 +418,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 						Scopes:        []string{"foo", "bar"},
 						ResponseTypes: []string{"code token"},
 					},
-					ResponseMode: []ResponseModeType{ResponseModeQuery},
+					ResponseModes: []ResponseModeType{ResponseModeQuery},
 				}, nil)
 			},
 			expectedError: ErrUnsupportedResponseMode,
@@ -444,7 +444,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 						ResponseTypes: []string{"code token"},
 						Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
 					},
-					ResponseMode: []ResponseModeType{ResponseModeFormPost},
+					ResponseModes: []ResponseModeType{ResponseModeFormPost},
 				}, nil)
 			},
 			expect: &AuthorizeRequest{
@@ -459,7 +459,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 							ResponseTypes: []string{"code token"},
 							Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
 						},
-						ResponseMode: []ResponseModeType{ResponseModeFormPost},
+						ResponseModes: []ResponseModeType{ResponseModeFormPost},
 					},
 					RequestedScope:    []string{"foo", "bar"},
 					RequestedAudience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},

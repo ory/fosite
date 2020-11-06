@@ -34,7 +34,6 @@ import (
 )
 
 func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizationCode, stateFromServer, iDToken string, token goauth.Token, customParameters url.Values, rFC6749Error map[string]string, err error) {
-
 	token = goauth.Token{}
 	rFC6749Error = map[string]string{}
 	customParameters = url.Values{}
@@ -43,23 +42,28 @@ func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizatio
 	if err != nil {
 		return "", "", "", token, customParameters, rFC6749Error, err
 	}
+
 	//doc>html>body
 	body := findBody(doc.FirstChild.FirstChild)
 	if body.Data != "body" {
 		return "", "", "", token, customParameters, rFC6749Error, errors.New("Malformed html")
 	}
+
 	htmlEvent := body.Attr[0].Key
 	if htmlEvent != "onload" {
 		return "", "", "", token, customParameters, rFC6749Error, errors.New("onload event is missing")
 	}
+
 	onLoadFunc := body.Attr[0].Val
 	if onLoadFunc != "javascript:document.forms[0].submit()" {
 		return "", "", "", token, customParameters, rFC6749Error, errors.New("onload function is missing")
 	}
+
 	form := getNextNoneTextNode(body.FirstChild)
 	if form.Data != "form" {
 		return "", "", "", token, customParameters, rFC6749Error, errors.New("html form is missing")
 	}
+
 	for _, attr := range form.Attr {
 		if attr.Key == "method" {
 			if attr.Val != "post" {
@@ -82,6 +86,7 @@ func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizatio
 			}
 
 		}
+
 		switch k {
 		case "state":
 			stateFromServer = v
@@ -111,6 +116,7 @@ func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizatio
 			customParameters.Add(k, v)
 		}
 	}
+
 	return
 }
 
@@ -119,8 +125,10 @@ func getNextNoneTextNode(node *html.Node) *html.Node {
 	if nextNode != nil && nextNode.Type == html.TextNode {
 		nextNode = getNextNoneTextNode(node.NextSibling)
 	}
+
 	return nextNode
 }
+
 func findBody(node *html.Node) *html.Node {
 	if node != nil {
 		if node.Data == "body" {
@@ -128,5 +136,6 @@ func findBody(node *html.Node) *html.Node {
 		}
 		return findBody(node.NextSibling)
 	}
+
 	return nil
 }

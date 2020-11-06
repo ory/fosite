@@ -38,18 +38,9 @@ import (
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
-	"github.com/ory/fosite/handler/oauth2"
 )
 
 func TestAuthorizeFormPostResponseMode(t *testing.T) {
-	for _, strategy := range []oauth2.AccessTokenStrategy{
-		hmacStrategy,
-	} {
-		runTestAuthorizeFormPostResponseMode(t, strategy)
-	}
-}
-
-func runTestAuthorizeFormPostResponseMode(t *testing.T, strategy interface{}) {
 	session := &defaultSession{
 		DefaultSession: &openid.DefaultSession{
 			Claims: &jwt.IDTokenClaims{
@@ -67,7 +58,7 @@ func runTestAuthorizeFormPostResponseMode(t *testing.T, strategy interface{}) {
 	defaultClient.RedirectURIs[0] = ts.URL + "/callback"
 	responseModeClient := &fosite.DefaultResponseModeClient{
 		DefaultClient: defaultClient,
-		ResponseMode:  []fosite.ResponseModeType{fosite.ResponseModeFormPost},
+		ResponseModes: []fosite.ResponseModeType{fosite.ResponseModeFormPost},
 	}
 	fositeStore.Clients["response-mode-client"] = responseModeClient
 	oauthClient.ClientID = "response-mode-client"

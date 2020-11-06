@@ -40,7 +40,7 @@ type AuthorizeRequest struct {
 	RedirectURI          *url.URL         `json:"redirectUri" gorethink:"redirectUri"`
 	State                string           `json:"state" gorethink:"state"`
 	HandledResponseTypes Arguments        `json:"handledResponseTypes" gorethink:"handledResponseTypes"`
-	ResponseMode         ResponseModeType `json:"ResponseMode" gorethink:"ResponseMode"`
+	ResponseMode         ResponseModeType `json:"ResponseModes" gorethink:"ResponseModes"`
 	DefaultResponseMode  ResponseModeType `json:"DefaultResponseMode" gorethink:"DefaultResponseMode"`
 
 	Request

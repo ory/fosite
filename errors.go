@@ -74,7 +74,7 @@ var (
 	}
 	ErrUnsupportedResponseMode = &RFC6749Error{
 		Name:        errUnsupportedResponseModeName,
-		Description: "The authorization server does not support obtaining response using this response mode",
+		Description: "The authorization server does not support obtaining a response using this response mode.",
 		Code:        http.StatusBadRequest,
 	}
 	ErrInvalidScope = &RFC6749Error{
