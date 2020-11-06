@@ -227,6 +227,7 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	request.ResponseTypes = responseTypes
 	return nil
 }
+
 func (f *Fosite) ParseResponseMode(r *http.Request, request *AuthorizeRequest) error {
 	switch responseMode := r.Form.Get("response_mode"); responseMode {
 	case string(ResponseModeDefault):
