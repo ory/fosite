@@ -274,15 +274,10 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
 		return request, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithCause(err).WithDebug(err.Error()))
 	}
-
 	request.Form = r.Form
 
 	// Save state to the request to be returned in error conditions (https://github.com/ory/hydra/issues/1642)
 	request.State = request.Form.Get("state")
-
-	if err := f.ParseResponseMode(r, request); err != nil {
-		return request, err
-	}
 
 	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	if err != nil {
@@ -290,7 +285,18 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 	request.Client = client
 
+	// Now that the base fields (state and client) are populated, we extract all the information
+	// from the request object or request object uri, if one is set.
+	//
+	// All other parse methods should come afterwards so that we ensure that the data is taken
+	// from the request_object if set.
 	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(request); err != nil {
+		return request, err
+	}
+
+	// The request context is now fully available and we can start processing the individual
+	// fields.
+	if err := f.ParseResponseMode(r, request); err != nil {
 		return request, err
 	}
 

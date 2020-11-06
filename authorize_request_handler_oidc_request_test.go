@@ -64,7 +64,6 @@ func mustGenerateNoneAssertion(t *testing.T, claims jwt.MapClaims) string {
 }
 
 func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
-
 	key, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
 		panic(err)
@@ -79,7 +78,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 		},
 	}
 
-	validRequestObject := mustGenerateAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz"}, key, "kid-foo")
+	validRequestObject := mustGenerateAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz", "response_type": "token", "response_mode": "post_form"}, key, "kid-foo")
 	validRequestObjectWithoutKid := mustGenerateAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz"}, key, "")
 	validNoneRequestObject := mustGenerateNoneAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz", "state": "some-state"})
 
@@ -167,9 +166,10 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 		},
 		{
 			d:          "should pass and set request parameters properly",
-			form:       url.Values{"scope": {"openid"}, "request": {validRequestObject}},
+			form:       url.Values{"scope": {"openid"}, "response_type": {"code"}, "response_mode": {"none"}, "request": {validRequestObject}},
 			client:     &DefaultOpenIDConnectClient{JSONWebKeys: jwks, RequestObjectSigningAlgorithm: "RS256"},
-			expectForm: url.Values{"scope": {"foo openid"}, "request": {validRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
+			// The values from form are overwritten by the request object.
+			expectForm: url.Values{"response_type": {"token"}, "response_mode": {"post_form"}, "scope": {"foo openid"}, "request": {validRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
 		},
 		{
 			d:          "should pass even if kid is unset",
@@ -188,7 +188,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			d:          "should pass and set request_uri parameters properly and also fetch jwk from remote",
 			form:       url.Values{"scope": {"openid"}, "request_uri": {reqTS.URL}},
 			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "RS256", RequestURIs: []string{reqTS.URL}},
-			expectForm: url.Values{"scope": {"foo openid"}, "request_uri": {reqTS.URL}, "foo": {"bar"}, "baz": {"baz"}},
+			expectForm: url.Values{"response_type": {"token"}, "response_mode": {"post_form"}, "scope": {"foo openid"}, "request_uri": {reqTS.URL}, "foo": {"bar"}, "baz": {"baz"}},
 		},
 		{
 			d:          "should pass when request object uses algorithm none",

@@ -44,9 +44,7 @@ import (
 //   If a Response Type contains one of more space characters (%20), it is compared as a space-delimited list of
 //   values in which the order of values does not matter.
 func TestNewAuthorizeRequest(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	store := NewMockStorage(ctrl)
-	defer ctrl.Finish()
+	var store *MockStorage
 
 	redir, _ := url.Parse("https://foo.bar/cb")
 	specialCharRedir, _ := url.Parse("web+application://callback")
@@ -380,7 +378,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				"response_mode": {"unknown"},
 			},
 			mock: func() {
-				//store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"},ResponseTypes: []string{"code token"}}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{RedirectURIs: []string{"https://foo.bar/cb"}, Scopes: []string{"foo", "bar"},ResponseTypes: []string{"code token"}}, nil)
 			},
 			expectedError: ErrUnsupportedResponseMode,
 		},
@@ -470,6 +468,10 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			store = NewMockStorage(ctrl)
+			defer ctrl.Finish()
+
 			c.mock()
 			if c.r == nil {
 				c.r = &http.Request{Header: http.Header{}}
@@ -478,6 +480,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				}
 			}
 
+			c.conf.Store = store
 			ar, err := c.conf.NewAuthorizeRequest(context.Background(), c.r)
 			if c.expectedError != nil {
 				assert.EqualError(t, err, c.expectedError.Error())
