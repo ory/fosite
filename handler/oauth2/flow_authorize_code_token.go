@@ -180,13 +180,13 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	} else if err := c.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
 		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
-			err = rollBackTxnErr
+			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebugf("error: %s; rollback error: %s", err, rollBackTxnErr))
 		}
 		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	} else if refreshSignature != "" {
 		if err := c.CoreStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester.Sanitize([]string{})); err != nil {
 			if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
-				err = rollBackTxnErr
+				return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebugf("error: %s; rollback error: %s", err, rollBackTxnErr))
 			}
 			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		}
