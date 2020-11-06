@@ -228,9 +228,7 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	return nil
 }
 func (f *Fosite) ParseResponseMode(r *http.Request, request *AuthorizeRequest) error {
-	responseMode := r.Form.Get("response_mode")
-
-	switch responseMode {
+	switch responseMode := r.Form.Get("response_mode"); responseMode {
 	case string(ResponseModeDefault):
 		request.ResponseMode = ResponseModeDefault
 	case string(ResponseModeFragment):
@@ -242,25 +240,32 @@ func (f *Fosite) ParseResponseMode(r *http.Request, request *AuthorizeRequest) e
 	default:
 		return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("Request with unsupported response_mode \"%s\".", responseMode))
 	}
+
 	return nil
 }
+
 func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest) error {
-	if request.ResponseMode != ResponseModeDefault {
-		var found bool
-		responseModeClient, ok := request.GetClient().(ResponseModeClient)
-		if !ok {
-			return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("The request has response_mode \"%s\". set but registered OAuth 2.0 client doesn't support response_mode", r.Form.Get("response_mode")))
-		}
-		for _, t := range responseModeClient.GetResponseMode() {
-			if request.ResponseMode == t {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("The client is not allowed to request response_mode \"%s\".", r.Form.Get("response_mode")))
+	if request.ResponseMode == ResponseModeDefault {
+		return nil
+	}
+
+	responseModeClient, ok := request.GetClient().(ResponseModeClient)
+	if !ok {
+		return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("The request has response_mode \"%s\". set but registered OAuth 2.0 client doesn't support response_mode", r.Form.Get("response_mode")))
+	}
+
+	var found bool
+	for _, t := range responseModeClient.GetResponseMode() {
+		if request.ResponseMode == t {
+			found = true
+			break
 		}
 	}
+
+	if !found {
+		return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("The client is not allowed to request response_mode \"%s\".", r.Form.Get("response_mode")))
+	}
+
 	return nil
 }
 

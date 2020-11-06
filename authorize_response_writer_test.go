@@ -100,7 +100,7 @@ func TestNewAuthorizeResponse(t *testing.T) {
 				ar.EXPECT().GetResponseTypes().Return([]string{"token", "code"})
 			},
 			isErr:     true,
-			expectErr: ErrUnsupportedResponseMode.WithHintf("Insecure response_mode \"%s\" for the response_type \"%s\".", ResponseModeQuery, []string{"token", "code"}),
+			expectErr: ErrUnsupportedResponseMode.WithHintf("Insecure response_mode '%s' for the response_type '%s'.", ResponseModeQuery, []string{"token", "code"}),
 		},
 	} {
 		c.mock()

@@ -96,8 +96,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.NotEmpty(t, err["Name"])
 				assert.NotEmpty(t, err["Description"])
-				assert.Equal(t, "Insecure response_mode \"query\" for the response_type \"[id_token token]\".", err["Hint"])
-
+				assert.Equal(t, "Insecure response_mode 'query' for the response_type '[id_token token]'.", err["Hint"])
 			},
 		},
 		{
@@ -115,7 +114,6 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 				assert.NotEmpty(t, token.AccessToken)
 				assert.NotEmpty(t, token.Expiry)
 				assert.NotEmpty(t, iDToken)
-
 			},
 		},
 		{
@@ -172,7 +170,7 @@ func runTestAuthorizeResponseMode(t *testing.T, strategy interface{}) {
 				//assert.EqualValues(t, state, stateFromServer)
 				assert.NotEmpty(t, err["Name"])
 				assert.NotEmpty(t, err["Description"])
-				assert.Equal(t, "Insecure response_mode \"query\" for the response_type \"[token code]\".", err["Hint"])
+				assert.Equal(t, "Insecure response_mode 'query' for the response_type '[token code]'.", err["Hint"])
 			},
 		},
 		{

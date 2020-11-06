@@ -210,6 +210,7 @@ func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, t
 		Parameters: parameters,
 	})
 }
+
 func URLSetFragment(source *url.URL, fragment url.Values) {
 	var f string
 	for k, v := range fragment {
