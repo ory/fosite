@@ -4,17 +4,18 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-04)](#unreleased-2020-11-04)
+- [Unreleased (2020-11-09)](#unreleased-2020-11-09)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
+    - [BREAKING CHANGES](#breaking-changes)
   - [0.35.1 (2020-10-11)](#0351-2020-10-11)
     - [Bug Fixes](#bug-fixes-1)
     - [Documentation](#documentation-1)
     - [Features](#features-1)
 - [0.35.0 (2020-10-06)](#0350-2020-10-06)
     - [Bug Fixes](#bug-fixes-2)
-    - [BREAKING CHANGES](#breaking-changes)
+    - [BREAKING CHANGES](#breaking-changes-1)
   - [0.34.1 (2020-10-02)](#0341-2020-10-02)
     - [Bug Fixes](#bug-fixes-3)
     - [Documentation](#documentation-2)
@@ -22,10 +23,10 @@
     - [Bug Fixes](#bug-fixes-4)
     - [Features](#features-2)
     - [Unclassified](#unclassified)
-    - [BREAKING CHANGES](#breaking-changes-1)
+    - [BREAKING CHANGES](#breaking-changes-2)
 - [0.33.0 (2020-09-16)](#0330-2020-09-16)
     - [Features](#features-3)
-    - [BREAKING CHANGES](#breaking-changes-2)
+    - [BREAKING CHANGES](#breaking-changes-3)
   - [0.32.4 (2020-09-15)](#0324-2020-09-15)
     - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation-3)
@@ -322,7 +323,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.35.1...6d2092da1e8699e43fd6dccb4c3a33b885cec7f8) (2020-11-04)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.35.1...3e3290f811f849881f1c6bafabc1c765d9a42ac7) (2020-11-09)
 
 
 ### Bug Fixes
@@ -353,6 +354,22 @@
 
 ### Features
 
+* Add support for response_mode=form_post ([#509](https://github.com/ory/fosite/issues/509)) ([3e3290f](https://github.com/ory/fosite/commit/3e3290f811f849881f1c6bafabc1c765d9a42ac7)):
+
+    > This patch introduces support for `response_mode=form_post` as well as `response_mode` of `none` and `query` and `fragment`.
+    > 
+    >  To support this new feature your OAuth2 Client must implement the `fosite.ResponseModeClient` interface. We suggest to always return all response modes there unless you want to explicitly disable one of the response modes:
+    > 
+    > ```go
+    > func (c *Client) GetResponseModes() []fosite.ResponseModeType {
+    > 	return []fosite.ResponseModeType{
+    > 		fosite.ResponseModeDefault,
+    > 		fosite.ResponseModeFormPost,
+    > 		fosite.ResponseModeQuery,
+    > 		fosite.ResponseModeFragment,
+    > 	}
+    > }
+    > ```
 * Improve error messages ([#513](https://github.com/ory/fosite/issues/513)) ([fcac5a6](https://github.com/ory/fosite/commit/fcac5a6457c92d1eb1a389192cd0c7fb590ab8b3))
 * Support passing repeated audience parameter in URL query ([#518](https://github.com/ory/fosite/issues/518)) ([47f2a31](https://github.com/ory/fosite/commit/47f2a31fbed137b58e4866f78ec8b9f591134f98)), closes [#504](https://github.com/ory/fosite/issues/504):
 
@@ -363,6 +380,13 @@
     > > Audience(s) that this ID Token is intended for. It MUST contain the OAuth 2.0 client_id of the Relying Party as an audience value. It MAY also contain identifiers for other audiences. In the general case, the aud value is an array of case sensitive strings. In the common special case when there is one audience, the aud value MAY be a single case sensitive string. 
     > 
     > `client_id` is generally not an URI, but some UUID or some other random string.
+
+
+### BREAKING CHANGES
+
+* As part of this change, methods `GetResponseMode`, `SetDefaultResponseMode`, `GetDefaultResponseMode ` where added to interface `AuthorizeRequester`. Also, methods `GetQuery`, `AddQuery`, and `GetFragment` were merged into one function `GetParameters` and `AddParameter` on the `AuthorizeResponder` interface. Methods on `AuthorizeRequest` and `AuthorizeResponse` changed accordingly and will need to be updated in your codebase. Additionally, the field `Debug` was renamed to `DebugField` and a new method `Debug() string` was added to `RFC6749Error`.
+
+Co-authored-by: hackerman <3372410+aeneasr@users.noreply.github.com>
 
 
 
