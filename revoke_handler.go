@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/pkg/errors"
 )
 
@@ -49,11 +51,11 @@ import (
 // server and does not influence the revocation response.
 func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) error {
 	if r.Method != "POST" {
-		return errors.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s' but expected 'POST'.", r.Method))
+		return errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s' but expected 'POST'.", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	} else if len(r.PostForm) == 0 {
-		return errors.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
+		return errorsx.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
 	}
 
 	client, err := f.AuthenticateClient(ctx, r, r.PostForm)
@@ -76,7 +78,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 	}
 
 	if !found {
-		return errors.WithStack(ErrInvalidRequest)
+		return errorsx.WithStack(ErrInvalidRequest)
 	}
 
 	return nil
@@ -111,7 +113,7 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 			return
 		}
 
-		rw.WriteHeader(ErrInvalidRequest.Code)
+		rw.WriteHeader(ErrInvalidRequest.CodeField)
 		_, _ = rw.Write(js)
 	} else if errors.Is(err, ErrInvalidClient) {
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
@@ -122,7 +124,7 @@ func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
 			return
 		}
 
-		rw.WriteHeader(ErrInvalidClient.Code)
+		rw.WriteHeader(ErrInvalidClient.CodeField)
 		_, _ = rw.Write(js)
 	} else {
 		// 200 OK

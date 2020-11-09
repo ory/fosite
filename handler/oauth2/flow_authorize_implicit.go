@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
 )
@@ -57,17 +57,17 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 
 	// Disabled because this is already handled at the authorize_request_handler
 	// if !ar.GetClient().GetResponseTypes().Has("token") {
-	// 	 return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token"))
+	// 	 return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token"))
 	// }
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
@@ -90,11 +90,11 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	// Generate the code
 	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, ar)
 	if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar.Sanitize([]string{})); err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 	resp.AddParameter("access_token", token)
 	resp.AddParameter("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC())/time.Second), 10))

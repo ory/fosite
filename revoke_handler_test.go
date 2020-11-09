@@ -240,14 +240,14 @@ func TestWriteRevocationResponse(t *testing.T) {
 				rw:  httptest.NewRecorder(),
 				err: ErrInvalidRequest,
 			},
-			expectCode: ErrInvalidRequest.Code,
+			expectCode: ErrInvalidRequest.CodeField,
 		},
 		{
 			input: args{
 				rw:  httptest.NewRecorder(),
 				err: ErrInvalidClient,
 			},
-			expectCode: ErrInvalidClient.Code,
+			expectCode: ErrInvalidClient.CodeField,
 		},
 		{
 			input: args{

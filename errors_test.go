@@ -28,12 +28,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIs(t *testing.T) {
-	assert.True(t, errors.Is(ErrUnknownRequest, ErrUnknownRequest))
-	assert.True(t, errors.Is(ErrUnknownRequest, &RFC6749Error{
-		Name: errUnknownErrorName,
-	}))
-	assert.True(t, errors.Is(&RFC6749Error{
-		Name: errUnknownErrorName,
-	}, ErrUnknownRequest))
+func TestRFC6749Error(t *testing.T) {
+	t.Run("case=wrap", func(t *testing.T) {
+		orig := errors.New("hi")
+		wrap := new(RFC6749Error)
+		wrap.Wrap(orig)
+
+		assert.EqualValues(t, orig.(stackTracer).StackTrace(), wrap.StackTrace())
+	})
+
+	t.Run("case=wrap_self", func(t *testing.T) {
+		wrap := new(RFC6749Error)
+		wrap.Wrap(wrap)
+
+		assert.Empty(t, wrap.StackTrace())
+	})
 }

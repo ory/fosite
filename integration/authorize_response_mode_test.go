@@ -86,9 +86,9 @@ func TestAuthorizeResponseModes(t *testing.T) {
 				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeQuery}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
-				assert.NotEmpty(t, err["Name"])
-				assert.NotEmpty(t, err["Description"])
-				assert.Equal(t, "Insecure response_mode 'query' for the response_type '[id_token token]'.", err["Hint"])
+				assert.NotEmpty(t, err["ErrorField"])
+				assert.NotEmpty(t, err["DescriptionField"])
+				assert.Equal(t, "Insecure response_mode 'query' for the response_type '[id_token token]'.", err["HintField"])
 			},
 		},
 		{
@@ -118,9 +118,9 @@ func TestAuthorizeResponseModes(t *testing.T) {
 				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeQuery}
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
-				assert.NotEmpty(t, err["Name"])
-				assert.NotEmpty(t, err["Description"])
-				assert.Equal(t, "The client is not allowed to request response_mode \"form_post\".", err["Hint"])
+				assert.NotEmpty(t, err["ErrorField"])
+				assert.NotEmpty(t, err["DescriptionField"])
+				assert.Equal(t, "The client is not allowed to request response_mode \"form_post\".", err["HintField"])
 			},
 		},
 		{
@@ -160,9 +160,9 @@ func TestAuthorizeResponseModes(t *testing.T) {
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				//assert.EqualValues(t, state, stateFromServer)
-				assert.NotEmpty(t, err["Name"])
-				assert.NotEmpty(t, err["Description"])
-				assert.Equal(t, "Insecure response_mode 'query' for the response_type '[token code]'.", err["Hint"])
+				assert.NotEmpty(t, err["ErrorField"])
+				assert.NotEmpty(t, err["DescriptionField"])
+				assert.Equal(t, "Insecure response_mode 'query' for the response_type '[token code]'.", err["HintField"])
 			},
 		},
 		{
@@ -226,9 +226,9 @@ func TestAuthorizeResponseModes(t *testing.T) {
 func getParameters(t *testing.T, param url.Values) (code, state, iDToken string, token goauth.Token, errResp map[string]string) {
 	errResp = make(map[string]string)
 	if param.Get("error") != "" {
-		errResp["Name"] = param.Get("error")
-		errResp["Description"] = param.Get("error_description")
-		errResp["Hint"] = param.Get("error_hint")
+		errResp["ErrorField"] = param.Get("error")
+		errResp["DescriptionField"] = param.Get("error_description")
+		errResp["HintField"] = param.Get("error_hint")
 	} else {
 		code = param.Get("code")
 		state = param.Get("state")

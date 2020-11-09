@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/x/errorsx"
+
 	jwtx "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 
@@ -109,27 +111,27 @@ func validate(ctx context.Context, jwtStrategy jwt.JWTStrategy, token string) (t
 		if errors.As(err, &e) {
 			switch e.Errors {
 			case jwtx.ValidationErrorMalformed:
-				err = errors.WithStack(fosite.ErrInvalidTokenFormat.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrInvalidTokenFormat.WithWrap(err).WithDebug(err.Error()))
 			case jwtx.ValidationErrorUnverifiable:
-				err = errors.WithStack(fosite.ErrTokenSignatureMismatch.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrTokenSignatureMismatch.WithWrap(err).WithDebug(err.Error()))
 			case jwtx.ValidationErrorSignatureInvalid:
-				err = errors.WithStack(fosite.ErrTokenSignatureMismatch.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrTokenSignatureMismatch.WithWrap(err).WithDebug(err.Error()))
 			case jwtx.ValidationErrorAudience:
-				err = errors.WithStack(fosite.ErrTokenClaim.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
 			case jwtx.ValidationErrorExpired:
-				err = errors.WithStack(fosite.ErrTokenExpired.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrTokenExpired.WithWrap(err).WithDebug(err.Error()))
 			case jwtx.ValidationErrorIssuedAt:
-				err = errors.WithStack(fosite.ErrTokenClaim.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
 			case jwtx.ValidationErrorIssuer:
-				err = errors.WithStack(fosite.ErrTokenClaim.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
 			case jwtx.ValidationErrorNotValidYet:
-				err = errors.WithStack(fosite.ErrTokenClaim.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
 			case jwtx.ValidationErrorId:
-				err = errors.WithStack(fosite.ErrTokenClaim.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
 			case jwtx.ValidationErrorClaimsInvalid:
-				err = errors.WithStack(fosite.ErrTokenClaim.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
 			default:
-				err = errors.WithStack(fosite.ErrRequestUnauthorized.WithCause(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrRequestUnauthorized.WithWrap(err).WithDebug(err.Error()))
 			}
 		}
 	}

@@ -13,14 +13,11 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      -
-        restore_cache:
+      - restore_cache:
           keys:
             - go-github-ory-fosite-v1-{{ checksum "go.sum" }}
-      -
-        run: go mod download
-      -
-        save_cache:
+      - run: go mod download
+      - save_cache:
           key: go-github-ory-fosite-v1-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"

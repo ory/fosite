@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
 )
@@ -81,17 +81,17 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 
 	// Disabled because this is already handled at the authorize_request_handler
 	// if !ar.GetClient().GetResponseTypes().Has("code") {
-	// 	 return errors.WithStack(fosite.ErrInvalidGrant)
+	// 	 return errorsx.WithStack(fosite.ErrInvalidGrant)
 	// }
 
 	if !c.secureChecker()(ar.GetRedirectURI()) {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/."))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
@@ -105,12 +105,12 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 	if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthCodeLifespan))
 	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.GetSanitationWhiteList())); err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	resp.AddParameter("code", code)

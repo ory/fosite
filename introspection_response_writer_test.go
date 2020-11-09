@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -46,17 +48,17 @@ func TestWriteIntrospectionError(t *testing.T) {
 	rw.EXPECT().WriteHeader(http.StatusUnauthorized)
 	rw.EXPECT().Header().AnyTimes().Return(http.Header{})
 	rw.EXPECT().Write(gomock.Any())
-	f.WriteIntrospectionError(rw, errors.WithStack(ErrRequestUnauthorized))
+	f.WriteIntrospectionError(rw, errorsx.WithStack(ErrRequestUnauthorized))
 
 	rw.EXPECT().WriteHeader(http.StatusBadRequest)
 	rw.EXPECT().Write(gomock.Any())
-	f.WriteIntrospectionError(rw, errors.WithStack(ErrInvalidRequest))
+	f.WriteIntrospectionError(rw, errorsx.WithStack(ErrInvalidRequest))
 
 	rw.EXPECT().Write([]byte("{\"active\":false}\n"))
 	f.WriteIntrospectionError(rw, errors.New(""))
 
 	rw.EXPECT().Write([]byte("{\"active\":false}\n"))
-	f.WriteIntrospectionError(rw, errors.WithStack(ErrInactiveToken.WithCause(ErrRequestUnauthorized)))
+	f.WriteIntrospectionError(rw, errorsx.WithStack(ErrInactiveToken.WithWrap(ErrRequestUnauthorized)))
 
 	f.WriteIntrospectionError(rw, nil)
 }

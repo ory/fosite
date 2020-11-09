@@ -26,7 +26,7 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
@@ -59,22 +59,22 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 	// Disabled because this is already handled at the authorize_request_handler
 	//if ar.GetResponseTypes().Matches("token") && !ar.GetClient().GetResponseTypes().Has("token") {
-	//	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the token response type"))
+	//	return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the token response type"))
 	//} else if ar.GetResponseTypes().Matches("code") && !ar.GetClient().GetResponseTypes().Has("code") {
-	//	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the code response type"))
+	//	return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the code response type"))
 	//} else if ar.GetResponseTypes().Matches("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
-	//	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the id_token response type"))
+	//	return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the id_token response type"))
 	//}
 
 	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter \"nonce\" must be set when using the OpenID Connect Hybrid Flow."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter \"nonce\" must be set when using the OpenID Connect Hybrid Flow."))
 	} else if len(nonce) < c.MinParameterEntropy {
-		return errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
+		return errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
 	}
 
 	sess, ok := ar.GetSession().(Session)
 	if !ok {
-		return errors.WithStack(ErrInvalidSession)
+		return errorsx.WithStack(ErrInvalidSession)
 	}
 
 	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ctx, ar); err != nil {
@@ -84,19 +84,19 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
 	claims := sess.IDTokenClaims()
 	if ar.GetResponseTypes().Has("code") {
 		if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
-			return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant 'authorization_code'."))
+			return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant 'authorization_code'."))
 		}
 
 		code, signature, err := c.AuthorizeExplicitGrantHandler.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 		if err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 
 		// This is not required because the auth code flow is being handled by oauth2/flow_authorize_code_token which in turn
@@ -109,7 +109,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		// This is required because we must limit the authorize code lifespan.
 		ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthorizeExplicitGrantHandler.AuthCodeLifespan).Round(time.Second))
 		if err := c.AuthorizeExplicitGrantHandler.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.AuthorizeExplicitGrantHandler.GetSanitationWhiteList())); err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 
 		resp.AddParameter("code", code)
@@ -123,16 +123,16 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 		if ar.GetGrantedScopes().Has("openid") {
 			if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar.Sanitize(oidcParameters)); err != nil {
-				return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+				return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 			}
 		}
 	}
 
 	if ar.GetResponseTypes().Has("token") {
 		if !ar.GetClient().GetGrantTypes().Has("implicit") {
-			return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
+			return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
 		} else if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, ar, resp); err != nil {
-			return errors.WithStack(err)
+			return errorsx.WithStack(err)
 		}
 		ar.SetResponseTypeHandled("token")
 
@@ -153,7 +153,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, ar, resp); err != nil {
-		return errors.WithStack(err)
+		return errorsx.WithStack(err)
 	}
 
 	ar.SetResponseTypeHandled("id_token")

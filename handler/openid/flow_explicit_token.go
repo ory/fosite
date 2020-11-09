@@ -24,43 +24,45 @@ package openid
 import (
 	"context"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
 )
 
 func (c *OpenIDConnectExplicitHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	return errors.WithStack(fosite.ErrUnknownRequest)
+	return errorsx.WithStack(fosite.ErrUnknownRequest)
 }
 
 func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().ExactOne("authorization_code") {
-		return errors.WithStack(fosite.ErrUnknownRequest)
+		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, requester.GetRequestForm().Get("code"), requester)
 	if errors.Is(err, ErrNoSessionFound) {
-		return errors.WithStack(fosite.ErrUnknownRequest.WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrUnknownRequest.WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	if !authorize.GetGrantedScopes().Has("openid") {
-		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("An OpenID Connect session was found but the openid scope is missing, probably due to a broken code configuration."))
+		return errorsx.WithStack(fosite.ErrMisconfiguration.WithDebug("An OpenID Connect session was found but the openid scope is missing, probably due to a broken code configuration."))
 	}
 
 	if !requester.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"authorization_code\"."))
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"authorization_code\"."))
 	}
 
 	sess, ok := requester.GetSession().(Session)
 	if !ok {
-		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because session must be of type fosite/handler/openid.Session."))
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because session must be of type fosite/handler/openid.Session."))
 	}
 
 	claims := sess.IDTokenClaims()
 	if claims.Subject == "" {
-		return errors.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
 	}
 
 	claims.AccessTokenHash = c.GetAccessTokenHash(ctx, requester, responder)
@@ -69,7 +71,7 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 	// https://openid.net/specs/openid-connect-registration-1_0.html
 	//
 	// if !requester.GetClient().GetResponseTypes().Has("id_token") {
-	// 	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
+	// 	return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
 	// }
 
 	return c.IssueExplicitIDToken(ctx, authorize, responder)

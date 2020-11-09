@@ -25,7 +25,7 @@ import (
 	"context"
 	"encoding/base64"
 
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
@@ -54,32 +54,32 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	ar.SetDefaultResponseMode(fosite.ResponseModeFragment)
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
 	}
 
 	// Disabled because this is already handled at the authorize_request_handler
 	//if ar.GetResponseTypes().ExactOne("id_token") && !ar.GetClient().GetResponseTypes().Has("id_token") {
-	//	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
+	//	return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
 	//} else if ar.GetResponseTypes().Matches("token", "id_token") && !ar.GetClient().GetResponseTypes().Has("token", "id_token") {
-	//	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token and id_token"))
+	//	return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token and id_token"))
 	//}
 
 	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'nonce' must be set when using the OpenID Connect Implicit Flow."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'nonce' must be set when using the OpenID Connect Implicit Flow."))
 	} else if len(nonce) < c.MinParameterEntropy {
-		return errors.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
+		return errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
 	sess, ok := ar.GetSession().(Session)
 	if !ok {
-		return errors.WithStack(ErrInvalidSession)
+		return errorsx.WithStack(ErrInvalidSession)
 	}
 
 	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ctx, ar); err != nil {
@@ -89,7 +89,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	claims := sess.IDTokenClaims()
 	if ar.GetResponseTypes().Has("token") {
 		if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, ar, resp); err != nil {
-			return errors.WithStack(err)
+			return errorsx.WithStack(err)
 		}
 
 		ar.SetResponseTypeHandled("token")
@@ -104,7 +104,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	if err := c.IssueImplicitIDToken(ctx, ar, resp); err != nil {
-		return errors.WithStack(err)
+		return errorsx.WithStack(err)
 	}
 
 	// there is no need to check for https, because implicit flow does not require https

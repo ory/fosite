@@ -24,7 +24,7 @@ package openid
 import (
 	"context"
 
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
 )
@@ -51,11 +51,11 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	//if !ar.GetClient().GetResponseTypes().Has("id_token", "code") {
-	//	return errors.WithStack(fosite.ErrInvalidRequest.WithDebug("The client is not allowed to use response type id_token and code"))
+	//	return errorsx.WithStack(fosite.ErrInvalidRequest.WithDebug("The client is not allowed to use response type id_token and code"))
 	//}
 
 	if len(resp.GetCode()) == 0 {
-		return errors.WithStack(fosite.ErrMisconfiguration.WithDebug("The authorization code has not been issued yet, indicating a broken code configuration."))
+		return errorsx.WithStack(fosite.ErrMisconfiguration.WithDebug("The authorization code has not been issued yet, indicating a broken code configuration."))
 	}
 
 	if err := c.OpenIDConnectRequestValidator.ValidatePrompt(ctx, ar); err != nil {
@@ -63,7 +63,7 @@ func (c *OpenIDConnectExplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	}
 
 	if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar.Sanitize(oidcParameters)); err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	// there is no need to check for https, because it has already been checked by core.explicit

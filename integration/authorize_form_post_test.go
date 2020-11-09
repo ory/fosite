@@ -160,8 +160,8 @@ func TestAuthorizeFormPostResponseMode(t *testing.T) {
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.EqualValues(t, state, stateFromServer)
-				assert.NotEmpty(t, err["Name"])
-				assert.NotEmpty(t, err["Description"])
+				assert.NotEmpty(t, err["ErrorField"])
+				assert.NotEmpty(t, err["DescriptionField"])
 			},
 		},
 	} {

@@ -25,6 +25,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
@@ -47,17 +49,17 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	// grant_type REQUIRED.
 	// Value MUST be set to "password".
 	if !request.GetGrantTypes().ExactOne("password") {
-		return errors.WithStack(fosite.ErrUnknownRequest)
+		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("password") {
-		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The client is not allowed to use authorization grant 'password'."))
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The client is not allowed to use authorization grant 'password'."))
 	}
 
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
@@ -68,11 +70,11 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	username := request.GetRequestForm().Get("username")
 	password := request.GetRequestForm().Get("password")
 	if username == "" || password == "" {
-		return errors.WithStack(fosite.ErrInvalidRequest.WithHint("Username or password are missing from the POST body."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Username or password are missing from the POST body."))
 	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Is(err, fosite.ErrNotFound) {
-		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to authenticate the provided username and password credentials.").WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to authenticate the provided username and password credentials.").WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	// Credentials must not be passed around, potentially leaking to the database!
@@ -89,7 +91,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.3.3
 func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !requester.GetGrantTypes().ExactOne("password") {
-		return errors.WithStack(fosite.ErrUnknownRequest)
+		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	var refresh, refreshSignature string
@@ -97,9 +99,9 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 		var err error
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester.Sanitize([]string{})); err != nil {
-			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 	}
 

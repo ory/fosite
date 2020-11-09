@@ -26,6 +26,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -80,7 +82,7 @@ func TestIntrospectToken(t *testing.T) {
 			description: "should fail because validation fails",
 			setup: func() {
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).AnyTimes().Return(areq, nil)
-				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errors.WithStack(fosite.ErrTokenExpired))
+				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errorsx.WithStack(fosite.ErrTokenExpired))
 				chgen.EXPECT().RefreshTokenSignature("1234").Return("asdf")
 				store.EXPECT().GetRefreshTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
 			},
@@ -90,7 +92,7 @@ func TestIntrospectToken(t *testing.T) {
 			description: "should fail because access token invalid",
 			setup: func() {
 				v.DisableRefreshTokenValidation = true
-				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errors.WithStack(fosite.ErrInvalidTokenFormat))
+				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errorsx.WithStack(fosite.ErrInvalidTokenFormat))
 			},
 			expectErr: fosite.ErrInvalidTokenFormat,
 		},
