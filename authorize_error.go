@@ -25,8 +25,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/pkg/errors"
 )
 
 func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
@@ -66,7 +64,11 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	query.Add("state", ar.GetState())
 
 	var redirectURIString string
-	if !(len(ar.GetResponseTypes()) == 0 || ar.GetResponseTypes().ExactOne("code")) && !errors.Is(err, ErrUnsupportedResponseType) {
+	if ar.GetResponseMode() == ResponseModeFormPost {
+		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
+		WriteAuthorizeFormPostResponse(redirectURI.String(), query, GetPostFormHTMLTemplate(*f), rw)
+		return
+	} else if ar.GetResponseMode() == ResponseModeFragment {
 		redirectURIString = redirectURI.String() + "#" + query.Encode()
 	} else {
 		for key, values := range redirectURI.Query() {

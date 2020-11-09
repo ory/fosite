@@ -53,6 +53,8 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 		return nil
 	}
 
+	ar.SetDefaultResponseMode(fosite.ResponseModeFragment)
+
 	// Disabled because this is already handled at the authorize_request_handler
 	// if !ar.GetClient().GetResponseTypes().Has("token") {
 	// 	 return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token"))
@@ -94,12 +96,12 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 	if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar.Sanitize([]string{})); err != nil {
 		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
+	resp.AddParameter("access_token", token)
+	resp.AddParameter("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC())/time.Second), 10))
+	resp.AddParameter("token_type", "bearer")
+	resp.AddParameter("state", ar.GetState())
+	resp.AddParameter("scope", strings.Join(ar.GetGrantedScopes(), " "))
 
-	resp.AddFragment("access_token", token)
-	resp.AddFragment("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC())/time.Second), 10))
-	resp.AddFragment("token_type", "bearer")
-	resp.AddFragment("state", ar.GetState())
-	resp.AddFragment("scope", strings.Join(ar.GetGrantedScopes(), " "))
 	ar.SetResponseTypeHandled("token")
 
 	return nil

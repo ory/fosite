@@ -22,6 +22,7 @@
 package fosite
 
 import (
+	"html/template"
 	"net/http"
 	"reflect"
 )
@@ -105,6 +106,9 @@ type Fosite struct {
 
 	// MinParameterEntropy controls the minimum size of state and nonce parameters. Defaults to fosite.MinParameterEntropy.
 	MinParameterEntropy int
+
+	// FormPostHTMLTemplate sets html template for rendering the authorization response when the request has response_mode=form_post. Defaults to fosite.FormPostDefaultTemplate
+	FormPostHTMLTemplate *template.Template
 }
 
 const MinParameterEntropy = 8

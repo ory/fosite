@@ -268,6 +268,15 @@ type AuthorizeRequester interface {
 	// GetState returns the request's state.
 	GetState() (state string)
 
+	// GetResponseMode returns response_mode of the authorization request
+	GetResponseMode() ResponseModeType
+
+	// SetDefaultResponseMode sets default response mode for a response type in a flow
+	SetDefaultResponseMode(responseMode ResponseModeType)
+
+	// GetDefaultResponseMode gets default response mode for a response type in a flow
+	GetDefaultResponseMode() ResponseModeType
+
 	Requester
 }
 
@@ -310,15 +319,9 @@ type AuthorizeResponder interface {
 	// AddHeader adds an header key value pair to the response
 	AddHeader(key, value string)
 
-	// GetQuery returns the response's query
-	GetQuery() (query url.Values)
+	// GetParameters returns the response's parameters
+	GetParameters() (query url.Values)
 
-	// AddQuery adds an url query key value pair to the response
-	AddQuery(key, value string)
-
-	// GetHeader returns the response's url fragments
-	GetFragment() (fragment url.Values)
-
-	// AddHeader adds a key value pair to the response's url fragment
-	AddFragment(key, value string)
+	// AddParameter adds key value pair to the response
+	AddParameter(key, value string)
 }

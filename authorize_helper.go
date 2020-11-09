@@ -22,6 +22,9 @@
 package fosite
 
 import (
+	"fmt"
+	"html/template"
+	"io"
 	"net/url"
 	"regexp"
 	"strings"
@@ -29,6 +32,21 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/pkg/errors"
 )
+
+var FormPostDefaultTemplate = template.Must(template.New("form_post").Parse(`<html>
+   <head>
+      <title>Submit This Form</title>
+   </head>
+   <body onload="javascript:document.forms[0].submit()">
+      <form method="post" action="{{ .RedirURL }}">
+         {{ range $key,$value := .Parameters }}
+            {{ range $parameter:= $value}}
+		      <input type="hidden" name="{{$key}}" value="{{$parameter}}"/>
+            {{end}}
+         {{ end }}
+      </form>
+   </body>
+</html>`))
 
 // MatchRedirectURIWithClientRedirectURIs if the given uri is a registered redirect uri. Does not perform
 // uri validation.
@@ -181,4 +199,36 @@ func IsRedirectURISecureStrict(redirectURI *url.URL) bool {
 func IsLocalhost(redirectURI *url.URL) bool {
 	hn := redirectURI.Hostname()
 	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "::1" || hn == "localhost"
+}
+
+func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, template *template.Template, rw io.Writer) {
+	_ = template.Execute(rw, struct {
+		RedirURL   string
+		Parameters url.Values
+	}{
+		RedirURL:   redirectURL,
+		Parameters: parameters,
+	})
+}
+
+func URLSetFragment(source *url.URL, fragment url.Values) {
+	var f string
+	for k, v := range fragment {
+		for _, vv := range v {
+			if len(f) != 0 {
+				f += fmt.Sprintf("&%s=%s", k, vv)
+			} else {
+				f += fmt.Sprintf("%s=%s", k, vv)
+			}
+		}
+	}
+	source.Fragment = f
+}
+
+func GetPostFormHTMLTemplate(f Fosite) *template.Template {
+	formPostHTMLTemplate := f.FormPostHTMLTemplate
+	if formPostHTMLTemplate == nil {
+		formPostHTMLTemplate = FormPostDefaultTemplate
+	}
+	return formPostHTMLTemplate
 }

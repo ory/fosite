@@ -51,6 +51,8 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		return nil
 	}
 
+	ar.SetDefaultResponseMode(fosite.ResponseModeFragment)
+
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
 		return errors.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
 	}
@@ -91,14 +93,14 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		}
 
 		ar.SetResponseTypeHandled("token")
-		hash, err := c.RS256JWTStrategy.Hash(ctx, []byte(resp.GetFragment().Get("access_token")))
+		hash, err := c.RS256JWTStrategy.Hash(ctx, []byte(resp.GetParameters().Get("access_token")))
 		if err != nil {
 			return err
 		}
 
 		claims.AccessTokenHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]))
 	} else {
-		resp.AddFragment("state", ar.GetState())
+		resp.AddParameter("state", ar.GetState())
 	}
 
 	if err := c.IssueImplicitIDToken(ctx, ar, resp); err != nil {

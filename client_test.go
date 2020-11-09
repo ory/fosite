@@ -49,3 +49,8 @@ func TestDefaultClient(t *testing.T) {
 	assert.Equal(t, "code", sc.GetResponseTypes()[0])
 	assert.Equal(t, "authorization_code", sc.GetGrantTypes()[0])
 }
+
+func TestDefaultResponseModeClient_GetResponseMode(t *testing.T) {
+	rc := &DefaultResponseModeClient{ResponseModes: []ResponseModeType{ResponseModeFragment}}
+	assert.Equal(t, []ResponseModeType{ResponseModeFragment}, rc.GetResponseModes())
+}

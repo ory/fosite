@@ -23,25 +23,9 @@ package fosite
 
 import (
 	"net/http"
-	"regexp"
-)
-
-var (
-	// scopeMatch = regexp.MustCompile("scope=[^\\&]+.*$")
-	plusMatch = regexp.MustCompile("\\+")
 )
 
 func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
-	redir := ar.GetRedirectURI()
-
-	// Explicit grants
-	q := redir.Query()
-	rq := resp.GetQuery()
-	for k := range rq {
-		q.Set(k, rq.Get(k))
-	}
-	redir.RawQuery = q.Encode()
-
 	// Set custom headers, e.g. "X-MySuperCoolCustomHeader" or "X-DONT-CACHE-ME"...
 	wh := rw.Header()
 	rh := resp.GetHeader()
@@ -49,27 +33,42 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 		wh.Set(k, rh.Get(k))
 	}
 
-	// Implicit grants
-	// The endpoint URI MUST NOT include a fragment component.
-	redir.Fragment = ""
-
-	u := redir.String()
-
-	fr := resp.GetFragment()
-	if len(fr) > 0 {
-		u = u + "#" + fr.Encode()
-	}
-
-	u = plusMatch.ReplaceAllString(u, "%20")
-
 	wh.Set("Cache-Control", "no-store")
 	wh.Set("Pragma", "no-cache")
 
-	// https://tools.ietf.org/html/rfc6749#section-4.1.1
-	// When a decision is established, the authorization server directs the
-	// user-agent to the provided client redirection URI using an HTTP
-	// redirection response, or by other means available to it via the
-	// user-agent.
-	wh.Set("Location", u)
+	redir := ar.GetRedirectURI()
+	switch ar.GetResponseMode() {
+	case ResponseModeFormPost:
+		//form_post
+		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
+		WriteAuthorizeFormPostResponse(redir.String(), resp.GetParameters(), GetPostFormHTMLTemplate(*f), rw)
+		return
+	case ResponseModeQuery, ResponseModeDefault:
+		// Explicit grants
+		q := redir.Query()
+		rq := resp.GetParameters()
+		for k := range rq {
+			q.Set(k, rq.Get(k))
+		}
+		redir.RawQuery = q.Encode()
+		sendRedirect(redir.String(), rw)
+		return
+	case ResponseModeFragment:
+		// Implicit grants
+		// The endpoint URI MUST NOT include a fragment component.
+		redir.Fragment = ""
+		URLSetFragment(redir, resp.GetParameters())
+		sendRedirect(redir.String(), rw)
+		return
+	}
+}
+
+// https://tools.ietf.org/html/rfc6749#section-4.1.1
+// When a decision is established, the authorization server directs the
+// user-agent to the provided client redirection URI using an HTTP
+// redirection response, or by other means available to it via the
+// user-agent.
+func sendRedirect(url string, rw http.ResponseWriter) {
+	rw.Header().Set("Location", url)
 	rw.WriteHeader(http.StatusFound)
 }

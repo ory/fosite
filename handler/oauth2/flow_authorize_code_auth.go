@@ -77,6 +77,8 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 		return nil
 	}
 
+	ar.SetDefaultResponseMode(fosite.ResponseModeQuery)
+
 	// Disabled because this is already handled at the authorize_request_handler
 	// if !ar.GetClient().GetResponseTypes().Has("code") {
 	// 	 return errors.WithStack(fosite.ErrInvalidGrant)
@@ -111,9 +113,10 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 		return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 	}
 
-	resp.AddQuery("code", code)
-	resp.AddQuery("state", ar.GetState())
-	resp.AddQuery("scope", strings.Join(ar.GetGrantedScopes(), " "))
+	resp.AddParameter("code", code)
+	resp.AddParameter("state", ar.GetState())
+	resp.AddParameter("scope", strings.Join(ar.GetGrantedScopes(), " "))
+
 	ar.SetResponseTypeHandled("code")
 	return nil
 }

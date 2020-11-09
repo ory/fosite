@@ -228,6 +228,48 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	return nil
 }
 
+func (f *Fosite) ParseResponseMode(r *http.Request, request *AuthorizeRequest) error {
+	switch responseMode := r.Form.Get("response_mode"); responseMode {
+	case string(ResponseModeDefault):
+		request.ResponseMode = ResponseModeDefault
+	case string(ResponseModeFragment):
+		request.ResponseMode = ResponseModeFragment
+	case string(ResponseModeQuery):
+		request.ResponseMode = ResponseModeQuery
+	case string(ResponseModeFormPost):
+		request.ResponseMode = ResponseModeFormPost
+	default:
+		return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("Request with unsupported response_mode \"%s\".", responseMode))
+	}
+
+	return nil
+}
+
+func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest) error {
+	if request.ResponseMode == ResponseModeDefault {
+		return nil
+	}
+
+	responseModeClient, ok := request.GetClient().(ResponseModeClient)
+	if !ok {
+		return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("The request has response_mode \"%s\". set but registered OAuth 2.0 client doesn't support response_mode", r.Form.Get("response_mode")))
+	}
+
+	var found bool
+	for _, t := range responseModeClient.GetResponseModes() {
+		if request.ResponseMode == t {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return errors.WithStack(ErrUnsupportedResponseMode.WithHintf("The client is not allowed to request response_mode \"%s\".", r.Form.Get("response_mode")))
+	}
+
+	return nil
+}
+
 func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	request := &AuthorizeRequest{
 		ResponseTypes:        Arguments{},
@@ -238,7 +280,6 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
 		return request, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithCause(err).WithDebug(err.Error()))
 	}
-
 	request.Form = r.Form
 
 	// Save state to the request to be returned in error conditions (https://github.com/ory/hydra/issues/1642)
@@ -250,7 +291,18 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 	request.Client = client
 
+	// Now that the base fields (state and client) are populated, we extract all the information
+	// from the request object or request object uri, if one is set.
+	//
+	// All other parse methods should come afterwards so that we ensure that the data is taken
+	// from the request_object if set.
 	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(request); err != nil {
+		return request, err
+	}
+
+	// The request context is now fully available and we can start processing the individual
+	// fields.
+	if err := f.ParseResponseMode(r, request); err != nil {
 		return request, err
 	}
 
@@ -271,6 +323,10 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 
 	if err := f.validateResponseTypes(r, request); err != nil {
+		return request, err
+	}
+
+	if err := f.validateResponseMode(r, request); err != nil {
 		return request, err
 	}
 

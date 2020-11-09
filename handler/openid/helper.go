@@ -64,8 +64,7 @@ func (i *IDTokenHandleHelper) IssueImplicitIDToken(ctx context.Context, ar fosit
 	if err != nil {
 		return err
 	}
-
-	resp.AddFragment("id_token", token)
+	resp.AddParameter("id_token", token)
 	return nil
 }
 

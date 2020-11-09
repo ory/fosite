@@ -55,6 +55,8 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
+	ar.SetDefaultResponseMode(fosite.ResponseModeFragment)
+
 	// Disabled because this is already handled at the authorize_request_handler
 	//if ar.GetResponseTypes().Matches("token") && !ar.GetClient().GetResponseTypes().Has("token") {
 	//	return errors.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the token response type"))
@@ -110,10 +112,10 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 			return errors.WithStack(fosite.ErrServerError.WithCause(err).WithDebug(err.Error()))
 		}
 
-		resp.AddFragment("code", code)
+		resp.AddParameter("code", code)
 		ar.SetResponseTypeHandled("code")
 
-		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetFragment().Get("code")))
+		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetParameters().Get("code")))
 		if err != nil {
 			return err
 		}
@@ -134,15 +136,15 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		}
 		ar.SetResponseTypeHandled("token")
 
-		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetFragment().Get("access_token")))
+		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetParameters().Get("access_token")))
 		if err != nil {
 			return err
 		}
 		claims.AccessTokenHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2]))
 	}
 
-	if resp.GetFragment().Get("state") == "" {
-		resp.AddFragment("state", ar.GetState())
+	if resp.GetParameters().Get("state") == "" {
+		resp.AddParameter("state", ar.GetState())
 	}
 
 	if !ar.GetGrantedScopes().Has("openid") || !ar.GetResponseTypes().Has("id_token") {

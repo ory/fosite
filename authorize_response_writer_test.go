@@ -64,6 +64,8 @@ func TestNewAuthorizeResponse(t *testing.T) {
 			mock: func() {
 				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				ar.EXPECT().DidHandleAllResponseTypes().Return(true)
+				ar.EXPECT().GetDefaultResponseMode().Return(ResponseModeFragment)
+				ar.EXPECT().GetResponseMode().Return(ResponseModeDefault)
 			},
 			isErr: false,
 		},
@@ -73,6 +75,8 @@ func TestNewAuthorizeResponse(t *testing.T) {
 				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				ar.EXPECT().DidHandleAllResponseTypes().Return(true)
+				ar.EXPECT().GetDefaultResponseMode().Return(ResponseModeFragment)
+				ar.EXPECT().GetResponseMode().Return(ResponseModeDefault)
 			},
 			isErr: false,
 		},
@@ -84,6 +88,19 @@ func TestNewAuthorizeResponse(t *testing.T) {
 			},
 			isErr:     true,
 			expectErr: fooErr,
+		},
+		{
+			mock: func() {
+				oauth2 = duo
+				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				handlers[0].EXPECT().HandleAuthorizeEndpointRequest(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+				ar.EXPECT().DidHandleAllResponseTypes().Return(true)
+				ar.EXPECT().GetDefaultResponseMode().Return(ResponseModeFragment)
+				ar.EXPECT().GetResponseMode().Return(ResponseModeQuery).Times(2)
+				ar.EXPECT().GetResponseTypes().Return([]string{"token", "code"})
+			},
+			isErr:     true,
+			expectErr: ErrUnsupportedResponseMode.WithHintf("Insecure response_mode '%s' for the response_type '%s'.", ResponseModeQuery, []string{"token", "code"}),
 		},
 	} {
 		c.mock()
