@@ -502,7 +502,7 @@ func TestAuthenticateClient(t *testing.T) {
 				if errors.As(err, &validationError) {
 					t.Logf("Error is: %s", validationError.Inner)
 				} else if errors.As(err, &rfcError) {
-					t.Logf("Debug is: %s", rfcError.Debug)
+					t.Logf("DebugField is: %s", rfcError.DebugField)
 				}
 			}
 			require.NoError(t, err)

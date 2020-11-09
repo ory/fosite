@@ -261,7 +261,7 @@ func ErrorToRFC6749Error(err error) *RFC6749Error {
 	return &RFC6749Error{
 		Name:        errUnknownErrorName,
 		Description: "The error is unrecognizable",
-		Debug:       err.Error(),
+		DebugField:  err.Error(),
 		Code:        http.StatusInternalServerError,
 		cause:       err,
 	}
@@ -272,7 +272,7 @@ type RFC6749Error struct {
 	Description string
 	Hint        string
 	Code        int
-	Debug       string
+	DebugField  string
 	cause       error
 }
 
@@ -314,9 +314,13 @@ func (e *RFC6749Error) WithHint(hint string) *RFC6749Error {
 	return &err
 }
 
+func (e *RFC6749Error) Debug() string {
+	return e.DebugField
+}
+
 func (e *RFC6749Error) WithDebug(debug string) *RFC6749Error {
 	err := *e
-	err.Debug = debug
+	err.DebugField = debug
 	return &err
 }
 
@@ -338,7 +342,7 @@ func (e *RFC6749Error) WithCause(cause error) *RFC6749Error {
 
 func (e *RFC6749Error) Sanitize() *RFC6749Error {
 	err := *e
-	err.Debug = ""
+	err.DebugField = ""
 	return &err
 }
 
@@ -348,8 +352,8 @@ func (e *RFC6749Error) GetDescription() string {
 	if e.Hint != "" {
 		description += " " + e.Hint
 	}
-	if e.Debug != "" {
-		description += " " + e.Debug
+	if e.DebugField != "" {
+		description += " " + e.DebugField
 	}
 	return strings.ReplaceAll(description, "\"", "'")
 }
@@ -380,7 +384,7 @@ func (e *RFC6749Error) UnmarshalJSON(b []byte) error {
 	e.Description = data.Verbose
 	e.Hint = data.Hint
 	e.Code = data.Code
-	e.Debug = data.Debug
+	e.DebugField = data.Debug
 
 	return nil
 }
@@ -392,7 +396,7 @@ func (e RFC6749Error) MarshalJSON() ([]byte, error) {
 		Description: e.GetDescription(),
 		Hint:        e.Hint,
 		Code:        e.Code,
-		Debug:       e.Debug,
+		Debug:       e.DebugField,
 	}
 	return json.Marshal(data)
 }
@@ -404,8 +408,8 @@ func (e *RFC6749Error) ToValues() url.Values {
 	if e.Hint != "" {
 		values.Add("error_hint", e.Hint)
 	}
-	if e.Debug != "" {
-		values.Add("error_debug", e.Debug)
+	if e.DebugField != "" {
+		values.Add("error_debug", e.DebugField)
 	}
 	return values
 }

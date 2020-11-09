@@ -182,7 +182,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
 			return fosite.ErrServerError.WithCause(err).WithDebugf("error: %s; rollback error: %s", err, rollBackTxnErr)
 		}
-		return err
+		return fosite.ErrServerError.WithCause(err).WithDebug(err.Error())
 	} else if refreshSignature != "" {
 		if err := c.CoreStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester.Sanitize([]string{})); err != nil {
 			if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
