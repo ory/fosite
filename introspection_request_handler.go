@@ -27,7 +27,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 )
 
 // NewIntrospectionRequest initiates token introspection as defined in
@@ -111,11 +111,11 @@ import (
 //	token=mF_9.B5f-4.1JqM&token_type_hint=access_token
 func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, session Session) (IntrospectionResponder, error) {
 	if r.Method != "POST" {
-		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s' but expected 'POST'.", r.Method))
+		return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s' but expected 'POST'.", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithCause(err).WithDebug(err.Error()))
+		return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	} else if len(r.PostForm) == 0 {
-		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
+		return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
 	}
 
 	token := r.PostForm.Get("token")
@@ -123,44 +123,44 @@ func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, s
 	scope := r.PostForm.Get("scope")
 	if clientToken := AccessTokenFromRequest(r); clientToken != "" {
 		if token == clientToken {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Bearer and introspection token are identical."))
+			return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrRequestUnauthorized.WithHint("Bearer and introspection token are identical."))
 		}
 
 		if tu, _, err := f.IntrospectToken(ctx, clientToken, AccessToken, session.Clone()); err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("HTTP Authorization header missing, malformed, or credentials used are invalid."))
+			return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrRequestUnauthorized.WithHint("HTTP Authorization header missing, malformed, or credentials used are invalid."))
 		} else if tu != "" && tu != AccessToken {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHintf("HTTP Authorization header did not provide a token of type 'access_token', got type '%s'.", tu))
+			return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrRequestUnauthorized.WithHintf("HTTP Authorization header did not provide a token of type 'access_token', got type '%s'.", tu))
 		}
 	} else {
 		id, secret, ok := r.BasicAuth()
 		if !ok {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("HTTP Authorization header missing."))
+			return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrRequestUnauthorized.WithHint("HTTP Authorization header missing."))
 		}
 
 		clientID, err := url.QueryUnescape(id)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to decode OAuth 2.0 Client ID from HTTP basic authorization header, make sure it is properly encoded.").WithCause(err).WithDebug(err.Error()))
+			return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrRequestUnauthorized.WithHint("Unable to decode OAuth 2.0 Client ID from HTTP basic authorization header, make sure it is properly encoded.").WithWrap(err).WithDebug(err.Error()))
 		}
 
 		clientSecret, err := url.QueryUnescape(secret)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to decode OAuth 2.0 Client Secret from HTTP basic authorization header, make sure it is properly encoded.").WithCause(err).WithDebug(err.Error()))
+			return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrRequestUnauthorized.WithHint("Unable to decode OAuth 2.0 Client Secret from HTTP basic authorization header, make sure it is properly encoded.").WithWrap(err).WithDebug(err.Error()))
 		}
 
 		client, err := f.Store.GetClient(ctx, clientID)
 		if err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to find OAuth 2.0 Client from HTTP basic authorization header.").WithCause(err).WithDebug(err.Error()))
+			return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrRequestUnauthorized.WithHint("Unable to find OAuth 2.0 Client from HTTP basic authorization header.").WithWrap(err).WithDebug(err.Error()))
 		}
 
 		// Enforce client authentication
 		if err := f.Hasher.Compare(ctx, client.GetHashedSecret(), []byte(clientSecret)); err != nil {
-			return &IntrospectionResponse{Active: false}, errors.WithStack(ErrRequestUnauthorized.WithHint("OAuth 2.0 Client credentials are invalid."))
+			return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrRequestUnauthorized.WithHint("OAuth 2.0 Client credentials are invalid."))
 		}
 	}
 
 	tu, ar, err := f.IntrospectToken(ctx, token, TokenUse(tokenTypeHint), session, RemoveEmpty(strings.Split(scope, " "))...)
 	if err != nil {
-		return &IntrospectionResponse{Active: false}, errors.WithStack(ErrInactiveToken.WithHint("An introspection strategy indicated that the token is inactive.").WithCause(err).WithDebug(err.Error()))
+		return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrInactiveToken.WithHint("An introspection strategy indicated that the token is inactive.").WithWrap(err).WithDebug(err.Error()))
 	}
 	accessTokenType := ""
 

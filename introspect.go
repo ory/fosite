@@ -26,6 +26,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/pkg/errors"
 )
 
@@ -66,12 +68,12 @@ func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenUse Tok
 			// do nothing
 		} else {
 			rfcerr := ErrorToRFC6749Error(err)
-			return "", nil, errors.WithStack(rfcerr)
+			return "", nil, errorsx.WithStack(rfcerr)
 		}
 	}
 
 	if !found {
-		return "", nil, errors.WithStack(ErrRequestUnauthorized.WithHint("Unable to find a suitable validation strategy for the token, thus it is invalid."))
+		return "", nil, errorsx.WithStack(ErrRequestUnauthorized.WithHint("Unable to find a suitable validation strategy for the token, thus it is invalid."))
 	}
 
 	return foundTokenUse, ar, nil

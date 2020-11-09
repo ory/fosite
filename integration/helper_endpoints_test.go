@@ -71,7 +71,7 @@ func tokenInfoHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite
 			t.Logf("Info request failed because: %+v", err)
 			var e *fosite.RFC6749Error
 			require.True(t, errors.As(err, &e))
-			http.Error(rw, e.Description, e.Code)
+			http.Error(rw, e.DescriptionField, e.CodeField)
 			return
 		}
 

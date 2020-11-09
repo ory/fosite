@@ -52,7 +52,7 @@ func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 		return
 	}
 
-	rw.WriteHeader(rfcerr.Code)
+	rw.WriteHeader(rfcerr.CodeField)
 	// ignoring the error because the connection is broken when it happens
 	_, _ = rw.Write(js)
 }

@@ -24,6 +24,8 @@ package oauth2
 import (
 	"context"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
@@ -67,7 +69,7 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 	}
 
 	if ar.GetClient().GetID() != client.GetID() {
-		return errors.WithStack(fosite.ErrUnauthorizedClient)
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient)
 	}
 
 	requestID := ar.GetID()
@@ -84,5 +86,5 @@ func storeErrorsToRevocationError(err1, err2 error) error {
 	}
 
 	// there was an unexpected error => the token may still exist and the client should retry later
-	return errors.WithStack(fosite.ErrTemporarilyUnavailable)
+	return errorsx.WithStack(fosite.ErrTemporarilyUnavailable)
 }

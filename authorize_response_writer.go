@@ -26,7 +26,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 )
 
 func (f *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester, session Session) (AuthorizeResponder, error) {
@@ -43,7 +43,7 @@ func (f *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester
 	}
 
 	if !ar.DidHandleAllResponseTypes() {
-		return nil, errors.WithStack(ErrUnsupportedResponseType)
+		return nil, errorsx.WithStack(ErrUnsupportedResponseType)
 	}
 
 	if ar.GetDefaultResponseMode() == ResponseModeFragment && ar.GetResponseMode() == ResponseModeQuery {

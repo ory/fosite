@@ -32,6 +32,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ory/x/errorsx"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 
@@ -64,11 +66,11 @@ func (j *RS256JWTStrategy) Generate(ctx context.Context, claims jwt.Claims, head
 	var sig, sstr string
 	var err error
 	if sstr, err = token.SigningString(); err != nil {
-		return "", "", errors.WithStack(err)
+		return "", "", errorsx.WithStack(err)
 	}
 
 	if sig, err = token.Method.Sign(sstr, j.PrivateKey); err != nil {
-		return "", "", errors.WithStack(err)
+		return "", "", errorsx.WithStack(err)
 	}
 
 	return fmt.Sprintf("%s.%s", sstr, sig), sig, nil
@@ -77,7 +79,7 @@ func (j *RS256JWTStrategy) Generate(ctx context.Context, claims jwt.Claims, head
 // Validate validates a token and returns its signature or an error if the token is not valid.
 func (j *RS256JWTStrategy) Validate(ctx context.Context, token string) (string, error) {
 	if _, err := j.Decode(ctx, token); err != nil {
-		return "", errors.WithStack(err)
+		return "", errorsx.WithStack(err)
 	}
 
 	return j.GetSignature(ctx, token)
@@ -94,9 +96,9 @@ func (j *RS256JWTStrategy) Decode(ctx context.Context, token string) (*jwt.Token
 	})
 
 	if err != nil {
-		return parsedToken, errors.WithStack(err)
+		return parsedToken, errorsx.WithStack(err)
 	} else if !parsedToken.Valid {
-		return parsedToken, errors.WithStack(fosite.ErrInactiveToken)
+		return parsedToken, errorsx.WithStack(fosite.ErrInactiveToken)
 	}
 
 	return parsedToken, err
@@ -117,7 +119,7 @@ func (j *RS256JWTStrategy) Hash(ctx context.Context, in []byte) ([]byte, error) 
 	hash := sha256.New()
 	_, err := hash.Write(in)
 	if err != nil {
-		return []byte{}, errors.WithStack(err)
+		return []byte{}, errorsx.WithStack(err)
 	}
 	return hash.Sum([]byte{}), nil
 }
@@ -144,11 +146,11 @@ func (j *ES256JWTStrategy) Generate(ctx context.Context, claims jwt.Claims, head
 	var sig, sstr string
 	var err error
 	if sstr, err = token.SigningString(); err != nil {
-		return "", "", errors.WithStack(err)
+		return "", "", errorsx.WithStack(err)
 	}
 
 	if sig, err = token.Method.Sign(sstr, j.PrivateKey); err != nil {
-		return "", "", errors.WithStack(err)
+		return "", "", errorsx.WithStack(err)
 	}
 
 	return fmt.Sprintf("%s.%s", sstr, sig), sig, nil
@@ -157,7 +159,7 @@ func (j *ES256JWTStrategy) Generate(ctx context.Context, claims jwt.Claims, head
 // Validate validates a token and returns its signature or an error if the token is not valid.
 func (j *ES256JWTStrategy) Validate(ctx context.Context, token string) (string, error) {
 	if _, err := j.Decode(ctx, token); err != nil {
-		return "", errors.WithStack(err)
+		return "", errorsx.WithStack(err)
 	}
 
 	return j.GetSignature(ctx, token)
@@ -174,9 +176,9 @@ func (j *ES256JWTStrategy) Decode(ctx context.Context, token string) (*jwt.Token
 	})
 
 	if err != nil {
-		return parsedToken, errors.WithStack(err)
+		return parsedToken, errorsx.WithStack(err)
 	} else if !parsedToken.Valid {
-		return parsedToken, errors.WithStack(fosite.ErrInactiveToken)
+		return parsedToken, errorsx.WithStack(fosite.ErrInactiveToken)
 	}
 
 	return parsedToken, err
@@ -197,7 +199,7 @@ func (j *ES256JWTStrategy) Hash(ctx context.Context, in []byte) ([]byte, error) 
 	hash := sha256.New()
 	_, err := hash.Write(in)
 	if err != nil {
-		return []byte{}, errors.WithStack(err)
+		return []byte{}, errorsx.WithStack(err)
 	}
 	return hash.Sum([]byte{}), nil
 }

@@ -24,6 +24,8 @@ package fosite
 import (
 	"context"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/pkg/errors"
 )
 
@@ -43,7 +45,7 @@ func (f *Fosite) NewAccessResponse(ctx context.Context, requester AccessRequeste
 	}
 
 	if response.GetAccessToken() == "" || response.GetTokenType() == "" {
-		return nil, errors.WithStack(ErrServerError.WithHint("An internal server occurred while trying to complete the request.").WithDebug("Access token or token type not set by TokenEndpointHandlers."))
+		return nil, errorsx.WithStack(ErrServerError.WithHint("An internal server occurred while trying to complete the request.").WithDebug("Access token or token type not set by TokenEndpointHandlers."))
 	}
 
 	return response, nil

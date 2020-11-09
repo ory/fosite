@@ -26,6 +26,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/pkg/errors"
 )
 
@@ -59,11 +61,11 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
-		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s', expected 'POST'.", r.Method))
+		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s', expected 'POST'.", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithCause(err).WithDebug(err.Error()))
+		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	} else if len(r.PostForm) == 0 {
-		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
+		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
 	}
 
 	accessRequest.Form = r.PostForm
@@ -75,7 +77,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	accessRequest.SetRequestedAudience(GetAudiences(r.PostForm))
 	accessRequest.GrantTypes = RemoveEmpty(strings.Split(r.PostForm.Get("grant_type"), " "))
 	if len(accessRequest.GrantTypes) < 1 {
-		return accessRequest, errors.WithStack(ErrInvalidRequest.WithHint("Request parameter 'grant_type' is missing"))
+		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHint("Request parameter 'grant_type' is missing"))
 	}
 
 	client, err := f.AuthenticateClient(ctx, r, r.PostForm)
@@ -96,7 +98,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	if !found {
-		return nil, errors.WithStack(ErrInvalidRequest)
+		return nil, errorsx.WithStack(ErrInvalidRequest)
 	}
 	return accessRequest, nil
 }

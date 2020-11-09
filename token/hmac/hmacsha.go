@@ -32,6 +32,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
@@ -81,7 +83,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	// by the authorization server.
 	tokenKey, err := RandomBytes(c.TokenEntropy)
 	if err != nil {
-		return "", "", errors.WithStack(err)
+		return "", "", errorsx.WithStack(err)
 	}
 
 	signature := generateHMAC(tokenKey, &signingKey)
@@ -129,29 +131,29 @@ func (c *HMACStrategy) validate(secret []byte, token string) error {
 
 	split := strings.Split(token, ".")
 	if len(split) != 2 {
-		return errors.WithStack(fosite.ErrInvalidTokenFormat)
+		return errorsx.WithStack(fosite.ErrInvalidTokenFormat)
 	}
 
 	tokenKey := split[0]
 	tokenSignature := split[1]
 	if tokenKey == "" || tokenSignature == "" {
-		return errors.WithStack(fosite.ErrInvalidTokenFormat)
+		return errorsx.WithStack(fosite.ErrInvalidTokenFormat)
 	}
 
 	decodedTokenSignature, err := b64.DecodeString(tokenSignature)
 	if err != nil {
-		return errors.WithStack(err)
+		return errorsx.WithStack(err)
 	}
 
 	decodedTokenKey, err := b64.DecodeString(tokenKey)
 	if err != nil {
-		return errors.WithStack(err)
+		return errorsx.WithStack(err)
 	}
 
 	expectedMAC := generateHMAC(decodedTokenKey, &signingKey)
 	if !hmac.Equal(expectedMAC, decodedTokenSignature) {
 		// Hash is invalid
-		return errors.WithStack(fosite.ErrTokenSignatureMismatch)
+		return errorsx.WithStack(fosite.ErrTokenSignatureMismatch)
 	}
 
 	return nil

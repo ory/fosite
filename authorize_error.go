@@ -50,7 +50,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 			return
 		}
 
-		rw.WriteHeader(rfcerr.Code)
+		rw.WriteHeader(rfcerr.CodeField)
 		_, _ = rw.Write(js)
 		return
 	}

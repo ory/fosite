@@ -88,11 +88,11 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, c.code, params.Error)
-			assert.Equal(t, c.err.Hint, params.Hint)
+			assert.Equal(t, c.err.HintField, params.Hint)
 
-			expectDescription := c.err.Description
-			if c.err.Hint != "" {
-				expectDescription += " " + c.err.Hint
+			expectDescription := c.err.DescriptionField
+			if c.err.HintField != "" {
+				expectDescription += " " + c.err.HintField
 			}
 
 			if !c.debug {
