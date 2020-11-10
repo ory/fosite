@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-09)](#unreleased-2020-11-09)
+- [Unreleased (2020-11-10)](#unreleased-2020-11-10)
     - [Bug Fixes](#bug-fixes)
     - [Documentation](#documentation)
     - [Features](#features)
@@ -323,7 +323,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.35.1...3e3290f811f849881f1c6bafabc1c765d9a42ac7) (2020-11-09)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.35.1...9718eb6ce63983ade0689908b5cce3e27c8838bc) (2020-11-10)
 
 
 ### Bug Fixes
@@ -350,6 +350,7 @@
 ### Documentation
 
 * Document Session interface methods ([#512](https://github.com/ory/fosite/issues/512)) ([11a95ba](https://github.com/ory/fosite/commit/11a95ba00f562b3864fc0d6878c9d93943cc4273))
+* Updates banner in readme.md ([#529](https://github.com/ory/fosite/issues/529)) ([9718eb6](https://github.com/ory/fosite/commit/9718eb6ce63983ade0689908b5cce3e27c8838bc))
 
 
 ### Features
