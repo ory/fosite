@@ -139,13 +139,13 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 		return errors.WithStack(fosite.ErrInvalidClient.WithHint("The subjects token OAuth2 Client does not exist."))
 	}
 
-	delegatingClient, ok := subjectTokenClient.(fosite.TokenExchangeClient)
+	subjectClient, ok := subjectTokenClient.(fosite.TokenExchangeClient)
 	if !ok {
 		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to perform a token exchange for the given subject token."))
 	}
 
 	// check if the subjects token client allows the current client to perform an exchange on its tokens
-	if !delegatingClient.GetMayAct().HasOneOf(client.GetID()) {
+	if !subjectClient.GetMayAct().HasOneOf(client.GetID()) {
 		return errors.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to perform a token exchange for the given subject token."))
 	}
 
@@ -154,7 +154,7 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 		return errors.WithStack(fosite.ErrInvalidRequestObject)
 	}
 
-	tokenExchangeRequest.SetSubjectTokenClient(delegatingClient)
+	tokenExchangeRequest.SetSubjectTokenClient(subjectClient)
 
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) &&
