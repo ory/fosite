@@ -66,9 +66,16 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	//	return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use the id_token response type"))
 	//}
 
-	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter \"nonce\" must be set when using the OpenID Connect Hybrid Flow."))
-	} else if len(nonce) < c.MinParameterEntropy {
+	// The nonce is actually not required for hybrid flows. It fails the OpenID Connect Conformity
+	// Test Module "oidcc-ensure-request-without-nonce-succeeds-for-code-flow" if enabled.
+	//
+	nonce := ar.GetRequestForm().Get("nonce")
+
+	if len(nonce) == 0 && ar.GetResponseTypes().Has("id_token") {
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'nonce' must be set when requesting an ID Token using the OpenID Connect Hybrid Flow."))
+	}
+
+	if len(nonce) > 0 && len(nonce) < c.MinParameterEntropy {
 		return errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
 	}
 
