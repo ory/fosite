@@ -131,20 +131,6 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because nonce not set but required",
-			setup: func() OpenIDConnectHybridHandler {
-				areq.ResponseTypes = fosite.Arguments{"token", "code"}
-				areq.Client = &fosite.DefaultClient{
-					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
-					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
-					Scopes:        []string{"openid"},
-				}
-				areq.GrantedScope = fosite.Arguments{"openid"}
-				return makeOpenIDConnectHybridHandler(fosite.MinParameterEntropy)
-			},
-			expectErr: fosite.ErrInvalidRequest,
-		},
-		{
 			description: "should fail because nonce set but too short",
 			setup: func() OpenIDConnectHybridHandler {
 				areq.Form = url.Values{"nonce": {"short"}}
@@ -213,6 +199,17 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should pass because nonce was set with sufficient entropy",
 			setup: func() OpenIDConnectHybridHandler {
 				areq.Form.Set("nonce", "some-foobar-nonce-win")
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
+					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
+					Scopes:        []string{"openid"},
+				}
+				return makeOpenIDConnectHybridHandler(fosite.MinParameterEntropy)
+			},
+		},
+		{
+			description: "should pass even if nonce was not set",
+			setup: func() OpenIDConnectHybridHandler {
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
