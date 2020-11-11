@@ -36,10 +36,7 @@ func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
 
-	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat)
-	if !f.SendDebugMessagesToClients {
-		rfcerr = rfcerr.Sanitize()
-	}
+	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat).WithExposeDebug(f.SendDebugMessagesToClients)
 
 	js, err := json.Marshal(rfcerr)
 	if err != nil {
