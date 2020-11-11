@@ -70,6 +70,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 		TokenURL:                   config.TokenURL,
 		JWKSFetcherStrategy:        config.GetJWKSFetcherStrategy(),
 		MinParameterEntropy:        config.GetMinParameterEntropy(),
+		UseLegacyErrorFormat:       config.UseLegacyErrorFormat,
 	}
 
 	for _, factory := range factories {

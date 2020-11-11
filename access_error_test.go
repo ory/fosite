@@ -60,18 +60,22 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 		code               string
 		debug              bool
 		expectDebugMessage string
+		includeExtraFields bool
 	}{
-		{ErrInvalidRequest.WithDebug("some-debug"), "invalid_request", true, "some-debug"},
-		{ErrInvalidRequest.WithDebugf("some-debug-%d", 1234), "invalid_request", true, "some-debug-1234"},
-		{ErrInvalidRequest.WithDebug("some-debug"), "invalid_request", false, "some-debug"},
-		{ErrInvalidClient.WithDebug("some-debug"), "invalid_client", false, "some-debug"},
-		{ErrInvalidGrant.WithDebug("some-debug"), "invalid_grant", false, "some-debug"},
-		{ErrInvalidScope.WithDebug("some-debug"), "invalid_scope", false, "some-debug"},
-		{ErrUnauthorizedClient.WithDebug("some-debug"), "unauthorized_client", false, "some-debug"},
-		{ErrUnsupportedGrantType.WithDebug("some-debug"), "unsupported_grant_type", false, "some-debug"},
+		{ErrInvalidRequest.WithDebug("some-debug"), "invalid_request", true, "some-debug", true},
+		{ErrInvalidRequest.WithDebugf("some-debug-%d", 1234), "invalid_request", true, "some-debug-1234", true},
+		{ErrInvalidRequest.WithDebug("some-debug"), "invalid_request", false, "some-debug", true},
+		{ErrInvalidClient.WithDebug("some-debug"), "invalid_client", false, "some-debug", true},
+		{ErrInvalidGrant.WithDebug("some-debug"), "invalid_grant", false, "some-debug", true},
+		{ErrInvalidScope.WithDebug("some-debug"), "invalid_scope", false, "some-debug", true},
+		{ErrUnauthorizedClient.WithDebug("some-debug"), "unauthorized_client", false, "some-debug", true},
+		{ErrUnsupportedGrantType.WithDebug("some-debug"), "unsupported_grant_type", false, "some-debug", true},
+		{ErrUnsupportedGrantType.WithDebug("some-debug"), "unsupported_grant_type", false, "some-debug", false},
+		{ErrUnsupportedGrantType.WithDebug("some-debug"), "unsupported_grant_type", true, "some-debug", false},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			f.SendDebugMessagesToClients = c.debug
+			f.UseLegacyErrorFormat = c.includeExtraFields
 
 			rw := httptest.NewRecorder()
 			f.WriteAccessError(rw, nil, c.err)
@@ -88,19 +92,26 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 			require.NoError(t, err)
 
 			assert.Equal(t, c.code, params.Error)
-			assert.Equal(t, c.err.HintField, params.Hint)
-
-			expectDescription := c.err.DescriptionField
-			if c.err.HintField != "" {
-				expectDescription += " " + c.err.HintField
-			}
-
-			if !c.debug {
-				assert.Equal(t, expectDescription, params.Description)
+			if !c.includeExtraFields {
 				assert.Empty(t, params.Debug)
+				assert.Empty(t, params.Hint)
+				assert.Contains(t, params.Description, c.err.DescriptionField)
+				assert.Contains(t, params.Description, c.err.HintField)
+
+				if c.debug {
+					assert.Contains(t, params.Description, c.err.DebugField)
+				} else {
+					assert.NotContains(t, params.Description, c.err.DebugField)
+				}
 			} else {
-				assert.Equal(t, expectDescription+" "+c.expectDebugMessage, params.Description)
-				assert.Equal(t, c.expectDebugMessage, params.Debug)
+				assert.EqualValues(t, c.err.DescriptionField, params.Description)
+				assert.EqualValues(t, c.err.HintField, params.Hint)
+
+				if !c.debug {
+					assert.Empty(t, params.Debug)
+				} else {
+					assert.EqualValues(t, c.err.DebugField, params.Debug)
+				}
 			}
 		})
 	}

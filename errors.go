@@ -265,6 +265,7 @@ type (
 		CodeField        int
 		DebugField       string
 		cause            error
+		useLegacyFormat  bool
 	}
 	stackTracer interface {
 		StackTrace() errors.StackTrace
@@ -317,6 +318,11 @@ func (e *RFC6749Error) Wrap(err error) {
 
 func (e RFC6749Error) WithWrap(cause error) *RFC6749Error {
 	e.cause = cause
+	return &e
+}
+
+func (e RFC6749Error) WithLegacyFormat(useLegacyFormat bool) *RFC6749Error {
+	e.useLegacyFormat = useLegacyFormat
 	return &e
 }
 
@@ -416,7 +422,6 @@ func (e *RFC6749Error) GetDescription() string {
 // RFC6749ErrorJson is a helper struct for JSON encoding/decoding of RFC6749Error.
 type RFC6749ErrorJson struct {
 	Name        string `json:"error"`
-	Verbose     string `json:"error_verbose"`
 	Description string `json:"error_description"`
 	Hint        string `json:"error_hint,omitempty"`
 	Code        int    `json:"status_code,omitempty"`
@@ -431,35 +436,49 @@ func (e *RFC6749Error) UnmarshalJSON(b []byte) error {
 	}
 
 	e.ErrorField = data.Name
-	e.DescriptionField = data.Verbose
-	e.HintField = data.Hint
 	e.CodeField = data.Code
-	e.DebugField = data.Debug
+	e.DescriptionField = data.Description
+
+	if len(data.Hint+data.Debug) > 0 {
+		e.HintField = data.Hint
+		e.DebugField = data.Debug
+		e.useLegacyFormat = true
+	}
 
 	return nil
 }
 
 func (e RFC6749Error) MarshalJSON() ([]byte, error) {
-	data := RFC6749ErrorJson{
+	if !e.useLegacyFormat {
+		return json.Marshal(&RFC6749ErrorJson{
+			Name:        e.ErrorField,
+			Description: e.GetDescription(),
+		})
+	}
+
+	return json.Marshal(&RFC6749ErrorJson{
 		Name:        e.ErrorField,
-		Verbose:     e.DescriptionField,
-		Description: e.GetDescription(),
+		Description: e.DescriptionField,
 		Hint:        e.HintField,
 		Code:        e.CodeField,
 		Debug:       e.DebugField,
-	}
-	return json.Marshal(data)
+	})
 }
 
 func (e *RFC6749Error) ToValues() url.Values {
 	values := url.Values{}
-	values.Add("error", e.ErrorField)
-	values.Add("error_description", e.GetDescription())
-	if e.HintField != "" {
-		values.Add("error_hint", e.HintField)
+	values.Set("error", e.ErrorField)
+	values.Set("error_description", e.GetDescription())
+
+	if e.useLegacyFormat {
+		values.Set("error_description", e.DescriptionField)
+		if e.HintField != "" {
+			values.Set("error_hint", e.HintField)
+		}
+		if e.DebugField != "" {
+			values.Set("error_debug", e.DebugField)
+		}
 	}
-	if e.DebugField != "" {
-		values.Add("error_debug", e.DebugField)
-	}
+
 	return values
 }

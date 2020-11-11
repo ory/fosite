@@ -95,6 +95,7 @@ type Fosite struct {
 	AudienceMatchingStrategy   AudienceMatchingStrategy
 	JWKSFetcherStrategy        JWKSFetcherStrategy
 	HTTPClient                 *http.Client
+	UseLegacyErrorFormat       bool
 
 	// TokenURL is the the URL of the Authorization Server's Token Endpoint.
 	TokenURL string

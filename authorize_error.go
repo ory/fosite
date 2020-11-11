@@ -31,7 +31,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
 
-	rfcerr := ErrorToRFC6749Error(err)
+	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat)
 	if !f.SendDebugMessagesToClients {
 		rfcerr = rfcerr.Sanitize()
 	}
@@ -60,26 +60,26 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	// The endpoint URI MUST NOT include a fragment component.
 	redirectURI.Fragment = ""
 
-	query := rfcerr.ToValues()
-	query.Add("state", ar.GetState())
+	errors := rfcerr.ToValues()
+	errors.Set("state", ar.GetState())
 
 	var redirectURIString string
 	if ar.GetResponseMode() == ResponseModeFormPost {
-		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
-		WriteAuthorizeFormPostResponse(redirectURI.String(), query, GetPostFormHTMLTemplate(*f), rw)
+		rw.Header().Set("Content-Type", "text/html;charset=UTF-8")
+		WriteAuthorizeFormPostResponse(redirectURI.String(), errors, GetPostFormHTMLTemplate(*f), rw)
 		return
 	} else if ar.GetResponseMode() == ResponseModeFragment {
-		redirectURIString = redirectURI.String() + "#" + query.Encode()
+		redirectURIString = redirectURI.String() + "#" + errors.Encode()
 	} else {
 		for key, values := range redirectURI.Query() {
 			for _, value := range values {
-				query.Add(key, value)
+				errors.Add(key, value)
 			}
 		}
-		redirectURI.RawQuery = query.Encode()
+		redirectURI.RawQuery = errors.Encode()
 		redirectURIString = redirectURI.String()
 	}
 
-	rw.Header().Add("Location", redirectURIString)
+	rw.Header().Set("Location", redirectURIString)
 	rw.WriteHeader(http.StatusFound)
 }

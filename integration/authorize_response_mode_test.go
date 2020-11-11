@@ -54,7 +54,9 @@ func TestAuthorizeResponseModes(t *testing.T) {
 			Headers: &jwt.Headers{},
 		},
 	}
-	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+	f := compose.ComposeAllEnabled(&compose.Config{
+		UseLegacyErrorFormat: true,
+	}, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 
@@ -120,7 +122,24 @@ func TestAuthorizeResponseModes(t *testing.T) {
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.NotEmpty(t, err["ErrorField"])
 				assert.NotEmpty(t, err["DescriptionField"])
-				assert.Equal(t, "The client is not allowed to request response_mode \"form_post\".", err["HintField"])
+				assert.Equal(t, "The client is not allowed to request response_mode 'form_post'.", err["HintField"])
+			},
+		},
+		{
+			description:  "Should fail because response mode form_post is not allowed by the client without legacy format",
+			responseType: "id_token%20token",
+			responseMode: "form_post",
+			setup: func() {
+				state = "12345678901234567890"
+				oauthClient.Scopes = []string{"openid"}
+				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeQuery}
+				f.(*fosite.Fosite).UseLegacyErrorFormat = false
+			},
+			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
+				f.(*fosite.Fosite).UseLegacyErrorFormat = true // reset
+				assert.NotEmpty(t, err["ErrorField"])
+				assert.Contains(t, err["DescriptionField"], "The client is not allowed to request response_mode 'form_post'.")
+				assert.Empty(t, err["HintField"])
 			},
 		},
 		{
@@ -166,6 +185,26 @@ func TestAuthorizeResponseModes(t *testing.T) {
 			},
 		},
 		{
+			description:  "Should fail Hybrid grant test with query without legacy fields",
+			responseType: "token%20code",
+			responseMode: "query",
+			setup: func() {
+				state = "12345678901234567890"
+				oauthClient.Scopes = []string{"openid"}
+				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeQuery}
+				f.(*fosite.Fosite).UseLegacyErrorFormat = false
+			},
+			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
+				f.(*fosite.Fosite).UseLegacyErrorFormat = true // reset
+
+				//assert.EqualValues(t, state, stateFromServer)
+				assert.NotEmpty(t, err["ErrorField"])
+				assert.Contains(t, err["DescriptionField"], "Insecure response_mode 'query' for the response_type '[token code]'.")
+				assert.Empty(t, err["HintField"])
+				assert.Empty(t, err["DebugField"])
+			},
+		},
+		{
 			description:  "Should pass Hybrid grant test with form_post",
 			responseType: "token%20code",
 			responseMode: "form_post",
@@ -186,38 +225,46 @@ func TestAuthorizeResponseModes(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
 			c.setup()
 			authURL := strings.Replace(oauthClient.AuthCodeURL(state, goauth.SetAuthURLParam("response_mode", c.responseMode), goauth.SetAuthURLParam("nonce", "111111111")), "response_type=code", "response_type="+c.responseType, -1)
-			var callbackURL *url.URL
+
+			var (
+				callbackURL *url.URL
+				redirErr    = errors.New("Dont follow redirects")
+			)
+
 			client := &http.Client{
 				CheckRedirect: func(req *http.Request, via []*http.Request) error {
 					callbackURL = req.URL
-					return errors.New("Dont follow redirects")
+					return redirErr
 				},
 			}
 
-			var code, state, iDToken string
-			var token goauth.Token
-			var errResp map[string]string
+			var (
+				code, state, iDToken string
+				token                goauth.Token
+				errResp              map[string]string
+			)
 
 			resp, err := client.Get(authURL)
-			if callbackURL != nil {
-				if fosite.ResponseModeType(c.responseMode) == fosite.ResponseModeFragment {
-					require.Error(t, err)
-					//fragment
-					fragment, err := url.ParseQuery(callbackURL.Fragment)
-					require.NoError(t, err)
-					code, state, iDToken, token, errResp = getParameters(t, fragment)
-				} else if fosite.ResponseModeType(c.responseMode) == fosite.ResponseModeQuery {
-					require.Error(t, err)
-					//query
-					query, err := url.ParseQuery(callbackURL.RawQuery)
-					require.NoError(t, err)
-					code, state, iDToken, token, errResp = getParameters(t, query)
-				}
-			}
-			if fosite.ResponseModeType(c.responseMode) == fosite.ResponseModeFormPost && resp.Body != nil {
-				//form_post
+			if fosite.ResponseModeType(c.responseMode) == fosite.ResponseModeFragment {
+				// fragment
+				require.EqualError(t, errors.Unwrap(err), redirErr.Error())
+				fragment, err := url.ParseQuery(callbackURL.Fragment)
+				require.NoError(t, err)
+				code, state, iDToken, token, errResp = getParameters(t, fragment)
+			} else if fosite.ResponseModeType(c.responseMode) == fosite.ResponseModeQuery {
+				// query
+				require.EqualError(t, errors.Unwrap(err), redirErr.Error())
+				query, err := url.ParseQuery(callbackURL.RawQuery)
+				require.NoError(t, err)
+				code, state, iDToken, token, errResp = getParameters(t, query)
+			} else if fosite.ResponseModeType(c.responseMode) == fosite.ResponseModeFormPost {
+				// form_post
+				require.NoError(t, err)
 				code, state, iDToken, token, _, errResp, err = internal.ParseFormPostResponse(fositeStore.Clients["response-mode-client"].GetRedirectURIs()[0], resp.Body)
+			} else {
+				t.FailNow()
 			}
+
 			c.check(t, state, code, token, iDToken, errResp)
 		})
 	}
