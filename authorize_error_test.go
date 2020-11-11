@@ -90,8 +90,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeQuery).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeQuery).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -112,8 +112,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeQuery).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeQuery).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -133,8 +133,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeQuery).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeQuery).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -153,8 +153,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeDefault).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeDefault).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -173,8 +173,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeQuery).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeQuery).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -193,8 +193,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"foobar"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"foobar"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -213,8 +213,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -233,8 +233,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -253,8 +253,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code", "token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -274,8 +274,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code", "token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -296,8 +296,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code", "token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -319,8 +319,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[0]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code", "token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -342,8 +342,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code", "token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -363,8 +363,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"code", "token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"code", "token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -384,8 +384,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"id_token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"id_token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -405,8 +405,8 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).Times(2)
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"token"}))
+				req.EXPECT().GetResponseMode().Return(ResponseModeFragment).AnyTimes()
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusFound)
 			},
@@ -418,6 +418,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				assert.Equal(t, "no-cache", header.Get("Pragma"))
 			},
 		},
+		// 17
 		{
 			debug: true,
 			err:   ErrInvalidRequest.WithDebug("with-debug"),
@@ -425,7 +426,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().IsRedirectURIValid().Return(true)
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
-				req.EXPECT().GetResponseTypes().MaxTimes(2).Return(Arguments([]string{"token"}))
+				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"token"}))
 				req.EXPECT().GetResponseMode().Return(ResponseModeFormPost).Times(1)
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().Write(gomock.Any()).AnyTimes()

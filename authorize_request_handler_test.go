@@ -466,6 +466,90 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				},
 			},
 		},
+		/* determine correct response mode if default */
+		{
+			desc: "success with response mode",
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+				"audience":      {"https://cloud.ory.sh/api https://www.ory.sh/api"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultResponseModeClient{
+					DefaultClient: &DefaultClient{
+						RedirectURIs:  []string{"https://foo.bar/cb"},
+						Scopes:        []string{"foo", "bar"},
+						ResponseTypes: []string{"code"},
+						Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+					},
+					ResponseModes: []ResponseModeType{ResponseModeQuery},
+				}, nil)
+			},
+			expect: &AuthorizeRequest{
+				RedirectURI:   redir,
+				ResponseTypes: []string{"code"},
+				State:         "strong-state",
+				Request: Request{
+					Client: &DefaultResponseModeClient{
+						DefaultClient: &DefaultClient{
+							RedirectURIs:  []string{"https://foo.bar/cb"},
+							Scopes:        []string{"foo", "bar"},
+							ResponseTypes: []string{"code"},
+							Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+						},
+						ResponseModes: []ResponseModeType{ResponseModeQuery},
+					},
+					RequestedScope:    []string{"foo", "bar"},
+					RequestedAudience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+				},
+			},
+		},
+		/* determine correct response mode if default */
+		{
+			desc: "success with response mode",
+			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+				"audience":      {"https://cloud.ory.sh/api https://www.ory.sh/api"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultResponseModeClient{
+					DefaultClient: &DefaultClient{
+						RedirectURIs:  []string{"https://foo.bar/cb"},
+						Scopes:        []string{"foo", "bar"},
+						ResponseTypes: []string{"code token"},
+						Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+					},
+					ResponseModes: []ResponseModeType{ResponseModeFragment},
+				}, nil)
+			},
+			expect: &AuthorizeRequest{
+				RedirectURI:   redir,
+				ResponseTypes: []string{"code", "token"},
+				State:         "strong-state",
+				Request: Request{
+					Client: &DefaultResponseModeClient{
+						DefaultClient: &DefaultClient{
+							RedirectURIs:  []string{"https://foo.bar/cb"},
+							Scopes:        []string{"foo", "bar"},
+							ResponseTypes: []string{"code token"},
+							Audience:      []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+						},
+						ResponseModes: []ResponseModeType{ResponseModeFragment},
+					},
+					RequestedScope:    []string{"foo", "bar"},
+					RequestedAudience: []string{"https://cloud.ory.sh/api", "https://www.ory.sh/api"},
+				},
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			ctrl := gomock.NewController(t)
