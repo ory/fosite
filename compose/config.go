@@ -95,6 +95,10 @@ type Config struct {
 
 	// MinParameterEntropy controls the minimum size of state and nonce parameters. Defaults to fosite.MinParameterEntropy.
 	MinParameterEntropy int
+
+	// UseLegacyErrorFormat controls whether the legacy error format (with `error_debug`, `error_hint`, ...)
+	// should be used or not.
+	UseLegacyErrorFormat bool
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
