@@ -332,6 +332,17 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 		return request, err
 	}
 
+	// A fallback handler to set the default response mode in cases where we can not reach the Authorize Handlers
+	// but still need the e.g. correct error response mode.
+	if request.GetResponseMode() == ResponseModeDefault {
+		if request.ResponseTypes.ExactOne("code") {
+			request.SetDefaultResponseMode(ResponseModeQuery)
+		} else {
+			// If the response type is not `code` it is an implicit/hybrid (fragment) response mode.
+			request.SetDefaultResponseMode(ResponseModeFragment)
+		}
+	}
+
 	// rfc6819 4.4.1.8.  Threat: CSRF Attack against redirect-uri
 	// The "state" parameter should be used to link the authorization
 	// request with the redirect URI used to deliver the access token (Section 5.3.5).
