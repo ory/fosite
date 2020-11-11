@@ -31,11 +31,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
 
-	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat)
-	if !f.SendDebugMessagesToClients {
-		rfcerr = rfcerr.Sanitize()
-	}
-
+	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat).WithExposeDebug(f.SendDebugMessagesToClients)
 	if !ar.IsRedirectURIValid() {
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 

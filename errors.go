@@ -266,6 +266,7 @@ type (
 		DebugField       string
 		cause            error
 		useLegacyFormat  bool
+		exposeDebug      bool
 	}
 	stackTracer interface {
 		StackTrace() errors.StackTrace
@@ -401,9 +402,19 @@ func (e *RFC6749Error) WithDescription(description string) *RFC6749Error {
 	return &err
 }
 
+// Sanitize strips the debug field
+//
+// Deprecated: Use WithExposeDebug instead.
 func (e *RFC6749Error) Sanitize() *RFC6749Error {
 	err := *e
 	err.DebugField = ""
+	return &err
+}
+
+// WithExposeDebug if set to true exposes debug messages
+func (e *RFC6749Error) WithExposeDebug(exposeDebug bool) *RFC6749Error {
+	err := *e
+	err.exposeDebug = exposeDebug
 	return &err
 }
 
@@ -413,7 +424,7 @@ func (e *RFC6749Error) GetDescription() string {
 	if e.HintField != "" {
 		description += " " + e.HintField
 	}
-	if e.DebugField != "" {
+	if e.DebugField != "" && e.exposeDebug {
 		description += " " + e.DebugField
 	}
 	return strings.ReplaceAll(description, "\"", "'")
@@ -456,12 +467,17 @@ func (e RFC6749Error) MarshalJSON() ([]byte, error) {
 		})
 	}
 
+	var debug string
+	if e.exposeDebug {
+		debug = e.DebugField
+	}
+
 	return json.Marshal(&RFC6749ErrorJson{
 		Name:        e.ErrorField,
 		Description: e.DescriptionField,
 		Hint:        e.HintField,
 		Code:        e.CodeField,
-		Debug:       e.DebugField,
+		Debug:       debug,
 	})
 }
 
@@ -475,7 +491,8 @@ func (e *RFC6749Error) ToValues() url.Values {
 		if e.HintField != "" {
 			values.Set("error_hint", e.HintField)
 		}
-		if e.DebugField != "" {
+
+		if e.DebugField != "" && e.exposeDebug {
 			values.Set("error_debug", e.DebugField)
 		}
 	}
