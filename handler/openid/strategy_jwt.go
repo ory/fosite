@@ -227,15 +227,15 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 		claims.Issuer = h.Issuer
 	}
 
-	nonce := requester.GetRequestForm().Get("nonce")
 	// OPTIONAL. String value used to associate a Client session with an ID Token, and to mitigate replay attacks.
-	if len(nonce) == 0 {
+	if nonce := requester.GetRequestForm().Get("nonce"); len(nonce) == 0 {
 	} else if len(nonce) > 0 && len(nonce) < h.MinParameterEntropy {
 		// We're assuming that using less then, by default, 8 characters for the state can not be considered "unguessable"
 		return "", errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", h.MinParameterEntropy))
+	} else if len(nonce) > 0 {
+		claims.Nonce = nonce
 	}
 
-	claims.Nonce = nonce
 	claims.Audience = stringslice.Unique(append(claims.Audience, requester.GetClient().GetID()))
 	claims.IssuedAt = time.Now().UTC()
 
