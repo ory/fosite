@@ -25,6 +25,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/pborman/uuid"
+
 	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
@@ -61,12 +63,16 @@ func (c *OpenIDConnectRefreshHandler) HandleTokenEndpointRequest(ctx context.Con
 		return errors.New("Failed to generate id token because session must be of type fosite/handler/openid.Session")
 	}
 
-	// We need to reset the expires at value
+	// We need to reset the expires at value as this would be the previous expiry.
 	sess.IDTokenClaims().ExpiresAt = time.Time{}
-	sess.IDTokenClaims().Nonce = ""
+
+	// These will be recomputed in PopulateTokenEndpointResponse
 	sess.IDTokenClaims().JTI = ""
 	sess.IDTokenClaims().AccessTokenHash = ""
+
+	// We are not issuing a code so there is no need for this field.
 	sess.IDTokenClaims().CodeHash = ""
+
 	return nil
 }
 
@@ -98,9 +104,10 @@ func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
 	}
 
-	hash := c.GetAccessTokenHash(ctx, requester, responder)
-
-	claims.AccessTokenHash = hash
+	claims.AccessTokenHash = c.GetAccessTokenHash(ctx, requester, responder)
+	claims.JTI = uuid.New()
+	claims.CodeHash = ""
+	claims.IssuedAt = time.Now().Truncate(time.Second)
 
 	return c.IssueExplicitIDToken(ctx, requester, responder)
 }
