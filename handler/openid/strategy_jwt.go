@@ -177,12 +177,14 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 
 		switch prompt {
 		case "none":
-			if claims.AuthTime.After(claims.RequestedAt) {
-				return "", errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because prompt was set to \"none\" but auth_time happened after the authorization request was registered, indicating that the user was logged in during this request which is not allowed."))
+			if !claims.AuthTime.Equal(claims.RequestedAt) && claims.AuthTime.After(claims.RequestedAt) {
+				return "", errorsx.WithStack(fosite.ErrServerError.
+					WithDebugf("Failed to generate id token because prompt was set to 'none' but auth_time ('%s') happened after the authorization request ('%s') was registered, indicating that the user was logged in during this request which is not allowed.", claims.AuthTime, claims.RequestedAt))
 			}
 		case "login":
-			if claims.AuthTime.Before(claims.RequestedAt) {
-				return "", errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because prompt was set to \"login\" but auth_time happened before the authorization request was registered, indicating that the user was not re-authenticated which is forbidden."))
+			if !claims.AuthTime.Equal(claims.RequestedAt) && claims.AuthTime.Before(claims.RequestedAt) {
+				return "", errorsx.WithStack(fosite.ErrServerError.
+					WithDebugf("Failed to generate id token because prompt was set to 'login' but auth_time ('%s') happened before the authorization request ('%s') was registered, indicating that the user was not re-authenticated which is forbidden.", claims.AuthTime, claims.RequestedAt))
 			}
 		}
 
@@ -220,7 +222,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	}
 
 	if claims.AuthTime.IsZero() {
-		claims.AuthTime = time.Now().UTC()
+		claims.AuthTime = time.Now().Truncate(time.Second).UTC()
 	}
 
 	if claims.Issuer == "" {
