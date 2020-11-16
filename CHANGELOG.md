@@ -4,8 +4,10 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-10)](#unreleased-2020-11-10)
+- [Unreleased (2020-11-16)](#unreleased-2020-11-16)
+- [0.36.0 (2020-11-16)](#0360-2020-11-16)
     - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
     - [Documentation](#documentation)
     - [Features](#features)
     - [BREAKING CHANGES](#breaking-changes)
@@ -28,11 +30,11 @@
     - [Features](#features-3)
     - [BREAKING CHANGES](#breaking-changes-3)
   - [0.32.4 (2020-09-15)](#0324-2020-09-15)
-    - [Code Refactoring](#code-refactoring)
+    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation-3)
   - [0.32.3 (2020-09-12)](#0323-2020-09-12)
     - [Bug Fixes](#bug-fixes-5)
-    - [Code Refactoring](#code-refactoring-1)
+    - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-4)
     - [Features](#features-4)
   - [0.32.2 (2020-06-22)](#0322-2020-06-22)
@@ -317,13 +319,18 @@
 - [0.2.0 (2016-08-06)](#020-2016-08-06)
     - [Unclassified](#unclassified-118)
 - [0.1.0 (2016-08-01)](#010-2016-08-01)
-    - [Code Refactoring](#code-refactoring-2)
+    - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-26)
     - [Unclassified](#unclassified-119)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.35.1...9718eb6ce63983ade0689908b5cce3e27c8838bc) (2020-11-10)
+# Unreleased (2020-11-16)
+
+No significant changes have been made for this release.
+
+
+# [0.36.0](https://github.com/ory/fosite/compare/v0.35.1...v0.36.0) (2020-11-16)
 
 
 ### Bug Fixes
@@ -334,7 +341,16 @@
     > 
     > > *request_object_signing_alg - OPTIONAL. JWS [JWS] alg algorithm [JWA] that MUST be used for signing Request Objects sent to the OP. All Request Objects from this Client MUST be rejected, if not signed with this algorithm. Request Objects are described in Section 6.1 of OpenID Connect Core 1.0 [OpenID.Core]. This algorithm MUST be used both when the Request Object is passed by value (using the request parameter) and when it is passed by reference (using the request_uri parameter). Servers SHOULD support RS256. The value none MAY be used. The default, if omitted, is that any algorithm supported by the OP and the RP MAY be used.
 * Always return non-error response for inactive tokens ([#517](https://github.com/ory/fosite/issues/517)) ([5f2cae3](https://github.com/ory/fosite/commit/5f2cae3eabb83da898e1b5515176e65dda4da862))
+* Be more permissive in time checks ([839d000](https://github.com/ory/fosite/commit/839d00093a2ed8c590d910f113186cd96fad9185)):
+
+    > Time equality should not cause failures in OpenID Connect validation.
 * Do not accidentally leak jwks fetching errors ([6d2092d](https://github.com/ory/fosite/commit/6d2092da1e8699e43fd6dccb4c3a33b885cec7f8)), closes [/github.com/ory/fosite/pull/526#discussion_r517491738](https://github.com//github.com/ory/fosite/pull/526/issues/discussion_r517491738)
+* Do not require nonce for hybrid flows ([de5c8f9](https://github.com/ory/fosite/commit/de5c8f90e8ccae0849fa6426d53563ef7520880d)):
+
+    > This patch resolves an issue where nonce was required for hybrid flows, which does not comply with the OpenID Connect conformity test suite, specifically the `oidcc-ensure-request-without-nonce-succeeds-for-code-flow` test.
+* Guess default response mode in `NewAuthorizeRequest` ([a2952d7](https://github.com/ory/fosite/commit/a2952d7ad09fbd83a354b22dbcc0cef8a15f50f7))
+* Improve claims handling for jwts ([a72ca9a](https://github.com/ory/fosite/commit/a72ca9a978e60d7c4b000c41357719f0e2b61f8e))
+* Improve error stack wrapping ([620d4c1](https://github.com/ory/fosite/commit/620d4c148307f7be7b2674fe420141b33aef6075))
 * Kid header is not required for key lookup ([27cc5c0](https://github.com/ory/fosite/commit/27cc5c0e935ecb8bca23dd8c2670c8a93f7b829d))
 * Modernized JWT stateless introspection ([#519](https://github.com/ory/fosite/issues/519)) ([a6bfb92](https://github.com/ory/fosite/commit/a6bfb921ebc746ba7a1215e32fb42a2c0530a2bf))
 * Only use allowed characters in error_description ([431f9a5](https://github.com/ory/fosite/commit/431f9a56ed03648ea4ef637fe6c2b6d74e765dad)), closes [#525](https://github.com/ory/fosite/issues/525):
@@ -345,6 +361,11 @@
 * Use state from request object ([8cac1a0](https://github.com/ory/fosite/commit/8cac1a00a6f87523b88fea6962ab1194049cbacd)):
 
     > Resolves failing OIDC conformity test "oidcc-request-uri-unsigned".
+
+
+### Code Refactoring
+
+* Use rfc compliant error formating ([edbbda3](https://github.com/ory/fosite/commit/edbbda3c4cf70a77cdcd1383c55762c73613f87e))
 
 
 ### Documentation
@@ -372,6 +393,7 @@
     > }
     > ```
 * Improve error messages ([#513](https://github.com/ory/fosite/issues/513)) ([fcac5a6](https://github.com/ory/fosite/commit/fcac5a6457c92d1eb1a389192cd0c7fb590ab8b3))
+* Introduce WithExposeDebug to error interface ([625a521](https://github.com/ory/fosite/commit/625a5214c4a002b4d0f86e49555edf8755703968))
 * Support passing repeated audience parameter in URL query ([#518](https://github.com/ory/fosite/issues/518)) ([47f2a31](https://github.com/ory/fosite/commit/47f2a31fbed137b58e4866f78ec8b9f591134f98)), closes [#504](https://github.com/ory/fosite/issues/504):
 
     > Added `GetAudiences` helper function which tries to have current behavior and also support multiple/repeated audience parameters. If there are parameter is repeated, then it is not split by space. If there is only one then it is split by space. I think this is the best balance between standard/backwards behavior and allowing repeated parameter and allowing also URIs/audiences with spaces in them (which we probably all agree is probably not something anyone should be doing).
@@ -385,6 +407,15 @@
 
 ### BREAKING CHANGES
 
+* This patch removes fields `error_hint`, `error_debug` from error responses. To use the legacy error format where these fields are included, set `UseLegacyErrorFormat` to true in your compose config or directly on the `Fosite` struct. If `UseLegacyErrorFormat` is set, the `error_description` no longer merges `error_hint` nor `error_debug` messages which reverts a change introduced in `v0.33.0`. Instead, `error_hint` and `error_debug` are included and the merged message can be constructed from those fields.
+* As part of this change, the error interface and its fields have changed:
+
+- `RFC6749Error.Name` was renamed to `RFC6749Error.ErrorField`.
+- `RFC6749Error.Description` was renamed to `RFC6749Error.DescriptionField`.
+- `RFC6749Error.Hint` was renamed to `RFC6749Error.HintField`.
+- `RFC6749Error.Code` was renamed to `RFC6749Error.CodeField`.
+- `RFC6749Error.Hint` was renamed to `RFC6749Error.HintField`.
+- `RFC6749Error.WithCause()` was renamed to `RFC6749Error.WithWrap() *RFC6749Error` and alternatively to `RFC6749Error.Wrap()` (without return value) to standardize naming conventions around the new Go 1.14+ error interfaces.
 * As part of this change, methods `GetResponseMode`, `SetDefaultResponseMode`, `GetDefaultResponseMode ` where added to interface `AuthorizeRequester`. Also, methods `GetQuery`, `AddQuery`, and `GetFragment` were merged into one function `GetParameters` and `AddParameter` on the `AuthorizeResponder` interface. Methods on `AuthorizeRequest` and `AuthorizeResponse` changed accordingly and will need to be updated in your codebase. Additionally, the field `Debug` was renamed to `DebugField` and a new method `Debug() string` was added to `RFC6749Error`.
 
 Co-authored-by: hackerman <3372410+aeneasr@users.noreply.github.com>
