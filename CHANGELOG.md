@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-16)](#unreleased-2020-11-16)
+- [Unreleased (2020-11-18)](#unreleased-2020-11-18)
 - [0.36.0 (2020-11-16)](#0360-2020-11-16)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -325,7 +325,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Unreleased (2020-11-16)
+# Unreleased (2020-11-18)
 
 No significant changes have been made for this release.
 
