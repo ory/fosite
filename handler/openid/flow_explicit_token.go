@@ -40,8 +40,6 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	return errorsx.WithStack(fosite.ErrUnknownRequest)
-
 	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, requester.GetRequestForm().Get("code"), requester)
 	if errors.Is(err, ErrNoSessionFound) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest.WithWrap(err).WithDebug(err.Error()))
