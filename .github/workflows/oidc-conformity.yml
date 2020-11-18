@@ -1,0 +1,24 @@
+name: "OpenID Connect Conformity Tests"
+
+on:
+  push:
+
+jobs:
+  oidc-conformity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+          repository: ory/hydra
+          ref: master
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15.0'
+      - name: Update fosite
+        run: go get github.com/ory/fosite@${{ github.sha }}
+      - name: Start service
+        run: ./test/conformance/start.sh
+      - name: Run tests
+        run: ./test/conformance/test.sh -v -short -parallel 16
