@@ -133,6 +133,11 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 		subjectTokenClientId = or.GetSubjectTokenClient().GetID()
 	}
 
+	// forbid original subjects client to exchange its own token
+	if client.GetID() == subjectTokenClientId {
+		return errors.WithStack(fosite.ErrRequestForbidden.WithHint("Clients are not allowed to perform a token exchange on their own tokens"))
+	}
+
 	// reload client from storage to ensure that may_act is up to date in case of eventual revocation
 	subjectTokenClient, err := c.Store.GetClient(ctx, subjectTokenClientId)
 	if err != nil {

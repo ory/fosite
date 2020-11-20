@@ -99,6 +99,27 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 			},
 		},
 		{
+			description: "should fail because client cannot exchange its own token",
+			expectErr:   fosite.ErrRequestForbidden.WithHint("Clients are not allowed to perform a token exchange on their own tokens"),
+			mock: func() {
+				areq.EXPECT().GetGrantTypes().Return(fosite.Arguments{"urn:ietf:params:oauth:grant-type:token-exchange"})
+				query, _ := url.ParseQuery("subject_token=ABCD.1234&subject_token_type=urn:ietf:params:oauth:token-type:access_token")
+				areq.EXPECT().GetRequestForm().Return(query)
+				exchangeClient := &fosite.DefaultClient{
+					ID:         "exchange-client",
+					GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:token-exchange"},
+					Audience:   []string{"https://www.ory.sh/api"},
+				}
+				areq.EXPECT().GetClient().Return(exchangeClient)
+				areq.EXPECT().GetSession()
+				coreChgen.EXPECT().AccessTokenSignature("ABCD.1234").Return("1234")
+				coreStore.EXPECT().GetAccessTokenSession(nil, "1234", nil).Return(delegatedAreq, nil)
+				coreChgen.EXPECT().ValidateAccessToken(nil, delegatedAreq, "ABCD.1234").Return(nil)
+
+				delegatedAreq.EXPECT().GetSubjectTokenClient().Times(2).Return(exchangeClient)
+			},
+		},
+		{
 			description: "should fail because allowed actor not set",
 			expectErr:   fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to perform a token exchange for the given subject token."),
 			mock: func() {
@@ -106,6 +127,7 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 				query, _ := url.ParseQuery("subject_token=ABCD.1234&subject_token_type=urn:ietf:params:oauth:token-type:access_token")
 				areq.EXPECT().GetRequestForm().Return(query)
 				areq.EXPECT().GetClient().Return(&fosite.DefaultClient{
+					ID:         "exchange-client",
 					GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:token-exchange"},
 					Audience:   []string{"https://www.ory.sh/api"},
 				})
