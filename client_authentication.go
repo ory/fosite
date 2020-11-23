@@ -162,7 +162,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Claim 'sub' from 'client_assertion' must match the 'client_id' of the OAuth 2.0 Client."))
 		} else if jti, ok = (*claims)["jti"].(string); !ok || len(jti) == 0 {
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Claim 'jti' from 'client_assertion' must be set but is not."))
-		} else if f.Store.ClientAssertionJWTValid(context.Background(), jti) != nil {
+		} else if f.Store.ClientAssertionJWTValid(ctx, jti) != nil {
 			return nil, errorsx.WithStack(ErrJTIKnown.WithHint("Claim 'jti' from 'client_assertion' MUST only be used once."))
 		}
 
@@ -181,7 +181,7 @@ func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form u
 		if err != nil {
 			return nil, errorsx.WithStack(err)
 		}
-		if err := f.Store.SetClientAssertionJWT(context.Background(), jti, time.Unix(expiry, 0)); err != nil {
+		if err := f.Store.SetClientAssertionJWT(ctx, jti, time.Unix(expiry, 0)); err != nil {
 			return nil, err
 		}
 
