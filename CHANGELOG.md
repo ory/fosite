@@ -4,10 +4,11 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-18)](#unreleased-2020-11-18)
+- [Unreleased (2020-11-25)](#unreleased-2020-11-25)
+    - [Code Refactoring](#code-refactoring)
 - [0.36.0 (2020-11-16)](#0360-2020-11-16)
     - [Bug Fixes](#bug-fixes)
-    - [Code Refactoring](#code-refactoring)
+    - [Code Refactoring](#code-refactoring-1)
     - [Documentation](#documentation)
     - [Features](#features)
     - [BREAKING CHANGES](#breaking-changes)
@@ -30,11 +31,11 @@
     - [Features](#features-3)
     - [BREAKING CHANGES](#breaking-changes-3)
   - [0.32.4 (2020-09-15)](#0324-2020-09-15)
-    - [Code Refactoring](#code-refactoring-1)
+    - [Code Refactoring](#code-refactoring-2)
     - [Documentation](#documentation-3)
   - [0.32.3 (2020-09-12)](#0323-2020-09-12)
     - [Bug Fixes](#bug-fixes-5)
-    - [Code Refactoring](#code-refactoring-2)
+    - [Code Refactoring](#code-refactoring-3)
     - [Documentation](#documentation-4)
     - [Features](#features-4)
   - [0.32.2 (2020-06-22)](#0322-2020-06-22)
@@ -319,15 +320,20 @@
 - [0.2.0 (2016-08-06)](#020-2016-08-06)
     - [Unclassified](#unclassified-118)
 - [0.1.0 (2016-08-01)](#010-2016-08-01)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-26)
     - [Unclassified](#unclassified-119)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Unreleased (2020-11-18)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.36.0...2da54e3620a467e20d67ae05d0d3885a2383e4d4) (2020-11-25)
 
-No significant changes have been made for this release.
+
+### Code Refactoring
+
+* Use constructor ([#535](https://github.com/ory/fosite/issues/535)) ([2da54e3](https://github.com/ory/fosite/commit/2da54e3620a467e20d67ae05d0d3885a2383e4d4))
+* Use provided context ([#536](https://github.com/ory/fosite/issues/536)) ([35d4f13](https://github.com/ory/fosite/commit/35d4f133faa87076c7eb1c5e8384f3653643de9e))
+
 
 
 # [0.36.0](https://github.com/ory/fosite/compare/v0.35.1...v0.36.0) (2020-11-16)
