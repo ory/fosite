@@ -36,7 +36,7 @@ func (c *OpenIDConnectExplicitHandler) HandleTokenEndpointRequest(ctx context.Co
 }
 
 func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !requester.GetGrantTypes().ExactOne("authorization_code") {
+	if !c.CanHandleTokenEndpointRequest(requester) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -75,4 +75,12 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 	// }
 
 	return c.IssueExplicitIDToken(ctx, authorize, responder)
+}
+
+func (c *OpenIDConnectExplicitHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+	return false
+}
+
+func (c *OpenIDConnectExplicitHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+	return requester.GetGrantTypes().ExactOne("authorization_code")
 }

@@ -42,6 +42,8 @@ func TestNewAccessRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockStorage(ctrl)
 	handler := internal.NewMockTokenEndpointHandler(ctrl)
+	handler.EXPECT().CanHandleTokenEndpointRequest(gomock.Any()).Return(true).AnyTimes()
+	handler.EXPECT().CanSkipClientAuth(gomock.Any()).Return(false).AnyTimes()
 	hasher := internal.NewMockHasher(ctrl)
 	defer ctrl.Finish()
 
@@ -94,6 +96,7 @@ func TestNewAccessRequest(t *testing.T) {
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(nil, errors.New(""))
 			},
+			handlers: TokenEndpointHandlers{handler},
 		},
 		{
 			header: http.Header{
@@ -118,6 +121,7 @@ func TestNewAccessRequest(t *testing.T) {
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(nil, errors.New(""))
 			},
+			handlers: TokenEndpointHandlers{handler},
 		},
 		{
 			header: http.Header{
@@ -134,6 +138,7 @@ func TestNewAccessRequest(t *testing.T) {
 				client.Secret = []byte("foo")
 				hasher.EXPECT().Compare(context.TODO(), gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(errors.New(""))
 			},
+			handlers: TokenEndpointHandlers{handler},
 		},
 		{
 			header: http.Header{
@@ -190,6 +195,172 @@ func TestNewAccessRequest(t *testing.T) {
 				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			handlers: TokenEndpointHandlers{handler},
+			expect: &AccessRequest{
+				GrantTypes: Arguments{"foo"},
+				Request: Request{
+					Client: client,
+				},
+			},
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			r := &http.Request{
+				Header:   c.header,
+				PostForm: c.form,
+				Form:     c.form,
+				Method:   c.method,
+			}
+			c.mock()
+			ctx := NewContext()
+			fosite.TokenEndpointHandlers = c.handlers
+			ar, err := fosite.NewAccessRequest(ctx, r, new(DefaultSession))
+
+			if c.expectErr != nil {
+				assert.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+				AssertObjectKeysEqual(t, c.expect, ar, "GrantTypes", "Client")
+				assert.NotNil(t, ar.GetRequestedAt())
+			}
+		})
+	}
+}
+
+func TestNewAccessRequestWithoutClientAuth(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	store := internal.NewMockStorage(ctrl)
+	handler := internal.NewMockTokenEndpointHandler(ctrl)
+	handler.EXPECT().CanHandleTokenEndpointRequest(gomock.Any()).Return(true).AnyTimes()
+	handler.EXPECT().CanSkipClientAuth(gomock.Any()).Return(true).AnyTimes()
+	hasher := internal.NewMockHasher(ctrl)
+	defer ctrl.Finish()
+
+	client := &DefaultClient{}
+	fosite := &Fosite{Store: store, Hasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
+	for k, c := range []struct {
+		header    http.Header
+		form      url.Values
+		mock      func()
+		method    string
+		expectErr error
+		expect    *AccessRequest
+		handlers  TokenEndpointHandlers
+	}{
+		{
+			header:    http.Header{},
+			expectErr: ErrInvalidRequest,
+			form:      url.Values{},
+			method:    "POST",
+			mock:      func() {},
+		},
+		{
+			header: http.Header{},
+			method: "POST",
+			form: url.Values{
+				"grant_type": {"foo"},
+			},
+			mock:      func() {},
+			expectErr: ErrInvalidRequest,
+		},
+		{
+			method: "POST",
+			form: url.Values{
+				"grant_type": {"foo"},
+			},
+			mock: func() {
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			handlers: TokenEndpointHandlers{handler},
+			expect: &AccessRequest{
+				GrantTypes: Arguments{"foo"},
+				Request: Request{
+					Client: client,
+				},
+			},
+		},
+	} {
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			r := &http.Request{
+				Header:   c.header,
+				PostForm: c.form,
+				Form:     c.form,
+				Method:   c.method,
+			}
+			c.mock()
+			ctx := NewContext()
+			fosite.TokenEndpointHandlers = c.handlers
+			ar, err := fosite.NewAccessRequest(ctx, r, new(DefaultSession))
+
+			if c.expectErr != nil {
+				assert.EqualError(t, err, c.expectErr.Error())
+			} else {
+				require.NoError(t, err)
+				AssertObjectKeysEqual(t, c.expect, ar, "GrantTypes", "Client")
+				assert.NotNil(t, ar.GetRequestedAt())
+			}
+		})
+	}
+}
+
+// In this test case one handler requires client auth and another handler not.
+func TestNewAccessRequestWithMixedClientAuth(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	store := internal.NewMockStorage(ctrl)
+	handlerWithClientAuth := internal.NewMockTokenEndpointHandler(ctrl)
+	handlerWithClientAuth.EXPECT().CanHandleTokenEndpointRequest(gomock.Any()).Return(true).AnyTimes()
+	handlerWithClientAuth.EXPECT().CanSkipClientAuth(gomock.Any()).Return(false).AnyTimes()
+	handlerWithoutClientAuth := internal.NewMockTokenEndpointHandler(ctrl)
+	handlerWithoutClientAuth.EXPECT().CanHandleTokenEndpointRequest(gomock.Any()).Return(true).AnyTimes()
+	handlerWithoutClientAuth.EXPECT().CanSkipClientAuth(gomock.Any()).Return(true).AnyTimes()
+	hasher := internal.NewMockHasher(ctrl)
+	defer ctrl.Finish()
+
+	client := &DefaultClient{}
+	fosite := &Fosite{Store: store, Hasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
+	for k, c := range []struct {
+		header    http.Header
+		form      url.Values
+		mock      func()
+		method    string
+		expectErr error
+		expect    *AccessRequest
+		handlers  TokenEndpointHandlers
+	}{
+		{
+			header: http.Header{
+				"Authorization": {basicAuth("foo", "bar")},
+			},
+			method: "POST",
+			form: url.Values{
+				"grant_type": {"foo"},
+			},
+			expectErr: ErrInvalidClient,
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
+				client.Public = false
+				client.Secret = []byte("foo")
+				hasher.EXPECT().Compare(context.TODO(), gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(errors.New(""))
+				handlerWithoutClientAuth.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			handlers: TokenEndpointHandlers{handlerWithoutClientAuth, handlerWithClientAuth},
+		},
+		{
+			header: http.Header{
+				"Authorization": {basicAuth("foo", "bar")},
+			},
+			method: "POST",
+			form: url.Values{
+				"grant_type": {"foo"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("foo")).Return(client, nil)
+				client.Public = false
+				client.Secret = []byte("foo")
+				hasher.EXPECT().Compare(context.TODO(), gomock.Eq([]byte("foo")), gomock.Eq([]byte("bar"))).Return(nil)
+				handlerWithoutClientAuth.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
+				handlerWithClientAuth.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			handlers: TokenEndpointHandlers{handlerWithoutClientAuth, handlerWithClientAuth},
 			expect: &AccessRequest{
 				GrantTypes: Arguments{"foo"},
 				Request: Request{

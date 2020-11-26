@@ -48,6 +48,15 @@ type TokenEndpointHandler interface {
 	// HandleTokenEndpointRequest handles an authorize request. If the handler is not responsible for handling
 	// the request, this method should return ErrUnknownRequest and otherwise handle the request.
 	HandleTokenEndpointRequest(ctx context.Context, requester AccessRequester) error
+
+	// CanSkipClientAuth indicates if client authentication can be skipped. By default it MUST be false, unless you are
+	// implementing extension grant type, which allows unauthenticated client. CanSkipClientAuth must be called
+	// before HandleTokenEndpointRequest to decide, if AccessRequester will contain authenticated client.
+	CanSkipClientAuth(requester AccessRequester) bool
+
+	// CanHandleRequest indicates, if TokenEndpointHandler can handle this request or not. If true,
+	// HandleTokenEndpointRequest can be called.
+	CanHandleTokenEndpointRequest(requester AccessRequester) bool
 }
 
 // RevocationHandler is the interface that allows token revocation for an OAuth2.0 provider.

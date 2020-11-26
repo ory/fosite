@@ -127,7 +127,7 @@ func (c *Handler) validate(challenge, method string, client fosite.Client) error
 }
 
 func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !request.GetGrantTypes().ExactOne("authorization_code") {
+	if !c.CanHandleTokenEndpointRequest(request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -228,4 +228,14 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	return nil
+}
+
+func (c *Handler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+	return false
+}
+
+func (c *Handler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+	// grant_type REQUIRED.
+	// Value MUST be set to "authorization_code"
+	return requester.GetGrantTypes().ExactOne("authorization_code")
 }

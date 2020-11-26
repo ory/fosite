@@ -46,9 +46,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.2
 func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	// grant_type REQUIRED.
-	// Value MUST be set to "password".
-	if !request.GetGrantTypes().ExactOne("password") {
+	if !c.CanHandleTokenEndpointRequest(request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -90,7 +88,7 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.3.3
 func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !requester.GetGrantTypes().ExactOne("password") {
+	if !c.CanHandleTokenEndpointRequest(requester) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -114,4 +112,14 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 	}
 
 	return nil
+}
+
+func (c *ResourceOwnerPasswordCredentialsGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+	return false
+}
+
+func (c *ResourceOwnerPasswordCredentialsGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+	// grant_type REQUIRED.
+	// Value MUST be set to "password".
+	return requester.GetGrantTypes().ExactOne("password")
 }
