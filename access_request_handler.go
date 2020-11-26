@@ -57,7 +57,6 @@ import (
 //   client MUST authenticate with the authorization server as described
 //   in Section 3.2.1.
 func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session Session) (AccessRequester, error) {
-	var err error
 	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
@@ -80,14 +79,20 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHint("Request parameter 'grant_type' is missing"))
 	}
 
-	client, err := f.AuthenticateClient(ctx, r, r.PostForm)
-	if err != nil {
-		return accessRequest, err
-	}
-	accessRequest.Client = client
-
 	var found = false
+	var isClientAuth = false
 	for _, loader := range f.TokenEndpointHandlers {
+		if !loader.CanHandleTokenEndpointRequest(accessRequest) {
+			continue
+		}
+		if !loader.CanSkipClientAuth(accessRequest) && !isClientAuth {
+			client, err := f.AuthenticateClient(ctx, r, r.PostForm)
+			if err != nil {
+				return accessRequest, err
+			}
+			accessRequest.Client = client
+			isClientAuth = true
+		}
 		if err := loader.HandleTokenEndpointRequest(ctx, accessRequest); err == nil {
 			found = true
 		} else if errors.Is(err, ErrUnknownRequest) {

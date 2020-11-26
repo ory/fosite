@@ -38,9 +38,7 @@ type ClientCredentialsGrantHandler struct {
 
 // IntrospectTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
 func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Context, request fosite.AccessRequester) error {
-	// grant_type REQUIRED.
-	// Value MUST be set to "client_credentials".
-	if !request.GetGrantTypes().ExactOne("client_credentials") {
+	if !c.CanHandleTokenEndpointRequest(request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -69,7 +67,7 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.4.3
 func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
-	if !request.GetGrantTypes().ExactOne("client_credentials") {
+	if !c.CanHandleTokenEndpointRequest(request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -78,4 +76,14 @@ func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	return c.IssueAccessToken(ctx, request, response)
+}
+
+func (c *ClientCredentialsGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+	return false
+}
+
+func (c *ClientCredentialsGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+	// grant_type REQUIRED.
+	// Value MUST be set to "client_credentials".
+	return requester.GetGrantTypes().ExactOne("client_credentials")
 }

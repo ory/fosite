@@ -53,9 +53,7 @@ type RefreshTokenGrantHandler struct {
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
 func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	// grant_type REQUIRED.
-	// Value MUST be set to "refresh_token".
-	if !request.GetGrantTypes().ExactOne("refresh_token") {
+	if !c.CanHandleTokenEndpointRequest(request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -117,7 +115,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-6
 func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !requester.GetGrantTypes().ExactOne("refresh_token") {
+	if !c.CanHandleTokenEndpointRequest(requester) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -193,4 +191,14 @@ func handleRefreshTokenEndpointResponseStorageError(ctx context.Context, rollbac
 	}
 
 	return errorsx.WithStack(fosite.ErrServerError.WithWrap(storageErr).WithDebug(storageErr.Error()))
+}
+
+func (c *RefreshTokenGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+	return false
+}
+
+func (c *RefreshTokenGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+	// grant_type REQUIRED.
+	// Value MUST be set to "refresh_token".
+	return requester.GetGrantTypes().ExactOne("refresh_token")
 }
