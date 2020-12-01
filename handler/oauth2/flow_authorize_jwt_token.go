@@ -23,6 +23,7 @@ package oauth2
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ory/fosite"
@@ -260,17 +261,22 @@ func (c *AuthorizeJwtGrantHandler) findPublicKeyForToken(ctx context.Context, to
 		}
 	}
 
+	keyNotFoundMsg := fmt.Sprintf(
+		"No public JWK was registered for issuer \"%s\" and subject \"%s\", and public key is required to check signature of JWT in \"assertion\" request parameter.",
+		unverifiedClaims.Issuer,
+		unverifiedClaims.Subject,
+	)
 	if keyID != "" {
 		key, err := c.AuthorizeJwtGrantStorage.GetPublicKey(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject, keyID)
 		if err != nil {
-			return nil, errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+			return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
 		}
 		return key, nil
 	}
 
 	keys, err := c.AuthorizeJwtGrantStorage.GetPublicKeys(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject)
 	if err != nil {
-		return nil, errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
 	}
 
 	claims := jwt.Claims{}
@@ -281,11 +287,5 @@ func (c *AuthorizeJwtGrantHandler) findPublicKeyForToken(ctx context.Context, to
 		}
 	}
 
-	return nil, errorsx.WithStack(fosite.ErrInvalidGrant.
-		WithHintf(
-			"No public JWK was registered for issuer \"%s\" and subject \"%s\", and public key is required to check signature of JWT in \"assertion\" request parameter.",
-			unverifiedClaims.Issuer,
-			unverifiedClaims.Subject,
-		).WithWrap(err).WithDebug(err.Error()),
-	)
+	return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
 }
