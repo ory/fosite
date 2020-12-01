@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"gopkg.in/square/go-jose.v2"
 
 	"github.com/ory/fosite"
 )
@@ -34,6 +35,21 @@ import (
 type MemoryUserRelation struct {
 	Username string
 	Password string
+}
+
+type IssuerPublicKeys struct {
+	Issuer    string
+	KeysBySub map[string]SubjectPublicKeys
+}
+
+type SubjectPublicKeys struct {
+	Subject string
+	Keys    map[string]PublicKeyScopes
+}
+
+type PublicKeyScopes struct {
+	Key    *jose.JSONWebKey
+	Scopes []string
 }
 
 type MemoryStore struct {
@@ -48,6 +64,8 @@ type MemoryStore struct {
 	// In-memory request ID to token signatures
 	AccessTokenRequestIDs  map[string]string
 	RefreshTokenRequestIDs map[string]string
+	// Public keys to check signature in auth grant jwt assertion.
+	IssuerPublicKeys map[string]IssuerPublicKeys
 
 	clientsMutex                sync.RWMutex
 	authorizeCodesMutex         sync.RWMutex
@@ -59,6 +77,7 @@ type MemoryStore struct {
 	blacklistedJTIsMutex        sync.RWMutex
 	accessTokenRequestIDsMutex  sync.RWMutex
 	refreshTokenRequestIDsMutex sync.RWMutex
+	issuerPublicKeysMutex       sync.RWMutex
 }
 
 func NewMemoryStore() *MemoryStore {
@@ -73,6 +92,7 @@ func NewMemoryStore() *MemoryStore {
 		AccessTokenRequestIDs:  make(map[string]string),
 		RefreshTokenRequestIDs: make(map[string]string),
 		BlacklistedJTIs:        make(map[string]time.Time),
+		IssuerPublicKeys:       make(map[string]IssuerPublicKeys),
 	}
 }
 
@@ -116,6 +136,7 @@ func NewExampleStore() *MemoryStore {
 		PKCES:                  map[string]fosite.Requester{},
 		AccessTokenRequestIDs:  map[string]string{},
 		RefreshTokenRequestIDs: map[string]string{},
+		IssuerPublicKeys:       map[string]IssuerPublicKeys{},
 	}
 }
 
@@ -355,4 +376,68 @@ func (s *MemoryStore) RevokeAccessToken(ctx context.Context, requestID string) e
 		}
 	}
 	return nil
+}
+
+func (s *MemoryStore) GetPublicKey(ctx context.Context, issuer string, subject string, keyId string) (*jose.JSONWebKey, error) {
+	s.issuerPublicKeysMutex.RLock()
+	defer s.issuerPublicKeysMutex.RUnlock()
+
+	if issuerKeys, ok := s.IssuerPublicKeys[issuer]; ok {
+		if subKeys, ok := issuerKeys.KeysBySub[subject]; ok {
+			if keyScopes, ok := subKeys.Keys[keyId]; ok {
+				return keyScopes.Key, nil
+			}
+		}
+	}
+
+	return nil, fosite.ErrNotFound
+}
+func (s *MemoryStore) GetPublicKeys(ctx context.Context, issuer string, subject string) (*jose.JSONWebKeySet, error) {
+	s.issuerPublicKeysMutex.RLock()
+	defer s.issuerPublicKeysMutex.RUnlock()
+
+	if issuerKeys, ok := s.IssuerPublicKeys[issuer]; ok {
+		if subKeys, ok := issuerKeys.KeysBySub[subject]; ok {
+			if len(subKeys.Keys) == 0 {
+				return nil, fosite.ErrNotFound
+			}
+
+			keys := make([]jose.JSONWebKey, 0, len(subKeys.Keys))
+			for _, keyScopes := range subKeys.Keys {
+				keys = append(keys, *keyScopes.Key)
+			}
+
+			return &jose.JSONWebKeySet{Keys: keys}, nil
+		}
+	}
+
+	return nil, fosite.ErrNotFound
+}
+
+func (s *MemoryStore) GetPublicKeyScopes(ctx context.Context, issuer string, subject string, keyId string) ([]string, error) {
+	s.issuerPublicKeysMutex.RLock()
+	defer s.issuerPublicKeysMutex.RUnlock()
+
+	if issuerKeys, ok := s.IssuerPublicKeys[issuer]; ok {
+		if subKeys, ok := issuerKeys.KeysBySub[subject]; ok {
+			if keyScopes, ok := subKeys.Keys[keyId]; ok {
+				return keyScopes.Scopes, nil
+			}
+		}
+	}
+
+	return nil, fosite.ErrNotFound
+}
+
+func (s *MemoryStore) IsJWTUsed(ctx context.Context, jti string) (bool, error) {
+	err := s.ClientAssertionJWTValid(ctx, jti)
+	if err != nil {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (s *MemoryStore) MarkJWTUsedForTime(ctx context.Context, jti string, exp time.Time) error {
+	return s.SetClientAssertionJWT(ctx, jti, exp)
 }
