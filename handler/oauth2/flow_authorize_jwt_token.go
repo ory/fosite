@@ -101,6 +101,12 @@ func (c *AuthorizeJwtGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		)
 	}
 
+	if claims.ID != "" {
+		if err := c.AuthorizeJwtGrantStorage.MarkJWTUsedForTime(ctx, claims.ID, claims.Expiry.Time()); err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
+	}
+
 	scopes, err := c.AuthorizeJwtGrantStorage.GetPublicKeyScopes(ctx, claims.Issuer, claims.Subject, key.KeyID)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
