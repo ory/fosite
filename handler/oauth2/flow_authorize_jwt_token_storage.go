@@ -22,6 +22,5 @@
 package oauth2
 
 type AuthorizeJwtGrantStorage interface {
-	AccessTokenStorage
 	JWTAuthGrantStorage
 }

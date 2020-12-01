@@ -99,6 +99,18 @@ type Config struct {
 	// UseLegacyErrorFormat controls whether the legacy error format (with `error_debug`, `error_hint`, ...)
 	// should be used or not.
 	UseLegacyErrorFormat bool
+
+	// JWTSkipClientAuth indicates, if client authentication can be skipped, when using jwt as assertion.
+	JWTSkipClientAuth bool
+
+	// JWTIDOptional indicates, if jti (JWT ID) claim required or not in JWT.
+	JWTIDOptional bool
+
+	// JWTIssuedDateOptional indicates, if "iat" (issued at) claim required or not in JWT.
+	JWTIssuedDateOptional bool
+
+	// JWTMaxDuration sets the maximum time after JWT issued date, during which the JWT is considered valid.
+	JWTMaxDuration time.Duration
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
@@ -197,4 +209,13 @@ func (c *Config) GetMinParameterEntropy() int {
 	} else {
 		return c.MinParameterEntropy
 	}
+}
+
+// GetJWTMaxDuration returns the maximum time after JWT issued date, during which the JWT is considered valid.
+// Defaults to 30 days.
+func (c *Config) GetJWTMaxDuration() time.Duration {
+	if c.JWTMaxDuration == 0 {
+		return time.Hour * 24 * 30
+	}
+	return c.JWTMaxDuration
 }
