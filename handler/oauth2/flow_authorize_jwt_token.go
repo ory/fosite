@@ -285,5 +285,5 @@ func (c *AuthorizeJwtGrantHandler) findPublicKeyForToken(ctx context.Context, to
 		}
 	}
 
-	return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
+	return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg))
 }
