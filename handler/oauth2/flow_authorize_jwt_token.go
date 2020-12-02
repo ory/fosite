@@ -155,12 +155,12 @@ func (c *AuthorizeJwtGrantHandler) validateTokenPreRequisites(token *jwt.JSONWeb
 	}
 	if unverifiedClaims.Issuer == "" {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain a \"sub\" (subject) claim."),
+			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"iss\" (issuer) claim."),
 		)
 	}
 	if unverifiedClaims.Subject == "" {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"iss\" (issuer) claim."),
+			WithHint("The JWT in \"assertion\" request parameter MUST contain a \"sub\" (subject) claim."),
 		)
 	}
 
