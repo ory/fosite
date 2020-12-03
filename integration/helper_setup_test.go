@@ -22,6 +22,9 @@
 package integration_test
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -29,6 +32,8 @@ import (
 	"github.com/gorilla/mux"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	goauth_jwt "golang.org/x/oauth2/jwt"
+	"gopkg.in/square/go-jose.v2"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
@@ -38,6 +43,15 @@ import (
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
 )
+
+var firstPrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
+var secondPrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
+
+const secondKeyID = "321"
+const firstKeyID = "123"
+const secondJWTBearerIssuer = "second@tinkoff.ru"
+const firstJWTBearerIssuer = "first@tinkoff.ru"
+const jwtBearerSubject = "service-client"
 
 var fositeStore = &storage.MemoryStore{
 	Clients: map[string]fosite.Client{
@@ -67,6 +81,51 @@ var fositeStore = &storage.MemoryStore{
 			Password: "secret",
 		},
 	},
+	IssuerPublicKeys: map[string]storage.IssuerPublicKeys{
+		firstJWTBearerIssuer: {
+			Issuer: firstJWTBearerIssuer,
+			KeysBySub: map[string]storage.SubjectPublicKeys{
+				jwtBearerSubject: {
+					Subject: jwtBearerSubject,
+					Keys: map[string]storage.PublicKeyScopes{
+						firstKeyID: {
+							Key: &jose.JSONWebKey{
+								Key:       firstPrivateKey.Public(),
+								Algorithm: string(jose.RS256),
+								Use:       "sig",
+								KeyID:     firstKeyID,
+							},
+							Scopes: []string{
+								"fosite",
+							},
+						},
+					},
+				},
+			},
+		},
+		secondJWTBearerIssuer: {
+			Issuer: secondJWTBearerIssuer,
+			KeysBySub: map[string]storage.SubjectPublicKeys{
+				jwtBearerSubject: {
+					Subject: jwtBearerSubject,
+					Keys: map[string]storage.PublicKeyScopes{
+						secondKeyID: {
+							Key: &jose.JSONWebKey{
+								Key:       secondPrivateKey.Public(),
+								Algorithm: string(jose.RS256),
+								Use:       "sig",
+								KeyID:     secondKeyID,
+							},
+							Scopes: []string{
+								"fosite",
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	BlacklistedJTIs:        map[string]time.Time{},
 	AuthorizeCodes:         map[string]storage.StoreAuthorizeCode{},
 	PKCES:                  map[string]fosite.Requester{},
 	AccessTokens:           map[string]fosite.Requester{},
@@ -104,6 +163,19 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 		ClientSecret: "foobar",
 		Scopes:       []string{"fosite"},
 		TokenURL:     ts.URL + "/token",
+	}
+}
+
+func newOAuth2JWTBearerAppClient(ts *httptest.Server) *goauth_jwt.Config {
+	return &goauth_jwt.Config{
+		Email:        firstJWTBearerIssuer,
+		Subject:      jwtBearerSubject,
+		Scopes:       []string{"fosite"},
+		Audience:     "https://www.ory.sh/api",
+		TokenURL:     ts.URL + "/token",
+		PrivateKey:   x509.MarshalPKCS1PrivateKey(firstPrivateKey),
+		PrivateKeyID: firstKeyID,
+		Expires:      24 * time.Hour,
 	}
 }
 
