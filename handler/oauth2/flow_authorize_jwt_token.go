@@ -176,18 +176,6 @@ func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt
 		)
 	}
 
-	if claims.Expiry == nil {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"exp\" (expiration time) claim."),
-		)
-	}
-
-	if claims.Expiry.Time().Before(time.Now()) {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter expired."),
-		)
-	}
-
 	if len(claims.Audience) == 0 {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim."),
@@ -203,20 +191,16 @@ func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt
 		)
 	}
 
-	if !c.JWTIDOptional && claims.ID == "" {
+	if claims.Expiry == nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"jti\" (JWT ID) claim."),
+			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"exp\" (expiration time) claim."),
 		)
 	}
 
-	if claims.ID != "" {
-		used, err := c.AuthorizeJwtGrantStorage.IsJWTUsed(ctx, claims.ID)
-		if err != nil {
-			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-		}
-		if used {
-			return errorsx.WithStack(fosite.ErrJTIKnown)
-		}
+	if claims.Expiry.Time().Before(time.Now()) {
+		return errorsx.WithStack(fosite.ErrInvalidGrant.
+			WithHint("The JWT in \"assertion\" request parameter expired."),
+		)
 	}
 
 	if claims.NotBefore != nil && !claims.NotBefore.Time().Before(time.Now()) {
@@ -240,6 +224,22 @@ func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt
 				claims.IssuedAt.Time().Format(time.RFC3339),
 			),
 		)
+	}
+
+	if !c.JWTIDOptional && claims.ID == "" {
+		return errorsx.WithStack(fosite.ErrInvalidGrant.
+			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"jti\" (JWT ID) claim."),
+		)
+	}
+
+	if claims.ID != "" {
+		used, err := c.AuthorizeJwtGrantStorage.IsJWTUsed(ctx, claims.ID)
+		if err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
+		if used {
+			return errorsx.WithStack(fosite.ErrJTIKnown)
+		}
 	}
 
 	return nil
