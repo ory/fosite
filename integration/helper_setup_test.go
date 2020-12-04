@@ -47,11 +47,14 @@ import (
 var firstPrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
 var secondPrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
 
-const secondKeyID = "321"
 const firstKeyID = "123"
-const secondJWTBearerIssuer = "second@tinkoff.ru"
+const secondKeyID = "321"
+
 const firstJWTBearerIssuer = "first@tinkoff.ru"
-const jwtBearerSubject = "service-client"
+const secondJWTBearerIssuer = "second@tinkoff.ru"
+
+const firstJWTBearerSubject = "first-service-client"
+const secondJWTBearerSubject = "second-service-client"
 
 var fositeStore = &storage.MemoryStore{
 	Clients: map[string]fosite.Client{
@@ -85,8 +88,8 @@ var fositeStore = &storage.MemoryStore{
 		firstJWTBearerIssuer: {
 			Issuer: firstJWTBearerIssuer,
 			KeysBySub: map[string]storage.SubjectPublicKeys{
-				jwtBearerSubject: {
-					Subject: jwtBearerSubject,
+				firstJWTBearerSubject: {
+					Subject: firstJWTBearerSubject,
 					Keys: map[string]storage.PublicKeyScopes{
 						firstKeyID: {
 							Key: &jose.JSONWebKey{
@@ -106,8 +109,8 @@ var fositeStore = &storage.MemoryStore{
 		secondJWTBearerIssuer: {
 			Issuer: secondJWTBearerIssuer,
 			KeysBySub: map[string]storage.SubjectPublicKeys{
-				jwtBearerSubject: {
-					Subject: jwtBearerSubject,
+				secondJWTBearerSubject: {
+					Subject: secondJWTBearerSubject,
 					Keys: map[string]storage.PublicKeyScopes{
 						secondKeyID: {
 							Key: &jose.JSONWebKey{
@@ -166,15 +169,28 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 	}
 }
 
-func newOAuth2JWTBearerAppClient(ts *httptest.Server) *goauth_jwt.Config {
+func newJWTBearerAppFirstClient(ts *httptest.Server) *goauth_jwt.Config {
 	return &goauth_jwt.Config{
 		Email:        firstJWTBearerIssuer,
-		Subject:      jwtBearerSubject,
+		Subject:      firstJWTBearerSubject,
 		Scopes:       []string{"fosite"},
 		Audience:     "https://www.ory.sh/api",
 		TokenURL:     ts.URL + "/token",
 		PrivateKey:   x509.MarshalPKCS1PrivateKey(firstPrivateKey),
 		PrivateKeyID: firstKeyID,
+		Expires:      24 * time.Hour,
+	}
+}
+
+func newJWTBearerAppSecondClient(ts *httptest.Server) *goauth_jwt.Config {
+	return &goauth_jwt.Config{
+		Email:        secondJWTBearerIssuer,
+		Subject:      secondJWTBearerSubject,
+		Scopes:       []string{"fosite"},
+		Audience:     "https://www.ory.sh/api",
+		TokenURL:     ts.URL + "/token",
+		PrivateKey:   x509.MarshalPKCS1PrivateKey(secondPrivateKey),
+		PrivateKeyID: secondKeyID,
 		Expires:      24 * time.Hour,
 	}
 }

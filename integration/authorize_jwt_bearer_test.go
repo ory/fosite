@@ -242,6 +242,6 @@ func TestAuthorizeJWTBearerSuite(t *testing.T) {
 	defer testServer.Close()
 
 	suite.Run(t, &authorizeJWTBearerSuite{
-		client: newOAuth2JWTBearerAppClient(testServer),
+		client: newJWTBearerAppFirstClient(testServer),
 	})
 }
