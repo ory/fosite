@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2020-11-25)](#unreleased-2020-11-25)
+- [Unreleased (2020-12-06)](#unreleased-2020-12-06)
     - [Code Refactoring](#code-refactoring)
 - [0.36.0 (2020-11-16)](#0360-2020-11-16)
     - [Bug Fixes](#bug-fixes)
@@ -326,7 +326,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.36.0...2da54e3620a467e20d67ae05d0d3885a2383e4d4) (2020-11-25)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.36.0...2da54e3620a467e20d67ae05d0d3885a2383e4d4) (2020-12-06)
 
 
 ### Code Refactoring
