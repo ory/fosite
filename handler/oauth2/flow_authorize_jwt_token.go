@@ -117,7 +117,20 @@ func (c *AuthorizeJwtGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		}
 	}
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.HandleHelper.AccessTokenLifespan).Round(time.Second))
+	for _, scope := range request.GetRequestedScopes() {
+		request.GrantScope(scope)
+	}
+
+	for _, audience := range request.GetRequestedAudience() {
+		request.GrantAudience(audience)
+	}
+
+	session, err := c.getSessionFromRequest(request)
+	if err != nil {
+		return err
+	}
+	session.SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.HandleHelper.AccessTokenLifespan).Round(time.Second))
+	session.SetSubject(claims.Subject)
 
 	return nil
 }
@@ -165,6 +178,49 @@ func (c *AuthorizeJwtGrantHandler) validateTokenPreRequisites(token *jwt.JSONWeb
 	}
 
 	return nil
+}
+
+func (c *AuthorizeJwtGrantHandler) findPublicKeyForToken(ctx context.Context, token *jwt.JSONWebToken) (*jose.JSONWebKey, error) {
+	unverifiedClaims := jwt.Claims{}
+	if err := token.UnsafeClaimsWithoutVerification(&unverifiedClaims); err != nil {
+		return nil, errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
+	}
+
+	var keyID string
+	for _, header := range token.Headers {
+		if header.KeyID != "" {
+			keyID = header.KeyID
+			break
+		}
+	}
+
+	keyNotFoundMsg := fmt.Sprintf(
+		"No public JWK was registered for issuer \"%s\" and subject \"%s\", and public key is required to check signature of JWT in \"assertion\" request parameter.",
+		unverifiedClaims.Issuer,
+		unverifiedClaims.Subject,
+	)
+	if keyID != "" {
+		key, err := c.AuthorizeJwtGrantStorage.GetPublicKey(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject, keyID)
+		if err != nil {
+			return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
+		}
+		return key, nil
+	}
+
+	keys, err := c.AuthorizeJwtGrantStorage.GetPublicKeys(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject)
+	if err != nil {
+		return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
+	}
+
+	claims := jwt.Claims{}
+	for _, key := range keys.Keys {
+		err := token.Claims(key, &claims)
+		if err == nil {
+			return &key, nil
+		}
+	}
+
+	return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg))
 }
 
 func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt.JSONWebToken, key *jose.JSONWebKey) error {
@@ -245,45 +301,13 @@ func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt
 	return nil
 }
 
-func (c *AuthorizeJwtGrantHandler) findPublicKeyForToken(ctx context.Context, token *jwt.JSONWebToken) (*jose.JSONWebKey, error) {
-	unverifiedClaims := jwt.Claims{}
-	if err := token.UnsafeClaimsWithoutVerification(&unverifiedClaims); err != nil {
-		return nil, errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
+func (c *AuthorizeJwtGrantHandler) getSessionFromRequest(requester fosite.AccessRequester) (AuthorizeJwtGrantSession, error) {
+	session := requester.GetSession()
+	if jwtSession, ok := session.(AuthorizeJwtGrantSession); !ok {
+		return nil, errorsx.WithStack(
+			fosite.ErrServerError.WithHintf("Session must be of type AuthorizeJwtGrantSession but got type: %T", session),
+		)
+	} else {
+		return jwtSession, nil
 	}
-
-	var keyID string
-	for _, header := range token.Headers {
-		if header.KeyID != "" {
-			keyID = header.KeyID
-			break
-		}
-	}
-
-	keyNotFoundMsg := fmt.Sprintf(
-		"No public JWK was registered for issuer \"%s\" and subject \"%s\", and public key is required to check signature of JWT in \"assertion\" request parameter.",
-		unverifiedClaims.Issuer,
-		unverifiedClaims.Subject,
-	)
-	if keyID != "" {
-		key, err := c.AuthorizeJwtGrantStorage.GetPublicKey(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject, keyID)
-		if err != nil {
-			return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
-		}
-		return key, nil
-	}
-
-	keys, err := c.AuthorizeJwtGrantStorage.GetPublicKeys(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject)
-	if err != nil {
-		return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
-	}
-
-	claims := jwt.Claims{}
-	for _, key := range keys.Keys {
-		err := token.Claims(key, &claims)
-		if err == nil {
-			return &key, nil
-		}
-	}
-
-	return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg))
 }

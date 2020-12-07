@@ -82,6 +82,10 @@ func (s *DefaultSession) GetUsername() string {
 	return s.Username
 }
 
+func (s *DefaultSession) SetSubject(subject string) {
+	s.Subject = subject
+}
+
 func (s *DefaultSession) GetSubject() string {
 	if s == nil {
 		return ""
