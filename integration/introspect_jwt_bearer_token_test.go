@@ -23,77 +23,68 @@ package integration_test
 
 import (
 	"context"
-	"encoding/json"
+	"net/http"
 	"testing"
+	"time"
 
-	"github.com/parnurzeal/gorequest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	goauth_jwt "golang.org/x/oauth2/jwt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
+	"github.com/ory/fosite/integration/clients"
 )
-
-type responseIntrospect struct {
-	Active    bool     `json:"active"`
-	ClientID  string   `json:"client_id,omitempty"`
-	Scope     string   `json:"scope,omitempty"`
-	Audience  []string `json:"aud,omitempty"`
-	ExpiresAt int64    `json:"exp,omitempty"`
-	IssuedAt  int64    `json:"iat,omitempty"`
-	Subject   string   `json:"sub,omitempty"`
-	Username  string   `json:"username,omitempty"`
-}
 
 type introspectJwtBearerTokenSuite struct {
 	suite.Suite
 
-	clientJWT *goauth_jwt.Config
-	clientAppJWT *goauth_jwt.Config
-	clientIntrospect *gorequest.SuperAgent
+	clientJWT          *clients.JWTBearer
+	clientIntrospect   *clients.Introspect
+	clientTokenPayload *clients.JWTBearerPayload
+	appTokenPayload    *clients.JWTBearerPayload
+
+	scopes   []string
+	audience []string
 }
 
-func (s *introspectJwtBearerTokenSuite) getClient() *goauth_jwt.Config {
+func (s *introspectJwtBearerTokenSuite) SetupTest() {
+	s.scopes = []string{"fosite"}
+	s.audience = []string{"https://www.ory.sh/api", "https://vk.com"}
+
+	s.clientTokenPayload = &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: s.audience,
+		Expires:  time.Now().Add(time.Hour).Unix(),
+	}
+
+	s.appTokenPayload = &clients.JWTBearerPayload{
+		Issuer:   secondJWTBearerIssuer,
+		Subject:  secondJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+	}
+}
+
+func (s *introspectJwtBearerTokenSuite) getJWTClient() *clients.JWTBearer {
 	client := *s.clientJWT
+	client.SetPrivateKey(firstKeyID, firstPrivateKey)
 
 	return &client
 }
 
-func (s *introspectJwtBearerTokenSuite) getClientApp() *goauth_jwt.Config {
-	client := *s.clientAppJWT
+func (s *introspectJwtBearerTokenSuite) getAPPJWTClient() *clients.JWTBearer {
+	client := *s.clientJWT
+	client.SetPrivateKey(secondKeyID, secondPrivateKey)
 
 	return &client
 }
 
-func (s *introspectJwtBearerTokenSuite) introspectAccessToken(
-	accessToken,
-	scopes string,
-	headers map[string]string,
-) (*responseIntrospect, []error) {
-	res := &responseIntrospect{}
-	client := *s.clientIntrospect
-	request := client.
-		Type("form").
-		SendStruct(map[string]string{"token": accessToken, "scope": scopes})
-
-	for key, value := range headers {
-		request.Set(key, value)
-	}
-
-	_, bytes, errs := request.End()
-	if errs != nil {
-		return nil, errs
-	}
-
-	if err := json.Unmarshal([]byte(bytes), res); err != nil {
-		return nil, []error{err}
-	}
-
-	return res, nil
-}
-
-func (s *introspectJwtBearerTokenSuite) assertSuccessResponse(t *testing.T, response *responseIntrospect, err []error) {
+func (s *introspectJwtBearerTokenSuite) assertSuccessResponse(
+	t *testing.T,
+	response *clients.IntrospectResponse,
+	err error,
+) {
 	assert.Nil(t, err)
 	assert.NotNil(t, response)
 
@@ -101,21 +92,77 @@ func (s *introspectJwtBearerTokenSuite) assertSuccessResponse(t *testing.T, resp
 	assert.Equal(t, response.Subject, firstJWTBearerSubject)
 	assert.NotEmpty(t, response.ExpiresAt)
 	assert.NotEmpty(t, response.IssuedAt)
-	// TODO understood about ClientID Scope Audience Username
+	assert.Equal(t, time.Unix(response.ExpiresAt, 0).Sub(time.Unix(response.IssuedAt, 0)), time.Hour)
+	assert.Equal(t, response.Audience, s.audience)
+}
+
+func (s *introspectJwtBearerTokenSuite) assertUnauthorizedResponse(
+	t *testing.T,
+	response *clients.IntrospectResponse,
+	err error,
+) {
+	assert.Nil(t, response)
+	assert.NotNil(t, err)
+
+	retrieveError, ok := err.(*clients.RequestError)
+	assert.True(t, ok)
+	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusUnauthorized)
 }
 
 func (s *introspectJwtBearerTokenSuite) TestBaseConfiguredClient() {
 	ctx := context.Background()
-	token, _ := s.getClient().TokenSource(ctx).Token()
-	token2, _ := s.getClientApp().TokenSource(ctx).Token()
 
-	response, err := s.introspectAccessToken(
-		token.AccessToken,
-		"",
-		map[string]string{ "Authorization": "bearer "+ token2.AccessToken},
+	scopes := []string{"fosite", "docker"}
+	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, scopes)
+	token2, _ := s.getAPPJWTClient().GetToken(ctx, s.appTokenPayload, s.scopes)
+
+	response, err := s.clientIntrospect.IntrospectToken(
+		ctx,
+		clients.IntrospectForm{
+			Token:  token.AccessToken,
+			Scopes: nil,
+		},
+		map[string]string{"Authorization": "bearer " + token2.AccessToken},
 	)
 
 	s.assertSuccessResponse(s.T(), response, err)
+	assert.NotEmpty(s.T(), response.Scope, scopes)
+}
+
+func (s *introspectJwtBearerTokenSuite) TestInvalidScopes() {
+	ctx := context.Background()
+
+	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
+	token2, _ := s.getAPPJWTClient().GetToken(ctx, s.appTokenPayload, s.scopes)
+
+	response, err := s.clientIntrospect.IntrospectToken(
+		ctx,
+		clients.IntrospectForm{
+			Token:  token.AccessToken,
+			Scopes: []string{"invalid"},
+		},
+		map[string]string{"Authorization": "bearer " + token2.AccessToken},
+	)
+
+	assert.Nil(s.T(), err)
+	assert.NotNil(s.T(), response)
+	assert.False(s.T(), response.Active)
+}
+
+func (s *introspectJwtBearerTokenSuite) TestIntrospectByYourself() {
+	ctx := context.Background()
+	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
+
+	response, err := s.clientIntrospect.IntrospectToken(
+		ctx,
+		clients.IntrospectForm{
+			Token:  token.AccessToken,
+			Scopes: nil,
+		},
+		map[string]string{"Authorization": "bearer " + token.AccessToken},
+	)
+
+	s.assertUnauthorizedResponse(s.T(), response, err)
 }
 
 func TestIntrospectJwtBearerTokenSuite(t *testing.T) {
@@ -124,6 +171,7 @@ func TestIntrospectJwtBearerTokenSuite(t *testing.T) {
 			JWTSkipClientAuth:     true,
 			JWTIDOptional:         true,
 			JWTIssuedDateOptional: true,
+			AccessTokenLifespan:   time.Hour,
 			TokenURL:              "https://www.ory.sh/api",
 		},
 		fositeStore,
@@ -137,8 +185,7 @@ func TestIntrospectJwtBearerTokenSuite(t *testing.T) {
 	defer testServer.Close()
 
 	suite.Run(t, &introspectJwtBearerTokenSuite{
-		clientJWT: newJWTBearerAppFirstClient(testServer),
-		clientAppJWT: newJWTBearerAppSecondClient(testServer),
-		clientIntrospect: gorequest.New().Post(testServer.URL + "/introspect"),
+		clientJWT:        newJWTBearerAppClient(testServer),
+		clientIntrospect: clients.NewIntrospectClient(testServer.URL + "/introspect"),
 	})
 }

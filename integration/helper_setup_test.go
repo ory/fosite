@@ -24,7 +24,6 @@ package integration_test
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -32,12 +31,12 @@ import (
 	"github.com/gorilla/mux"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	goauth_jwt "golang.org/x/oauth2/jwt"
 	"gopkg.in/square/go-jose.v2"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/integration/clients"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/hmac"
@@ -100,6 +99,9 @@ var fositeStore = &storage.MemoryStore{
 							},
 							Scopes: []string{
 								"fosite",
+								"gitlab",
+								"vk.com",
+								"docker",
 							},
 						},
 					},
@@ -169,30 +171,10 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 	}
 }
 
-func newJWTBearerAppFirstClient(ts *httptest.Server) *goauth_jwt.Config {
-	return &goauth_jwt.Config{
-		Email:        firstJWTBearerIssuer,
-		Subject:      firstJWTBearerSubject,
-		Scopes:       []string{"fosite"},
-		Audience:     "https://www.ory.sh/api",
-		TokenURL:     ts.URL + "/token",
-		PrivateKey:   x509.MarshalPKCS1PrivateKey(firstPrivateKey),
-		PrivateKeyID: firstKeyID,
-		Expires:      24 * time.Hour,
-	}
-}
-
-func newJWTBearerAppSecondClient(ts *httptest.Server) *goauth_jwt.Config {
-	return &goauth_jwt.Config{
-		Email:        secondJWTBearerIssuer,
-		Subject:      secondJWTBearerSubject,
-		Scopes:       []string{"fosite"},
-		Audience:     "https://www.ory.sh/api",
-		TokenURL:     ts.URL + "/token",
-		PrivateKey:   x509.MarshalPKCS1PrivateKey(secondPrivateKey),
-		PrivateKeyID: secondKeyID,
-		Expires:      24 * time.Hour,
-	}
+func newJWTBearerAppClient(ts *httptest.Server) *clients.JWTBearer {
+	return clients.NewJWTBearer(clients.JWTBearerConfig{
+		TokenURL: ts.URL + "/token",
+	})
 }
 
 var hmacStrategy = &oauth2.HMACSHAStrategy{

@@ -23,7 +23,6 @@ package integration_test
 
 import (
 	"context"
-	"crypto/x509"
 	"net/http"
 	"testing"
 	"time"
@@ -31,40 +30,39 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"golang.org/x/oauth2"
-	goauth_jwt "golang.org/x/oauth2/jwt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
+	"github.com/ory/fosite/integration/clients"
 )
 
 type authorizeJWTBearerSuite struct {
 	suite.Suite
 
-	client *goauth_jwt.Config
+	client *clients.JWTBearer
 }
 
-func (s *authorizeJWTBearerSuite) getClient() *goauth_jwt.Config {
+func (s *authorizeJWTBearerSuite) getClient() *clients.JWTBearer {
 	client := *s.client
 
 	return &client
 }
 
-func (s *authorizeJWTBearerSuite) assertSuccessResponse(t *testing.T, token *oauth2.Token, err error) {
+func (s *authorizeJWTBearerSuite) assertSuccessResponse(t *testing.T, token *clients.Token, err error) {
 	assert.Nil(t, err)
 	assert.NotNil(t, token)
 
 	assert.Equal(t, token.TokenType, "bearer")
 	assert.Empty(t, token.RefreshToken)
-	assert.NotEmpty(t, token.Expiry)
+	assert.NotEmpty(t, token.ExpiresIn)
 	assert.NotEmpty(t, token.AccessToken)
 }
 
-func (s *authorizeJWTBearerSuite) assertBadRequestResponse(t *testing.T, token *oauth2.Token, err error) {
+func (s *authorizeJWTBearerSuite) assertBadRequestResponse(t *testing.T, token *clients.Token, err error) {
 	assert.Nil(t, token)
 	assert.NotNil(t, err)
 
-	retrieveError, ok := err.(*oauth2.RetrieveError)
+	retrieveError, ok := err.(*clients.RequestError)
 	assert.True(t, ok)
 	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusBadRequest)
 }
@@ -72,7 +70,41 @@ func (s *authorizeJWTBearerSuite) assertBadRequestResponse(t *testing.T, token *
 func (s *authorizeJWTBearerSuite) TestBaseConfiguredClient() {
 	ctx := context.Background()
 	client := s.getClient()
-	token, err := client.TokenSource(ctx).Token()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, []string{"fosite"})
+
+	s.assertSuccessResponse(s.T(), token, err)
+}
+
+func (s *authorizeJWTBearerSuite) TestListOfAudience() {
+	ctx := context.Background()
+	client := s.getClient()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api", "https://vk.com/oauth"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, []string{"fosite"})
+
+	s.assertSuccessResponse(s.T(), token, err)
+}
+
+func (s *authorizeJWTBearerSuite) TestFewScopes() {
+	ctx := context.Background()
+	client := s.getClient()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, []string{"fosite", "gitlab"})
 
 	s.assertSuccessResponse(s.T(), token, err)
 }
@@ -80,9 +112,13 @@ func (s *authorizeJWTBearerSuite) TestBaseConfiguredClient() {
 func (s *authorizeJWTBearerSuite) TestGetTokenWithoutScopes() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.Scopes = nil
-
-	token, err := client.TokenSource(ctx).Token()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, nil)
 
 	s.assertSuccessResponse(s.T(), token, err)
 }
@@ -90,19 +126,29 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithoutScopes() {
 func (s *authorizeJWTBearerSuite) TestGetTokenWithRandomClaim() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.PrivateClaims = map[string]interface{}{"random": "random"}
-
-	token, err := client.TokenSource(ctx).Token()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:        firstJWTBearerIssuer,
+		Subject:       firstJWTBearerSubject,
+		Audience:      []string{"https://www.ory.sh/api"},
+		Expires:       time.Now().Add(time.Hour).Unix(),
+		IssuerAt:      time.Now().Unix(),
+		PrivateClaims: map[string]interface{}{"random": "random"},
+	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestGetTokenWithNoteBeforeClaim() {
+func (s *authorizeJWTBearerSuite) TestGetTokenWithNotBeforeClaim() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.PrivateClaims = map[string]interface{}{"nbf": time.Now().Add(-time.Hour).Unix()}
-
-	token, err := client.TokenSource(ctx).Token()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:    firstJWTBearerIssuer,
+		Subject:   firstJWTBearerSubject,
+		Audience:  []string{"https://www.ory.sh/api"},
+		Expires:   time.Now().Add(time.Hour).Unix(),
+		IssuerAt:  time.Now().Unix(),
+		NotBefore: time.Now().Add(-time.Hour).Unix(),
+	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
 }
@@ -110,9 +156,14 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithNoteBeforeClaim() {
 func (s *authorizeJWTBearerSuite) TestGetTokenWithJTIClaim() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.PrivateClaims = map[string]interface{}{"jti": uuid.New()}
-
-	token, err := client.TokenSource(ctx).Token()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+		JWTID:    uuid.New(),
+	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
 }
@@ -120,24 +171,59 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithJTIClaim() {
 func (s *authorizeJWTBearerSuite) TestGetTokenWithAllSuccessCases() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.Scopes = nil
-	client.PrivateClaims = map[string]interface{}{
-		"nbf":    time.Now().Add(-time.Hour).Unix(),
-		"jti":    uuid.New(),
-		"random": "random",
-	}
-
-	token, err := client.TokenSource(ctx).Token()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:        firstJWTBearerIssuer,
+		Subject:       firstJWTBearerSubject,
+		Audience:      []string{"https://www.ory.sh/api"},
+		Expires:       time.Now().Add(time.Hour).Unix(),
+		IssuerAt:      time.Now().Unix(),
+		JWTID:         uuid.New(),
+		NotBefore:     time.Now().Add(-time.Hour).Unix(),
+		PrivateClaims: map[string]interface{}{"random": "random"},
+	}, nil)
 
 	s.assertSuccessResponse(s.T(), token, err)
+}
+
+func (s *authorizeJWTBearerSuite) TestExpiredJWT() {
+	ctx := context.Background()
+	client := s.getClient()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(-time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, []string{"fosite"})
+
+	s.assertBadRequestResponse(s.T(), token, err)
+}
+
+func (s *authorizeJWTBearerSuite) TestMaxDuration() {
+	ctx := context.Background()
+	client := s.getClient()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(365 * 24 * time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, []string{"fosite"})
+
+	s.assertBadRequestResponse(s.T(), token, err)
 }
 
 func (s *authorizeJWTBearerSuite) TestInvalidPrivatKey() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.PrivateKey = x509.MarshalPKCS1PrivateKey(secondPrivateKey)
-
-	token, err := client.TokenSource(ctx).Token()
+	client.SetPrivateKey(firstKeyID, secondPrivateKey)
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
 }
@@ -145,9 +231,14 @@ func (s *authorizeJWTBearerSuite) TestInvalidPrivatKey() {
 func (s *authorizeJWTBearerSuite) TestInvalidKeyID() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.PrivateKeyID = secondKeyID
-
-	token, err := client.TokenSource(ctx).Token()
+	client.SetPrivateKey(secondKeyID, firstPrivateKey)
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
 }
@@ -155,9 +246,13 @@ func (s *authorizeJWTBearerSuite) TestInvalidKeyID() {
 func (s *authorizeJWTBearerSuite) TestInvalidAudience() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.Audience = "https://vk.com/oauth"
-
-	token, err := client.TokenSource(ctx).Token()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://vk.com/oauth"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
 }
@@ -165,41 +260,32 @@ func (s *authorizeJWTBearerSuite) TestInvalidAudience() {
 func (s *authorizeJWTBearerSuite) TestDuplicatedJTI() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.PrivateClaims = map[string]interface{}{"jti": uuid.New()}
-	client.TokenSource(ctx).Token()
+	config := &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+		JWTID:    uuid.New(),
+	}
 
-	token, err := client.TokenSource(ctx).Token()
+	client.GetToken(ctx, config, nil)
+	token2, err := client.GetToken(ctx, config, nil)
 
-	s.assertBadRequestResponse(s.T(), token, err)
-}
-
-func (s *authorizeJWTBearerSuite) TestDuplicatedJTIInSameTime() {
-	ctx := context.Background()
-	client := s.getClient()
-	client.PrivateClaims = map[string]interface{}{"jti": uuid.New()}
-	client.TokenSource(ctx).Token()
-
-	token, err := client.TokenSource(ctx).Token()
-
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadRequestResponse(s.T(), token2, err)
 }
 
 func (s *authorizeJWTBearerSuite) TestNotBeforeLaterThenIssueAt() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.PrivateClaims = map[string]interface{}{"nbf": time.Now().Add(time.Hour).Unix()}
-
-	token, err := client.TokenSource(ctx).Token()
-
-	s.assertBadRequestResponse(s.T(), token, err)
-}
-
-func (s *authorizeJWTBearerSuite) TestNotBeforeInvalidFormat() {
-	ctx := context.Background()
-	client := s.getClient()
-	client.PrivateClaims = map[string]interface{}{"nbf": time.Now().Add(-time.Hour).Format(time.RFC3339)}
-
-	token, err := client.TokenSource(ctx).Token()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:    firstJWTBearerIssuer,
+		Subject:   firstJWTBearerSubject,
+		Audience:  []string{"https://www.ory.sh/api"},
+		Expires:   time.Now().Add(time.Hour).Unix(),
+		IssuerAt:  time.Now().Unix(),
+		NotBefore: time.Now().Add(time.Hour).Unix(),
+	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
 }
@@ -207,19 +293,55 @@ func (s *authorizeJWTBearerSuite) TestNotBeforeInvalidFormat() {
 func (s *authorizeJWTBearerSuite) TestWithoutIssuer() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.Email = ""
-
-	token, err := client.TokenSource(ctx).Token()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  "",
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestWrongRegisteredIssuer() {
+func (s *authorizeJWTBearerSuite) TestWithWrongSubject() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.Email = secondJWTBearerIssuer
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  secondJWTBearerIssuer,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, nil)
 
-	token, err := client.TokenSource(ctx).Token()
+	s.assertBadRequestResponse(s.T(), token, err)
+}
+
+func (s *authorizeJWTBearerSuite) TestWithWrongIssuer() {
+	ctx := context.Background()
+	client := s.getClient()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   secondJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, nil)
+
+	s.assertBadRequestResponse(s.T(), token, err)
+}
+
+func (s *authorizeJWTBearerSuite) TestWithWrongScope() {
+	ctx := context.Background()
+	client := s.getClient()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Issuer:   firstJWTBearerIssuer,
+		Subject:  firstJWTBearerSubject,
+		Audience: []string{"https://www.ory.sh/api"},
+		Expires:  time.Now().Add(time.Hour).Unix(),
+		IssuerAt: time.Now().Unix(),
+	}, []string{"fosite", "lenovo"})
 
 	s.assertBadRequestResponse(s.T(), token, err)
 }
@@ -230,6 +352,7 @@ func TestAuthorizeJWTBearerSuite(t *testing.T) {
 			JWTSkipClientAuth:     true,
 			JWTIDOptional:         true,
 			JWTIssuedDateOptional: true,
+			JWTMaxDuration:        24 * time.Hour,
 			TokenURL:              "https://www.ory.sh/api",
 		},
 		fositeStore,
@@ -241,7 +364,10 @@ func TestAuthorizeJWTBearerSuite(t *testing.T) {
 	testServer := mockServer(t, provider, &fosite.DefaultSession{})
 	defer testServer.Close()
 
+	client := newJWTBearerAppClient(testServer)
+	client.SetPrivateKey(firstKeyID, firstPrivateKey)
+
 	suite.Run(t, &authorizeJWTBearerSuite{
-		client: newJWTBearerAppFirstClient(testServer),
+		client: client,
 	})
 }

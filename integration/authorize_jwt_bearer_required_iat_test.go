@@ -36,19 +36,19 @@ import (
 	"github.com/ory/fosite/integration/clients"
 )
 
-type authorizeJWTBearerRequiredJtiSuite struct {
+type authorizeJWTBearerRequiredAITSuite struct {
 	suite.Suite
 
 	client *clients.JWTBearer
 }
 
-func (s *authorizeJWTBearerRequiredJtiSuite) getClient() *clients.JWTBearer {
+func (s *authorizeJWTBearerRequiredAITSuite) getClient() *clients.JWTBearer {
 	client := *s.client
 
 	return &client
 }
 
-func (s *authorizeJWTBearerRequiredJtiSuite) assertSuccessResponse(t *testing.T, token *clients.Token, err error) {
+func (s *authorizeJWTBearerRequiredAITSuite) assertSuccessResponse(t *testing.T, token *clients.Token, err error) {
 	assert.Nil(t, err)
 	assert.NotNil(t, token)
 
@@ -58,7 +58,7 @@ func (s *authorizeJWTBearerRequiredJtiSuite) assertSuccessResponse(t *testing.T,
 	assert.NotEmpty(t, token.AccessToken)
 }
 
-func (s *authorizeJWTBearerRequiredJtiSuite) assertBadRequestResponse(t *testing.T, token *clients.Token, err error) {
+func (s *authorizeJWTBearerRequiredAITSuite) assertBadRequestResponse(t *testing.T, token *clients.Token, err error) {
 	assert.Nil(t, token)
 	assert.NotNil(t, err)
 
@@ -67,7 +67,7 @@ func (s *authorizeJWTBearerRequiredJtiSuite) assertBadRequestResponse(t *testing
 	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusBadRequest)
 }
 
-func (s *authorizeJWTBearerRequiredJtiSuite) TestBaseConfiguredClient() {
+func (s *authorizeJWTBearerRequiredAITSuite) TestBaseConfiguredClient() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -75,13 +75,13 @@ func (s *authorizeJWTBearerRequiredJtiSuite) TestBaseConfiguredClient() {
 		Subject:  firstJWTBearerSubject,
 		Audience: []string{"https://www.ory.sh/api"},
 		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		JWTID:    uuid.New(),
 	}, []string{"fosite"})
 
 	s.assertBadRequestResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerRequiredJtiSuite) TestWithJTIClaim() {
+func (s *authorizeJWTBearerRequiredAITSuite) TestWithJTIClaim() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -96,12 +96,12 @@ func (s *authorizeJWTBearerRequiredJtiSuite) TestWithJTIClaim() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func TestAuthorizeJWTBearerRequiredJtiSuite(t *testing.T) {
+func TestAuthorizeJWTBearerRequiredAITSuite(t *testing.T) {
 	provider := compose.Compose(
 		&compose.Config{
 			JWTSkipClientAuth:     true,
-			JWTIDOptional:         false,
-			JWTIssuedDateOptional: true,
+			JWTIDOptional:         true,
+			JWTIssuedDateOptional: false,
 			TokenURL:              "https://www.ory.sh/api",
 		},
 		fositeStore,
@@ -116,7 +116,7 @@ func TestAuthorizeJWTBearerRequiredJtiSuite(t *testing.T) {
 	client := newJWTBearerAppClient(testServer)
 	client.SetPrivateKey(firstKeyID, firstPrivateKey)
 
-	suite.Run(t, &authorizeJWTBearerRequiredJtiSuite{
+	suite.Run(t, &authorizeJWTBearerRequiredAITSuite{
 		client: client,
 	})
 }
