@@ -455,6 +455,64 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithIssueDateFar
 	)
 }
 
+func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithExpirationDateFarInFuture() {
+	// arrange
+	ctx := context.Background()
+	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	keyID := "my_key"
+	pubKey := s.createJWK(s.privateKey.Public(), keyID)
+	cl := s.createStandardClaim()
+	cl.IssuedAt = jwt.NewNumericDate(time.Now().AddDate(0, 0, -15))
+	cl.Expiry = jwt.NewNumericDate(time.Now().AddDate(0, 0, 20))
+	s.handler.JWTIssuedDateOptional = false
+	s.handler.JWTMaxDuration = time.Hour * 24 * 30
+	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
+	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
+
+	// act
+	err := s.handler.HandleTokenEndpointRequest(ctx, s.accessRequest)
+
+	// assert
+	s.True(errors.Is(err, fosite.ErrInvalidGrant))
+	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because assertion will expire unreasonably far in the future.")
+	s.Equal(
+		fmt.Sprintf(
+			"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future.",
+			cl.Expiry.Time().Format(time.RFC3339),
+		),
+		err.(*fosite.RFC6749Error).HintField,
+	)
+}
+
+func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithExpirationDateFarInFutureWithNoIssuerDate() {
+	// arrange
+	ctx := context.Background()
+	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	keyID := "my_key"
+	pubKey := s.createJWK(s.privateKey.Public(), keyID)
+	cl := s.createStandardClaim()
+	cl.IssuedAt = nil
+	cl.Expiry = jwt.NewNumericDate(time.Now().AddDate(0, 0, 31))
+	s.handler.JWTIssuedDateOptional = true
+	s.handler.JWTMaxDuration = time.Hour * 24 * 30
+	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
+	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
+
+	// act
+	err := s.handler.HandleTokenEndpointRequest(ctx, s.accessRequest)
+
+	// assert
+	s.True(errors.Is(err, fosite.ErrInvalidGrant))
+	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because assertion will expire unreasonably far in the future.")
+	s.Equal(
+		fmt.Sprintf(
+			"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future.",
+			cl.Expiry.Time().Format(time.RFC3339),
+		),
+		err.(*fosite.RFC6749Error).HintField,
+	)
+}
+
 func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithoutRequiredTokenID() {
 	// arrange
 	ctx := context.Background()
@@ -711,9 +769,9 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createStandardClaim() jwt.Cla
 		Issuer:    "trusted_issuer",
 		Subject:   "some_ro",
 		Audience:  jwt.Audience{"https://www.example.com/token", "leela", "fry"},
-		Expiry:    jwt.NewNumericDate(time.Now().AddDate(0, 1, 0)),
+		Expiry:    jwt.NewNumericDate(time.Now().AddDate(0, 0, 23)),
 		NotBefore: nil,
-		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		IssuedAt:  jwt.NewNumericDate(time.Now().AddDate(0, 0, -7)),
 		ID:        "my_token",
 	}
 }

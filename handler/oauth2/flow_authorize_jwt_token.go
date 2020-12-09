@@ -47,7 +47,8 @@ type AuthorizeJwtGrantHandler struct {
 	JWTIDOptional bool
 	// JWTIssuedDateOptional indicates, if "iat" (issued at) claim required or not.
 	JWTIssuedDateOptional bool
-	// JWTMaxDuration sets the maximum time after token issued date, during which the token is considered valid.
+	// JWTMaxDuration sets the maximum time after token issued date (if present), during which the token is
+	// considered valid. If "iat" claim is not present, then current time will be used as issued date.
 	JWTMaxDuration time.Duration
 
 	*HandleHelper
@@ -273,11 +274,27 @@ func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt
 			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"iat\" (issued at) claim."),
 		)
 	}
+
 	if claims.IssuedAt != nil && time.Now().Sub(claims.IssuedAt.Time()).Nanoseconds() > c.JWTMaxDuration.Nanoseconds() {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHintf(
 				"The JWT in \"assertion\" request parameter contains an \"iat\" (issued at) claim with value \"%s\" that is unreasonably far in the past.",
 				claims.IssuedAt.Time().Format(time.RFC3339),
+			),
+		)
+	}
+
+	var issuedDate time.Time
+	if claims.IssuedAt != nil {
+		issuedDate = claims.IssuedAt.Time()
+	} else {
+		issuedDate = time.Now()
+	}
+	if claims.Expiry.Time().Sub(issuedDate).Nanoseconds() > c.JWTMaxDuration.Nanoseconds() {
+		return errorsx.WithStack(fosite.ErrInvalidGrant.
+			WithHintf(
+				"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future.",
+				claims.Expiry.Time().Format(time.RFC3339),
 			),
 		)
 	}
