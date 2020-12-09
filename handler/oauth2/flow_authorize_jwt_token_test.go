@@ -692,7 +692,7 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestIsValidWhenClientA
 }
 
 func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createTestAssertion(cl jwt.Claims, keyID string) string {
-	jwk := jose.JSONWebKey{Key: s.privateKey, KeyID: keyID, Algorithm: string(jose.RS256), Use: "sig"}
+	jwk := jose.JSONWebKey{Key: s.privateKey, KeyID: keyID, Algorithm: string(jose.RS256)}
 	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: jwk}, (&jose.SignerOptions{}).WithType("JWT"))
 	if err != nil {
 		s.FailNowf("failed to create test assertion", "failed to create signer: %s", err.Error())
