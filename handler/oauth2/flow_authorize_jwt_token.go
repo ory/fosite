@@ -121,7 +121,7 @@ func (c *AuthorizeJwtGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		request.GrantScope(scope)
 	}
 
-	for _, audience := range request.GetRequestedAudience() {
+	for _, audience := range claims.Audience {
 		request.GrantAudience(audience)
 	}
 
