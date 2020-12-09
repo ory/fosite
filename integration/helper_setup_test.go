@@ -43,17 +43,24 @@ import (
 	"github.com/ory/fosite/token/jwt"
 )
 
-var firstPrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
-var secondPrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
+const (
+	firstKeyID  = "123"
+	secondKeyID = "321"
 
-const firstKeyID = "123"
-const secondKeyID = "321"
+	firstJWTBearerIssuer  = "first@example.com"
+	secondJWTBearerIssuer = "second@example.com"
 
-const firstJWTBearerIssuer = "first@tinkoff.ru"
-const secondJWTBearerIssuer = "second@tinkoff.ru"
+	firstJWTBearerSubject  = "first-service-client"
+	secondJWTBearerSubject = "second-service-client"
 
-const firstJWTBearerSubject = "first-service-client"
-const secondJWTBearerSubject = "second-service-client"
+	tokenURL          = "https://www.ory.sh/api"
+	tokenRelativePath = "/token"
+)
+
+var (
+	firstPrivateKey, _  = rsa.GenerateKey(rand.Reader, 2048)
+	secondPrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
+)
 
 var fositeStore = &storage.MemoryStore{
 	Clients: map[string]fosite.Client{
@@ -64,7 +71,7 @@ var fositeStore = &storage.MemoryStore{
 			ResponseTypes: []string{"id_token", "code", "token", "token code", "id_token code", "token id_token", "token code id_token"},
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 			Scopes:        []string{"fosite", "offline", "openid"},
-			Audience:      []string{"https://www.ory.sh/api"},
+			Audience:      []string{tokenURL},
 		},
 		"public-client": &fosite.DefaultClient{
 			ID:            "public-client",
@@ -74,7 +81,7 @@ var fositeStore = &storage.MemoryStore{
 			ResponseTypes: []string{"id_token", "code", "code id_token"},
 			GrantTypes:    []string{"refresh_token", "authorization_code"},
 			Scopes:        []string{"fosite", "offline", "openid"},
-			Audience:      []string{"https://www.ory.sh/api"},
+			Audience:      []string{tokenURL},
 		},
 	},
 	Users: map[string]storage.MemoryUserRelation{
@@ -100,7 +107,7 @@ var fositeStore = &storage.MemoryStore{
 							Scopes: []string{
 								"fosite",
 								"gitlab",
-								"vk.com",
+								"example.com",
 								"docker",
 							},
 						},
@@ -155,7 +162,7 @@ func newOAuth2Client(ts *httptest.Server) *goauth.Config {
 		RedirectURL:  ts.URL + "/callback",
 		Scopes:       []string{"fosite"},
 		Endpoint: goauth.Endpoint{
-			TokenURL:  ts.URL + "/token",
+			TokenURL:  ts.URL + tokenRelativePath,
 			AuthURL:   ts.URL + "/auth",
 			AuthStyle: goauth.AuthStyleInHeader,
 		},
@@ -167,14 +174,12 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 		ClientID:     "my-client",
 		ClientSecret: "foobar",
 		Scopes:       []string{"fosite"},
-		TokenURL:     ts.URL + "/token",
+		TokenURL:     ts.URL + tokenRelativePath,
 	}
 }
 
 func newJWTBearerAppClient(ts *httptest.Server) *clients.JWTBearer {
-	return clients.NewJWTBearer(clients.JWTBearerConfig{
-		TokenURL: ts.URL + "/token",
-	})
+	return clients.NewJWTBearer(ts.URL + tokenRelativePath)
 }
 
 var hmacStrategy = &oauth2.HMACSHAStrategy{
@@ -195,7 +200,7 @@ var jwtStrategy = &oauth2.DefaultJWTStrategy{
 func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {
 	router := mux.NewRouter()
 	router.HandleFunc("/auth", authEndpointHandler(t, f, session))
-	router.HandleFunc("/token", tokenEndpointHandler(t, f))
+	router.HandleFunc(tokenRelativePath, tokenEndpointHandler(t, f))
 	router.HandleFunc("/callback", authCallbackHandler(t))
 	router.HandleFunc("/info", tokenInfoHandler(t, f, session))
 	router.HandleFunc("/introspect", tokenIntrospectionHandler(t, f, session))

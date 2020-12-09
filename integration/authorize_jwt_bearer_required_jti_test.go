@@ -73,7 +73,7 @@ func (s *authorizeJWTBearerRequiredJtiSuite) TestBaseConfiguredClient() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, []string{"fosite"})
@@ -87,7 +87,7 @@ func (s *authorizeJWTBearerRequiredJtiSuite) TestWithJTIClaim() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 		JWTID:    uuid.New(),
@@ -102,7 +102,7 @@ func TestAuthorizeJWTBearerRequiredJtiSuite(t *testing.T) {
 			JWTSkipClientAuth:     true,
 			JWTIDOptional:         false,
 			JWTIssuedDateOptional: true,
-			TokenURL:              "https://www.ory.sh/api",
+			TokenURL:              tokenURL,
 		},
 		fositeStore,
 		jwtStrategy,

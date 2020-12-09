@@ -73,7 +73,7 @@ func (s *authorizeJWTBearerSuite) TestBaseConfiguredClient() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, []string{"fosite"})
@@ -87,7 +87,7 @@ func (s *authorizeJWTBearerSuite) TestListOfAudience() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api", "https://vk.com/oauth"},
+		Audience: []string{tokenURL, "https://example.com/oauth"},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, []string{"fosite"})
@@ -101,7 +101,7 @@ func (s *authorizeJWTBearerSuite) TestFewScopes() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, []string{"fosite", "gitlab"})
@@ -115,7 +115,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithoutScopes() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, nil)
@@ -129,7 +129,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithRandomClaim() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:        firstJWTBearerIssuer,
 		Subject:       firstJWTBearerSubject,
-		Audience:      []string{"https://www.ory.sh/api"},
+		Audience:      []string{tokenURL},
 		Expires:       time.Now().Add(time.Hour).Unix(),
 		IssuerAt:      time.Now().Unix(),
 		PrivateClaims: map[string]interface{}{"random": "random"},
@@ -144,7 +144,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithNotBeforeClaim() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:    firstJWTBearerIssuer,
 		Subject:   firstJWTBearerSubject,
-		Audience:  []string{"https://www.ory.sh/api"},
+		Audience:  []string{tokenURL},
 		Expires:   time.Now().Add(time.Hour).Unix(),
 		IssuerAt:  time.Now().Unix(),
 		NotBefore: time.Now().Add(-time.Hour).Unix(),
@@ -159,7 +159,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithJTIClaim() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 		JWTID:    uuid.New(),
@@ -174,7 +174,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithAllSuccessCases() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:        firstJWTBearerIssuer,
 		Subject:       firstJWTBearerSubject,
-		Audience:      []string{"https://www.ory.sh/api"},
+		Audience:      []string{tokenURL},
 		Expires:       time.Now().Add(time.Hour).Unix(),
 		IssuerAt:      time.Now().Unix(),
 		JWTID:         uuid.New(),
@@ -191,7 +191,7 @@ func (s *authorizeJWTBearerSuite) TestExpiredJWT() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(-time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, []string{"fosite"})
@@ -205,7 +205,7 @@ func (s *authorizeJWTBearerSuite) TestMaxDuration() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(365 * 24 * time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, []string{"fosite"})
@@ -220,7 +220,7 @@ func (s *authorizeJWTBearerSuite) TestInvalidPrivatKey() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, nil)
@@ -235,7 +235,7 @@ func (s *authorizeJWTBearerSuite) TestInvalidKeyID() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, nil)
@@ -249,7 +249,7 @@ func (s *authorizeJWTBearerSuite) TestInvalidAudience() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://vk.com/oauth"},
+		Audience: []string{"https://example.com/oauth"},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, nil)
@@ -263,7 +263,7 @@ func (s *authorizeJWTBearerSuite) TestDuplicatedJTI() {
 	config := &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 		JWTID:    uuid.New(),
@@ -281,7 +281,7 @@ func (s *authorizeJWTBearerSuite) TestNotBeforeLaterThenIssueAt() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:    firstJWTBearerIssuer,
 		Subject:   firstJWTBearerSubject,
-		Audience:  []string{"https://www.ory.sh/api"},
+		Audience:  []string{tokenURL},
 		Expires:   time.Now().Add(time.Hour).Unix(),
 		IssuerAt:  time.Now().Unix(),
 		NotBefore: time.Now().Add(time.Hour).Unix(),
@@ -296,7 +296,7 @@ func (s *authorizeJWTBearerSuite) TestWithoutIssuer() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  "",
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, nil)
@@ -310,7 +310,7 @@ func (s *authorizeJWTBearerSuite) TestWithWrongSubject() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  secondJWTBearerIssuer,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, nil)
@@ -324,7 +324,7 @@ func (s *authorizeJWTBearerSuite) TestWithWrongIssuer() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   secondJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, nil)
@@ -338,7 +338,7 @@ func (s *authorizeJWTBearerSuite) TestWithWrongScope() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
 		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 		IssuerAt: time.Now().Unix(),
 	}, []string{"fosite", "lenovo"})
@@ -353,7 +353,7 @@ func TestAuthorizeJWTBearerSuite(t *testing.T) {
 			JWTIDOptional:         true,
 			JWTIssuedDateOptional: true,
 			JWTMaxDuration:        24 * time.Hour,
-			TokenURL:              "https://www.ory.sh/api",
+			TokenURL:              tokenURL,
 		},
 		fositeStore,
 		jwtStrategy,

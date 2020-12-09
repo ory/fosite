@@ -49,7 +49,7 @@ type introspectJwtBearerTokenSuite struct {
 
 func (s *introspectJwtBearerTokenSuite) SetupTest() {
 	s.scopes = []string{"fosite"}
-	s.audience = []string{"https://www.ory.sh/api", "https://vk.com"}
+	s.audience = []string{tokenURL, "https://example.com"}
 
 	s.clientTokenPayload = &clients.JWTBearerPayload{
 		Issuer:   firstJWTBearerIssuer,
@@ -61,7 +61,7 @@ func (s *introspectJwtBearerTokenSuite) SetupTest() {
 	s.appTokenPayload = &clients.JWTBearerPayload{
 		Issuer:   secondJWTBearerIssuer,
 		Subject:  secondJWTBearerSubject,
-		Audience: []string{"https://www.ory.sh/api"},
+		Audience: []string{tokenURL},
 		Expires:  time.Now().Add(time.Hour).Unix(),
 	}
 }
@@ -152,6 +152,62 @@ func (s *introspectJwtBearerTokenSuite) TestInvalidScopes() {
 	assert.False(s.T(), response.Active)
 }
 
+func (s *introspectJwtBearerTokenSuite) TestIntrospectWithoutScopes() {
+	ctx := context.Background()
+
+	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
+	token2, _ := s.getAPPJWTClient().GetToken(ctx, s.appTokenPayload, s.scopes)
+
+	response, err := s.clientIntrospect.IntrospectToken(
+		ctx,
+		clients.IntrospectForm{
+			Token:  token.AccessToken,
+			Scopes: nil,
+		},
+		map[string]string{"Authorization": "bearer " + token2.AccessToken},
+	)
+
+	s.assertSuccessResponse(s.T(), response, err)
+}
+
+func (s *introspectJwtBearerTokenSuite) TestTokenWithoutScopes() {
+	ctx := context.Background()
+
+	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, nil)
+	token2, _ := s.getAPPJWTClient().GetToken(ctx, s.appTokenPayload, s.scopes)
+
+	response, err := s.clientIntrospect.IntrospectToken(
+		ctx,
+		clients.IntrospectForm{
+			Token:  token.AccessToken,
+			Scopes: nil,
+		},
+		map[string]string{"Authorization": "bearer " + token2.AccessToken},
+	)
+
+	s.assertSuccessResponse(s.T(), response, err)
+}
+
+func (s *introspectJwtBearerTokenSuite) TestSubjectHasAccessToScopeButNotInited() {
+	ctx := context.Background()
+
+	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, nil)
+	token2, _ := s.getAPPJWTClient().GetToken(ctx, s.appTokenPayload, s.scopes)
+
+	response, err := s.clientIntrospect.IntrospectToken(
+		ctx,
+		clients.IntrospectForm{
+			Token:  token.AccessToken,
+			Scopes: s.scopes,
+		},
+		map[string]string{"Authorization": "bearer " + token2.AccessToken},
+	)
+
+	assert.Nil(s.T(), err)
+	assert.NotNil(s.T(), response)
+	assert.False(s.T(), response.Active)
+}
+
 func (s *introspectJwtBearerTokenSuite) TestIntrospectByYourself() {
 	ctx := context.Background()
 	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
@@ -175,7 +231,7 @@ func TestIntrospectJwtBearerTokenSuite(t *testing.T) {
 			JWTIDOptional:         true,
 			JWTIssuedDateOptional: true,
 			AccessTokenLifespan:   time.Hour,
-			TokenURL:              "https://www.ory.sh/api",
+			TokenURL:              tokenURL,
 		},
 		fositeStore,
 		jwtStrategy,

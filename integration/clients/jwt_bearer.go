@@ -40,9 +40,9 @@ import (
 const jwtBearerGrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
 type JWTBearer struct {
-	config JWTBearerConfig
-	header *Header
-	client *http.Client
+	tokenURL string
+	header   *Header
+	client   *http.Client
 
 	PrivateKey   *rsa.PrivateKey
 	PrivateKeyID string
@@ -53,10 +53,6 @@ type Token struct {
 	TokenType    string `json:"token_type,omitempty"`
 	RefreshToken string `json:"refresh_token,omitempty"`
 	ExpiresIn    int64  `json:"expires_in,omitempty"`
-}
-
-type JWTBearerConfig struct {
-	TokenURL string
 }
 
 type Header struct {
@@ -92,7 +88,7 @@ func (c *JWTBearer) GetToken(ctx context.Context, payloadData *JWTBearerPayload,
 		return nil, err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "POST", c.config.TokenURL, requestBodyReader)
+	request, err := http.NewRequestWithContext(ctx, "POST", c.tokenURL, requestBodyReader)
 	if err != nil {
 		return nil, err
 	}
@@ -203,9 +199,9 @@ func (c *JWTBearer) getBase64Payload(payload *JWTBearerPayload) (string, error) 
 	return base64.RawURLEncoding.EncodeToString(payloadString), nil
 }
 
-func NewJWTBearer(config JWTBearerConfig) *JWTBearer {
+func NewJWTBearer(tokenURL string) *JWTBearer {
 	return &JWTBearer{
-		client: &http.Client{},
-		config: config,
+		client:   &http.Client{},
+		tokenURL: tokenURL,
 	}
 }

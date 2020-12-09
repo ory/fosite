@@ -47,8 +47,8 @@ type IntrospectResponse struct {
 }
 
 type Introspect struct {
-	url    string
-	client *http.Client
+	endpointURL string
+	client      *http.Client
 }
 
 func (c *Introspect) IntrospectToken(
@@ -98,7 +98,7 @@ func (c *Introspect) getRequest(
 	data url.Values,
 	header map[string]string,
 ) (*http.Request, error) {
-	request, err := http.NewRequestWithContext(ctx, "POST", c.url, strings.NewReader(data.Encode()))
+	request, err := http.NewRequestWithContext(ctx, "POST", c.endpointURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, err
 	}
@@ -112,9 +112,9 @@ func (c *Introspect) getRequest(
 	return request, nil
 }
 
-func NewIntrospectClient(url string) *Introspect {
+func NewIntrospectClient(endpointURL string) *Introspect {
 	return &Introspect{
-		url:    url,
-		client: &http.Client{},
+		endpointURL: endpointURL,
+		client:      &http.Client{},
 	}
 }
