@@ -92,8 +92,11 @@ func (s *introspectJwtBearerTokenSuite) assertSuccessResponse(
 	assert.Equal(t, response.Subject, firstJWTBearerSubject)
 	assert.NotEmpty(t, response.ExpiresAt)
 	assert.NotEmpty(t, response.IssuedAt)
-	assert.Equal(t, time.Unix(response.ExpiresAt, 0).Sub(time.Unix(response.IssuedAt, 0)), time.Hour)
 	assert.Equal(t, response.Audience, s.audience)
+
+	tokenDuration := time.Unix(response.ExpiresAt, 0).Sub(time.Unix(response.IssuedAt, 0))
+	assert.Less(t, int64(tokenDuration), int64(time.Hour + time.Minute))
+	assert.Greater(t, int64(tokenDuration), int64(time.Hour - time.Minute))
 }
 
 func (s *introspectJwtBearerTokenSuite) assertUnauthorizedResponse(
