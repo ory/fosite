@@ -30,6 +30,7 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
@@ -71,11 +72,13 @@ func (s *authorizeJWTBearerSuite) TestBaseConfiguredClient() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
@@ -85,11 +88,13 @@ func (s *authorizeJWTBearerSuite) TestListOfAudience() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL, "https://example.com/oauth"},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL, "https://example.com/oauth"},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
@@ -99,11 +104,13 @@ func (s *authorizeJWTBearerSuite) TestFewScopes() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, []string{"fosite", "gitlab"})
 
 	s.assertSuccessResponse(s.T(), token, err)
@@ -113,11 +120,13 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithoutScopes() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, nil)
 
 	s.assertSuccessResponse(s.T(), token, err)
@@ -127,11 +136,13 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithRandomClaim() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:        firstJWTBearerIssuer,
-		Subject:       firstJWTBearerSubject,
-		Audience:      []string{tokenURL},
-		Expires:       time.Now().Add(time.Hour).Unix(),
-		IssuerAt:      time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 		PrivateClaims: map[string]interface{}{"random": "random"},
 	}, []string{"fosite"})
 
@@ -142,12 +153,14 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithNotBeforeClaim() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:    firstJWTBearerIssuer,
-		Subject:   firstJWTBearerSubject,
-		Audience:  []string{tokenURL},
-		Expires:   time.Now().Add(time.Hour).Unix(),
-		IssuerAt:  time.Now().Unix(),
-		NotBefore: time.Now().Add(-time.Hour).Unix(),
+		Claims: &jwt.Claims{
+			Issuer:    firstJWTBearerIssuer,
+			Subject:   firstJWTBearerSubject,
+			Audience:  []string{tokenURL},
+			Expiry:    jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+		},
 	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
@@ -157,12 +170,14 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithJTIClaim() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
-		JWTID:    uuid.New(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+			ID:       uuid.New(),
+		},
 	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
@@ -172,13 +187,15 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithAllSuccessCases() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:        firstJWTBearerIssuer,
-		Subject:       firstJWTBearerSubject,
-		Audience:      []string{tokenURL},
-		Expires:       time.Now().Add(time.Hour).Unix(),
-		IssuerAt:      time.Now().Unix(),
-		JWTID:         uuid.New(),
-		NotBefore:     time.Now().Add(-time.Hour).Unix(),
+		Claims: &jwt.Claims{
+			Issuer:    firstJWTBearerIssuer,
+			Subject:   firstJWTBearerSubject,
+			Audience:  []string{tokenURL, "example.com"},
+			Expiry:    jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+			ID:        uuid.New(),
+		},
 		PrivateClaims: map[string]interface{}{"random": "random"},
 	}, nil)
 
@@ -189,11 +206,13 @@ func (s *authorizeJWTBearerSuite) TestExpiredJWT() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(-time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, []string{"fosite"})
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -203,11 +222,13 @@ func (s *authorizeJWTBearerSuite) TestMaxDuration() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(365 * 24 * time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(365 * 24 * time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, []string{"fosite"})
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -216,13 +237,19 @@ func (s *authorizeJWTBearerSuite) TestMaxDuration() {
 func (s *authorizeJWTBearerSuite) TestInvalidPrivatKey() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.SetPrivateKey(firstKeyID, secondPrivateKey)
+
+	if err := client.SetPrivateKey(firstKeyID, secondPrivateKey); err != nil {
+		assert.Nil(s.T(), err)
+	}
+
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -231,13 +258,19 @@ func (s *authorizeJWTBearerSuite) TestInvalidPrivatKey() {
 func (s *authorizeJWTBearerSuite) TestInvalidKeyID() {
 	ctx := context.Background()
 	client := s.getClient()
-	client.SetPrivateKey(secondKeyID, firstPrivateKey)
+
+	if err := client.SetPrivateKey(secondKeyID, firstPrivateKey); err != nil {
+		assert.Nil(s.T(), err)
+	}
+
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -247,11 +280,13 @@ func (s *authorizeJWTBearerSuite) TestInvalidAudience() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{"https://example.com/oauth"},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{"https://example.com/oauth"},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -261,12 +296,14 @@ func (s *authorizeJWTBearerSuite) TestDuplicatedJTI() {
 	ctx := context.Background()
 	client := s.getClient()
 	config := &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
-		JWTID:    uuid.New(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+			ID:       uuid.New(),
+		},
 	}
 
 	client.GetToken(ctx, config, nil)
@@ -279,12 +316,14 @@ func (s *authorizeJWTBearerSuite) TestNotBeforeLaterThenIssueAt() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:    firstJWTBearerIssuer,
-		Subject:   firstJWTBearerSubject,
-		Audience:  []string{tokenURL},
-		Expires:   time.Now().Add(time.Hour).Unix(),
-		IssuerAt:  time.Now().Unix(),
-		NotBefore: time.Now().Add(time.Hour).Unix(),
+		Claims: &jwt.Claims{
+			Issuer:    firstJWTBearerIssuer,
+			Subject:   firstJWTBearerSubject,
+			Audience:  []string{tokenURL},
+			Expiry:    jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+		},
 	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -294,11 +333,13 @@ func (s *authorizeJWTBearerSuite) TestWithoutIssuer() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  "",
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  "",
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -308,11 +349,13 @@ func (s *authorizeJWTBearerSuite) TestWithWrongSubject() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  secondJWTBearerIssuer,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  secondJWTBearerIssuer,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -322,11 +365,13 @@ func (s *authorizeJWTBearerSuite) TestWithWrongIssuer() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   secondJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   secondJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, nil)
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -336,11 +381,13 @@ func (s *authorizeJWTBearerSuite) TestWithWrongScope() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
 	}, []string{"fosite", "lenovo"})
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -365,7 +412,9 @@ func TestAuthorizeJWTBearerSuite(t *testing.T) {
 	defer testServer.Close()
 
 	client := newJWTBearerAppClient(testServer)
-	client.SetPrivateKey(firstKeyID, firstPrivateKey)
+	if err := client.SetPrivateKey(firstKeyID, firstPrivateKey); err != nil {
+		assert.Nil(t, err)
+	}
 
 	suite.Run(t, &authorizeJWTBearerSuite{
 		client: client,

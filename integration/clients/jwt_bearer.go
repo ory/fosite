@@ -23,18 +23,16 @@ package clients
 
 import (
 	"context"
-	"crypto"
-	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"gopkg.in/square/go-jose.v2"
+	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 const jwtBearerGrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"
@@ -44,8 +42,7 @@ type JWTBearer struct {
 	header   *Header
 	client   *http.Client
 
-	PrivateKey   *rsa.PrivateKey
-	PrivateKeyID string
+	PrivateKey jose.Signer
 }
 
 type Token struct {
@@ -62,28 +59,41 @@ type Header struct {
 }
 
 type JWTBearerPayload struct {
-	Issuer   string
-	Subject  string
-	Audience []string
-	Expires  int64
+	*jwt.Claims
 
-	IssuerAt      int64
-	NotBefore     int64
-	JWTID         string
 	PrivateClaims map[string]interface{}
 }
 
-func (c *JWTBearer) SetPrivateKey(keyID string, privateKey *rsa.PrivateKey) {
-	c.PrivateKey = privateKey
-	c.header = &Header{
-		Algorithm: "RS256",
-		Typ:       "JWT",
-		KeyID:     keyID,
+func (c *JWTBearer) SetPrivateKey(keyID string, privateKey *rsa.PrivateKey) error {
+	jwk := jose.JSONWebKey{Key: privateKey, KeyID: keyID, Algorithm: string(jose.RS256)}
+	signingKey := jose.SigningKey{
+		Algorithm: jose.RS256,
+		Key:       jwk,
 	}
+	signerOptions := &jose.SignerOptions{}
+	signerOptions.WithType("JWT")
+
+	sig, err := jose.NewSigner(signingKey, signerOptions)
+	if err != nil {
+		return err
+	}
+
+	c.PrivateKey = sig
+
+	return nil
 }
 
 func (c *JWTBearer) GetToken(ctx context.Context, payloadData *JWTBearerPayload, scope []string) (*Token, error) {
-	requestBodyReader, err := c.getRequestBodyReader(payloadData, scope)
+	builder := jwt.Signed(c.PrivateKey).
+		Claims(payloadData.Claims).
+		Claims(payloadData.PrivateClaims)
+
+	assertion, err := builder.CompactSerialize()
+	if err != nil {
+		return nil, err
+	}
+
+	requestBodyReader, err := c.getRequestBodyReader(assertion, scope)
 	if err != nil {
 		return nil, err
 	}
@@ -123,12 +133,7 @@ func (c *JWTBearer) GetToken(ctx context.Context, payloadData *JWTBearerPayload,
 	return token, err
 }
 
-func (c *JWTBearer) getRequestBodyReader(payloadData *JWTBearerPayload, scope []string) (io.Reader, error) {
-	assertion, err := c.getAssertion(payloadData)
-	if err != nil {
-		return nil, err
-	}
-
+func (c *JWTBearer) getRequestBodyReader(assertion string, scope []string) (io.Reader, error) {
 	data := url.Values{}
 	data.Set("grant_type", jwtBearerGrantType)
 	data.Set("assertion", string(assertion))
@@ -138,65 +143,6 @@ func (c *JWTBearer) getRequestBodyReader(payloadData *JWTBearerPayload, scope []
 	}
 
 	return strings.NewReader(data.Encode()), nil
-}
-
-func (c *JWTBearer) getAssertion(payloadData *JWTBearerPayload) ([]byte, error) {
-	payload, err := c.getBase64Payload(payloadData)
-	if err != nil {
-		return nil, err
-	}
-
-	headerJSON, err := json.Marshal(c.header)
-	if err != nil {
-		return nil, err
-	}
-
-	header := base64.RawURLEncoding.EncodeToString(headerJSON)
-	firstPart := []byte(fmt.Sprintf("%s.%s", header, payload))
-
-	h := sha256.New()
-	h.Write(firstPart)
-
-	singed, err := rsa.SignPKCS1v15(rand.Reader, c.PrivateKey, crypto.SHA256, h.Sum(nil))
-	if err != nil {
-		return nil, err
-	}
-
-	return []byte(fmt.Sprintf("%s.%s", firstPart, base64.RawURLEncoding.EncodeToString(singed))), nil
-}
-
-func (c *JWTBearer) getBase64Payload(payload *JWTBearerPayload) (string, error) {
-	payloadMap := map[string]interface{}{
-		"iss": payload.Issuer,
-		"sub": payload.Subject,
-		"aud": payload.Audience,
-		"exp": payload.Expires,
-	}
-
-	if payload.IssuerAt > 0 {
-		payloadMap["iat"] = payload.IssuerAt
-	}
-
-	if payload.NotBefore > 0 {
-		payloadMap["nbf"] = payload.NotBefore
-	}
-
-	if payload.JWTID != "" {
-		payloadMap["jti"] = payload.JWTID
-	}
-
-	if len(payload.PrivateClaims) != 0 {
-		for claim, value := range payload.PrivateClaims {
-			payloadMap[claim] = value
-		}
-	}
-
-	payloadString, err := json.Marshal(payloadMap)
-	if err != nil {
-		return "", err
-	}
-
-	return base64.RawURLEncoding.EncodeToString(payloadString), nil
 }
 
 func NewJWTBearer(tokenURL string) *JWTBearer {

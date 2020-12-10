@@ -30,6 +30,7 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
@@ -71,11 +72,13 @@ func (s *authorizeJWTBearerRequiredAITSuite) TestBaseConfiguredClient() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		JWTID:    uuid.New(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			ID:       uuid.New(),
+		},
 	}, []string{"fosite"})
 
 	s.assertBadRequestResponse(s.T(), token, err)
@@ -85,12 +88,14 @@ func (s *authorizeJWTBearerRequiredAITSuite) TestWithJTIClaim() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
-		IssuerAt: time.Now().Unix(),
-		JWTID:    uuid.New(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+			ID:       uuid.New(),
+		},
 	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
@@ -114,7 +119,9 @@ func TestAuthorizeJWTBearerRequiredAITSuite(t *testing.T) {
 	defer testServer.Close()
 
 	client := newJWTBearerAppClient(testServer)
-	client.SetPrivateKey(firstKeyID, firstPrivateKey)
+	if err := client.SetPrivateKey(firstKeyID, firstPrivateKey); err != nil {
+		assert.Nil(t, err)
+	}
 
 	suite.Run(t, &authorizeJWTBearerRequiredAITSuite{
 		client: client,

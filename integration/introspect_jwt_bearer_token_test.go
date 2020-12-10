@@ -29,6 +29,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
@@ -52,17 +53,21 @@ func (s *introspectJwtBearerTokenSuite) SetupTest() {
 	s.audience = []string{tokenURL, "https://example.com"}
 
 	s.clientTokenPayload = &clients.JWTBearerPayload{
-		Issuer:   firstJWTBearerIssuer,
-		Subject:  firstJWTBearerSubject,
-		Audience: s.audience,
-		Expires:  time.Now().Add(time.Hour).Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: s.audience,
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+		},
 	}
 
 	s.appTokenPayload = &clients.JWTBearerPayload{
-		Issuer:   secondJWTBearerIssuer,
-		Subject:  secondJWTBearerSubject,
-		Audience: []string{tokenURL},
-		Expires:  time.Now().Add(time.Hour).Unix(),
+		Claims: &jwt.Claims{
+			Issuer:   secondJWTBearerIssuer,
+			Subject:  secondJWTBearerSubject,
+			Audience: s.audience,
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+		},
 	}
 }
 
@@ -95,8 +100,8 @@ func (s *introspectJwtBearerTokenSuite) assertSuccessResponse(
 	assert.Equal(t, response.Audience, s.audience)
 
 	tokenDuration := time.Unix(response.ExpiresAt, 0).Sub(time.Unix(response.IssuedAt, 0))
-	assert.Less(t, int64(tokenDuration), int64(time.Hour + time.Minute))
-	assert.Greater(t, int64(tokenDuration), int64(time.Hour - time.Minute))
+	assert.Less(t, int64(tokenDuration), int64(time.Hour+time.Minute))
+	assert.Greater(t, int64(tokenDuration), int64(time.Hour-time.Minute))
 }
 
 func (s *introspectJwtBearerTokenSuite) assertUnauthorizedResponse(
