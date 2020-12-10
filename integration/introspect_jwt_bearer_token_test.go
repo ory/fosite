@@ -71,53 +71,7 @@ func (s *introspectJwtBearerTokenSuite) SetupTest() {
 	}
 }
 
-func (s *introspectJwtBearerTokenSuite) getJWTClient() *clients.JWTBearer {
-	client := *s.clientJWT
-	client.SetPrivateKey(firstKeyID, firstPrivateKey)
-
-	return &client
-}
-
-func (s *introspectJwtBearerTokenSuite) getAPPJWTClient() *clients.JWTBearer {
-	client := *s.clientJWT
-	client.SetPrivateKey(secondKeyID, secondPrivateKey)
-
-	return &client
-}
-
-func (s *introspectJwtBearerTokenSuite) assertSuccessResponse(
-	t *testing.T,
-	response *clients.IntrospectResponse,
-	err error,
-) {
-	assert.Nil(t, err)
-	assert.NotNil(t, response)
-
-	assert.True(t, response.Active)
-	assert.Equal(t, response.Subject, firstJWTBearerSubject)
-	assert.NotEmpty(t, response.ExpiresAt)
-	assert.NotEmpty(t, response.IssuedAt)
-	assert.Equal(t, response.Audience, s.audience)
-
-	tokenDuration := time.Unix(response.ExpiresAt, 0).Sub(time.Unix(response.IssuedAt, 0))
-	assert.Less(t, int64(tokenDuration), int64(time.Hour+time.Minute))
-	assert.Greater(t, int64(tokenDuration), int64(time.Hour-time.Minute))
-}
-
-func (s *introspectJwtBearerTokenSuite) assertUnauthorizedResponse(
-	t *testing.T,
-	response *clients.IntrospectResponse,
-	err error,
-) {
-	assert.Nil(t, response)
-	assert.NotNil(t, err)
-
-	retrieveError, ok := err.(*clients.RequestError)
-	assert.True(t, ok)
-	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusUnauthorized)
-}
-
-func (s *introspectJwtBearerTokenSuite) TestBaseConfiguredClient() {
+func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithMultipleScopesToken() {
 	ctx := context.Background()
 
 	scopes := []string{"fosite", "docker"}
@@ -133,11 +87,11 @@ func (s *introspectJwtBearerTokenSuite) TestBaseConfiguredClient() {
 		map[string]string{"Authorization": "bearer " + token2.AccessToken},
 	)
 
-	s.assertSuccessResponse(s.T(), response, err)
+	s.assertSuccessResponse(s.T(), response, err, firstJWTBearerSubject)
 	assert.NotEmpty(s.T(), response.Scope, scopes)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestInvalidScopes() {
+func (s *introspectJwtBearerTokenSuite) TestUnActiveResponseWithInvalidScopes() {
 	ctx := context.Background()
 
 	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
@@ -157,7 +111,7 @@ func (s *introspectJwtBearerTokenSuite) TestInvalidScopes() {
 	assert.False(s.T(), response.Active)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestIntrospectWithoutScopes() {
+func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithoutScopesForIntrospection() {
 	ctx := context.Background()
 
 	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
@@ -172,10 +126,10 @@ func (s *introspectJwtBearerTokenSuite) TestIntrospectWithoutScopes() {
 		map[string]string{"Authorization": "bearer " + token2.AccessToken},
 	)
 
-	s.assertSuccessResponse(s.T(), response, err)
+	s.assertSuccessResponse(s.T(), response, err, firstJWTBearerSubject)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestTokenWithoutScopes() {
+func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithoutScopes() {
 	ctx := context.Background()
 
 	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, nil)
@@ -190,7 +144,7 @@ func (s *introspectJwtBearerTokenSuite) TestTokenWithoutScopes() {
 		map[string]string{"Authorization": "bearer " + token2.AccessToken},
 	)
 
-	s.assertSuccessResponse(s.T(), response, err)
+	s.assertSuccessResponse(s.T(), response, err, firstJWTBearerSubject)
 }
 
 func (s *introspectJwtBearerTokenSuite) TestSubjectHasAccessToScopeButNotInited() {
@@ -213,7 +167,7 @@ func (s *introspectJwtBearerTokenSuite) TestSubjectHasAccessToScopeButNotInited(
 	assert.False(s.T(), response.Active)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestIntrospectByYourself() {
+func (s *introspectJwtBearerTokenSuite) TestTheSameTokenInRequestAndHeader() {
 	ctx := context.Background()
 	token, _ := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
 
@@ -228,6 +182,54 @@ func (s *introspectJwtBearerTokenSuite) TestIntrospectByYourself() {
 
 	s.assertUnauthorizedResponse(s.T(), response, err)
 }
+
+func (s *introspectJwtBearerTokenSuite) getJWTClient() *clients.JWTBearer {
+	client := *s.clientJWT
+	client.SetPrivateKey(firstKeyID, firstPrivateKey)
+
+	return &client
+}
+
+func (s *introspectJwtBearerTokenSuite) getAPPJWTClient() *clients.JWTBearer {
+	client := *s.clientJWT
+	client.SetPrivateKey(secondKeyID, secondPrivateKey)
+
+	return &client
+}
+
+func (s *introspectJwtBearerTokenSuite) assertSuccessResponse(
+	t *testing.T,
+	response *clients.IntrospectResponse,
+	err error,
+	subject string,
+) {
+	assert.Nil(t, err)
+	assert.NotNil(t, response)
+
+	assert.True(t, response.Active)
+	assert.Equal(t, response.Subject, subject)
+	assert.NotEmpty(t, response.ExpiresAt)
+	assert.NotEmpty(t, response.IssuedAt)
+	assert.Equal(t, response.Audience, s.audience)
+
+	tokenDuration := time.Unix(response.ExpiresAt, 0).Sub(time.Unix(response.IssuedAt, 0))
+	assert.Less(t, int64(tokenDuration), int64(time.Hour+time.Minute))
+	assert.Greater(t, int64(tokenDuration), int64(time.Hour-time.Minute))
+}
+
+func (s *introspectJwtBearerTokenSuite) assertUnauthorizedResponse(
+	t *testing.T,
+	response *clients.IntrospectResponse,
+	err error,
+) {
+	assert.Nil(t, response)
+	assert.NotNil(t, err)
+
+	retrieveError, ok := err.(*clients.RequestError)
+	assert.True(t, ok)
+	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusUnauthorized)
+}
+
 
 func TestIntrospectJwtBearerTokenSuite(t *testing.T) {
 	provider := compose.Compose(

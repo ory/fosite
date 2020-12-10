@@ -43,32 +43,7 @@ type authorizeJWTBearerSuite struct {
 	client *clients.JWTBearer
 }
 
-func (s *authorizeJWTBearerSuite) getClient() *clients.JWTBearer {
-	client := *s.client
-
-	return &client
-}
-
-func (s *authorizeJWTBearerSuite) assertSuccessResponse(t *testing.T, token *clients.Token, err error) {
-	assert.Nil(t, err)
-	assert.NotNil(t, token)
-
-	assert.Equal(t, token.TokenType, "bearer")
-	assert.Empty(t, token.RefreshToken)
-	assert.NotEmpty(t, token.ExpiresIn)
-	assert.NotEmpty(t, token.AccessToken)
-}
-
-func (s *authorizeJWTBearerSuite) assertBadRequestResponse(t *testing.T, token *clients.Token, err error) {
-	assert.Nil(t, token)
-	assert.NotNil(t, err)
-
-	retrieveError, ok := err.(*clients.RequestError)
-	assert.True(t, ok)
-	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusBadRequest)
-}
-
-func (s *authorizeJWTBearerSuite) TestBaseConfiguredClient() {
+func (s *authorizeJWTBearerSuite) TestSuccessResponseWithRequiredParamsOnly() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -77,14 +52,13 @@ func (s *authorizeJWTBearerSuite) TestBaseConfiguredClient() {
 			Subject:  firstJWTBearerSubject,
 			Audience: []string{tokenURL},
 			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
-			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
 	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestListOfAudience() {
+func (s *authorizeJWTBearerSuite) TestSuccessResponseWithMultipleAudienceInAssertion() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -100,7 +74,7 @@ func (s *authorizeJWTBearerSuite) TestListOfAudience() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestFewScopes() {
+func (s *authorizeJWTBearerSuite) TestSuccessResponseWithMultipleScopesInRequest() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -116,7 +90,7 @@ func (s *authorizeJWTBearerSuite) TestFewScopes() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestGetTokenWithoutScopes() {
+func (s *authorizeJWTBearerSuite) TestSuccessResponseWithoutScopes() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -132,7 +106,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithoutScopes() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestGetTokenWithRandomClaim() {
+func (s *authorizeJWTBearerSuite) TestSuccessResponseWithRandomClaim() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -149,7 +123,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithRandomClaim() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestGetTokenWithNotBeforeClaim() {
+func (s *authorizeJWTBearerSuite) TestSuccessResponseWithNotBeforeClaim() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -166,7 +140,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithNotBeforeClaim() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestGetTokenWithJTIClaim() {
+func (s *authorizeJWTBearerSuite) TestSuccessResponseWithJTIClaim() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -183,7 +157,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithJTIClaim() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestGetTokenWithAllSuccessCases() {
+func (s *authorizeJWTBearerSuite) TestSuccessResponse() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -202,7 +176,7 @@ func (s *authorizeJWTBearerSuite) TestGetTokenWithAllSuccessCases() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestExpiredJWT() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithExpiredJWT() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -215,10 +189,10 @@ func (s *authorizeJWTBearerSuite) TestExpiredJWT() {
 		},
 	}, []string{"fosite"})
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestMaxDuration() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithExpiryMaxDuration() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -231,10 +205,10 @@ func (s *authorizeJWTBearerSuite) TestMaxDuration() {
 		},
 	}, []string{"fosite"})
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestInvalidPrivatKey() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithInvalidPrivatKey() {
 	ctx := context.Background()
 	client := s.getClient()
 
@@ -252,10 +226,10 @@ func (s *authorizeJWTBearerSuite) TestInvalidPrivatKey() {
 		},
 	}, nil)
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestInvalidKeyID() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithInvalidKeyID() {
 	ctx := context.Background()
 	client := s.getClient()
 
@@ -273,10 +247,10 @@ func (s *authorizeJWTBearerSuite) TestInvalidKeyID() {
 		},
 	}, nil)
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestInvalidAudience() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithInvalidAudience() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -289,10 +263,10 @@ func (s *authorizeJWTBearerSuite) TestInvalidAudience() {
 		},
 	}, nil)
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestDuplicatedJTI() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithDuplicatedJTI() {
 	ctx := context.Background()
 	client := s.getClient()
 	config := &clients.JWTBearerPayload{
@@ -309,10 +283,10 @@ func (s *authorizeJWTBearerSuite) TestDuplicatedJTI() {
 	client.GetToken(ctx, config, nil)
 	token2, err := client.GetToken(ctx, config, nil)
 
-	s.assertBadRequestResponse(s.T(), token2, err)
+	s.assertBadResponse(s.T(), token2, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestNotBeforeLaterThenIssueAt() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithNotBeforeLaterThenIssueAt() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -326,10 +300,10 @@ func (s *authorizeJWTBearerSuite) TestNotBeforeLaterThenIssueAt() {
 		},
 	}, nil)
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestWithoutIssuer() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithoutIssuer() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -342,10 +316,10 @@ func (s *authorizeJWTBearerSuite) TestWithoutIssuer() {
 		},
 	}, nil)
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestWithWrongSubject() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithWrongSubject() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -358,10 +332,10 @@ func (s *authorizeJWTBearerSuite) TestWithWrongSubject() {
 		},
 	}, nil)
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestWithWrongIssuer() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithWrongIssuer() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -374,10 +348,10 @@ func (s *authorizeJWTBearerSuite) TestWithWrongIssuer() {
 		},
 	}, nil)
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestWithWrongScope() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithWrongScope() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -390,7 +364,32 @@ func (s *authorizeJWTBearerSuite) TestWithWrongScope() {
 		},
 	}, []string{"fosite", "lenovo"})
 
-	s.assertBadRequestResponse(s.T(), token, err)
+	s.assertBadResponse(s.T(), token, err)
+}
+
+func (s *authorizeJWTBearerSuite) getClient() *clients.JWTBearer {
+	client := *s.client
+
+	return &client
+}
+
+func (s *authorizeJWTBearerSuite) assertSuccessResponse(t *testing.T, token *clients.Token, err error) {
+	assert.Nil(t, err)
+	assert.NotNil(t, token)
+
+	assert.Equal(t, token.TokenType, "bearer")
+	assert.Empty(t, token.RefreshToken)
+	assert.NotEmpty(t, token.ExpiresIn)
+	assert.NotEmpty(t, token.AccessToken)
+}
+
+func (s *authorizeJWTBearerSuite) assertBadResponse(t *testing.T, token *clients.Token, err error) {
+	assert.Nil(t, token)
+	assert.NotNil(t, err)
+
+	retrieveError, ok := err.(*clients.RequestError)
+	assert.True(t, ok)
+	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusBadRequest)
 }
 
 func TestAuthorizeJWTBearerSuite(t *testing.T) {

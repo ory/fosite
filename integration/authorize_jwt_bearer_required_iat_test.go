@@ -43,6 +43,39 @@ type authorizeJWTBearerRequiredAITSuite struct {
 	client *clients.JWTBearer
 }
 
+func (s *authorizeJWTBearerRequiredAITSuite) TestBadResponseWithoutIssuedAt() {
+	ctx := context.Background()
+	client := s.getClient()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			ID:       uuid.New(),
+		},
+	}, []string{"fosite"})
+
+	s.assertBadResponse(s.T(), token, err)
+}
+
+func (s *authorizeJWTBearerRequiredAITSuite) TestSuccessResponseWithIssuedAt() {
+	ctx := context.Background()
+	client := s.getClient()
+	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+			ID:       uuid.New(),
+		},
+	}, []string{"fosite"})
+
+	s.assertSuccessResponse(s.T(), token, err)
+}
+
 func (s *authorizeJWTBearerRequiredAITSuite) getClient() *clients.JWTBearer {
 	client := *s.client
 
@@ -59,46 +92,13 @@ func (s *authorizeJWTBearerRequiredAITSuite) assertSuccessResponse(t *testing.T,
 	assert.NotEmpty(t, token.AccessToken)
 }
 
-func (s *authorizeJWTBearerRequiredAITSuite) assertBadRequestResponse(t *testing.T, token *clients.Token, err error) {
+func (s *authorizeJWTBearerRequiredAITSuite) assertBadResponse(t *testing.T, token *clients.Token, err error) {
 	assert.Nil(t, token)
 	assert.NotNil(t, err)
 
 	retrieveError, ok := err.(*clients.RequestError)
 	assert.True(t, ok)
 	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusBadRequest)
-}
-
-func (s *authorizeJWTBearerRequiredAITSuite) TestBaseConfiguredClient() {
-	ctx := context.Background()
-	client := s.getClient()
-	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Claims: &jwt.Claims{
-			Issuer:   firstJWTBearerIssuer,
-			Subject:  firstJWTBearerSubject,
-			Audience: []string{tokenURL},
-			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
-			ID:       uuid.New(),
-		},
-	}, []string{"fosite"})
-
-	s.assertBadRequestResponse(s.T(), token, err)
-}
-
-func (s *authorizeJWTBearerRequiredAITSuite) TestWithJTIClaim() {
-	ctx := context.Background()
-	client := s.getClient()
-	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
-		Claims: &jwt.Claims{
-			Issuer:   firstJWTBearerIssuer,
-			Subject:  firstJWTBearerSubject,
-			Audience: []string{tokenURL},
-			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
-			IssuedAt: jwt.NewNumericDate(time.Now()),
-			ID:       uuid.New(),
-		},
-	}, []string{"fosite"})
-
-	s.assertSuccessResponse(s.T(), token, err)
 }
 
 func TestAuthorizeJWTBearerRequiredAITSuite(t *testing.T) {
