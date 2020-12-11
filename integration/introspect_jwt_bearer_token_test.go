@@ -24,6 +24,7 @@ package integration_test
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -89,7 +90,7 @@ func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithMultipleScopesTok
 	)
 
 	s.assertSuccessResponse(s.T(), response, err, firstJWTBearerSubject)
-	assert.NotEmpty(s.T(), response.Scope, scopes)
+	assert.Equal(s.T(), strings.Split(response.Scope, " "), scopes)
 }
 
 func (s *introspectJwtBearerTokenSuite) TestUnActiveResponseWithInvalidScopes() {
