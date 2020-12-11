@@ -106,7 +106,7 @@ func (s *authorizeJWTBearerSuite) TestSuccessResponseWithoutScopes() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestSuccessResponseWithRandomClaim() {
+func (s *authorizeJWTBearerSuite) TestSuccessResponseWithExtraClaim() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -117,7 +117,7 @@ func (s *authorizeJWTBearerSuite) TestSuccessResponseWithRandomClaim() {
 			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
-		PrivateClaims: map[string]interface{}{"random": "random"},
+		PrivateClaims: map[string]interface{}{"extraClaim": "extraClaimValue"},
 	}, []string{"fosite"})
 
 	s.assertSuccessResponse(s.T(), token, err)
@@ -208,11 +208,12 @@ func (s *authorizeJWTBearerSuite) TestBadResponseWithExpiryMaxDuration() {
 	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestBadResponseWithInvalidPrivatKey() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithInvalidPrivateKey() {
 	ctx := context.Background()
 	client := s.getClient()
+	wrongPrivateKey := secondPrivateKey
 
-	if err := client.SetPrivateKey(firstKeyID, secondPrivateKey); err != nil {
+	if err := client.SetPrivateKey(firstKeyID, wrongPrivateKey); err != nil {
 		assert.Nil(s.T(), err)
 	}
 
@@ -233,7 +234,7 @@ func (s *authorizeJWTBearerSuite) TestBadResponseWithInvalidKeyID() {
 	ctx := context.Background()
 	client := s.getClient()
 
-	if err := client.SetPrivateKey(secondKeyID, firstPrivateKey); err != nil {
+	if err := client.SetPrivateKey("wrongKeyID", firstPrivateKey); err != nil {
 		assert.Nil(s.T(), err)
 	}
 
@@ -266,7 +267,7 @@ func (s *authorizeJWTBearerSuite) TestBadResponseWithInvalidAudience() {
 	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestBadResponseWithDuplicatedJTI() {
+func (s *authorizeJWTBearerSuite) TestBadResponseForSecondRequestWithSameJTI() {
 	ctx := context.Background()
 	client := s.getClient()
 	config := &clients.JWTBearerPayload{
@@ -286,6 +287,30 @@ func (s *authorizeJWTBearerSuite) TestBadResponseWithDuplicatedJTI() {
 	s.assertBadResponse(s.T(), token2, err)
 }
 
+func (s *authorizeJWTBearerSuite) TestSuccessResponseForSecondRequestWithSameJTIAfterFirstExpired() {
+	ctx := context.Background()
+	client := s.getClient()
+	config := &clients.JWTBearerPayload{
+		Claims: &jwt.Claims{
+			Issuer:   firstJWTBearerIssuer,
+			Subject:  firstJWTBearerSubject,
+			Audience: []string{tokenURL},
+			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Second)),
+			IssuedAt: jwt.NewNumericDate(time.Now().Add(-time.Hour)),
+			ID:       uuid.New(),
+		},
+	}
+
+	client.GetToken(ctx, config, nil)
+
+	time.Sleep(time.Second)
+	config.Expiry = jwt.NewNumericDate(time.Now().Add(time.Hour))
+
+	token2, err := client.GetToken(ctx, config, nil)
+
+	s.assertSuccessResponse(s.T(), token2, err)
+}
+
 func (s *authorizeJWTBearerSuite) TestBadResponseWithNotBeforeLaterThenIssueAt() {
 	ctx := context.Background()
 	client := s.getClient()
@@ -303,7 +328,7 @@ func (s *authorizeJWTBearerSuite) TestBadResponseWithNotBeforeLaterThenIssueAt()
 	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerSuite) TestBadResponseWithoutIssuer() {
+func (s *authorizeJWTBearerSuite) TestBadResponseWithoutSubject() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -325,7 +350,7 @@ func (s *authorizeJWTBearerSuite) TestBadResponseWithWrongSubject() {
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Claims: &jwt.Claims{
 			Issuer:   firstJWTBearerIssuer,
-			Subject:  secondJWTBearerIssuer,
+			Subject:  "wrong_subject",
 			Audience: []string{tokenURL},
 			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
@@ -340,7 +365,7 @@ func (s *authorizeJWTBearerSuite) TestBadResponseWithWrongIssuer() {
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
 		Claims: &jwt.Claims{
-			Issuer:   secondJWTBearerIssuer,
+			Issuer:   "wrong_issuer",
 			Subject:  firstJWTBearerSubject,
 			Audience: []string{tokenURL},
 			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
@@ -362,7 +387,7 @@ func (s *authorizeJWTBearerSuite) TestBadResponseWithWrongScope() {
 			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
 		},
-	}, []string{"fosite", "lenovo"})
+	}, []string{"fosite", "permission"})
 
 	s.assertBadResponse(s.T(), token, err)
 }

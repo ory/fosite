@@ -42,7 +42,7 @@ type JWTBearer struct {
 	header   *Header
 	client   *http.Client
 
-	PrivateKey jose.Signer
+	Signer jose.Signer
 }
 
 type Token struct {
@@ -78,13 +78,13 @@ func (c *JWTBearer) SetPrivateKey(keyID string, privateKey *rsa.PrivateKey) erro
 		return err
 	}
 
-	c.PrivateKey = sig
+	c.Signer = sig
 
 	return nil
 }
 
 func (c *JWTBearer) GetToken(ctx context.Context, payloadData *JWTBearerPayload, scope []string) (*Token, error) {
-	builder := jwt.Signed(c.PrivateKey).
+	builder := jwt.Signed(c.Signer).
 		Claims(payloadData.Claims).
 		Claims(payloadData.PrivateClaims)
 

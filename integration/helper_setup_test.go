@@ -22,6 +22,7 @@
 package integration_test
 
 import (
+	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"net/http/httptest"
@@ -91,51 +92,20 @@ var fositeStore = &storage.MemoryStore{
 		},
 	},
 	IssuerPublicKeys: map[string]storage.IssuerPublicKeys{
-		firstJWTBearerIssuer: {
-			Issuer: firstJWTBearerIssuer,
-			KeysBySub: map[string]storage.SubjectPublicKeys{
-				firstJWTBearerSubject: {
-					Subject: firstJWTBearerSubject,
-					Keys: map[string]storage.PublicKeyScopes{
-						firstKeyID: {
-							Key: &jose.JSONWebKey{
-								Key:       firstPrivateKey.Public(),
-								Algorithm: string(jose.RS256),
-								Use:       "sig",
-								KeyID:     firstKeyID,
-							},
-							Scopes: []string{
-								"fosite",
-								"gitlab",
-								"example.com",
-								"docker",
-							},
-						},
-					},
-				},
-			},
-		},
-		secondJWTBearerIssuer: {
-			Issuer: secondJWTBearerIssuer,
-			KeysBySub: map[string]storage.SubjectPublicKeys{
-				secondJWTBearerSubject: {
-					Subject: secondJWTBearerSubject,
-					Keys: map[string]storage.PublicKeyScopes{
-						secondKeyID: {
-							Key: &jose.JSONWebKey{
-								Key:       secondPrivateKey.Public(),
-								Algorithm: string(jose.RS256),
-								Use:       "sig",
-								KeyID:     secondKeyID,
-							},
-							Scopes: []string{
-								"fosite",
-							},
-						},
-					},
-				},
-			},
-		},
+		firstJWTBearerIssuer: createIssuerPublicKey(
+			firstJWTBearerIssuer,
+			firstJWTBearerSubject,
+			firstKeyID,
+			firstPrivateKey.Public(),
+			[]string{"fosite", "gitlab", "example.com", "docker"},
+		),
+		secondJWTBearerIssuer: createIssuerPublicKey(
+			secondJWTBearerIssuer,
+			secondJWTBearerSubject,
+			secondKeyID,
+			secondPrivateKey.Public(),
+			[]string{"fosite"},
+		),
 	},
 	BlacklistedJTIs:        map[string]time.Time{},
 	AuthorizeCodes:         map[string]storage.StoreAuthorizeCode{},
@@ -154,6 +124,28 @@ type defaultSession struct {
 var accessTokenLifespan = time.Hour
 
 var authCodeLifespan = time.Minute
+
+func createIssuerPublicKey(issuer, subject, keyID string, key crypto.PublicKey, scopes []string) storage.IssuerPublicKeys {
+	return storage.IssuerPublicKeys {
+		Issuer: issuer,
+		KeysBySub: map[string]storage.SubjectPublicKeys{
+			subject: {
+				Subject: subject,
+				Keys: map[string]storage.PublicKeyScopes{
+					keyID: {
+						Key: &jose.JSONWebKey{
+							Key:       key,
+							Algorithm: string(jose.RS256),
+							Use:       "sig",
+							KeyID:     keyID,
+						},
+						Scopes: scopes,
+					},
+				},
+			},
+		},
+	}
+}
 
 func newOAuth2Client(ts *httptest.Server) *goauth.Config {
 	return &goauth.Config{

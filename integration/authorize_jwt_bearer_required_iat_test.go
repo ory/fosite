@@ -37,13 +37,13 @@ import (
 	"github.com/ory/fosite/integration/clients"
 )
 
-type authorizeJWTBearerRequiredAITSuite struct {
+type authorizeJWTBearerRequiredIATSuite struct {
 	suite.Suite
 
 	client *clients.JWTBearer
 }
 
-func (s *authorizeJWTBearerRequiredAITSuite) TestBadResponseWithoutIssuedAt() {
+func (s *authorizeJWTBearerRequiredIATSuite) TestBadResponseWithoutIssuedAt() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -59,7 +59,7 @@ func (s *authorizeJWTBearerRequiredAITSuite) TestBadResponseWithoutIssuedAt() {
 	s.assertBadResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerRequiredAITSuite) TestSuccessResponseWithIssuedAt() {
+func (s *authorizeJWTBearerRequiredIATSuite) TestSuccessResponseWithIssuedAt() {
 	ctx := context.Background()
 	client := s.getClient()
 	token, err := client.GetToken(ctx, &clients.JWTBearerPayload{
@@ -76,13 +76,13 @@ func (s *authorizeJWTBearerRequiredAITSuite) TestSuccessResponseWithIssuedAt() {
 	s.assertSuccessResponse(s.T(), token, err)
 }
 
-func (s *authorizeJWTBearerRequiredAITSuite) getClient() *clients.JWTBearer {
+func (s *authorizeJWTBearerRequiredIATSuite) getClient() *clients.JWTBearer {
 	client := *s.client
 
 	return &client
 }
 
-func (s *authorizeJWTBearerRequiredAITSuite) assertSuccessResponse(t *testing.T, token *clients.Token, err error) {
+func (s *authorizeJWTBearerRequiredIATSuite) assertSuccessResponse(t *testing.T, token *clients.Token, err error) {
 	assert.Nil(t, err)
 	assert.NotNil(t, token)
 
@@ -92,7 +92,7 @@ func (s *authorizeJWTBearerRequiredAITSuite) assertSuccessResponse(t *testing.T,
 	assert.NotEmpty(t, token.AccessToken)
 }
 
-func (s *authorizeJWTBearerRequiredAITSuite) assertBadResponse(t *testing.T, token *clients.Token, err error) {
+func (s *authorizeJWTBearerRequiredIATSuite) assertBadResponse(t *testing.T, token *clients.Token, err error) {
 	assert.Nil(t, token)
 	assert.NotNil(t, err)
 
@@ -101,7 +101,7 @@ func (s *authorizeJWTBearerRequiredAITSuite) assertBadResponse(t *testing.T, tok
 	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusBadRequest)
 }
 
-func TestAuthorizeJWTBearerRequiredAITSuite(t *testing.T) {
+func TestAuthorizeJWTBearerRequiredIATSuite(t *testing.T) {
 	provider := compose.Compose(
 		&compose.Config{
 			JWTSkipClientAuth:     true,
@@ -123,7 +123,7 @@ func TestAuthorizeJWTBearerRequiredAITSuite(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
-	suite.Run(t, &authorizeJWTBearerRequiredAITSuite{
+	suite.Run(t, &authorizeJWTBearerRequiredIATSuite{
 		client: client,
 	})
 }
