@@ -79,19 +79,18 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHint("Request parameter 'grant_type' is missing"))
 	}
 
+	client, clientErr := f.AuthenticateClient(ctx, r, r.PostForm)
+	if clientErr == nil {
+		accessRequest.Client = client
+	}
+
 	var found = false
-	var isClientAuth = false
 	for _, loader := range f.TokenEndpointHandlers {
 		if !loader.CanHandleTokenEndpointRequest(accessRequest) {
 			continue
 		}
-		if !loader.CanSkipClientAuth(accessRequest) && !isClientAuth {
-			client, err := f.AuthenticateClient(ctx, r, r.PostForm)
-			if err != nil {
-				return accessRequest, err
-			}
-			accessRequest.Client = client
-			isClientAuth = true
+		if !loader.CanSkipClientAuth(accessRequest) && clientErr != nil {
+			return accessRequest, clientErr
 		}
 		if err := loader.HandleTokenEndpointRequest(ctx, accessRequest); err == nil {
 			found = true
