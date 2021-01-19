@@ -23,7 +23,6 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ory/fosite"
@@ -32,10 +31,10 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
-const grantTypeJwtBearer = "urn:ietf:params:oauth:grant-type:jwt-bearer"
+const grantTypeJWTBearer = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
-type AuthorizeJwtGrantHandler struct {
-	AuthorizeJwtGrantStorage AuthorizeJwtGrantStorage
+type AuthorizeJWTGrantHandler struct {
+	AuthorizeJWTGrantStorage AuthorizeJWTGrantStorage
 	ScopeStrategy            fosite.ScopeStrategy
 	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 
@@ -56,19 +55,14 @@ type AuthorizeJwtGrantHandler struct {
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything) and
 // https://tools.ietf.org/html/rfc7523#section-2.1 (everything)
-func (c *AuthorizeJwtGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
-		return errorsx.WithStack(fosite.ErrUnknownRequest)
-	}
-
-	// if client is authenticated, check grant types
-	if !c.CanSkipClientAuth(request) && !request.GetClient().GetGrantTypes().Has(grantTypeJwtBearer) {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintf("The OAuth 2.0 Client is not allowed to use authorization grant \"%s\".", grantTypeJwtBearer))
+func (c *AuthorizeJWTGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
+	if err := c.CheckRequest(request); err != nil {
+		return err
 	}
 
 	assertion := request.GetRequestForm().Get("assertion")
 	if assertion == "" {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("The assertion request parameter must be set when using grant_type of '%s'.", grantTypeJwtBearer))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("The assertion request parameter must be set when using grant_type of '%s'.", grantTypeJWTBearer))
 	}
 
 	token, err := jwt.ParseSigned(assertion)
@@ -89,10 +83,6 @@ func (c *AuthorizeJwtGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return err
 	}
 
-	if err := c.validateToken(ctx, token, key); err != nil {
-		return err
-	}
-
 	claims := jwt.Claims{}
 	if err := token.Claims(key, &claims); err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
@@ -101,13 +91,17 @@ func (c *AuthorizeJwtGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		)
 	}
 
+	if err := c.validateTokenClaims(ctx, claims, key); err != nil {
+		return err
+	}
+
 	if claims.ID != "" {
-		if err := c.AuthorizeJwtGrantStorage.MarkJWTUsedForTime(ctx, claims.ID, claims.Expiry.Time()); err != nil {
+		if err := c.AuthorizeJWTGrantStorage.MarkJWTUsedForTime(ctx, claims.ID, claims.Expiry.Time()); err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 	}
 
-	scopes, err := c.AuthorizeJwtGrantStorage.GetPublicKeyScopes(ctx, claims.Issuer, claims.Subject, key.KeyID)
+	scopes, err := c.AuthorizeJWTGrantStorage.GetPublicKeyScopes(ctx, claims.Issuer, claims.Subject, key.KeyID)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
@@ -136,30 +130,38 @@ func (c *AuthorizeJwtGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	return nil
 }
 
-func (c *AuthorizeJwtGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
-		return errorsx.WithStack(fosite.ErrUnknownRequest)
-	}
-
-	// if client is authenticated, check grant types
-	if !c.CanSkipClientAuth(request) && !request.GetClient().GetGrantTypes().Has(grantTypeJwtBearer) {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintf("The OAuth 2.0 Client is not allowed to use authorization grant \"%s\".", grantTypeJwtBearer))
+func (c *AuthorizeJWTGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
+	if err := c.CheckRequest(request); err != nil {
+		return err
 	}
 
 	return c.IssueAccessToken(ctx, request, response)
 }
 
-func (c *AuthorizeJwtGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+func (c *AuthorizeJWTGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
 	return c.SkipClientAuth
 }
 
-func (c *AuthorizeJwtGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+func (c *AuthorizeJWTGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code"
-	return requester.GetGrantTypes().ExactOne(grantTypeJwtBearer)
+	return requester.GetGrantTypes().ExactOne(grantTypeJWTBearer)
 }
 
-func (c *AuthorizeJwtGrantHandler) validateTokenPreRequisites(token *jwt.JSONWebToken) error {
+func (c *AuthorizeJWTGrantHandler) CheckRequest(request fosite.AccessRequester) error {
+	if !c.CanHandleTokenEndpointRequest(request) {
+		return errorsx.WithStack(fosite.ErrUnknownRequest)
+	}
+
+	// if client is authenticated, check grant types
+	if !c.CanSkipClientAuth(request) && !request.GetClient().GetGrantTypes().Has(grantTypeJWTBearer) {
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintf("The OAuth 2.0 Client is not allowed to use authorization grant \"%s\".", grantTypeJWTBearer))
+	}
+
+	return nil
+}
+
+func (c *AuthorizeJWTGrantHandler) validateTokenPreRequisites(token *jwt.JSONWebToken) error {
 	unverifiedClaims := jwt.Claims{}
 	if err := token.UnsafeClaimsWithoutVerification(&unverifiedClaims); err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
@@ -181,7 +183,7 @@ func (c *AuthorizeJwtGrantHandler) validateTokenPreRequisites(token *jwt.JSONWeb
 	return nil
 }
 
-func (c *AuthorizeJwtGrantHandler) findPublicKeyForToken(ctx context.Context, token *jwt.JSONWebToken) (*jose.JSONWebKey, error) {
+func (c *AuthorizeJWTGrantHandler) findPublicKeyForToken(ctx context.Context, token *jwt.JSONWebToken) (*jose.JSONWebKey, error) {
 	unverifiedClaims := jwt.Claims{}
 	if err := token.UnsafeClaimsWithoutVerification(&unverifiedClaims); err != nil {
 		return nil, errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
@@ -195,22 +197,22 @@ func (c *AuthorizeJwtGrantHandler) findPublicKeyForToken(ctx context.Context, to
 		}
 	}
 
-	keyNotFoundMsg := fmt.Sprintf(
+	keyNotFoundErr := fosite.ErrInvalidGrant.WithHintf(
 		"No public JWK was registered for issuer \"%s\" and subject \"%s\", and public key is required to check signature of JWT in \"assertion\" request parameter.",
 		unverifiedClaims.Issuer,
 		unverifiedClaims.Subject,
 	)
 	if keyID != "" {
-		key, err := c.AuthorizeJwtGrantStorage.GetPublicKey(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject, keyID)
+		key, err := c.AuthorizeJWTGrantStorage.GetPublicKey(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject, keyID)
 		if err != nil {
-			return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
+			return nil, errorsx.WithStack(keyNotFoundErr.WithWrap(err).WithDebug(err.Error()))
 		}
 		return key, nil
 	}
 
-	keys, err := c.AuthorizeJwtGrantStorage.GetPublicKeys(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject)
+	keys, err := c.AuthorizeJWTGrantStorage.GetPublicKeys(ctx, unverifiedClaims.Issuer, unverifiedClaims.Subject)
 	if err != nil {
-		return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg).WithWrap(err).WithDebug(err.Error()))
+		return nil, errorsx.WithStack(keyNotFoundErr.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	claims := jwt.Claims{}
@@ -221,18 +223,10 @@ func (c *AuthorizeJwtGrantHandler) findPublicKeyForToken(ctx context.Context, to
 		}
 	}
 
-	return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(keyNotFoundMsg))
+	return nil, errorsx.WithStack(keyNotFoundErr)
 }
 
-func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt.JSONWebToken, key *jose.JSONWebKey) error {
-	claims := jwt.Claims{}
-	if err := token.Claims(key, &claims); err != nil {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("Unable to verify the integrity of the 'assertion' value.").
-			WithWrap(err).WithDebug(err.Error()),
-		)
-	}
-
+func (c *AuthorizeJWTGrantHandler) validateTokenClaims(ctx context.Context, claims jwt.Claims, key *jose.JSONWebKey) error {
 	if len(claims.Audience) == 0 {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim."),
@@ -275,15 +269,6 @@ func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt
 		)
 	}
 
-	if claims.IssuedAt != nil && time.Now().Sub(claims.IssuedAt.Time()).Nanoseconds() > c.JWTMaxDuration.Nanoseconds() {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHintf(
-				"The JWT in \"assertion\" request parameter contains an \"iat\" (issued at) claim with value \"%s\" that is unreasonably far in the past.",
-				claims.IssuedAt.Time().Format(time.RFC3339),
-			),
-		)
-	}
-
 	var issuedDate time.Time
 	if claims.IssuedAt != nil {
 		issuedDate = claims.IssuedAt.Time()
@@ -293,8 +278,9 @@ func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt
 	if claims.Expiry.Time().Sub(issuedDate).Nanoseconds() > c.JWTMaxDuration.Nanoseconds() {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHintf(
-				"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future.",
+				"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future, considering token issued at \"%s\".",
 				claims.Expiry.Time().Format(time.RFC3339),
+				issuedDate.Format(time.RFC3339),
 			),
 		)
 	}
@@ -306,7 +292,7 @@ func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt
 	}
 
 	if claims.ID != "" {
-		used, err := c.AuthorizeJwtGrantStorage.IsJWTUsed(ctx, claims.ID)
+		used, err := c.AuthorizeJWTGrantStorage.IsJWTUsed(ctx, claims.ID)
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
@@ -318,11 +304,11 @@ func (c *AuthorizeJwtGrantHandler) validateToken(ctx context.Context, token *jwt
 	return nil
 }
 
-func (c *AuthorizeJwtGrantHandler) getSessionFromRequest(requester fosite.AccessRequester) (AuthorizeJwtGrantSession, error) {
+func (c *AuthorizeJWTGrantHandler) getSessionFromRequest(requester fosite.AccessRequester) (AuthorizeJWTGrantSession, error) {
 	session := requester.GetSession()
-	if jwtSession, ok := session.(AuthorizeJwtGrantSession); !ok {
+	if jwtSession, ok := session.(AuthorizeJWTGrantSession); !ok {
 		return nil, errorsx.WithStack(
-			fosite.ErrServerError.WithHintf("Session must be of type AuthorizeJwtGrantSession but got type: %T", session),
+			fosite.ErrServerError.WithHintf("Session must be of type AuthorizeJWTGrantSession but got type: %T", session),
 		)
 	} else {
 		return jwtSession, nil

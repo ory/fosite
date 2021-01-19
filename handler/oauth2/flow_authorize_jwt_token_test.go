@@ -24,20 +24,20 @@ import (
 // Define the suite, and absorb the built-in basic suite
 // functionality from testify - including a T() method which
 // returns the current testing context.
-type AuthorizeJwtGrantRequestHandlerTestSuite struct {
+type AuthorizeJWTGrantRequestHandlerTestSuite struct {
 	suite.Suite
 
 	privateKey              *rsa.PrivateKey
 	mockCtrl                *gomock.Controller
-	mockStore               *internal.MockAuthorizeJwtGrantStorage
+	mockStore               *internal.MockAuthorizeJWTGrantStorage
 	mockAccessTokenStrategy *internal.MockAccessTokenStrategy
 	mockAccessTokenStore    *internal.MockAccessTokenStorage
 	accessRequest           *fosite.AccessRequest
-	handler                 *AuthorizeJwtGrantHandler
+	handler                 *AuthorizeJWTGrantHandler
 }
 
 // Setup before each test in the suite.
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) SetupSuite() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupSuite() {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		s.FailNowf("failed to setup test suite", "failed to generate RSA private key: %s", err.Error())
@@ -46,25 +46,25 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) SetupSuite() {
 }
 
 // Will run after all the tests in the suite have been run.
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TearDownSuite() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TearDownSuite() {
 }
 
 // Will run after each test in the suite.
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TearDownTest() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
 // Setup before each test.
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) SetupTest() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
-	s.mockStore = internal.NewMockAuthorizeJwtGrantStorage(s.mockCtrl)
+	s.mockStore = internal.NewMockAuthorizeJWTGrantStorage(s.mockCtrl)
 	s.mockAccessTokenStrategy = internal.NewMockAccessTokenStrategy(s.mockCtrl)
 	s.mockAccessTokenStore = internal.NewMockAccessTokenStorage(s.mockCtrl)
 	s.accessRequest = fosite.NewAccessRequest(new(fosite.DefaultSession))
 	s.accessRequest.Form = url.Values{}
-	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJwtBearer}}
-	s.handler = &AuthorizeJwtGrantHandler{
-		AuthorizeJwtGrantStorage: s.mockStore,
+	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
+	s.handler = &AuthorizeJWTGrantHandler{
+		AuthorizeJWTGrantStorage: s.mockStore,
 		ScopeStrategy:            fosite.HierarchicScopeStrategy,
 		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 		TokenURL:                 "https://www.example.com/token",
@@ -82,11 +82,11 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) SetupTest() {
 
 // In order for 'go test' to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestAuthorizeJwtGrantRequestHandlerTestSuite(t *testing.T) {
-	suite.Run(t, new(AuthorizeJwtGrantRequestHandlerTestSuite))
+func TestAuthorizeJWTGrantRequestHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(AuthorizeJWTGrantRequestHandlerTestSuite))
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestWithInvalidGrantType() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestRequestWithInvalidGrantType() {
 	// arrange
 	s.accessRequest.GrantTypes = []string{"authorization_code"}
 
@@ -98,9 +98,9 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestWithInvalidGrantTy
 	s.EqualError(err, fosite.ErrUnknownRequest.Error(), "expected error, because of invalid grant type")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestClientIsNotRegisteredForGrantType() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestClientIsNotRegisteredForGrantType() {
 	// arrange
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{"authorization_code"}}
 	s.handler.SkipClientAuth = false
 
@@ -116,9 +116,9 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestClientIsNotRegisteredForG
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestWithoutAssertion() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestRequestWithoutAssertion() {
 	// arrange
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 
 	// act
 	err := s.handler.HandleTokenEndpointRequest(context.Background(), s.accessRequest)
@@ -132,9 +132,9 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestWithoutAssertion()
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestWithMalformedAssertion() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestRequestWithMalformedAssertion() {
 	// arrange
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	s.accessRequest.Form.Add("assertion", "fjigjgfkjgkf")
 
 	// act
@@ -149,9 +149,9 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestWithMalformedAsser
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestAssertionWithoutIssuer() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestRequestAssertionWithoutIssuer() {
 	// arrange
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	cl := s.createStandardClaim()
 	cl.Issuer = ""
@@ -169,9 +169,9 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestAssertionWithoutIs
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestAssertionWithoutSubject() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestRequestAssertionWithoutSubject() {
 	// arrange
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	cl := s.createStandardClaim()
 	cl.Subject = ""
@@ -189,10 +189,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestAssertionWithoutSu
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNoMatchingPublicKeyToCheckAssertionSignature() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestNoMatchingPublicKeyToCheckAssertionSignature() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	cl := s.createStandardClaim()
 	keyID := "my_key"
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
@@ -213,10 +213,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNoMatchingPublicKeyToChec
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNoMatchingPublicKeysToCheckAssertionSignature() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestNoMatchingPublicKeysToCheckAssertionSignature() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "" // provide no hint of what key was used to sign assertion
 	cl := s.createStandardClaim()
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
@@ -237,10 +237,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNoMatchingPublicKeysToChe
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestWrongPublicKeyToCheckAssertionSignature() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestWrongPublicKeyToCheckAssertionSignature() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "wrong_key"
 	cl := s.createStandardClaim()
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
@@ -256,10 +256,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestWrongPublicKeyToCheckAsse
 	s.Equal("Unable to verify the integrity of the 'assertion' value.", err.(*fosite.RFC6749Error).HintField)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestWrongPublicKeysToCheckAssertionSignature() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestWrongPublicKeysToCheckAssertionSignature() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "" // provide no hint of what key was used to sign assertion
 	cl := s.createStandardClaim()
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
@@ -280,10 +280,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestWrongPublicKeysToCheckAss
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNoAudienceInAssertion() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestNoAudienceInAssertion() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -303,10 +303,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNoAudienceInAssertion() {
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNotValidAudienceInAssertion() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestNotValidAudienceInAssertion() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -329,10 +329,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNotValidAudienceInAsserti
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNoExpirationInAssertion() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestNoExpirationInAssertion() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -352,10 +352,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestNoExpirationInAssertion()
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestExpiredAssertion() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestExpiredAssertion() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -375,10 +375,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestExpiredAssertion() {
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionNotAcceptedBeforeDate() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionNotAcceptedBeforeDate() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	nbf := time.Now().AddDate(0, 1, 0)
@@ -402,10 +402,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionNotAcceptedBefor
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithoutRequiredIssueDate() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithoutRequiredIssueDate() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -426,10 +426,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithoutRequiredI
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithIssueDateFarInPast() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithIssueDateFarInPast() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	issuedAt := time.Now().AddDate(0, 0, -31)
@@ -448,17 +448,18 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithIssueDateFar
 	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because assertion was issued far in the past")
 	s.Equal(
 		fmt.Sprintf(
-			"The JWT in \"assertion\" request parameter contains an \"iat\" (issued at) claim with value \"%s\" that is unreasonably far in the past.",
-			issuedAt.Format(time.RFC3339),
+			"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future, considering token issued at \"%s\".",
+			cl.Expiry.Time().Format(time.RFC3339),
+			cl.IssuedAt.Time().Format(time.RFC3339),
 		),
 		err.(*fosite.RFC6749Error).HintField,
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithExpirationDateFarInFuture() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithExpirationDateFarInFuture() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -477,17 +478,18 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithExpirationDa
 	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because assertion will expire unreasonably far in the future.")
 	s.Equal(
 		fmt.Sprintf(
-			"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future.",
+			"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future, considering token issued at \"%s\".",
 			cl.Expiry.Time().Format(time.RFC3339),
+			cl.IssuedAt.Time().Format(time.RFC3339),
 		),
 		err.(*fosite.RFC6749Error).HintField,
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithExpirationDateFarInFutureWithNoIssuerDate() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithExpirationDateFarInFutureWithNoIssuerDate() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -504,19 +506,12 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithExpirationDa
 	// assert
 	s.True(errors.Is(err, fosite.ErrInvalidGrant))
 	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because assertion will expire unreasonably far in the future.")
-	s.Equal(
-		fmt.Sprintf(
-			"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future.",
-			cl.Expiry.Time().Format(time.RFC3339),
-		),
-		err.(*fosite.RFC6749Error).HintField,
-	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithoutRequiredTokenID() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithoutRequiredTokenID() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -536,10 +531,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithoutRequiredT
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionAlreadyUsed() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionAlreadyUsed() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -555,10 +550,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionAlreadyUsed() {
 	s.EqualError(err, fosite.ErrJTIKnown.Error(), "expected error, because assertion was used")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestErrWhenCheckingIfJWTWasUsed() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestErrWhenCheckingIfJWTWasUsed() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -574,10 +569,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestErrWhenCheckingIfJWTWasUs
 	s.EqualError(err, fosite.ErrServerError.Error(), "expected error, because error occurred while trying to check if jwt was used")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestErrWhenMarkingJWTAsUsed() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestErrWhenMarkingJWTAsUsed() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -594,10 +589,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestErrWhenMarkingJWTAsUsed()
 	s.EqualError(err, fosite.ErrServerError.Error(), "expected error, because error occurred while trying to mark jwt as used")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestErrWhileFetchingPublicKeyScope() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestErrWhileFetchingPublicKeyScope() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -616,10 +611,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestErrWhileFetchingPublicKey
 	s.EqualError(err, fosite.ErrServerError.Error(), "expected error, because error occurred while fetching public key scopes")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithInvalidScopes() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithInvalidScopes() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -643,10 +638,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionWithInvalidScope
 	)
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestValidAssertion() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestValidAssertion() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -665,10 +660,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestValidAssertion() {
 	s.NoError(err, "no error expected, because assertion must be valid")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionIsValidWhenNoScopesPassed() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionIsValidWhenNoScopesPassed() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -685,10 +680,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionIsValidWhenNoSco
 	s.NoError(err, "no error expected, because assertion must be valid")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionIsValidWhenJWTIDIsOptional() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionIsValidWhenJWTIDIsOptional() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -705,10 +700,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionIsValidWhenJWTID
 	s.NoError(err, "no error expected, because assertion must be valid, when no jti claim and it is allowed by option")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionIsValidWhenJWTIssuedDateOptional() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionIsValidWhenJWTIssuedDateOptional() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -727,10 +722,10 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestAssertionIsValidWhenJWTIs
 	s.NoError(err, "no error expected, because assertion must be valid, when no iss claim and it is allowed by option")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestIsValidWhenClientAuthOptional() {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestRequestIsValidWhenClientAuthOptional() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
@@ -749,7 +744,7 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) TestRequestIsValidWhenClientA
 	s.NoError(err, "no error expected, because request must be valid, when no client unauthenticated and it is allowed by option")
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createTestAssertion(cl jwt.Claims, keyID string) string {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) createTestAssertion(cl jwt.Claims, keyID string) string {
 	jwk := jose.JSONWebKey{Key: s.privateKey, KeyID: keyID, Algorithm: string(jose.RS256)}
 	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: jwk}, (&jose.SignerOptions{}).WithType("JWT"))
 	if err != nil {
@@ -764,7 +759,7 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createTestAssertion(cl jwt.Cl
 	return raw
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createStandardClaim() jwt.Claims {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) createStandardClaim() jwt.Claims {
 	return jwt.Claims{
 		Issuer:    "trusted_issuer",
 		Subject:   "some_ro",
@@ -776,7 +771,7 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createStandardClaim() jwt.Cla
 	}
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createRandomTestJWK() jose.JSONWebKey {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) createRandomTestJWK() jose.JSONWebKey {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		s.FailNowf("failed to create random test JWK", "failed to generate RSA private key: %s", err.Error())
@@ -785,7 +780,7 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createRandomTestJWK() jose.JS
 	return s.createJWK(privateKey.Public(), strconv.Itoa(mrand.Int()))
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createJWK(key interface{}, keyID string) jose.JSONWebKey {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) createJWK(key interface{}, keyID string) jose.JSONWebKey {
 	return jose.JSONWebKey{
 		Key:       key,
 		KeyID:     keyID,
@@ -794,28 +789,28 @@ func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createJWK(key interface{}, ke
 	}
 }
 
-func (s *AuthorizeJwtGrantRequestHandlerTestSuite) createJWS(keys ...jose.JSONWebKey) *jose.JSONWebKeySet {
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) createJWS(keys ...jose.JSONWebKey) *jose.JSONWebKeySet {
 	return &jose.JSONWebKeySet{Keys: keys}
 }
 
 // Define the suite, and absorb the built-in basic suite
 // functionality from testify - including a T() method which
 // returns the current testing context.
-type AuthorizeJwtGrantPopulateTokenEndpointTestSuite struct {
+type AuthorizeJWTGrantPopulateTokenEndpointTestSuite struct {
 	suite.Suite
 
 	privateKey              *rsa.PrivateKey
 	mockCtrl                *gomock.Controller
-	mockStore               *internal.MockAuthorizeJwtGrantStorage
+	mockStore               *internal.MockAuthorizeJWTGrantStorage
 	mockAccessTokenStrategy *internal.MockAccessTokenStrategy
 	mockAccessTokenStore    *internal.MockAccessTokenStorage
 	accessRequest           *fosite.AccessRequest
 	accessResponse          *fosite.AccessResponse
-	handler                 *AuthorizeJwtGrantHandler
+	handler                 *AuthorizeJWTGrantHandler
 }
 
 // Setup before each test in the suite.
-func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) SetupSuite() {
+func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) SetupSuite() {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		s.FailNowf("failed to setup test suite", "failed to generate RSA private key: %s", err.Error())
@@ -824,26 +819,26 @@ func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) SetupSuite() {
 }
 
 // Will run after all the tests in the suite have been run.
-func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) TearDownSuite() {
+func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TearDownSuite() {
 }
 
 // Will run after each test in the suite.
-func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) TearDownTest() {
+func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TearDownTest() {
 	s.mockCtrl.Finish()
 }
 
 // Setup before each test.
-func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) SetupTest() {
+func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
-	s.mockStore = internal.NewMockAuthorizeJwtGrantStorage(s.mockCtrl)
+	s.mockStore = internal.NewMockAuthorizeJWTGrantStorage(s.mockCtrl)
 	s.mockAccessTokenStrategy = internal.NewMockAccessTokenStrategy(s.mockCtrl)
 	s.mockAccessTokenStore = internal.NewMockAccessTokenStorage(s.mockCtrl)
 	s.accessRequest = fosite.NewAccessRequest(new(fosite.DefaultSession))
 	s.accessRequest.Form = url.Values{}
-	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJwtBearer}}
+	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
 	s.accessResponse = fosite.NewAccessResponse()
-	s.handler = &AuthorizeJwtGrantHandler{
-		AuthorizeJwtGrantStorage: s.mockStore,
+	s.handler = &AuthorizeJWTGrantHandler{
+		AuthorizeJWTGrantStorage: s.mockStore,
 		ScopeStrategy:            fosite.HierarchicScopeStrategy,
 		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 		TokenURL:                 "https://www.example.com/token",
@@ -861,11 +856,11 @@ func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) SetupTest() {
 
 // In order for 'go test' to run this suite, we need to create
 // a normal test function and pass our suite to suite.Run.
-func TestAuthorizeJwtGrantPopulateTokenEndpointTestSuite(t *testing.T) {
-	suite.Run(t, new(AuthorizeJwtGrantPopulateTokenEndpointTestSuite))
+func TestAuthorizeJWTGrantPopulateTokenEndpointTestSuite(t *testing.T) {
+	suite.Run(t, new(AuthorizeJWTGrantPopulateTokenEndpointTestSuite))
 }
 
-func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) TestRequestWithInvalidGrantType() {
+func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestRequestWithInvalidGrantType() {
 	// arrange
 	s.accessRequest.GrantTypes = []string{"authorization_code"}
 
@@ -877,9 +872,9 @@ func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) TestRequestWithInvalid
 	s.EqualError(err, fosite.ErrUnknownRequest.Error(), "expected error, because of invalid grant type")
 }
 
-func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) TestClientIsNotRegisteredForGrantType() {
+func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestClientIsNotRegisteredForGrantType() {
 	// arrange
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{"authorization_code"}}
 	s.handler.SkipClientAuth = false
 
@@ -895,10 +890,10 @@ func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) TestClientIsNotRegiste
 	)
 }
 
-func (s *AuthorizeJwtGrantPopulateTokenEndpointTestSuite) TestAccessTokenIssuedSuccessfully() {
+func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestAccessTokenIssuedSuccessfully() {
 	// arrange
 	ctx := context.Background()
-	s.accessRequest.GrantTypes = []string{grantTypeJwtBearer}
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	token := "token"
 	sig := "sig"
 	s.mockAccessTokenStrategy.EXPECT().GenerateAccessToken(ctx, s.accessRequest).Return(token, sig, nil)

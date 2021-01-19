@@ -37,7 +37,7 @@ import (
 	"github.com/ory/fosite/integration/clients"
 )
 
-type introspectJwtBearerTokenSuite struct {
+type introspectJWTBearerTokenSuite struct {
 	suite.Suite
 
 	clientJWT          *clients.JWTBearer
@@ -50,7 +50,7 @@ type introspectJwtBearerTokenSuite struct {
 	audience            []string
 }
 
-func (s *introspectJwtBearerTokenSuite) SetupTest() {
+func (s *introspectJWTBearerTokenSuite) SetupTest() {
 	s.scopes = []string{"fosite"}
 	s.audience = []string{tokenURL, "https://example.com"}
 
@@ -73,7 +73,7 @@ func (s *introspectJwtBearerTokenSuite) SetupTest() {
 	}
 }
 
-func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithMultipleScopesToken() {
+func (s *introspectJWTBearerTokenSuite) TestSuccessResponseWithMultipleScopesToken() {
 	ctx := context.Background()
 
 	scopes := []string{"fosite", "docker"}
@@ -93,7 +93,7 @@ func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithMultipleScopesTok
 	assert.Equal(s.T(), strings.Split(response.Scope, " "), scopes)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestUnActiveResponseWithInvalidScopes() {
+func (s *introspectJWTBearerTokenSuite) TestUnActiveResponseWithInvalidScopes() {
 	ctx := context.Background()
 
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
@@ -113,7 +113,7 @@ func (s *introspectJwtBearerTokenSuite) TestUnActiveResponseWithInvalidScopes() 
 	assert.False(s.T(), response.Active)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithoutScopesForIntrospection() {
+func (s *introspectJWTBearerTokenSuite) TestSuccessResponseWithoutScopesForIntrospection() {
 	ctx := context.Background()
 
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
@@ -131,7 +131,7 @@ func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithoutScopesForIntro
 	s.assertSuccessResponse(s.T(), response, err, firstJWTBearerSubject)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithoutScopes() {
+func (s *introspectJWTBearerTokenSuite) TestSuccessResponseWithoutScopes() {
 	ctx := context.Background()
 
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, nil)
@@ -149,7 +149,7 @@ func (s *introspectJwtBearerTokenSuite) TestSuccessResponseWithoutScopes() {
 	s.assertSuccessResponse(s.T(), response, err, firstJWTBearerSubject)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestSubjectHasAccessToScopeButNotInited() {
+func (s *introspectJWTBearerTokenSuite) TestSubjectHasAccessToScopeButNotInited() {
 	ctx := context.Background()
 
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, nil)
@@ -169,7 +169,7 @@ func (s *introspectJwtBearerTokenSuite) TestSubjectHasAccessToScopeButNotInited(
 	assert.False(s.T(), response.Active)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestTheSameTokenInRequestAndHeader() {
+func (s *introspectJWTBearerTokenSuite) TestTheSameTokenInRequestAndHeader() {
 	ctx := context.Background()
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
 	assert.Nil(s.T(), err)
@@ -186,7 +186,7 @@ func (s *introspectJwtBearerTokenSuite) TestTheSameTokenInRequestAndHeader() {
 	s.assertUnauthorizedResponse(s.T(), response, err)
 }
 
-func (s *introspectJwtBearerTokenSuite) TestUnauthorizedResponseForRequestWithoutAuthorization() {
+func (s *introspectJWTBearerTokenSuite) TestUnauthorizedResponseForRequestWithoutAuthorization() {
 	ctx := context.Background()
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
 	assert.Nil(s.T(), err)
@@ -203,13 +203,13 @@ func (s *introspectJwtBearerTokenSuite) TestUnauthorizedResponseForRequestWithou
 	s.assertUnauthorizedResponse(s.T(), response, err)
 }
 
-func (s *introspectJwtBearerTokenSuite) getJWTClient() *clients.JWTBearer {
+func (s *introspectJWTBearerTokenSuite) getJWTClient() *clients.JWTBearer {
 	client := *s.clientJWT
 
 	return &client
 }
 
-func (s *introspectJwtBearerTokenSuite) assertSuccessResponse(
+func (s *introspectJWTBearerTokenSuite) assertSuccessResponse(
 	t *testing.T,
 	response *clients.IntrospectResponse,
 	err error,
@@ -229,7 +229,7 @@ func (s *introspectJwtBearerTokenSuite) assertSuccessResponse(
 	assert.Greater(t, int64(tokenDuration), int64(time.Hour-time.Minute))
 }
 
-func (s *introspectJwtBearerTokenSuite) assertUnauthorizedResponse(
+func (s *introspectJWTBearerTokenSuite) assertUnauthorizedResponse(
 	t *testing.T,
 	response *clients.IntrospectResponse,
 	err error,
@@ -242,14 +242,14 @@ func (s *introspectJwtBearerTokenSuite) assertUnauthorizedResponse(
 	assert.Equal(t, retrieveError.Response.StatusCode, http.StatusUnauthorized)
 }
 
-func TestIntrospectJwtBearerTokenSuite(t *testing.T) {
+func TestIntrospectJWTBearerTokenSuite(t *testing.T) {
 	provider := compose.Compose(
 		&compose.Config{
-			JWTSkipClientAuth:     true,
-			JWTIDOptional:         true,
-			JWTIssuedDateOptional: true,
-			AccessTokenLifespan:   time.Hour,
-			TokenURL:              tokenURL,
+			GrantTypeJWTBearerCanSkipClientAuth:  true,
+			GrantTypeJWTBearerIDOptional:         true,
+			GrantTypeJWTBearerIssuedDateOptional: true,
+			AccessTokenLifespan:                  time.Hour,
+			TokenURL:                             tokenURL,
 		},
 		fositeStore,
 		jwtStrategy,
@@ -282,7 +282,7 @@ func TestIntrospectJwtBearerTokenSuite(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
-	suite.Run(t, &introspectJwtBearerTokenSuite{
+	suite.Run(t, &introspectJWTBearerTokenSuite{
 		clientJWT:           client,
 		clientIntrospect:    clients.NewIntrospectClient(testServer.URL + "/introspect"),
 		authorizationHeader: "bearer " + token.AccessToken,

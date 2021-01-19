@@ -141,14 +141,14 @@ func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{},
 // OAuth2AuthorizeExplicitFactory creates an OAuth2 authorize jwt grant (using JWTs as Authorization Grants) handler
 // and registers an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeJWTGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
-	return &oauth2.AuthorizeJwtGrantHandler{
-		AuthorizeJwtGrantStorage: storage.(oauth2.AuthorizeJwtGrantStorage),
+	return &oauth2.AuthorizeJWTGrantHandler{
+		AuthorizeJWTGrantStorage: storage.(oauth2.AuthorizeJWTGrantStorage),
 		ScopeStrategy:            config.GetScopeStrategy(),
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 		TokenURL:                 config.TokenURL,
-		SkipClientAuth:           config.JWTSkipClientAuth,
-		JWTIDOptional:            config.JWTIDOptional,
-		JWTIssuedDateOptional:    config.JWTIssuedDateOptional,
+		SkipClientAuth:           config.GrantTypeJWTBearerCanSkipClientAuth,
+		JWTIDOptional:            config.GrantTypeJWTBearerIDOptional,
+		JWTIssuedDateOptional:    config.GrantTypeJWTBearerIssuedDateOptional,
 		JWTMaxDuration:           config.GetJWTMaxDuration(),
 		HandleHelper: &oauth2.HandleHelper{
 			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),

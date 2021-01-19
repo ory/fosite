@@ -25,7 +25,7 @@ import (
 	"github.com/ory/fosite"
 )
 
-type AuthorizeJwtGrantSession interface {
+type AuthorizeJWTGrantSession interface {
 	SetSubject(subject string)
 
 	fosite.Session

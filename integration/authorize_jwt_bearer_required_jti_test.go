@@ -104,10 +104,10 @@ func (s *authorizeJWTBearerRequiredJtiSuite) assertBadResponse(t *testing.T, tok
 func TestAuthorizeJWTBearerRequiredJtiSuite(t *testing.T) {
 	provider := compose.Compose(
 		&compose.Config{
-			JWTSkipClientAuth:     true,
-			JWTIDOptional:         false,
-			JWTIssuedDateOptional: true,
-			TokenURL:              tokenURL,
+			GrantTypeJWTBearerCanSkipClientAuth:  true,
+			GrantTypeJWTBearerIDOptional:         false,
+			GrantTypeJWTBearerIssuedDateOptional: true,
+			TokenURL:                             tokenURL,
 		},
 		fositeStore,
 		jwtStrategy,
