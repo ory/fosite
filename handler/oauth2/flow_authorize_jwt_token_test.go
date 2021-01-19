@@ -578,6 +578,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestErrWhenMarkingJWTAsUsed()
 	cl := s.createStandardClaim()
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
+	s.mockStore.EXPECT().GetPublicKeyScopes(ctx, cl.Issuer, cl.Subject, keyID).Return([]string{"valid_scope"}, nil)
 	s.mockStore.EXPECT().IsJWTUsed(ctx, cl.ID).Return(false, nil)
 	s.mockStore.EXPECT().MarkJWTUsedForTime(ctx, cl.ID, cl.Expiry.Time()).Return(fosite.ErrServerError)
 
@@ -601,7 +602,6 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestErrWhileFetchingPublicKey
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
 	s.mockStore.EXPECT().GetPublicKeyScopes(ctx, cl.Issuer, cl.Subject, keyID).Return([]string{}, fosite.ErrServerError)
 	s.mockStore.EXPECT().IsJWTUsed(ctx, cl.ID).Return(false, nil)
-	s.mockStore.EXPECT().MarkJWTUsedForTime(ctx, cl.ID, cl.Expiry.Time()).Return(nil)
 
 	// act
 	err := s.handler.HandleTokenEndpointRequest(ctx, s.accessRequest)
@@ -624,7 +624,6 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithInvalidScope
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
 	s.mockStore.EXPECT().GetPublicKeyScopes(ctx, cl.Issuer, cl.Subject, keyID).Return([]string{"valid_scope"}, nil)
 	s.mockStore.EXPECT().IsJWTUsed(ctx, cl.ID).Return(false, nil)
-	s.mockStore.EXPECT().MarkJWTUsedForTime(ctx, cl.ID, cl.Expiry.Time()).Return(nil)
 
 	// act
 	err := s.handler.HandleTokenEndpointRequest(ctx, s.accessRequest)

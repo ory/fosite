@@ -95,12 +95,6 @@ func (c *AuthorizeJWTGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return err
 	}
 
-	if claims.ID != "" {
-		if err := c.AuthorizeJWTGrantStorage.MarkJWTUsedForTime(ctx, claims.ID, claims.Expiry.Time()); err != nil {
-			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-		}
-	}
-
 	scopes, err := c.AuthorizeJWTGrantStorage.GetPublicKeyScopes(ctx, claims.Issuer, claims.Subject, key.KeyID)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
@@ -109,6 +103,12 @@ func (c *AuthorizeJWTGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(scopes, scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+		}
+	}
+
+	if claims.ID != "" {
+		if err := c.AuthorizeJWTGrantStorage.MarkJWTUsedForTime(ctx, claims.ID, claims.Expiry.Time()); err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 	}
 
