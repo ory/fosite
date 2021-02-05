@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   changelog: ory/changelog@0.1.4
   nancy: ory/nancy@0.0.13
-  golangci: ory/golangci@0.0.9
+  golangci: ory/golangci@0.0.10
 
 jobs:
   test:
@@ -13,6 +13,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run: golangci/lint
       - restore_cache:
           keys:
             - go-github-ory-fosite-v1-{{ checksum "go.sum" }}
@@ -25,11 +26,10 @@ jobs:
       - run: go-acc -o coverage.txt ./... -- -v -failfast -timeout=20m
 
 workflows:
-  tbr:
+  test:
     jobs:
       - nancy/test
       - test
-      - golangci/lint
       - changelog/generate:
           requires:
             - test
