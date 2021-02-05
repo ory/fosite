@@ -13,7 +13,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run: golangci/lint
+      - golangci/lint
       - restore_cache:
           keys:
             - go-github-ory-fosite-v1-{{ checksum "go.sum" }}
