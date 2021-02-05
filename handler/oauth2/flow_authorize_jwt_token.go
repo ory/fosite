@@ -68,12 +68,12 @@ func (c *AuthorizeJWTGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	token, err := jwt.ParseSigned(assertion)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("Unable to parse jwt token passed in \"assertion\" request parameter.").
+			WithHint("Unable to parse JSON Web Token passed in \"assertion\" request parameter.").
 			WithWrap(err).WithDebug(err.Error()),
 		)
 	}
 
-	// check fo required claims in token, so we can later find public key based on them
+	// Check fo required claims in token, so we can later find public key based on them.
 	if err := c.validateTokenPreRequisites(token); err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func (c *AuthorizeJWTGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(scopes, scope) {
-			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The public key registered for issuer \"%s\" and subject \"%s\" is not allowed to request scope \"%s\".", claims.Issuer, claims.Subject, scope))
 		}
 	}
 
@@ -152,6 +152,13 @@ func (c *AuthorizeJWTGrantHandler) CheckRequest(request fosite.AccessRequester) 
 	if !c.CanHandleTokenEndpointRequest(request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
+
+	// Client Authentication is optional:
+	//
+	// Authentication of the client is optional, as described in
+	//   Section 3.2.1 of OAuth 2.0 [RFC6749] and consequently, the
+	//   "client_id" is only needed when a form of client authentication that
+	//   relies on the parameter is used.
 
 	// if client is authenticated, check grant types
 	if !c.CanSkipClientAuth(request) && !request.GetClient().GetGrantTypes().Has(grantTypeJWTBearer) {
@@ -275,7 +282,7 @@ func (c *AuthorizeJWTGrantHandler) validateTokenClaims(ctx context.Context, clai
 	} else {
 		issuedDate = time.Now()
 	}
-	if claims.Expiry.Time().Sub(issuedDate).Nanoseconds() > c.JWTMaxDuration.Nanoseconds() {
+	if claims.Expiry.Time().Sub(issuedDate) > c.JWTMaxDuration {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHintf(
 				"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future, considering token issued at \"%s\".",
@@ -304,9 +311,14 @@ func (c *AuthorizeJWTGrantHandler) validateTokenClaims(ctx context.Context, clai
 	return nil
 }
 
-func (c *AuthorizeJWTGrantHandler) getSessionFromRequest(requester fosite.AccessRequester) (AuthorizeJWTGrantSession, error) {
+type jwtGrantSession interface {
+	AuthorizeJWTGrantSession
+	fosite.Session
+}
+
+func (c *AuthorizeJWTGrantHandler) getSessionFromRequest(requester fosite.AccessRequester) (jwtGrantSession, error) {
 	session := requester.GetSession()
-	if jwtSession, ok := session.(AuthorizeJWTGrantSession); !ok {
+	if jwtSession, ok := session.(jwtGrantSession); !ok {
 		return nil, errorsx.WithStack(
 			fosite.ErrServerError.WithHintf("Session must be of type AuthorizeJWTGrantSession but got type: %T", session),
 		)

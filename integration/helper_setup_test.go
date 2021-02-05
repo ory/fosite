@@ -126,7 +126,7 @@ var accessTokenLifespan = time.Hour
 var authCodeLifespan = time.Minute
 
 func createIssuerPublicKey(issuer, subject, keyID string, key crypto.PublicKey, scopes []string) storage.IssuerPublicKeys {
-	return storage.IssuerPublicKeys {
+	return storage.IssuerPublicKeys{
 		Issuer: issuer,
 		KeysBySub: map[string]storage.SubjectPublicKeys{
 			subject: {

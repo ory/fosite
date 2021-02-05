@@ -21,12 +21,8 @@
 
 package oauth2
 
-import (
-	"github.com/ory/fosite"
-)
-
+// AuthorizeJWTGrantSession must be implemented by the session if RFC7523 is to be supported.
 type AuthorizeJWTGrantSession interface {
+	// SetSubject sets the session's subject.
 	SetSubject(subject string)
-
-	fosite.Session
 }

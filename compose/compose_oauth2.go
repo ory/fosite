@@ -138,7 +138,7 @@ func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{},
 	}
 }
 
-// OAuth2AuthorizeExplicitFactory creates an OAuth2 authorize jwt grant (using JWTs as Authorization Grants) handler
+// OAuth2AuthorizeJWTGrantFactory creates an OAuth2 Authorize JWT Grant (using JWTs as Authorization Grants) handler
 // and registers an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeJWTGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeJWTGrantHandler{

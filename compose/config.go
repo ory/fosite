@@ -211,11 +211,13 @@ func (c *Config) GetMinParameterEntropy() int {
 	}
 }
 
-// GetJWTMaxDuration returns the maximum time after JWT issued date, during which the JWT is considered valid.
-// Defaults to 30 days.
+// GetJWTMaxDuration specified the maximum amount of allowed `exp` time for a JWT. It compares
+// the time with the JWT's `exp` time if the JWT time is larger, will cause the JWT to be invalid.
+//
+// Defaults to a day.
 func (c *Config) GetJWTMaxDuration() time.Duration {
 	if c.GrantTypeJWTBearerMaxDuration == 0 {
-		return time.Hour * 24 * 30
+		return time.Hour * 24
 	}
 	return c.GrantTypeJWTBearerMaxDuration
 }

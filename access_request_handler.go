@@ -86,16 +86,27 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 
 	var found = false
 	for _, loader := range f.TokenEndpointHandlers {
+		// Is the loader responsible for handling the request?
 		if !loader.CanHandleTokenEndpointRequest(accessRequest) {
 			continue
 		}
+
+		// The handler **is** responsible!
+
+		// Is the client supplied in the request? If not can this handler skip client auth?
 		if !loader.CanSkipClientAuth(accessRequest) && clientErr != nil {
+			// No client and handler can not skip client auth -> error.
 			return accessRequest, clientErr
 		}
+
+		// All good.
 		if err := loader.HandleTokenEndpointRequest(ctx, accessRequest); err == nil {
 			found = true
 		} else if errors.Is(err, ErrUnknownRequest) {
-			// do nothing
+			// This is a duplicate because it should already have been handled by
+			// `loader.CanHandleTokenEndpointRequest(accessRequest)` but let's keep it for sanity.
+			//
+			continue
 		} else if err != nil {
 			return accessRequest, err
 		}

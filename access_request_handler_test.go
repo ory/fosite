@@ -236,6 +236,7 @@ func TestNewAccessRequestWithoutClientAuth(t *testing.T) {
 	defer ctrl.Finish()
 
 	client := &DefaultClient{}
+	anotherClient := &DefaultClient{ID: "another"}
 	fosite := &Fosite{Store: store, Hasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
 	for k, c := range []struct {
 		header    http.Header
@@ -246,6 +247,7 @@ func TestNewAccessRequestWithoutClientAuth(t *testing.T) {
 		expect    *AccessRequest
 		handlers  TokenEndpointHandlers
 	}{
+		// No grant type -> error
 		{
 			form: url.Values{},
 			mock: func() {
@@ -254,6 +256,7 @@ func TestNewAccessRequestWithoutClientAuth(t *testing.T) {
 			method:    "POST",
 			expectErr: ErrInvalidRequest,
 		},
+		// No registered handlers -> error
 		{
 			form: url.Values{
 				"grant_type": {"foo"},
@@ -263,8 +266,9 @@ func TestNewAccessRequestWithoutClientAuth(t *testing.T) {
 			},
 			method:    "POST",
 			expectErr: ErrInvalidRequest,
-			handlers:  TokenEndpointHandlers{}, // no handlers, so expect error
+			handlers:  TokenEndpointHandlers{},
 		},
+		// Handler can skip client auth and ignores missing client.
 		{
 			header: http.Header{
 				"Authorization": {basicAuth("foo", "bar")},
@@ -286,6 +290,7 @@ func TestNewAccessRequestWithoutClientAuth(t *testing.T) {
 			},
 			handlers: TokenEndpointHandlers{handler},
 		},
+		// Should pass if no auth is set in the header and can skip!
 		{
 			form: url.Values{
 				"grant_type": {"foo"},
@@ -298,6 +303,28 @@ func TestNewAccessRequestWithoutClientAuth(t *testing.T) {
 				GrantTypes: Arguments{"foo"},
 				Request: Request{
 					Client: client,
+				},
+			},
+			handlers: TokenEndpointHandlers{handler},
+		},
+		// Should also pass if client auth is set!
+		{
+			header: http.Header{
+				"Authorization": {basicAuth("foo", "bar")},
+			},
+			form: url.Values{
+				"grant_type": {"foo"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "foo").Return(anotherClient, nil).Times(1)
+				hasher.EXPECT().Compare(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
+			},
+			method: "POST",
+			expect: &AccessRequest{
+				GrantTypes: Arguments{"foo"},
+				Request: Request{
+					Client: anotherClient,
 				},
 			},
 			handlers: TokenEndpointHandlers{handler},
@@ -404,9 +431,9 @@ func TestNewAccessRequestWithMixedClientAuth(t *testing.T) {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Any()).Times(0)
 				handlerWithoutClientAuth.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil)
 			},
-			method: "POST",
+			method:    "POST",
 			expectErr: ErrInvalidRequest,
-			handlers: TokenEndpointHandlers{handlerWithoutClientAuth, handlerWithClientAuth},
+			handlers:  TokenEndpointHandlers{handlerWithoutClientAuth, handlerWithClientAuth},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {

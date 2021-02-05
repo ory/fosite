@@ -38,7 +38,7 @@ type AuthorizeJWTGrantRequestHandlerTestSuite struct {
 
 // Setup before each test in the suite.
 func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupSuite() {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 512) // fast RSA for testing
 	if err != nil {
 		s.FailNowf("failed to setup test suite", "failed to generate RSA private key: %s", err.Error())
 	}
@@ -144,7 +144,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestRequestWithMalformedAsser
 	s.True(errors.Is(err, fosite.ErrInvalidGrant))
 	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because of malformed assertion")
 	s.Equal(
-		"Unable to parse jwt token passed in \"assertion\" request parameter.",
+		"Unable to parse JSON Web Token passed in \"assertion\" request parameter.",
 		err.(*fosite.RFC6749Error).HintField,
 	)
 }
@@ -632,7 +632,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithInvalidScope
 	s.True(errors.Is(err, fosite.ErrInvalidScope))
 	s.EqualError(err, fosite.ErrInvalidScope.Error(), "expected error, because requested scopes don't match allowed scope for this assertion")
 	s.Equal(
-		"The OAuth 2.0 Client is not allowed to request scope 'some_scope'.",
+		"The public key registered for issuer \"trusted_issuer\" and subject \"some_ro\" is not allowed to request scope \"some_scope\".",
 		err.(*fosite.RFC6749Error).HintField,
 	)
 }
