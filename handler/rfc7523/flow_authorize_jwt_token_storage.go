@@ -19,10 +19,8 @@
  *
  */
 
-package oauth2
+package rfc7523
 
-// AuthorizeJWTGrantSession must be implemented by the session if RFC7523 is to be supported.
-type AuthorizeJWTGrantSession interface {
-	// SetSubject sets the session's subject.
-	SetSubject(subject string)
+type AuthorizeJWTGrantStorage interface {
+	JWTAuthGrantStorage
 }

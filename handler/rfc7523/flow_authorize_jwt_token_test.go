@@ -1,4 +1,4 @@
-package oauth2
+package rfc7523
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"errors"
 	"fmt"
+	"github.com/ory/fosite/handler/oauth2"
 	mrand "math/rand"
 	"net/url"
 	"strconv"
@@ -72,7 +73,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupTest() {
 		JWTIDOptional:            false,
 		JWTIssuedDateOptional:    false,
 		JWTMaxDuration:           time.Hour * 24 * 30,
-		HandleHelper: &HandleHelper{
+		HandleHelper: &oauth2.HandleHelper{
 			AccessTokenStrategy: s.mockAccessTokenStrategy,
 			AccessTokenStorage:  s.mockAccessTokenStore,
 			AccessTokenLifespan: time.Hour,
@@ -845,7 +846,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) SetupTest() {
 		JWTIDOptional:            false,
 		JWTIssuedDateOptional:    false,
 		JWTMaxDuration:           time.Hour * 24 * 30,
-		HandleHelper: &HandleHelper{
+		HandleHelper: &oauth2.HandleHelper{
 			AccessTokenStrategy: s.mockAccessTokenStrategy,
 			AccessTokenStorage:  s.mockAccessTokenStore,
 			AccessTokenLifespan: time.Hour,

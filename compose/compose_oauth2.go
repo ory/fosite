@@ -23,6 +23,7 @@ package compose
 
 import (
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/rfc7523"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -141,8 +142,8 @@ func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{},
 // OAuth2AuthorizeJWTGrantFactory creates an OAuth2 Authorize JWT Grant (using JWTs as Authorization Grants) handler
 // and registers an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeJWTGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
-	return &oauth2.AuthorizeJWTGrantHandler{
-		AuthorizeJWTGrantStorage: storage.(oauth2.AuthorizeJWTGrantStorage),
+	return &rfc7523.AuthorizeJWTGrantHandler{
+		AuthorizeJWTGrantStorage: storage.(rfc7523.AuthorizeJWTGrantStorage),
 		ScopeStrategy:            config.GetScopeStrategy(),
 		AudienceMatchingStrategy: config.GetAudienceStrategy(),
 		TokenURL:                 config.TokenURL,

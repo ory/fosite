@@ -19,10 +19,11 @@
  *
  */
 
-package oauth2
+package rfc7523
 
 import (
 	"context"
+	"github.com/ory/fosite/handler/oauth2"
 	"time"
 
 	"github.com/ory/fosite"
@@ -50,7 +51,7 @@ type AuthorizeJWTGrantHandler struct {
 	// considered valid. If "iat" claim is not present, then current time will be used as issued date.
 	JWTMaxDuration time.Duration
 
-	*HandleHelper
+	*oauth2.HandleHelper
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything) and
