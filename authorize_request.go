@@ -49,10 +49,11 @@ type AuthorizeRequest struct {
 func NewAuthorizeRequest() *AuthorizeRequest {
 	return &AuthorizeRequest{
 		ResponseTypes:        Arguments{},
-		RedirectURI:          &url.URL{},
 		HandledResponseTypes: Arguments{},
 		Request:              *NewRequest(),
 		ResponseMode:         ResponseModeDefault,
+		// The redirect URL must be unset / nil for redirect detection to work properly:
+		// RedirectURI:          &url.URL{},
 	}
 }
 
