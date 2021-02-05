@@ -22,12 +22,17 @@
 package fosite
 
 import (
+	"github.com/stretchr/testify/require"
 	"net/url"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestAuthorizeRequestURLRegression(t *testing.T) {
+	require.Nil(t, NewAuthorizeRequest().RedirectURI)
+}
 
 func TestAuthorizeRequest(t *testing.T) {
 	var urlparse = func(rawurl string) *url.URL {
