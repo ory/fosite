@@ -28,8 +28,8 @@ import (
 	"gopkg.in/square/go-jose.v2"
 )
 
-// JWTAuthGrantStorage holds information needed to validate jwt assertion in authorization grants.
-type JWTAuthGrantStorage interface {
+// RFC7523KeyStorage holds information needed to validate jwt assertion in authorization grants.
+type RFC7523KeyStorage interface {
 	// GetPublicKey returns public key, issued by 'issuer', and assigned for subject. Public key is used to check
 	// signature of jwt assertion in authorization grants.
 	GetPublicKey(ctx context.Context, issuer string, subject string, keyId string) (*jose.JSONWebKey, error)

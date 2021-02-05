@@ -6,12 +6,13 @@ import (
 	"crypto/rsa"
 	"errors"
 	"fmt"
-	"github.com/ory/fosite/handler/oauth2"
 	mrand "math/rand"
 	"net/url"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/ory/fosite/handler/oauth2"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -30,11 +31,11 @@ type AuthorizeJWTGrantRequestHandlerTestSuite struct {
 
 	privateKey              *rsa.PrivateKey
 	mockCtrl                *gomock.Controller
-	mockStore               *internal.MockAuthorizeJWTGrantStorage
+	mockStore               *internal.MockRFC7523KeyStorage
 	mockAccessTokenStrategy *internal.MockAccessTokenStrategy
 	mockAccessTokenStore    *internal.MockAccessTokenStorage
 	accessRequest           *fosite.AccessRequest
-	handler                 *AuthorizeJWTGrantHandler
+	handler                 *Handler
 }
 
 // Setup before each test in the suite.
@@ -58,14 +59,14 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TearDownTest() {
 // Setup before each test.
 func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
-	s.mockStore = internal.NewMockAuthorizeJWTGrantStorage(s.mockCtrl)
+	s.mockStore = internal.NewMockRFC7523KeyStorage(s.mockCtrl)
 	s.mockAccessTokenStrategy = internal.NewMockAccessTokenStrategy(s.mockCtrl)
 	s.mockAccessTokenStore = internal.NewMockAccessTokenStorage(s.mockCtrl)
 	s.accessRequest = fosite.NewAccessRequest(new(fosite.DefaultSession))
 	s.accessRequest.Form = url.Values{}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
-	s.handler = &AuthorizeJWTGrantHandler{
-		AuthorizeJWTGrantStorage: s.mockStore,
+	s.handler = &Handler{
+		Storage:                  s.mockStore,
 		ScopeStrategy:            fosite.HierarchicScopeStrategy,
 		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 		TokenURL:                 "https://www.example.com/token",
@@ -801,12 +802,12 @@ type AuthorizeJWTGrantPopulateTokenEndpointTestSuite struct {
 
 	privateKey              *rsa.PrivateKey
 	mockCtrl                *gomock.Controller
-	mockStore               *internal.MockAuthorizeJWTGrantStorage
+	mockStore               *internal.MockRFC7523KeyStorage
 	mockAccessTokenStrategy *internal.MockAccessTokenStrategy
 	mockAccessTokenStore    *internal.MockAccessTokenStorage
 	accessRequest           *fosite.AccessRequest
 	accessResponse          *fosite.AccessResponse
-	handler                 *AuthorizeJWTGrantHandler
+	handler                 *Handler
 }
 
 // Setup before each test in the suite.
@@ -830,15 +831,15 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TearDownTest() {
 // Setup before each test.
 func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
-	s.mockStore = internal.NewMockAuthorizeJWTGrantStorage(s.mockCtrl)
+	s.mockStore = internal.NewMockRFC7523KeyStorage(s.mockCtrl)
 	s.mockAccessTokenStrategy = internal.NewMockAccessTokenStrategy(s.mockCtrl)
 	s.mockAccessTokenStore = internal.NewMockAccessTokenStorage(s.mockCtrl)
 	s.accessRequest = fosite.NewAccessRequest(new(fosite.DefaultSession))
 	s.accessRequest.Form = url.Values{}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
 	s.accessResponse = fosite.NewAccessResponse()
-	s.handler = &AuthorizeJWTGrantHandler{
-		AuthorizeJWTGrantStorage: s.mockStore,
+	s.handler = &Handler{
+		Storage:                  s.mockStore,
 		ScopeStrategy:            fosite.HierarchicScopeStrategy,
 		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 		TokenURL:                 "https://www.example.com/token",

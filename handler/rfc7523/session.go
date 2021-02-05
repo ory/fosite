@@ -21,8 +21,8 @@
 
 package rfc7523
 
-// AuthorizeJWTGrantSession must be implemented by the session if RFC7523 is to be supported.
-type AuthorizeJWTGrantSession interface {
+// Session must be implemented by the session if RFC7523 is to be supported.
+type Session interface {
 	// SetSubject sets the session's subject.
 	SetSubject(subject string)
 }

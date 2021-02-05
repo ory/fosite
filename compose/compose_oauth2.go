@@ -23,7 +23,6 @@ package compose
 
 import (
 	"github.com/ory/fosite/handler/oauth2"
-	"github.com/ory/fosite/handler/rfc7523"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -136,25 +135,5 @@ func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{},
 	return &oauth2.StatelessJWTValidator{
 		JWTStrategy:   strategy.(jwt.JWTStrategy),
 		ScopeStrategy: config.GetScopeStrategy(),
-	}
-}
-
-// OAuth2AuthorizeJWTGrantFactory creates an OAuth2 Authorize JWT Grant (using JWTs as Authorization Grants) handler
-// and registers an access token, refresh token and authorize code validator.
-func OAuth2AuthorizeJWTGrantFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
-	return &rfc7523.AuthorizeJWTGrantHandler{
-		AuthorizeJWTGrantStorage: storage.(rfc7523.AuthorizeJWTGrantStorage),
-		ScopeStrategy:            config.GetScopeStrategy(),
-		AudienceMatchingStrategy: config.GetAudienceStrategy(),
-		TokenURL:                 config.TokenURL,
-		SkipClientAuth:           config.GrantTypeJWTBearerCanSkipClientAuth,
-		JWTIDOptional:            config.GrantTypeJWTBearerIDOptional,
-		JWTIssuedDateOptional:    config.GrantTypeJWTBearerIssuedDateOptional,
-		JWTMaxDuration:           config.GetJWTMaxDuration(),
-		HandleHelper: &oauth2.HandleHelper{
-			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
-			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
-			AccessTokenLifespan: config.GetAccessTokenLifespan(),
-		},
 	}
 }

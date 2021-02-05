@@ -255,7 +255,7 @@ func TestIntrospectJWTBearerTokenSuite(t *testing.T) {
 		jwtStrategy,
 		nil,
 		compose.OAuth2ClientCredentialsGrantFactory,
-		compose.OAuth2AuthorizeJWTGrantFactory,
+		compose.RFC7523AssertionGrantFactory,
 		compose.OAuth2TokenIntrospectionFactory,
 	)
 	testServer := mockServer(t, provider, &fosite.DefaultSession{})

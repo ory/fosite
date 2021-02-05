@@ -23,6 +23,7 @@ package oauth2
 
 import (
 	"context"
+
 	"github.com/ory/fosite"
 )
 
