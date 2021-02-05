@@ -63,43 +63,47 @@ func (j *JWTSession) GetJWTHeader() *jwt.Headers {
 	return j.JWTHeader
 }
 
-func (s *JWTSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
-	if s.ExpiresAt == nil {
-		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
+func (j *JWTSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
+	if j.ExpiresAt == nil {
+		j.ExpiresAt = make(map[fosite.TokenType]time.Time)
 	}
-	s.ExpiresAt[key] = exp
+	j.ExpiresAt[key] = exp
 }
 
-func (s *JWTSession) GetExpiresAt(key fosite.TokenType) time.Time {
-	if s.ExpiresAt == nil {
-		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
+func (j *JWTSession) GetExpiresAt(key fosite.TokenType) time.Time {
+	if j.ExpiresAt == nil {
+		j.ExpiresAt = make(map[fosite.TokenType]time.Time)
 	}
 
-	if _, ok := s.ExpiresAt[key]; !ok {
+	if _, ok := j.ExpiresAt[key]; !ok {
 		return time.Time{}
 	}
-	return s.ExpiresAt[key]
+	return j.ExpiresAt[key]
 }
 
-func (s *JWTSession) GetUsername() string {
-	if s == nil {
+func (j *JWTSession) GetUsername() string {
+	if j == nil {
 		return ""
 	}
-	return s.Username
+	return j.Username
 }
 
-func (s *JWTSession) GetSubject() string {
-	if s == nil {
+func (j *JWTSession) SetSubject(subject string) {
+	j.Subject = subject
+}
+
+func (j *JWTSession) GetSubject() string {
+	if j == nil {
 		return ""
 	}
 
-	return s.Subject
+	return j.Subject
 }
 
-func (s *JWTSession) Clone() fosite.Session {
-	if s == nil {
+func (j *JWTSession) Clone() fosite.Session {
+	if j == nil {
 		return nil
 	}
 
-	return deepcopy.Copy(s).(fosite.Session)
+	return deepcopy.Copy(j).(fosite.Session)
 }

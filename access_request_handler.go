@@ -57,7 +57,6 @@ import (
 //   client MUST authenticate with the authorization server as described
 //   in Section 3.2.1.
 func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session Session) (AccessRequester, error) {
-	var err error
 	accessRequest := NewAccessRequest(session)
 
 	if r.Method != "POST" {
@@ -80,18 +79,34 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHint("Request parameter 'grant_type' is missing"))
 	}
 
-	client, err := f.AuthenticateClient(ctx, r, r.PostForm)
-	if err != nil {
-		return accessRequest, err
+	client, clientErr := f.AuthenticateClient(ctx, r, r.PostForm)
+	if clientErr == nil {
+		accessRequest.Client = client
 	}
-	accessRequest.Client = client
 
 	var found = false
 	for _, loader := range f.TokenEndpointHandlers {
+		// Is the loader responsible for handling the request?
+		if !loader.CanHandleTokenEndpointRequest(accessRequest) {
+			continue
+		}
+
+		// The handler **is** responsible!
+
+		// Is the client supplied in the request? If not can this handler skip client auth?
+		if !loader.CanSkipClientAuth(accessRequest) && clientErr != nil {
+			// No client and handler can not skip client auth -> error.
+			return accessRequest, clientErr
+		}
+
+		// All good.
 		if err := loader.HandleTokenEndpointRequest(ctx, accessRequest); err == nil {
 			found = true
 		} else if errors.Is(err, ErrUnknownRequest) {
-			// do nothing
+			// This is a duplicate because it should already have been handled by
+			// `loader.CanHandleTokenEndpointRequest(accessRequest)` but let's keep it for sanity.
+			//
+			continue
 		} else if err != nil {
 			return accessRequest, err
 		}

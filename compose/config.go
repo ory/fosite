@@ -99,6 +99,18 @@ type Config struct {
 	// UseLegacyErrorFormat controls whether the legacy error format (with `error_debug`, `error_hint`, ...)
 	// should be used or not.
 	UseLegacyErrorFormat bool
+
+	// GrantTypeJWTBearerCanSkipClientAuth indicates, if client authentication can be skipped, when using jwt as assertion.
+	GrantTypeJWTBearerCanSkipClientAuth bool
+
+	// GrantTypeJWTBearerIDOptional indicates, if jti (JWT ID) claim required or not in JWT.
+	GrantTypeJWTBearerIDOptional bool
+
+	// GrantTypeJWTBearerIssuedDateOptional indicates, if "iat" (issued at) claim required or not in JWT.
+	GrantTypeJWTBearerIssuedDateOptional bool
+
+	// GrantTypeJWTBearerMaxDuration sets the maximum time after JWT issued date, during which the JWT is considered valid.
+	GrantTypeJWTBearerMaxDuration time.Duration
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
@@ -197,4 +209,15 @@ func (c *Config) GetMinParameterEntropy() int {
 	} else {
 		return c.MinParameterEntropy
 	}
+}
+
+// GetJWTMaxDuration specified the maximum amount of allowed `exp` time for a JWT. It compares
+// the time with the JWT's `exp` time if the JWT time is larger, will cause the JWT to be invalid.
+//
+// Defaults to a day.
+func (c *Config) GetJWTMaxDuration() time.Duration {
+	if c.GrantTypeJWTBearerMaxDuration == 0 {
+		return time.Hour * 24
+	}
+	return c.GrantTypeJWTBearerMaxDuration
 }

@@ -22,6 +22,9 @@
 package integration_test
 
 import (
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -29,14 +32,35 @@ import (
 	"github.com/gorilla/mux"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
+	"gopkg.in/square/go-jose.v2"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/integration/clients"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
+)
+
+const (
+	firstKeyID  = "123"
+	secondKeyID = "321"
+
+	firstJWTBearerIssuer  = "first@example.com"
+	secondJWTBearerIssuer = "second@example.com"
+
+	firstJWTBearerSubject  = "first-service-client"
+	secondJWTBearerSubject = "second-service-client"
+
+	tokenURL          = "https://www.ory.sh/api"
+	tokenRelativePath = "/token"
+)
+
+var (
+	firstPrivateKey, _  = rsa.GenerateKey(rand.Reader, 2048)
+	secondPrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
 )
 
 var fositeStore = &storage.MemoryStore{
@@ -48,7 +72,7 @@ var fositeStore = &storage.MemoryStore{
 			ResponseTypes: []string{"id_token", "code", "token", "token code", "id_token code", "token id_token", "token code id_token"},
 			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 			Scopes:        []string{"fosite", "offline", "openid"},
-			Audience:      []string{"https://www.ory.sh/api"},
+			Audience:      []string{tokenURL},
 		},
 		"public-client": &fosite.DefaultClient{
 			ID:            "public-client",
@@ -58,7 +82,7 @@ var fositeStore = &storage.MemoryStore{
 			ResponseTypes: []string{"id_token", "code", "code id_token"},
 			GrantTypes:    []string{"refresh_token", "authorization_code"},
 			Scopes:        []string{"fosite", "offline", "openid"},
-			Audience:      []string{"https://www.ory.sh/api"},
+			Audience:      []string{tokenURL},
 		},
 	},
 	Users: map[string]storage.MemoryUserRelation{
@@ -67,6 +91,23 @@ var fositeStore = &storage.MemoryStore{
 			Password: "secret",
 		},
 	},
+	IssuerPublicKeys: map[string]storage.IssuerPublicKeys{
+		firstJWTBearerIssuer: createIssuerPublicKey(
+			firstJWTBearerIssuer,
+			firstJWTBearerSubject,
+			firstKeyID,
+			firstPrivateKey.Public(),
+			[]string{"fosite", "gitlab", "example.com", "docker"},
+		),
+		secondJWTBearerIssuer: createIssuerPublicKey(
+			secondJWTBearerIssuer,
+			secondJWTBearerSubject,
+			secondKeyID,
+			secondPrivateKey.Public(),
+			[]string{"fosite"},
+		),
+	},
+	BlacklistedJTIs:        map[string]time.Time{},
 	AuthorizeCodes:         map[string]storage.StoreAuthorizeCode{},
 	PKCES:                  map[string]fosite.Requester{},
 	AccessTokens:           map[string]fosite.Requester{},
@@ -84,6 +125,28 @@ var accessTokenLifespan = time.Hour
 
 var authCodeLifespan = time.Minute
 
+func createIssuerPublicKey(issuer, subject, keyID string, key crypto.PublicKey, scopes []string) storage.IssuerPublicKeys {
+	return storage.IssuerPublicKeys{
+		Issuer: issuer,
+		KeysBySub: map[string]storage.SubjectPublicKeys{
+			subject: {
+				Subject: subject,
+				Keys: map[string]storage.PublicKeyScopes{
+					keyID: {
+						Key: &jose.JSONWebKey{
+							Key:       key,
+							Algorithm: string(jose.RS256),
+							Use:       "sig",
+							KeyID:     keyID,
+						},
+						Scopes: scopes,
+					},
+				},
+			},
+		},
+	}
+}
+
 func newOAuth2Client(ts *httptest.Server) *goauth.Config {
 	return &goauth.Config{
 		ClientID:     "my-client",
@@ -91,7 +154,7 @@ func newOAuth2Client(ts *httptest.Server) *goauth.Config {
 		RedirectURL:  ts.URL + "/callback",
 		Scopes:       []string{"fosite"},
 		Endpoint: goauth.Endpoint{
-			TokenURL:  ts.URL + "/token",
+			TokenURL:  ts.URL + tokenRelativePath,
 			AuthURL:   ts.URL + "/auth",
 			AuthStyle: goauth.AuthStyleInHeader,
 		},
@@ -103,8 +166,12 @@ func newOAuth2AppClient(ts *httptest.Server) *clientcredentials.Config {
 		ClientID:     "my-client",
 		ClientSecret: "foobar",
 		Scopes:       []string{"fosite"},
-		TokenURL:     ts.URL + "/token",
+		TokenURL:     ts.URL + tokenRelativePath,
 	}
+}
+
+func newJWTBearerAppClient(ts *httptest.Server) *clients.JWTBearer {
+	return clients.NewJWTBearer(ts.URL + tokenRelativePath)
 }
 
 var hmacStrategy = &oauth2.HMACSHAStrategy{
@@ -125,7 +192,7 @@ var jwtStrategy = &oauth2.DefaultJWTStrategy{
 func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {
 	router := mux.NewRouter()
 	router.HandleFunc("/auth", authEndpointHandler(t, f, session))
-	router.HandleFunc("/token", tokenEndpointHandler(t, f))
+	router.HandleFunc(tokenRelativePath, tokenEndpointHandler(t, f))
 	router.HandleFunc("/callback", authCallbackHandler(t))
 	router.HandleFunc("/info", tokenInfoHandler(t, f, session))
 	router.HandleFunc("/introspect", tokenIntrospectionHandler(t, f, session))

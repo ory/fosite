@@ -37,9 +37,7 @@ import (
 // HandleTokenEndpointRequest implements
 // * https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything)
 func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	// grant_type REQUIRED.
-	// Value MUST be set to "authorization_code".
-	if !request.GetGrantTypes().ExactOne("authorization_code") {
+	if !c.CanHandleTokenEndpointRequest(request) {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest))
 	}
 
@@ -57,7 +55,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 				WithDebug("GetAuthorizeCodeSession must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedAuthorizeCode\".")
 		}
 
-		//If an authorize code is used twice, we revoke all refresh and access tokens associated with this request.
+		// If an authorize code is used twice, we revoke all refresh and access tokens associated with this request.
 		reqID := authorizeRequest.GetID()
 		hint := "The authorization code has already been used."
 		debug := ""
@@ -133,9 +131,7 @@ func canIssueRefreshToken(c *AuthorizeExplicitGrantHandler, request fosite.Reque
 }
 
 func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	// grant_type REQUIRED.
-	// Value MUST be set to "authorization_code", as this is the explicit grant handler.
-	if !requester.GetGrantTypes().ExactOne("authorization_code") {
+	if !c.CanHandleTokenEndpointRequest(requester) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -207,4 +203,14 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	return nil
+}
+
+func (c *AuthorizeExplicitGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+	return false
+}
+
+func (c *AuthorizeExplicitGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+	// grant_type REQUIRED.
+	// Value MUST be set to "authorization_code"
+	return requester.GetGrantTypes().ExactOne("authorization_code")
 }

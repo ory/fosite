@@ -206,7 +206,7 @@ func (mr *MockAuthorizeRequesterMockRecorder) GetRequestedScopes() *gomock.Call 
 // GetResponseMode mocks base method
 func (m *MockAuthorizeRequester) GetResponseMode() fosite.ResponseModeType {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResponseModes")
+	ret := m.ctrl.Call(m, "GetResponseMode")
 	ret0, _ := ret[0].(fosite.ResponseModeType)
 	return ret0
 }
@@ -214,7 +214,7 @@ func (m *MockAuthorizeRequester) GetResponseMode() fosite.ResponseModeType {
 // GetResponseMode indicates an expected call of GetResponseMode
 func (mr *MockAuthorizeRequesterMockRecorder) GetResponseMode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponseModes", reflect.TypeOf((*MockAuthorizeRequester)(nil).GetResponseMode))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponseMode", reflect.TypeOf((*MockAuthorizeRequester)(nil).GetResponseMode))
 }
 
 // GetResponseTypes mocks base method
@@ -369,18 +369,6 @@ func (m *MockAuthorizeRequester) SetRequestedScopes(arg0 fosite.Arguments) {
 func (mr *MockAuthorizeRequesterMockRecorder) SetRequestedScopes(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRequestedScopes", reflect.TypeOf((*MockAuthorizeRequester)(nil).SetRequestedScopes), arg0)
-}
-
-// SetResponseMode mocks base method
-func (m *MockAuthorizeRequester) SetResponseMode(arg0 fosite.ResponseModeType) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetResponseMode", arg0)
-}
-
-// SetResponseMode indicates an expected call of SetResponseMode
-func (mr *MockAuthorizeRequesterMockRecorder) SetResponseMode(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetResponseMode", reflect.TypeOf((*MockAuthorizeRequester)(nil).SetResponseMode), arg0)
 }
 
 // SetResponseTypeHandled mocks base method
