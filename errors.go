@@ -245,7 +245,7 @@ const (
 	errInsufficientEntropyName     = "insufficient_entropy"
 	errInvalidTokenFormatName      = "invalid_token"
 	errTokenSignatureMismatchName  = "token_signature_mismatch"
-	errTokenExpiredName            = "token_expired"
+	errTokenExpiredName            = "invalid_token" // https://tools.ietf.org/html/rfc6750#section-3.1
 	errScopeNotGrantedName         = "scope_not_granted"
 	errTokenClaimName              = "token_claim"
 	errTokenInactiveName           = "token_inactive"
