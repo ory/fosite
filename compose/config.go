@@ -111,6 +111,9 @@ type Config struct {
 
 	// GrantTypeJWTBearerMaxDuration sets the maximum time after JWT issued date, during which the JWT is considered valid.
 	GrantTypeJWTBearerMaxDuration time.Duration
+
+	// ClientAuthenticationStrategy indicates the Strategy to authenticate client requests
+	ClientAuthenticationStrategy fosite.ClientAuthenticationStrategy
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
@@ -220,4 +223,12 @@ func (c *Config) GetJWTMaxDuration() time.Duration {
 		return time.Hour * 24
 	}
 	return c.GrantTypeJWTBearerMaxDuration
+}
+
+// GetClientAuthenticationStrategy returns the configured client authentication strategy.
+// Defaults to nil.
+// Note that on a nil strategy `fosite.Fosite` fallbacks to its default client authentication strategy
+// `fosite.Fosite.DefaultClientAuthenticationStrategy`
+func (c *Config) GetClientAuthenticationStrategy() fosite.ClientAuthenticationStrategy {
+	return c.ClientAuthenticationStrategy
 }
