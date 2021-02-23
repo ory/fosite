@@ -38,6 +38,9 @@ import (
 	jose "gopkg.in/square/go-jose.v2"
 )
 
+// ClientAuthenticationStrategy provides a method signature for authenticating a client request
+type ClientAuthenticationStrategy func(context.Context, *http.Request, url.Values) (Client, error)
+
 const clientAssertionJWTBearerType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
 func (f *Fosite) findClientPublicJWK(oidcClient OpenIDConnectClient, t *jwt.Token, expectsRSAKey bool) (interface{}, error) {
@@ -66,7 +69,18 @@ func (f *Fosite) findClientPublicJWK(oidcClient OpenIDConnectClient, t *jwt.Toke
 	return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The OAuth 2.0 Client has no JSON Web Keys set registered, but they are needed to complete the request."))
 }
 
+// AuthenticateClient authenticates client requests using the configured strategy
+// `Fosite.ClientAuthenticationStrategy`, if nil it uses `Fosite.DefaultClientAuthenticationStrategy`
 func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form url.Values) (Client, error) {
+	if f.ClientAuthenticationStrategy == nil {
+		return f.DefaultClientAuthenticationStrategy(ctx, r, form)
+	}
+	return f.ClientAuthenticationStrategy(ctx, r, form)
+}
+
+// DefaultClientAuthenticationStrategy provides the fosite's default client authentication strategy,
+// HTTP Basic Authentication and JWT Bearer
+func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *http.Request, form url.Values) (Client, error) {
 	if assertionType := form.Get("client_assertion_type"); assertionType == clientAssertionJWTBearerType {
 		assertion := form.Get("client_assertion")
 		if len(assertion) == 0 {

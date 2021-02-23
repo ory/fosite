@@ -58,19 +58,20 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 	}
 
 	f := &fosite.Fosite{
-		Store:                      storage.(fosite.Storage),
-		AuthorizeEndpointHandlers:  fosite.AuthorizeEndpointHandlers{},
-		TokenEndpointHandlers:      fosite.TokenEndpointHandlers{},
-		TokenIntrospectionHandlers: fosite.TokenIntrospectionHandlers{},
-		RevocationHandlers:         fosite.RevocationHandlers{},
-		Hasher:                     hasher,
-		ScopeStrategy:              config.GetScopeStrategy(),
-		AudienceMatchingStrategy:   config.GetAudienceStrategy(),
-		SendDebugMessagesToClients: config.SendDebugMessagesToClients,
-		TokenURL:                   config.TokenURL,
-		JWKSFetcherStrategy:        config.GetJWKSFetcherStrategy(),
-		MinParameterEntropy:        config.GetMinParameterEntropy(),
-		UseLegacyErrorFormat:       config.UseLegacyErrorFormat,
+		Store:                        storage.(fosite.Storage),
+		AuthorizeEndpointHandlers:    fosite.AuthorizeEndpointHandlers{},
+		TokenEndpointHandlers:        fosite.TokenEndpointHandlers{},
+		TokenIntrospectionHandlers:   fosite.TokenIntrospectionHandlers{},
+		RevocationHandlers:           fosite.RevocationHandlers{},
+		Hasher:                       hasher,
+		ScopeStrategy:                config.GetScopeStrategy(),
+		AudienceMatchingStrategy:     config.GetAudienceStrategy(),
+		SendDebugMessagesToClients:   config.SendDebugMessagesToClients,
+		TokenURL:                     config.TokenURL,
+		JWKSFetcherStrategy:          config.GetJWKSFetcherStrategy(),
+		MinParameterEntropy:          config.GetMinParameterEntropy(),
+		UseLegacyErrorFormat:         config.UseLegacyErrorFormat,
+		ClientAuthenticationStrategy: config.GetClientAuthenticationStrategy(),
 	}
 
 	for _, factory := range factories {
