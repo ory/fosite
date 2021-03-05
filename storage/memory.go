@@ -57,7 +57,7 @@ type MemoryStore struct {
 	AuthorizeCodes  map[string]StoreAuthorizeCode
 	IDSessions      map[string]fosite.Requester
 	AccessTokens    map[string]fosite.Requester
-	RefreshTokens   map[string]fosite.Requester
+	RefreshTokens   map[string]StoreRefreshToken
 	PKCES           map[string]fosite.Requester
 	Users           map[string]MemoryUserRelation
 	BlacklistedJTIs map[string]time.Time
@@ -86,7 +86,7 @@ func NewMemoryStore() *MemoryStore {
 		AuthorizeCodes:         make(map[string]StoreAuthorizeCode),
 		IDSessions:             make(map[string]fosite.Requester),
 		AccessTokens:           make(map[string]fosite.Requester),
-		RefreshTokens:          make(map[string]fosite.Requester),
+		RefreshTokens:          make(map[string]StoreRefreshToken),
 		PKCES:                  make(map[string]fosite.Requester),
 		Users:                  make(map[string]MemoryUserRelation),
 		AccessTokenRequestIDs:  make(map[string]string),
@@ -97,6 +97,11 @@ func NewMemoryStore() *MemoryStore {
 }
 
 type StoreAuthorizeCode struct {
+	active bool
+	fosite.Requester
+}
+
+type StoreRefreshToken struct {
 	active bool
 	fosite.Requester
 }
@@ -132,7 +137,7 @@ func NewExampleStore() *MemoryStore {
 		},
 		AuthorizeCodes:         map[string]StoreAuthorizeCode{},
 		AccessTokens:           map[string]fosite.Requester{},
-		RefreshTokens:          map[string]fosite.Requester{},
+		RefreshTokens:          map[string]StoreRefreshToken{},
 		PKCES:                  map[string]fosite.Requester{},
 		AccessTokenRequestIDs:  map[string]string{},
 		RefreshTokenRequestIDs: map[string]string{},
@@ -311,7 +316,7 @@ func (s *MemoryStore) CreateRefreshTokenSession(_ context.Context, signature str
 	s.refreshTokensMutex.Lock()
 	defer s.refreshTokensMutex.Unlock()
 
-	s.RefreshTokens[signature] = req
+	s.RefreshTokens[signature] = StoreRefreshToken{active: true, Requester: req}
 	s.RefreshTokenRequestIDs[req.GetID()] = signature
 	return nil
 }
@@ -323,6 +328,9 @@ func (s *MemoryStore) GetRefreshTokenSession(_ context.Context, signature string
 	rel, ok := s.RefreshTokens[signature]
 	if !ok {
 		return nil, fosite.ErrNotFound
+	}
+	if !rel.active {
+		return rel, fosite.ErrInactiveToken
 	}
 	return rel, nil
 }
@@ -354,14 +362,12 @@ func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) 
 	defer s.refreshTokenRequestIDsMutex.Unlock()
 
 	if signature, exists := s.RefreshTokenRequestIDs[requestID]; exists {
-		err1 := s.DeleteRefreshTokenSession(ctx, signature)
-		err2 := s.DeleteAccessTokenSession(ctx, signature)
-		if err1 != nil {
-			return err1
+		rel, ok := s.RefreshTokens[signature]
+		if !ok {
+			return fosite.ErrNotFound
 		}
-		if err2 != nil {
-			return err2
-		}
+		rel.active = false
+		s.RefreshTokens[signature] = rel
 	}
 	return nil
 }
