@@ -7,6 +7,7 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/golang/mock v1.4.3
 	github.com/gorilla/mux v1.7.4
+	github.com/gorilla/websocket v1.4.2
 	github.com/magiconair/properties v1.8.1
 	github.com/mattn/goveralls v0.0.6
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
