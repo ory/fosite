@@ -229,6 +229,36 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
 					},
 				},
+				{
+					description: "should deny access on token reuse",
+					setup: func() {
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClient{
+							ID:         "foo",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"foo", "bar", "offline"},
+						}
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						req := &fosite.Request{
+							Client:         areq.Client,
+							GrantedScope:   fosite.Arguments{"foo", "offline"},
+							RequestedScope: fosite.Arguments{"foo", "bar", "offline"},
+							Session:        sess,
+							Form:           url.Values{"foo": []string{"bar"}},
+							RequestedAt:    time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+						}
+						err = store.CreateRefreshTokenSession(nil, sig, req)
+						require.NoError(t, err)
+
+						err = store.RevokeRefreshToken(nil, req.ID)
+						require.NoError(t, err)
+					},
+					expectErr: fosite.ErrInactiveToken,
+				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
 					h = RefreshTokenGrantHandler{
@@ -256,6 +286,91 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						c.expect(t)
 					}
 				})
+			}
+		})
+	}
+}
+
+func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
+	var mockTransactional *internal.MockTransactional
+	var mockRevocationStore *internal.MockTokenRevocationStorage
+	request := fosite.NewAccessRequest(&fosite.DefaultSession{})
+	propagatedContext := context.Background()
+
+	type transactionalStore struct {
+		storage.Transactional
+		TokenRevocationStorage
+	}
+
+	for _, testCase := range []struct {
+		description string
+		setup       func()
+		expectError error
+	}{
+		{
+			description: "should revoke session on token reuse",
+			setup: func() {
+				request.GrantTypes = fosite.Arguments{"refresh_token"}
+				request.Client = &fosite.DefaultClient{
+					ID:         "foo",
+					GrantTypes: fosite.Arguments{"refresh_token"},
+				}
+				mockRevocationStore.
+					EXPECT().
+					GetRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
+					Return(request, fosite.ErrInactiveToken).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil).
+					Times(1)
+				mockRevocationStore.
+					EXPECT().
+					DeleteRefreshTokenSession(propagatedContext, gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockRevocationStore.
+					EXPECT().
+					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockRevocationStore.
+					EXPECT().
+					RevokeAccessToken(propagatedContext, gomock.Any()).
+					Return(nil).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					Commit(propagatedContext).
+					Return(nil).
+					Times(1)
+			},
+			expectError: fosite.ErrInactiveToken,
+		},
+	} {
+		t.Run(fmt.Sprintf("scenario=%s", testCase.description), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			mockTransactional = internal.NewMockTransactional(ctrl)
+			mockRevocationStore = internal.NewMockTokenRevocationStorage(ctrl)
+			testCase.setup()
+
+			handler := RefreshTokenGrantHandler{
+				TokenRevocationStorage: transactionalStore{
+					mockTransactional,
+					mockRevocationStore,
+				},
+				AccessTokenStrategy:      &hmacshaStrategy,
+				RefreshTokenStrategy:     &hmacshaStrategy,
+				AccessTokenLifespan:      time.Hour,
+				ScopeStrategy:            fosite.HierarchicScopeStrategy,
+				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+			}
+
+			if err := handler.HandleTokenEndpointRequest(propagatedContext, request); testCase.expectError != nil {
+				assert.EqualError(t, err, testCase.expectError.Error())
 			}
 		})
 	}

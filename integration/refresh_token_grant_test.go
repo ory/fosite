@@ -203,6 +203,25 @@ func TestRefreshTokenFlow(t *testing.T) {
 			pass:  true,
 			check: func(t *testing.T, original, refreshed *oauth2.Token, or, rr *introspectionResponse) {},
 		},
+		{
+			description: "should deny access if original token was reused",
+			setup: func(t *testing.T) {
+				oauthClient.Scopes = []string{"offline"}
+			},
+			pass: true,
+			check: func(t *testing.T, original, refreshed *oauth2.Token, or, rr *introspectionResponse) {
+				tokenSource := oauthClient.TokenSource(oauth2.NoContext, original)
+				_, err := tokenSource.Token()
+				require.Error(t, err)
+				require.Equal(t, http.StatusUnauthorized, err.(*oauth2.RetrieveError).Response.StatusCode)
+
+				refreshed.Expiry = refreshed.Expiry.Add(-time.Hour * 24)
+				tokenSource = oauthClient.TokenSource(oauth2.NoContext, refreshed)
+				_, err = tokenSource.Token()
+				require.Error(t, err)
+				require.Equal(t, http.StatusUnauthorized, err.(*oauth2.RetrieveError).Response.StatusCode)
+			},
+		},
 	} {
 		t.Run("case="+c.description, func(t *testing.T) {
 			c.setup(t)
