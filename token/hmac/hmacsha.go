@@ -19,7 +19,7 @@
  *
  */
 
-// Package hmac is the default implementation for generating and validating challenges. It uses HMAC-SHA256 to
+// Package hmac is the default implementation for generating and validating challenges. It uses HMAC-SHA512_256 to
 // generate and validate challenges.
 
 package hmac
