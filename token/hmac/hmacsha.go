@@ -64,7 +64,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 	defer c.Unlock()
 
 	if len(c.GlobalSecret) < minimumSecretLength {
-		return "", "", errors.Errorf("secret for signing HMAC-SHA512_256 is expected to be 32 byte long, got %d byte", len(c.GlobalSecret))
+		return "", "", errors.Errorf("secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got %d byte", len(c.GlobalSecret))
 	}
 
 	var signingKey [32]byte
