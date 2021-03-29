@@ -115,7 +115,7 @@ func (c *HMACStrategy) Validate(token string) (err error) {
 	}
 
 	if err == nil {
-		return errors.New("a secret for signing HMAC-SHA256 is expected to be defined, but none were")
+		return errors.New("a secret for signing HMAC-SHA512/256 is expected to be defined, but none were")
 	}
 
 	return err
@@ -123,7 +123,7 @@ func (c *HMACStrategy) Validate(token string) (err error) {
 
 func (c *HMACStrategy) validate(secret []byte, token string) error {
 	if len(secret) < minimumSecretLength {
-		return errors.Errorf("secret for signing HMAC-SHA256 is expected to be 32 byte long, got %d byte", len(secret))
+		return errors.Errorf("secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got %d byte", len(secret))
 	}
 
 	var signingKey [32]byte
