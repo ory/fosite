@@ -4,7 +4,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
 
-- [Unreleased (2021-03-29)](#unreleased-2021-03-29)
+- [Unreleased (2021-03-30)](#unreleased-2021-03-30)
     - [Bug Fixes](#bug-fixes)
     - [Tests](#tests)
 - [0.39.0 (2021-03-08)](#0390-2021-03-08)
@@ -339,12 +339,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [Unreleased](https://github.com/ory/fosite/compare/v0.39.0...a3594a3cb0eb70e912a7268d2d396d19a45116c6) (2021-03-29)
+# [Unreleased](https://github.com/ory/fosite/compare/v0.39.0...9a9467a20391059534df859b2b295711918bfd08) (2021-03-30)
 
 
 ### Bug Fixes
 
 * Sha alg name in error message and go doc ([#571](https://github.com/ory/fosite/issues/571)) ([0f2e289](https://github.com/ory/fosite/commit/0f2e289973ad22d14c5d5bedd4fc9bb886134354))
+* Upgrade gogo protubuf ([#573](https://github.com/ory/fosite/issues/573)) ([9a9467a](https://github.com/ory/fosite/commit/9a9467a20391059534df859b2b295711918bfd08))
 
 
 ### Tests
