@@ -27,6 +27,9 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+
+	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/token/jwt"
 )
 
 // WriteIntrospectionError responds with token metadata discovered by token introspection as defined in
@@ -215,11 +218,22 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 			for name, value := range extraClaims {
 				switch name {
 				// We do not allow these to be set through extra claims.
-				case "exp", "client_id", "scope", "iat", "sub", "aud", "username":
+				case "exp", "client_id", "scope", "iat", "sub", "aud", "username", "iss", "jti", "nbf":
 					continue
 				default:
 					response[name] = value
 				}
+			}
+		}
+	}
+
+	// We make a clone so that WithScopeField does not change the original value.
+	jwtSession, ok := r.GetAccessRequester().GetSession().Clone().(oauth2.JWTSessionContainer)
+	if ok {
+		claims := jwtSession.GetJWTClaims()
+		if claims != nil {
+			for name, value := range claims.WithScopeField(jwt.JWTScopeFieldString).ToMapClaims() {
+				response[name] = value
 			}
 		}
 	}
