@@ -216,7 +216,7 @@ func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r Introspect
 				switch name {
 				// We do not allow these to be set through extra claims.
 				case "exp", "client_id", "scope", "iat", "sub", "aud", "username":
-					break
+					continue
 				default:
 					response[name] = value
 				}
