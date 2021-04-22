@@ -351,7 +351,7 @@ func (s *MemoryStore) Authenticate(_ context.Context, name string, secret string
 		return fosite.ErrNotFound
 	}
 	if rel.Password != secret {
-		return fosite.ErrNotFound
+		return fosite.ErrNotFound.WithDebug("Invalid credentials")
 	}
 	return nil
 }
