@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"testing"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
+	jwtgo "github.com/form3tech-oss/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"

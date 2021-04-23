@@ -30,7 +30,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
+	jwtgo "github.com/form3tech-oss/jwt-go"
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"

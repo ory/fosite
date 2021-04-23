@@ -33,7 +33,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/form3tech-oss/jwt-go"
 	"github.com/pkg/errors"
 	jose "gopkg.in/square/go-jose.v2"
 )

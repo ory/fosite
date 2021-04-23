@@ -3,8 +3,7 @@ module github.com/ory/fosite
 require (
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/form3tech-oss/jwt-go v3.2.2+incompatible
 	github.com/golang/mock v1.4.4
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.2
@@ -23,7 +22,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/tools v0.0.0-20210106214847-113979e3529a // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1
 )
 

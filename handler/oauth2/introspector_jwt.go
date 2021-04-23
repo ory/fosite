@@ -25,7 +25,7 @@ import (
 	"context"
 	"time"
 
-	jwtx "github.com/dgrijalva/jwt-go"
+	jwtx "github.com/form3tech-oss/jwt-go"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"

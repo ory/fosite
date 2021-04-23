@@ -24,7 +24,7 @@ package openid
 import (
 	"testing"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
+	jwtgo "github.com/form3tech-oss/jwt-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

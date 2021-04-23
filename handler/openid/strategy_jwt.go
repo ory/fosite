@@ -28,7 +28,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
+	jwtgo "github.com/form3tech-oss/jwt-go"
 	"github.com/mohae/deepcopy"
 	"github.com/pkg/errors"
 

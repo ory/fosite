@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/form3tech-oss/jwt-go"
 	"github.com/pborman/uuid"
 )
 
@@ -57,7 +57,7 @@ type JWTClaimsContainer interface {
 	// WithScopeField configures how a scope field should be represented in JWT.
 	WithScopeField(scopeField JWTScopeFieldEnum) JWTClaimsContainer
 
-	// ToMapClaims returns the claims as a github.com/dgrijalva/jwt-go.MapClaims type.
+	// ToMapClaims returns the claims as a github.com/form3tech-oss/jwt-go.MapClaims type.
 	ToMapClaims() jwt.MapClaims
 }
 

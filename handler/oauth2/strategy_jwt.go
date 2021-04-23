@@ -28,7 +28,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	jwtx "github.com/dgrijalva/jwt-go"
+	jwtx "github.com/form3tech-oss/jwt-go"
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"

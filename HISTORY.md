@@ -159,7 +159,7 @@ type JWTSessionContainer interface {
 +	// values are already set in the claims, they will not be updated.
 +	WithDefaults(iat time.Time, issuer string) JWTClaimsContainer
 +
-+	// ToMapClaims returns the claims as a github.com/dgrijalva/jwt-go.MapClaims type.
++	// ToMapClaims returns the claims as a github.com/form3tech-oss/jwt-go.MapClaims type.
 +	ToMapClaims() jwt.MapClaims
 + }
 ```

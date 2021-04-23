@@ -21,7 +21,7 @@
 
 package jwt
 
-import jwt "github.com/dgrijalva/jwt-go"
+import jwt "github.com/form3tech-oss/jwt-go"
 
 // Headers is the jwt headers
 type Headers struct {
