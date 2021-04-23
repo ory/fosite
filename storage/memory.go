@@ -26,7 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"gopkg.in/square/go-jose.v2"
 
 	"github.com/ory/fosite"
@@ -352,7 +351,7 @@ func (s *MemoryStore) Authenticate(_ context.Context, name string, secret string
 		return fosite.ErrNotFound
 	}
 	if rel.Password != secret {
-		return errors.New("Invalid credentials")
+		return fosite.ErrNotFound.WithDebug("Invalid credentials")
 	}
 	return nil
 }
