@@ -85,6 +85,7 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 		setup       func()
 		active      bool
 		hasExp      bool
+		hasExtra    bool
 	}{
 		{
 			description: "should success for not expired access token",
@@ -95,8 +96,9 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				sess.SetExpiresAt(ires.TokenUse, time.Now().Add(time.Hour*2))
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
-			active: true,
-			hasExp: true,
+			active:   true,
+			hasExp:   true,
+			hasExtra: false,
 		},
 		{
 			description: "should success for expired access token",
@@ -107,8 +109,9 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				sess.SetExpiresAt(ires.TokenUse, time.Now().Add(-time.Hour*2))
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
-			active: false,
-			hasExp: false,
+			active:   false,
+			hasExp:   false,
+			hasExtra: false,
 		},
 		{
 			description: "should success for ExpiresAt not set access token",
@@ -119,17 +122,42 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				sess.SetExpiresAt(ires.TokenUse, time.Time{})
 				ires.AccessRequester = NewAccessRequest(sess)
 			},
-			active: true,
-			hasExp: false,
+			active:   true,
+			hasExp:   false,
+			hasExtra: false,
+		},
+		{
+			description: "should output extra claims",
+			setup: func() {
+				ires.Active = true
+				ires.TokenUse = AccessToken
+				sess := &DefaultSession{}
+				sess.GetExtraClaims()["extra"] = "foobar"
+				// We try to set these, but they should be ignored.
+				for _, field := range []string{"exp", "client_id", "scope", "iat", "sub", "aud", "username"} {
+					sess.GetExtraClaims()[field] = "invalid"
+				}
+				sess.SetExpiresAt(ires.TokenUse, time.Time{})
+				ires.AccessRequester = NewAccessRequest(sess)
+			},
+			active:   true,
+			hasExp:   false,
+			hasExtra: true,
 		},
 	} {
 		t.Run(c.description, func(t *testing.T) {
 			c.setup()
 			f.WriteIntrospectionResponse(rw, ires)
 			var params struct {
-				Active bool   `json:"active"`
-				Exp    *int64 `json:"exp"`
-				Iat    *int64 `json:"iat"`
+				Active   bool   `json:"active"`
+				Exp      *int64 `json:"exp"`
+				Iat      *int64 `json:"iat"`
+				Extra    string `json:"extra"`
+				ClientId string `json:"client_id"`
+				Scope    string `json:"scope"`
+				Subject  string `json:"sub"`
+				Audience string `json:"aud"`
+				Username string `json:"username"`
 			}
 			assert.Equal(t, 200, rw.Code)
 			err := json.NewDecoder(rw.Body).Decode(&params)
@@ -142,6 +170,18 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 				} else {
 					assert.Nil(t, params.Exp)
 				}
+				if c.hasExtra {
+					assert.Equal(t, params.Extra, "foobar")
+				} else {
+					assert.Empty(t, params.Extra)
+				}
+				assert.NotEqual(t, "invalid", params.Exp)
+				assert.NotEqual(t, "invalid", params.ClientId)
+				assert.NotEqual(t, "invalid", params.Scope)
+				assert.NotEqual(t, "invalid", params.Iat)
+				assert.NotEqual(t, "invalid", params.Subject)
+				assert.NotEqual(t, "invalid", params.Audience)
+				assert.NotEqual(t, "invalid", params.Username)
 			}
 		})
 	}
