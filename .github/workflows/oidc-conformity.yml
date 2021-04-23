@@ -12,11 +12,6 @@ jobs:
   oidc-conformity:
     runs-on: ubuntu-latest
     steps:
-      - run: echo ${{ github.sha }}
-      - run: "echo $GITHUB_SHA"
-      - name: Checkout repository
-        uses: actions/checkout@v2
-      - run: git rev-parse HEAD
       - name: Checkout repository
         uses: actions/checkout@v2
         with:
@@ -27,7 +22,7 @@ jobs:
         with:
           go-version: '^1.15.0'
       - name: Update fosite
-        run: go get github.com/ory/fosite@${{ github.sha }}
+        run: go get github.com/ory/fosite@${{ github.event.pull_request.head.sha }}
       - name: Start service
         run: ./test/conformance/start.sh
       - name: Run tests
