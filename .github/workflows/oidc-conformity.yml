@@ -16,6 +16,9 @@ jobs:
       - run: "echo $GITHUB_SHA"
       - name: Checkout repository
         uses: actions/checkout@v2
+      - run: git rev-parse HEAD
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
           fetch-depth: 2
           repository: ory/hydra
