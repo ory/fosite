@@ -15,7 +15,7 @@ require (
 	github.com/magiconair/properties v1.8.1
 	github.com/mattn/goveralls v0.0.6
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
-	github.com/oleiade/reflections v1.0.0
+	github.com/oleiade/reflections v1.0.1
 	github.com/ory/go-acc v0.2.6
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/x v0.0.212
