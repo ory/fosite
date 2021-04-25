@@ -62,6 +62,10 @@ type AuthorizeExplicitGrantHandler struct {
 	IsRedirectURISecure func(*url.URL) bool
 
 	RefreshTokenScopes []string
+
+	// OmitRedirectScopeParam must be set to true if the scope query param is to be omitted
+	// in the authorization's redirect URI
+	OmitRedirectScopeParam bool
 }
 
 func (c *AuthorizeExplicitGrantHandler) secureChecker() func(*url.URL) bool {
@@ -115,7 +119,9 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 
 	resp.AddParameter("code", code)
 	resp.AddParameter("state", ar.GetState())
-	resp.AddParameter("scope", strings.Join(ar.GetGrantedScopes(), " "))
+	if !c.OmitRedirectScopeParam {
+		resp.AddParameter("scope", strings.Join(ar.GetGrantedScopes(), " "))
+	}
 
 	ar.SetResponseTypeHandled("code")
 	return nil

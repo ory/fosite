@@ -45,19 +45,21 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
-			h := AuthorizeExplicitGrantHandler{
+			handler := AuthorizeExplicitGrantHandler{
 				CoreStorage:              store,
 				AuthorizeCodeStrategy:    strategy,
 				ScopeStrategy:            fosite.HierarchicScopeStrategy,
 				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 			}
 			for _, c := range []struct {
+				handler     AuthorizeExplicitGrantHandler
 				areq        *fosite.AuthorizeRequest
 				description string
 				expectErr   error
 				expect      func(t *testing.T, areq *fosite.AuthorizeRequest, aresp *fosite.AuthorizeResponse)
 			}{
 				{
+					handler: handler,
 					areq: &fosite.AuthorizeRequest{
 						ResponseTypes: fosite.Arguments{""},
 						Request:       *fosite.NewRequest(),
@@ -65,6 +67,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					description: "should pass because not responsible for handling an empty response type",
 				},
 				{
+					handler: handler,
 					areq: &fosite.AuthorizeRequest{
 						ResponseTypes: fosite.Arguments{"foo"},
 						Request:       *fosite.NewRequest(),
@@ -72,6 +75,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					description: "should pass because not responsible for handling an invalid response type",
 				},
 				{
+					handler: handler,
 					areq: &fosite.AuthorizeRequest{
 						ResponseTypes: fosite.Arguments{"code"},
 						Request: fosite.Request{
@@ -86,6 +90,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					expectErr:   fosite.ErrInvalidRequest,
 				},
 				{
+					handler: handler,
 					areq: &fosite.AuthorizeRequest{
 						ResponseTypes: fosite.Arguments{"code"},
 						Request: fosite.Request{
@@ -102,6 +107,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					expectErr:   fosite.ErrInvalidRequest,
 				},
 				{
+					handler: handler,
 					areq: &fosite.AuthorizeRequest{
 						ResponseTypes: fosite.Arguments{"code"},
 						Request: fosite.Request{
@@ -130,10 +136,46 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 						assert.Equal(t, fosite.ResponseModeQuery, areq.GetResponseMode())
 					},
 				},
+				{
+					handler: AuthorizeExplicitGrantHandler{
+						CoreStorage:              store,
+						AuthorizeCodeStrategy:    strategy,
+						ScopeStrategy:            fosite.HierarchicScopeStrategy,
+						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+						OmitRedirectScopeParam:   true,
+					},
+					areq: &fosite.AuthorizeRequest{
+						ResponseTypes: fosite.Arguments{"code"},
+						Request: fosite.Request{
+							Client: &fosite.DefaultClient{
+								ResponseTypes: fosite.Arguments{"code"},
+								RedirectURIs:  []string{"https://asdf.de/cb"},
+								Audience:      []string{"https://www.ory.sh/api"},
+							},
+							RequestedAudience: []string{"https://www.ory.sh/api"},
+							GrantedScope:      fosite.Arguments{"a", "b"},
+							Session: &fosite.DefaultSession{
+								ExpiresAt: map[fosite.TokenType]time.Time{fosite.AccessToken: time.Now().UTC().Add(time.Hour)},
+							},
+							RequestedAt: time.Now().UTC(),
+						},
+						State:       "superstate",
+						RedirectURI: parseUrl("https://asdf.de/cb"),
+					},
+					description: "should pass but no scope in redirect uri",
+					expect: func(t *testing.T, areq *fosite.AuthorizeRequest, aresp *fosite.AuthorizeResponse) {
+						code := aresp.GetParameters().Get("code")
+						assert.NotEmpty(t, code)
+
+						assert.Empty(t, aresp.GetParameters().Get("scope"))
+						assert.Equal(t, areq.State, aresp.GetParameters().Get("state"))
+						assert.Equal(t, fosite.ResponseModeQuery, areq.GetResponseMode())
+					},
+				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
 					aresp := fosite.NewAuthorizeResponse()
-					err := h.HandleAuthorizeEndpointRequest(nil, c.areq, aresp)
+					err := c.handler.HandleAuthorizeEndpointRequest(nil, c.areq, aresp)
 					if c.expectErr != nil {
 						require.EqualError(t, err, c.expectErr.Error())
 					} else {
