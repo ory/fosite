@@ -28,9 +28,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/x/errorsx"
+	"gopkg.in/square/go-jose.v2"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 
 	"github.com/ory/go-convenience/stringslice"
@@ -101,7 +102,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 		assertion = string(body)
 	}
 
-	token, err := jwt.ParseWithClaims(assertion, new(jwt.MapClaims), func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(assertion, jwt.MapClaims{}, func(t *jwt.Token) (interface{}, error) {
 		// request_object_signing_alg - OPTIONAL.
 		//  JWS [JWS] alg algorithm [JWA] that MUST be used for signing Request Objects sent to the OP. All Request Objects from this Client MUST be rejected,
 		// 	if not signed with this algorithm. Request Objects are described in Section 6.1 of OpenID Connect Core 1.0 [OpenID.Core]. This algorithm MUST
@@ -111,26 +112,22 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 			return nil, errorsx.WithStack(ErrInvalidRequestObject.WithHintf("The request object uses signing algorithm '%s', but the requested OAuth 2.0 Client enforces signing algorithm '%s'.", t.Header["alg"], oidcClient.GetRequestObjectSigningAlgorithm()))
 		}
 
-		if t.Method == jwt.SigningMethodNone {
-			return jwt.UnsafeAllowNoneSignatureType, nil
-		}
-
-		switch t.Method.(type) {
-		case *jwt.SigningMethodRSA:
+		switch t.Method {
+		case jose.RS256, jose.RS384, jose.RS512:
 			key, err := f.findClientPublicJWK(oidcClient, t, true)
 			if err != nil {
 				return nil, wrapSigningKeyFailure(
 					ErrInvalidRequestObject.WithHint("Unable to retrieve RSA signing key from OAuth 2.0 Client."), err)
 			}
 			return key, nil
-		case *jwt.SigningMethodECDSA:
+		case jose.ES256, jose.ES384, jose.ES512:
 			key, err := f.findClientPublicJWK(oidcClient, t, false)
 			if err != nil {
 				return nil, wrapSigningKeyFailure(
 					ErrInvalidRequestObject.WithHint("Unable to retrieve ECDSA signing key from OAuth 2.0 Client."), err)
 			}
 			return key, nil
-		case *jwt.SigningMethodRSAPSS:
+		case jose.PS256, jose.PS384, jose.PS512:
 			key, err := f.findClientPublicJWK(oidcClient, t, true)
 			if err != nil {
 				return nil, wrapSigningKeyFailure(
@@ -155,12 +152,8 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 		return errorsx.WithStack(ErrInvalidRequestObject.WithHint("Unable to verify the request object because its claims could not be validated, check if the expiry time is set correctly.").WithWrap(err).WithDebug(err.Error()))
 	}
 
-	claims, ok := token.Claims.(*jwt.MapClaims)
-	if !ok {
-		return errorsx.WithStack(ErrInvalidRequestObject.WithHint("Unable to type assert claims from request object.").WithDebugf(`Got claims of type %T but expected type '*jwt.MapClaims'.`, token.Claims))
-	}
-
-	for k, v := range *claims {
+	claims := token.Claims
+	for k, v := range claims {
 		request.Form.Set(k, fmt.Sprintf("%s", v))
 	}
 

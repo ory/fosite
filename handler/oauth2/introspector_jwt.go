@@ -25,8 +25,6 @@ import (
 	"context"
 	"time"
 
-	jwtx "github.com/dgrijalva/jwt-go"
-
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
 )
@@ -37,8 +35,8 @@ type StatelessJWTValidator struct {
 }
 
 // AccessTokenJWTToRequest tries to reconstruct fosite.Request from a JWT.
-func AccessTokenJWTToRequest(token *jwtx.Token) fosite.Requester {
-	mapClaims := token.Claims.(jwtx.MapClaims)
+func AccessTokenJWTToRequest(token *jwt.Token) fosite.Requester {
+	mapClaims := token.Claims
 	claims := jwt.JWTClaims{}
 	claims.FromMapClaims(mapClaims)
 

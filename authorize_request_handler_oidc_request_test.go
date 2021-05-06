@@ -33,14 +33,14 @@ import (
 
 	"github.com/pkg/errors"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	jose "gopkg.in/square/go-jose.v2"
 )
 
 func mustGenerateAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token := jwt.NewWithClaims(jose.RS256, claims)
 	if kid != "" {
 		token.Header["kid"] = kid
 	}
@@ -50,15 +50,8 @@ func mustGenerateAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateK
 }
 
 func mustGenerateHSAssertion(t *testing.T, claims jwt.MapClaims) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jose.HS256, claims)
 	tokenString, err := token.SignedString([]byte("aaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccddddddddddddddddddddddd"))
-	require.NoError(t, err)
-	return tokenString
-}
-
-func mustGenerateNoneAssertion(t *testing.T, claims jwt.MapClaims) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodNone, claims)
-	tokenString, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
 	require.NoError(t, err)
 	return tokenString
 }
@@ -80,7 +73,6 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 
 	validRequestObject := mustGenerateAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz", "response_type": "token", "response_mode": "post_form"}, key, "kid-foo")
 	validRequestObjectWithoutKid := mustGenerateAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz"}, key, "")
-	validNoneRequestObject := mustGenerateNoneAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz", "state": "some-state"})
 
 	var reqH http.HandlerFunc = func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte(validRequestObject))
@@ -190,18 +182,6 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "RS256", RequestURIs: []string{reqTS.URL}},
 			expectForm: url.Values{"response_type": {"token"}, "response_mode": {"post_form"}, "scope": {"foo openid"}, "request_uri": {reqTS.URL}, "foo": {"bar"}, "baz": {"baz"}},
 		},
-		{
-			d:          "should pass when request object uses algorithm none",
-			form:       url.Values{"scope": {"openid"}, "request": {validNoneRequestObject}},
-			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "none"},
-			expectForm: url.Values{"state": {"some-state"}, "scope": {"foo openid"}, "request": {validNoneRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
-		},
-		{
-			d:          "should pass when request object uses algorithm none and the client did not explicitly allow any algorithm",
-			form:       url.Values{"scope": {"openid"}, "request": {validNoneRequestObject}},
-			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL},
-			expectForm: url.Values{"state": {"some-state"}, "scope": {"foo openid"}, "request": {validNoneRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
-		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			req := &AuthorizeRequest{
@@ -217,10 +197,15 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 				if tc.expectErrReason != "" {
 					real := new(RFC6749Error)
 					require.True(t, errors.As(err, &real))
-					assert.EqualValues(t, real.Reason(), tc.expectErrReason)
+					assert.EqualValues(t, tc.expectErrReason, real.Reason())
 				}
 			} else {
-				require.NoError(t, err)
+				if err != nil {
+					real := new(RFC6749Error)
+					errors.As(err, &real)
+					require.NoErrorf(t, err, "Hint: %v\nDebug:%v", real.HintField, real.DebugField)
+				}
+				require.NoErrorf(t, err, "%+v", err)
 				require.Equal(t, len(tc.expectForm), len(req.Form))
 				for k, v := range tc.expectForm {
 					assert.EqualValues(t, v, req.Form[k])

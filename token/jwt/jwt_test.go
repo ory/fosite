@@ -30,8 +30,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ory/fosite/internal"
 )
 
 var header = &Headers{
@@ -48,13 +46,13 @@ func TestHash(t *testing.T) {
 		{
 			d: "RS256JWTStrategy",
 			strategy: &RS256JWTStrategy{
-				PrivateKey: internal.MustRSAKey(),
+				PrivateKey: MustRSAKey(),
 			},
 		},
 		{
 			d: "ES256JWTStrategy",
 			strategy: &ES256JWTStrategy{
-				PrivateKey: internal.MustECDSAKey(),
+				PrivateKey: MustECDSAKey(),
 			},
 		},
 	} {
@@ -103,19 +101,19 @@ func TestGenerateJWT(t *testing.T) {
 		{
 			d: "RS256JWTStrategy",
 			strategy: &RS256JWTStrategy{
-				PrivateKey: internal.MustRSAKey(),
+				PrivateKey: MustRSAKey(),
 			},
 			resetKey: func(strategy JWTStrategy) {
-				strategy.(*RS256JWTStrategy).PrivateKey = internal.MustRSAKey()
+				strategy.(*RS256JWTStrategy).PrivateKey = MustRSAKey()
 			},
 		},
 		{
 			d: "ES256JWTStrategy",
 			strategy: &ES256JWTStrategy{
-				PrivateKey: internal.MustECDSAKey(),
+				PrivateKey: MustECDSAKey(),
 			},
 			resetKey: func(strategy JWTStrategy) {
-				strategy.(*ES256JWTStrategy).PrivateKey = internal.MustECDSAKey()
+				strategy.(*ES256JWTStrategy).PrivateKey = MustECDSAKey()
 			},
 		},
 	} {
@@ -149,7 +147,6 @@ func TestGenerateJWT(t *testing.T) {
 			token, sig, err = tc.strategy.Generate(context.TODO(), claims.ToMapClaims(), header)
 			require.NoError(t, err)
 			require.NotNil(t, token)
-			//t.Logf("%s.%s", token, sig)
 
 			sig, err = tc.strategy.Validate(context.TODO(), token)
 			require.Error(t, err)
@@ -177,13 +174,13 @@ func TestValidateSignatureRejectsJWT(t *testing.T) {
 		{
 			d: "RS256JWTStrategy",
 			strategy: &RS256JWTStrategy{
-				PrivateKey: internal.MustRSAKey(),
+				PrivateKey: MustRSAKey(),
 			},
 		},
 		{
 			d: "ES256JWTStrategy",
 			strategy: &ES256JWTStrategy{
-				PrivateKey: internal.MustECDSAKey(),
+				PrivateKey: MustECDSAKey(),
 			},
 		},
 	} {

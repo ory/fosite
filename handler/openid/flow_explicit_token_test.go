@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"testing"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -124,10 +123,11 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
 				idToken, _ := aresp.GetExtra("id_token").(string)
-				decodedIdToken, _ := jwtgo.Parse(idToken, func(token *jwtgo.Token) (interface{}, error) {
+				decodedIdToken, err := jwt.Parse(idToken, func(token *jwt.Token) (interface{}, error) {
 					return key.PublicKey, nil
 				})
-				claims, _ := decodedIdToken.Claims.(jwtgo.MapClaims)
+				require.NoError(t, err)
+				claims := decodedIdToken.Claims
 				assert.NotEmpty(t, claims["at_hash"])
 			},
 		},

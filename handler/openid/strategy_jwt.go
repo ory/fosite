@@ -28,7 +28,6 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	jwtgo "github.com/dgrijalva/jwt-go"
 	"github.com/mohae/deepcopy"
 	"github.com/pkg/errors"
 
@@ -200,16 +199,14 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 
 		if tokenHintString := requester.GetRequestForm().Get("id_token_hint"); tokenHintString != "" {
 			tokenHint, err := h.JWTStrategy.Decode(ctx, tokenHintString)
-			var ve *jwtgo.ValidationError
-			if errors.As(err, &ve) && ve.Errors == jwtgo.ValidationErrorExpired {
+			var ve *jwt.ValidationError
+			if errors.As(err, &ve) && ve.Errors == jwt.ValidationErrorExpired {
 				// Expired ID Tokens are allowed as values to id_token_hint
 			} else if err != nil {
 				return "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebugf("Unable to decode id token from 'id_token_hint' parameter because %s.", err.Error()))
 			}
 
-			if hintClaims, ok := tokenHint.Claims.(jwtgo.MapClaims); !ok {
-				return "", errorsx.WithStack(fosite.ErrServerError.WithDebug("Unable to decode id token from 'id_token_hint' to *jwt.StandardClaims."))
-			} else if hintSub, _ := hintClaims["sub"].(string); hintSub == "" {
+			if hintSub, _ := tokenHint.Claims["sub"].(string); hintSub == "" {
 				return "", errorsx.WithStack(fosite.ErrServerError.WithDebug("Provided id token from 'id_token_hint' does not have a subject."))
 			} else if hintSub != claims.Subject {
 				return "", errorsx.WithStack(fosite.ErrServerError.WithDebug("Subject from authorization mismatches id token subject from 'id_token_hint'."))

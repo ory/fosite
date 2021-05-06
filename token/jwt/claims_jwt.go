@@ -25,7 +25,6 @@ import (
 	"strings"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pborman/uuid"
 )
 
@@ -58,7 +57,7 @@ type JWTClaimsContainer interface {
 	WithScopeField(scopeField JWTScopeFieldEnum) JWTClaimsContainer
 
 	// ToMapClaims returns the claims as a github.com/dgrijalva/jwt-go.MapClaims type.
-	ToMapClaims() jwt.MapClaims
+	ToMapClaims() MapClaims
 }
 
 // JWTClaims represent a token's claims.
@@ -255,11 +254,11 @@ func (c JWTClaims) Get(key string) interface{} {
 }
 
 // ToMapClaims will return a jwt-go MapClaims representation
-func (c JWTClaims) ToMapClaims() jwt.MapClaims {
+func (c JWTClaims) ToMapClaims() MapClaims {
 	return c.ToMap()
 }
 
 // FromMapClaims will populate claims from a jwt-go MapClaims representation
-func (c *JWTClaims) FromMapClaims(mc jwt.MapClaims) {
+func (c *JWTClaims) FromMapClaims(mc MapClaims) {
 	c.FromMap(mc)
 }

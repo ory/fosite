@@ -26,28 +26,28 @@ package jwt
 
 import (
 	"context"
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/sha256"
-	"fmt"
 	"strings"
 
 	"github.com/ory/x/errorsx"
+	"gopkg.in/square/go-jose.v2"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
-
-	"github.com/ory/fosite"
 )
 
 type JWTStrategy interface {
-	Generate(ctx context.Context, claims jwt.Claims, header Mapper) (string, string, error)
+	Generate(ctx context.Context, claims MapClaims, header Mapper) (string, string, error)
 	Validate(ctx context.Context, token string) (string, error)
 	Hash(ctx context.Context, in []byte) ([]byte, error)
-	Decode(ctx context.Context, token string) (*jwt.Token, error)
+	Decode(ctx context.Context, token string) (*Token, error)
 	GetSignature(ctx context.Context, token string) (string, error)
 	GetSigningMethodLength() int
 }
+
+var SHA256HashSize = crypto.SHA256.Size()
 
 // RS256JWTStrategy is responsible for generating and validating JWT challenges
 type RS256JWTStrategy struct {
@@ -55,78 +55,33 @@ type RS256JWTStrategy struct {
 }
 
 // Generate generates a new authorize code or returns an error. set secret
-func (j *RS256JWTStrategy) Generate(ctx context.Context, claims jwt.Claims, header Mapper) (string, string, error) {
-	if header == nil || claims == nil {
-		return "", "", errors.New("Either claims or header is nil.")
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	token.Header = assign(token.Header, header.ToMap())
-
-	var sig, sstr string
-	var err error
-	if sstr, err = token.SigningString(); err != nil {
-		return "", "", errorsx.WithStack(err)
-	}
-
-	if sig, err = token.Method.Sign(sstr, j.PrivateKey); err != nil {
-		return "", "", errorsx.WithStack(err)
-	}
-
-	return fmt.Sprintf("%s.%s", sstr, sig), sig, nil
+func (j *RS256JWTStrategy) Generate(ctx context.Context, claims MapClaims, header Mapper) (string, string, error) {
+	return generateToken(claims, header, jose.RS256, j.PrivateKey)
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
 func (j *RS256JWTStrategy) Validate(ctx context.Context, token string) (string, error) {
-	if _, err := j.Decode(ctx, token); err != nil {
-		return "", errorsx.WithStack(err)
-	}
-
-	return j.GetSignature(ctx, token)
+	return validateToken(token, &j.PrivateKey.PublicKey)
 }
 
 // Decode will decode a JWT token
-func (j *RS256JWTStrategy) Decode(ctx context.Context, token string) (*jwt.Token, error) {
-	// Parse the token.
-	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, errors.Errorf("Unexpected signing method: %v", t.Header["alg"])
-		}
-		return &j.PrivateKey.PublicKey, nil
-	})
-
-	if err != nil {
-		return parsedToken, errorsx.WithStack(err)
-	} else if !parsedToken.Valid {
-		return parsedToken, errorsx.WithStack(fosite.ErrInactiveToken)
-	}
-
-	return parsedToken, err
+func (j *RS256JWTStrategy) Decode(ctx context.Context, token string) (*Token, error) {
+	return decodeToken(token, &j.PrivateKey.PublicKey)
 }
 
 // GetSignature will return the signature of a token
 func (j *RS256JWTStrategy) GetSignature(ctx context.Context, token string) (string, error) {
-	split := strings.Split(token, ".")
-	if len(split) != 3 {
-		return "", errors.New("Header, body and signature must all be set")
-	}
-	return split[2], nil
+	return getTokenSignature(token)
 }
 
 // Hash will return a given hash based on the byte input or an error upon fail
 func (j *RS256JWTStrategy) Hash(ctx context.Context, in []byte) ([]byte, error) {
-	// SigningMethodRS256
-	hash := sha256.New()
-	_, err := hash.Write(in)
-	if err != nil {
-		return []byte{}, errorsx.WithStack(err)
-	}
-	return hash.Sum([]byte{}), nil
+	return hashSHA256(in)
 }
 
 // GetSigningMethodLength will return the length of the signing method
 func (j *RS256JWTStrategy) GetSigningMethodLength() int {
-	return jwt.SigningMethodRS256.Hash.Size()
+	return SHA256HashSize
 }
 
 // ES256JWTStrategy is responsible for generating and validating JWT challenges
@@ -135,57 +90,67 @@ type ES256JWTStrategy struct {
 }
 
 // Generate generates a new authorize code or returns an error. set secret
-func (j *ES256JWTStrategy) Generate(ctx context.Context, claims jwt.Claims, header Mapper) (string, string, error) {
-	if header == nil || claims == nil {
-		return "", "", errors.New("Either claims or header is nil.")
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
-	token.Header = assign(token.Header, header.ToMap())
-
-	var sig, sstr string
-	var err error
-	if sstr, err = token.SigningString(); err != nil {
-		return "", "", errorsx.WithStack(err)
-	}
-
-	if sig, err = token.Method.Sign(sstr, j.PrivateKey); err != nil {
-		return "", "", errorsx.WithStack(err)
-	}
-
-	return fmt.Sprintf("%s.%s", sstr, sig), sig, nil
+func (j *ES256JWTStrategy) Generate(ctx context.Context, claims MapClaims, header Mapper) (string, string, error) {
+	return generateToken(claims, header, jose.ES256, j.PrivateKey)
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
 func (j *ES256JWTStrategy) Validate(ctx context.Context, token string) (string, error) {
-	if _, err := j.Decode(ctx, token); err != nil {
-		return "", errorsx.WithStack(err)
-	}
-
-	return j.GetSignature(ctx, token)
+	return validateToken(token, &j.PrivateKey.PublicKey)
 }
 
 // Decode will decode a JWT token
-func (j *ES256JWTStrategy) Decode(ctx context.Context, token string) (*jwt.Token, error) {
-	// Parse the token.
-	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodECDSA); !ok {
-			return nil, errors.Errorf("Unexpected signing method: %v", t.Header["alg"])
-		}
-		return &j.PrivateKey.PublicKey, nil
-	})
-
-	if err != nil {
-		return parsedToken, errorsx.WithStack(err)
-	} else if !parsedToken.Valid {
-		return parsedToken, errorsx.WithStack(fosite.ErrInactiveToken)
-	}
-
-	return parsedToken, err
+func (j *ES256JWTStrategy) Decode(ctx context.Context, token string) (*Token, error) {
+	return decodeToken(token, &j.PrivateKey.PublicKey)
 }
 
 // GetSignature will return the signature of a token
 func (j *ES256JWTStrategy) GetSignature(ctx context.Context, token string) (string, error) {
+	return getTokenSignature(token)
+}
+
+// Hash will return a given hash based on the byte input or an error upon fail
+func (j *ES256JWTStrategy) Hash(ctx context.Context, in []byte) ([]byte, error) {
+	return hashSHA256(in)
+}
+
+// GetSigningMethodLength will return the length of the signing method
+func (j *ES256JWTStrategy) GetSigningMethodLength() int {
+	return SHA256HashSize
+}
+
+func generateToken(claims MapClaims, header Mapper, signingMethod jose.SignatureAlgorithm, privateKey interface{}) (rawToken string, sig string, err error) {
+	if header == nil || claims == nil {
+		err = errors.New("Either claims or header is nil.")
+		return
+	}
+
+	token := NewWithClaims(signingMethod, claims)
+	token.Header = assign(token.Header, header.ToMap())
+
+	rawToken, err = token.SignedString(privateKey)
+	if err != nil {
+		return
+	}
+
+	sig, err = getTokenSignature(rawToken)
+	return
+}
+
+func decodeToken(token string, verificationKey interface{}) (*Token, error) {
+	keyFunc := func(*Token) (interface{}, error) { return verificationKey, nil }
+	return ParseWithClaims(token, MapClaims{}, keyFunc)
+}
+
+func validateToken(tokenStr string, verificationKey interface{}) (string, error) {
+	_, err := decodeToken(tokenStr, verificationKey)
+	if err != nil {
+		return "", err
+	}
+	return getTokenSignature(tokenStr)
+}
+
+func getTokenSignature(token string) (string, error) {
 	split := strings.Split(token, ".")
 	if len(split) != 3 {
 		return "", errors.New("Header, body and signature must all be set")
@@ -193,20 +158,13 @@ func (j *ES256JWTStrategy) GetSignature(ctx context.Context, token string) (stri
 	return split[2], nil
 }
 
-// Hash will return a given hash based on the byte input or an error upon fail
-func (j *ES256JWTStrategy) Hash(ctx context.Context, in []byte) ([]byte, error) {
-	// SigningMethodES256
+func hashSHA256(in []byte) ([]byte, error) {
 	hash := sha256.New()
 	_, err := hash.Write(in)
 	if err != nil {
 		return []byte{}, errorsx.WithStack(err)
 	}
 	return hash.Sum([]byte{}), nil
-}
-
-// GetSigningMethodLength will return the length of the signing method
-func (j *ES256JWTStrategy) GetSigningMethodLength() int {
-	return jwt.SigningMethodES256.Hash.Size()
 }
 
 func assign(a, b map[string]interface{}) map[string]interface{} {
