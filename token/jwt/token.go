@@ -173,10 +173,9 @@ func ParseWithClaims(rawToken string, claims MapClaims, keyFunc Keyfunc) (*Token
 	// with jwt-go library behavior
 	if err := claims.Valid(); err != nil {
 		if e, ok := err.(*ValidationError); !ok {
-			return nil, &ValidationError{Inner: e, Errors: ValidationErrorClaimsInvalid}
-		} else {
-			return nil, err
+			err = &ValidationError{Inner: e, Errors: ValidationErrorClaimsInvalid}
 		}
+		return token, err
 	}
 
 	// set token as verified and validated
