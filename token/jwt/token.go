@@ -1,6 +1,8 @@
 package jwt
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -21,6 +23,14 @@ type Token struct {
 	Method jose.SignatureAlgorithm
 	valid  bool
 }
+
+const (
+	SigningMethodNone = jose.SignatureAlgorithm("none")
+	// This key should be use to correctly sign and verify alg:none JWT tokens
+	UnsafeAllowNoneSignatureType unsafeNoneMagicConstant = "none signing method allowed"
+)
+
+type unsafeNoneMagicConstant string
 
 // Valid informs if the token was verified against a given verification key
 // and claims are valid
@@ -58,6 +68,11 @@ func (t *Token) toJoseHeader() map[jose.HeaderKey]interface{} {
 //
 // > Get the complete, signed token
 func (t *Token) SignedString(k interface{}) (rawToken string, err error) {
+	if _, ok := k.(unsafeNoneMagicConstant); ok {
+		rawToken, err = unsignedToken(t)
+		return
+
+	}
 	var signer jose.Signer
 	key := jose.SigningKey{
 		Algorithm: t.Method,
@@ -81,6 +96,21 @@ func (t *Token) SignedString(k interface{}) (rawToken string, err error) {
 		return
 	}
 	return
+}
+
+func unsignedToken(t *Token) (string, error) {
+	t.Header["alg"] = "none"
+	hbytes, err := json.Marshal(&t.Header)
+	if err != nil {
+		return "", errorsx.WithStack(err)
+	}
+	bbytes, err := json.Marshal(&t.Claims)
+	if err != nil {
+		return "", errorsx.WithStack(err)
+	}
+	h := base64.RawURLEncoding.EncodeToString(hbytes)
+	b := base64.RawURLEncoding.EncodeToString(bbytes)
+	return fmt.Sprintf("%v.%v.", h, b), nil
 }
 
 func newToken(parsedToken *jwt.JSONWebToken, claims MapClaims) (*Token, error) {
@@ -164,8 +194,12 @@ func ParseWithClaims(rawToken string, claims MapClaims, keyFunc Keyfunc) (*Token
 	verificationKey = pointer(verificationKey)
 
 	// verify signature with returned key
-	if err := parsedToken.Claims(verificationKey, &claims); err != nil {
-		return nil, &ValidationError{Errors: ValidationErrorSignatureInvalid, text: err.Error()}
+	_, validNoneKey := verificationKey.(*unsafeNoneMagicConstant)
+	isSignedToken := !(token.Method == SigningMethodNone && validNoneKey)
+	if isSignedToken {
+		if err := parsedToken.Claims(verificationKey, &claims); err != nil {
+			return nil, &ValidationError{Errors: ValidationErrorSignatureInvalid, text: err.Error()}
+		}
 	}
 
 	// Validate claims

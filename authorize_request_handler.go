@@ -112,6 +112,10 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 			return nil, errorsx.WithStack(ErrInvalidRequestObject.WithHintf("The request object uses signing algorithm '%s', but the requested OAuth 2.0 Client enforces signing algorithm '%s'.", t.Header["alg"], oidcClient.GetRequestObjectSigningAlgorithm()))
 		}
 
+		if t.Method == jwt.SigningMethodNone {
+			return jwt.UnsafeAllowNoneSignatureType, nil
+		}
+
 		switch t.Method {
 		case jose.RS256, jose.RS384, jose.RS512:
 			key, err := f.findClientPublicJWK(oidcClient, t, true)

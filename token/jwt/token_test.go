@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,4 +28,20 @@ func TestParseInvalidReturnsToken(t *testing.T) {
 	require.True(t, errors.As(err, &verr))
 	require.NotZero(t, verr.Errors&ValidationErrorExpired, "%+v", verr)
 	require.NotEmpty(t, ptoken)
+}
+
+func TestUnsignedToken(t *testing.T) {
+	key := UnsafeAllowNoneSignatureType
+	token := NewWithClaims(SigningMethodNone, MapClaims{
+		"aud": "foo",
+		"exp": time.Now().UTC().Add(time.Hour).Unix(),
+		"iat": time.Now().UTC().Unix(),
+		"sub": "nestor",
+	})
+	rawToken, err := token.SignedString(key)
+	require.NoError(t, err)
+	require.NotEmpty(t, rawToken)
+	parts := strings.Split(rawToken, ".")
+	require.Len(t, parts, 3)
+	require.Empty(t, parts[2])
 }

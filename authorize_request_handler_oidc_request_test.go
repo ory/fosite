@@ -56,6 +56,13 @@ func mustGenerateHSAssertion(t *testing.T, claims jwt.MapClaims) string {
 	return tokenString
 }
 
+func mustGenerateNoneAssertion(t *testing.T, claims jwt.MapClaims) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodNone, claims)
+	tokenString, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+	require.NoError(t, err)
+	return tokenString
+}
+
 func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 	key, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
@@ -73,6 +80,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 
 	validRequestObject := mustGenerateAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz", "response_type": "token", "response_mode": "post_form"}, key, "kid-foo")
 	validRequestObjectWithoutKid := mustGenerateAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz"}, key, "")
+	validNoneRequestObject := mustGenerateNoneAssertion(t, jwt.MapClaims{"scope": "foo", "foo": "bar", "baz": "baz", "state": "some-state"})
 
 	var reqH http.HandlerFunc = func(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte(validRequestObject))
@@ -181,6 +189,18 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			form:       url.Values{"scope": {"openid"}, "request_uri": {reqTS.URL}},
 			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "RS256", RequestURIs: []string{reqTS.URL}},
 			expectForm: url.Values{"response_type": {"token"}, "response_mode": {"post_form"}, "scope": {"foo openid"}, "request_uri": {reqTS.URL}, "foo": {"bar"}, "baz": {"baz"}},
+		},
+		{
+			d:          "should pass when request object uses algorithm none",
+			form:       url.Values{"scope": {"openid"}, "request": {validNoneRequestObject}},
+			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL, RequestObjectSigningAlgorithm: "none"},
+			expectForm: url.Values{"state": {"some-state"}, "scope": {"foo openid"}, "request": {validNoneRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
+		},
+		{
+			d:          "should pass when request object uses algorithm none and the client did not explicitly allow any algorithm",
+			form:       url.Values{"scope": {"openid"}, "request": {validNoneRequestObject}},
+			client:     &DefaultOpenIDConnectClient{JSONWebKeysURI: reqJWK.URL},
+			expectForm: url.Values{"state": {"some-state"}, "scope": {"foo openid"}, "request": {validNoneRequestObject}, "foo": {"bar"}, "baz": {"baz"}},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {

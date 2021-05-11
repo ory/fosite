@@ -68,6 +68,13 @@ func mustGenerateHSAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.Privat
 	return tokenString
 }
 
+func mustGenerateNoneAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
+	token := jwt.NewWithClaims(jwt.SigningMethodNone, claims)
+	tokenString, err := token.SignedString(jwt.UnsafeAllowNoneSignatureType)
+	require.NoError(t, err)
+	return tokenString
+}
+
 // returns an http basic authorization header, encoded using application/x-www-form-urlencoded
 func clientBasicAuthHeader(clientID, clientSecret string) http.Header {
 	creds := url.QueryEscape(clientID) + ":" + url.QueryEscape(clientSecret)
@@ -392,6 +399,19 @@ func TestAuthenticateClient(t *testing.T) {
 			d:      "should fail because JWT algorithm is HS256",
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateHSAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"iss": "bar",
+				"jti": "12345",
+				"aud": "token-url",
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
+			r:         new(http.Request),
+			expectErr: ErrInvalidClient,
+		},
+		{
+			d:      "should fail because JWT algorithm is none",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateNoneAssertion(t, jwt.MapClaims{
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "bar",
