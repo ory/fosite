@@ -30,25 +30,6 @@ import (
 	. "github.com/ory/fosite/token/jwt"
 )
 
-var idTokenClaims = &IDTokenClaims{
-	JTI:                                 "foo-id",
-	Subject:                             "peter",
-	IssuedAt:                            time.Now().UTC().Round(time.Second),
-	Issuer:                              "fosite",
-	Audience:                            []string{"tests"},
-	ExpiresAt:                           time.Now().UTC().Add(time.Hour).Round(time.Second),
-	AuthTime:                            time.Now().UTC(),
-	RequestedAt:                         time.Now().UTC(),
-	AccessTokenHash:                     "foobar",
-	CodeHash:                            "barfoo",
-	AuthenticationContextClassReference: "acr",
-	AuthenticationMethodsReference:      "amr",
-	Extra: map[string]interface{}{
-		"foo": "bar",
-		"baz": "bar",
-	},
-}
-
 func TestIDTokenAssert(t *testing.T) {
 	assert.NoError(t, (&IDTokenClaims{ExpiresAt: time.Now().UTC().Add(time.Hour)}).
 		ToMapClaims().Valid())
@@ -59,6 +40,24 @@ func TestIDTokenAssert(t *testing.T) {
 }
 
 func TestIDTokenClaimsToMap(t *testing.T) {
+	idTokenClaims := &IDTokenClaims{
+		JTI:                                 "foo-id",
+		Subject:                             "peter",
+		IssuedAt:                            time.Now().UTC().Round(time.Second),
+		Issuer:                              "fosite",
+		Audience:                            []string{"tests"},
+		ExpiresAt:                           time.Now().UTC().Add(time.Hour).Round(time.Second),
+		AuthTime:                            time.Now().UTC(),
+		RequestedAt:                         time.Now().UTC(),
+		AccessTokenHash:                     "foobar",
+		CodeHash:                            "barfoo",
+		AuthenticationContextClassReference: "acr",
+		AuthenticationMethodsReference:      "amr",
+		Extra: map[string]interface{}{
+			"foo": "bar",
+			"baz": "bar",
+		},
+	}
 	assert.Equal(t, map[string]interface{}{
 		"jti":       idTokenClaims.JTI,
 		"sub":       idTokenClaims.Subject,
@@ -66,7 +65,6 @@ func TestIDTokenClaimsToMap(t *testing.T) {
 		"rat":       float64(idTokenClaims.RequestedAt.Unix()),
 		"iss":       idTokenClaims.Issuer,
 		"aud":       idTokenClaims.Audience,
-		"nonce":     idTokenClaims.Nonce,
 		"exp":       float64(idTokenClaims.ExpiresAt.Unix()),
 		"foo":       idTokenClaims.Extra["foo"],
 		"baz":       idTokenClaims.Extra["baz"],
@@ -75,5 +73,24 @@ func TestIDTokenClaimsToMap(t *testing.T) {
 		"auth_time": idTokenClaims.AuthTime.Unix(),
 		"acr":       idTokenClaims.AuthenticationContextClassReference,
 		"amr":       idTokenClaims.AuthenticationMethodsReference,
+	}, idTokenClaims.ToMap())
+
+	idTokenClaims.Nonce = "foobar"
+	assert.Equal(t, map[string]interface{}{
+		"jti":       idTokenClaims.JTI,
+		"sub":       idTokenClaims.Subject,
+		"iat":       float64(idTokenClaims.IssuedAt.Unix()),
+		"rat":       float64(idTokenClaims.RequestedAt.Unix()),
+		"iss":       idTokenClaims.Issuer,
+		"aud":       idTokenClaims.Audience,
+		"exp":       float64(idTokenClaims.ExpiresAt.Unix()),
+		"foo":       idTokenClaims.Extra["foo"],
+		"baz":       idTokenClaims.Extra["baz"],
+		"at_hash":   idTokenClaims.AccessTokenHash,
+		"c_hash":    idTokenClaims.CodeHash,
+		"auth_time": idTokenClaims.AuthTime.Unix(),
+		"acr":       idTokenClaims.AuthenticationContextClassReference,
+		"amr":       idTokenClaims.AuthenticationMethodsReference,
+		"nonce":     idTokenClaims.Nonce,
 	}, idTokenClaims.ToMap())
 }

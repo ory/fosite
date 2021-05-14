@@ -59,7 +59,7 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 		ret["aud"] = []string{}
 	}
 
-	if len(c.Nonce) >= 0 {
+	if len(c.Nonce) > 0 {
 		ret["nonce"] = c.Nonce
 	}
 
