@@ -21,7 +21,7 @@ jobs:
       - name: Echo context
         run: echo ${{ toJSON(github) }}
       - name: Update fosite
-        run: go get github.com/${{ github.repository }}@${{ github.event.pull_request.head.sha }}
+        run: go get github.com/${{ github.event.pull_request.head.repo.full_name }}@${{ github.event.pull_request.head.sha }}
       - name: Start service
         run: ./test/conformance/start.sh
       - name: Run tests
