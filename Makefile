@@ -3,3 +3,4 @@ format:
 
 test:
 		go test ./...
+
