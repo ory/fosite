@@ -35,6 +35,9 @@ func (f *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester
 		Parameters: url.Values{},
 	}
 
+	ctx = context.WithValue(ctx, AuthorizeRequestContextKey, ar)
+	ctx = context.WithValue(ctx, AuthorizeResponseContextKey, resp)
+
 	ar.SetSession(session)
 	for _, h := range f.AuthorizeEndpointHandlers {
 		if err := h.HandleAuthorizeEndpointRequest(ctx, ar, resp); err != nil {

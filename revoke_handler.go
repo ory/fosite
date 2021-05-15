@@ -50,6 +50,8 @@ import (
 // An invalid token type hint value is ignored by the authorization
 // server and does not influence the revocation response.
 func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) error {
+	ctx = context.WithValue(ctx, RequestContextKey, r)
+
 	if r.Method != "POST" {
 		return errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s' but expected 'POST'.", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {

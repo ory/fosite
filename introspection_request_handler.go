@@ -110,6 +110,8 @@ import (
 //
 //	token=mF_9.B5f-4.1JqM&token_type_hint=access_token
 func (f *Fosite) NewIntrospectionRequest(ctx context.Context, r *http.Request, session Session) (IntrospectionResponder, error) {
+	ctx = context.WithValue(ctx, RequestContextKey, r)
+
 	if r.Method != "POST" {
 		return &IntrospectionResponse{Active: false}, errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s' but expected 'POST'.", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {

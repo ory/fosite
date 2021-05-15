@@ -275,6 +275,9 @@ func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest
 func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	request := NewAuthorizeRequest()
 
+	ctx = context.WithValue(ctx, RequestContextKey, r)
+	ctx = context.WithValue(ctx, AuthorizeRequestContextKey, request)
+
 	if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
 		return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	}
