@@ -153,7 +153,7 @@ func ParseWithClaims(rawToken string, claims MapClaims, keyFunc Keyfunc) (*Token
 	// Parse the token.
 	parsedToken, err := jwt.ParseSigned(rawToken)
 	if err != nil {
-		return nil, &ValidationError{Errors: ValidationErrorMalformed, text: err.Error()}
+		return &Token{}, &ValidationError{Errors: ValidationErrorMalformed, text: err.Error()}
 	}
 
 	// fill unverified claims
@@ -187,6 +187,9 @@ func ParseWithClaims(rawToken string, claims MapClaims, keyFunc Keyfunc) (*Token
 		}
 		return token, &ValidationError{Errors: ValidationErrorUnverifiable, Inner: err}
 	}
+	if verificationKey == nil {
+		return token, &ValidationError{Errors: ValidationErrorSignatureInvalid, text: "keyfunc returned a nil verification key"}
+	}
 	// To verify signature go-jose requires a pointer to
 	// public key instead of the public key value.
 	// The pointer values provides that pointer.
@@ -198,7 +201,7 @@ func ParseWithClaims(rawToken string, claims MapClaims, keyFunc Keyfunc) (*Token
 	isSignedToken := !(token.Method == SigningMethodNone && validNoneKey)
 	if isSignedToken {
 		if err := parsedToken.Claims(verificationKey, &claims); err != nil {
-			return nil, &ValidationError{Errors: ValidationErrorSignatureInvalid, text: err.Error()}
+			return token, &ValidationError{Errors: ValidationErrorSignatureInvalid, text: err.Error()}
 		}
 	}
 
