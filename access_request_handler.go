@@ -59,6 +59,9 @@ import (
 func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session Session) (AccessRequester, error) {
 	accessRequest := NewAccessRequest(session)
 
+	ctx = context.WithValue(ctx, RequestContextKey, r)
+	ctx = context.WithValue(ctx, AccessRequestContextKey, accessRequest)
+
 	if r.Method != "POST" {
 		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s', expected 'POST'.", r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {

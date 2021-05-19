@@ -92,7 +92,7 @@ func TestNewAccessResponse(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			f.TokenEndpointHandlers = c.handlers
 			c.mock()
-			ar, err := f.NewAccessResponse(nil, nil)
+			ar, err := f.NewAccessResponse(context.TODO(), nil)
 
 			if c.expectErr != nil {
 				assert.EqualError(t, err, c.expectErr.Error())

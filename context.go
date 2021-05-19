@@ -26,3 +26,13 @@ import "context"
 func NewContext() context.Context {
 	return context.Background()
 }
+
+type ContextKey string
+
+const (
+	RequestContextKey           = ContextKey("request")
+	AccessRequestContextKey     = ContextKey("accessRequest")
+	AccessResponseContextKey    = ContextKey("accessResponse")
+	AuthorizeRequestContextKey  = ContextKey("authorizeRequest")
+	AuthorizeResponseContextKey = ContextKey("authorizeResponse")
+)

@@ -34,6 +34,10 @@ func (f *Fosite) NewAccessResponse(ctx context.Context, requester AccessRequeste
 	var tk TokenEndpointHandler
 
 	response := NewAccessResponse()
+
+	ctx = context.WithValue(ctx, AccessRequestContextKey, requester)
+	ctx = context.WithValue(ctx, AccessResponseContextKey, response)
+
 	for _, tk = range f.TokenEndpointHandlers {
 		if err = tk.PopulateTokenEndpointResponse(ctx, requester, response); err == nil {
 			// do nothing
