@@ -49,9 +49,24 @@ type IDTokenClaims struct {
 // ToMap will transform the headers to a map structure
 func (c *IDTokenClaims) ToMap() map[string]interface{} {
 	var ret = Copy(c.Extra)
-	ret["sub"] = c.Subject
-	ret["iss"] = c.Issuer
-	ret["jti"] = c.JTI
+
+	if c.Subject != "" {
+		ret["sub"] = c.Subject
+	} else {
+		delete(ret, "sub")
+	}
+
+	if c.Issuer != "" {
+		ret["iss"] = c.Issuer
+	} else {
+		delete(ret, "iss")
+	}
+
+	if c.JTI != "" {
+		ret["jti"] = c.JTI
+	} else {
+		ret["jti"] = uuid.New()
+	}
 
 	if len(c.Audience) > 0 {
 		ret["aud"] = c.Audience
@@ -59,37 +74,60 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 		ret["aud"] = []string{}
 	}
 
+	if !c.IssuedAt.IsZero() {
+		ret["iat"] = float64(c.IssuedAt.Unix()) // jwt-go does not support int64 as datatype
+	} else {
+		delete(ret, "iat")
+	}
+
+	if !c.ExpiresAt.IsZero() {
+		ret["exp"] = float64(c.ExpiresAt.Unix()) // jwt-go does not support int64 as datatype
+	} else {
+		delete(ret, "exp")
+	}
+
+	if !c.RequestedAt.IsZero() {
+		ret["rat"] = float64(c.RequestedAt.Unix()) // jwt-go does not support int64 as datatype
+	} else {
+		delete(ret, "rat")
+	}
+
 	if len(c.Nonce) > 0 {
 		ret["nonce"] = c.Nonce
+	} else {
+		delete(ret, "nonce")
 	}
 
 	if len(c.AccessTokenHash) > 0 {
 		ret["at_hash"] = c.AccessTokenHash
-	}
-
-	if len(c.JTI) == 0 {
-		ret["jti"] = uuid.New()
+	} else {
+		delete(ret, "at_hash")
 	}
 
 	if len(c.CodeHash) > 0 {
 		ret["c_hash"] = c.CodeHash
+	} else {
+		delete(ret, "c_hash")
 	}
 
 	if !c.AuthTime.IsZero() {
-		ret["auth_time"] = c.AuthTime.Unix()
+		ret["auth_time"] = float64(c.AuthTime.Unix()) // jwt-go does not support int64 as datatype
+	} else {
+		delete(ret, "auth_time")
 	}
 
 	if len(c.AuthenticationContextClassReference) > 0 {
 		ret["acr"] = c.AuthenticationContextClassReference
+	} else {
+		delete(ret, "acr")
 	}
 
 	if len(c.AuthenticationMethodsReference) > 0 {
 		ret["amr"] = c.AuthenticationMethodsReference
+	} else {
+		delete(ret, "amr")
 	}
 
-	ret["iat"] = float64(c.IssuedAt.Unix())
-	ret["exp"] = float64(c.ExpiresAt.Unix())
-	ret["rat"] = float64(c.RequestedAt.Unix())
 	return ret
 
 }
