@@ -3,30 +3,40 @@ package jwt
 import (
 	"crypto/subtle"
 	"encoding/json"
+	"errors"
 	"time"
-
-	"github.com/pkg/errors"
+	// "fmt"
 )
 
+var TimeFunc = time.Now
+
 // MapClaims provides backwards compatible validations not available in `go-jose`.
-// It was taken from [here](https://github.com/dgrijalva/jwt-go/blob/master/map_claims.go).
+// It was taken from [here](https://raw.githubusercontent.com/form3tech-oss/jwt-go/master/map_claims.go).
 //
-// > Claims type that uses the map[string]interface{} for JSON decoding
+// Claims type that uses the map[string]interface{} for JSON decoding
 // This is the default claims type if you don't supply one
 type MapClaims map[string]interface{}
 
 // Compares the aud claim against cmp.
 // If required is false, this method will return true if the value matches or is unset
 func (m MapClaims) VerifyAudience(cmp string, req bool) bool {
-	aud, ok := m["aud"].([]string)
-	if !ok {
-		strAud, ok := m["aud"].(string)
-		if !ok {
-			return false
+	var aud []string
+	switch v := m["aud"].(type) {
+	case []string:
+		aud = v
+	case []interface{}:
+		for _, a := range v {
+			vs, ok := a.(string)
+			if !ok {
+				return false
+			}
+			aud = append(aud, vs)
 		}
-		aud = append(aud, strAud)
+	case string:
+		aud = append(aud, v)
+	default:
+		return false
 	}
-
 	return verifyAud(aud, cmp, req)
 }
 
@@ -40,7 +50,7 @@ func (m MapClaims) VerifyExpiresAt(cmp int64, req bool) bool {
 		v, _ := exp.Int64()
 		return verifyExp(v, cmp, req)
 	}
-	return req == false
+	return !req
 }
 
 // Compares the iat claim against cmp.
@@ -53,7 +63,7 @@ func (m MapClaims) VerifyIssuedAt(cmp int64, req bool) bool {
 		v, _ := iat.Int64()
 		return verifyIat(v, cmp, req)
 	}
-	return req == false
+	return !req
 }
 
 // Compares the iss claim against cmp.
@@ -73,10 +83,8 @@ func (m MapClaims) VerifyNotBefore(cmp int64, req bool) bool {
 		v, _ := nbf.Int64()
 		return verifyNbf(v, cmp, req)
 	}
-	return req == false
+	return !req
 }
-
-var TimeFunc = time.Now
 
 // Validates time based claims "exp, iat, nbf".
 // There is no accounting for clock skew.

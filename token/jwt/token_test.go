@@ -56,181 +56,297 @@ func TestParser_Parse(t *testing.T) {
 			return &k.PublicKey, nil
 		}
 	)
-	var jwtTestData = []struct {
+	type expected struct {
+		errors  uint32
+		keyFunc Keyfunc
+		valid   bool
+		claims  MapClaims
+	}
+	type generate struct {
+		claims     MapClaims
+		signingKey interface{}             // defaultSigningKey
+		method     jose.SignatureAlgorithm // default RS256
+	}
+	type given struct {
 		name        string
 		tokenString string
-		keyfunc     Keyfunc
-		claims      MapClaims
-		valid       bool
-		errors      uint32
-		signingKey  interface{}             // defaultSigningKey
-		method      jose.SignatureAlgorithm // default RS256
+		generate    *generate
+	}
+	var jwtTestData = []struct {
+		expected
+		given
 	}{
 		{
-			name:        "basic",
-			tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       true,
-			errors:      0,
+			given: given{
+				name:        "basic",
+				tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   true,
+				errors:  0,
+			},
 		},
 		{
-			name:        "basic expired",
-			tokenString: "", // autogen
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims{"foo": "bar", "exp": float64(time.Now().Unix() - 100)},
-			valid:       false,
-			errors:      ValidationErrorExpired,
+			given: given{
+				name: "basic expired",
+				generate: &generate{
+					claims: MapClaims{"foo": "bar", "exp": float64(time.Now().Unix() - 100)},
+				},
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims{"foo": "bar", "exp": float64(time.Now().Unix() - 100)},
+				valid:   false,
+				errors:  ValidationErrorExpired,
+			},
 		},
 		{
-			name:        "basic nbf",
-			tokenString: "", // autogen
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100)},
-			valid:       false,
-			errors:      ValidationErrorNotValidYet,
+			given: given{
+				name: "basic nbf",
+				generate: &generate{
+					claims: MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100)},
+				},
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100)},
+				valid:   false,
+				errors:  ValidationErrorNotValidYet,
+			},
 		},
 		{
-			name:        "expired and nbf",
-			tokenString: "", // autogen
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100), "exp": float64(time.Now().Unix() - 100)},
-			valid:       false,
-			errors:      ValidationErrorNotValidYet | ValidationErrorExpired,
+			given: given{
+				name: "expired and nbf",
+				generate: &generate{
+					claims: MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100), "exp": float64(time.Now().Unix() - 100)},
+				},
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100), "exp": float64(time.Now().Unix() - 100)},
+				valid:   false,
+				errors:  ValidationErrorNotValidYet | ValidationErrorExpired,
+			},
 		},
 		{
-			name:        "basic invalid",
-			tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.EhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       false,
-			errors:      ValidationErrorSignatureInvalid,
+			given: given{
+				name:        "basic invalid",
+				tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.EhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   false,
+				errors:  ValidationErrorSignatureInvalid,
+			},
 		},
 		{
-			name:        "basic nokeyfunc",
-			tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
-			keyfunc:     nilKeyFunc,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       false,
-			errors:      ValidationErrorUnverifiable,
+			given: given{
+				name:        "basic nokeyfunc",
+				tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+			},
+			expected: expected{
+				keyFunc: nilKeyFunc,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   false,
+				errors:  ValidationErrorUnverifiable,
+			},
 		},
 		{
-			name:        "basic nokey",
-			tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
-			keyfunc:     emptyKeyFunc,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       false,
-			errors:      ValidationErrorSignatureInvalid,
+			given: given{
+				name:        "basic nokey",
+				tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+			},
+			expected: expected{
+				keyFunc: emptyKeyFunc,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   false,
+				errors:  ValidationErrorSignatureInvalid,
+			},
 		},
 		{
-			name:        "basic errorkey",
-			tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
-			keyfunc:     errorKeyFunc,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       false,
-			errors:      ValidationErrorUnverifiable,
+			given: given{
+				name:        "basic errorkey",
+				tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+				generate: &generate{
+					claims: MapClaims{"foo": "bar"},
+				},
+			},
+			expected: expected{
+				keyFunc: errorKeyFunc,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   false,
+				errors:  ValidationErrorUnverifiable,
+			},
 		},
 		{
-			name:        "valid signing method",
-			tokenString: "",
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       true,
-			errors:      0,
+			given: given{
+				name: "valid signing method",
+				generate: &generate{
+					claims: MapClaims{"foo": "bar"},
+				},
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   true,
+				errors:  0,
+			},
 		},
 		{
-			name:        "invalid",
-			tokenString: "foo_invalid_token",
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims(nil),
-			valid:       false,
-			errors:      ValidationErrorMalformed,
+			given: given{
+				name:        "invalid",
+				tokenString: "foo_invalid_token",
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims(nil),
+				valid:   false,
+				errors:  ValidationErrorMalformed,
+			},
 		},
 		{
-			name:        "valid format invalid content",
-			tokenString: "foo.bar.baz",
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims(nil),
-			valid:       false,
-			errors:      ValidationErrorMalformed,
+			given: given{
+				name:        "valid format invalid content",
+				tokenString: "foo.bar.baz",
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims(nil),
+				valid:   false,
+				errors:  ValidationErrorMalformed,
+			},
 		},
 		{
-			name:        "wrong key, expected RSA got ECDSA",
-			tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
-			keyfunc:     publicECDSAKey,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       false,
-			errors:      ValidationErrorSignatureInvalid,
+			given: given{
+				name:        "wrong key, expected ECDSA got RSA",
+				tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+			},
+			expected: expected{
+				keyFunc: publicECDSAKey,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   false,
+				errors:  ValidationErrorSignatureInvalid,
+			},
 		},
 		{
-			name:        "nokey, expected RSA got ECDSA",
-			tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
-			keyfunc:     emptyKeyFunc,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       false,
-			errors:      ValidationErrorSignatureInvalid,
+			given: given{
+				name:        "should fail, got RSA but found no key",
+				tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+			},
+			expected: expected{
+				keyFunc: emptyKeyFunc,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   false,
+				errors:  ValidationErrorSignatureInvalid,
+			},
 		},
 		{
-			name:        "key does not match",
-			tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
-			keyfunc:     randomKey,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       false,
-			errors:      ValidationErrorSignatureInvalid,
+			given: given{
+				name:        "key does not match",
+				tokenString: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
+			},
+			expected: expected{
+				keyFunc: randomKey,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   false,
+				errors:  ValidationErrorSignatureInvalid,
+			},
 		},
 		{
-			name:        "used before issued",
-			tokenString: "", // autogen
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims{"foo": "bar", "iat": float64(time.Now().Unix() + 500)},
-			valid:       false,
-			errors:      ValidationErrorIssuedAt,
+			given: given{
+				name: "used before issued",
+				generate: &generate{
+					claims: MapClaims{"foo": "bar", "iat": float64(time.Now().Unix() + 500)},
+				},
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims{"foo": "bar", "iat": float64(time.Now().Unix() + 500)},
+				valid:   false,
+				errors:  ValidationErrorIssuedAt,
+			},
 		},
 		{
-			name:        "valid ECDSA signing method",
-			tokenString: "",
-			keyfunc:     publicECDSAKey,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       true,
-			errors:      0,
-			signingKey:  defaultES256PrivateKey,
-			method:      jose.ES256,
+			given: given{
+				name: "valid ECDSA signing method",
+				generate: &generate{
+					claims:     MapClaims{"foo": "bar"},
+					signingKey: defaultES256PrivateKey,
+					method:     jose.ES256,
+				},
+			},
+			expected: expected{
+				keyFunc: publicECDSAKey,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   true,
+				errors:  0,
+			},
 		},
 		{
-			name:        "valid NONE signing method",
-			tokenString: "",
-			keyfunc:     noneKey,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       true,
-			errors:      0,
-			signingKey:  UnsafeAllowNoneSignatureType,
-			method:      SigningMethodNone,
+			given: given{
+				name: "should pass, valid NONE signing method",
+				generate: &generate{
+					claims:     MapClaims{"foo": "bar"},
+					signingKey: UnsafeAllowNoneSignatureType,
+					method:     SigningMethodNone,
+				},
+			},
+			expected: expected{
+				keyFunc: noneKey,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   true,
+				errors:  0,
+			},
 		},
 		{
-			name:        "should fail, valid NONE token with invalid verification key",
-			tokenString: "",
-			keyfunc:     defaultKeyFunc,
-			claims:      MapClaims{"foo": "bar"},
-			valid:       false,
-			errors:      ValidationErrorSignatureInvalid,
-			signingKey:  UnsafeAllowNoneSignatureType,
-			method:      SigningMethodNone,
+			given: given{
+				name: "should fail, expected RS256 but got NONE",
+				generate: &generate{
+					claims:     MapClaims{"foo": "bar"},
+					signingKey: UnsafeAllowNoneSignatureType,
+					method:     SigningMethodNone,
+				},
+			},
+			expected: expected{
+				keyFunc: defaultKeyFunc,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   false,
+				errors:  ValidationErrorSignatureInvalid,
+			},
+		},
+		{
+			given: given{
+				name: "should fail, expected ECDSA but got NONE",
+				generate: &generate{
+					claims:     MapClaims{"foo": "bar"},
+					signingKey: UnsafeAllowNoneSignatureType,
+					method:     SigningMethodNone,
+				},
+			},
+			expected: expected{
+				keyFunc: publicECDSAKey,
+				claims:  MapClaims{"foo": "bar"},
+				valid:   false,
+				errors:  ValidationErrorSignatureInvalid,
+			},
 		},
 	}
 
 	// Iterate over test data set and run tests
 	for _, data := range jwtTestData {
 		t.Run(data.name, func(t *testing.T) {
-			// If the token string is blank, use helper function to generate string
-			if data.tokenString == "" {
-				signingKey := data.signingKey
-				method := data.method
+			if data.generate != nil {
+				signingKey := data.generate.signingKey
+				method := data.generate.method
 				if signingKey == nil {
 					// use test defaults
 					signingKey = defaultSigningKey
 					method = jose.RS256
 				}
-				data.tokenString = makeSampleToken(data.claims, method, signingKey)
+				data.tokenString = makeSampleToken(data.generate.claims, method, signingKey)
 			}
 
 			// Parse the token
@@ -238,7 +354,7 @@ func TestParser_Parse(t *testing.T) {
 			var err error
 
 			// Figure out correct claims type
-			token, err = ParseWithClaims(data.tokenString, MapClaims{}, data.keyfunc)
+			token, err = ParseWithClaims(data.tokenString, MapClaims{}, data.keyFunc)
 			// Verify result matches expectation
 			assert.EqualValues(t, data.claims, token.Claims)
 			if data.valid && err != nil {
