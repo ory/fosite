@@ -34,7 +34,7 @@ import (
 	"testing"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -46,7 +46,7 @@ import (
 )
 
 func mustGenerateRSAAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token := jwt.NewWithClaims(jose.RS256, claims)
 	token.Header["kid"] = kid
 	tokenString, err := token.SignedString(key)
 	require.NoError(t, err)
@@ -54,7 +54,7 @@ func mustGenerateRSAAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.Priva
 }
 
 func mustGenerateECDSAAssertion(t *testing.T, claims jwt.MapClaims, key *ecdsa.PrivateKey, kid string) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token := jwt.NewWithClaims(jose.ES256, claims)
 	token.Header["kid"] = kid
 	tokenString, err := token.SignedString(key)
 	require.NoError(t, err)
@@ -62,7 +62,7 @@ func mustGenerateECDSAAssertion(t *testing.T, claims jwt.MapClaims, key *ecdsa.P
 }
 
 func mustGenerateHSAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jose.HS256, claims)
 	tokenString, err := token.SignedString([]byte("aaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccddddddddddddddddddddddd"))
 	require.NoError(t, err)
 	return tokenString
@@ -503,6 +503,7 @@ func TestAuthenticateClient(t *testing.T) {
 					t.Logf("Error is: %s", validationError.Inner)
 				} else if errors.As(err, &rfcError) {
 					t.Logf("DebugField is: %s", rfcError.DebugField)
+					t.Logf("HintField is: %s", rfcError.HintField)
 				}
 			}
 			require.NoError(t, err)

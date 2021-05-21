@@ -33,14 +33,14 @@ import (
 
 	"github.com/pkg/errors"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	jose "gopkg.in/square/go-jose.v2"
 )
 
 func mustGenerateAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token := jwt.NewWithClaims(jose.RS256, claims)
 	if kid != "" {
 		token.Header["kid"] = kid
 	}
@@ -50,7 +50,7 @@ func mustGenerateAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateK
 }
 
 func mustGenerateHSAssertion(t *testing.T, claims jwt.MapClaims) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jose.HS256, claims)
 	tokenString, err := token.SignedString([]byte("aaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbcccccccccccccccccccccddddddddddddddddddddddd"))
 	require.NoError(t, err)
 	return tokenString
@@ -217,10 +217,15 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 				if tc.expectErrReason != "" {
 					real := new(RFC6749Error)
 					require.True(t, errors.As(err, &real))
-					assert.EqualValues(t, real.Reason(), tc.expectErrReason)
+					assert.EqualValues(t, tc.expectErrReason, real.Reason())
 				}
 			} else {
-				require.NoError(t, err)
+				if err != nil {
+					real := new(RFC6749Error)
+					errors.As(err, &real)
+					require.NoErrorf(t, err, "Hint: %v\nDebug:%v", real.HintField, real.DebugField)
+				}
+				require.NoErrorf(t, err, "%+v", err)
 				require.Equal(t, len(tc.expectForm), len(req.Form))
 				for k, v := range tc.expectForm {
 					assert.EqualValues(t, v, req.Form[k])

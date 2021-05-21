@@ -7,8 +7,6 @@ replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 require (
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/form3tech-oss/jwt-go v3.2.2+incompatible // indirect
 	github.com/golang/mock v1.4.4
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.2

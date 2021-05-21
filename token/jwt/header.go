@@ -21,8 +21,6 @@
 
 package jwt
 
-import jwt "github.com/dgrijalva/jwt-go"
-
 // Headers is the jwt headers
 type Headers struct {
 	Extra map[string]interface{}
@@ -61,6 +59,6 @@ func (h *Headers) Get(key string) interface{} {
 }
 
 // ToMapClaims will return a jwt-go MapClaims representation
-func (h Headers) ToMapClaims() jwt.MapClaims {
+func (h Headers) ToMapClaims() MapClaims {
 	return h.ToMap()
 }

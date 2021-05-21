@@ -28,7 +28,6 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	jwtx "github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
@@ -99,7 +98,7 @@ func (h *DefaultJWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosi
 	return h.HMACSHAStrategy.ValidateAuthorizeCode(ctx, req, token)
 }
 
-func validate(ctx context.Context, jwtStrategy jwt.JWTStrategy, token string) (t *jwtx.Token, err error) {
+func validate(ctx context.Context, jwtStrategy jwt.JWTStrategy, token string) (t *jwt.Token, err error) {
 	t, err = jwtStrategy.Decode(ctx, token)
 
 	if err == nil {
@@ -107,28 +106,28 @@ func validate(ctx context.Context, jwtStrategy jwt.JWTStrategy, token string) (t
 	}
 
 	if err != nil {
-		var e *jwtx.ValidationError
+		var e *jwt.ValidationError
 		if errors.As(err, &e) {
 			switch e.Errors {
-			case jwtx.ValidationErrorMalformed:
+			case jwt.ValidationErrorMalformed:
 				err = errorsx.WithStack(fosite.ErrInvalidTokenFormat.WithWrap(err).WithDebug(err.Error()))
-			case jwtx.ValidationErrorUnverifiable:
+			case jwt.ValidationErrorUnverifiable:
 				err = errorsx.WithStack(fosite.ErrTokenSignatureMismatch.WithWrap(err).WithDebug(err.Error()))
-			case jwtx.ValidationErrorSignatureInvalid:
+			case jwt.ValidationErrorSignatureInvalid:
 				err = errorsx.WithStack(fosite.ErrTokenSignatureMismatch.WithWrap(err).WithDebug(err.Error()))
-			case jwtx.ValidationErrorAudience:
+			case jwt.ValidationErrorAudience:
 				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwtx.ValidationErrorExpired:
+			case jwt.ValidationErrorExpired:
 				err = errorsx.WithStack(fosite.ErrTokenExpired.WithWrap(err).WithDebug(err.Error()))
-			case jwtx.ValidationErrorIssuedAt:
+			case jwt.ValidationErrorIssuedAt:
 				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwtx.ValidationErrorIssuer:
+			case jwt.ValidationErrorIssuer:
 				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwtx.ValidationErrorNotValidYet:
+			case jwt.ValidationErrorNotValidYet:
 				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwtx.ValidationErrorId:
+			case jwt.ValidationErrorId:
 				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwtx.ValidationErrorClaimsInvalid:
+			case jwt.ValidationErrorClaimsInvalid:
 				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
 			default:
 				err = errorsx.WithStack(fosite.ErrRequestUnauthorized.WithWrap(err).WithDebug(err.Error()))

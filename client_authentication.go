@@ -33,7 +33,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
 	jose "gopkg.in/square/go-jose.v2"
 )
@@ -90,7 +90,7 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 		var clientID string
 		var client Client
 
-		token, err := jwt.ParseWithClaims(assertion, new(jwt.MapClaims), func(t *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(assertion, jwt.MapClaims{}, func(t *jwt.Token) (interface{}, error) {
 			var err error
 			clientID, _, err = clientCredentialsFromRequestBody(form, false)
 			if err != nil {
@@ -98,9 +98,8 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 			}
 
 			if clientID == "" {
-				if claims, ok := t.Claims.(*jwt.MapClaims); !ok {
-					return nil, errorsx.WithStack(ErrRequestUnauthorized.WithHint("Unable to type assert claims from client_assertion.").WithDebugf(`Expected claims to be of type '*jwt.MapClaims' but got '%T'.`, t.Claims))
-				} else if sub, ok := (*claims)["sub"].(string); !ok {
+				claims := t.Claims
+				if sub, ok := claims["sub"].(string); !ok {
 					return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The claim 'sub' from the client_assertion JSON Web Token is undefined."))
 				} else {
 					clientID = sub
@@ -135,18 +134,18 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 			if oidcClient.GetTokenEndpointAuthSigningAlgorithm() != fmt.Sprintf("%s", t.Header["alg"]) {
 				return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("The 'client_assertion' uses signing algorithm '%s' but the requested OAuth 2.0 Client enforces signing algorithm '%s'.", t.Header["alg"], oidcClient.GetTokenEndpointAuthSigningAlgorithm()))
 			}
-
-			if _, ok := t.Method.(*jwt.SigningMethodRSA); ok {
+			switch t.Method {
+			case jose.RS256, jose.RS384, jose.RS512:
 				return f.findClientPublicJWK(oidcClient, t, true)
-			} else if _, ok := t.Method.(*jwt.SigningMethodECDSA); ok {
+			case jose.ES256, jose.ES384, jose.ES512:
 				return f.findClientPublicJWK(oidcClient, t, false)
-			} else if _, ok := t.Method.(*jwt.SigningMethodRSAPSS); ok {
+			case jose.PS256, jose.PS384, jose.PS512:
 				return f.findClientPublicJWK(oidcClient, t, true)
-			} else if _, ok := t.Method.(*jwt.SigningMethodHMAC); ok {
+			case jose.HS256, jose.HS384, jose.HS512:
 				return nil, errorsx.WithStack(ErrInvalidClient.WithHint("This authorization server does not support client authentication method 'client_secret_jwt'."))
+			default:
+				return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("The 'client_assertion' request parameter uses unsupported signing algorithm '%s'.", t.Header["alg"]))
 			}
-
-			return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("The 'client_assertion' request parameter uses unsupported signing algorithm '%s'.", t.Header["alg"]))
 		})
 		if err != nil {
 			// Do not re-process already enhanced errors
@@ -162,19 +161,15 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Unable to verify the request object because its claims could not be validated, check if the expiry time is set correctly.").WithWrap(err).WithDebug(err.Error()))
 		}
 
-		claims, ok := token.Claims.(*jwt.MapClaims)
-		if !ok {
-			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Unable to type assert claims from request parameter 'client_assertion'.").WithDebugf("Got claims of type %T but expected type '*jwt.MapClaims'.", token.Claims))
-		}
-
+		claims := token.Claims
 		var jti string
 		if !claims.VerifyIssuer(clientID, true) {
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Claim 'iss' from 'client_assertion' must match the 'client_id' of the OAuth 2.0 Client."))
 		} else if f.TokenURL == "" {
 			return nil, errorsx.WithStack(ErrMisconfiguration.WithHint("The authorization server's token endpoint URL has not been set."))
-		} else if sub, ok := (*claims)["sub"].(string); !ok || sub != clientID {
+		} else if sub, ok := claims["sub"].(string); !ok || sub != clientID {
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Claim 'sub' from 'client_assertion' must match the 'client_id' of the OAuth 2.0 Client."))
-		} else if jti, ok = (*claims)["jti"].(string); !ok || len(jti) == 0 {
+		} else if jti, ok = claims["jti"].(string); !ok || len(jti) == 0 {
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Claim 'jti' from 'client_assertion' must be set but is not."))
 		} else if f.Store.ClientAssertionJWTValid(ctx, jti) != nil {
 			return nil, errorsx.WithStack(ErrJTIKnown.WithHint("Claim 'jti' from 'client_assertion' MUST only be used once."))
@@ -183,7 +178,7 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 		// type conversion according to jwt.MapClaims.VerifyExpiresAt
 		var expiry int64
 		err = nil
-		switch exp := (*claims)["exp"].(type) {
+		switch exp := claims["exp"].(type) {
 		case float64:
 			expiry = int64(exp)
 		case json.Number:
@@ -199,7 +194,7 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 			return nil, err
 		}
 
-		if auds, ok := (*claims)["aud"].([]interface{}); !ok {
+		if auds, ok := claims["aud"].([]interface{}); !ok {
 			if !claims.VerifyAudience(f.TokenURL, true) {
 				return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("Claim 'audience' from 'client_assertion' must match the authorization server's token endpoint '%s'.", f.TokenURL))
 			}
