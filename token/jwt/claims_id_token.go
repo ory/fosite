@@ -110,7 +110,7 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 	}
 
 	if !c.AuthTime.IsZero() {
-		ret["auth_time"] = float64(c.AuthTime.Unix()) // jwt-go does not support int64 as datatype
+		ret["auth_time"] = c.AuthTime.Unix()
 	} else {
 		delete(ret, "auth_time")
 	}

@@ -70,7 +70,7 @@ func TestIDTokenClaimsToMap(t *testing.T) {
 		"baz":       idTokenClaims.Extra["baz"],
 		"at_hash":   idTokenClaims.AccessTokenHash,
 		"c_hash":    idTokenClaims.CodeHash,
-		"auth_time": float64(idTokenClaims.AuthTime.Unix()),
+		"auth_time": idTokenClaims.AuthTime.Unix(),
 		"acr":       idTokenClaims.AuthenticationContextClassReference,
 		"amr":       idTokenClaims.AuthenticationMethodsReference,
 	}, idTokenClaims.ToMap())
@@ -88,7 +88,7 @@ func TestIDTokenClaimsToMap(t *testing.T) {
 		"baz":       idTokenClaims.Extra["baz"],
 		"at_hash":   idTokenClaims.AccessTokenHash,
 		"c_hash":    idTokenClaims.CodeHash,
-		"auth_time": float64(idTokenClaims.AuthTime.Unix()),
+		"auth_time": idTokenClaims.AuthTime.Unix(),
 		"acr":       idTokenClaims.AuthenticationContextClassReference,
 		"amr":       idTokenClaims.AuthenticationMethodsReference,
 		"nonce":     idTokenClaims.Nonce,
