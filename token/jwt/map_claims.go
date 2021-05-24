@@ -1,11 +1,14 @@
 package jwt
 
 import (
+	"bytes"
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"time"
-	// "fmt"
+
+	"github.com/ory/x/errorsx"
+	jjson "gopkg.in/square/go-jose.v2/json"
 )
 
 var TimeFunc = time.Now
@@ -43,11 +46,7 @@ func (m MapClaims) VerifyAudience(cmp string, req bool) bool {
 // Compares the exp claim against cmp.
 // If required is false, this method will return true if the value matches or is unset
 func (m MapClaims) VerifyExpiresAt(cmp int64, req bool) bool {
-	switch exp := m["exp"].(type) {
-	case float64:
-		return verifyExp(int64(exp), cmp, req)
-	case json.Number:
-		v, _ := exp.Int64()
+	if v, ok := m.toInt64("exp"); ok {
 		return verifyExp(v, cmp, req)
 	}
 	return !req
@@ -56,11 +55,7 @@ func (m MapClaims) VerifyExpiresAt(cmp int64, req bool) bool {
 // Compares the iat claim against cmp.
 // If required is false, this method will return true if the value matches or is unset
 func (m MapClaims) VerifyIssuedAt(cmp int64, req bool) bool {
-	switch iat := m["iat"].(type) {
-	case float64:
-		return verifyIat(int64(iat), cmp, req)
-	case json.Number:
-		v, _ := iat.Int64()
+	if v, ok := m.toInt64("iat"); ok {
 		return verifyIat(v, cmp, req)
 	}
 	return !req
@@ -76,14 +71,27 @@ func (m MapClaims) VerifyIssuer(cmp string, req bool) bool {
 // Compares the nbf claim against cmp.
 // If required is false, this method will return true if the value matches or is unset
 func (m MapClaims) VerifyNotBefore(cmp int64, req bool) bool {
-	switch nbf := m["nbf"].(type) {
-	case float64:
-		return verifyNbf(int64(nbf), cmp, req)
-	case json.Number:
-		v, _ := nbf.Int64()
+	if v, ok := m.toInt64("nbf"); ok {
 		return verifyNbf(v, cmp, req)
 	}
+
 	return !req
+}
+
+func (m MapClaims) toInt64(claim string) (int64, bool) {
+	switch t := m[claim].(type) {
+	case float64:
+		return int64(t), true
+	case int64:
+		return t, true
+	case json.Number:
+		v, err := t.Int64()
+		if err != nil {
+			return v, false
+		}
+		return v, true
+	}
+	return 0, false
 }
 
 // Validates time based claims "exp, iat, nbf".
@@ -114,6 +122,35 @@ func (m MapClaims) Valid() error {
 	}
 
 	return vErr
+}
+
+func (m MapClaims) UnmarshalJSON(b []byte) error {
+	// A custom unmarshal is required in order to convert float64 integer values to int64.
+	// It does it on the first level of a map for relevant claims like "iat", "exp" and "nbf",
+	// but also applicable to any first level claim.
+	//
+	// This custom Unmarshal can be removed once this issue gets solved
+	// https://github.com/square/go-jose/issues/351
+	d := jjson.NewDecoder(bytes.NewReader(b))
+	mp := map[string]interface{}(m)
+	if err := d.Decode(&mp); err != nil {
+		return errorsx.WithStack(err)
+	}
+
+	for k, v := range mp {
+		switch n := v.(type) {
+		case float64:
+			intv := int64(n)
+			// this checks that no precision gets lost
+			// and that the number fits into a int64
+			if n != float64(intv) {
+				continue
+			}
+			m[k] = intv
+		}
+	}
+
+	return nil
 }
 
 func verifyAud(aud []string, cmp string, required bool) bool {
