@@ -105,7 +105,7 @@ func TestScopeFieldString(t *testing.T) {
 
 func TestScopeFieldBoth(t *testing.T) {
 	jwtClaimsWithBoth := jwtClaims.WithScopeField(JWTScopeFieldBoth)
-	// Making a copy of jwtClaimsMap.
+	// Making a copy of jwtClaimsMap
 	jwtClaimsMapWithBoth := jwtClaims.ToMap()
 	jwtClaimsMapWithBoth["scope"] = "email offline"
 	assert.Equal(t, jwtClaimsMapWithBoth, map[string]interface{}(jwtClaimsWithBoth.ToMapClaims()))

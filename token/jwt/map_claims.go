@@ -86,10 +86,15 @@ func (m MapClaims) toInt64(claim string) (int64, bool) {
 		return t, true
 	case json.Number:
 		v, err := t.Int64()
-		if err != nil {
-			return v, false
+		if err == nil {
+			return v, true
 		}
-		return v, true
+		vf, err := t.Float64()
+		if err != nil {
+			return 0, false
+		}
+
+		return int64(vf), true
 	}
 	return 0, false
 }
@@ -129,8 +134,8 @@ func (m MapClaims) UnmarshalJSON(b []byte) error {
 	// It does it on the first level of a map for relevant claims like "iat", "exp" and "nbf",
 	// but also applicable to any first level claim.
 	//
-	// This custom Unmarshal can be removed once this issue gets solved
-	// https://github.com/square/go-jose/issues/351
+	// This custom Unmarshal can be removed once this PR gets merged
+	// https://github.com/square/go-jose/pull/352
 	d := jjson.NewDecoder(bytes.NewReader(b))
 	mp := map[string]interface{}(m)
 	if err := d.Decode(&mp); err != nil {
