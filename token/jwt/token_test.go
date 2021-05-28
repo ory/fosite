@@ -92,12 +92,12 @@ func TestParser_Parse(t *testing.T) {
 			given: given{
 				name: "basic expired",
 				generate: &generate{
-					claims: MapClaims{"foo": "bar", "exp": float64(time.Now().Unix() - 100)},
+					claims: MapClaims{"foo": "bar", "exp": time.Now().Unix() - 100},
 				},
 			},
 			expected: expected{
 				keyFunc: defaultKeyFunc,
-				claims:  MapClaims{"foo": "bar", "exp": float64(time.Now().Unix() - 100)},
+				claims:  MapClaims{"foo": "bar", "exp": time.Now().Unix() - 100},
 				valid:   false,
 				errors:  ValidationErrorExpired,
 			},
@@ -106,12 +106,12 @@ func TestParser_Parse(t *testing.T) {
 			given: given{
 				name: "basic nbf",
 				generate: &generate{
-					claims: MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100)},
+					claims: MapClaims{"foo": "bar", "nbf": time.Now().Unix() + 100},
 				},
 			},
 			expected: expected{
 				keyFunc: defaultKeyFunc,
-				claims:  MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100)},
+				claims:  MapClaims{"foo": "bar", "nbf": time.Now().Unix() + 100},
 				valid:   false,
 				errors:  ValidationErrorNotValidYet,
 			},
@@ -120,12 +120,12 @@ func TestParser_Parse(t *testing.T) {
 			given: given{
 				name: "expired and nbf",
 				generate: &generate{
-					claims: MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100), "exp": float64(time.Now().Unix() - 100)},
+					claims: MapClaims{"foo": "bar", "nbf": time.Now().Unix() + 100, "exp": time.Now().Unix() - 100},
 				},
 			},
 			expected: expected{
 				keyFunc: defaultKeyFunc,
-				claims:  MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100), "exp": float64(time.Now().Unix() - 100)},
+				claims:  MapClaims{"foo": "bar", "nbf": time.Now().Unix() + 100, "exp": time.Now().Unix() - 100},
 				valid:   false,
 				errors:  ValidationErrorNotValidYet | ValidationErrorExpired,
 			},
@@ -259,12 +259,12 @@ func TestParser_Parse(t *testing.T) {
 			given: given{
 				name: "used before issued",
 				generate: &generate{
-					claims: MapClaims{"foo": "bar", "iat": float64(time.Now().Unix() + 500)},
+					claims: MapClaims{"foo": "bar", "iat": time.Now().Unix() + 500},
 				},
 			},
 			expected: expected{
 				keyFunc: defaultKeyFunc,
-				claims:  MapClaims{"foo": "bar", "iat": float64(time.Now().Unix() + 500)},
+				claims:  MapClaims{"foo": "bar", "iat": time.Now().Unix() + 500},
 				valid:   false,
 				errors:  ValidationErrorIssuedAt,
 			},

@@ -181,6 +181,8 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 		switch exp := claims["exp"].(type) {
 		case float64:
 			expiry = int64(exp)
+		case int64:
+			expiry = exp
 		case json.Number:
 			expiry, err = exp.Int64()
 		default:
