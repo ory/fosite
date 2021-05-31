@@ -130,29 +130,16 @@ func (m MapClaims) Valid() error {
 }
 
 func (m MapClaims) UnmarshalJSON(b []byte) error {
-	// A custom unmarshal is required in order to convert float64 integer values to int64.
-	// It does it on the first level of a map for relevant claims like "iat", "exp" and "nbf",
-	// but also applicable to any first level claim.
-	//
-	// This custom Unmarshal can be removed once this PR gets merged
-	// https://github.com/square/go-jose/pull/352
+	// This custom unmarshal allows to configure the
+	// go-jose decoding settings since there is no other way
+	// see https://github.com/square/go-jose/issues/353.
+	// If issue is closed with a better solution
+	// this custom Unmarshal method can be removed
 	d := jjson.NewDecoder(bytes.NewReader(b))
 	mp := map[string]interface{}(m)
+	d.SetNumberType(jjson.UnmarshalIntOrFloat)
 	if err := d.Decode(&mp); err != nil {
 		return errorsx.WithStack(err)
-	}
-
-	for k, v := range mp {
-		switch n := v.(type) {
-		case float64:
-			intv := int64(n)
-			// this checks that no precision gets lost
-			// and that the number fits into a int64
-			if n != float64(intv) {
-				continue
-			}
-			m[k] = intv
-		}
 	}
 
 	return nil
