@@ -227,7 +227,7 @@ import "github.com/ory/fosite/compose"
 import "github.com/ory/fosite/storage"
 
 // This is the example storage that contains:
-// * an OAuth2 Client with id "my-client" and secret "foobar" capable of all oauth2 and open id connect grant and response types.
+// * an OAuth2 Client with id "my-client" and secrets "foobar" and "foobaz" capable of all oauth2 and open id connect grant and response types.
 // * a User for the resource owner password credentials grant type with username "peter" and password "secret".
 //
 // You will most likely replace this with your own logic once you set up a real world application.

@@ -244,11 +244,31 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 	}
 
 	// Enforce client authentication
-	if err := f.Hasher.Compare(ctx, client.GetHashedSecret(), []byte(clientSecret)); err != nil {
+	if err := f.checkClientSecret(ctx, client, []byte(clientSecret)); err != nil {
 		return nil, errorsx.WithStack(ErrInvalidClient.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	return client, nil
+}
+
+func (f *Fosite) checkClientSecret(ctx context.Context, client Client, clientSecret []byte) error {
+	var err error
+	err = f.Hasher.Compare(ctx, client.GetHashedSecret(), clientSecret)
+	if err == nil {
+		return nil
+	}
+	cc, ok := client.(ClientWithSecretRotation)
+	if !ok {
+		return err
+	}
+	for _, hash := range cc.GetRotatedHashes() {
+		err = f.Hasher.Compare(ctx, hash, clientSecret)
+		if err == nil {
+			return nil
+		}
+	}
+
+	return err
 }
 
 func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool) (interface{}, error) {
