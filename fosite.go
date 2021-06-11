@@ -113,6 +113,8 @@ type Fosite struct {
 
 	// ClientAuthenticationStrategy provides an extension point to plug a strategy to authenticate clients
 	ClientAuthenticationStrategy ClientAuthenticationStrategy
+
+	ResponseModeHandlerExtension ResponseModeHandler
 }
 
 const MinParameterEntropy = 8
@@ -124,4 +126,13 @@ func (f *Fosite) GetMinParameterEntropy() int {
 	} else {
 		return f.MinParameterEntropy
 	}
+}
+
+var defaultResponseModeHandler = &DefaultResponseModeHandler{}
+
+func (f *Fosite) ResponseModeHandler() ResponseModeHandler {
+	if f.ResponseModeHandlerExtension == nil {
+		return defaultResponseModeHandler
+	}
+	return f.ResponseModeHandlerExtension
 }

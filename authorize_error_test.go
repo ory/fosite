@@ -72,6 +72,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 			err: ErrInvalidGrant,
 			mock: func(rw *MockResponseWriter, req *MockAuthorizeRequester) {
 				req.EXPECT().IsRedirectURIValid().Return(false)
+				req.EXPECT().GetResponseMode().Return(ResponseModeDefault)
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().WriteHeader(http.StatusBadRequest)
 				rw.EXPECT().Write(gomock.Any())
@@ -427,7 +428,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 				req.EXPECT().GetRedirectURI().Return(copyUrl(purls[1]))
 				req.EXPECT().GetState().Return("foostate")
 				req.EXPECT().GetResponseTypes().AnyTimes().Return(Arguments([]string{"token"}))
-				req.EXPECT().GetResponseMode().Return(ResponseModeFormPost).Times(1)
+				req.EXPECT().GetResponseMode().Return(ResponseModeFormPost).Times(2)
 				rw.EXPECT().Header().Times(3).Return(header)
 				rw.EXPECT().Write(gomock.Any()).AnyTimes()
 			},
