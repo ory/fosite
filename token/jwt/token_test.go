@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/square/go-jose.v2"
+	"gopkg.in/square/go-jose.v2/jwt"
 
 	"crypto/rand"
 	"crypto/rsa"
@@ -30,6 +31,19 @@ func TestUnsignedToken(t *testing.T) {
 	parts := strings.Split(rawToken, ".")
 	require.Len(t, parts, 3)
 	require.Empty(t, parts[2])
+	tk, err := jwt.ParseSigned(rawToken)
+	require.NoError(t, err)
+	require.Len(t, tk.Headers, 1)
+	require.Equal(t, "JWT", tk.Headers[0].ExtraHeaders[jose.HeaderKey("typ")])
+}
+
+func TestJWTHeaders(t *testing.T) {
+	rawToken := makeSampleToken(nil, jose.RS256, MustRSAKey())
+	tk, err := jwt.ParseSigned(rawToken)
+	require.NoError(t, err)
+	require.Len(t, tk.Headers, 1)
+	require.Equal(t, tk.Headers[0].Algorithm, "RS256")
+	require.Equal(t, "JWT", tk.Headers[0].ExtraHeaders[jose.HeaderKey("typ")])
 }
 
 var keyFuncError error = fmt.Errorf("error loading key")
