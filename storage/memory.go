@@ -110,20 +110,22 @@ func NewExampleStore() *MemoryStore {
 		IDSessions: make(map[string]fosite.Requester),
 		Clients: map[string]fosite.Client{
 			"my-client": &fosite.DefaultClient{
-				ID:            "my-client",
-				Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
-				RedirectURIs:  []string{"http://localhost:3846/callback"},
-				ResponseTypes: []string{"id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"},
-				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
-				Scopes:        []string{"fosite", "openid", "photos", "offline"},
+				ID:             "my-client",
+				Secret:         []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`),            // = "foobar"
+				RotatedSecrets: [][]byte{[]byte(`$2y$10$X51gLxUQJ.hGw1epgHTE5u0bt64xM0COU7K9iAp.OFg8p2pUd.1zC `)}, // = "foobaz",
+				RedirectURIs:   []string{"http://localhost:3846/callback"},
+				ResponseTypes:  []string{"id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"},
+				GrantTypes:     []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+				Scopes:         []string{"fosite", "openid", "photos", "offline"},
 			},
 			"encoded:client": &fosite.DefaultClient{
-				ID:            "encoded:client",
-				Secret:        []byte(`$2a$10$A7M8b65dSSKGHF0H2sNkn.9Z0hT8U1Nv6OWPV3teUUaczXkVkxuDS`), // = "encoded&password"
-				RedirectURIs:  []string{"http://localhost:3846/callback"},
-				ResponseTypes: []string{"id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"},
-				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
-				Scopes:        []string{"fosite", "openid", "photos", "offline"},
+				ID:             "encoded:client",
+				Secret:         []byte(`$2a$10$A7M8b65dSSKGHF0H2sNkn.9Z0hT8U1Nv6OWPV3teUUaczXkVkxuDS`), // = "encoded&password"
+				RotatedSecrets: nil,
+				RedirectURIs:   []string{"http://localhost:3846/callback"},
+				ResponseTypes:  []string{"id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"},
+				GrantTypes:     []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+				Scopes:         []string{"fosite", "openid", "photos", "offline"},
 			},
 		},
 		Users: map[string]MemoryUserRelation{
