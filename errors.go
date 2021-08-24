@@ -28,7 +28,9 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
+	"golang.org/x/text/language"
 
 	stderr "errors"
 
@@ -267,6 +269,8 @@ type (
 		cause            error
 		useLegacyFormat  bool
 		exposeDebug      bool
+		catalog          i18n.MessageCatalog
+		lang             language.Tag
 	}
 	stackTracer interface {
 		StackTrace() errors.StackTrace
@@ -373,12 +377,14 @@ func (e *RFC6749Error) Cause() error {
 }
 
 func (e *RFC6749Error) WithHintf(hint string, args ...interface{}) *RFC6749Error {
-	return e.WithHint(fmt.Sprintf(hint, args...))
+	err := *e
+	err.HintField = i18n.GetMessage(e.catalog, hint, e.lang, args...)
+	return &err
 }
 
 func (e *RFC6749Error) WithHint(hint string) *RFC6749Error {
 	err := *e
-	err.HintField = hint
+	err.HintField = i18n.GetMessage(e.catalog, hint, e.lang)
 	return &err
 }
 
@@ -399,6 +405,13 @@ func (e *RFC6749Error) WithDebugf(debug string, args ...interface{}) *RFC6749Err
 func (e *RFC6749Error) WithDescription(description string) *RFC6749Error {
 	err := *e
 	err.DescriptionField = description
+	return &err
+}
+
+func (e *RFC6749Error) WithLocalizer(catalog i18n.MessageCatalog, lang language.Tag) *RFC6749Error {
+	err := *e
+	err.catalog = catalog
+	err.lang = lang
 	return &err
 }
 

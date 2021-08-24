@@ -24,8 +24,10 @@ package fosite
 import (
 	"testing"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/text/language"
 )
 
 func TestRFC6749Error(t *testing.T) {
@@ -43,4 +45,39 @@ func TestRFC6749Error(t *testing.T) {
 
 		assert.Empty(t, wrap.StackTrace())
 	})
+}
+
+func TestRFC6749ErrorWithLocalizer(t *testing.T) {
+	catalog := i18n.NewDefaultMessageCatalog([]*i18n.DefaultLocaleBundle{
+		{
+			LangTag: "en",
+			Messages: []*i18n.DefaultMessage{
+				{
+					ID:               "badRequestMethod",
+					FormattedMessage: "HTTP method is '%s', expected 'POST'.",
+				},
+				{
+					ID:               "badRequestBody",
+					FormattedMessage: "Unable to parse HTTP body, make sure to send a properly formatted form request body.",
+				},
+			},
+		},
+		{
+			LangTag: "es",
+			Messages: []*i18n.DefaultMessage{
+				{
+					ID:               "badRequestMethod",
+					FormattedMessage: "El método HTTP es '%s', esperado 'POST'.",
+				},
+				{
+					ID:               "badRequestBody",
+					FormattedMessage: "No se puede analizar el cuerpo HTTP, asegúrese de enviar un cuerpo de solicitud de formulario con el formato adecuado.",
+				},
+			},
+		},
+	})
+
+	err := ErrInvalidRequest.WithLocalizer(catalog, language.Spanish).
+		WithHintf("badRequestMethod", "GET")
+	assert.Equal(t, "The request is missing a required parameter, includes an invalid parameter value, includes a parameter more than once, or is otherwise malformed. El método HTTP es 'GET', esperado 'POST'.", err.GetDescription())
 }
