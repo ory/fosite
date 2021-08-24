@@ -433,7 +433,8 @@ func (e *RFC6749Error) WithExposeDebug(exposeDebug bool) *RFC6749Error {
 
 // GetDescription returns a more description description, combined with hint and debug (when available).
 func (e *RFC6749Error) GetDescription() string {
-	description := e.DescriptionField
+	description := i18n.GetMessageOrDefault(e.catalog, e.ErrorField, e.lang, e.DescriptionField)
+
 	if e.HintField != "" {
 		description += " " + e.HintField
 	}

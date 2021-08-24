@@ -73,11 +73,15 @@ func TestRFC6749ErrorWithLocalizer(t *testing.T) {
 					ID:               "badRequestBody",
 					FormattedMessage: "No se puede analizar el cuerpo HTTP, asegúrese de enviar un cuerpo de solicitud de formulario con el formato adecuado.",
 				},
+				{
+					ID:               "invalid_request",
+					FormattedMessage: "A la solicitud le falta un parámetro obligatorio, incluye un valor de parámetro no válido, incluye un parámetro más de una vez o tiene un formato incorrecto.",
+				},
 			},
 		},
 	})
 
 	err := ErrInvalidRequest.WithLocalizer(catalog, language.Spanish).
 		WithHintf("badRequestMethod", "GET")
-	assert.Equal(t, "The request is missing a required parameter, includes an invalid parameter value, includes a parameter more than once, or is otherwise malformed. El método HTTP es 'GET', esperado 'POST'.", err.GetDescription())
+	assert.Equal(t, "A la solicitud le falta un parámetro obligatorio, incluye un valor de parámetro no válido, incluye un parámetro más de una vez o tiene un formato incorrecto. El método HTTP es 'GET', esperado 'POST'.", err.GetDescription())
 }
