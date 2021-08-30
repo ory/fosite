@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/i18n"
 )
 
 type Config struct {
@@ -114,6 +115,8 @@ type Config struct {
 
 	// ClientAuthenticationStrategy indicates the Strategy to authenticate client requests
 	ClientAuthenticationStrategy fosite.ClientAuthenticationStrategy
+
+	MessageCatalog i18n.MessageCatalog
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.

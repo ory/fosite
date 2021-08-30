@@ -72,6 +72,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 		MinParameterEntropy:          config.GetMinParameterEntropy(),
 		UseLegacyErrorFormat:         config.UseLegacyErrorFormat,
 		ClientAuthenticationStrategy: config.GetClientAuthenticationStrategy(),
+		MessageCatalog:               config.MessageCatalog,
 	}
 
 	for _, factory := range factories {

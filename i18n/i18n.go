@@ -1,7 +1,7 @@
 package i18n
 
 import (
-	"fmt"
+	"net/http"
 
 	"golang.org/x/text/language"
 )
@@ -9,6 +9,7 @@ import (
 // MessageCatalog declares the interface to get globalized messages
 type MessageCatalog interface {
 	GetMessage(ID string, tag language.Tag, v ...interface{}) string
+	GetLangFromRequest(r *http.Request) language.Tag
 }
 
 // GetMessage is a helper func to get the translated message based on
@@ -23,10 +24,20 @@ func GetMessage(c MessageCatalog, ID string, tag language.Tag, v ...interface{})
 // 'def' message.
 func GetMessageOrDefault(c MessageCatalog, ID string, tag language.Tag, def string, v ...interface{}) string {
 	if c != nil {
-		if s := c.GetMessage(ID, tag, v...); s != "" {
+		if s := c.GetMessage(ID, tag, v...); s != ID {
 			return s
 		}
 	}
 
-	return fmt.Sprintf(def, v...)
+	return def
+}
+
+// GetLangFromRequest is a helper func to get the language tag based on the
+// HTTP request and the constructed message catalog.
+func GetLangFromRequest(c MessageCatalog, r *http.Request) language.Tag {
+	if c != nil {
+		return c.GetLangFromRequest(r)
+	}
+
+	return language.English
 }

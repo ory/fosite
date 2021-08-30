@@ -261,16 +261,19 @@ const (
 
 type (
 	RFC6749Error struct {
-		ErrorField       string
-		DescriptionField string
-		HintField        string
-		CodeField        int
-		DebugField       string
-		cause            error
-		useLegacyFormat  bool
-		exposeDebug      bool
-		catalog          i18n.MessageCatalog
-		lang             language.Tag
+		ErrorField        string
+		DescriptionField  string
+		HintIDField       i18n.ErrorHintType
+		ExtraHintIDsField []i18n.ErrorHintType
+		HintArgsField     []interface{}
+		HintField         string
+		CodeField         int
+		DebugField        string
+		cause             error
+		useLegacyFormat   bool
+		exposeDebug       bool
+		catalog           i18n.MessageCatalog
+		lang              language.Tag
 	}
 	stackTracer interface {
 		StackTrace() errors.StackTrace
@@ -376,16 +379,44 @@ func (e *RFC6749Error) Cause() error {
 	return e.cause
 }
 
+// WithHintf sets the hint without any globalization. Avoid the use
+// of this func. Instead use WithHintID.
 func (e *RFC6749Error) WithHintf(hint string, args ...interface{}) *RFC6749Error {
+	return e.WithHint(fmt.Sprintf(hint, args...))
+}
+
+// WithHint sets the hint without any globalization. Avoid the use
+// of this func. Instead use WithHintID.
+func (e *RFC6749Error) WithHint(hint string) *RFC6749Error {
 	err := *e
-	err.HintField = i18n.GetMessage(e.catalog, hint, e.lang, args...)
+	err.HintField = hint
 	return &err
 }
 
-func (e *RFC6749Error) WithHint(hint string) *RFC6749Error {
+// WithHintID accepts the ID of the hint message. The hint ID
+// must be an entry in 'errHints' in this file.
+func (e *RFC6749Error) WithHintID(ID i18n.ErrorHintType, args ...interface{}) *RFC6749Error {
 	err := *e
-	err.HintField = i18n.GetMessage(e.catalog, hint, e.lang)
+	err.HintIDField = ID
+	err.HintArgsField = args
+	err.HintField = err.getDefaultHint(ID, args...)
 	return &err
+}
+
+// WithHintIDs accepts a list of hint message IDs and concatenates them.
+// The hint ID must be an entry in 'errHints' in this file.
+func (e *RFC6749Error) WithHintIDs(IDs []i18n.ErrorHintType) *RFC6749Error {
+	err := e.WithHintID(IDs[0])
+	err.ExtraHintIDsField = IDs[1:]
+	for i, v := range err.ExtraHintIDsField {
+		if i != 0 {
+			err.HintField += " "
+		}
+
+		err.HintField += err.getDefaultHint(v)
+	}
+
+	return err
 }
 
 func (e *RFC6749Error) Debug() string {
@@ -435,6 +466,7 @@ func (e *RFC6749Error) WithExposeDebug(exposeDebug bool) *RFC6749Error {
 func (e *RFC6749Error) GetDescription() string {
 	description := i18n.GetMessageOrDefault(e.catalog, e.ErrorField, e.lang, e.DescriptionField)
 
+	e.computeHintField()
 	if e.HintField != "" {
 		description += " " + e.HintField
 	}
@@ -512,4 +544,31 @@ func (e *RFC6749Error) ToValues() url.Values {
 	}
 
 	return values
+}
+
+func (e *RFC6749Error) getDefaultHint(ID i18n.ErrorHintType, args ...interface{}) string {
+	defHint, ok := i18n.HintsMap[ID]
+	if !ok {
+		// This should never happen if the hints are properly populated in the
+		// map.
+		panic(fmt.Sprintf("Hint must be populated in the map for: %s", ID))
+	}
+
+	return fmt.Sprintf(defHint, args...)
+}
+
+func (e *RFC6749Error) computeHintField() {
+	if e.HintIDField == "" {
+		return
+	}
+
+	e.HintField = i18n.GetMessageOrDefault(e.catalog, fmt.Sprintf("%s", e.HintIDField), e.lang, e.HintField, e.HintArgsField...)
+	for _, v := range e.ExtraHintIDsField {
+		if v == "" {
+			continue
+		}
+
+		e.HintField += " " + i18n.GetMessageOrDefault(e.catalog, fmt.Sprintf("%s", v), e.lang,
+			e.getDefaultHint(v, e.HintArgsField...), e.HintArgsField...)
+	}
 }

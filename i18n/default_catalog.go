@@ -1,6 +1,8 @@
 package i18n
 
 import (
+	"net/http"
+
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -59,8 +61,19 @@ func (c *defaultMessageCatalog) GetMessage(ID string, tag language.Tag, v ...int
 	p := message.NewPrinter(matchedTag)
 
 	result := p.Sprintf(ID, v...)
+	if result == ID && tag != language.English {
+		return c.GetMessage(ID, language.English, v...)
+	}
 
 	return result
+}
+
+func (c *defaultMessageCatalog) GetLangFromRequest(r *http.Request) language.Tag {
+	lang, _ := r.Cookie("lang")
+	accept := r.Header.Get("Accept-Language")
+	tag, _ := language.MatchStrings(c.matcher, lang.String(), accept)
+
+	return tag
 }
 
 func (c *defaultMessageCatalog) makeMatcher() {

@@ -22,6 +22,7 @@
 package fosite
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/ory/fosite/i18n"
@@ -53,11 +54,11 @@ func TestRFC6749ErrorWithLocalizer(t *testing.T) {
 			LangTag: "en",
 			Messages: []*i18n.DefaultMessage{
 				{
-					ID:               "badRequestMethod",
+					ID:               fmt.Sprintf("%s", i18n.ErrHintInvalidHTTPMethod),
 					FormattedMessage: "HTTP method is '%s', expected 'POST'.",
 				},
 				{
-					ID:               "badRequestBody",
+					ID:               fmt.Sprintf("%s", i18n.ErrHintMalformedRequestBody),
 					FormattedMessage: "Unable to parse HTTP body, make sure to send a properly formatted form request body.",
 				},
 			},
@@ -66,11 +67,11 @@ func TestRFC6749ErrorWithLocalizer(t *testing.T) {
 			LangTag: "es",
 			Messages: []*i18n.DefaultMessage{
 				{
-					ID:               "badRequestMethod",
+					ID:               fmt.Sprintf("%s", i18n.ErrHintInvalidHTTPMethod),
 					FormattedMessage: "El método HTTP es '%s', esperado 'POST'.",
 				},
 				{
-					ID:               "badRequestBody",
+					ID:               fmt.Sprintf("%s", i18n.ErrHintMalformedRequestBody),
 					FormattedMessage: "No se puede analizar el cuerpo HTTP, asegúrese de enviar un cuerpo de solicitud de formulario con el formato adecuado.",
 				},
 				{
@@ -82,6 +83,6 @@ func TestRFC6749ErrorWithLocalizer(t *testing.T) {
 	})
 
 	err := ErrInvalidRequest.WithLocalizer(catalog, language.Spanish).
-		WithHintf("badRequestMethod", "GET")
+		WithHintID(i18n.ErrHintInvalidHTTPMethod, "GET")
 	assert.Equal(t, "A la solicitud le falta un parámetro obligatorio, incluye un valor de parámetro no válido, incluye un parámetro más de una vez o tiene un formato incorrecto. El método HTTP es 'GET', esperado 'POST'.", err.GetDescription())
 }
