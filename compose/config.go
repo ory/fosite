@@ -117,6 +117,9 @@ type Config struct {
 	ClientAuthenticationStrategy fosite.ClientAuthenticationStrategy
 
 	MessageCatalog i18n.MessageCatalog
+
+	// ResponseModeHandlerExtension provides a handler for custom response modes
+	ResponseModeHandlerExtension fosite.ResponseModeHandler
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.

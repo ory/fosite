@@ -183,6 +183,12 @@ func TestAuthenticateClient(t *testing.T) {
 		},
 		{
 			d:      "should pass because client is confidential and id and secret match in post body",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: []byte("invalid_hash"), RotatedSecrets: [][]byte{barSecret}}, TokenEndpointAuthMethod: "client_secret_post"},
+			form:   url.Values{"client_id": []string{"foo"}, "client_secret": []string{"bar"}},
+			r:      new(http.Request),
+		},
+		{
+			d:      "should pass because client is confidential and id and rotated secret match in post body",
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_post"},
 			form:   url.Values{"client_id": []string{"foo"}, "client_secret": []string{"bar"}},
 			r:      new(http.Request),
@@ -208,6 +214,18 @@ func TestAuthenticateClient(t *testing.T) {
 			r:      &http.Request{Header: clientBasicAuthHeader("foo", "bar")},
 		},
 		{
+			d:      "should pass because client is confidential and id and rotated secret match in header",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: []byte("invalid_hash"), RotatedSecrets: [][]byte{barSecret}}, TokenEndpointAuthMethod: "client_secret_basic"},
+			form:   url.Values{},
+			r:      &http.Request{Header: clientBasicAuthHeader("foo", "bar")},
+		},
+		{
+			d:      "should pass because client is confidential and id and rotated secret match in header",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: []byte("invalid_hash"), RotatedSecrets: [][]byte{[]byte("invalid"), barSecret}}, TokenEndpointAuthMethod: "client_secret_basic"},
+			form:   url.Values{},
+			r:      &http.Request{Header: clientBasicAuthHeader("foo", "bar")},
+		},
+		{
 			d:         "should fail because auth method is not client_secret_basic",
 			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_post"},
 			form:      url.Values{},
@@ -217,6 +235,13 @@ func TestAuthenticateClient(t *testing.T) {
 		{
 			d:         "should fail because client is confidential and secret does not match in header",
 			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_basic"},
+			form:      url.Values{},
+			r:         &http.Request{Header: clientBasicAuthHeader("foo", "baz")},
+			expectErr: ErrInvalidClient,
+		},
+		{
+			d:         "should fail because client is confidential and neither secret nor rotated does match in header",
+			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret, RotatedSecrets: [][]byte{barSecret}}, TokenEndpointAuthMethod: "client_secret_basic"},
 			form:      url.Values{},
 			r:         &http.Request{Header: clientBasicAuthHeader("foo", "baz")},
 			expectErr: ErrInvalidClient,

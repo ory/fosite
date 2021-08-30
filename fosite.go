@@ -118,6 +118,8 @@ type Fosite struct {
 
 	// MessageCatalog is the catalog of messages used for i18n
 	MessageCatalog i18n.MessageCatalog
+
+	ResponseModeHandlerExtension ResponseModeHandler
 }
 
 const MinParameterEntropy = 8
@@ -129,4 +131,13 @@ func (f *Fosite) GetMinParameterEntropy() int {
 	} else {
 		return f.MinParameterEntropy
 	}
+}
+
+var defaultResponseModeHandler = &DefaultResponseModeHandler{}
+
+func (f *Fosite) ResponseModeHandler() ResponseModeHandler {
+	if f.ResponseModeHandlerExtension == nil {
+		return defaultResponseModeHandler
+	}
+	return f.ResponseModeHandlerExtension
 }

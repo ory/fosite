@@ -126,19 +126,19 @@ func (c *JWTClaims) ToMap() map[string]interface{} {
 	}
 
 	if !c.IssuedAt.IsZero() {
-		ret["iat"] = float64(c.IssuedAt.Unix()) // jwt-go does not support int64 as datatype
+		ret["iat"] = c.IssuedAt.Unix()
 	} else {
 		delete(ret, "iat")
 	}
 
 	if !c.NotBefore.IsZero() {
-		ret["nbf"] = float64(c.NotBefore.Unix()) // jwt-go does not support int64 as datatype
+		ret["nbf"] = c.NotBefore.Unix()
 	} else {
 		delete(ret, "nbf")
 	}
 
 	if !c.ExpiresAt.IsZero() {
-		ret["exp"] = float64(c.ExpiresAt.Unix()) // jwt-go does not support int64 as datatype
+		ret["exp"] = c.ExpiresAt.Unix()
 	} else {
 		delete(ret, "exp")
 	}
@@ -183,38 +183,23 @@ func (c *JWTClaims) FromMap(m map[string]interface{}) {
 				c.Audience = s
 			}
 		case "iat":
-			switch v.(type) {
-			case float64:
-				c.IssuedAt = time.Unix(int64(v.(float64)), 0).UTC()
-			case int64:
-				c.IssuedAt = time.Unix(v.(int64), 0).UTC()
-			}
+			c.IssuedAt = toTime(v, c.IssuedAt)
 		case "nbf":
-			switch v.(type) {
-			case float64:
-				c.NotBefore = time.Unix(int64(v.(float64)), 0).UTC()
-			case int64:
-				c.NotBefore = time.Unix(v.(int64), 0).UTC()
-			}
+			c.NotBefore = toTime(v, c.NotBefore)
 		case "exp":
-			switch v.(type) {
-			case float64:
-				c.ExpiresAt = time.Unix(int64(v.(float64)), 0).UTC()
-			case int64:
-				c.ExpiresAt = time.Unix(v.(int64), 0).UTC()
-			}
+			c.ExpiresAt = toTime(v, c.ExpiresAt)
 		case "scp":
-			switch v.(type) {
+			switch s := v.(type) {
 			case []string:
-				c.Scope = v.([]string)
+				c.Scope = s
 				if c.ScopeField == JWTScopeFieldString {
 					c.ScopeField = JWTScopeFieldBoth
 				} else if c.ScopeField == JWTScopeFieldUnset {
 					c.ScopeField = JWTScopeFieldList
 				}
 			case []interface{}:
-				c.Scope = make([]string, len(v.([]interface{})))
-				for i, vi := range v.([]interface{}) {
+				c.Scope = make([]string, len(s))
+				for i, vi := range s {
 					if s, ok := vi.(string); ok {
 						c.Scope[i] = s
 					}
@@ -238,6 +223,17 @@ func (c *JWTClaims) FromMap(m map[string]interface{}) {
 			c.Extra[k] = v
 		}
 	}
+}
+
+func toTime(v interface{}, def time.Time) (t time.Time) {
+	t = def
+	switch a := v.(type) {
+	case float64:
+		t = time.Unix(int64(a), 0).UTC()
+	case int64:
+		t = time.Unix(a, 0).UTC()
+	}
+	return
 }
 
 // Add will add a key-value pair to the extra field

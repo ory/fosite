@@ -52,6 +52,13 @@ type Client interface {
 	GetAudience() Arguments
 }
 
+// ClientWithSecretRotation extends Client interface by a method providing a slice of rotated secrets.
+type ClientWithSecretRotation interface {
+	Client
+	// GetRotatedHashes returns a slice of hashed secrets used for secrets rotation.
+	GetRotatedHashes() [][]byte
+}
+
 // OpenIDConnectClient represents a client capable of performing OpenID Connect requests.
 type OpenIDConnectClient interface {
 	// GetRequestURIs is an array of request_uri values that are pre-registered by the RP for use at the OP. Servers MAY
@@ -88,14 +95,15 @@ type ResponseModeClient interface {
 
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
-	ID            string   `json:"id"`
-	Secret        []byte   `json:"client_secret,omitempty"`
-	RedirectURIs  []string `json:"redirect_uris"`
-	GrantTypes    []string `json:"grant_types"`
-	ResponseTypes []string `json:"response_types"`
-	Scopes        []string `json:"scopes"`
-	Audience      []string `json:"audience"`
-	Public        bool     `json:"public"`
+	ID             string   `json:"id"`
+	Secret         []byte   `json:"client_secret,omitempty"`
+	RotatedSecrets [][]byte `json:"rotated_secrets,omitempty"`
+	RedirectURIs   []string `json:"redirect_uris"`
+	GrantTypes     []string `json:"grant_types"`
+	ResponseTypes  []string `json:"response_types"`
+	Scopes         []string `json:"scopes"`
+	Audience       []string `json:"audience"`
+	Public         bool     `json:"public"`
 }
 
 type DefaultOpenIDConnectClient struct {
@@ -131,6 +139,10 @@ func (c *DefaultClient) GetRedirectURIs() []string {
 
 func (c *DefaultClient) GetHashedSecret() []byte {
 	return c.Secret
+}
+
+func (c *DefaultClient) GetRotatedHashes() [][]byte {
+	return c.RotatedSecrets
 }
 
 func (c *DefaultClient) GetScopes() Arguments {

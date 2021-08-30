@@ -48,11 +48,11 @@ var jwtClaims = &JWTClaims{
 
 var jwtClaimsMap = map[string]interface{}{
 	"sub": jwtClaims.Subject,
-	"iat": float64(jwtClaims.IssuedAt.Unix()),
+	"iat": jwtClaims.IssuedAt.Unix(),
 	"iss": jwtClaims.Issuer,
-	"nbf": float64(jwtClaims.NotBefore.Unix()),
+	"nbf": jwtClaims.NotBefore.Unix(),
 	"aud": jwtClaims.Audience,
-	"exp": float64(jwtClaims.ExpiresAt.Unix()),
+	"exp": jwtClaims.ExpiresAt.Unix(),
 	"jti": jwtClaims.JTI,
 	"scp": []string{"email", "offline"},
 	"foo": jwtClaims.Extra["foo"],
@@ -105,7 +105,7 @@ func TestScopeFieldString(t *testing.T) {
 
 func TestScopeFieldBoth(t *testing.T) {
 	jwtClaimsWithBoth := jwtClaims.WithScopeField(JWTScopeFieldBoth)
-	// Making a copy of jwtClaimsMap.
+	// Making a copy of jwtClaimsMap
 	jwtClaimsMapWithBoth := jwtClaims.ToMap()
 	jwtClaimsMapWithBoth["scope"] = "email offline"
 	assert.Equal(t, jwtClaimsMapWithBoth, map[string]interface{}(jwtClaimsWithBoth.ToMapClaims()))

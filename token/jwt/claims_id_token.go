@@ -74,19 +74,19 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 	}
 
 	if !c.IssuedAt.IsZero() {
-		ret["iat"] = float64(c.IssuedAt.Unix()) // jwt-go does not support int64 as datatype
+		ret["iat"] = c.IssuedAt.Unix()
 	} else {
 		delete(ret, "iat")
 	}
 
 	if !c.ExpiresAt.IsZero() {
-		ret["exp"] = float64(c.ExpiresAt.Unix()) // jwt-go does not support int64 as datatype
+		ret["exp"] = c.ExpiresAt.Unix()
 	} else {
 		delete(ret, "exp")
 	}
 
 	if !c.RequestedAt.IsZero() {
-		ret["rat"] = float64(c.RequestedAt.Unix()) // jwt-go does not support int64 as datatype
+		ret["rat"] = c.RequestedAt.Unix()
 	} else {
 		delete(ret, "rat")
 	}

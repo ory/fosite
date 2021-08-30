@@ -77,6 +77,20 @@ func (mr *MockClientMockRecorder) GetHashedSecret() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHashedSecret", reflect.TypeOf((*MockClient)(nil).GetHashedSecret))
 }
 
+// GetHashedSecret mocks base method
+func (m *MockClient) GetRotatedHashes() [][]byte {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRotatedHashes")
+	ret0, _ := ret[0].([][]byte)
+	return ret0
+}
+
+// GetHashedSecret indicates an expected call of GetHashedSecret
+func (mr *MockClientMockRecorder) GetRotatedHashes() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRotatedHashes", reflect.TypeOf((*MockClient)(nil).GetRotatedHashes))
+}
+
 // GetID mocks base method
 func (m *MockClient) GetID() string {
 	m.ctrl.T.Helper()

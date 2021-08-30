@@ -203,6 +203,24 @@ func TestNewIntrospectionRequest(t *testing.T) {
 			},
 			isActive: true,
 		},
+		{
+			description: "should pass with basic auth if username and password not encoded",
+			setup: func() {
+				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				httpreq = &http.Request{
+					Method: "POST",
+					Header: http.Header{
+						//Basic Authorization with username=my-client and password=foobaz
+						"Authorization": []string{"Basic bXktY2xpZW50OmZvb2Jheg=="},
+					},
+					PostForm: url.Values{
+						"token": []string{"introspect-token"},
+					},
+				}
+				validator.EXPECT().IntrospectToken(ctx, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
+			},
+			isActive: true,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c.setup()

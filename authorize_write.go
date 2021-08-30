@@ -37,7 +37,7 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 	wh.Set("Pragma", "no-cache")
 
 	redir := ar.GetRedirectURI()
-	switch ar.GetResponseMode() {
+	switch rm := ar.GetResponseMode(); rm {
 	case ResponseModeFormPost:
 		//form_post
 		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
@@ -60,6 +60,11 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 		URLSetFragment(redir, resp.GetParameters())
 		sendRedirect(redir.String(), rw)
 		return
+	default:
+		if f.ResponseModeHandler().ResponseModes().Has(rm) {
+			f.ResponseModeHandler().WriteAuthorizeResponse(rw, ar, resp)
+			return
+		}
 	}
 }
 

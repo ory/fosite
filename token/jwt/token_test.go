@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/square/go-jose.v2"
+	"gopkg.in/square/go-jose.v2/jwt"
 
 	"crypto/rand"
 	"crypto/rsa"
@@ -30,6 +31,19 @@ func TestUnsignedToken(t *testing.T) {
 	parts := strings.Split(rawToken, ".")
 	require.Len(t, parts, 3)
 	require.Empty(t, parts[2])
+	tk, err := jwt.ParseSigned(rawToken)
+	require.NoError(t, err)
+	require.Len(t, tk.Headers, 1)
+	require.Equal(t, "JWT", tk.Headers[0].ExtraHeaders[jose.HeaderKey("typ")])
+}
+
+func TestJWTHeaders(t *testing.T) {
+	rawToken := makeSampleToken(nil, jose.RS256, MustRSAKey())
+	tk, err := jwt.ParseSigned(rawToken)
+	require.NoError(t, err)
+	require.Len(t, tk.Headers, 1)
+	require.Equal(t, tk.Headers[0].Algorithm, "RS256")
+	require.Equal(t, "JWT", tk.Headers[0].ExtraHeaders[jose.HeaderKey("typ")])
 }
 
 var keyFuncError error = fmt.Errorf("error loading key")
@@ -92,12 +106,12 @@ func TestParser_Parse(t *testing.T) {
 			given: given{
 				name: "basic expired",
 				generate: &generate{
-					claims: MapClaims{"foo": "bar", "exp": float64(time.Now().Unix() - 100)},
+					claims: MapClaims{"foo": "bar", "exp": time.Now().Unix() - 100},
 				},
 			},
 			expected: expected{
 				keyFunc: defaultKeyFunc,
-				claims:  MapClaims{"foo": "bar", "exp": float64(time.Now().Unix() - 100)},
+				claims:  MapClaims{"foo": "bar", "exp": time.Now().Unix() - 100},
 				valid:   false,
 				errors:  ValidationErrorExpired,
 			},
@@ -106,12 +120,12 @@ func TestParser_Parse(t *testing.T) {
 			given: given{
 				name: "basic nbf",
 				generate: &generate{
-					claims: MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100)},
+					claims: MapClaims{"foo": "bar", "nbf": time.Now().Unix() + 100},
 				},
 			},
 			expected: expected{
 				keyFunc: defaultKeyFunc,
-				claims:  MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100)},
+				claims:  MapClaims{"foo": "bar", "nbf": time.Now().Unix() + 100},
 				valid:   false,
 				errors:  ValidationErrorNotValidYet,
 			},
@@ -120,12 +134,12 @@ func TestParser_Parse(t *testing.T) {
 			given: given{
 				name: "expired and nbf",
 				generate: &generate{
-					claims: MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100), "exp": float64(time.Now().Unix() - 100)},
+					claims: MapClaims{"foo": "bar", "nbf": time.Now().Unix() + 100, "exp": time.Now().Unix() - 100},
 				},
 			},
 			expected: expected{
 				keyFunc: defaultKeyFunc,
-				claims:  MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100), "exp": float64(time.Now().Unix() - 100)},
+				claims:  MapClaims{"foo": "bar", "nbf": time.Now().Unix() + 100, "exp": time.Now().Unix() - 100},
 				valid:   false,
 				errors:  ValidationErrorNotValidYet | ValidationErrorExpired,
 			},
@@ -259,12 +273,12 @@ func TestParser_Parse(t *testing.T) {
 			given: given{
 				name: "used before issued",
 				generate: &generate{
-					claims: MapClaims{"foo": "bar", "iat": float64(time.Now().Unix() + 500)},
+					claims: MapClaims{"foo": "bar", "iat": time.Now().Unix() + 500},
 				},
 			},
 			expected: expected{
 				keyFunc: defaultKeyFunc,
-				claims:  MapClaims{"foo": "bar", "iat": float64(time.Now().Unix() + 500)},
+				claims:  MapClaims{"foo": "bar", "iat": time.Now().Unix() + 500},
 				valid:   false,
 				errors:  ValidationErrorIssuedAt,
 			},

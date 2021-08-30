@@ -238,6 +238,11 @@ func (f *Fosite) ParseResponseMode(r *http.Request, request *AuthorizeRequest) e
 	case string(ResponseModeFormPost):
 		request.ResponseMode = ResponseModeFormPost
 	default:
+		rm := ResponseModeType(responseMode)
+		if f.ResponseModeHandler().ResponseModes().Has(rm) {
+			request.ResponseMode = ResponseModeType(rm)
+			break
+		}
 		return errorsx.WithStack(ErrUnsupportedResponseMode.WithHintf("Request with unsupported response_mode \"%s\".", responseMode))
 	}
 
