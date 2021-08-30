@@ -12,8 +12,8 @@ import (
 // the requester in the Write* function that produces the translated
 // message.
 // See - WriteIntrospectionError, for example.
-func AddLocalizerToErr(catalog i18n.MessageCatalog, err error, requester Requester) {
-	AddLocalizerToErrWithLang(catalog, getLangFromRequester(requester), err)
+func AddLocalizerToErr(catalog i18n.MessageCatalog, err error, requester Requester) error {
+	return AddLocalizerToErrWithLang(catalog, getLangFromRequester(requester), err)
 }
 
 // AddLocalizerToErrWithLang augments the error object with the localizer

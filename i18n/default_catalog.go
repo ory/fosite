@@ -35,7 +35,9 @@ func NewDefaultMessageCatalog(bundles []*DefaultLocaleBundle) MessageCatalog {
 	}
 
 	for _, v := range c.Bundles {
-		v.Init()
+		if err := v.Init(); err != nil {
+			continue
+		}
 	}
 
 	c.makeMatcher()
