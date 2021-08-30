@@ -29,7 +29,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/ory/fosite"
 	. "github.com/ory/fosite"
+	"github.com/ory/fosite/i18n"
 	. "github.com/ory/fosite/internal"
 )
 
@@ -100,7 +102,7 @@ func TestNewAuthorizeResponse(t *testing.T) {
 				ar.EXPECT().GetResponseTypes().Return([]string{"token", "code"})
 			},
 			isErr:     true,
-			expectErr: ErrUnsupportedResponseMode.WithHintf("Insecure response_mode '%s' for the response_type '%s'.", ResponseModeQuery, []string{"token", "code"}),
+			expectErr: ErrUnsupportedResponseMode.WithHintID(i18n.ErrHintWeakResponseModeForResponseType, ResponseModeQuery, fosite.Arguments{"token", "code"}),
 		},
 	} {
 		c.mock()

@@ -31,6 +31,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -130,7 +131,7 @@ func validate(ctx context.Context, jwtStrategy jwt.JWTStrategy, token string) (t
 			case jwt.ValidationErrorClaimsInvalid:
 				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
 			default:
-				err = errorsx.WithStack(fosite.ErrRequestUnauthorized.WithWrap(err).WithDebug(err.Error()))
+				err = errorsx.WithStack(fosite.ErrRequestUnauthorized.WithHintID(i18n.ErrHintInvalidCredentialFormat).WithWrap(err).WithDebug(err.Error()))
 			}
 		}
 	}

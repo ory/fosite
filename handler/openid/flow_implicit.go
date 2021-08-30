@@ -29,6 +29,7 @@ import (
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -54,7 +55,7 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	ar.SetDefaultResponseMode(fosite.ResponseModeFragment)
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, "implicit"))
 	}
 
 	// Disabled because this is already handled at the authorize_request_handler
@@ -65,15 +66,15 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	//}
 
 	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'nonce' must be set when using the OpenID Connect Implicit Flow."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintID(i18n.ErrHintImplicitGrantMissingNonce))
 	} else if len(nonce) < c.MinParameterEntropy {
-		return errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
+		return errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintID(i18n.ErrHintWeakNonceEntropy, c.MinParameterEntropy))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintID(i18n.ErrHintRequestScopeNotAllowed, scope))
 		}
 	}
 

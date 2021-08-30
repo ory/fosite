@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
@@ -89,13 +90,13 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 	// }
 
 	if !c.secureChecker()(ar.GetRedirectURI()) {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintID(i18n.ErrHintInsecureRedirectURLProtocol))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintID(i18n.ErrHintRequestScopeNotAllowed, scope))
 		}
 	}
 

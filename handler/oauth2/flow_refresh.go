@@ -23,7 +23,6 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -32,6 +31,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/storage"
 )
 
@@ -58,7 +58,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant 'refresh_token'."))
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, "refresh_token"))
 	}
 
 	refresh := request.GetRequestForm().Get("refresh_token")
@@ -83,14 +83,13 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	if !(len(c.RefreshTokenScopes) == 0 || originalRequest.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...)) {
 		scopeNames := strings.Join(c.RefreshTokenScopes, " or ")
-		hint := fmt.Sprintf("The OAuth 2.0 Client was not granted scope %s and may thus not perform the 'refresh_token' authorization grant.", scopeNames)
-		return errorsx.WithStack(fosite.ErrScopeNotGranted.WithHint(hint))
+		return errorsx.WithStack(fosite.ErrScopeNotGranted.WithHintID(i18n.ErrHintRefreshTokenNoScopeGranted, scopeNames))
 
 	}
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
 	if originalRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the ID during the initial token issuance."))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintID(i18n.ErrHintRefreshTokenClientIDMismatch))
 	}
 
 	request.SetSession(originalRequest.GetSession().Clone())
@@ -99,7 +98,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	for _, scope := range originalRequest.GetGrantedScopes() {
 		if !c.ScopeStrategy(request.GetClient().GetScopes(), scope) {
-			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintID(i18n.ErrHintRequestScopeNotAllowed, scope))
 		}
 		request.GrantScope(scope)
 	}
@@ -223,13 +222,13 @@ func (c *RefreshTokenGrantHandler) handleRefreshTokenEndpointStorageError(ctx co
 	if errors.Is(storageErr, fosite.ErrSerializationFailure) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.
 			WithDebugf(storageErr.Error()).
-			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))
+			WithHintID(i18n.ErrHintRefreshTokenConcurrentRequestsNotAllowed))
 	}
 
 	if errors.Is(storageErr, fosite.ErrNotFound) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.
 			WithDebugf(storageErr.Error()).
-			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))
+			WithHintID(i18n.ErrHintRefreshTokenConcurrentRequestsNotAllowed))
 	}
 
 	return errorsx.WithStack(fosite.ErrServerError.WithWrap(storageErr).WithDebug(storageErr.Error()))

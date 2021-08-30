@@ -29,6 +29,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 
 	"github.com/asaskevich/govalidator"
@@ -94,7 +95,7 @@ func MatchRedirectURIWithClientRedirectURIs(rawurl string, client Client) (*url.
 		}
 	}
 
-	return nil, errorsx.WithStack(ErrInvalidRequest.WithHint("The 'redirect_uri' parameter does not match any of the OAuth 2.0 Client's pre-registered redirect urls."))
+	return nil, errorsx.WithStack(ErrInvalidRequest.WithHintID(i18n.ErrHintRedirectURINotAllowed))
 }
 
 // Match a requested  redirect URI against a pool of registered client URIs

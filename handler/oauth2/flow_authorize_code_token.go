@@ -27,6 +27,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/storage"
 
 	"github.com/pkg/errors"
@@ -42,7 +43,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"authorization_code\"."))
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, "authorization_code"))
 	}
 
 	code := request.GetRequestForm().Get("code")
@@ -51,23 +52,23 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	if errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) {
 		if authorizeRequest == nil {
 			return fosite.ErrServerError.
-				WithHint("Misconfigured code lead to an error that prohibited the OAuth 2.0 Framework from processing this request.").
+				WithHintID(i18n.ErrHintMisconfiguredAuthCode).
 				WithDebug("GetAuthorizeCodeSession must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedAuthorizeCode\".")
 		}
 
 		// If an authorize code is used twice, we revoke all refresh and access tokens associated with this request.
 		reqID := authorizeRequest.GetID()
-		hint := "The authorization code has already been used."
+		hints := []i18n.ErrorHintType{i18n.ErrHintAuthCodeReused}
 		debug := ""
 		if revErr := c.TokenRevocationStorage.RevokeAccessToken(ctx, reqID); revErr != nil {
-			hint += " Additionally, an error occurred during processing the access token revocation."
+			hints = append(hints, i18n.ErrHintAccessTokenRevokeFailed)
 			debug += "Revocation of access_token lead to error " + revErr.Error() + "."
 		}
 		if revErr := c.TokenRevocationStorage.RevokeRefreshToken(ctx, reqID); revErr != nil {
-			hint += " Additionally, an error occurred during processing the refresh token revocation."
+			hints = append(hints, i18n.ErrHintRefreshTokenRevokeFailed)
 			debug += "Revocation of refresh_token lead to error " + revErr.Error() + "."
 		}
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(hint).WithDebug(debug))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintIDs(hints).WithDebug(debug))
 	} else if err != nil && errors.Is(err, fosite.ErrNotFound) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {
@@ -90,7 +91,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// confidential client, or if the client is public, ensure that the
 	// code was issued to "client_id" in the request,
 	if authorizeRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintID(i18n.ErrHintTokenClientIDMismatch))
 	}
 
 	// ensure that the "redirect_uri" parameter is present if the
@@ -99,7 +100,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	// their values are identical.
 	forcedRedirectURI := authorizeRequest.GetRequestForm().Get("redirect_uri")
 	if forcedRedirectURI != "" && forcedRedirectURI != request.GetRequestForm().Get("redirect_uri") {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The \"redirect_uri\" from this request does not match the one from the authorize request."))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintID(i18n.ErrHintTokenRedirectURIMismatch))
 	}
 
 	// Checking of POST client_id skipped, because:

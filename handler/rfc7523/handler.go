@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/i18n"
 
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
@@ -65,13 +66,13 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 	assertion := request.GetRequestForm().Get("assertion")
 	if assertion == "" {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("The assertion request parameter must be set when using grant_type of '%s'.", grantTypeJWTBearer))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintID(i18n.ErrHintMissingClientAssertionDuplicate, grantTypeJWTBearer))
 	}
 
 	token, err := jwt.ParseSigned(assertion)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("Unable to parse JSON Web Token passed in \"assertion\" request parameter.").
+			WithHintID(i18n.ErrHintClientAssertionParsingError).
 			WithWrap(err).WithDebug(err.Error()),
 		)
 	}
@@ -89,7 +90,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	claims := jwt.Claims{}
 	if err := token.Claims(key, &claims); err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("Unable to verify the integrity of the 'assertion' value.").
+			WithHintID(i18n.ErrHintClientAssertionVerifyErrorDuplicate).
 			WithWrap(err).WithDebug(err.Error()),
 		)
 	}
@@ -105,7 +106,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 	for _, scope := range request.GetRequestedScopes() {
 		if !c.ScopeStrategy(scopes, scope) {
-			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The public key registered for issuer \"%s\" and subject \"%s\" is not allowed to request scope \"%s\".", claims.Issuer, claims.Subject, scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintID(i18n.ErrHintClientAssertionScopeNotAllowed, claims.Issuer, claims.Subject, scope))
 		}
 	}
 
@@ -165,7 +166,7 @@ func (c *Handler) CheckRequest(request fosite.AccessRequester) error {
 
 	// if client is authenticated, check grant types
 	if !c.CanSkipClientAuth(request) && !request.GetClient().GetGrantTypes().Has(grantTypeJWTBearer) {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintf("The OAuth 2.0 Client is not allowed to use authorization grant \"%s\".", grantTypeJWTBearer))
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, grantTypeJWTBearer))
 	}
 
 	return nil
@@ -175,18 +176,18 @@ func (c *Handler) validateTokenPreRequisites(token *jwt.JSONWebToken) error {
 	unverifiedClaims := jwt.Claims{}
 	if err := token.UnsafeClaimsWithoutVerification(&unverifiedClaims); err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("Looks like there are no claims in JWT in \"assertion\" request parameter.").
+			WithHintID(i18n.ErrHintMissingClientAssertionClaims).
 			WithWrap(err).WithDebug(err.Error()),
 		)
 	}
 	if unverifiedClaims.Issuer == "" {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"iss\" (issuer) claim."),
+			WithHintID(i18n.ErrHintMissingClientAssertionIssuer),
 		)
 	}
 	if unverifiedClaims.Subject == "" {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain a \"sub\" (subject) claim."),
+			WithHintID(i18n.ErrHintMissingClientAssertionSubjectDuplicate),
 		)
 	}
 
@@ -207,8 +208,8 @@ func (c *Handler) findPublicKeyForToken(ctx context.Context, token *jwt.JSONWebT
 		}
 	}
 
-	keyNotFoundErr := fosite.ErrInvalidGrant.WithHintf(
-		"No public JWK was registered for issuer \"%s\" and subject \"%s\", and public key is required to check signature of JWT in \"assertion\" request parameter.",
+	keyNotFoundErr := fosite.ErrInvalidGrant.WithHintID(
+		i18n.ErrHintClientAssertionNoPublicJWKConfigured,
 		unverifiedClaims.Issuer,
 		unverifiedClaims.Subject,
 	)
@@ -239,14 +240,14 @@ func (c *Handler) findPublicKeyForToken(ctx context.Context, token *jwt.JSONWebT
 func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, key *jose.JSONWebKey) error {
 	if len(claims.Audience) == 0 {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim."),
+			WithHintID(i18n.ErrHintInvalidClientAssertionAudienceDuplicate),
 		)
 	}
 
 	if !claims.Audience.Contains(c.TokenURL) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHintf(
-				"The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim containing a value \"%s\" that identifies the authorization server as an intended audience.",
+			WithHintID(
+				i18n.ErrHintInvalidClientAssertionAudience,
 				c.TokenURL,
 			),
 		)
@@ -254,20 +255,20 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 
 	if claims.Expiry == nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"exp\" (expiration time) claim."),
+			WithHintID(i18n.ErrHintMissingClientAssertionExpiry),
 		)
 	}
 
 	if claims.Expiry.Time().Before(time.Now()) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter expired."),
+			WithHintID(i18n.ErrHintClientAssertionExpired),
 		)
 	}
 
 	if claims.NotBefore != nil && !claims.NotBefore.Time().Before(time.Now()) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHintf(
-				"The JWT in \"assertion\" request parameter contains an \"nbf\" (not before) claim, that identifies the time '%s' before which the token MUST NOT be accepted.",
+			WithHintID(
+				i18n.ErrHintClientAssertionNotValidYet,
 				claims.NotBefore.Time().Format(time.RFC3339),
 			),
 		)
@@ -275,7 +276,7 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 
 	if !c.JWTIssuedDateOptional && claims.IssuedAt == nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"iat\" (issued at) claim."),
+			WithHintID(i18n.ErrHintMissingClientAssertionIssuedAt),
 		)
 	}
 
@@ -287,8 +288,8 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 	}
 	if claims.Expiry.Time().Sub(issuedDate) > c.JWTMaxDuration {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHintf(
-				"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future, considering token issued at \"%s\".",
+			WithHintID(
+				i18n.ErrHintClientAssertionValidityTooLong,
 				claims.Expiry.Time().Format(time.RFC3339),
 				issuedDate.Format(time.RFC3339),
 			),
@@ -297,7 +298,7 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 
 	if !c.JWTIDOptional && claims.ID == "" {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"jti\" (JWT ID) claim."),
+			WithHintID(i18n.ErrHintMissingClientAssertionJTIDuplicate),
 		)
 	}
 
@@ -323,7 +324,7 @@ func (c *Handler) getSessionFromRequest(requester fosite.AccessRequester) (exten
 	session := requester.GetSession()
 	if jwtSession, ok := session.(extendedSession); !ok {
 		return nil, errorsx.WithStack(
-			fosite.ErrServerError.WithHintf("Session must be of type *rfc7523.Session but got type: %T", session),
+			fosite.ErrServerError.WithHintID(i18n.ErrHintInvalidClientAssertionSessionType, session),
 		)
 	} else {
 		return jwtSession, nil

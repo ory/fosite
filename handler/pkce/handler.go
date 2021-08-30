@@ -33,6 +33,7 @@ import (
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/i18n"
 )
 
 type Handler struct {
@@ -91,12 +92,12 @@ func (c *Handler) validate(challenge, method string, client fosite.Client) error
 		// nature of error, e.g., code challenge required.
 		if c.Force {
 			return errorsx.WithStack(fosite.ErrInvalidRequest.
-				WithHint("Clients must include a code_challenge when performing the authorize code flow, but it is missing.").
+				WithHintID(i18n.ErrHintMissingPKCECodeChallenge).
 				WithDebug("The server is configured in a way that enforces PKCE for clients."))
 		}
 		if c.ForceForPublicClients && client.IsPublic() {
 			return errorsx.WithStack(fosite.ErrInvalidRequest.
-				WithHint("This client must include a code_challenge when performing the authorize code flow, but it is missing.").
+				WithHintID(i18n.ErrHintMissingPKCECodeChallengeForPublicClient).
 				WithDebug("The server is configured in a way that enforces PKCE for this client."))
 		}
 		return nil
@@ -116,12 +117,12 @@ func (c *Handler) validate(challenge, method string, client fosite.Client) error
 	case "":
 		if !c.EnablePlainChallengeMethod {
 			return errorsx.WithStack(fosite.ErrInvalidRequest.
-				WithHint("Clients must use code_challenge_method=S256, plain is not allowed.").
+				WithHintID(i18n.ErrHintInvalidPKCECodeChallengeMethod, "S256").
 				WithDebug("The server is configured in a way that enforces PKCE S256 as challenge method for clients."))
 		}
 	default:
 		return errorsx.WithStack(fosite.ErrInvalidRequest.
-			WithHint("The code_challenge_method is not supported, use S256 instead."))
+			WithHintID(i18n.ErrHintInvalidPKCECodeChallengeMethod, "S256"))
 	}
 	return nil
 }
@@ -143,7 +144,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(code)
 	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, signature, request.GetSession())
 	if errors.Is(err, fosite.ErrNotFound) {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to find initial PKCE data tied to this request").WithWrap(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintID(i18n.ErrHintMissingPKCERequestData).WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
@@ -172,13 +173,13 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	// Validation
 	if len(verifier) < 43 {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The PKCE code verifier must be at least 43 characters."))
+			WithHintID(i18n.ErrHintPKCEVerifierTooSmall))
 	} else if len(verifier) > 128 {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The PKCE code verifier can not be longer than 128 characters."))
+			WithHintID(i18n.ErrHintPKCEVerifierTooLong))
 	} else if verifierWrongFormat.MatchString(verifier) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The PKCE code verifier must only contain [a-Z], [0-9], '-', '.', '_', '~'."))
+			WithHintID(i18n.ErrHintInvalidPKCEVerifierCharSet))
 	}
 
 	// Upon receipt of the request at the token endpoint, the server
@@ -211,7 +212,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 		if base64.RawURLEncoding.EncodeToString(hash.Sum([]byte{})) != challenge {
 			return errorsx.WithStack(fosite.ErrInvalidGrant.
-				WithHint("The PKCE code challenge did not match the code verifier."))
+				WithHintID(i18n.ErrHintPKCEVerifierMismatch))
 		}
 		break
 	case "plain":
@@ -219,7 +220,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	default:
 		if verifier != challenge {
 			return errorsx.WithStack(fosite.ErrInvalidGrant.
-				WithHint("The PKCE code challenge did not match the code verifier."))
+				WithHintID(i18n.ErrHintPKCEVerifierMismatch))
 		}
 	}
 

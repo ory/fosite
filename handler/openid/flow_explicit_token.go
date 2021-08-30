@@ -24,6 +24,7 @@ package openid
 import (
 	"context"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
@@ -52,7 +53,7 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 	}
 
 	if !requester.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"authorization_code\"."))
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, "authorization_code"))
 	}
 
 	sess, ok := requester.GetSession().(Session)

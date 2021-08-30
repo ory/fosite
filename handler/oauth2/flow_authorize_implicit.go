@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
@@ -61,13 +62,13 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 	// }
 
 	if !ar.GetClient().GetGrantTypes().Has("implicit") {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, "implicit"))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintID(i18n.ErrHintRequestScopeNotAllowed, scope))
 		}
 	}
 

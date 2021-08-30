@@ -27,6 +27,7 @@ import (
 
 	"github.com/pborman/uuid"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
@@ -48,7 +49,7 @@ func (c *OpenIDConnectRefreshHandler) HandleTokenEndpointRequest(ctx context.Con
 	}
 
 	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"refresh_token\"."))
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, "refresh_token"))
 	}
 
 	// Refresh tokens can only be issued by an authorize_code which in turn disables the need to check if the id_token
@@ -86,7 +87,7 @@ func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.
 	}
 
 	if !requester.GetClient().GetGrantTypes().Has("refresh_token") {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"refresh_token\"."))
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, "refresh_token"))
 	}
 
 	// Disabled because this is already handled at the authorize_request_handler

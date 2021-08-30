@@ -113,7 +113,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestClientIsNotRegisteredForG
 	s.True(errors.Is(err, fosite.ErrUnauthorizedClient))
 	s.EqualError(err, fosite.ErrUnauthorizedClient.Error(), "expected error, because client is not registered to use this grant type")
 	s.Equal(
-		"The OAuth 2.0 Client is not allowed to use authorization grant \"urn:ietf:params:oauth:grant-type:jwt-bearer\".",
+		"The OAuth 2.0 Client is not allowed to use authorization grant 'urn:ietf:params:oauth:grant-type:jwt-bearer'.",
 		err.(*fosite.RFC6749Error).HintField,
 	)
 }
@@ -324,7 +324,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestNotValidAudienceInAsserti
 	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because of invalid audience claim in assertion")
 	s.Equal(
 		fmt.Sprintf(
-			"The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim containing a value \"%s\" that identifies the authorization server as an intended audience.",
+			"Claim 'audience' from 'client_assertion' must match the authorization server's token endpoint '%s'.",
 			s.handler.TokenURL,
 		),
 		err.(*fosite.RFC6749Error).HintField,
@@ -886,7 +886,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestClientIsNotRegiste
 	s.True(errors.Is(err, fosite.ErrUnauthorizedClient))
 	s.EqualError(err, fosite.ErrUnauthorizedClient.Error(), "expected error, because client is not registered to use this grant type")
 	s.Equal(
-		"The OAuth 2.0 Client is not allowed to use authorization grant \"urn:ietf:params:oauth:grant-type:jwt-bearer\".",
+		"The OAuth 2.0 Client is not allowed to use authorization grant 'urn:ietf:params:oauth:grant-type:jwt-bearer'.",
 		err.(*fosite.RFC6749Error).HintField,
 	)
 }

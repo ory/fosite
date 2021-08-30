@@ -24,7 +24,9 @@ package fosite
 import (
 	"context"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
+	"golang.org/x/text/language"
 
 	"github.com/pkg/errors"
 )
@@ -49,7 +51,13 @@ func (f *Fosite) NewAccessResponse(ctx context.Context, requester AccessRequeste
 	}
 
 	if response.GetAccessToken() == "" || response.GetTokenType() == "" {
-		return nil, errorsx.WithStack(ErrServerError.WithHint("An internal server occurred while trying to complete the request.").WithDebug("Access token or token type not set by TokenEndpointHandlers."))
+		lang := language.English
+		g11nContext, ok := requester.(G11NContext)
+		if ok {
+			lang = g11nContext.GetLang()
+		}
+
+		return nil, errorsx.WithStack(ErrServerError.WithLocalizer(f.MessageCatalog, lang).WithHintID(i18n.ErrHintInternalError).WithDebug("Access token or token type not set by TokenEndpointHandlers."))
 	}
 
 	return response, nil

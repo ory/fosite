@@ -122,7 +122,7 @@ func TestAuthorizeResponseModes(t *testing.T) {
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
 				assert.NotEmpty(t, err["ErrorField"])
 				assert.NotEmpty(t, err["DescriptionField"])
-				assert.Equal(t, "The client is not allowed to request response_mode 'form_post'.", err["HintField"])
+				assert.Equal(t, "The client is not allowed to request response_mode 'form_post'.", err["HintField"], "err is %v", err)
 			},
 		},
 		{

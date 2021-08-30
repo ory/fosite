@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 
 	jose "gopkg.in/square/go-jose.v2"
@@ -61,17 +62,17 @@ func (s *DefaultJWKSFetcherStrategy) Resolve(location string, forceRefresh bool)
 	if !ok || forceRefresh {
 		response, err := s.client.Get(location)
 		if err != nil {
-			return nil, errorsx.WithStack(ErrServerError.WithHintf("Unable to fetch JSON Web Keys from location '%s'. Check for typos or other network issues.", location).WithWrap(err).WithDebug(err.Error()))
+			return nil, errorsx.WithStack(ErrServerError.WithHintID(i18n.ErrHintJWKFetchError, location).WithWrap(err).WithDebug(err.Error()))
 		}
 		defer response.Body.Close()
 
 		if response.StatusCode < 200 || response.StatusCode >= 400 {
-			return nil, errorsx.WithStack(ErrServerError.WithHintf("Expected successful status code in range of 200 - 399 from location '%s' but received code %d.", location, response.StatusCode))
+			return nil, errorsx.WithStack(ErrServerError.WithHintID(i18n.ErrHintJWKFetchBadStatus, location, response.StatusCode))
 		}
 
 		var set jose.JSONWebKeySet
 		if err := json.NewDecoder(response.Body).Decode(&set); err != nil {
-			return nil, errorsx.WithStack(ErrServerError.WithHintf("Unable to decode JSON Web Keys from location '%s'. Please check for typos and if the URL returns valid JSON.", location).WithWrap(err).WithDebug(err.Error()))
+			return nil, errorsx.WithStack(ErrServerError.WithHintID(i18n.ErrHintMalformedJWKFetchBody, location).WithWrap(err).WithDebug(err.Error()))
 		}
 
 		s.keys[location] = set

@@ -32,6 +32,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/go-convenience/stringslice"
 )
@@ -234,7 +235,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	if nonce := requester.GetRequestForm().Get("nonce"); len(nonce) == 0 {
 	} else if len(nonce) > 0 && len(nonce) < h.MinParameterEntropy {
 		// We're assuming that using less then, by default, 8 characters for the state can not be considered "unguessable"
-		return "", errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", h.MinParameterEntropy))
+		return "", errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintID(i18n.ErrHintWeakNonceEntropy, h.MinParameterEntropy))
 	} else if len(nonce) > 0 {
 		claims.Nonce = nonce
 	}

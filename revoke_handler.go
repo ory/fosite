@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
@@ -53,11 +54,11 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 	ctx = context.WithValue(ctx, RequestContextKey, r)
 
 	if r.Method != "POST" {
-		return errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s' but expected 'POST'.", r.Method))
+		return errorsx.WithStack(ErrInvalidRequest.WithHintID(i18n.ErrHintInvalidHTTPMethod, r.Method))
 	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
+		return errorsx.WithStack(ErrInvalidRequest.WithHintID(i18n.ErrHintMalformedRequestBody).WithWrap(err).WithDebug(err.Error()))
 	} else if len(r.PostForm) == 0 {
-		return errorsx.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
+		return errorsx.WithStack(ErrInvalidRequest.WithHintID(i18n.ErrHintEmptyRequestBody))
 	}
 
 	client, err := f.AuthenticateClient(ctx, r, r.PostForm)

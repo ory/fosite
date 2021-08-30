@@ -57,7 +57,7 @@ func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
 
 	// Inactive token errors should never written out as an error.
 	if !errors.Is(err, ErrInactiveToken) && (errors.Is(err, ErrInvalidRequest) || errors.Is(err, ErrRequestUnauthorized)) {
-		f.writeJsonError(rw, err)
+		f.writeJsonError(rw, nil, err)
 		return
 	}
 

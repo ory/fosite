@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 )
 
@@ -50,7 +51,7 @@ func (f *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester
 	}
 
 	if ar.GetDefaultResponseMode() == ResponseModeFragment && ar.GetResponseMode() == ResponseModeQuery {
-		return nil, ErrUnsupportedResponseMode.WithHintf("Insecure response_mode '%s' for the response_type '%s'.", ar.GetResponseMode(), ar.GetResponseTypes())
+		return nil, ErrUnsupportedResponseMode.WithHintID(i18n.ErrHintWeakResponseModeForResponseType, ar.GetResponseMode(), ar.GetResponseTypes())
 	}
 
 	return resp, nil

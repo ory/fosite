@@ -30,6 +30,7 @@ import (
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -72,11 +73,11 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	nonce := ar.GetRequestForm().Get("nonce")
 
 	if len(nonce) == 0 && ar.GetResponseTypes().Has("id_token") {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'nonce' must be set when requesting an ID Token using the OpenID Connect Hybrid Flow."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintID(i18n.ErrHintHybridGrantMissingNonce))
 	}
 
 	if len(nonce) > 0 && len(nonce) < c.MinParameterEntropy {
-		return errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", c.MinParameterEntropy))
+		return errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintID(i18n.ErrHintWeakNonceEntropy, c.MinParameterEntropy))
 	}
 
 	sess, ok := ar.GetSession().(Session)
@@ -91,14 +92,14 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
 		if !c.ScopeStrategy(client.GetScopes(), scope) {
-			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintID(i18n.ErrHintRequestScopeNotAllowed, scope))
 		}
 	}
 
 	claims := sess.IDTokenClaims()
 	if ar.GetResponseTypes().Has("code") {
 		if !ar.GetClient().GetGrantTypes().Has("authorization_code") {
-			return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant 'authorization_code'."))
+			return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, "authorization_code"))
 		}
 
 		code, signature, err := c.AuthorizeExplicitGrantHandler.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
@@ -137,7 +138,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 	if ar.GetResponseTypes().Has("token") {
 		if !ar.GetClient().GetGrantTypes().Has("implicit") {
-			return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant 'implicit'."))
+			return errorsx.WithStack(fosite.ErrInvalidGrant.WithHintID(i18n.ErrHintAuthorizationGrantNotSupported, "implicit"))
 		} else if err := c.AuthorizeImplicitGrantTypeHandler.IssueImplicitAccessToken(ctx, ar, resp); err != nil {
 			return errorsx.WithStack(err)
 		}

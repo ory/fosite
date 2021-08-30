@@ -33,6 +33,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/go-convenience/stringslice"
 )
@@ -91,18 +92,18 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 
 		if stringslice.Has(prompt, "none") {
 			if !v.secureChecker()(req.GetRedirectURI()) {
-				return errorsx.WithStack(fosite.ErrConsentRequired.WithHint("OAuth 2.0 Client is marked public and redirect uri is not considered secure (https missing), but \"prompt=none\" was requested."))
+				return errorsx.WithStack(fosite.ErrConsentRequired.WithHintID(i18n.ErrHintPromptNoneNotAllowed))
 			}
 		}
 	}
 
 	if !isWhitelisted(prompt, v.AllowedPrompt) {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("Used unknown value '%s' for prompt parameter", prompt))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintID(i18n.ErrHintInvalidPromptValue, prompt))
 	}
 
 	if stringslice.Has(prompt, "none") && len(prompt) > 1 {
 		// If this parameter contains none with any other value, an error is returned.
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'prompt' was set to 'none', but contains other values as well which is not allowed."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintID(i18n.ErrHintInvalidPromptNoneValue))
 	}
 
 	maxAge, err := strconv.ParseInt(req.GetRequestForm().Get("max_age"), 10, 64)
@@ -141,13 +142,13 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 		}
 		if !claims.AuthTime.Equal(claims.RequestedAt) && claims.AuthTime.After(claims.RequestedAt) {
 			// !claims.AuthTime.Truncate(time.Second).Equal(claims.RequestedAt) && claims.AuthTime.Truncate(time.Second).Before(claims.RequestedAt) {
-			return errorsx.WithStack(fosite.ErrLoginRequired.WithHintf("Failed to validate OpenID Connect request because prompt was set to 'none' but auth_time ('%s') happened after the authorization request ('%s') was registered, indicating that the user was logged in during this request which is not allowed.", claims.AuthTime, claims.RequestedAt))
+			return errorsx.WithStack(fosite.ErrLoginRequired.WithHintID(i18n.ErrHintPromptNoneLoginNotAllowed, claims.AuthTime, claims.RequestedAt))
 		}
 	}
 
 	if stringslice.Has(prompt, "login") {
 		if claims.AuthTime.Before(claims.RequestedAt) {
-			return errorsx.WithStack(fosite.ErrLoginRequired.WithHintf("Failed to validate OpenID Connect request because prompt was set to 'login' but auth_time ('%s') happened before the authorization request ('%s') was registered, indicating that the user was not re-authenticated which is forbidden.", claims.AuthTime, claims.RequestedAt))
+			return errorsx.WithStack(fosite.ErrLoginRequired.WithHintID(i18n.ErrHintPromptLoginNoReauth, claims.AuthTime, claims.RequestedAt))
 		}
 	}
 
@@ -161,13 +162,13 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 	if errors.As(err, &ve) && ve.Errors == jwt.ValidationErrorExpired {
 		// Expired tokens are ok
 	} else if err != nil {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Failed to validate OpenID Connect request as decoding id token from id_token_hint parameter failed.").WithWrap(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintID(i18n.ErrHintIDTokenHintDecodeFailed).WithWrap(err).WithDebug(err.Error()))
 	}
 
 	if hintSub, _ := tokenHint.Claims["sub"].(string); hintSub == "" {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Failed to validate OpenID Connect request because provided id token from id_token_hint does not have a subject."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintID(i18n.ErrHintIDTokenHintMissingSubject))
 	} else if hintSub != claims.Subject {
-		return errorsx.WithStack(fosite.ErrLoginRequired.WithHint("Failed to validate OpenID Connect request because the subject from provided id token from id_token_hint does not match the current session's subject."))
+		return errorsx.WithStack(fosite.ErrLoginRequired.WithHintID(i18n.ErrHintIDTokenSubjectMismatch))
 	}
 
 	return nil
