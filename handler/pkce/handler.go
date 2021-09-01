@@ -158,8 +158,8 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	if err := c.validate(challenge, method, client); err != nil {
 		return err
 	}
-
-	if !c.Force && challenge == "" && verifier == "" {
+	
+	if !c.Force && verifier == "" {
 		return nil
 	}
 
