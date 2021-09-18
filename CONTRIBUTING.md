@@ -33,8 +33,8 @@ of this document is to provide a high-level overview of how you can get
 involved.
 
 _Please note_: We take Ory Fosite's security and our users' trust very
-seriously. If you believe you have found a security issue in Ory Fosite,
-please responsibly disclose by contacting us at security@ory.sh.
+seriously. If you believe you have found a security issue in Ory Fosite, please
+responsibly disclose by contacting us at security@ory.sh.
 
 First: As a potential contributor, your changes and ideas are welcome at any
 hour of the day or night, weekdays, weekends, and holidays. Please do not ever
@@ -47,11 +47,9 @@ contributions, and don't want a wall of rules to get in the way of that.
 
 That said, if you want to ensure that a pull request is likely to be merged,
 talk to us! You can find out our thoughts and ensure that your contribution
-won't clash or be obviated by Ory
-Fosite's normal direction. A great way to
-do this is via
-[Ory Fosite Discussions](https://github.com/ory/meta/discussions)
-or the [Ory Chat](https://www.ory.sh/chat).
+won't clash or be obviated by Ory Fosite's normal direction. A great way to do
+this is via [Ory Fosite Discussions](https://github.com/ory/meta/discussions) or
+the [Ory Chat](https://www.ory.sh/chat).
 
 ## FAQ
 
@@ -68,8 +66,7 @@ or the [Ory Chat](https://www.ory.sh/chat).
 - I want to talk to other Ory Fosite users.
   [How can I become a part of the community?](#communication)
 
-- I would like to know what I am agreeing to when I contribute to Ory
-  Fosite.
+- I would like to know what I am agreeing to when I contribute to Ory Fosite.
   Does Ory have
   [a Contributors License Agreement?](https://cla-assistant.io/ory/fosite)
 
@@ -93,8 +90,8 @@ a few things you can do to help out:
   look at discussions in the forum and take part in our weekly hangout. More
   info on this in [Communication](#communication).
 
-- **Helping with open issues.** We have a lot of open issues for Ory Fosite
-  and some of them may lack necessary information, some are duplicates of older
+- **Helping with open issues.** We have a lot of open issues for Ory Fosite and
+  some of them may lack necessary information, some are duplicates of older
   issues. You can help out by guiding people through the process of filling out
   the issue template, asking for clarifying information, or pointing them to
   existing issues that match their description of the problem.
@@ -112,8 +109,9 @@ a few things you can do to help out:
 We use [Slack](https://www.ory.sh/chat). You are welcome to drop in and ask
 questions, discuss bugs and feature requests, talk to other users of Ory, etc.
 
-Check out [Ory Fosite Discussions](https://github.com/ory/meta/discussions). This is a great place for
-in-depth discussions and lots of code examples, logs and similar data.
+Check out [Ory Fosite Discussions](https://github.com/ory/meta/discussions).
+This is a great place for in-depth discussions and lots of code examples, logs
+and similar data.
 
 You can also join our community hangout, if you want to speak to the Ory team
 directly or ask some questions. You can find more info on the hangouts in
