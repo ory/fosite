@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2021-09-18)](#000-2021-09-18)
+- [0.0.0 (2021-09-21)](#000-2021-09-21)
   - [Bug Fixes](#bug-fixes)
   - [Code Refactoring](#code-refactoring)
   - [Features](#features)
@@ -354,7 +354,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.40.2...v0.0.0) (2021-09-18)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.40.2...v0.0.0) (2021-09-21)
 
 ### Bug Fixes
 
