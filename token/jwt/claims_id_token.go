@@ -40,7 +40,7 @@ type IDTokenClaims struct {
 	AuthTime                            time.Time
 	AccessTokenHash                     string
 	AuthenticationContextClassReference string
-	AuthenticationMethodsReference      string
+	AuthenticationMethodsReference      []string
 	CodeHash                            string
 	Extra                               map[string]interface{}
 }

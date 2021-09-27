@@ -52,7 +52,7 @@ func TestIDTokenClaimsToMap(t *testing.T) {
 		AccessTokenHash:                     "foobar",
 		CodeHash:                            "barfoo",
 		AuthenticationContextClassReference: "acr",
-		AuthenticationMethodsReference:      "amr",
+		AuthenticationMethodsReference:      []string{"amr"},
 		Extra: map[string]interface{}{
 			"foo": "bar",
 			"baz": "bar",
