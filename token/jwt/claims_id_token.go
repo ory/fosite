@@ -40,7 +40,7 @@ type IDTokenClaims struct {
 	AuthTime                            time.Time
 	AccessTokenHash                     string
 	AuthenticationContextClassReference string
-	AuthenticationMethodsReference      []string
+	AuthenticationMethodsReferences     []string
 	CodeHash                            string
 	Extra                               map[string]interface{}
 }
@@ -121,8 +121,8 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 		delete(ret, "acr")
 	}
 
-	if len(c.AuthenticationMethodsReference) > 0 {
-		ret["amr"] = c.AuthenticationMethodsReference
+	if len(c.AuthenticationMethodsReferences) > 0 {
+		ret["amr"] = c.AuthenticationMethodsReferences
 	} else {
 		delete(ret, "amr")
 	}
