@@ -324,7 +324,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestNotValidAudienceInAsserti
 	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because of invalid audience claim in assertion")
 	s.Equal(
 		fmt.Sprintf(
-			"Claim 'audience' from 'client_assertion' must match the authorization server's token endpoint '%s'.",
+			"The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim containing a value \"%s\" that identifies the authorization server as an intended audience.",
 			s.handler.TokenURL,
 		),
 		err.(*fosite.RFC6749Error).HintField,

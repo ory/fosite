@@ -117,7 +117,7 @@ func (c *Handler) validate(challenge, method string, client fosite.Client) error
 	case "":
 		if !c.EnablePlainChallengeMethod {
 			return errorsx.WithStack(fosite.ErrInvalidRequest.
-				WithHintID(i18n.ErrHintInvalidPKCECodeChallengeMethod, "S256").
+				WithHintID(i18n.ErrHintInvalidPKCECodeChallengeMethodPlainNotAllowed, "S256").
 				WithDebug("The server is configured in a way that enforces PKCE S256 as challenge method for clients."))
 		}
 	default:

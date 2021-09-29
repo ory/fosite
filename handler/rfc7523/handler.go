@@ -247,7 +247,7 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 	if !claims.Audience.Contains(c.TokenURL) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHintID(
-				i18n.ErrHintInvalidClientAssertionAudience,
+				i18n.ErrHintHandlerInvalidClientAssertionAudience,
 				c.TokenURL,
 			),
 		)
