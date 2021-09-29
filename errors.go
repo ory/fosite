@@ -551,7 +551,7 @@ func (e *RFC6749Error) getDefaultHint(ID i18n.ErrorHintType, args ...interface{}
 	if !ok {
 		// This should never happen if the hints are properly populated in the
 		// map.
-		panic(fmt.Sprintf("Hint must be populated in the map for: %s", ID))
+		return fmt.Sprintf("Hint must be populated in the map for: %s", ID)
 	}
 
 	return fmt.Sprintf(defHint, args...)
