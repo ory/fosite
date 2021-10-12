@@ -106,7 +106,7 @@ implementation, will receive a place in the [Hall of Fame](#hall-of-fame)!
 
 ## A word on security
 
-Please be aware that Fosite only secures parts your server side security. You
+Please be aware that Fosite only secures parts of your server side security. You
 still need to secure your apps and clients, keep your tokens safe, prevent CSRF
 attacks, ensure database security, use valid and strong TLS certificates and
 much more. If you need any help or advice feel free to contact our security
