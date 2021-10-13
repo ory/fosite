@@ -376,6 +376,7 @@
 - Add client secret rotation support ([#608](https://github.com/ory/fosite/issues/608)) ([a4ce354](https://github.com/ory/fosite/commit/a4ce3544c2996a99b65350d4b200967df9fc0d45)), closes [#590](https://github.com/ory/fosite/issues/590)
 - Add prettier and format ([d682bdf](https://github.com/ory/fosite/commit/d682bdf51c22c211ee1aceb06fb7c4a7e43db326))
 - Add ResponseModeHandler to support custom response modes ([#592](https://github.com/ory/fosite/issues/592)) ([10ec003](https://github.com/ory/fosite/commit/10ec003fb414fd3fcbd3e2e6d250cb2da51a0304)), closes [#591](https://github.com/ory/fosite/issues/591)
+- Support jose.opaquesigner for JWTs ([#611](https://github.com/ory/fosite/issues/611)) ([1121a0a](https://github.com/ory/fosite/commit/1121a0aa4155e9216abb989ab008df8cff67830d))
 
 # [0.40.2](https://github.com/ory/fosite/compare/v0.40.1...v0.40.2) (2021-05-28)
 
