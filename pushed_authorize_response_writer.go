@@ -29,7 +29,10 @@ import (
 )
 
 func (f *Fosite) NewPushedAuthorizeResponse(ctx context.Context, ar AuthorizeRequester, session Session) (PushedAuthorizeResponder, error) {
-	var resp = &PushedAuthorizeResponse{}
+	var resp = &PushedAuthorizeResponse{
+		Header: http.Header{},
+		Extra:  map[string]interface{}{},
+	}
 
 	ctx = context.WithValue(ctx, AuthorizeRequestContextKey, ar)
 	ctx = context.WithValue(ctx, PushedAuthorizeResponseContextKey, resp)
@@ -47,12 +50,25 @@ func (f *Fosite) NewPushedAuthorizeResponse(ctx context.Context, ar AuthorizeReq
 func (f *Fosite) WritePushedAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp PushedAuthorizeResponder) {
 	// Set custom headers, e.g. "X-MySuperCoolCustomHeader" or "X-DONT-CACHE-ME"...
 	wh := rw.Header()
+	rh := resp.GetHeader()
+	for k := range rh {
+		wh.Set(k, rh.Get(k))
+	}
+
 	wh.Set("Cache-Control", "no-store")
 	wh.Set("Pragma", "no-cache")
 	wh.Set("Content-Type", "application/json;charset=UTF-8")
-	if err := json.NewEncoder(rw).Encode(resp); err != nil {
-		fmt.Printf("ERROR: err=%v\n", err)
+
+	js, err := json.Marshal(resp.ToMap())
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
+	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+
+	rw.WriteHeader(http.StatusOK)
+	_, _ = rw.Write(js)
 }
 
 func (f *Fosite) WritePushedAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {

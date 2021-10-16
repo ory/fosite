@@ -332,6 +332,21 @@ type PushedAuthorizeResponder interface {
 	GetRequestURI() string
 	// SetRequestURI sets the request_uri
 	SetRequestURI(requestURI string)
+
+	// GetHeader returns the response's header
+	GetHeader() (header http.Header)
+
+	// AddHeader adds an header key value pair to the response
+	AddHeader(key, value string)
+
+	// SetExtra sets a key value pair for the response.
+	SetExtra(key string, value interface{})
+
+	// GetExtra returns a key's value.
+	GetExtra(key string) interface{}
+
+	// ToMap converts the response to a map.
+	ToMap() map[string]interface{}
 }
 
 type MergeableAuthorizeRequester interface {
