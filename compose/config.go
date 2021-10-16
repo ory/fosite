@@ -117,6 +117,13 @@ type Config struct {
 
 	// ResponseModeHandlerExtension provides a handler for custom response modes
 	ResponseModeHandlerExtension fosite.ResponseModeHandler
+
+	// PushedAuthorizationRequestURIPrefix is the URI prefix for the PAR request_uri.
+	// This is defaulted to 'urn:ietf:params:oauth:request_uri:'.
+	PushedAuthorizationRequestURIPrefix string
+
+	// PushedAuthorizationContextLifespan is the lifespan of the PAR context
+	PushedAuthorizationContextLifespan time.Duration
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.

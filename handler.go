@@ -76,3 +76,12 @@ type RevocationHandler interface {
 	// RevokeToken handles access and refresh token revocation.
 	RevokeToken(ctx context.Context, token string, tokenType TokenType, client Client) error
 }
+
+// PushedAuthorizeEndpointHandler is the interface that handles PAR (https://datatracker.ietf.org/doc/html/rfc9126)
+type PushedAuthorizeEndpointHandler interface {
+	// HandlePushedAuthorizeRequest handles a pushed authorize endpoint request. To extend the handler's capabilities, the http request
+	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
+	// the pushed authorize request, he must return nil and NOT modify session nor responder neither requester.
+	//
+	HandlePushedAuthorizeEndpointRequest(ctx context.Context, requester AuthorizeRequester, responder PushedAuthorizeResponder) error
+}

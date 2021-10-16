@@ -114,3 +114,11 @@ func (d *AuthorizeRequest) SetDefaultResponseMode(defaultResponseMode ResponseMo
 func (d *AuthorizeRequest) GetDefaultResponseMode() ResponseModeType {
 	return d.DefaultResponseMode
 }
+
+func (d *AuthorizeRequest) MergeAuthorizeRequester(request AuthorizeRequester) {
+	d.Request.Merge(request)
+	d.RedirectURI = request.GetRedirectURI()
+	d.ResponseTypes = request.GetResponseTypes()
+	d.State = request.GetState()
+	d.ResponseMode = request.GetResponseMode()
+}

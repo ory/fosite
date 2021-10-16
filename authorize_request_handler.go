@@ -277,6 +277,8 @@ func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest
 func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	request := NewAuthorizeRequest()
 
+	var client Client
+	client, _ = ctx.Value(ClientContextKey).(Client)
 	ctx = context.WithValue(ctx, RequestContextKey, r)
 	ctx = context.WithValue(ctx, AuthorizeRequestContextKey, request)
 
@@ -285,13 +287,26 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	}
 	request.Form = r.Form
 
+	// Check if this is a continuation from a pushed authorization request
+	requestURI := r.Form.Get("request_uri")
+	if strings.HasPrefix(requestURI, f.parPrefix()) {
+		// request will be further enriched by the handler.
+		// everything below has already been validated through
+		// NewPushedAuthorizeRequest.
+		return request, nil
+	}
+
 	// Save state to the request to be returned in error conditions (https://github.com/ory/hydra/issues/1642)
 	request.State = request.Form.Get("state")
 
-	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
-	if err != nil {
-		return request, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
+	if client == nil {
+		var err error
+		client, err = f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
+		if err != nil {
+			return request, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
+		}
 	}
+
 	request.Client = client
 
 	// Now that the base fields (state and client) are populated, we extract all the information

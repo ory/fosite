@@ -33,10 +33,11 @@ type TokenUse = TokenType
 type TokenType string
 
 const (
-	AccessToken   TokenType = "access_token"
-	RefreshToken  TokenType = "refresh_token"
-	AuthorizeCode TokenType = "authorize_code"
-	IDToken       TokenType = "id_token"
+	AccessToken                   TokenType = "access_token"
+	RefreshToken                  TokenType = "refresh_token"
+	AuthorizeCode                 TokenType = "authorize_code"
+	IDToken                       TokenType = "id_token"
+	PushedAuthorizeRequestContext TokenType = "par_context"
 
 	BearerAccessToken string = "bearer"
 )
@@ -324,4 +325,16 @@ type AuthorizeResponder interface {
 
 	// AddParameter adds key value pair to the response
 	AddParameter(key, value string)
+}
+
+type PushedAuthorizeResponder interface {
+	// GetRequestURI returns the request_uri
+	GetRequestURI() string
+	// SetRequestURI sets the request_uri
+	SetRequestURI(requestURI string)
+}
+
+type MergeableAuthorizeRequester interface {
+	// Merge merges the argument into the method receiver.
+	MergeAuthorizeRequester(requester AuthorizeRequester)
 }

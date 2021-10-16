@@ -57,6 +57,7 @@ type MemoryStore struct {
 	IDSessions      map[string]fosite.Requester
 	AccessTokens    map[string]fosite.Requester
 	RefreshTokens   map[string]StoreRefreshToken
+	PARSessions     map[string]fosite.AuthorizeRequester
 	PKCES           map[string]fosite.Requester
 	Users           map[string]MemoryUserRelation
 	BlacklistedJTIs map[string]time.Time
@@ -72,6 +73,7 @@ type MemoryStore struct {
 	accessTokensMutex           sync.RWMutex
 	refreshTokensMutex          sync.RWMutex
 	pkcesMutex                  sync.RWMutex
+	parSessionsMutex            sync.RWMutex
 	usersMutex                  sync.RWMutex
 	blacklistedJTIsMutex        sync.RWMutex
 	accessTokenRequestIDsMutex  sync.RWMutex
@@ -87,6 +89,7 @@ func NewMemoryStore() *MemoryStore {
 		AccessTokens:           make(map[string]fosite.Requester),
 		RefreshTokens:          make(map[string]StoreRefreshToken),
 		PKCES:                  make(map[string]fosite.Requester),
+		PARSessions:            make(map[string]fosite.AuthorizeRequester),
 		Users:                  make(map[string]MemoryUserRelation),
 		AccessTokenRequestIDs:  make(map[string]string),
 		RefreshTokenRequestIDs: make(map[string]string),
@@ -140,6 +143,7 @@ func NewExampleStore() *MemoryStore {
 		AccessTokens:           map[string]fosite.Requester{},
 		RefreshTokens:          map[string]StoreRefreshToken{},
 		PKCES:                  map[string]fosite.Requester{},
+		PARSessions:            map[string]fosite.AuthorizeRequester{},
 		AccessTokenRequestIDs:  map[string]string{},
 		RefreshTokenRequestIDs: map[string]string{},
 		IssuerPublicKeys:       map[string]IssuerPublicKeys{},
@@ -447,4 +451,40 @@ func (s *MemoryStore) IsJWTUsed(ctx context.Context, jti string) (bool, error) {
 
 func (s *MemoryStore) MarkJWTUsedForTime(ctx context.Context, jti string, exp time.Time) error {
 	return s.SetClientAssertionJWT(ctx, jti, exp)
+}
+
+// CreatePARSession stores the pushed authorization request context. The requestURI is used to derive the key.
+func (s *MemoryStore) CreatePARSession(ctx context.Context, requestURI string, request fosite.AuthorizeRequester) error {
+	s.parSessionsMutex.Lock()
+	defer s.parSessionsMutex.Unlock()
+
+	s.PARSessions[requestURI] = request
+	return nil
+}
+
+// GetPARSession gets the push authorization request context. If the request is nil, a new request object
+// is created. Otherwise, the same object is updated.
+func (s *MemoryStore) GetPARSession(ctx context.Context, requestURI string, request fosite.AuthorizeRequester) error {
+	s.parSessionsMutex.RLock()
+	defer s.parSessionsMutex.RUnlock()
+
+	r, ok := s.PARSessions[requestURI]
+	if !ok {
+		return fosite.ErrNotFound
+	}
+
+	if req, ok := request.(fosite.MergeableAuthorizeRequester); ok {
+		req.MergeAuthorizeRequester(r)
+	}
+
+	return nil
+}
+
+// DeletePARSession deletes the context.
+func (s *MemoryStore) DeletePARSession(ctx context.Context, requestURI string) (err error) {
+	s.parSessionsMutex.Lock()
+	defer s.parSessionsMutex.Unlock()
+
+	delete(s.PARSessions, requestURI)
+	return nil
 }

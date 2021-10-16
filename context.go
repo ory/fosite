@@ -30,9 +30,11 @@ func NewContext() context.Context {
 type ContextKey string
 
 const (
-	RequestContextKey           = ContextKey("request")
-	AccessRequestContextKey     = ContextKey("accessRequest")
-	AccessResponseContextKey    = ContextKey("accessResponse")
-	AuthorizeRequestContextKey  = ContextKey("authorizeRequest")
-	AuthorizeResponseContextKey = ContextKey("authorizeResponse")
+	RequestContextKey                 = ContextKey("request")
+	AccessRequestContextKey           = ContextKey("accessRequest")
+	AccessResponseContextKey          = ContextKey("accessResponse")
+	AuthorizeRequestContextKey        = ContextKey("authorizeRequest")
+	AuthorizeResponseContextKey       = ContextKey("authorizeResponse")
+	PushedAuthorizeResponseContextKey = ContextKey("pushedAuthorizeResponse")
+	ClientContextKey                  = ContextKey("client")
 )

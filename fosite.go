@@ -25,6 +25,11 @@ import (
 	"html/template"
 	"net/http"
 	"reflect"
+	"time"
+)
+
+const (
+	defaultPARPrefix = "urn:ietf:params:oauth:request_uri:"
 )
 
 // AuthorizeEndpointHandlers is a list of AuthorizeEndpointHandler
@@ -83,19 +88,34 @@ func (t *RevocationHandlers) Append(h RevocationHandler) {
 	*t = append(*t, h)
 }
 
+// PushedAuthorizeEndpointHandlers is a list of PushedAuthorizeEndpointHandler
+type PushedAuthorizeEndpointHandlers []PushedAuthorizeEndpointHandler
+
+// Append adds an PushedAuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+func (t *PushedAuthorizeEndpointHandlers) Append(h PushedAuthorizeEndpointHandler) {
+	for _, this := range *t {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*t = append(*t, h)
+}
+
 // Fosite implements OAuth2Provider.
 type Fosite struct {
-	Store                      Storage
-	AuthorizeEndpointHandlers  AuthorizeEndpointHandlers
-	TokenEndpointHandlers      TokenEndpointHandlers
-	TokenIntrospectionHandlers TokenIntrospectionHandlers
-	RevocationHandlers         RevocationHandlers
-	Hasher                     Hasher
-	ScopeStrategy              ScopeStrategy
-	AudienceMatchingStrategy   AudienceMatchingStrategy
-	JWKSFetcherStrategy        JWKSFetcherStrategy
-	HTTPClient                 *http.Client
-	UseLegacyErrorFormat       bool
+	Store                           Storage
+	AuthorizeEndpointHandlers       AuthorizeEndpointHandlers
+	TokenEndpointHandlers           TokenEndpointHandlers
+	TokenIntrospectionHandlers      TokenIntrospectionHandlers
+	RevocationHandlers              RevocationHandlers
+	PushedAuthorizeEndpointHandlers PushedAuthorizeEndpointHandlers
+	Hasher                          Hasher
+	ScopeStrategy                   ScopeStrategy
+	AudienceMatchingStrategy        AudienceMatchingStrategy
+	JWKSFetcherStrategy             JWKSFetcherStrategy
+	HTTPClient                      *http.Client
+	UseLegacyErrorFormat            bool
 
 	// TokenURL is the the URL of the Authorization Server's Token Endpoint.
 	TokenURL string
@@ -115,6 +135,13 @@ type Fosite struct {
 	ClientAuthenticationStrategy ClientAuthenticationStrategy
 
 	ResponseModeHandlerExtension ResponseModeHandler
+
+	// PushedAuthorizationRequestURIPrefix is the URI prefix for the PAR request_uri.
+	// This is defaulted to 'urn:ietf:params:oauth:request_uri:'.
+	PushedAuthorizationRequestURIPrefix string
+
+	// PushedAuthorizationContextLifespan is the lifespan of the PAR context
+	PushedAuthorizationContextLifespan time.Duration
 }
 
 const MinParameterEntropy = 8
@@ -135,4 +162,12 @@ func (f *Fosite) ResponseModeHandler() ResponseModeHandler {
 		return defaultResponseModeHandler
 	}
 	return f.ResponseModeHandlerExtension
+}
+
+func (f *Fosite) parPrefix() string {
+	if f.PushedAuthorizationRequestURIPrefix == "" {
+		return defaultPARPrefix
+	}
+
+	return f.PushedAuthorizationRequestURIPrefix
 }
