@@ -26,7 +26,10 @@ func (c *AuthorizePARHandler) HandleAuthorizeEndpointRequest(ctx context.Context
 		return errorsx.WithStack(fosite.ErrInvalidRequestURI.WithHint("Invalid PAR session").WithWrap(err).WithDebug(err.Error()))
 	}
 
-	c.Storage.DeletePARSession(ctx, requestURI)
+	err = c.Storage.DeletePARSession(ctx, requestURI)
+	if err != nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	}
 
 	// validate the clients match
 	if ar.GetRequestForm().Get("client_id") != ar.GetClient().GetID() {
