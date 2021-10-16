@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/x/errorsx"
 	"gopkg.in/square/go-jose.v2"
@@ -276,6 +277,7 @@ func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest
 
 func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	request := NewAuthorizeRequest()
+	request.Request.Lang = i18n.GetLangFromRequest(f.MessageCatalog, r)
 
 	ctx = context.WithValue(ctx, RequestContextKey, r)
 	ctx = context.WithValue(ctx, AuthorizeRequestContextKey, request)

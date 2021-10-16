@@ -26,6 +26,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"golang.org/x/text/language"
 )
 
 type TokenUse = TokenType
@@ -324,4 +326,10 @@ type AuthorizeResponder interface {
 
 	// AddParameter adds key value pair to the response
 	AddParameter(key, value string)
+}
+
+// G11NContext is the globalization context
+type G11NContext interface {
+	// GetLang returns the current language in the context
+	GetLang() language.Tag
 }

@@ -25,6 +25,8 @@ import (
 	"html/template"
 	"net/http"
 	"reflect"
+
+	"github.com/ory/fosite/i18n"
 )
 
 // AuthorizeEndpointHandlers is a list of AuthorizeEndpointHandler
@@ -115,6 +117,9 @@ type Fosite struct {
 	ClientAuthenticationStrategy ClientAuthenticationStrategy
 
 	ResponseModeHandlerExtension ResponseModeHandler
+
+	// MessageCatalog is the catalog of messages used for i18n
+	MessageCatalog i18n.MessageCatalog
 }
 
 const MinParameterEntropy = 8

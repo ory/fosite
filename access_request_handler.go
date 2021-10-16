@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
@@ -58,6 +59,7 @@ import (
 //   in Section 3.2.1.
 func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session Session) (AccessRequester, error) {
 	accessRequest := NewAccessRequest(session)
+	accessRequest.Request.Lang = i18n.GetLangFromRequest(f.MessageCatalog, r)
 
 	ctx = context.WithValue(ctx, RequestContextKey, r)
 	ctx = context.WithValue(ctx, AccessRequestContextKey, accessRequest)
