@@ -115,10 +115,12 @@ func (d *AuthorizeRequest) GetDefaultResponseMode() ResponseModeType {
 	return d.DefaultResponseMode
 }
 
-func (d *AuthorizeRequest) MergeAuthorizeRequester(request AuthorizeRequester) {
+func (d *AuthorizeRequest) Merge(request Requester) {
 	d.Request.Merge(request)
-	d.RedirectURI = request.GetRedirectURI()
-	d.ResponseTypes = request.GetResponseTypes()
-	d.State = request.GetState()
-	d.ResponseMode = request.GetResponseMode()
+	if r, ok := request.(AuthorizeRequester); ok {
+		d.RedirectURI = r.GetRedirectURI()
+		d.ResponseTypes = r.GetResponseTypes()
+		d.State = r.GetState()
+		d.ResponseMode = r.GetResponseMode()
+	}
 }

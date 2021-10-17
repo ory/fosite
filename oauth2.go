@@ -348,8 +348,3 @@ type PushedAuthorizeResponder interface {
 	// ToMap converts the response to a map.
 	ToMap() map[string]interface{}
 }
-
-type MergeableAuthorizeRequester interface {
-	// Merge merges the argument into the method receiver.
-	MergeAuthorizeRequester(requester AuthorizeRequester)
-}

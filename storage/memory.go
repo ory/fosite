@@ -473,10 +473,7 @@ func (s *MemoryStore) GetPARSession(ctx context.Context, requestURI string, requ
 		return fosite.ErrNotFound
 	}
 
-	if req, ok := request.(fosite.MergeableAuthorizeRequester); ok {
-		req.MergeAuthorizeRequester(r)
-	}
-
+	request.Merge(r)
 	return nil
 }
 
