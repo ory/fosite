@@ -61,6 +61,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant 'refresh_token'."))
 	}
 
+
 	refresh := request.GetRequestForm().Get("refresh_token")
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(refresh)
 	originalRequest, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, request.GetSession())
@@ -131,9 +132,21 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	refreshToken, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
-	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	oneTimeUseRefreshToken := true
+	oneTimeUseRefreshTokenContext := ctx.Value(fosite.EnableOneTimeUseRefreshTokenContextKey)
+	if oneTimeUseRefreshTokenContext != nil {
+		oneTimeUseRefreshToken = oneTimeUseRefreshTokenContext.(bool)
+	}
+	var refreshSignature string
+
+	if oneTimeUseRefreshToken {
+		var err error
+		var refreshToken string
+		refreshToken, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
+		if err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
+		responder.SetExtra("refresh_token", refreshToken)
 	}
 
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(requester.GetRequestForm().Get("refresh_token"))
@@ -143,13 +156,16 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
+
 	ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
 	if err != nil {
 		return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
 	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
 		return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
-	} else if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
-		return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
+	} else if oneTimeUseRefreshToken {
+		if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
+			return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
+		}
 	}
 
 	storeReq := requester.Sanitize([]string{})
@@ -159,15 +175,16 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
 	}
 
-	if err := c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq); err != nil {
-		return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
+	if oneTimeUseRefreshToken {
+		if err := c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq); err != nil {
+			return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
+		}
 	}
 
 	responder.SetAccessToken(accessToken)
 	responder.SetTokenType("bearer")
 	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
-	responder.SetExtra("refresh_token", refreshToken)
 
 	if err := storage.MaybeCommitTx(ctx, c.TokenRevocationStorage); err != nil {
 		return c.handleRefreshTokenEndpointStorageError(ctx, false, err)

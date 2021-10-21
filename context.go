@@ -35,4 +35,5 @@ const (
 	AccessResponseContextKey    = ContextKey("accessResponse")
 	AuthorizeRequestContextKey  = ContextKey("authorizeRequest")
 	AuthorizeResponseContextKey = ContextKey("authorizeResponse")
+	EnableOneTimeUseRefreshTokenContextKey  = ContextKey("enableOneTimeUseRefreshToken")
 )
