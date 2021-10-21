@@ -444,7 +444,8 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 
 					c.setup()
 
-					err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
+					ctx := context.TODO()
+					err := h.PopulateTokenEndpointResponse(ctx, areq, aresp)
 					if c.expectErr != nil {
 						assert.EqualError(t, err, c.expectErr.Error())
 					} else {
