@@ -42,3 +42,7 @@ func (e ValidationError) Error() string {
 func (e *ValidationError) valid() bool {
 	return e.Errors == 0
 }
+
+func (e *ValidationError) Has(verr uint32) bool {
+	return (e.Errors & verr) != 0
+}
