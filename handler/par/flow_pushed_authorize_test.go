@@ -14,7 +14,7 @@ import (
 	"github.com/ory/fosite/storage"
 )
 
-func parseUrl(uu string) *url.URL {
+func parseURL(uu string) *url.URL {
 	u, _ := url.Parse(uu)
 	return u
 }
@@ -62,7 +62,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 						RedirectURIs:  []string{"http://asdf.com/cb"},
 					},
 				},
-				RedirectURI: parseUrl("http://asdf.com/cb"),
+				RedirectURI: parseURL("http://asdf.com/cb"),
 			},
 			description: "should fail because redirect uri is not https",
 			expectErr:   fosite.ErrInvalidRequest,
@@ -79,7 +79,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					},
 					RequestedAudience: []string{"https://www.ory.sh/not-api"},
 				},
-				RedirectURI: parseUrl("https://asdf.com/cb"),
+				RedirectURI: parseURL("https://asdf.com/cb"),
 			},
 			description: "should fail because audience doesn't match",
 			expectErr:   fosite.ErrInvalidRequest,
@@ -102,7 +102,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					RequestedAt: time.Now().UTC(),
 				},
 				State:       "superstate",
-				RedirectURI: parseUrl("https://asdf.de/cb"),
+				RedirectURI: parseURL("https://asdf.de/cb"),
 			},
 			description: "should pass",
 			expect: func(t *testing.T, areq *fosite.AuthorizeRequest, aresp *fosite.PushedAuthorizeResponse) {

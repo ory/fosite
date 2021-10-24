@@ -76,7 +76,7 @@ func TestAuthorizeCode_PushAuthorizeRequest(t *testing.T) {
 								RequestedAt: time.Now().UTC(),
 							},
 							State:       "superstate",
-							RedirectURI: parseUrl("https://asdf.de/cb"),
+							RedirectURI: parseURL("https://asdf.de/cb"),
 						}
 
 						err := handler.Storage.CreatePARSession(context.Background(), requestURI, r)
