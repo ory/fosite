@@ -133,7 +133,7 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	}
 
 	oneTimeUseRefreshToken := true
-	oneTimeUseRefreshTokenContext := ctx.Value(fosite.EnableOneTimeUseRefreshTokenContextKey)
+	oneTimeUseRefreshTokenContext := ctx.Value(fosite.RefreshTokenRotationEnabledContextKey)
 	if oneTimeUseRefreshTokenContext != nil {
 		oneTimeUseRefreshToken = oneTimeUseRefreshTokenContext.(bool)
 	}
