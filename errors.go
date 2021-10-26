@@ -382,7 +382,10 @@ func (e *RFC6749Error) Cause() error {
 
 func (e *RFC6749Error) WithHintf(hint string, args ...interface{}) *RFC6749Error {
 	err := *e
-	err.hintIDField = hint
+	if err.hintIDField == "" {
+		err.hintIDField = hint
+	}
+
 	err.hintArgs = args
 	err.HintField = fmt.Sprintf(hint, args...)
 	return &err
@@ -390,17 +393,28 @@ func (e *RFC6749Error) WithHintf(hint string, args ...interface{}) *RFC6749Error
 
 func (e *RFC6749Error) WithHint(hint string) *RFC6749Error {
 	err := *e
-	err.hintIDField = hint
+	if err.hintIDField == "" {
+		err.hintIDField = hint
+	}
+
 	err.HintField = hint
 	return &err
 }
 
-// WithHintIDOrDefault accepts the ID of the hint message
+// WithHintIDOrDefaultf accepts the ID of the hint message
 func (e *RFC6749Error) WithHintIDOrDefaultf(ID string, def string, args ...interface{}) *RFC6749Error {
 	err := *e
 	err.hintIDField = ID
 	err.hintArgs = args
 	err.HintField = fmt.Sprintf(def, args...)
+	return &err
+}
+
+// WithHintTranslationID accepts the ID of the hint message and should be paired with
+// WithHint and WithHintf to add a default message and vaargs.
+func (e *RFC6749Error) WithHintTranslationID(ID string) *RFC6749Error {
+	err := *e
+	err.hintIDField = ID
 	return &err
 }
 

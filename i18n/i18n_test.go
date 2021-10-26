@@ -3,7 +3,7 @@ package i18n
 import (
 	"testing"
 
-	"github.com/magiconair/properties/assert"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
 )
 
@@ -39,4 +39,7 @@ func TestSimpleTranslation(t *testing.T) {
 
 	msg := GetMessage(catalog, "badRequestMethod", language.Spanish, "GET")
 	assert.Equal(t, msg, "El método HTTP es 'GET', esperado 'POST'.")
+
+	msg = GetMessage(catalog, "badRequestBody", language.English, "GET")
+	assert.Equal(t, msg, "Unable to parse HTTP body, make sure to send a properly formatted form request body.")
 }

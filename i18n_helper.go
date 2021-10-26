@@ -3,6 +3,7 @@ package fosite
 import (
 	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
+	"github.com/pkg/errors"
 	"golang.org/x/text/language"
 )
 
@@ -23,9 +24,10 @@ func AddLocalizerToErr(catalog i18n.MessageCatalog, err error, requester Request
 // message.
 // See - WriteIntrospectionError, for example.
 func AddLocalizerToErrWithLang(catalog i18n.MessageCatalog, lang language.Tag, err error) error {
-	if e, ok := err.(*RFC6749Error); ok {
+	var e RFC6749Error
+	if errors.As(err, &e) {
 		return e.WithLocalizer(catalog, lang)
-	} else if e, ok := errorsx.Cause(err).(*RFC6749Error); ok {
+	} else if errors.As(errorsx.Cause(err), &e) {
 		return e.WithLocalizer(catalog, lang)
 	}
 	return err
