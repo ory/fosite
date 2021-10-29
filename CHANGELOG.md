@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2021-10-13)](#000-2021-10-13)
+- [0.0.0 (2021-10-29)](#000-2021-10-29)
   - [Bug Fixes](#bug-fixes)
   - [Code Refactoring](#code-refactoring)
   - [Documentation](#documentation)
@@ -355,7 +355,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.40.2...v0.0.0) (2021-10-13)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.40.2...v0.0.0) (2021-10-29)
 
 ### Bug Fixes
 
@@ -376,6 +376,7 @@
 - Add client secret rotation support ([#608](https://github.com/ory/fosite/issues/608)) ([a4ce354](https://github.com/ory/fosite/commit/a4ce3544c2996a99b65350d4b200967df9fc0d45)), closes [#590](https://github.com/ory/fosite/issues/590)
 - Add prettier and format ([d682bdf](https://github.com/ory/fosite/commit/d682bdf51c22c211ee1aceb06fb7c4a7e43db326))
 - Add ResponseModeHandler to support custom response modes ([#592](https://github.com/ory/fosite/issues/592)) ([10ec003](https://github.com/ory/fosite/commit/10ec003fb414fd3fcbd3e2e6d250cb2da51a0304)), closes [#591](https://github.com/ory/fosite/issues/591)
+- I18n support added ([#627](https://github.com/ory/fosite/issues/627)) ([cf02af9](https://github.com/ory/fosite/commit/cf02af977681fd667b33f8e131891f6746d0b9da)), closes [#615](https://github.com/ory/fosite/issues/615)
 - Support jose.opaquesigner for JWTs ([#611](https://github.com/ory/fosite/issues/611)) ([1121a0a](https://github.com/ory/fosite/commit/1121a0aa4155e9216abb989ab008df8cff67830d))
 
 # [0.40.2](https://github.com/ory/fosite/compare/v0.40.1...v0.40.2) (2021-05-28)
