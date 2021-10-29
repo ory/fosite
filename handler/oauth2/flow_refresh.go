@@ -148,7 +148,9 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
 	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
 		return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
-	} else if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, ts.GetID()); err != nil {
+	}
+
+	if err := c.TokenRevocationStorage.RevokeRefreshTokenMaybeGracePeriod(ctx, ts.GetID(), signature); err != nil {
 		return c.handleRefreshTokenEndpointStorageError(ctx, true, err)
 	}
 

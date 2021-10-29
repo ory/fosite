@@ -40,6 +40,18 @@ type TokenRevocationStorage interface {
 	// grant (see Implementation Note).
 	RevokeRefreshToken(ctx context.Context, requestID string) error
 
+	// RevokeRefreshTokenMaybeGracePeriod revokes a refresh token as specified in:
+	// https://tools.ietf.org/html/rfc7009#section-2.1
+	// If the particular
+	// token is a refresh token and the authorization server supports the
+	// revocation of access tokens, then the authorization server SHOULD
+	// also invalidate all access tokens based on the same authorization
+	// grant (see Implementation Note).
+	//
+	// If the Refresh Token grace period is greater than zero in configuration the token
+	// will have its expiration time set as UTCNow + GracePeriod.
+	RevokeRefreshTokenMaybeGracePeriod(ctx context.Context, requestID string, signature string) error
+
 	// RevokeAccessToken revokes an access token as specified in:
 	// https://tools.ietf.org/html/rfc7009#section-2.1
 	// If the token passed to the request
