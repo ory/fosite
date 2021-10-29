@@ -26,19 +26,21 @@ import (
 	"time"
 
 	"github.com/pborman/uuid"
+	"golang.org/x/text/language"
 )
 
 // Request is an implementation of Requester
 type Request struct {
-	ID                string     `json:"id" gorethink:"id"`
-	RequestedAt       time.Time  `json:"requestedAt" gorethink:"requestedAt"`
-	Client            Client     `json:"client" gorethink:"client"`
-	RequestedScope    Arguments  `json:"scopes" gorethink:"scopes"`
-	GrantedScope      Arguments  `json:"grantedScopes" gorethink:"grantedScopes"`
-	Form              url.Values `json:"form" gorethink:"form"`
-	Session           Session    `json:"session" gorethink:"session"`
-	RequestedAudience Arguments  `json:"requestedAudience"`
-	GrantedAudience   Arguments  `json:"grantedAudience"`
+	ID                string       `json:"id" gorethink:"id"`
+	RequestedAt       time.Time    `json:"requestedAt" gorethink:"requestedAt"`
+	Client            Client       `json:"client" gorethink:"client"`
+	RequestedScope    Arguments    `json:"scopes" gorethink:"scopes"`
+	GrantedScope      Arguments    `json:"grantedScopes" gorethink:"grantedScopes"`
+	Form              url.Values   `json:"form" gorethink:"form"`
+	Session           Session      `json:"session" gorethink:"session"`
+	RequestedAudience Arguments    `json:"requestedAudience"`
+	GrantedAudience   Arguments    `json:"grantedAudience"`
+	Lang              language.Tag `json:"-"`
 }
 
 func NewRequest() *Request {
@@ -192,4 +194,8 @@ func (a *Request) Sanitize(allowedParameters []string) Requester {
 	}
 
 	return b
+}
+
+func (a *Request) GetLang() language.Tag {
+	return a.Lang
 }
