@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2021-10-29)](#000-2021-10-29)
+- [0.0.0 (2021-11-01)](#000-2021-11-01)
   - [Bug Fixes](#bug-fixes)
   - [Code Refactoring](#code-refactoring)
   - [Documentation](#documentation)
@@ -355,7 +355,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.40.2...v0.0.0) (2021-10-29)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.40.2...v0.0.0) (2021-11-01)
 
 ### Bug Fixes
 
@@ -370,6 +370,7 @@
 ### Documentation
 
 - Add missing word ([#626](https://github.com/ory/fosite/issues/626)) ([c7a553b](https://github.com/ory/fosite/commit/c7a553bb4945013be17d2bbd2ec126ae93113a72))
+- Document that DeleteOpenIDConnectSession is deprecated ([#634](https://github.com/ory/fosite/issues/634)) ([4e2c03d](https://github.com/ory/fosite/commit/4e2c03d3f6dcb3a3b50e7ea245128edde7ebf959))
 
 ### Features
 
