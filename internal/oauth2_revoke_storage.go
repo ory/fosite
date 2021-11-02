@@ -159,7 +159,7 @@ func (m *MockTokenRevocationStorage) RevokeRefreshTokenMaybeGracePeriod(ctx cont
 	return ret0
 }
 
-// RevokeRefreshToken indicates an expected call of RevokeRefreshToken
+// RevokeRefreshTokenMaybeGracePeriod indicates an expected call of RevokeRefreshTokenMaybeGracePeriod
 func (mr *MockTokenRevocationStorageMockRecorder) RevokeRefreshTokenMaybeGracePeriod(ctx, requestID interface{}, signature interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeRefreshTokenMaybeGracePeriod",
