@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2021-11-01)](#000-2021-11-01)
+- [0.0.0 (2021-11-12)](#000-2021-11-12)
   - [Bug Fixes](#bug-fixes)
   - [Code Refactoring](#code-refactoring)
   - [Documentation](#documentation)
@@ -355,10 +355,11 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.40.2...v0.0.0) (2021-11-01)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.40.2...v0.0.0) (2021-11-12)
 
 ### Bug Fixes
 
+- Force HTTP GET for redirect responses ([#636](https://github.com/ory/fosite/issues/636)) ([f6c6523](https://github.com/ory/fosite/commit/f6c6523a09e7733d5ca263bccb7fd4fdb80172b2))
 - Include `typ` in jwt header ([#607](https://github.com/ory/fosite/issues/607)) ([7644a74](https://github.com/ory/fosite/commit/7644a74bd48accb46d8578f6846b3e509dfd4b03)), closes [#606](https://github.com/ory/fosite/issues/606)
 - Make `amr` claim an array to match the OIDC spec ([#625](https://github.com/ory/fosite/issues/625)) ([8a6f66a](https://github.com/ory/fosite/commit/8a6f66ab5d9f74140f4ce94210f09ccb0e27f56d))
 - Resolve nancy warning ([b6cf0a6](https://github.com/ory/fosite/commit/b6cf0a641d1169595ceb3110f76be0788e778521))
