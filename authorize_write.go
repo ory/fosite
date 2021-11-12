@@ -75,5 +75,5 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 // user-agent.
 func sendRedirect(url string, rw http.ResponseWriter) {
 	rw.Header().Set("Location", url)
-	rw.WriteHeader(http.StatusFound)
+	rw.WriteHeader(http.StatusSeeOther)
 }
