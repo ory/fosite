@@ -26,12 +26,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/x/errorsx"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
+	"github.com/ory/x/errorsx"
 )
 
 // DefaultJWTStrategy is a JWT RS256 strategy.
@@ -100,42 +99,39 @@ func (h *DefaultJWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosi
 
 func validate(ctx context.Context, jwtStrategy jwt.JWTStrategy, token string) (t *jwt.Token, err error) {
 	t, err = jwtStrategy.Decode(ctx, token)
-
 	if err == nil {
 		err = t.Claims.Valid()
+		return
 	}
 
-	if err != nil {
-		var e *jwt.ValidationError
-		if errors.As(err, &e) {
-			switch e.Errors {
-			case jwt.ValidationErrorMalformed:
-				err = errorsx.WithStack(fosite.ErrInvalidTokenFormat.WithWrap(err).WithDebug(err.Error()))
-			case jwt.ValidationErrorUnverifiable:
-				err = errorsx.WithStack(fosite.ErrTokenSignatureMismatch.WithWrap(err).WithDebug(err.Error()))
-			case jwt.ValidationErrorSignatureInvalid:
-				err = errorsx.WithStack(fosite.ErrTokenSignatureMismatch.WithWrap(err).WithDebug(err.Error()))
-			case jwt.ValidationErrorAudience:
-				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwt.ValidationErrorExpired:
-				err = errorsx.WithStack(fosite.ErrTokenExpired.WithWrap(err).WithDebug(err.Error()))
-			case jwt.ValidationErrorIssuedAt:
-				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwt.ValidationErrorIssuer:
-				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwt.ValidationErrorNotValidYet:
-				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwt.ValidationErrorId:
-				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			case jwt.ValidationErrorClaimsInvalid:
-				err = errorsx.WithStack(fosite.ErrTokenClaim.WithWrap(err).WithDebug(err.Error()))
-			default:
-				err = errorsx.WithStack(fosite.ErrRequestUnauthorized.WithWrap(err).WithDebug(err.Error()))
-			}
-		}
+	var e *jwt.ValidationError
+	if err != nil && errors.As(err, &e) {
+		err = errorsx.WithStack(toRFCErr(e).WithWrap(err).WithDebug(err.Error()))
 	}
 
 	return
+}
+
+func toRFCErr(v *jwt.ValidationError) *fosite.RFC6749Error {
+	switch {
+	case v == nil:
+		return nil
+	case v.Has(jwt.ValidationErrorMalformed):
+		return fosite.ErrInvalidTokenFormat
+	case v.Has(jwt.ValidationErrorUnverifiable | jwt.ValidationErrorSignatureInvalid):
+		return fosite.ErrTokenSignatureMismatch
+	case v.Has(jwt.ValidationErrorExpired):
+		return fosite.ErrTokenExpired
+	case v.Has(jwt.ValidationErrorAudience |
+		jwt.ValidationErrorIssuedAt |
+		jwt.ValidationErrorIssuer |
+		jwt.ValidationErrorNotValidYet |
+		jwt.ValidationErrorId |
+		jwt.ValidationErrorClaimsInvalid):
+		return fosite.ErrTokenClaim
+	default:
+		return fosite.ErrRequestUnauthorized
+	}
 }
 
 func (h *DefaultJWTStrategy) generate(ctx context.Context, tokenType fosite.TokenType, requester fosite.Requester) (string, string, error) {

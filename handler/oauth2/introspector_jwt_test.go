@@ -111,7 +111,7 @@ func TestIntrospectJWT(t *testing.T) {
 			},
 		},
 	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case=%d:%v", k, c.description), func(t *testing.T) {
 			if c.scopes == nil {
 				c.scopes = []string{}
 			}
