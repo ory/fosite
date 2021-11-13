@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/i18n"
 )
 
 type Config struct {
@@ -117,6 +118,9 @@ type Config struct {
 
 	// ResponseModeHandlerExtension provides a handler for custom response modes
 	ResponseModeHandlerExtension fosite.ResponseModeHandler
+
+	// MessageCatalog is the message bundle used for i18n
+	MessageCatalog i18n.MessageCatalog
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.

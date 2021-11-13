@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/ory/x/errorsx"
+	"golang.org/x/text/language"
 )
 
 // NewIntrospectionRequest initiates token introspection as defined in
@@ -183,6 +184,7 @@ type IntrospectionResponse struct {
 	AccessRequester AccessRequester `json:"extra"`
 	TokenUse        TokenUse        `json:"token_use,omitempty"`
 	AccessTokenType string          `json:"token_type,omitempty"`
+	Lang            language.Tag    `json:"-"`
 }
 
 func (r *IntrospectionResponse) IsActive() bool {

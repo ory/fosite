@@ -28,7 +28,9 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
+	"golang.org/x/text/language"
 
 	stderr "errors"
 
@@ -267,6 +269,12 @@ type (
 		cause            error
 		useLegacyFormat  bool
 		exposeDebug      bool
+
+		// Fields for globalization
+		hintIDField string
+		hintArgs    []interface{}
+		catalog     i18n.MessageCatalog
+		lang        language.Tag
 	}
 	stackTracer interface {
 		StackTrace() errors.StackTrace
@@ -373,12 +381,40 @@ func (e *RFC6749Error) Cause() error {
 }
 
 func (e *RFC6749Error) WithHintf(hint string, args ...interface{}) *RFC6749Error {
-	return e.WithHint(fmt.Sprintf(hint, args...))
+	err := *e
+	if err.hintIDField == "" {
+		err.hintIDField = hint
+	}
+
+	err.hintArgs = args
+	err.HintField = fmt.Sprintf(hint, args...)
+	return &err
 }
 
 func (e *RFC6749Error) WithHint(hint string) *RFC6749Error {
 	err := *e
+	if err.hintIDField == "" {
+		err.hintIDField = hint
+	}
+
 	err.HintField = hint
+	return &err
+}
+
+// WithHintIDOrDefaultf accepts the ID of the hint message
+func (e *RFC6749Error) WithHintIDOrDefaultf(ID string, def string, args ...interface{}) *RFC6749Error {
+	err := *e
+	err.hintIDField = ID
+	err.hintArgs = args
+	err.HintField = fmt.Sprintf(def, args...)
+	return &err
+}
+
+// WithHintTranslationID accepts the ID of the hint message and should be paired with
+// WithHint and WithHintf to add a default message and vaargs.
+func (e *RFC6749Error) WithHintTranslationID(ID string) *RFC6749Error {
+	err := *e
+	err.hintIDField = ID
 	return &err
 }
 
@@ -402,6 +438,13 @@ func (e *RFC6749Error) WithDescription(description string) *RFC6749Error {
 	return &err
 }
 
+func (e *RFC6749Error) WithLocalizer(catalog i18n.MessageCatalog, lang language.Tag) *RFC6749Error {
+	err := *e
+	err.catalog = catalog
+	err.lang = lang
+	return &err
+}
+
 // Sanitize strips the debug field
 //
 // Deprecated: Use WithExposeDebug instead.
@@ -420,7 +463,8 @@ func (e *RFC6749Error) WithExposeDebug(exposeDebug bool) *RFC6749Error {
 
 // GetDescription returns a more description description, combined with hint and debug (when available).
 func (e *RFC6749Error) GetDescription() string {
-	description := e.DescriptionField
+	description := i18n.GetMessageOrDefault(e.catalog, e.ErrorField, e.lang, e.DescriptionField)
+	e.computeHintField()
 	if e.HintField != "" {
 		description += " " + e.HintField
 	}
@@ -498,4 +542,12 @@ func (e *RFC6749Error) ToValues() url.Values {
 	}
 
 	return values
+}
+
+func (e *RFC6749Error) computeHintField() {
+	if e.hintIDField == "" {
+		return
+	}
+
+	e.HintField = i18n.GetMessageOrDefault(e.catalog, e.hintIDField, e.lang, e.HintField, e.hintArgs...)
 }

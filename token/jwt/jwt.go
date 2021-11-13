@@ -51,7 +51,7 @@ var SHA256HashSize = crypto.SHA256.Size()
 
 // RS256JWTStrategy is responsible for generating and validating JWT challenges
 type RS256JWTStrategy struct {
-	PrivateKey *rsa.PrivateKey
+	PrivateKey interface{}
 }
 
 // Generate generates a new authorize code or returns an error. set secret
@@ -61,12 +61,26 @@ func (j *RS256JWTStrategy) Generate(ctx context.Context, claims MapClaims, heade
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
 func (j *RS256JWTStrategy) Validate(ctx context.Context, token string) (string, error) {
-	return validateToken(token, &j.PrivateKey.PublicKey)
+	switch t := j.PrivateKey.(type) {
+	case *rsa.PrivateKey:
+		return validateToken(token, t.PublicKey)
+	case jose.OpaqueSigner:
+		return validateToken(token, t.Public().Key)
+	default:
+		return "", errors.New("Unable to validate token. Invalid PrivateKey type")
+	}
 }
 
 // Decode will decode a JWT token
 func (j *RS256JWTStrategy) Decode(ctx context.Context, token string) (*Token, error) {
-	return decodeToken(token, &j.PrivateKey.PublicKey)
+	switch t := j.PrivateKey.(type) {
+	case *rsa.PrivateKey:
+		return decodeToken(token, t.PublicKey)
+	case jose.OpaqueSigner:
+		return decodeToken(token, t.Public().Key)
+	default:
+		return nil, errors.New("Unable to decode token. Invalid PrivateKey type")
+	}
 }
 
 // GetSignature will return the signature of a token
@@ -86,7 +100,7 @@ func (j *RS256JWTStrategy) GetSigningMethodLength() int {
 
 // ES256JWTStrategy is responsible for generating and validating JWT challenges
 type ES256JWTStrategy struct {
-	PrivateKey *ecdsa.PrivateKey
+	PrivateKey interface{}
 }
 
 // Generate generates a new authorize code or returns an error. set secret
@@ -96,12 +110,26 @@ func (j *ES256JWTStrategy) Generate(ctx context.Context, claims MapClaims, heade
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
 func (j *ES256JWTStrategy) Validate(ctx context.Context, token string) (string, error) {
-	return validateToken(token, &j.PrivateKey.PublicKey)
+	switch t := j.PrivateKey.(type) {
+	case *ecdsa.PrivateKey:
+		return validateToken(token, t.PublicKey)
+	case jose.OpaqueSigner:
+		return validateToken(token, t.Public().Key)
+	default:
+		return "", errors.New("Unable to validate token. Invalid PrivateKey type")
+	}
 }
 
 // Decode will decode a JWT token
 func (j *ES256JWTStrategy) Decode(ctx context.Context, token string) (*Token, error) {
-	return decodeToken(token, &j.PrivateKey.PublicKey)
+	switch t := j.PrivateKey.(type) {
+	case *ecdsa.PrivateKey:
+		return decodeToken(token, t.PublicKey)
+	case jose.OpaqueSigner:
+		return decodeToken(token, t.Public().Key)
+	default:
+		return nil, errors.New("Unable to decode token. Invalid PrivateKey type")
+	}
 }
 
 // GetSignature will return the signature of a token

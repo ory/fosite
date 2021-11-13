@@ -36,7 +36,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 		return
 	}
 
-	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat).WithExposeDebug(f.SendDebugMessagesToClients)
+	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat).WithExposeDebug(f.SendDebugMessagesToClients).WithLocalizer(f.MessageCatalog, getLangFromRequester(ar))
 	if !ar.IsRedirectURIValid() {
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
@@ -82,5 +82,5 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	}
 
 	rw.Header().Set("Location", redirectURIString)
-	rw.WriteHeader(http.StatusFound)
+	rw.WriteHeader(http.StatusSeeOther)
 }

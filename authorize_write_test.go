@@ -55,7 +55,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetHeader().Return(http.Header{})
 
 				rw.EXPECT().Header().Return(header).Times(2)
-				rw.EXPECT().WriteHeader(http.StatusFound)
+				rw.EXPECT().WriteHeader(http.StatusSeeOther)
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
@@ -74,7 +74,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetHeader().Return(http.Header{})
 
 				rw.EXPECT().Header().Return(header).Times(2)
-				rw.EXPECT().WriteHeader(http.StatusFound)
+				rw.EXPECT().WriteHeader(http.StatusSeeOther)
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
@@ -93,7 +93,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetHeader().Return(http.Header{})
 
 				rw.EXPECT().Header().Return(header).Times(2)
-				rw.EXPECT().WriteHeader(http.StatusFound)
+				rw.EXPECT().WriteHeader(http.StatusSeeOther)
 			},
 			expect: func() {
 				expectedUrl, _ := url.Parse("https://foobar.com/?foo=bar&bar=baz")
@@ -113,7 +113,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
 
 				rw.EXPECT().Header().Return(header).Times(2)
-				rw.EXPECT().WriteHeader(http.StatusFound)
+				rw.EXPECT().WriteHeader(http.StatusSeeOther)
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{
@@ -133,7 +133,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
 
 				rw.EXPECT().Header().Return(header).Times(2)
-				rw.EXPECT().WriteHeader(http.StatusFound)
+				rw.EXPECT().WriteHeader(http.StatusSeeOther)
 			},
 			expect: func() {
 				expectedUrl, err := url.Parse("https://foobar.com/?foo=bar&bar=b%2Baz&scope=a+b")
@@ -155,7 +155,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
 
 				rw.EXPECT().Header().Return(header).Times(2)
-				rw.EXPECT().WriteHeader(http.StatusFound)
+				rw.EXPECT().WriteHeader(http.StatusSeeOther)
 			},
 			expect: func() {
 				assert.Equal(t, http.Header{

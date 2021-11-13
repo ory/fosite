@@ -27,16 +27,20 @@ import (
 	"net/http"
 )
 
-func (f *Fosite) WriteAccessError(rw http.ResponseWriter, _ AccessRequester, err error) {
-	f.writeJsonError(rw, err)
+func (f *Fosite) WriteAccessError(rw http.ResponseWriter, req AccessRequester, err error) {
+	f.writeJsonError(rw, req, err)
 }
 
-func (f *Fosite) writeJsonError(rw http.ResponseWriter, err error) {
+func (f *Fosite) writeJsonError(rw http.ResponseWriter, requester AccessRequester, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
 
 	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat).WithExposeDebug(f.SendDebugMessagesToClients)
+
+	if requester != nil {
+		rfcerr = rfcerr.WithLocalizer(f.MessageCatalog, getLangFromRequester(requester))
+	}
 
 	js, err := json.Marshal(rfcerr)
 	if err != nil {
