@@ -649,6 +649,11 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					Commit(propagatedContext).
 					Return(errors.New("Whoops, unable to commit transaction!")).
 					Times(1)
+				mockTransactional.
+					EXPECT().
+					Rollback(propagatedContext).
+					Return(nil).
+					Times(1)
 			},
 			expectError: fosite.ErrServerError,
 		},
