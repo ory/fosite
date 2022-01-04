@@ -372,19 +372,8 @@ func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) 
 }
 
 func (s *MemoryStore) RevokeRefreshTokenMaybeGracePeriod(ctx context.Context, requestID string, signature string) error {
-	// duplicates RevokeRefreshToken, no configuration available to configure grace period
-	s.refreshTokenRequestIDsMutex.Lock()
-	defer s.refreshTokenRequestIDsMutex.Unlock()
-
-	if signature, exists := s.RefreshTokenRequestIDs[requestID]; exists {
-		rel, ok := s.RefreshTokens[signature]
-		if !ok {
-			return fosite.ErrNotFound
-		}
-		rel.active = false
-		s.RefreshTokens[signature] = rel
-	}
-	return nil
+	// no configuration option is available; grace period is not available with memory store
+	return s.RevokeRefreshToken(ctx, requestID)
 }
 
 func (s *MemoryStore) RevokeAccessToken(ctx context.Context, requestID string) error {
