@@ -374,6 +374,11 @@ func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) 
 	return nil
 }
 
+func (s *MemoryStore) RevokeRefreshTokenMaybeGracePeriod(ctx context.Context, requestID string, signature string) error {
+	// no configuration option is available; grace period is not available with memory store
+	return s.RevokeRefreshToken(ctx, requestID)
+}
+
 func (s *MemoryStore) RevokeAccessToken(ctx context.Context, requestID string) error {
 	s.accessTokenRequestIDsMutex.RLock()
 	defer s.accessTokenRequestIDsMutex.RUnlock()

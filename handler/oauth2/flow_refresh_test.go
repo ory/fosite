@@ -499,7 +499,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					RevokeRefreshTokenMaybeGracePeriod(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -620,7 +620,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 			expectError: fosite.ErrInvalidRequest,
 		},
 		{
-			description: "transaction should be rolled back if call to `RevokeRefreshToken` results in an error",
+			description: "transaction should be rolled back if call to `RevokeRefreshTokenMaybeGracePeriod` results in an error",
 			setup: func() {
 				request.GrantTypes = fosite.Arguments{"refresh_token"}
 				mockTransactional.
@@ -640,7 +640,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					RevokeRefreshTokenMaybeGracePeriod(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
 					Times(1)
 				mockTransactional.
@@ -652,7 +652,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 			expectError: fosite.ErrServerError,
 		},
 		{
-			description: "should result in a fosite.ErrInvalidRequest if call to `RevokeRefreshToken` results in a " +
+			description: "should result in a fosite.ErrInvalidRequest if call to `RevokeRefreshTokenMaybeGracePeriod` results in a " +
 				"fosite.ErrSerializationFailure error",
 			setup: func() {
 				request.GrantTypes = fosite.Arguments{"refresh_token"}
@@ -673,7 +673,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					RevokeRefreshTokenMaybeGracePeriod(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(fosite.ErrSerializationFailure).
 					Times(1)
 				mockTransactional.
@@ -705,7 +705,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					RevokeRefreshTokenMaybeGracePeriod(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -741,7 +741,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					RevokeRefreshTokenMaybeGracePeriod(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -778,7 +778,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					RevokeRefreshTokenMaybeGracePeriod(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -821,7 +821,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					RevokeRefreshTokenMaybeGracePeriod(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -897,7 +897,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					RevokeRefreshTokenMaybeGracePeriod(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -940,7 +940,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RevokeRefreshToken(propagatedContext, gomock.Any()).
+					RevokeRefreshTokenMaybeGracePeriod(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.

@@ -19,6 +19,7 @@ type MockTokenRevocationStorage struct {
 	recorder *MockTokenRevocationStorageMockRecorder
 }
 
+
 // MockTokenRevocationStorageMockRecorder is the mock recorder for MockTokenRevocationStorage
 type MockTokenRevocationStorageMockRecorder struct {
 	mock *MockTokenRevocationStorage
@@ -148,4 +149,22 @@ func (m *MockTokenRevocationStorage) RevokeRefreshToken(arg0 context.Context, ar
 func (mr *MockTokenRevocationStorageMockRecorder) RevokeRefreshToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeRefreshToken", reflect.TypeOf((*MockTokenRevocationStorage)(nil).RevokeRefreshToken), arg0, arg1)
+}
+
+// RevokeRefreshTokenMaybeGracePeriod mocks base method
+func (m *MockTokenRevocationStorage) RevokeRefreshTokenMaybeGracePeriod(ctx context.Context, requestID string, signature string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RevokeRefreshTokenMaybeGracePeriod", ctx, requestID, signature)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RevokeRefreshTokenMaybeGracePeriod indicates an expected call of RevokeRefreshTokenMaybeGracePeriod
+func (mr *MockTokenRevocationStorageMockRecorder) RevokeRefreshTokenMaybeGracePeriod(ctx, requestID interface{}, signature interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeRefreshTokenMaybeGracePeriod",
+		reflect.TypeOf((*MockTokenRevocationStorage)(nil).RevokeRefreshTokenMaybeGracePeriod),
+		ctx,
+		requestID,
+		signature)
 }
