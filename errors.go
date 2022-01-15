@@ -266,6 +266,7 @@ type (
 		HintField        string
 		CodeField        int
 		DebugField       string
+		DetailsField     map[string]interface{}
 		cause            error
 		useLegacyFormat  bool
 		exposeDebug      bool
@@ -287,7 +288,7 @@ var (
 	_ errorsx.RequestIDCarrier  = new(RFC6749Error)
 	_ errorsx.StatusCarrier     = new(RFC6749Error)
 	_ errorsx.StatusCodeCarrier = new(RFC6749Error)
-	// _ errorsx.DetailsCarrier = new(RFC6749Error)
+	_ errorsx.DetailsCarrier    = new(RFC6749Error)
 )
 
 func ErrorToRFC6749Error(err error) *RFC6749Error {
@@ -422,6 +423,10 @@ func (e *RFC6749Error) Debug() string {
 	return e.DebugField
 }
 
+func (e *RFC6749Error) Details() map[string]interface{} {
+	return e.DetailsField
+}
+
 func (e *RFC6749Error) WithDebug(debug string) *RFC6749Error {
 	err := *e
 	err.DebugField = debug
@@ -430,6 +435,19 @@ func (e *RFC6749Error) WithDebug(debug string) *RFC6749Error {
 
 func (e *RFC6749Error) WithDebugf(debug string, args ...interface{}) *RFC6749Error {
 	return e.WithDebug(fmt.Sprintf(debug, args...))
+}
+
+func (e *RFC6749Error) WithDetail(key string, detail interface{}) *RFC6749Error {
+	err := *e
+	if err.DetailsField == nil {
+		err.DetailsField = map[string]interface{}{}
+	}
+	err.DetailsField[key] = detail
+	return &err
+}
+
+func (e *RFC6749Error) WithDetailf(key string, message string, args ...interface{}) *RFC6749Error {
+	return e.WithDetail(key, fmt.Sprintf(message, args...))
 }
 
 func (e *RFC6749Error) WithDescription(description string) *RFC6749Error {
