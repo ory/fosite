@@ -22,6 +22,7 @@
 package compose
 
 import (
+	"html/template"
 	"net/url"
 	"time"
 
@@ -121,6 +122,9 @@ type Config struct {
 
 	// MessageCatalog is the message bundle used for i18n
 	MessageCatalog i18n.MessageCatalog
+
+	// FormPostHTMLTemplate sets html template for rendering the authorization response when the request has response_mode=form_post.
+	FormPostHTMLTemplate *template.Template
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
