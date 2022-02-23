@@ -915,6 +915,11 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Commit(propagatedContext).
 					Return(errors.New("Could not commit transaction!")).
 					Times(1)
+				mockTransactional.
+					EXPECT().
+					Rollback(propagatedContext).
+					Return(nil).
+					Times(1)
 			},
 			expectError: fosite.ErrServerError,
 		},
@@ -957,6 +962,11 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Commit(propagatedContext).
 					Return(fosite.ErrSerializationFailure).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					Rollback(propagatedContext).
+					Return(nil).
 					Times(1)
 			},
 			expectError: fosite.ErrInvalidRequest,
