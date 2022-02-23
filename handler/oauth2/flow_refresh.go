@@ -228,7 +228,7 @@ func (c *RefreshTokenGrantHandler) handleRefreshTokenEndpointStorageError(ctx co
 			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))
 	}
 
-	if errors.Is(storageErr, fosite.ErrNotFound) {
+	if errors.Is(storageErr, fosite.ErrNotFound) || errors.Is(storageErr, fosite.ErrInactiveToken) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.
 			WithDebugf(storageErr.Error()).
 			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))

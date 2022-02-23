@@ -620,6 +620,29 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 			expectError: fosite.ErrInvalidRequest,
 		},
 		{
+			description: "should result in a fosite.ErrInactiveToken if call to `RevokeAccessToken` results in a " +
+				"fosite.ErrInvalidRequest error",
+			setup: func() {
+				request.GrantTypes = fosite.Arguments{"refresh_token"}
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil).
+					Times(1)
+				mockRevocationStore.
+					EXPECT().
+					GetRefreshTokenSession(propagatedContext, gomock.Any(), nil).
+					Return(nil, fosite.ErrInactiveToken).
+					Times(1)
+				mockTransactional.
+					EXPECT().
+					Rollback(propagatedContext).
+					Return(nil).
+					Times(1)
+			},
+			expectError: fosite.ErrInvalidRequest,
+		},
+		{
 			description: "transaction should be rolled back if call to `RevokeRefreshTokenMaybeGracePeriod` results in an error",
 			setup: func() {
 				request.GrantTypes = fosite.Arguments{"refresh_token"}
