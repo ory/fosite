@@ -36,12 +36,16 @@ import (
 	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
 	jose "gopkg.in/square/go-jose.v2"
+	josejwt "gopkg.in/square/go-jose.v2/jwt"
 )
 
 // ClientAuthenticationStrategy provides a method signature for authenticating a client request
 type ClientAuthenticationStrategy func(context.Context, *http.Request, url.Values) (Client, error)
 
-const clientAssertionJWTBearerType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+const (
+	clientAssertionJWTBearerType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+	grantTypeJWTBearer           = "urn:ietf:params:oauth:grant-type:jwt-bearer"
+)
 
 func (f *Fosite) findClientPublicJWK(oidcClient OpenIDConnectClient, t *jwt.Token, expectsRSAKey bool) (interface{}, error) {
 	if set := oidcClient.GetJSONWebKeys(); set != nil {
@@ -221,7 +225,42 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 
 	clientID, clientSecret, err := clientCredentialsFromRequest(r, form)
 	if err != nil {
-		return nil, err
+		// check if grant type is urn:ietf:params:oauth:grant-type:jwt-bearer
+		// if yes, try to derive client ID from JWT Bearer token ("iss"). This is needed as certain providers
+		// (e.g. Salesforce) do not provide the means supply client credentials with the bearer token)
+		if grantType := form.Get("grant_type"); grantType == grantTypeJWTBearer {
+			assertion := form.Get("assertion")
+
+			if assertion == "" {
+				return nil, err
+			}
+			// do not validate the key (hence noop token func), all this is just to get the issuer as client ID
+			token, err := josejwt.ParseSigned(assertion)
+			// if there is no assertion is not a jwt (signature ignored), then authentication of the client has obviously failed
+			if err != nil {
+				return nil, err
+			}
+
+			// parse claims without looking at token
+			claims := jwt.MapClaims{}
+			if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+				// if claims can't be parsed, well then something is wrong
+				return nil, err
+			}
+
+			tokenIssuer, ok := claims["iss"]
+			if !ok {
+				// token does not contain an issuer, hence authentication of client has obviously failed
+				return nil, err
+			}
+			clientID, ok = tokenIssuer.(string)
+			if !ok {
+				// token does not contain a valid issuer, hence authentication of client has obviously failed
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	client, err := f.Store.GetClient(ctx, clientID)
