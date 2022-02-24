@@ -227,38 +227,10 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 	if err != nil {
 		// check if grant type is urn:ietf:params:oauth:grant-type:jwt-bearer
 		// if yes, try to derive client ID from JWT Bearer token ("iss"). This is needed as certain providers
-		// (e.g. Salesforce) do not provide the means supply client credentials with the bearer token)
-		if grantType := form.Get("grant_type"); grantType == grantTypeJWTBearer {
-			assertion := form.Get("assertion")
-
-			if assertion == "" {
-				return nil, err
-			}
-			// do not validate the key (hence noop token func), all this is just to get the issuer as client ID
-			token, err := josejwt.ParseSigned(assertion)
-			// if there is no assertion is not a jwt (signature ignored), then authentication of the client has obviously failed
-			if err != nil {
-				return nil, err
-			}
-
-			// parse claims without looking at token
-			claims := jwt.MapClaims{}
-			if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
-				// if claims can't be parsed, well then something is wrong
-				return nil, err
-			}
-
-			tokenIssuer, ok := claims["iss"]
-			if !ok {
-				// token does not contain an issuer, hence authentication of client has obviously failed
-				return nil, err
-			}
-			clientID, ok = tokenIssuer.(string)
-			if !ok {
-				// token does not contain a valid issuer, hence authentication of client has obviously failed
-				return nil, err
-			}
-		} else {
+		// (e.g. Salesforce) do not provide the means to supply client credentials with the bearer token.
+		// this is also covered by https://datatracker.ietf.org/doc/html/rfc7523#section-2.1
+		// that says that Authentication of the client is optional
+		if clientID, _, err = jwtBearerNoClientAuthRequest(r, form, err); err != nil {
 			return nil, err
 		}
 	}
@@ -288,6 +260,43 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 	}
 
 	return client, nil
+}
+
+// Tries to read client ID from (yet) unverified token, if request came unauthenticated
+func jwtBearerNoClientAuthRequest(r *http.Request, form url.Values, originalErr error) (clientID, clientSecret string, err error) {
+	if grantType := form.Get("grant_type"); grantType != grantTypeJWTBearer {
+		return "", "", originalErr
+	}
+	assertion := form.Get("assertion")
+
+	if assertion == "" {
+		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("Required parameter assertion is missing."))
+	}
+	// do not validate the key (hence noop token func), all this is just to get the issuer as client ID
+	token, err := josejwt.ParseSigned(assertion)
+	// if there is no assertion is not a jwt (signature ignored), then authentication of the client has obviously failed
+	if err != nil {
+		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("JWT in assertion can't be parsed."))
+	}
+
+	// parse claims without looking at token
+	claims := jwt.MapClaims{}
+	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
+		// if claims can't be parsed, well then something is wrong
+		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("Claims in JWT in assertion can't be parsed"))
+	}
+
+	tokenIssuer, ok := claims["iss"]
+	if !ok {
+		// token does not contain an issuer, hence authentication of client has obviously failed
+		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("Unauthenticated request with JWT assertion does not contain issuer [\"iss\"] that is used to derive client ID."))
+	}
+	clientID, ok = tokenIssuer.(string)
+	if !ok {
+		// token does not contain a valid issuer, hence authentication of client has obviously failed
+		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("Unauthenticated request with JWT assertion does not contain valid issuer [\"iss\"]."))
+	}
+	return
 }
 
 func (f *Fosite) checkClientSecret(ctx context.Context, client Client, clientSecret []byte) error {

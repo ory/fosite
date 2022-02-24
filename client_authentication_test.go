@@ -87,6 +87,7 @@ func clientBasicAuthHeader(clientID, clientSecret string) http.Header {
 
 func TestAuthenticateClient(t *testing.T) {
 	const at = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+	const gtJWT = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
 	hasher := &BCrypt{WorkFactor: 6}
 	f := &Fosite{
@@ -506,6 +507,31 @@ func TestAuthenticateClient(t *testing.T) {
 				"jti": "12345",
 				"aud": "not-token-url",
 			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
+			r:         new(http.Request),
+			expectErr: ErrInvalidClient,
+		},
+		{
+			d:      "should pass because assertion contains client id as issuer and client is public",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Public: true}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "none"},
+			form: url.Values{"assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"iss": "bar",
+				"jti": "12345",
+				"aud": "token-url",
+			}, rsaKey, "kid-foo")}, "grant_type": []string{gtJWT}},
+			r: new(http.Request),
+		},
+		{
+			d:      "should fail despite valid assertion because client is private",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret, Public: false}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "none"},
+			form: url.Values{"assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"iss": "bar",
+				"jti": "12345",
+				"aud": "token-url",
+			}, rsaKey, "kid-foo")}, "grant_type": []string{gtJWT}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
