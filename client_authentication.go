@@ -270,33 +270,30 @@ func jwtBearerNoClientAuthRequest(r *http.Request, form url.Values, originalErr 
 	assertion := form.Get("assertion")
 
 	if assertion == "" {
-		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("Required parameter assertion is missing."))
+		return "", "", originalErr
 	}
 	// do not validate the key (hence noop token func), all this is just to get the issuer as client ID
 	token, err := josejwt.ParseSigned(assertion)
 	// if there is no assertion is not a jwt (signature ignored), then authentication of the client has obviously failed
 	if err != nil {
-		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("JWT in assertion can't be parsed."))
+		return "", "", errorsx.WithStack(ErrUnauthorizedClient.WithHint("JWT in assertion is invalid."))
 	}
 
 	// parse claims without looking at token
-	claims := jwt.MapClaims{}
+	claims := struct {
+		Issuer string `json:"iss"`
+	}{}
 	if err := token.UnsafeClaimsWithoutVerification(&claims); err != nil {
 		// if claims can't be parsed, well then something is wrong
-		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("Claims in JWT in assertion can't be parsed"))
+		return "", "", errorsx.WithStack(ErrUnauthorizedClient.WithHint("Claims of JWT assertion in assertion can not be parsed."))
 	}
 
-	tokenIssuer, ok := claims["iss"]
-	if !ok {
+	if claims.Issuer == "" {
 		// token does not contain an issuer, hence authentication of client has obviously failed
-		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("Unauthenticated request with JWT assertion does not contain issuer [\"iss\"] that is used to derive client ID."))
+		return "", "", errorsx.WithStack(ErrUnauthorizedClient.WithHint("Unauthenticated request with JWT assertion does not contain issuer [\"iss\"] that is used to derive client ID."))
 	}
-	clientID, ok = tokenIssuer.(string)
-	if !ok {
-		// token does not contain a valid issuer, hence authentication of client has obviously failed
-		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("Unauthenticated request with JWT assertion does not contain valid issuer [\"iss\"]."))
-	}
-	return
+
+	return claims.Issuer, "", nil
 }
 
 func (f *Fosite) checkClientSecret(ctx context.Context, client Client, clientSecret []byte) error {

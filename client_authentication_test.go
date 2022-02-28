@@ -535,6 +535,19 @@ func TestAuthenticateClient(t *testing.T) {
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
+		{
+			d:      "should fail despite valid assertion because client unknown",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret, Public: false}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "none"},
+			form: url.Values{"assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"iss": "foo",
+				"jti": "12345",
+				"aud": "token-url",
+			}, rsaKey, "kid-foo")}, "grant_type": []string{gtJWT}},
+			r:         new(http.Request),
+			expectErr: ErrInvalidClient,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			store := storage.NewMemoryStore()
