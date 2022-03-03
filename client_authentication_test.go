@@ -163,6 +163,25 @@ func TestAuthenticateClient(t *testing.T) {
 			r:      new(http.Request),
 		},
 		{
+			d:      "should pass because client is public and client secret is empty in query param",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Public: true}, TokenEndpointAuthMethod: "none"},
+			form:   url.Values{"client_id": []string{"foo"}, "client_secret": []string{""}},
+			r:      new(http.Request),
+		},
+		{
+			d:      "should pass because client is public and client secret is empty in basic auth header",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Public: true}, TokenEndpointAuthMethod: "none"},
+			form:   url.Values{},
+			r:      &http.Request{Header: clientBasicAuthHeader("foo", "")},
+		},
+		{
+			d:         "should fail because client requires basic auth and client secret is empty in basic auth header",
+			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Public: true}, TokenEndpointAuthMethod: "client_secret_basic"},
+			form:      url.Values{},
+			r:         &http.Request{Header: clientBasicAuthHeader("foo", "")},
+			expectErr: ErrInvalidClient,
+		},
+		{
 			d:      "should pass with client credentials containing special characters",
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "!foo%20bar", Secret: complexSecret}, TokenEndpointAuthMethod: "client_secret_post"},
 			form:   url.Values{"client_id": []string{"!foo%20bar"}, "client_secret": []string{complexSecretRaw}},
