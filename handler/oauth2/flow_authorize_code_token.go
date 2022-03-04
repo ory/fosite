@@ -110,7 +110,14 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	request.SetSession(authorizeRequest.GetSession())
 	request.SetID(authorizeRequest.GetID())
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan).Round(time.Second))
+	// If session has set expire at value override the config access token expiration
+	accessExpIn := request.GetSession().GetExpiresAt(fosite.AccessToken).Round(time.Second)
+
+	if accessExpIn.IsZero(){
+		accessExpIn = time.Now().UTC().Add(c.AccessTokenLifespan).Round(time.Second)
+	}
+
+	request.GetSession().SetExpiresAt(fosite.AccessToken, accessExpIn)
 	if c.RefreshTokenLifespan > -1 {
 		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.RefreshTokenLifespan).Round(time.Second))
 	}

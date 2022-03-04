@@ -433,6 +433,36 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					description: "should fail because code has been used already",
 					expectErr:   fosite.ErrInvalidGrant,
 				},
+				{
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"authorization_code"},
+						Request: fosite.Request{
+							Form: url.Values{},
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"authorization_code"},
+							},
+							GrantedScope: fosite.Arguments{"foo", "offline"},
+							Session:      &fosite.DefaultSession{},
+							RequestedAt:  time.Now().UTC(),
+						},
+					},
+					check: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
+						assert.Equal(t, time.Now().Add(time.Minute*2).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
+						assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
+						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
+						require.NoError(t, err)
+						areq.Form.Add("code", code)
+
+						areq.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().Add(time.Minute*2).Round(time.Second))
+
+						require.NoError(t, store.CreateAuthorizeCodeSession(nil, sig, areq))
+						require.NoError(t, store.InvalidateAuthorizeCodeSession(nil, sig))
+					},
+					description: "should pass with overrided access token expiration",
+					expectErr:   fosite.ErrInvalidGrant,
+				},
 			} {
 				t.Run(fmt.Sprintf("case=%d/description=%s", i, c.description), func(t *testing.T) {
 					if c.setup != nil {
