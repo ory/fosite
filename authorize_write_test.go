@@ -118,7 +118,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			expect: func() {
 				assert.Equal(t, http.Header{
 					"X-Bar":         {"baz"},
-					"Location":      {"https://foobar.com/?foo=bar#bar=b+az%20ab"},
+					"Location":      {"https://foobar.com/?foo=bar#bar=b%2Baz+ab"},
 					"Cache-Control": []string{"no-store"},
 					"Pragma":        []string{"no-cache"},
 				}, header)
@@ -160,7 +160,45 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 			expect: func() {
 				assert.Equal(t, http.Header{
 					"X-Bar":         {"baz"},
-					"Location":      {"https://foobar.com/?foo=bar#scope=api:*"},
+					"Location":      {"https://foobar.com/?foo=bar#scope=api%3A%2A"},
+					"Cache-Control": []string{"no-store"},
+					"Pragma":        []string{"no-cache"},
+				}, header)
+			},
+		},
+		{
+			setup: func() {
+				redir, _ := url.Parse("https://foobar.com/?foo=bar#bar=baz")
+				ar.EXPECT().GetRedirectURI().Return(redir)
+				ar.EXPECT().GetResponseMode().Return(ResponseModeFragment)
+				resp.EXPECT().GetParameters().Return(url.Values{"qux": {"quux"}})
+				resp.EXPECT().GetHeader().Return(http.Header{})
+
+				rw.EXPECT().Header().Return(header).Times(2)
+				rw.EXPECT().WriteHeader(http.StatusSeeOther)
+			},
+			expect: func() {
+				assert.Equal(t, http.Header{
+					"Location":      {"https://foobar.com/?foo=bar#qux=quux"},
+					"Cache-Control": []string{"no-store"},
+					"Pragma":        []string{"no-cache"},
+				}, header)
+			},
+		},
+		{
+			setup: func() {
+				redir, _ := url.Parse("https://foobar.com/?foo=bar")
+				ar.EXPECT().GetRedirectURI().Return(redir)
+				ar.EXPECT().GetResponseMode().Return(ResponseModeFragment)
+				resp.EXPECT().GetParameters().Return(url.Values{"state": {"{\"a\":\"b=c&d=e\"}"}})
+				resp.EXPECT().GetHeader().Return(http.Header{})
+
+				rw.EXPECT().Header().Return(header).Times(2)
+				rw.EXPECT().WriteHeader(http.StatusSeeOther)
+			},
+			expect: func() {
+				assert.Equal(t, http.Header{
+					"Location":      {"https://foobar.com/?foo=bar#state=%7B%22a%22%3A%22b%3Dc%26d%3De%22%7D"},
 					"Cache-Control": []string{"no-store"},
 					"Pragma":        []string{"no-cache"},
 				}, header)

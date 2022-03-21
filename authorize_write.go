@@ -57,8 +57,13 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 		// Implicit grants
 		// The endpoint URI MUST NOT include a fragment component.
 		redir.Fragment = ""
-		URLSetFragment(redir, resp.GetParameters())
-		sendRedirect(redir.String(), rw)
+
+		u := redir.String()
+		fr := resp.GetParameters()
+		if len(fr) > 0 {
+			u = u + "#" + fr.Encode()
+		}
+		sendRedirect(u, rw)
 		return
 	default:
 		if f.ResponseModeHandler().ResponseModes().Has(rm) {
