@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2022-02-23)](#000-2022-02-23)
+- [0.0.0 (2022-03-21)](#000-2022-03-21)
   - [Bug Fixes](#bug-fixes)
 - [0.42.1 (2022-02-03)](#0421-2022-02-03)
   - [Code Generation](#code-generation)
@@ -364,7 +364,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.42.1...v0.0.0) (2022-02-23)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.42.1...v0.0.0) (2022-03-21)
 
 ### Bug Fixes
 
@@ -372,6 +372,10 @@
 - Handle token_inactive error for multiple concurrent refresh requests ([#652](https://github.com/ory/fosite/issues/652)) ([7c8f4ae](https://github.com/ory/fosite/commit/7c8f4ae49550c61ff43d1a86adace4ed08c71e3e)):
 
   See https://github.com/ory/hydra/issues/3004
+
+- Url-encode the fragment in the redirect URL of the authorize response ([#649](https://github.com/ory/fosite/issues/649)) ([beec138](https://github.com/ory/fosite/commit/beec13889c431ff06348c032dd260d00db253dd2)), closes [#648](https://github.com/ory/fosite/issues/648):
+
+  This patch reverts the encoding logic for the fragment of the redirect URL returned as part of the authorize response to what was the one before version `0.36.0`. In that version, the code was refactored and the keys and values of the fragment ceased to be url-encoded. This in turn reflected on all Ory Hydra versions starting from `1.9.0` and provoked a breaking change that made the parsing of the fragment impossible if any of the params contain a character like `&` or `=` because they get treated as separators instead of as text
 
 # [0.42.1](https://github.com/ory/fosite/compare/v0.42.0...v0.42.1) (2022-02-03)
 
