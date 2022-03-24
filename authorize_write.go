@@ -38,6 +38,10 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 
 	redir := ar.GetRedirectURI()
 	switch rm := ar.GetResponseMode(); rm {
+	case ResponseModeWebMessage:
+		rw.Header().Set("Content-Type", "text/html;charset=UTF-8")
+		WriteWebMessageResponse(redir.String(), resp.GetParameters(), GetWebMessageResponse(*f), rw)
+		return
 	case ResponseModeFormPost:
 		//form_post
 		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")

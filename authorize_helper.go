@@ -49,6 +49,38 @@ var FormPostDefaultTemplate = template.Must(template.New("form_post").Parse(`<ht
    </body>
 </html>`))
 
+var WebMessageDefaultTemplate = template.Must(template.New("web_message").Parse(`<html>
+<body>
+<script type="text/javascript">
+var callbackOrigin = "{{ .RedirURL }}";
+
+var response = {
+{{ range $key,$value := .Parameters }}
+	{{ range $parameter:= $value}}
+	"{{$key}}": "{{$parameter}}",
+	{{end}}
+{{ end }}
+};
+
+var authorizationResponse = {
+	type: "authorization_response",
+	response
+};
+
+
+(function(window, document) {
+	const isPopup = window.opener && window.opener !== window;
+	if (isPopup) {
+		// we're in a popup
+		window.opener.postMessage(authorizationResponse, callbackOrigin);
+	} else {
+		// we're in a frame
+		window.parent.postMessage(authorizationResponse, callbackOrigin);
+	}
+}
+)(this, this.document);	
+`))
+
 // MatchRedirectURIWithClientRedirectURIs if the given uri is a registered redirect uri. Does not perform
 // uri validation.
 //
@@ -212,6 +244,16 @@ func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, t
 	})
 }
 
+func WriteWebMessageResponse(redirectURL string, parameters url.Values, template *template.Template, rw io.Writer) {
+	_ = template.Execute(rw, struct {
+		RedirURL   string
+		Parameters url.Values
+	}{
+		RedirURL:   redirectURL,
+		Parameters: parameters,
+	})
+}
+
 // Deprecated: Do not use.
 func URLSetFragment(source *url.URL, fragment url.Values) {
 	var f string
@@ -233,4 +275,13 @@ func GetPostFormHTMLTemplate(f Fosite) *template.Template {
 		formPostHTMLTemplate = FormPostDefaultTemplate
 	}
 	return formPostHTMLTemplate
+}
+
+// GetWebMessageResponse returns the HTML template for the web message response.
+func GetWebMessageResponse(f Fosite) *template.Template {
+	webMessageHTMLTemplate := f.WebMessageHTMLTemplate
+	if webMessageHTMLTemplate == nil {
+		webMessageHTMLTemplate = WebMessageDefaultTemplate
+	}
+	return webMessageHTMLTemplate
 }

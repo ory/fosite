@@ -75,6 +75,7 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 		ResponseModeHandlerExtension: config.ResponseModeHandlerExtension,
 		MessageCatalog:               config.MessageCatalog,
 		FormPostHTMLTemplate:         config.FormPostHTMLTemplate,
+		WebMessageHTMLTemplate:       config.WebMessageHTMLTemplate,
 	}
 
 	for _, factory := range factories {

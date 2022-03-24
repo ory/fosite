@@ -212,8 +212,25 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 				resp.EXPECT().GetHeader().Return(http.Header{"X-Bar": {"baz"}})
 				resp.EXPECT().GetParameters().Return(url.Values{"code": {"poz65kqoneu"}, "state": {"qm6dnsrn"}})
 
-				rw.EXPECT().Header().Return(header).AnyTimes()
+				rw.EXPECT().Header().Return(header).Times(2)
 				rw.EXPECT().Write(gomock.Any()).AnyTimes()
+			},
+			expect: func() {
+				assert.Equal(t, "text/html;charset=UTF-8", header.Get("Content-Type"))
+			},
+		},
+
+		{
+			setup: func() {
+				redir, _ := url.Parse("https://foobar.com/?foo=bar")
+				ar.EXPECT().GetRedirectURI().Return(redir).AnyTimes()
+				ar.EXPECT().GetResponseMode().Return(ResponseModeWebMessage).AnyTimes()
+				resp.EXPECT().GetParameters().Return(url.Values{"code": {"code123"}, "state": {"state123"}}).AnyTimes()
+				resp.EXPECT().GetHeader().Return(http.Header{})
+
+				rw.EXPECT().Header().Return(header).Times(2)
+				rw.EXPECT().Write(gomock.Any()).AnyTimes()
+
 			},
 			expect: func() {
 				assert.Equal(t, "text/html;charset=UTF-8", header.Get("Content-Type"))

@@ -113,6 +113,9 @@ type Fosite struct {
 	// FormPostHTMLTemplate sets html template for rendering the authorization response when the request has response_mode=form_post. Defaults to fosite.FormPostDefaultTemplate
 	FormPostHTMLTemplate *template.Template
 
+	// WebMessageHTMLTemplate sets the html template used for response_mode=web_message. Defaults to fosite.WebMessageHTMLTemplate
+	WebMessageHTMLTemplate *template.Template
+
 	// ClientAuthenticationStrategy provides an extension point to plug a strategy to authenticate clients
 	ClientAuthenticationStrategy ClientAuthenticationStrategy
 

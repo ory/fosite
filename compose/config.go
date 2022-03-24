@@ -125,6 +125,9 @@ type Config struct {
 
 	// FormPostHTMLTemplate sets html template for rendering the authorization response when the request has response_mode=form_post.
 	FormPostHTMLTemplate *template.Template
+
+	// WebMessageHTMLTemplate sets html template for rendering the authorization response when the request has response_mode=web_message.
+	WebMessageHTMLTemplate *template.Template
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.
