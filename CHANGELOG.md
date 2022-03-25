@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2022-03-21)](#000-2022-03-21)
+- [0.0.0 (2022-03-25)](#000-2022-03-25)
   - [Bug Fixes](#bug-fixes)
 - [0.42.1 (2022-02-03)](#0421-2022-02-03)
   - [Code Generation](#code-generation)
@@ -364,11 +364,26 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.42.1...v0.0.0) (2022-03-21)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.42.1...v0.0.0) (2022-03-25)
 
 ### Bug Fixes
 
 - Always rollback ([#638](https://github.com/ory/fosite/issues/638)) ([7edf673](https://github.com/ory/fosite/commit/7edf673f20aece260f9ba677a07086c48835fba8)), closes [#637](https://github.com/ory/fosite/issues/637)
+- Empty client secret via basic auth header means "none" authn ([#655](https://github.com/ory/fosite/issues/655)) ([7a2d972](https://github.com/ory/fosite/commit/7a2d9721f4b6da0e3b2b829ec4312de1e3d66b6f)), closes [/github.com/golang/oauth2/blob/ee480838109b20d468babcb00b7027c82f962065/internal/token.go#L174-L176](https://github.com//github.com/golang/oauth2/blob/ee480838109b20d468babcb00b7027c82f962065/internal/token.go/issues/L174-L176):
+
+  The existing client authentication code treats an empty client_secret
+  query parameter to be equivalent to "none" authentication instead of
+  "client_secret_post."
+
+  This change updates the basic auth check to be consistent with this.
+  That is, an empty secret via the basic auth header is considered to
+  mean "none" instead of "client_secret_basic."
+
+  The "golang.org/x/oauth2" library probes for both methods of
+  authentication, starting with the basic auth header approach first.
+
+  As required, both client ID and secret are encoded in one header:
+
 - Handle token_inactive error for multiple concurrent refresh requests ([#652](https://github.com/ory/fosite/issues/652)) ([7c8f4ae](https://github.com/ory/fosite/commit/7c8f4ae49550c61ff43d1a86adace4ed08c71e3e)):
 
   See https://github.com/ory/hydra/issues/3004
