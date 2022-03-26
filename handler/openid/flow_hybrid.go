@@ -23,7 +23,6 @@ package openid
 
 import (
 	"context"
-	"encoding/base64"
 	"time"
 
 	"github.com/ory/x/errorsx"
@@ -122,11 +121,11 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		resp.AddParameter("code", code)
 		ar.SetResponseTypeHandled("code")
 
-		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetParameters().Get("code")))
+		hash, err := c.IDTokenHandleHelper.ComputeHash(ctx, sess, resp.GetParameters().Get("code"))
 		if err != nil {
 			return err
 		}
-		claims.CodeHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2]))
+		claims.CodeHash = hash
 
 		if ar.GetGrantedScopes().Has("openid") {
 			if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar.Sanitize(oidcParameters)); err != nil {
@@ -143,11 +142,11 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		}
 		ar.SetResponseTypeHandled("token")
 
-		hash, err := c.Enigma.Hash(ctx, []byte(resp.GetParameters().Get("access_token")))
+		hash, err := c.IDTokenHandleHelper.ComputeHash(ctx, sess, resp.GetParameters().Get("access_token"))
 		if err != nil {
 			return err
 		}
-		claims.AccessTokenHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.Enigma.GetSigningMethodLength()/2]))
+		claims.AccessTokenHash = hash
 	}
 
 	if resp.GetParameters().Get("state") == "" {

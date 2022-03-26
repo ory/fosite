@@ -23,7 +23,6 @@ package openid
 
 import (
 	"context"
-	"encoding/base64"
 
 	"github.com/ory/x/errorsx"
 
@@ -93,12 +92,12 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		}
 
 		ar.SetResponseTypeHandled("token")
-		hash, err := c.RS256JWTStrategy.Hash(ctx, []byte(resp.GetParameters().Get("access_token")))
+		hash, err := c.ComputeHash(ctx, sess, resp.GetParameters().Get("access_token"))
 		if err != nil {
 			return err
 		}
 
-		claims.AccessTokenHash = base64.RawURLEncoding.EncodeToString([]byte(hash[:c.RS256JWTStrategy.GetSigningMethodLength()/2]))
+		claims.AccessTokenHash = hash
 	} else {
 		resp.AddParameter("state", ar.GetState())
 	}
