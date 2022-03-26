@@ -46,7 +46,7 @@ func wrapSigningKeyFailure(outer *RFC6749Error, inner error) *RFC6749Error {
 	return outer
 }
 
-func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *AuthorizeRequest) error {
+func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *AuthorizeRequest, isPARRequest bool) error {
 	var scope Arguments = RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
 
 	// Even if a scope parameter is present in the Request Object value, a scope parameter MUST always be passed using
@@ -158,6 +158,12 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 	}
 
 	claims := token.Claims
+	// Reject the request if the "request_uri" authorization request
+	// parameter is provided.
+	if requestURI, _ := claims["request_uri"].(string); isPARRequest && requestURI != "" {
+		return errorsx.WithStack(ErrInvalidRequest.WithHint("The request must not contain 'request_uri'."))
+	}
+
 	for k, v := range claims {
 		request.Form.Set(k, fmt.Sprintf("%s", v))
 	}
@@ -357,7 +363,7 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 	//
 	// All other parse methods should come afterwards so that we ensure that the data is taken
 	// from the request_object if set.
-	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(request); err != nil {
+	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(request, isPARRequest); err != nil {
 		return request, err
 	}
 
