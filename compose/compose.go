@@ -30,9 +30,8 @@ import (
 )
 
 const (
-	defaultPARPrefix                  = "urn:ietf:params:oauth:request_uri:"
-	defaultPARContextLifetime         = 5 * time.Minute
-	defaultJWTLifetimeToleranceWindow = 24 * time.Hour
+	defaultPARPrefix          = "urn:ietf:params:oauth:request_uri:"
+	defaultPARContextLifetime = 5 * time.Minute
 )
 
 type Factory func(config *Config, storage interface{}, strategy interface{}) interface{}
@@ -140,6 +139,7 @@ func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *
 		OAuth2TokenRevocationFactory,
 
 		OAuth2PKCEFactory,
+		PushedAuthorizeHandlerFactory,
 	)
 }
 
