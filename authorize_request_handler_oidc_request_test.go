@@ -211,7 +211,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 				},
 			}
 
-			err := f.authorizeRequestParametersFromOpenIDConnectRequest(req)
+			err := f.authorizeRequestParametersFromOpenIDConnectRequest(req, false)
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error(), "%+v", err)
 				if tc.expectErrReason != "" {
