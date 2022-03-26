@@ -25,6 +25,7 @@ import (
 	"html/template"
 	"net/http"
 	"reflect"
+	"time"
 
 	"github.com/ory/fosite/i18n"
 )
@@ -85,19 +86,34 @@ func (t *RevocationHandlers) Append(h RevocationHandler) {
 	*t = append(*t, h)
 }
 
+// PushedAuthorizeEndpointHandlers is a list of PushedAuthorizeEndpointHandler
+type PushedAuthorizeEndpointHandlers []PushedAuthorizeEndpointHandler
+
+// Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+func (a *PushedAuthorizeEndpointHandlers) Append(h PushedAuthorizeEndpointHandler) {
+	for _, this := range *a {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*a = append(*a, h)
+}
+
 // Fosite implements OAuth2Provider.
 type Fosite struct {
-	Store                      Storage
-	AuthorizeEndpointHandlers  AuthorizeEndpointHandlers
-	TokenEndpointHandlers      TokenEndpointHandlers
-	TokenIntrospectionHandlers TokenIntrospectionHandlers
-	RevocationHandlers         RevocationHandlers
-	Hasher                     Hasher
-	ScopeStrategy              ScopeStrategy
-	AudienceMatchingStrategy   AudienceMatchingStrategy
-	JWKSFetcherStrategy        JWKSFetcherStrategy
-	HTTPClient                 *http.Client
-	UseLegacyErrorFormat       bool
+	Store                           Storage
+	AuthorizeEndpointHandlers       AuthorizeEndpointHandlers
+	TokenEndpointHandlers           TokenEndpointHandlers
+	TokenIntrospectionHandlers      TokenIntrospectionHandlers
+	RevocationHandlers              RevocationHandlers
+	PushedAuthorizeEndpointHandlers PushedAuthorizeEndpointHandlers
+	Hasher                          Hasher
+	ScopeStrategy                   ScopeStrategy
+	AudienceMatchingStrategy        AudienceMatchingStrategy
+	JWKSFetcherStrategy             JWKSFetcherStrategy
+	HTTPClient                      *http.Client
+	UseLegacyErrorFormat            bool
 
 	// TokenURL is the the URL of the Authorization Server's Token Endpoint.
 	TokenURL string
@@ -120,6 +136,16 @@ type Fosite struct {
 
 	// MessageCatalog is the catalog of messages used for i18n
 	MessageCatalog i18n.MessageCatalog
+
+	// PushedAuthorizationRequestURIPrefix is the URI prefix for the PAR request_uri.
+	// This is defaulted to 'urn:ietf:params:oauth:request_uri:'.
+	PushedAuthorizationRequestURIPrefix string
+
+	// PushedAuthorizationContextLifespan is the lifespan of the PAR context
+	PushedAuthorizationContextLifespan time.Duration
+
+	// EnforcePushedAuthorization enforces pushed authorization request for /authorize
+	EnforcePushedAuthorization bool
 }
 
 const MinParameterEntropy = 8
