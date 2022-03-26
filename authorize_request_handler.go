@@ -161,7 +161,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 	// Reject the request if the "request_uri" authorization request
 	// parameter is provided.
 	if requestURI, _ := claims["request_uri"].(string); isPARRequest && requestURI != "" {
-		return errorsx.WithStack(ErrInvalidRequest.WithHint("The request must not contain 'request_uri'."))
+		return errorsx.WithStack(ErrInvalidRequestObject.WithHint("The request must not contain 'request_uri'."))
 	}
 
 	for k, v := range claims {
