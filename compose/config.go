@@ -125,6 +125,16 @@ type Config struct {
 
 	// FormPostHTMLTemplate sets html template for rendering the authorization response when the request has response_mode=form_post.
 	FormPostHTMLTemplate *template.Template
+
+	// PushedAuthorizationRequestURIPrefix is the URI prefix for the PAR request_uri.
+	// This is defaulted to 'urn:ietf:params:oauth:request_uri:'.
+	PushedAuthorizationRequestURIPrefix string
+
+	// PushedAuthorizationContextLifespan is the lifespan of the PAR context
+	PushedAuthorizationContextLifespan time.Duration
+
+	// EnforcePushedAuthorization enforces pushed authorization request for /authorize
+	EnforcePushedAuthorization bool
 }
 
 // GetScopeStrategy returns the scope strategy to be used. Defaults to glob scope strategy.

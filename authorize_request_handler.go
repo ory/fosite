@@ -275,7 +275,51 @@ func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest
 	return nil
 }
 
+func (f *Fosite) authorizeRequestFromPAR(ctx context.Context, r *http.Request, request *AuthorizeRequest) (bool, error) {
+	requestURI := r.Form.Get("request_uri")
+	if requestURI == "" || !strings.HasPrefix(requestURI, f.PushedAuthorizationRequestURIPrefix) {
+		// nothing to do here
+		return false, nil
+	}
+
+	clientID := r.Form.Get("client_id")
+
+	storage, ok := f.Store.(PARStorage)
+	if !ok {
+		return false, errorsx.WithStack(ErrServerError.WithHint("Invalid storage").WithDebug("PARStorage not implemented"))
+	}
+
+	// hydrate the requester
+	var parRequest AuthorizeRequester
+	var err error
+	if parRequest, err = storage.GetPARSession(ctx, requestURI); err != nil {
+		return false, errorsx.WithStack(ErrInvalidRequestURI.WithHint("Invalid PAR session").WithWrap(err).WithDebug(err.Error()))
+	}
+
+	// hydrate the request object
+	request.Merge(parRequest)
+	request.RedirectURI = parRequest.GetRedirectURI()
+	request.ResponseTypes = parRequest.GetResponseTypes()
+	request.State = parRequest.GetState()
+	request.ResponseMode = parRequest.GetResponseMode()
+
+	if err := storage.DeletePARSession(ctx, requestURI); err != nil {
+		return false, errorsx.WithStack(ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	}
+
+	// validate the clients match
+	if clientID != request.GetClient().GetID() {
+		return false, errorsx.WithStack(ErrInvalidRequest.WithHint("The 'client_id' must match the pushed authorization request."))
+	}
+
+	return true, nil
+}
+
 func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
+	return f.newAuthorizeRequest(ctx, r, false)
+}
+
+func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPARRequest bool) (AuthorizeRequester, error) {
 	request := NewAuthorizeRequest()
 	request.Request.Lang = i18n.GetLangFromRequest(f.MessageCatalog, r)
 
@@ -289,6 +333,18 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 
 	// Save state to the request to be returned in error conditions (https://github.com/ory/hydra/issues/1642)
 	request.State = request.Form.Get("state")
+
+	// Check if this is a continuation from a pushed authorization request
+	if !isPARRequest {
+		if isPAR, err := f.authorizeRequestFromPAR(ctx, r, request); err != nil {
+			return request, err
+		} else if isPAR {
+			// No need to continue
+			return request, nil
+		} else if f.EnforcePushedAuthorization {
+			return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Pushed authorization request is enforced."))
+		}
+	}
 
 	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	if err != nil {

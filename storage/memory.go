@@ -65,6 +65,7 @@ type MemoryStore struct {
 	RefreshTokenRequestIDs map[string]string
 	// Public keys to check signature in auth grant jwt assertion.
 	IssuerPublicKeys map[string]IssuerPublicKeys
+	PARSessions      map[string]fosite.AuthorizeRequester
 
 	clientsMutex                sync.RWMutex
 	authorizeCodesMutex         sync.RWMutex
@@ -77,6 +78,7 @@ type MemoryStore struct {
 	accessTokenRequestIDsMutex  sync.RWMutex
 	refreshTokenRequestIDsMutex sync.RWMutex
 	issuerPublicKeysMutex       sync.RWMutex
+	parSessionsMutex            sync.RWMutex
 }
 
 func NewMemoryStore() *MemoryStore {
@@ -92,6 +94,7 @@ func NewMemoryStore() *MemoryStore {
 		RefreshTokenRequestIDs: make(map[string]string),
 		BlacklistedJTIs:        make(map[string]time.Time),
 		IssuerPublicKeys:       make(map[string]IssuerPublicKeys),
+		PARSessions:            make(map[string]fosite.AuthorizeRequester),
 	}
 }
 
@@ -453,4 +456,36 @@ func (s *MemoryStore) IsJWTUsed(ctx context.Context, jti string) (bool, error) {
 
 func (s *MemoryStore) MarkJWTUsedForTime(ctx context.Context, jti string, exp time.Time) error {
 	return s.SetClientAssertionJWT(ctx, jti, exp)
+}
+
+// CreatePARSession stores the pushed authorization request context. The requestURI is used to derive the key.
+func (s *MemoryStore) CreatePARSession(ctx context.Context, requestURI string, request fosite.AuthorizeRequester) error {
+	s.parSessionsMutex.Lock()
+	defer s.parSessionsMutex.Unlock()
+
+	s.PARSessions[requestURI] = request
+	return nil
+}
+
+// GetPARSession gets the push authorization request context. If the request is nil, a new request object
+// is created. Otherwise, the same object is updated.
+func (s *MemoryStore) GetPARSession(ctx context.Context, requestURI string) (fosite.AuthorizeRequester, error) {
+	s.parSessionsMutex.RLock()
+	defer s.parSessionsMutex.RUnlock()
+
+	r, ok := s.PARSessions[requestURI]
+	if !ok {
+		return nil, fosite.ErrNotFound
+	}
+
+	return r, nil
+}
+
+// DeletePARSession deletes the context.
+func (s *MemoryStore) DeletePARSession(ctx context.Context, requestURI string) (err error) {
+	s.parSessionsMutex.Lock()
+	defer s.parSessionsMutex.Unlock()
+
+	delete(s.PARSessions, requestURI)
+	return nil
 }

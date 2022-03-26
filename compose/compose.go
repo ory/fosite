@@ -23,9 +23,16 @@ package compose
 
 import (
 	"crypto/rsa"
+	"time"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
+)
+
+const (
+	defaultPARPrefix                  = "urn:ietf:params:oauth:request_uri:"
+	defaultPARContextLifetime         = 5 * time.Minute
+	defaultJWTLifetimeToleranceWindow = 24 * time.Hour
 )
 
 type Factory func(config *Config, storage interface{}, strategy interface{}) interface{}
@@ -53,28 +60,32 @@ type Factory func(config *Config, storage interface{}, strategy interface{}) int
 //
 // Compose makes use of interface{} types in order to be able to handle a all types of stores, strategies and handlers.
 func Compose(config *Config, storage interface{}, strategy interface{}, hasher fosite.Hasher, factories ...Factory) fosite.OAuth2Provider {
+	setDefaults(config)
 	if hasher == nil {
 		hasher = &fosite.BCrypt{WorkFactor: config.GetHashCost()}
 	}
 
 	f := &fosite.Fosite{
-		Store:                        storage.(fosite.Storage),
-		AuthorizeEndpointHandlers:    fosite.AuthorizeEndpointHandlers{},
-		TokenEndpointHandlers:        fosite.TokenEndpointHandlers{},
-		TokenIntrospectionHandlers:   fosite.TokenIntrospectionHandlers{},
-		RevocationHandlers:           fosite.RevocationHandlers{},
-		Hasher:                       hasher,
-		ScopeStrategy:                config.GetScopeStrategy(),
-		AudienceMatchingStrategy:     config.GetAudienceStrategy(),
-		SendDebugMessagesToClients:   config.SendDebugMessagesToClients,
-		TokenURL:                     config.TokenURL,
-		JWKSFetcherStrategy:          config.GetJWKSFetcherStrategy(),
-		MinParameterEntropy:          config.GetMinParameterEntropy(),
-		UseLegacyErrorFormat:         config.UseLegacyErrorFormat,
-		ClientAuthenticationStrategy: config.GetClientAuthenticationStrategy(),
-		ResponseModeHandlerExtension: config.ResponseModeHandlerExtension,
-		MessageCatalog:               config.MessageCatalog,
-		FormPostHTMLTemplate:         config.FormPostHTMLTemplate,
+		Store:                               storage.(fosite.Storage),
+		AuthorizeEndpointHandlers:           fosite.AuthorizeEndpointHandlers{},
+		TokenEndpointHandlers:               fosite.TokenEndpointHandlers{},
+		TokenIntrospectionHandlers:          fosite.TokenIntrospectionHandlers{},
+		RevocationHandlers:                  fosite.RevocationHandlers{},
+		Hasher:                              hasher,
+		ScopeStrategy:                       config.GetScopeStrategy(),
+		AudienceMatchingStrategy:            config.GetAudienceStrategy(),
+		SendDebugMessagesToClients:          config.SendDebugMessagesToClients,
+		TokenURL:                            config.TokenURL,
+		JWKSFetcherStrategy:                 config.GetJWKSFetcherStrategy(),
+		MinParameterEntropy:                 config.GetMinParameterEntropy(),
+		UseLegacyErrorFormat:                config.UseLegacyErrorFormat,
+		ClientAuthenticationStrategy:        config.GetClientAuthenticationStrategy(),
+		ResponseModeHandlerExtension:        config.ResponseModeHandlerExtension,
+		MessageCatalog:                      config.MessageCatalog,
+		FormPostHTMLTemplate:                config.FormPostHTMLTemplate,
+		PushedAuthorizationRequestURIPrefix: config.PushedAuthorizationRequestURIPrefix,
+		PushedAuthorizationContextLifespan:  config.PushedAuthorizationContextLifespan,
+		EnforcePushedAuthorization:          config.EnforcePushedAuthorization,
 	}
 
 	for _, factory := range factories {
@@ -90,6 +101,9 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 		}
 		if rh, ok := res.(fosite.RevocationHandler); ok {
 			f.RevocationHandlers.Append(rh)
+		}
+		if ph, ok := res.(fosite.PushedAuthorizeEndpointHandler); ok {
+			f.PushedAuthorizeEndpointHandlers.Append(ph)
 		}
 	}
 
@@ -127,4 +141,14 @@ func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *
 
 		OAuth2PKCEFactory,
 	)
+}
+
+func setDefaults(config *Config) {
+	if config.PushedAuthorizationRequestURIPrefix == "" {
+		config.PushedAuthorizationRequestURIPrefix = defaultPARPrefix
+	}
+
+	if config.PushedAuthorizationContextLifespan <= 0 {
+		config.PushedAuthorizationContextLifespan = defaultPARContextLifetime
+	}
 }
