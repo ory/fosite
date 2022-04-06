@@ -150,7 +150,7 @@ func TestRotate(t *testing.T) {
 			ExpectedRotatedGlobalSecrets: [][]byte{[]byte("1234567890123456789012345678901234567890")},
 		},
 		{
-			Name:                         "Existed Rotating Secret",
+			Name:                         "Existing Rotated Secret",
 			GloabSecret:                  []byte("1234567890123456789012345678901234567890"),
 			RotatedGlobalSecrets:         [][]byte{[]byte("abcdefgh90123456789012345678901")},
 			NewSecret:                    []byte("0000000090123456789012345678901234567890"),
