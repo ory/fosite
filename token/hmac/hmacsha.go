@@ -121,6 +121,22 @@ func (c *HMACStrategy) Validate(token string) (err error) {
 	return err
 }
 
+// Rotate moves the current secret to the list of rotated secrets and sets the
+func (c *HMACStrategy) Rotate(newSecret []byte) {
+	c.Mutex.Lock()
+	defer c.Mutex.Unlock()
+
+	// add the current newSecret to the list of rotated secrets
+	if c.RotatedGlobalSecrets == nil {
+		c.RotatedGlobalSecrets = [][]byte{c.GlobalSecret}
+	} else {
+		c.RotatedGlobalSecrets = append(c.RotatedGlobalSecrets, c.GlobalSecret)
+	}
+
+	// set current newSecret to new newSecret
+	c.GlobalSecret = newSecret
+}
+
 func (c *HMACStrategy) validate(secret []byte, token string) error {
 	if len(secret) < minimumSecretLength {
 		return errors.Errorf("secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got %d byte", len(secret))

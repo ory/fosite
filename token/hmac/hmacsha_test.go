@@ -131,3 +131,46 @@ func TestValidateWithRotatedKeyInvalid(t *testing.T) {
 
 	require.EqualError(t, new(HMACStrategy).Validate(token), "a secret for signing HMAC-SHA512/256 is expected to be defined, but none were")
 }
+
+func TestRotate(t *testing.T) {
+	for _, test := range []struct {
+		Name                         string
+		GloabSecret                  []byte
+		RotatedGlobalSecrets         [][]byte
+		NewSecret                    []byte
+		ExpectedGloabSecret          []byte
+		ExpectedRotatedGlobalSecrets [][]byte
+	}{
+		{
+			Name:                         "Nil Rotated Secrets",
+			GloabSecret:                  []byte("1234567890123456789012345678901234567890"),
+			RotatedGlobalSecrets:         nil,
+			NewSecret:                    []byte("0000000090123456789012345678901234567890"),
+			ExpectedGloabSecret:          []byte("0000000090123456789012345678901234567890"),
+			ExpectedRotatedGlobalSecrets: [][]byte{[]byte("1234567890123456789012345678901234567890")},
+		},
+		{
+			Name:                         "Existed Rotating Secret",
+			GloabSecret:                  []byte("1234567890123456789012345678901234567890"),
+			RotatedGlobalSecrets:         [][]byte{[]byte("abcdefgh90123456789012345678901")},
+			NewSecret:                    []byte("0000000090123456789012345678901234567890"),
+			ExpectedGloabSecret:          []byte("0000000090123456789012345678901234567890"),
+			ExpectedRotatedGlobalSecrets: [][]byte{[]byte("abcdefgh90123456789012345678901"), []byte("1234567890123456789012345678901234567890")},
+		},
+	} {
+		t.Run(test.Name, func(t *testing.T) {
+			// create initial strategy
+			strategy := HMACStrategy{
+				GlobalSecret:         test.GloabSecret,
+				RotatedGlobalSecrets: test.RotatedGlobalSecrets,
+			}
+
+			// rotate the key
+			strategy.Rotate(test.NewSecret)
+
+			// validate
+			require.Equal(t, test.ExpectedGloabSecret, strategy.GlobalSecret, "ExpectedGlobalSecret does match provided GlobalSecret")
+			require.Equal(t, test.ExpectedRotatedGlobalSecrets, strategy.RotatedGlobalSecrets, "ExpectedRotatedGlobalSecrets does match provided RotatedGlobalSecrets")
+		})
+	}
+}
