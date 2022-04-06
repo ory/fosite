@@ -121,7 +121,7 @@ func (c *HMACStrategy) Validate(token string) (err error) {
 	return err
 }
 
-// Rotate moves the current secret to the list of rotated secrets and sets the
+// Rotate moves the current secret to the list of rotated secrets and sets the newSecret to the GlobalSecret
 func (c *HMACStrategy) Rotate(newSecret []byte) {
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
