@@ -95,8 +95,7 @@ func (i *IDTokenHandleHelper) ComputeHash(ctx context.Context, sess Session, tok
 	var err error
 	hashSize := 256
 	if alg, ok := sess.IDTokenHeaders().Get("alg").(string); ok {
-		hashSize, err = strconv.Atoi(alg[2:])
-		if err != nil {
+		if hashSize, err = strconv.Atoi(alg[2:]); err != nil {
 			hashSize = 256
 		}
 	}
