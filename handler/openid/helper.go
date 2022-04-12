@@ -27,7 +27,6 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
-	"hash"
 	"strconv"
 
 	"github.com/ory/fosite"
@@ -93,21 +92,15 @@ func (i *IDTokenHandleHelper) IssueExplicitIDToken(ctx context.Context, ar fosit
 // ComputeHash computes the hash using the alg defined in the id_token header
 func (i *IDTokenHandleHelper) ComputeHash(ctx context.Context, sess Session, token string) (string, error) {
 	var err error
-	hashSize := 256
+	hash := sha256.New()
 	if alg, ok := sess.IDTokenHeaders().Get("alg").(string); ok {
-		if hashSize, err = strconv.Atoi(alg[2:]); err != nil {
-			hashSize = 256
+		if hashSize, err := strconv.Atoi(alg[2:]); err == nil {
+			if hashSize == 384 {
+				hash = sha512.New384()
+			} else if hashSize == 512 {
+				hash = sha512.New()
+			}
 		}
-	}
-
-	var hash hash.Hash
-	if hashSize == 384 {
-		hash = sha512.New384()
-	} else if hashSize == 512 {
-		hash = sha512.New()
-	} else {
-		// fallback to 256
-		hash = sha256.New()
 	}
 
 	buffer := bytes.NewBufferString(token)
