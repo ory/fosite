@@ -50,7 +50,7 @@ talk to us! You can find out our thoughts and ensure that your contribution
 won't clash or be obviated by Ory
 Fosite's normal direction. A great way to
 do this is via
-[Ory Fosite Discussions](https://github.com/ory/meta/discussions)
+[Ory Fosite Discussions](https://github.com/orgs/ory/discussions)
 or the [Ory Chat](https://www.ory.sh/chat).
 
 ## FAQ
@@ -112,7 +112,7 @@ a few things you can do to help out:
 We use [Slack](https://www.ory.sh/chat). You are welcome to drop in and ask
 questions, discuss bugs and feature requests, talk to other users of Ory, etc.
 
-Check out [Ory Fosite Discussions](https://github.com/ory/meta/discussions). This is a great place for
+Check out [Ory Fosite Discussions](https://github.com/orgs/ory/discussions). This is a great place for
 in-depth discussions and lots of code examples, logs and similar data.
 
 You can also join our community hangout, if you want to speak to the Ory team
