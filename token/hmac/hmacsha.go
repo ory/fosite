@@ -45,7 +45,7 @@ type HMACStrategy struct {
 	TokenEntropy         int
 	GlobalSecret         []byte
 	RotatedGlobalSecrets [][]byte
-	Hash                 func() hash.Hash // If nil, sha512.New512_256 is used.
+	Hash                 func() hash.Hash // Hash is a hash.Hash function to use to generate and validate challenges. If nil, sha512.New512_256 is used.
 	sync.Mutex
 }
 
