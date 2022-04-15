@@ -145,4 +145,9 @@ func TestCustomHMAC(t *testing.T) {
 	token, _, err := def.Generate()
 	require.NoError(t, err)
 	require.EqualError(t, sha512.Validate(token), fosite.ErrTokenSignatureMismatch.Error())
+
+	token512, _, err := sha512.Generate()
+	require.NoError(t, err)
+	require.NoError(t, sha512.Validate(token512))
+	require.EqualError(t, def.Validate(token512), fosite.ErrTokenSignatureMismatch.Error())
 }
