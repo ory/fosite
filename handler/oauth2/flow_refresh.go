@@ -78,6 +78,9 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	} else if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, originalRequest, refresh); err != nil {
 		// The authorization server MUST ... validate the refresh token.
 		// This needs to happen after store retrieval for the session to be hydrated properly
+		if errors.Is(err, fosite.ErrTokenExpired) {
+			return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
+		}
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
 	}
 
