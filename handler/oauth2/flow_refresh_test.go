@@ -43,6 +43,11 @@ import (
 func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 	var areq *fosite.AccessRequest
 	sess := &fosite.DefaultSession{Subject: "othersub"}
+	expiredSess := &fosite.DefaultSession{
+		ExpiresAt: map[fosite.TokenType]time.Time{
+			fosite.RefreshToken: time.Now().UTC().Add(-time.Hour),
+		},
+	}
 
 	for k, strategy := range map[string]RefreshTokenStrategy{
 		"hmac": &hmacshaStrategy,
@@ -104,6 +109,32 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 							Client:       &fosite.DefaultClient{ID: ""},
 							GrantedScope: []string{"offline"},
 							Session:      sess,
+						})
+						require.NoError(t, err)
+					},
+					expectErr: fosite.ErrInvalidGrant,
+				},
+				{
+					description: "should fail because token is expired",
+					setup: func() {
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClient{
+							ID:         "foo",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"foo", "bar", "offline"},
+						}
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+							Client:         areq.Client,
+							GrantedScope:   fosite.Arguments{"foo", "offline"},
+							RequestedScope: fosite.Arguments{"foo", "bar", "offline"},
+							Session:        expiredSess,
+							Form:           url.Values{"foo": []string{"bar"}},
+							RequestedAt:    time.Now().UTC().Add(-time.Hour).Round(time.Hour),
 						})
 						require.NoError(t, err)
 					},
