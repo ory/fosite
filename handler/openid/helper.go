@@ -93,7 +93,7 @@ func (i *IDTokenHandleHelper) IssueExplicitIDToken(ctx context.Context, ar fosit
 func (i *IDTokenHandleHelper) ComputeHash(ctx context.Context, sess Session, token string) (string, error) {
 	var err error
 	hash := sha256.New()
-	if alg, ok := sess.IDTokenHeaders().Get("alg").(string); ok {
+	if alg, ok := sess.IDTokenHeaders().Get("alg").(string); ok && len(alg) > 2 {
 		if hashSize, err := strconv.Atoi(alg[2:]); err == nil {
 			if hashSize == 384 {
 				hash = sha512.New384()
