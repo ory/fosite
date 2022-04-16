@@ -25,7 +25,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
+	"strconv"
 
 	"github.com/ory/fosite"
 )
@@ -36,6 +38,16 @@ type IDTokenHandleHelper struct {
 
 func (i *IDTokenHandleHelper) GetAccessTokenHash(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) string {
 	token := responder.GetAccessToken()
+	// The session should always be a openid.Session but best to safely cast
+	if session, ok := requester.GetSession().(Session); ok {
+		val, err := i.ComputeHash(ctx, session, token)
+		if err != nil {
+			// this should never happen
+			panic(err)
+		}
+
+		return val
+	}
 
 	buffer := bytes.NewBufferString(token)
 	hash := sha256.New()
@@ -75,4 +87,28 @@ func (i *IDTokenHandleHelper) IssueExplicitIDToken(ctx context.Context, ar fosit
 
 	resp.SetExtra("id_token", token)
 	return nil
+}
+
+// ComputeHash computes the hash using the alg defined in the id_token header
+func (i *IDTokenHandleHelper) ComputeHash(ctx context.Context, sess Session, token string) (string, error) {
+	var err error
+	hash := sha256.New()
+	if alg, ok := sess.IDTokenHeaders().Get("alg").(string); ok && len(alg) > 2 {
+		if hashSize, err := strconv.Atoi(alg[2:]); err == nil {
+			if hashSize == 384 {
+				hash = sha512.New384()
+			} else if hashSize == 512 {
+				hash = sha512.New()
+			}
+		}
+	}
+
+	buffer := bytes.NewBufferString(token)
+	_, err = hash.Write(buffer.Bytes())
+	if err != nil {
+		return "", err
+	}
+	hashBuf := bytes.NewBuffer(hash.Sum([]byte{}))
+
+	return base64.RawURLEncoding.EncodeToString(hashBuf.Bytes()[:hashBuf.Len()/2]), nil
 }
