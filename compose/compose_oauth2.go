@@ -88,6 +88,10 @@ func OAuth2AuthorizeImplicitFactory(config *Config, storage interface{}, strateg
 
 // OAuth2ResourceOwnerPasswordCredentialsFactory creates an OAuth2 resource owner password credentials grant handler and registers
 // an access token, refresh token and authorize code validator.
+//
+// Deprecated: This factory is deprecated as a means to communicate that the ROPC grant type is widely discouraged and
+// is at the time of this writing going to be omitted in the OAuth 2.1 spec. For more information on why this grant type
+// is discouraged see: https://www.scottbrady91.com/oauth/why-the-resource-owner-password-credentials-grant-type-is-not-authentication-nor-suitable-for-modern-applications
 func OAuth2ResourceOwnerPasswordCredentialsFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.ResourceOwnerPasswordCredentialsGrantHandler{
 		ResourceOwnerPasswordCredentialsGrantStorage: storage.(oauth2.ResourceOwnerPasswordCredentialsGrantStorage),
