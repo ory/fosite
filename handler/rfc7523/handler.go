@@ -147,7 +147,7 @@ func (c *Handler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
 
 func (c *Handler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
-	// Value MUST be set to "authorization_code"
+	// Value MUST be set to "urn:ietf:params:oauth:grant-type:jwt-bearer"
 	return requester.GetGrantTypes().ExactOne(grantTypeJWTBearer)
 }
 
