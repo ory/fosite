@@ -32,6 +32,9 @@ import (
 	"github.com/ory/fosite"
 )
 
+// Deprecated: This handler is deprecated as a means to communicate that the ROPC grant type is widely discouraged and
+// is at the time of this writing going to be omitted in the OAuth 2.1 spec. For more information on why this grant type
+// is discouraged see: https://www.scottbrady91.com/oauth/why-the-resource-owner-password-credentials-grant-type-is-not-authentication-nor-suitable-for-modern-applications
 type ResourceOwnerPasswordCredentialsGrantHandler struct {
 	// ResourceOwnerPasswordCredentialsGrantStorage is used to persist session data across requests.
 	ResourceOwnerPasswordCredentialsGrantStorage ResourceOwnerPasswordCredentialsGrantStorage

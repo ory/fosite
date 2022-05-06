@@ -22,6 +22,7 @@
 package hmac
 
 import (
+	"crypto/sha512"
 	"testing"
 
 	"github.com/ory/fosite"
@@ -130,4 +131,23 @@ func TestValidateWithRotatedKeyInvalid(t *testing.T) {
 	require.EqualError(t, now.Validate(token), "secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got 31 byte")
 
 	require.EqualError(t, new(HMACStrategy).Validate(token), "a secret for signing HMAC-SHA512/256 is expected to be defined, but none were")
+}
+
+func TestCustomHMAC(t *testing.T) {
+	def := HMACStrategy{
+		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
+	}
+	sha512 := HMACStrategy{
+		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
+		Hash:         sha512.New,
+	}
+
+	token, _, err := def.Generate()
+	require.NoError(t, err)
+	require.EqualError(t, sha512.Validate(token), fosite.ErrTokenSignatureMismatch.Error())
+
+	token512, _, err := sha512.Generate()
+	require.NoError(t, err)
+	require.NoError(t, sha512.Validate(token512))
+	require.EqualError(t, def.Validate(token512), fosite.ErrTokenSignatureMismatch.Error())
 }

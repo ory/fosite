@@ -29,6 +29,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
+	"hash"
 	"strings"
 	"sync"
 
@@ -44,6 +45,7 @@ type HMACStrategy struct {
 	TokenEntropy         int
 	GlobalSecret         []byte
 	RotatedGlobalSecrets [][]byte
+	Hash                 func() hash.Hash // Hash is a hash.Hash function to use to generate and validate challenges. If nil, sha512.New512_256 is used.
 	sync.Mutex
 }
 
@@ -86,7 +88,7 @@ func (c *HMACStrategy) Generate() (string, string, error) {
 		return "", "", errorsx.WithStack(err)
 	}
 
-	signature := generateHMAC(tokenKey, &signingKey)
+	signature := c.generateHMAC(tokenKey, &signingKey)
 
 	encodedSignature := b64.EncodeToString(signature)
 	encodedToken := fmt.Sprintf("%s.%s", b64.EncodeToString(tokenKey), encodedSignature)
@@ -150,7 +152,7 @@ func (c *HMACStrategy) validate(secret []byte, token string) error {
 		return errorsx.WithStack(err)
 	}
 
-	expectedMAC := generateHMAC(decodedTokenKey, &signingKey)
+	expectedMAC := c.generateHMAC(decodedTokenKey, &signingKey)
 	if !hmac.Equal(expectedMAC, decodedTokenSignature) {
 		// Hash is invalid
 		return errorsx.WithStack(fosite.ErrTokenSignatureMismatch)
@@ -169,8 +171,12 @@ func (c *HMACStrategy) Signature(token string) string {
 	return split[1]
 }
 
-func generateHMAC(data []byte, key *[32]byte) []byte {
-	h := hmac.New(sha512.New512_256, key[:])
+func (c *HMACStrategy) generateHMAC(data []byte, key *[32]byte) []byte {
+	hasher := c.Hash
+	if hasher == nil {
+		hasher = sha512.New512_256
+	}
+	h := hmac.New(hasher, key[:])
 	// sha512.digest.Write() always returns nil for err, the panic should never happen
 	_, err := h.Write(data)
 	if err != nil {

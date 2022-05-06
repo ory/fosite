@@ -130,6 +130,70 @@ func TestGetAccessTokenHash(t *testing.T) {
 
 	defer ctrl.Finish()
 
+	req.EXPECT().GetSession().Return(nil)
+	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
+
+	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+
+	hash := h.GetAccessTokenHash(nil, req, resp)
+	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
+}
+
+func TestGetAccessTokenHashWithDifferentKeyLength(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	req := internal.NewMockAccessRequester(ctrl)
+	resp := internal.NewMockAccessResponder(ctrl)
+
+	defer ctrl.Finish()
+
+	headers := &jwt.Headers{
+		Extra: map[string]interface{}{
+			"alg": "RS384",
+		},
+	}
+	req.EXPECT().GetSession().Return(&DefaultSession{Headers: headers})
+	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
+
+	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+
+	hash := h.GetAccessTokenHash(nil, req, resp)
+	assert.Equal(t, "VNX38yiOyeqBPheW5jDsWQKa6IjJzK66", hash)
+}
+
+func TestGetAccessTokenHashWithBadAlg(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	req := internal.NewMockAccessRequester(ctrl)
+	resp := internal.NewMockAccessResponder(ctrl)
+
+	defer ctrl.Finish()
+
+	headers := &jwt.Headers{
+		Extra: map[string]interface{}{
+			"alg": "R",
+		},
+	}
+	req.EXPECT().GetSession().Return(&DefaultSession{Headers: headers})
+	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
+
+	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+
+	hash := h.GetAccessTokenHash(nil, req, resp)
+	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
+}
+
+func TestGetAccessTokenHashWithMissingKeyLength(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	req := internal.NewMockAccessRequester(ctrl)
+	resp := internal.NewMockAccessResponder(ctrl)
+
+	defer ctrl.Finish()
+
+	headers := &jwt.Headers{
+		Extra: map[string]interface{}{
+			"alg": "RS",
+		},
+	}
+	req.EXPECT().GetSession().Return(&DefaultSession{Headers: headers})
 	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
 
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
