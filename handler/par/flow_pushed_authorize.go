@@ -35,14 +35,14 @@ type PushedAuthorizeHandler struct {
 func (c *PushedAuthorizeHandler) HandlePushedAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.PushedAuthorizeResponder) error {
 	storage, ok := c.Storage.(fosite.PARStorage)
 	if !ok {
-		return errorsx.WithStack(fosite.ErrServerError.WithHint("Invalid storage type"))
+		return errorsx.WithStack(fosite.ErrServerError.WithHint("OAuth 2.0 storage provider does not support Pushed Authorization Requests"))
 	}
 
 	if !ar.GetResponseTypes().HasOneOf("token", "code", "id_token") {
 		return nil
 	}
 
-	if !c.secureChecker()(ar.GetRedirectURI()) {
+	if !c.secureChecker(ar.GetRedirectURI()) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/."))
 	}
 
@@ -80,9 +80,9 @@ func (c *PushedAuthorizeHandler) HandlePushedAuthorizeEndpointRequest(ctx contex
 	return nil
 }
 
-func (c *PushedAuthorizeHandler) secureChecker() func(*url.URL) bool {
+func (c *PushedAuthorizeHandler) secureChecker(u *url.URL) bool {
 	if c.IsRedirectURISecure == nil {
 		c.IsRedirectURISecure = fosite.IsRedirectURISecure
 	}
-	return c.IsRedirectURISecure
+	return c.IsRedirectURISecure(u)
 }

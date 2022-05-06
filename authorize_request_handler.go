@@ -161,7 +161,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 	// Reject the request if the "request_uri" authorization request
 	// parameter is provided.
 	if requestURI, _ := claims["request_uri"].(string); isPARRequest && requestURI != "" {
-		return errorsx.WithStack(ErrInvalidRequestObject.WithHint("The request must not contain 'request_uri'."))
+		return errorsx.WithStack(ErrInvalidRequestObject.WithHint("Pushed Authorization Requests can not contain the 'request_uri' parameter."))
 	}
 
 	for k, v := range claims {
@@ -315,7 +315,7 @@ func (f *Fosite) authorizeRequestFromPAR(ctx context.Context, r *http.Request, r
 
 	// validate the clients match
 	if clientID != request.GetClient().GetID() {
-		return false, errorsx.WithStack(ErrInvalidRequest.WithHint("The 'client_id' must match the pushed authorization request."))
+		return false, errorsx.WithStack(ErrInvalidRequest.WithHint("The 'client_id' must match the one sent in the pushed authorization request."))
 	}
 
 	return true, nil
@@ -348,7 +348,7 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 			// No need to continue
 			return request, nil
 		} else if f.EnforcePushedAuthorization {
-			return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Pushed authorization request is enforced."))
+			return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Pushed Authorization Requests are enforced but no such request was sent."))
 		}
 	}
 

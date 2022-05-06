@@ -29,6 +29,7 @@ import (
 
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/par"
 )
 
 func TestAuthorizeEndpointHandlers(t *testing.T) {
@@ -60,6 +61,15 @@ func TestAuthorizedRequestValidators(t *testing.T) {
 	hs.Append(h)
 	hs.Append(h)
 	hs.Append(&oauth2.CoreValidator{})
+	require.Len(t, hs, 1)
+	assert.Equal(t, hs[0], h)
+}
+
+func TestPushedAuthorizedRequestHandlers(t *testing.T) {
+	h := &par.PushedAuthorizeHandler{}
+	hs := PushedAuthorizeEndpointHandlers{}
+	hs.Append(h)
+	hs.Append(h)
 	require.Len(t, hs, 1)
 	assert.Equal(t, hs[0], h)
 }
