@@ -60,7 +60,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* empty request */
 		{
 			desc:          "empty request fails",
-			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf:          &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			r:             &http.Request{},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -70,7 +70,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid redirect uri */
 		{
 			desc:          "invalid redirect uri fails",
-			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf:          &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query:         url.Values{"redirect_uri": []string{"invalid"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -80,7 +80,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* invalid client */
 		{
 			desc:          "invalid client fails",
-			conf:          &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf:          &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query:         url.Values{"redirect_uri": []string{"https://foo.bar/cb"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
@@ -90,7 +90,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"client_id": []string{"1234"},
 			},
@@ -102,7 +102,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri": []string{""},
 				"client_id":    []string{"1234"},
@@ -115,7 +115,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect client mismatch */
 		{
 			desc: "client and request redirects mismatch",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri": []string{"https://foo.bar/cb"},
 				"client_id":    []string{"1234"},
@@ -128,7 +128,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* no state */
 		{
 			desc: "no state",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  []string{"https://foo.bar/cb"},
 				"client_id":     []string{"1234"},
@@ -142,7 +142,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* short state */
 		{
 			desc: "short state",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -157,7 +157,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* fails because scope not given */
 		{
 			desc: "should fail because client does not have scope baz",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -173,7 +173,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* fails because scope not given */
 		{
 			desc: "should fail because client does not have scope baz",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -193,7 +193,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* success case */
 		{
 			desc: "should pass",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -228,7 +228,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* repeated audience parameter */
 		{
 			desc: "repeated audience parameter",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -263,7 +263,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* repeated audience parameter with tricky values */
 		{
 			desc: "repeated audience parameter with tricky values",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: ExactAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: ExactAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -298,7 +298,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* redirect_uri with special character in protocol*/
 		{
 			desc: "redirect_uri with special character",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"web+application://callback"},
 				"client_id":     {"1234"},
@@ -333,7 +333,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* audience with double spaces between values */
 		{
 			desc: "audience with double spaces between values",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -368,7 +368,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* fails because unknown response_mode*/
 		{
 			desc: "should fail because unknown response_mode",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -385,7 +385,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* fails because response_mode is requested but the OAuth 2.0 client doesn't support response mode */
 		{
 			desc: "should fail because response_mode is requested but the OAuth 2.0 client doesn't support response mode",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -402,7 +402,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* fails because requested response mode is not allowed */
 		{
 			desc: "should fail because requested response mode is not allowed",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -426,7 +426,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* success with response mode */
 		{
 			desc: "success with response mode",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -469,7 +469,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* determine correct response mode if default */
 		{
 			desc: "success with response mode",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},
@@ -511,7 +511,7 @@ func TestNewAuthorizeRequest(t *testing.T) {
 		/* determine correct response mode if default */
 		{
 			desc: "success with response mode",
-			conf: &Fosite{Store: store, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy},
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},
 				"client_id":     {"1234"},

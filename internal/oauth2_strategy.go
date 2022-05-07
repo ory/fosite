@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -37,31 +36,31 @@ func (m *MockCoreStrategy) EXPECT() *MockCoreStrategyMockRecorder {
 }
 
 // AccessTokenSignature mocks base method
-func (m *MockCoreStrategy) AccessTokenSignature(arg0 string) string {
+func (m *MockCoreStrategy) AccessTokenSignature(arg0 context.Context, arg1 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AccessTokenSignature", arg0)
+	ret := m.ctrl.Call(m, "AccessTokenSignature", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // AccessTokenSignature indicates an expected call of AccessTokenSignature
-func (mr *MockCoreStrategyMockRecorder) AccessTokenSignature(arg0 interface{}) *gomock.Call {
+func (mr *MockCoreStrategyMockRecorder) AccessTokenSignature(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccessTokenSignature", reflect.TypeOf((*MockCoreStrategy)(nil).AccessTokenSignature), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccessTokenSignature", reflect.TypeOf((*MockCoreStrategy)(nil).AccessTokenSignature), arg0, arg1)
 }
 
 // AuthorizeCodeSignature mocks base method
-func (m *MockCoreStrategy) AuthorizeCodeSignature(arg0 string) string {
+func (m *MockCoreStrategy) AuthorizeCodeSignature(arg0 context.Context, arg1 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AuthorizeCodeSignature", arg0)
+	ret := m.ctrl.Call(m, "AuthorizeCodeSignature", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // AuthorizeCodeSignature indicates an expected call of AuthorizeCodeSignature
-func (mr *MockCoreStrategyMockRecorder) AuthorizeCodeSignature(arg0 interface{}) *gomock.Call {
+func (mr *MockCoreStrategyMockRecorder) AuthorizeCodeSignature(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthorizeCodeSignature", reflect.TypeOf((*MockCoreStrategy)(nil).AuthorizeCodeSignature), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthorizeCodeSignature", reflect.TypeOf((*MockCoreStrategy)(nil).AuthorizeCodeSignature), arg0, arg1)
 }
 
 // GenerateAccessToken mocks base method
@@ -113,17 +112,17 @@ func (mr *MockCoreStrategyMockRecorder) GenerateRefreshToken(arg0, arg1 interfac
 }
 
 // RefreshTokenSignature mocks base method
-func (m *MockCoreStrategy) RefreshTokenSignature(arg0 string) string {
+func (m *MockCoreStrategy) RefreshTokenSignature(arg0 context.Context, arg1 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RefreshTokenSignature", arg0)
+	ret := m.ctrl.Call(m, "RefreshTokenSignature", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // RefreshTokenSignature indicates an expected call of RefreshTokenSignature
-func (mr *MockCoreStrategyMockRecorder) RefreshTokenSignature(arg0 interface{}) *gomock.Call {
+func (mr *MockCoreStrategyMockRecorder) RefreshTokenSignature(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshTokenSignature", reflect.TypeOf((*MockCoreStrategy)(nil).RefreshTokenSignature), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshTokenSignature", reflect.TypeOf((*MockCoreStrategy)(nil).RefreshTokenSignature), arg0, arg1)
 }
 
 // ValidateAccessToken mocks base method

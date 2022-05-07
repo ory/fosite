@@ -44,16 +44,16 @@ on top of Fosite.
 - [A word on extensibility](#a-word-on-extensibility)
 - [Installation](#installation)
 - [Documentation](#documentation)
-  - [Scopes](#scopes)
-    - [`fosite.WildcardScopeStrategy`](#fositewildcardscopestrategy)
-    - [`fosite.HierarchicScopeStrategy`](#fositehierarchicscopestrategy)
-  - [Quickstart](#quickstart)
-  - [Code Examples](#code-examples)
-  - [Example Storage Implementation](#example-storage-implementation)
-  - [Extensible handlers](#extensible-handlers)
-  - [JWT Introspection](#jwt-introspection)
+    - [Scopes](#scopes)
+        - [`fosite.WildcardScopeStrategy`](#fositewildcardscopestrategy)
+        - [`fosite.HierarchicScopeStrategy`](#fositehierarchicscopestrategy)
+    - [Quickstart](#quickstart)
+    - [Code Examples](#code-examples)
+    - [Example Storage Implementation](#example-storage-implementation)
+    - [Extensible handlers](#extensible-handlers)
+    - [JWT Introspection](#jwt-introspection)
 - [Contribute](#contribute)
-  - [Refresh mock objects](#refresh-mock-objects)
+    - [Refresh mock objects](#refresh-mock-objects)
 - [Hall of Fame](#hall-of-fame)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -192,10 +192,10 @@ scope strategy if you need a custom one by implementing `fosite.ScopeStrategy`.
 Using the composer, setting a strategy is easy:
 
 ```go
-import "github.com/ory/fosite/compose"
+import "github.com/ory/fosite"
 
-var config = &compose.Config{
-    ScopeStrategy: fosite.HierarchicScopeStrategy,
+var config = &fosite.Config{
+ScopeStrategy: fosite.HierarchicScopeStrategy,
 }
 ```
 
@@ -245,21 +245,30 @@ looking at some examples:
 
 ### Globalization
 
-Fosite does not natively carry translations for error messages and hints, but offers an interface that allows the consumer to define catalog bundles and an implementation to translate. This is available through the [MessageCatalog](i18n/i18n.go) interface. The functions defined are self-explanatory. The `DefaultMessageCatalog` illustrates this. Compose config has been extended to take in an instance of the `MessageCatalog`.
+Fosite does not natively carry translations for error messages and hints, but offers an interface that allows the
+consumer to define catalog bundles and an implementation to translate. This is available through
+the [MessageCatalog](i18n/i18n.go) interface. The functions defined are self-explanatory. The `DefaultMessageCatalog`
+illustrates this. Compose config has been extended to take in an instance of the `MessageCatalog`.
 
 #### Building translated files
 
 There are three possible "message key" types:
 
-1. Value of `RFC6749Error.ErrorField`: This is a string like `invalid_request` and correlates to most errors produced by Fosite.
-2. Hint identifier passed into `RFC6749Error.WithHintIDOrDefaultf`: This func is not used extensively in Fosite but, in time, most `WithHint` and `WithHintf` will be replaced with this function.
-3. Free text string format passed into `RFC6749Error.WithHint` and `RFC6749Error.WithHintf`: This function is used in Fosite and Hydra extensively and any message catalog implementation can use the format string parameter as the message key.
+1. Value of `RFC6749Error.ErrorField`: This is a string like `invalid_request` and correlates to most errors produced by
+   Fosite.
+2. Hint identifier passed into `RFC6749Error.WithHintIDOrDefaultf`: This func is not used extensively in Fosite but, in
+   time, most `WithHint` and `WithHintf` will be replaced with this function.
+3. Free text string format passed into `RFC6749Error.WithHint` and `RFC6749Error.WithHintf`: This function is used in
+   Fosite and Hydra extensively and any message catalog implementation can use the format string parameter as the
+   message key.
 
 An example of a message catalog can be seen in the [i18n_test.go](i18n/i18n_test.go).
 
 #### Generating the `en` messages file
 
-This is a WIP at the moment, but effectively any scripting language can be used to generate this. It would need to traverse all files in the source code and extract the possible message identifiers based on the different message key types.
+This is a WIP at the moment, but effectively any scripting language can be used to generate this. It would need to
+traverse all files in the source code and extract the possible message identifiers based on the different message key
+types.
 
 ### Quickstart
 
@@ -274,6 +283,8 @@ and OAuth2 handlers enabled. Please refer to the
 This little code snippet sets up a full-blown OAuth2 and OpenID Connect example.
 
 ```go
+package main
+
 import "github.com/ory/fosite"
 import "github.com/ory/fosite/compose"
 import "github.com/ory/fosite/storage"
@@ -291,13 +302,13 @@ var secret = []byte("my super secret signing password")
 
 privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 if err != nil {
-  panic("unable to create private key")
+panic("unable to create private key")
 }
 
-// check the api docs of compose.Config for further configuration options
-var config = &compose.Config {
-  	AccessTokenLifespan: time.Minute * 30,
-  	// ...
+// check the api docs of fosite.Config for further configuration options
+var config = &fosite.Config{
+	AccessTokenLifespan: time.Minute * 30,
+	// ...
 }
 
 var oauth2Provider = compose.ComposeAllEnabled(config, storage, secret, privateKey)
@@ -312,7 +323,7 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// It will analyze the request and extract important information like scopes, response type and others.
 	ar, err := oauth2Provider.NewAuthorizeRequest(ctx, req)
 	if err != nil {
-		oauth2Provider.WriteAuthorizeError(rw, ar, err)
+		oauth2Provider.WriteAuthorizeError(ctx, rw, ar, err)
 		return
 	}
 
@@ -352,12 +363,12 @@ func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// to support open id connect.
 	response, err := oauth2Provider.NewAuthorizeResponse(ctx, ar, mySessionData)
 	if err != nil {
-		oauth2Provider.WriteAuthorizeError(rw, ar, err)
+		oauth2Provider.WriteAuthorizeError(ctx, rw, ar, err)
 		return
 	}
 
 	// Awesome, now we redirect back to the client redirect uri and pass along an authorize code
-	oauth2Provider.WriteAuthorizeResponse(rw, ar, response)
+	oauth2Provider.WriteAuthorizeResponse(ctx, rw, ar, response)
 }
 
 // The token endpoint is usually at "https://mydomain.com/oauth2/token"
@@ -372,7 +383,7 @@ func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// This will create an access request object and iterate through the registered TokenEndpointHandlers to validate the request.
 	accessRequest, err := oauth2Provider.NewAccessRequest(ctx, req, mySessionData)
 	if err != nil {
-		oauth2Provider.WriteAccessError(rw, accessRequest, err)
+		oauth2Provider.WriteAccessError(ctx, rw, accessRequest, err)
 		return
 	}
 
@@ -384,12 +395,12 @@ func tokenHandlerFunc(rw http.ResponseWriter, req *http.Request) {
 	// and aggregate the result in response.
 	response, err := oauth2Provider.NewAccessResponse(ctx, accessRequest)
 	if err != nil {
-		oauth2Provider.WriteAccessError(rw, accessRequest, err)
+		oauth2Provider.WriteAccessError(ctx, rw, accessRequest, err)
 		return
 	}
 
 	// All done, send the response.
-	oauth2Provider.WriteAccessResponse(rw, accessRequest, response)
+	oauth2Provider.WriteAccessResponse(ctx, rw, accessRequest, response)
 
 	// The client has a valid access token now
 }

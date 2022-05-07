@@ -23,6 +23,7 @@ package integration_test
 
 import (
 	"context"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
 	"time"
@@ -400,7 +401,7 @@ func (s *authorizeJWTBearerSuite) getClient() *clients.JWTBearer {
 
 func (s *authorizeJWTBearerSuite) assertSuccessResponse(t *testing.T, token *clients.Token, err error) {
 	assert.Nil(t, err)
-	assert.NotNil(t, token)
+	require.NotNil(t, token)
 
 	assert.Equal(t, token.TokenType, "bearer")
 	assert.Empty(t, token.RefreshToken)
@@ -419,7 +420,7 @@ func (s *authorizeJWTBearerSuite) assertBadResponse(t *testing.T, token *clients
 
 func TestAuthorizeJWTBearerSuite(t *testing.T) {
 	provider := compose.Compose(
-		&compose.Config{
+		&fosite.Config{
 			GrantTypeJWTBearerCanSkipClientAuth:  true,
 			GrantTypeJWTBearerIDOptional:         true,
 			GrantTypeJWTBearerIssuedDateOptional: true,
@@ -428,7 +429,6 @@ func TestAuthorizeJWTBearerSuite(t *testing.T) {
 		},
 		fositeStore,
 		jwtStrategy,
-		nil,
 		compose.OAuth2ClientCredentialsGrantFactory,
 		compose.RFC7523AssertionGrantFactory,
 	)

@@ -22,6 +22,7 @@
 package fosite
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
@@ -94,7 +95,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 	reqJWK := httptest.NewServer(hJWK)
 	defer reqJWK.Close()
 
-	f := &Fosite{JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy()}
+	f := &Fosite{Config: &Config{JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy()}}
 	for k, tc := range []struct {
 		client Client
 		form   url.Values
@@ -211,7 +212,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 				},
 			}
 
-			err := f.authorizeRequestParametersFromOpenIDConnectRequest(req)
+			err := f.authorizeRequestParametersFromOpenIDConnectRequest(context.Background(), req)
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error(), "%+v", err)
 				if tc.expectErrReason != "" {

@@ -22,6 +22,8 @@
 package openid
 
 import (
+	"context"
+	"github.com/ory/fosite/internal/gen"
 	"net/url"
 	"testing"
 
@@ -35,10 +37,14 @@ import (
 )
 
 var strat = &DefaultStrategy{
-	JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
+	Signer: &jwt.DefaultSigner{
+		GetPrivateKey: func(_ context.Context) (interface{}, error) {
+			return gen.MustRSAKey(), nil
+		},
 	},
-	MinParameterEntropy: fosite.MinParameterEntropy,
+	Config: &fosite.Config{
+		MinParameterEntropy: fosite.MinParameterEntropy,
+	},
 }
 
 var fooErr = errors.New("foo")

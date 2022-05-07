@@ -29,15 +29,21 @@ import (
 	"github.com/ory/fosite"
 )
 
+type coreValidatorConfigProvider interface {
+	fosite.ScopeStrategyProvider
+	fosite.DisableRefreshTokenValidationProvider
+}
+
+var _ fosite.TokenIntrospector = (*CoreValidator)(nil)
+
 type CoreValidator struct {
 	CoreStrategy
 	CoreStorage
-	ScopeStrategy                 fosite.ScopeStrategy
-	DisableRefreshTokenValidation bool
+	Config coreValidatorConfigProvider
 }
 
 func (c *CoreValidator) IntrospectToken(ctx context.Context, token string, tokenUse fosite.TokenUse, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenUse, error) {
-	if c.DisableRefreshTokenValidation {
+	if c.Config.GetDisableRefreshTokenValidation(ctx) {
 		if err := c.introspectAccessToken(ctx, token, accessRequest, scopes); err != nil {
 			return "", err
 		}
@@ -79,7 +85,7 @@ func matchScopes(ss fosite.ScopeStrategy, granted, scopes []string) error {
 }
 
 func (c *CoreValidator) introspectAccessToken(ctx context.Context, token string, accessRequest fosite.AccessRequester, scopes []string) error {
-	sig := c.CoreStrategy.AccessTokenSignature(token)
+	sig := c.CoreStrategy.AccessTokenSignature(ctx, token)
 	or, err := c.CoreStorage.GetAccessTokenSession(ctx, sig, accessRequest.GetSession())
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrRequestUnauthorized.WithWrap(err).WithDebug(err.Error()))
@@ -87,7 +93,7 @@ func (c *CoreValidator) introspectAccessToken(ctx context.Context, token string,
 		return err
 	}
 
-	if err := matchScopes(c.ScopeStrategy, or.GetGrantedScopes(), scopes); err != nil {
+	if err := matchScopes(c.Config.GetScopeStrategy(ctx), or.GetGrantedScopes(), scopes); err != nil {
 		return err
 	}
 
@@ -96,7 +102,7 @@ func (c *CoreValidator) introspectAccessToken(ctx context.Context, token string,
 }
 
 func (c *CoreValidator) introspectRefreshToken(ctx context.Context, token string, accessRequest fosite.AccessRequester, scopes []string) error {
-	sig := c.CoreStrategy.RefreshTokenSignature(token)
+	sig := c.CoreStrategy.RefreshTokenSignature(ctx, token)
 	or, err := c.CoreStorage.GetRefreshTokenSession(ctx, sig, accessRequest.GetSession())
 
 	if err != nil {
@@ -105,7 +111,7 @@ func (c *CoreValidator) introspectRefreshToken(ctx context.Context, token string
 		return err
 	}
 
-	if err := matchScopes(c.ScopeStrategy, or.GetGrantedScopes(), scopes); err != nil {
+	if err := matchScopes(c.Config.GetScopeStrategy(ctx), or.GetGrantedScopes(), scopes); err != nil {
 		return err
 	}
 

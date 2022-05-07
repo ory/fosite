@@ -31,9 +31,7 @@ import (
 
 func TestCompare(t *testing.T) {
 	workfactor := 10
-	hasher := &BCrypt{
-		WorkFactor: workfactor,
-	}
+	hasher := &BCrypt{Config: &Config{HashCost: workfactor}}
 
 	expectedPassword := "hello world"
 	expectedPasswordHash, err := hasher.Hash(context.TODO(), []byte(expectedPassword))
@@ -97,12 +95,8 @@ func TestHash(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.testDescription, func(t *testing.T) {
-			hasher := &BCrypt{
-				WorkFactor: test.workFactor,
-			}
-
+			hasher := &BCrypt{Config: &Config{HashCost: test.workFactor}}
 			_, err := hasher.Hash(context.TODO(), password)
-
 			if test.shouldError {
 				assert.Error(t, err)
 			} else {
@@ -113,7 +107,7 @@ func TestHash(t *testing.T) {
 }
 
 func TestDefaultWorkFactor(t *testing.T) {
-	b := &BCrypt{}
+	b := &BCrypt{Config: &Config{}}
 	data := []byte("secrets")
 	hash, err := b.Hash(context.TODO(), data)
 	if err != nil {

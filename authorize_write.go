@@ -22,10 +22,11 @@
 package fosite
 
 import (
+	"context"
 	"net/http"
 )
 
-func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
+func (f *Fosite) WriteAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
 	// Set custom headers, e.g. "X-MySuperCoolCustomHeader" or "X-DONT-CACHE-ME"...
 	wh := rw.Header()
 	rh := resp.GetHeader()
@@ -41,7 +42,7 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 	case ResponseModeFormPost:
 		//form_post
 		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
-		WriteAuthorizeFormPostResponse(redir.String(), resp.GetParameters(), GetPostFormHTMLTemplate(*f), rw)
+		WriteAuthorizeFormPostResponse(redir.String(), resp.GetParameters(), GetPostFormHTMLTemplate(ctx, f), rw)
 		return
 	case ResponseModeQuery, ResponseModeDefault:
 		// Explicit grants
@@ -66,8 +67,8 @@ func (f *Fosite) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequ
 		sendRedirect(u, rw)
 		return
 	default:
-		if f.ResponseModeHandler().ResponseModes().Has(rm) {
-			f.ResponseModeHandler().WriteAuthorizeResponse(rw, ar, resp)
+		if f.ResponseModeHandler(ctx).ResponseModes().Has(rm) {
+			f.ResponseModeHandler(ctx).WriteAuthorizeResponse(ctx, rw, ar, resp)
 			return
 		}
 	}

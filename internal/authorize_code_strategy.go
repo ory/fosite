@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -37,17 +36,17 @@ func (m *MockAuthorizeCodeStrategy) EXPECT() *MockAuthorizeCodeStrategyMockRecor
 }
 
 // AuthorizeCodeSignature mocks base method
-func (m *MockAuthorizeCodeStrategy) AuthorizeCodeSignature(arg0 string) string {
+func (m *MockAuthorizeCodeStrategy) AuthorizeCodeSignature(arg0 context.Context, arg1 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AuthorizeCodeSignature", arg0)
+	ret := m.ctrl.Call(m, "AuthorizeCodeSignature", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // AuthorizeCodeSignature indicates an expected call of AuthorizeCodeSignature
-func (mr *MockAuthorizeCodeStrategyMockRecorder) AuthorizeCodeSignature(arg0 interface{}) *gomock.Call {
+func (mr *MockAuthorizeCodeStrategyMockRecorder) AuthorizeCodeSignature(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthorizeCodeSignature", reflect.TypeOf((*MockAuthorizeCodeStrategy)(nil).AuthorizeCodeSignature), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthorizeCodeSignature", reflect.TypeOf((*MockAuthorizeCodeStrategy)(nil).AuthorizeCodeSignature), arg0, arg1)
 }
 
 // GenerateAuthorizeCode mocks base method

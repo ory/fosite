@@ -39,7 +39,7 @@ func (f *Fosite) NewAuthorizeResponse(ctx context.Context, ar AuthorizeRequester
 	ctx = context.WithValue(ctx, AuthorizeResponseContextKey, resp)
 
 	ar.SetSession(session)
-	for _, h := range f.AuthorizeEndpointHandlers {
+	for _, h := range f.Config.GetAuthorizeEndpointHandlers(ctx) {
 		if err := h.HandleAuthorizeEndpointRequest(ctx, ar, resp); err != nil {
 			return nil, err
 		}

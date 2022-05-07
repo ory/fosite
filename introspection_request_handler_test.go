@@ -47,7 +47,8 @@ func TestIntrospectionResponseTokenUse(t *testing.T) {
 
 	ctx := gomock.AssignableToTypeOf(context.WithValue(context.TODO(), ContextKey("test"), nil))
 
-	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewExampleStore(), []byte{}, nil).(*Fosite)
+	config := new(Config)
+	f := compose.ComposeAllEnabled(config, storage.NewExampleStore(), nil).(*Fosite)
 	httpreq := &http.Request{
 		Method: "POST",
 		Header: http.Header{
@@ -66,7 +67,7 @@ func TestIntrospectionResponseTokenUse(t *testing.T) {
 		{
 			description: "introspecting access token",
 			setup: func() {
-				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				config.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				validator.EXPECT().IntrospectToken(ctx, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
 				validator.EXPECT().IntrospectToken(ctx, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(AccessToken, nil)
 			},
@@ -76,7 +77,7 @@ func TestIntrospectionResponseTokenUse(t *testing.T) {
 		{
 			description: "introspecting refresh token",
 			setup: func() {
-				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				config.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				validator.EXPECT().IntrospectToken(ctx, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), nil)
 				validator.EXPECT().IntrospectToken(ctx, "introspect-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(RefreshToken, nil)
 			},
@@ -110,7 +111,8 @@ func TestNewIntrospectionRequest(t *testing.T) {
 
 	ctx := gomock.AssignableToTypeOf(context.WithValue(context.TODO(), ContextKey("test"), nil))
 
-	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewExampleStore(), []byte{}, nil).(*Fosite)
+	config := new(Config)
+	f := compose.ComposeAllEnabled(config, storage.NewExampleStore(), nil).(*Fosite)
 	httpreq := &http.Request{
 		Method: "POST",
 		Header: http.Header{},
@@ -133,7 +135,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 		{
 			description: "should fail",
 			setup: func() {
-				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				config.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				httpreq = &http.Request{
 					Method: "POST",
 					Header: http.Header{
@@ -152,7 +154,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 		{
 			description: "should pass",
 			setup: func() {
-				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				config.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				httpreq = &http.Request{
 					Method: "POST",
 					Header: http.Header{
@@ -170,7 +172,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 		{
 			description: "should pass with basic auth if username and password encoded",
 			setup: func() {
-				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				config.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				httpreq = &http.Request{
 					Method: "POST",
 					Header: http.Header{
@@ -188,7 +190,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 		{
 			description: "should pass with basic auth if username and password not encoded",
 			setup: func() {
-				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				config.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				httpreq = &http.Request{
 					Method: "POST",
 					Header: http.Header{
@@ -206,7 +208,7 @@ func TestNewIntrospectionRequest(t *testing.T) {
 		{
 			description: "should pass with basic auth if username and password not encoded",
 			setup: func() {
-				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				config.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				httpreq = &http.Request{
 					Method: "POST",
 					Header: http.Header{

@@ -1805,7 +1805,7 @@ handler: Adds PKCE implementation for none and S256 (#246)
 
 This patch adds support for PKCE (https://tools.ietf.org/html/rfc7636) which is used by native apps (mobile) and prevents eavesdropping attacks against authorization codes.
 
-PKCE is enabled by default but not enforced. Challenge method plain is disabled by default. Both settings can be changed using `compose.Config.EnforcePKCE` and `compose.config.EnablePKCEPlainChallengeMethod`.
+PKCE is enabled by default but not enforced. Challenge method plain is disabled by default. Both settings can be changed using `compose.Config.EnforcePKCE` and `compose.Config.EnablePKCEPlainChallengeMethod`.
 
 Closes #213
 
@@ -1815,7 +1815,7 @@ Closes #213
 
   This patch adds support for PKCE (https://tools.ietf.org/html/rfc7636) which is used by native apps (mobile) and prevents eavesdropping attacks against authorization codes.
 
-  PKCE is enabled by default but not enforced. Challenge method plain is disabled by default. Both settings can be changed using `compose.Config.EnforcePKCE` and `compose.config.EnablePKCEPlainChallengeMethod`.
+  PKCE is enabled by default but not enforced. Challenge method plain is disabled by default. Both settings can be changed using `compose.Config.EnforcePKCE` and `compose.Config.EnablePKCEPlainChallengeMethod`.
 
 # [0.16.3](https://github.com/ory/fosite/compare/v0.16.2...v0.16.3) (2018-02-07)
 

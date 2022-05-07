@@ -22,27 +22,28 @@
 package fosite
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 )
 
-func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
+func (f *Fosite) WriteAuthorizeError(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
 
-	if f.ResponseModeHandler().ResponseModes().Has(ar.GetResponseMode()) {
-		f.ResponseModeHandler().WriteAuthorizeError(rw, ar, err)
+	if f.ResponseModeHandler(ctx).ResponseModes().Has(ar.GetResponseMode()) {
+		f.ResponseModeHandler(ctx).WriteAuthorizeError(ctx, rw, ar, err)
 		return
 	}
 
-	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat).WithExposeDebug(f.SendDebugMessagesToClients).WithLocalizer(f.MessageCatalog, getLangFromRequester(ar))
+	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.Config.GetUseLegacyErrorFormat(ctx)).WithExposeDebug(f.Config.GetSendDebugMessagesToClients(ctx)).WithLocalizer(f.Config.GetMessageCatalog(ctx), getLangFromRequester(ar))
 	if !ar.IsRedirectURIValid() {
 		rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
 		js, err := json.Marshal(rfcerr)
 		if err != nil {
-			if f.SendDebugMessagesToClients {
+			if f.Config.GetSendDebugMessagesToClients(ctx) {
 				errorMessage := EscapeJSONString(err.Error())
 				http.Error(rw, fmt.Sprintf(`{"error":"server_error","error_description":"%s"}`, errorMessage), http.StatusInternalServerError)
 			} else {
@@ -67,7 +68,7 @@ func (f *Fosite) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequest
 	var redirectURIString string
 	if ar.GetResponseMode() == ResponseModeFormPost {
 		rw.Header().Set("Content-Type", "text/html;charset=UTF-8")
-		WriteAuthorizeFormPostResponse(redirectURI.String(), errors, GetPostFormHTMLTemplate(*f), rw)
+		WriteAuthorizeFormPostResponse(redirectURI.String(), errors, GetPostFormHTMLTemplate(ctx, f), rw)
 		return
 	} else if ar.GetResponseMode() == ResponseModeFragment {
 		redirectURIString = redirectURI.String() + "#" + errors.Encode()

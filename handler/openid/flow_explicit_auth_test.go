@@ -22,7 +22,9 @@
 package openid
 
 import (
+	"context"
 	"fmt"
+	"github.com/ory/fosite/internal/gen"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -35,16 +37,19 @@ import (
 )
 
 // expose key to verify id_token
-var key = internal.MustRSAKey()
+var key = gen.MustRSAKey()
 
 func makeOpenIDConnectExplicitHandler(ctrl *gomock.Controller, minParameterEntropy int) (OpenIDConnectExplicitHandler, *internal.MockOpenIDConnectRequestStorage) {
 	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
+	config := &fosite.Config{MinParameterEntropy: minParameterEntropy}
 
 	var j = &DefaultStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: key,
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+				return key, nil
+			},
 		},
-		MinParameterEntropy: minParameterEntropy,
+		Config: config,
 	}
 
 	return OpenIDConnectExplicitHandler{
@@ -52,7 +57,7 @@ func makeOpenIDConnectExplicitHandler(ctrl *gomock.Controller, minParameterEntro
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: j,
 		},
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.JWTStrategy),
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(j.Signer, config),
 	}, store
 }
 

@@ -36,14 +36,20 @@ import (
 )
 
 func TestValidatePrompt(t *testing.T) {
-	var j = &DefaultStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: key,
-		},
+	config := &fosite.Config{
 		MinParameterEntropy: fosite.MinParameterEntropy,
 	}
+	var j = &DefaultStrategy{
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return key, nil
+			}},
+		Config: &fosite.Config{
+			MinParameterEntropy: fosite.MinParameterEntropy,
+		},
+	}
 
-	v := NewOpenIDConnectRequestValidator(nil, j)
+	v := NewOpenIDConnectRequestValidator(j, config)
 
 	var genIDToken = func(c jwt.IDTokenClaims) string {
 		s, _, err := j.Generate(context.TODO(), c.ToMapClaims(), jwt.NewHeaders())

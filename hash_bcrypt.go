@@ -33,14 +33,17 @@ const DefaultBCryptWorkFactor = 12
 
 // BCrypt implements the Hasher interface by using BCrypt.
 type BCrypt struct {
-	WorkFactor int
+	Config interface {
+		BCryptCostProvider
+	}
 }
 
 func (b *BCrypt) Hash(ctx context.Context, data []byte) ([]byte, error) {
-	if b.WorkFactor == 0 {
-		b.WorkFactor = DefaultBCryptWorkFactor
+	wf := b.Config.GetBCryptCost(ctx)
+	if wf == 0 {
+		wf = DefaultBCryptWorkFactor
 	}
-	s, err := bcrypt.GenerateFromPassword(data, b.WorkFactor)
+	s, err := bcrypt.GenerateFromPassword(data, wf)
 	if err != nil {
 		return nil, errorsx.WithStack(err)
 	}

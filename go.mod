@@ -30,7 +30,7 @@ require (
 	github.com/pborman/uuid v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/text v0.3.7

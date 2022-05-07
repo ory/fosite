@@ -59,7 +59,7 @@ import (
 //   in Section 3.2.1.
 func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session Session) (AccessRequester, error) {
 	accessRequest := NewAccessRequest(session)
-	accessRequest.Request.Lang = i18n.GetLangFromRequest(f.MessageCatalog, r)
+	accessRequest.Request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), r)
 
 	ctx = context.WithValue(ctx, RequestContextKey, r)
 	ctx = context.WithValue(ctx, AccessRequestContextKey, accessRequest)
@@ -90,16 +90,16 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	var found = false
-	for _, loader := range f.TokenEndpointHandlers {
+	for _, loader := range f.Config.GetTokenEndpointHandlers(ctx) {
 		// Is the loader responsible for handling the request?
-		if !loader.CanHandleTokenEndpointRequest(accessRequest) {
+		if !loader.CanHandleTokenEndpointRequest(ctx, accessRequest) {
 			continue
 		}
 
 		// The handler **is** responsible!
 
 		// Is the client supplied in the request? If not can this handler skip client auth?
-		if !loader.CanSkipClientAuth(accessRequest) && clientErr != nil {
+		if !loader.CanSkipClientAuth(ctx, accessRequest) && clientErr != nil {
 			// No client and handler can not skip client auth -> error.
 			return accessRequest, clientErr
 		}

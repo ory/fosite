@@ -23,7 +23,6 @@ package openid
 
 import (
 	"context"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -37,38 +36,28 @@ import (
 	"github.com/ory/go-convenience/stringslice"
 )
 
+var defaultPrompts = []string{"login", "none", "consent", "select_account"}
+
+type openIDConnectRequestValidatorConfigProvider interface {
+	fosite.RedirectSecureCheckerProvider
+	fosite.AllowedPromptsProvider
+}
+
 type OpenIDConnectRequestValidator struct {
-	AllowedPrompt       []string
-	Strategy            jwt.JWTStrategy
-	IsRedirectURISecure func(*url.URL) bool
+	Strategy jwt.Signer
+	Config   openIDConnectRequestValidatorConfigProvider
 }
 
-func NewOpenIDConnectRequestValidator(prompt []string, strategy jwt.JWTStrategy) *OpenIDConnectRequestValidator {
-	if len(prompt) == 0 {
-		prompt = []string{"login", "none", "consent", "select_account"}
-	}
-
+func NewOpenIDConnectRequestValidator(strategy jwt.Signer, config openIDConnectRequestValidatorConfigProvider) *OpenIDConnectRequestValidator {
 	return &OpenIDConnectRequestValidator{
-		AllowedPrompt: prompt,
-		Strategy:      strategy,
+		Strategy: strategy,
+		Config:   config,
 	}
-}
-
-func (v *OpenIDConnectRequestValidator) WithRedirectSecureChecker(checker func(*url.URL) bool) *OpenIDConnectRequestValidator {
-	v.IsRedirectURISecure = checker
-	return v
-}
-
-func (v *OpenIDConnectRequestValidator) secureChecker() func(*url.URL) bool {
-	if v.IsRedirectURISecure == nil {
-		v.IsRedirectURISecure = fosite.IsRedirectURISecure
-	}
-	return v.IsRedirectURISecure
 }
 
 func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req fosite.AuthorizeRequester) error {
 	// prompt is case sensitive!
-	prompt := fosite.RemoveEmpty(strings.Split(req.GetRequestForm().Get("prompt"), " "))
+	requiredPrompt := fosite.RemoveEmpty(strings.Split(req.GetRequestForm().Get("prompt"), " "))
 
 	if req.GetClient().IsPublic() {
 		// Threat: Malicious Client Obtains Existing Authorization by Fraud
@@ -89,18 +78,24 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 		//  unless the identity of the client can be proven, the request SHOULD
 		//  be processed as if no previous request had been approved.
 
-		if stringslice.Has(prompt, "none") {
-			if !v.secureChecker()(req.GetRedirectURI()) {
+		checker := v.Config.GetRedirectSecureChecker(ctx)
+		if stringslice.Has(requiredPrompt, "none") {
+			if !checker(ctx, req.GetRedirectURI()) {
 				return errorsx.WithStack(fosite.ErrConsentRequired.WithHint("OAuth 2.0 Client is marked public and redirect uri is not considered secure (https missing), but \"prompt=none\" was requested."))
 			}
 		}
 	}
 
-	if !isWhitelisted(prompt, v.AllowedPrompt) {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("Used unknown value '%s' for prompt parameter", prompt))
+	availablePrompts := v.Config.GetAllowedPrompts(ctx)
+	if len(availablePrompts) == 0 {
+		availablePrompts = defaultPrompts
 	}
 
-	if stringslice.Has(prompt, "none") && len(prompt) > 1 {
+	if !isWhitelisted(requiredPrompt, availablePrompts) {
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("Used unknown value '%s' for prompt parameter", requiredPrompt))
+	}
+
+	if stringslice.Has(requiredPrompt, "none") && len(requiredPrompt) > 1 {
 		// If this parameter contains none with any other value, an error is returned.
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'prompt' was set to 'none', but contains other values as well which is not allowed."))
 	}
@@ -135,7 +130,7 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 		}
 	}
 
-	if stringslice.Has(prompt, "none") {
+	if stringslice.Has(requiredPrompt, "none") {
 		if claims.AuthTime.IsZero() {
 			return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to validate OpenID Connect request because because auth_time is missing from session."))
 		}
@@ -145,7 +140,7 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 		}
 	}
 
-	if stringslice.Has(prompt, "login") {
+	if stringslice.Has(requiredPrompt, "login") {
 		if claims.AuthTime.Before(claims.RequestedAt) {
 			return errorsx.WithStack(fosite.ErrLoginRequired.WithHintf("Failed to validate OpenID Connect request because prompt was set to 'login' but auth_time ('%s') happened before the authorization request ('%s') was registered, indicating that the user was not re-authenticated which is forbidden.", claims.AuthTime, claims.RequestedAt))
 		}

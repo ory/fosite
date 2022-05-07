@@ -103,7 +103,7 @@ func (s *authorizeJWTBearerRequiredJtiSuite) assertBadResponse(t *testing.T, tok
 
 func TestAuthorizeJWTBearerRequiredJtiSuite(t *testing.T) {
 	provider := compose.Compose(
-		&compose.Config{
+		&fosite.Config{
 			GrantTypeJWTBearerCanSkipClientAuth:  true,
 			GrantTypeJWTBearerIDOptional:         false,
 			GrantTypeJWTBearerIssuedDateOptional: true,
@@ -111,7 +111,6 @@ func TestAuthorizeJWTBearerRequiredJtiSuite(t *testing.T) {
 		},
 		fositeStore,
 		jwtStrategy,
-		nil,
 		compose.OAuth2ClientCredentialsGrantFactory,
 		compose.RFC7523AssertionGrantFactory,
 	)

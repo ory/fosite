@@ -22,6 +22,7 @@
 package openid
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -94,10 +95,14 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 
 func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T) {
 	var j = &DefaultStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: key,
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+				return key, nil
+			},
 		},
-		MinParameterEntropy: fosite.MinParameterEntropy,
+		Config: &fosite.Config{
+			MinParameterEntropy: fosite.MinParameterEntropy,
+		},
 	}
 
 	h := &OpenIDConnectRefreshHandler{

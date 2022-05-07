@@ -38,29 +38,27 @@ import (
 const grantTypeJWTBearer = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
 type Handler struct {
-	Storage                  RFC7523KeyStorage
-	ScopeStrategy            fosite.ScopeStrategy
-	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
+	Storage RFC7523KeyStorage
 
-	// TokenURL is the the URL of the Authorization Server's Token Endpoint.
-	TokenURL string
-	// SkipClientAuth indicates, if client authentication can be skipped.
-	SkipClientAuth bool
-	// JWTIDOptional indicates, if jti (JWT ID) claim required or not.
-	JWTIDOptional bool
-	// JWTIssuedDateOptional indicates, if "iat" (issued at) claim required or not.
-	JWTIssuedDateOptional bool
-	// JWTMaxDuration sets the maximum time after token issued date (if present), during which the token is
-	// considered valid. If "iat" claim is not present, then current time will be used as issued date.
-	JWTMaxDuration time.Duration
+	Config interface {
+		fosite.TokenURLProvider
+		fosite.GrantTypeJWTBearerCanSkipClientAuthProvider
+		fosite.GrantTypeJWTBearerIDOptionalProvider
+		fosite.GrantTypeJWTBearerIssuedDateOptionalProvider
+		fosite.GetJWTMaxDurationProvider
+		fosite.AudienceStrategyProvider
+		fosite.ScopeStrategyProvider
+	}
 
 	*oauth2.HandleHelper
 }
 
+var _ fosite.TokenEndpointHandler = (*Handler)(nil)
+
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything) and
 // https://tools.ietf.org/html/rfc7523#section-2.1 (everything)
 func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if err := c.CheckRequest(request); err != nil {
+	if err := c.CheckRequest(ctx, request); err != nil {
 		return err
 	}
 
@@ -105,7 +103,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	}
 
 	for _, scope := range request.GetRequestedScopes() {
-		if !c.ScopeStrategy(scopes, scope) {
+		if !c.Config.GetScopeStrategy(ctx)(scopes, scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The public key registered for issuer \"%s\" and subject \"%s\" is not allowed to request scope \"%s\".", claims.Issuer, claims.Subject, scope))
 		}
 	}
@@ -128,32 +126,32 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	if err != nil {
 		return err
 	}
-	session.SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.HandleHelper.AccessTokenLifespan).Round(time.Second))
+	session.SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.HandleHelper.Config.GetAccessTokenLifespan(ctx)).Round(time.Second))
 	session.SetSubject(claims.Subject)
 
 	return nil
 }
 
 func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
-	if err := c.CheckRequest(request); err != nil {
+	if err := c.CheckRequest(ctx, request); err != nil {
 		return err
 	}
 
 	return c.IssueAccessToken(ctx, request, response)
 }
 
-func (c *Handler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
-	return c.SkipClientAuth
+func (c *Handler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
+	return c.Config.GetGrantTypeJWTBearerCanSkipClientAuth(ctx)
 }
 
-func (c *Handler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+func (c *Handler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "urn:ietf:params:oauth:grant-type:jwt-bearer"
 	return requester.GetGrantTypes().ExactOne(grantTypeJWTBearer)
 }
 
-func (c *Handler) CheckRequest(request fosite.AccessRequester) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
+func (c *Handler) CheckRequest(ctx context.Context, request fosite.AccessRequester) error {
+	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -165,7 +163,7 @@ func (c *Handler) CheckRequest(request fosite.AccessRequester) error {
 	//   relies on the parameter is used.
 
 	// if client is authenticated, check grant types
-	if !c.CanSkipClientAuth(request) && !request.GetClient().GetGrantTypes().Has(grantTypeJWTBearer) {
+	if !c.CanSkipClientAuth(ctx, request) && !request.GetClient().GetGrantTypes().Has(grantTypeJWTBearer) {
 		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintf("The OAuth 2.0 Client is not allowed to use authorization grant \"%s\".", grantTypeJWTBearer))
 	}
 
@@ -244,11 +242,11 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 		)
 	}
 
-	if !claims.Audience.Contains(c.TokenURL) {
+	if !claims.Audience.Contains(c.Config.GetTokenURL(ctx)) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHintf(
 				"The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim containing a value \"%s\" that identifies the authorization server as an intended audience.",
-				c.TokenURL,
+				c.Config.GetTokenURL(ctx),
 			),
 		)
 	}
@@ -274,7 +272,7 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 		)
 	}
 
-	if !c.JWTIssuedDateOptional && claims.IssuedAt == nil {
+	if !c.Config.GetGrantTypeJWTBearerIssuedDateOptional(ctx) && claims.IssuedAt == nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"iat\" (issued at) claim."),
 		)
@@ -286,7 +284,7 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 	} else {
 		issuedDate = time.Now()
 	}
-	if claims.Expiry.Time().Sub(issuedDate) > c.JWTMaxDuration {
+	if claims.Expiry.Time().Sub(issuedDate) > c.Config.GetJWTMaxDuration(ctx) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHintf(
 				"The JWT in \"assertion\" request parameter contains an \"exp\" (expiration time) claim with value \"%s\" that is unreasonably far in the future, considering token issued at \"%s\".",
@@ -296,7 +294,7 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 		)
 	}
 
-	if !c.JWTIDOptional && claims.ID == "" {
+	if !c.Config.GetGrantTypeJWTBearerIDOptional(ctx) && claims.ID == "" {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"jti\" (JWT ID) claim."),
 		)

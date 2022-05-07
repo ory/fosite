@@ -69,7 +69,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 	tokenTypeHint := TokenType(r.PostForm.Get("token_type_hint"))
 
 	var found = false
-	for _, loader := range f.RevocationHandlers {
+	for _, loader := range f.Config.GetRevocationHandlers(ctx) {
 		if err := loader.RevokeToken(ctx, token, tokenTypeHint, client); err == nil {
 			found = true
 		} else if errors.Is(err, ErrUnknownRequest) {
@@ -97,7 +97,7 @@ func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) erro
 // cannot handle such an error in a reasonable way.  Moreover, the
 // purpose of the revocation request, invalidating the particular token,
 // is already achieved.
-func (f *Fosite) WriteRevocationResponse(rw http.ResponseWriter, err error) {
+func (f *Fosite) WriteRevocationResponse(ctx context.Context, rw http.ResponseWriter, err error) {
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
 

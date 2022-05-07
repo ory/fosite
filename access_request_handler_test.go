@@ -42,15 +42,16 @@ func TestNewAccessRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockStorage(ctrl)
 	handler := internal.NewMockTokenEndpointHandler(ctrl)
-	handler.EXPECT().CanHandleTokenEndpointRequest(gomock.Any()).Return(true).AnyTimes()
-	handler.EXPECT().CanSkipClientAuth(gomock.Any()).Return(false).AnyTimes()
+	handler.EXPECT().CanHandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+	handler.EXPECT().CanSkipClientAuth(gomock.Any(), gomock.Any()).Return(false).AnyTimes()
 	hasher := internal.NewMockHasher(ctrl)
 	defer ctrl.Finish()
 
 	ctx := gomock.AssignableToTypeOf(context.WithValue(context.TODO(), ContextKey("test"), nil))
 
 	client := &DefaultClient{}
-	fosite := &Fosite{Store: store, Hasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
+	config := &Config{ClientSecretsHasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
+	fosite := &Fosite{Store: store, Config: config}
 	for k, c := range []struct {
 		header    http.Header
 		form      url.Values
@@ -214,7 +215,7 @@ func TestNewAccessRequest(t *testing.T) {
 			}
 			c.mock()
 			ctx := NewContext()
-			fosite.TokenEndpointHandlers = c.handlers
+			config.TokenEndpointHandlers = c.handlers
 			ar, err := fosite.NewAccessRequest(ctx, r, new(DefaultSession))
 
 			if c.expectErr != nil {
@@ -232,14 +233,15 @@ func TestNewAccessRequestWithoutClientAuth(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockStorage(ctrl)
 	handler := internal.NewMockTokenEndpointHandler(ctrl)
-	handler.EXPECT().CanHandleTokenEndpointRequest(gomock.Any()).Return(true).AnyTimes()
-	handler.EXPECT().CanSkipClientAuth(gomock.Any()).Return(true).AnyTimes()
+	handler.EXPECT().CanHandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+	handler.EXPECT().CanSkipClientAuth(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
 	hasher := internal.NewMockHasher(ctrl)
 	defer ctrl.Finish()
 
 	client := &DefaultClient{}
 	anotherClient := &DefaultClient{ID: "another"}
-	fosite := &Fosite{Store: store, Hasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
+	config := &Config{ClientSecretsHasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
+	fosite := &Fosite{Store: store, Config: config}
 	for k, c := range []struct {
 		header    http.Header
 		form      url.Values
@@ -341,7 +343,7 @@ func TestNewAccessRequestWithoutClientAuth(t *testing.T) {
 			}
 			c.mock()
 			ctx := NewContext()
-			fosite.TokenEndpointHandlers = c.handlers
+			config.TokenEndpointHandlers = c.handlers
 			ar, err := fosite.NewAccessRequest(ctx, r, new(DefaultSession))
 
 			if c.expectErr != nil {
@@ -361,12 +363,12 @@ func TestNewAccessRequestWithMixedClientAuth(t *testing.T) {
 	store := internal.NewMockStorage(ctrl)
 
 	handlerWithClientAuth := internal.NewMockTokenEndpointHandler(ctrl)
-	handlerWithClientAuth.EXPECT().CanHandleTokenEndpointRequest(gomock.Any()).Return(true).AnyTimes()
-	handlerWithClientAuth.EXPECT().CanSkipClientAuth(gomock.Any()).Return(false).AnyTimes()
+	handlerWithClientAuth.EXPECT().CanHandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+	handlerWithClientAuth.EXPECT().CanSkipClientAuth(gomock.Any(), gomock.Any()).Return(false).AnyTimes()
 
 	handlerWithoutClientAuth := internal.NewMockTokenEndpointHandler(ctrl)
-	handlerWithoutClientAuth.EXPECT().CanHandleTokenEndpointRequest(gomock.Any()).Return(true).AnyTimes()
-	handlerWithoutClientAuth.EXPECT().CanSkipClientAuth(gomock.Any()).Return(true).AnyTimes()
+	handlerWithoutClientAuth.EXPECT().CanHandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+	handlerWithoutClientAuth.EXPECT().CanSkipClientAuth(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
 
 	hasher := internal.NewMockHasher(ctrl)
 	defer ctrl.Finish()
@@ -374,7 +376,8 @@ func TestNewAccessRequestWithMixedClientAuth(t *testing.T) {
 	ctx := gomock.AssignableToTypeOf(context.WithValue(context.TODO(), ContextKey("test"), nil))
 
 	client := &DefaultClient{}
-	fosite := &Fosite{Store: store, Hasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
+	config := &Config{ClientSecretsHasher: hasher, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
+	fosite := &Fosite{Store: store, Config: config}
 	for k, c := range []struct {
 		header    http.Header
 		form      url.Values
@@ -449,7 +452,7 @@ func TestNewAccessRequestWithMixedClientAuth(t *testing.T) {
 			}
 			c.mock()
 			ctx := NewContext()
-			fosite.TokenEndpointHandlers = c.handlers
+			config.TokenEndpointHandlers = c.handlers
 			ar, err := fosite.NewAccessRequest(ctx, r, new(DefaultSession))
 
 			if c.expectErr != nil {

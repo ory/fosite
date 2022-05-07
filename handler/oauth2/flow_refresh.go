@@ -35,25 +35,24 @@ import (
 	"github.com/ory/fosite/storage"
 )
 
+var _ fosite.TokenEndpointHandler = (*RefreshTokenGrantHandler)(nil)
+
 type RefreshTokenGrantHandler struct {
 	AccessTokenStrategy    AccessTokenStrategy
 	RefreshTokenStrategy   RefreshTokenStrategy
 	TokenRevocationStorage TokenRevocationStorage
-
-	// AccessTokenLifespan defines the lifetime of an access token.
-	AccessTokenLifespan time.Duration
-
-	// RefreshTokenLifespan defines the lifetime of a refresh token.
-	RefreshTokenLifespan time.Duration
-
-	ScopeStrategy            fosite.ScopeStrategy
-	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
-	RefreshTokenScopes       []string
+	Config                 interface {
+		fosite.AccessTokenLifespanProvider
+		fosite.RefreshTokenLifespanProvider
+		fosite.ScopeStrategyProvider
+		fosite.AudienceStrategyProvider
+		fosite.RefreshTokenScopesProvider
+	}
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
 func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
+	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -62,7 +61,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	refresh := request.GetRequestForm().Get("refresh_token")
-	signature := c.RefreshTokenStrategy.RefreshTokenSignature(refresh)
+	signature := c.RefreshTokenStrategy.RefreshTokenSignature(ctx, refresh)
 	originalRequest, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, request.GetSession())
 	if errors.Is(err, fosite.ErrInactiveToken) {
 		// Detected refresh token reuse
@@ -84,8 +83,8 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	if !(len(c.RefreshTokenScopes) == 0 || originalRequest.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...)) {
-		scopeNames := strings.Join(c.RefreshTokenScopes, " or ")
+	if !(len(c.Config.GetRefreshTokenScopes(ctx)) == 0 || originalRequest.GetGrantedScopes().HasOneOf(c.Config.GetRefreshTokenScopes(ctx)...)) {
+		scopeNames := strings.Join(c.Config.GetRefreshTokenScopes(ctx), " or ")
 		hint := fmt.Sprintf("The OAuth 2.0 Client was not granted scope %s and may thus not perform the 'refresh_token' authorization grant.", scopeNames)
 		return errorsx.WithStack(fosite.ErrScopeNotGranted.WithHint(hint))
 
@@ -101,13 +100,13 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	request.SetRequestedAudience(originalRequest.GetRequestedAudience())
 
 	for _, scope := range originalRequest.GetGrantedScopes() {
-		if !c.ScopeStrategy(request.GetClient().GetScopes(), scope) {
+		if !c.Config.GetScopeStrategy(ctx)(request.GetClient().GetScopes(), scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 		request.GrantScope(scope)
 	}
 
-	if err := c.AudienceMatchingStrategy(request.GetClient().GetAudience(), originalRequest.GetGrantedAudience()); err != nil {
+	if err := c.Config.GetAudienceStrategy(ctx)(request.GetClient().GetAudience(), originalRequest.GetGrantedAudience()); err != nil {
 		return err
 	}
 
@@ -115,9 +114,9 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		request.GrantAudience(audience)
 	}
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan).Round(time.Second))
-	if c.RefreshTokenLifespan > -1 {
-		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.RefreshTokenLifespan).Round(time.Second))
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.Config.GetAccessTokenLifespan(ctx)).Round(time.Second))
+	if c.Config.GetRefreshTokenLifespan(ctx) > -1 {
+		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.Config.GetRefreshTokenLifespan(ctx)).Round(time.Second))
 	}
 
 	return nil
@@ -125,7 +124,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-6
 func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) (err error) {
-	if !c.CanHandleTokenEndpointRequest(requester) {
+	if !c.CanHandleTokenEndpointRequest(ctx, requester) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -139,7 +138,7 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	signature := c.RefreshTokenStrategy.RefreshTokenSignature(requester.GetRequestForm().Get("refresh_token"))
+	signature := c.RefreshTokenStrategy.RefreshTokenSignature(ctx, requester.GetRequestForm().Get("refresh_token"))
 
 	ctx, err = storage.MaybeBeginTx(ctx, c.TokenRevocationStorage)
 	if err != nil {
@@ -173,7 +172,7 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 
 	responder.SetAccessToken(accessToken)
 	responder.SetTokenType("bearer")
-	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC()))
+	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx), time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
 	responder.SetExtra("refresh_token", refreshToken)
 
@@ -248,11 +247,11 @@ func (c *RefreshTokenGrantHandler) handleRefreshTokenEndpointStorageError(ctx co
 	return errorsx.WithStack(fosite.ErrServerError.WithWrap(storageErr).WithDebug(storageErr.Error()))
 }
 
-func (c *RefreshTokenGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+func (c *RefreshTokenGrantHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
 	return false
 }
 
-func (c *RefreshTokenGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+func (c *RefreshTokenGrantHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "refresh_token".
 	return requester.GetGrantTypes().ExactOne("refresh_token")

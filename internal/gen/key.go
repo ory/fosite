@@ -19,7 +19,7 @@
  *
  */
 
-package internal
+package gen
 
 import (
 	"crypto/ecdsa"
