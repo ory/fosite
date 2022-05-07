@@ -59,7 +59,7 @@ func (f *Fosite) IntrospectToken(ctx context.Context, token string, tokenUse Tok
 	var foundTokenUse TokenUse = ""
 
 	ar := NewAccessRequest(session)
-	for _, validator := range f.TokenIntrospectionHandlers {
+	for _, validator := range f.Config.GetTokenIntrospectionHandlers(ctx) {
 		tu, err := validator.IntrospectToken(ctx, token, tokenUse, ar, scopes)
 		if err == nil {
 			found = true

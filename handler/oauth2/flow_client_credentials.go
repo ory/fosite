@@ -30,26 +30,31 @@ import (
 	"github.com/ory/fosite"
 )
 
+var _ fosite.TokenEndpointHandler = (*ClientCredentialsGrantHandler)(nil)
+
 type ClientCredentialsGrantHandler struct {
 	*HandleHelper
-	ScopeStrategy            fosite.ScopeStrategy
-	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
+	Config interface {
+		fosite.ScopeStrategyProvider
+		fosite.AudienceStrategyProvider
+		fosite.AccessTokenLifespanProvider
+	}
 }
 
 // IntrospectTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.4.2
-func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Context, request fosite.AccessRequester) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
+func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
+	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
-		if !c.ScopeStrategy(client.GetScopes(), scope) {
+		if !c.Config.GetScopeStrategy(ctx)(client.GetScopes(), scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
-	if err := c.AudienceMatchingStrategy(client.GetAudience(), request.GetRequestedAudience()); err != nil {
+	if err := c.Config.GetAudienceStrategy(ctx)(client.GetAudience(), request.GetRequestedAudience()); err != nil {
 		return err
 	}
 
@@ -61,13 +66,13 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 	}
 	// if the client is not public, he has already been authenticated by the access request handler.
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan))
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.Config.GetAccessTokenLifespan(ctx)))
 	return nil
 }
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.4.3
 func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
+	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -78,11 +83,11 @@ func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	return c.IssueAccessToken(ctx, request, response)
 }
 
-func (c *ClientCredentialsGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+func (c *ClientCredentialsGrantHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
 	return false
 }
 
-func (c *ClientCredentialsGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+func (c *ClientCredentialsGrantHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "client_credentials".
 	return requester.GetGrantTypes().ExactOne("client_credentials")

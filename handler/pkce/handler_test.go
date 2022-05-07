@@ -40,7 +40,7 @@ type mockCodeStrategy struct {
 	signature string
 }
 
-func (m *mockCodeStrategy) AuthorizeCodeSignature(token string) string {
+func (m *mockCodeStrategy) AuthorizeCodeSignature(ctx context.Context, token string) string {
 	return m.signature
 }
 
@@ -53,9 +53,11 @@ func (m *mockCodeStrategy) ValidateAuthorizeCode(ctx context.Context, requester 
 }
 
 func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
+	var config fosite.Config
 	h := &Handler{
 		Storage:               storage.NewMemoryStore(),
 		AuthorizeCodeStrategy: new(oauth2.HMACSHAStrategy),
+		Config:                &config,
 	}
 	w := fosite.NewAuthorizeResponse()
 	r := fosite.NewAuthorizeRequest()
@@ -77,19 +79,19 @@ func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
 	c.Public = true
-	h.EnablePlainChallengeMethod = true
+	config.EnablePKCEPlainChallengeMethod = true
 	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
 	c.Public = false
-	h.EnablePlainChallengeMethod = true
+	config.EnablePKCEPlainChallengeMethod = true
 	require.NoError(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
-	h.EnablePlainChallengeMethod = false
+	config.EnablePKCEPlainChallengeMethod = false
 	require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
 	r.Form.Set("code_challenge_method", "S256")
 	r.Form.Set("code_challenge", "")
-	h.Force = true
+	config.EnforcePKCE = true
 	require.Error(t, h.HandleAuthorizeEndpointRequest(context.Background(), r, w))
 
 	r.Form.Set("code_challenge", "challenge")
@@ -99,9 +101,8 @@ func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 func TestPKCEHandlerValidate(t *testing.T) {
 	s := storage.NewMemoryStore()
 	ms := &mockCodeStrategy{}
-	h := &Handler{
-		Storage: s, AuthorizeCodeStrategy: ms,
-	}
+	config := &fosite.Config{}
+	h := &Handler{Storage: s, AuthorizeCodeStrategy: ms, Config: config}
 	pc := &fosite.DefaultClient{Public: true}
 
 	s256verifier := "KGCt4m8AmjUvIR5ArTByrmehjtbxn1A49YpTZhsH8N7fhDr7LQayn9xx6mck"
@@ -256,8 +257,8 @@ func TestPKCEHandlerValidate(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
-			h.EnablePlainChallengeMethod = tc.enablePlain
-			h.Force = tc.force
+			config.EnablePKCEPlainChallengeMethod = tc.enablePlain
+			config.EnforcePKCE = tc.force
 			ms.signature = tc.code
 			ar := fosite.NewAuthorizeRequest()
 			ar.Form.Add("code_challenge", tc.challenge)
@@ -347,15 +348,17 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			h := &Handler{
-				Force:                      tc.force,
-				ForceForPublicClients:      tc.forcePublic,
-				EnablePlainChallengeMethod: tc.enablePlain,
+				Config: &fosite.Config{
+					EnforcePKCE:                    tc.force,
+					EnforcePKCEForPublicClients:    tc.forcePublic,
+					EnablePKCEPlainChallengeMethod: tc.enablePlain,
+				},
 			}
 
 			if tc.expectErr {
-				assert.Error(t, h.validate(tc.challenge, tc.method, tc.client))
+				assert.Error(t, h.validate(context.Background(), tc.challenge, tc.method, tc.client))
 			} else {
-				assert.NoError(t, h.validate(tc.challenge, tc.method, tc.client))
+				assert.NoError(t, h.validate(context.Background(), tc.challenge, tc.method, tc.client))
 			}
 		})
 	}

@@ -22,6 +22,7 @@
 package openid
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -59,10 +60,14 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 	areq := fosite.NewAccessRequest(session)
 
 	var j = &DefaultStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: key,
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+				return key, nil
+			},
 		},
-		MinParameterEntropy: fosite.MinParameterEntropy,
+		Config: &fosite.Config{
+			MinParameterEntropy: fosite.MinParameterEntropy,
+		},
 	}
 
 	h := &OpenIDConnectExplicitHandler{

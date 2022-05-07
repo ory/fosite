@@ -34,7 +34,7 @@ type OpenIDConnectRequestStorage interface {
 	// for a given authorize code. This is relevant for explicit open id connect flow.
 	CreateOpenIDConnectSession(ctx context.Context, authorizeCode string, requester fosite.Requester) error
 
-	// IsOpenIDConnectSession returns error
+	// GetOpenIDConnectSession returns error
 	// - nil if a session was found,
 	// - ErrNoSessionFound if no session was found
 	// - or an arbitrary error if an error occurred.

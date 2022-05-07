@@ -22,12 +22,13 @@
 package fosite
 
 import (
-	"html/template"
-	"net/http"
+	"context"
 	"reflect"
-
-	"github.com/ory/fosite/i18n"
 )
+
+const MinParameterEntropy = 8
+
+var defaultResponseModeHandler = &DefaultResponseModeHandler{}
 
 // AuthorizeEndpointHandlers is a list of AuthorizeEndpointHandler
 type AuthorizeEndpointHandlers []AuthorizeEndpointHandler
@@ -85,59 +86,55 @@ func (t *RevocationHandlers) Append(h RevocationHandler) {
 	*t = append(*t, h)
 }
 
+var _ OAuth2Provider = (*Fosite)(nil)
+
+type Configurator interface {
+	JWKSFetcherStrategyProvider
+	HTTPClientProvider
+	ScopeStrategyProvider
+	AudienceStrategyProvider
+	MinParameterEntropyProvider
+	HMACHashingProvider
+	ClientAuthenticationStrategyProvider
+	ResponseModeHandlerExtensionProvider
+	SendDebugMessagesToClientsProvider
+	JWKSFetcherStrategyProvider
+	ClientAuthenticationStrategyProvider
+	ResponseModeHandlerExtensionProvider
+	MessageCatalogProvider
+	FormPostHTMLTemplateProvider
+	TokenURLProvider
+	GetSecretsHashingProvider
+	AuthorizeEndpointHandlersProvider
+	TokenEndpointHandlersProvider
+	TokenIntrospectionHandlersProvider
+	RevocationHandlersProvider
+	UseLegacyErrorFormatProvider
+}
+
+func NewOAuth2Provider(s Storage, c Configurator) *Fosite {
+	return &Fosite{Store: s, Config: c}
+}
+
 // Fosite implements OAuth2Provider.
 type Fosite struct {
-	Store                      Storage
-	AuthorizeEndpointHandlers  AuthorizeEndpointHandlers
-	TokenEndpointHandlers      TokenEndpointHandlers
-	TokenIntrospectionHandlers TokenIntrospectionHandlers
-	RevocationHandlers         RevocationHandlers
-	Hasher                     Hasher
-	ScopeStrategy              ScopeStrategy
-	AudienceMatchingStrategy   AudienceMatchingStrategy
-	JWKSFetcherStrategy        JWKSFetcherStrategy
-	HTTPClient                 *http.Client
-	UseLegacyErrorFormat       bool
+	Store Storage
 
-	// TokenURL is the the URL of the Authorization Server's Token Endpoint.
-	TokenURL string
-
-	// SendDebugMessagesToClients if set to true, includes error debug messages in response payloads. Be aware that sensitive
-	// data may be exposed, depending on your implementation of Fosite. Such sensitive data might include database error
-	// codes or other information. Proceed with caution!
-	SendDebugMessagesToClients bool
-
-	// MinParameterEntropy controls the minimum size of state and nonce parameters. Defaults to fosite.MinParameterEntropy.
-	MinParameterEntropy int
-
-	// FormPostHTMLTemplate sets html template for rendering the authorization response when the request has response_mode=form_post. Defaults to fosite.FormPostDefaultTemplate
-	FormPostHTMLTemplate *template.Template
-
-	// ClientAuthenticationStrategy provides an extension point to plug a strategy to authenticate clients
-	ClientAuthenticationStrategy ClientAuthenticationStrategy
-
-	ResponseModeHandlerExtension ResponseModeHandler
-
-	// MessageCatalog is the catalog of messages used for i18n
-	MessageCatalog i18n.MessageCatalog
+	Config Configurator
 }
-
-const MinParameterEntropy = 8
 
 // GetMinParameterEntropy returns MinParameterEntropy if set. Defaults to fosite.MinParameterEntropy.
-func (f *Fosite) GetMinParameterEntropy() int {
-	if f.MinParameterEntropy == 0 {
-		return MinParameterEntropy
-	} else {
-		return f.MinParameterEntropy
+func (f *Fosite) GetMinParameterEntropy(ctx context.Context) int {
+	if mp := f.Config.GetMinParameterEntropy(ctx); mp > 0 {
+		return mp
 	}
+
+	return MinParameterEntropy
 }
 
-var defaultResponseModeHandler = &DefaultResponseModeHandler{}
-
-func (f *Fosite) ResponseModeHandler() ResponseModeHandler {
-	if f.ResponseModeHandlerExtension == nil {
-		return defaultResponseModeHandler
+func (f *Fosite) ResponseModeHandler(ctx context.Context) ResponseModeHandler {
+	if ext := f.Config.GetResponseModeHandlerExtension(ctx); ext != nil {
+		return ext
 	}
-	return f.ResponseModeHandlerExtension
+	return defaultResponseModeHandler
 }

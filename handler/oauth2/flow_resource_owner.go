@@ -32,24 +32,28 @@ import (
 	"github.com/ory/fosite"
 )
 
+var _ fosite.TokenEndpointHandler = (*ResourceOwnerPasswordCredentialsGrantHandler)(nil)
+
 // Deprecated: This handler is deprecated as a means to communicate that the ROPC grant type is widely discouraged and
 // is at the time of this writing going to be omitted in the OAuth 2.1 spec. For more information on why this grant type
 // is discouraged see: https://www.scottbrady91.com/oauth/why-the-resource-owner-password-credentials-grant-type-is-not-authentication-nor-suitable-for-modern-applications
 type ResourceOwnerPasswordCredentialsGrantHandler struct {
+	*HandleHelper
 	// ResourceOwnerPasswordCredentialsGrantStorage is used to persist session data across requests.
 	ResourceOwnerPasswordCredentialsGrantStorage ResourceOwnerPasswordCredentialsGrantStorage
-
-	RefreshTokenStrategy     RefreshTokenStrategy
-	ScopeStrategy            fosite.ScopeStrategy
-	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
-	RefreshTokenScopes       []string
-
-	*HandleHelper
+	RefreshTokenStrategy                         RefreshTokenStrategy
+	Config                                       interface {
+		fosite.ScopeStrategyProvider
+		fosite.AudienceStrategyProvider
+		fosite.RefreshTokenScopesProvider
+		fosite.RefreshTokenLifespanProvider
+		fosite.AccessTokenLifespanProvider
+	}
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.2
 func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
+	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -59,12 +63,12 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 
 	client := request.GetClient()
 	for _, scope := range request.GetRequestedScopes() {
-		if !c.ScopeStrategy(client.GetScopes(), scope) {
+		if !c.Config.GetScopeStrategy(ctx)(client.GetScopes(), scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
-	if err := c.AudienceMatchingStrategy(client.GetAudience(), request.GetRequestedAudience()); err != nil {
+	if err := c.Config.GetAudienceStrategy(ctx)(client.GetAudience(), request.GetRequestedAudience()); err != nil {
 		return err
 	}
 
@@ -81,9 +85,9 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	// Credentials must not be passed around, potentially leaking to the database!
 	delete(request.GetRequestForm(), "password")
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan).Round(time.Second))
-	if c.RefreshTokenLifespan > -1 {
-		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.RefreshTokenLifespan).Round(time.Second))
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.Config.GetAccessTokenLifespan(ctx)).Round(time.Second))
+	if c.Config.GetRefreshTokenLifespan(ctx) > -1 {
+		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.Config.GetRefreshTokenLifespan(ctx)).Round(time.Second))
 	}
 
 	return nil
@@ -91,12 +95,12 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.3.3
 func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !c.CanHandleTokenEndpointRequest(requester) {
+	if !c.CanHandleTokenEndpointRequest(ctx, requester) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	var refresh, refreshSignature string
-	if len(c.RefreshTokenScopes) == 0 || requester.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...) {
+	if len(c.Config.GetRefreshTokenScopes(ctx)) == 0 || requester.GetGrantedScopes().HasOneOf(c.Config.GetRefreshTokenScopes(ctx)...) {
 		var err error
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
@@ -117,11 +121,11 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 	return nil
 }
 
-func (c *ResourceOwnerPasswordCredentialsGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+func (c *ResourceOwnerPasswordCredentialsGrantHandler) CanSkipClientAuth(ctx context.Context, _ fosite.AccessRequester) bool {
 	return false
 }
 
-func (c *ResourceOwnerPasswordCredentialsGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+func (c *ResourceOwnerPasswordCredentialsGrantHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "password".
 	return requester.GetGrantTypes().ExactOne("password")

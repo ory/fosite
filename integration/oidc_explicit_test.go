@@ -23,6 +23,7 @@ package integration_test
 
 import (
 	"fmt"
+	"github.com/ory/fosite/internal/gen"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -36,7 +37,6 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/openid"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -51,7 +51,8 @@ func newIDSession(j *jwt.IDTokenClaims) *defaultSession {
 }
 
 func TestOpenIDConnectExplicitFlow(t *testing.T) {
-	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+	f := compose.ComposeAllEnabled(&fosite.Config{
+		GlobalSecret: []byte("some-secret-thats-random-some-secret-thats-random-")}, fositeStore, gen.MustRSAKey())
 
 	for k, c := range []struct {
 		description    string
@@ -157,9 +158,8 @@ func TestOpenIDConnectExplicitFlow(t *testing.T) {
 				time.Sleep(time.Second)
 
 				token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
-
 				if c.expectTokenErr != "" {
-					assert.Error(t, err)
+					require.Error(t, err)
 					assert.True(t, strings.Contains(err.Error(), c.expectTokenErr), err.Error())
 				} else {
 					require.NoError(t, err)

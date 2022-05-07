@@ -23,6 +23,7 @@ package fosite_test
 
 import (
 	"encoding/json"
+	"github.com/ory/fosite/internal/gen"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -32,7 +33,6 @@ import (
 	jose "gopkg.in/square/go-jose.v2"
 
 	. "github.com/ory/fosite"
-	"github.com/ory/fosite/internal"
 )
 
 func TestDefaultJWKSFetcherStrategy(t *testing.T) {
@@ -52,7 +52,7 @@ func TestDefaultJWKSFetcherStrategy(t *testing.T) {
 				{
 					KeyID: "foo",
 					Use:   "sig",
-					Key:   &internal.MustRSAKey().PublicKey,
+					Key:   &gen.MustRSAKey().PublicKey,
 				},
 			},
 		}
@@ -66,7 +66,7 @@ func TestDefaultJWKSFetcherStrategy(t *testing.T) {
 				{
 					KeyID: "bar",
 					Use:   "sig",
-					Key:   &internal.MustRSAKey().PublicKey,
+					Key:   &gen.MustRSAKey().PublicKey,
 				},
 			},
 		}

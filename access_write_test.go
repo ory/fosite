@@ -22,6 +22,7 @@
 package fosite_test
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -33,7 +34,7 @@ import (
 )
 
 func TestWriteAccessResponse(t *testing.T) {
-	f := &Fosite{}
+	f := &Fosite{Config: new(Config)}
 	header := http.Header{}
 	ctrl := gomock.NewController(t)
 	rw := NewMockResponseWriter(ctrl)
@@ -46,7 +47,7 @@ func TestWriteAccessResponse(t *testing.T) {
 	rw.EXPECT().Write(gomock.Any())
 	resp.EXPECT().ToMap().Return(map[string]interface{}{})
 
-	f.WriteAccessResponse(rw, ar, resp)
+	f.WriteAccessResponse(context.Background(), rw, ar, resp)
 	assert.Equal(t, "application/json;charset=UTF-8", header.Get("Content-Type"))
 	assert.Equal(t, "no-store", header.Get("Cache-Control"))
 	assert.Equal(t, "no-cache", header.Get("Pragma"))

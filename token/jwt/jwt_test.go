@@ -24,6 +24,7 @@ package jwt
 import (
 	"context"
 	"fmt"
+	"github.com/ory/fosite/internal/gen"
 	"strings"
 	"testing"
 	"time"
@@ -41,19 +42,19 @@ var header = &Headers{
 func TestHash(t *testing.T) {
 	for k, tc := range []struct {
 		d        string
-		strategy JWTStrategy
+		strategy Signer
 	}{
 		{
-			d: "RS256JWTStrategy",
-			strategy: &RS256JWTStrategy{
-				PrivateKey: MustRSAKey(),
-			},
+			d: "RS256",
+			strategy: &DefaultSigner{GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return gen.MustRSAKey(), nil
+			}},
 		},
 		{
-			d: "ES256JWTStrategy",
-			strategy: &ES256JWTStrategy{
-				PrivateKey: MustECDSAKey(),
-			},
+			d: "ES256",
+			strategy: &DefaultSigner{GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return gen.MustECDSAKey(), nil
+			}},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/strategy=%s", k, tc.d), func(t *testing.T) {
@@ -93,27 +94,33 @@ func TestAssign(t *testing.T) {
 }
 
 func TestGenerateJWT(t *testing.T) {
+	rsaKey := gen.MustRSAKey()
+	ecdsKey := gen.MustECDSAKey()
 	for k, tc := range []struct {
 		d        string
-		strategy JWTStrategy
-		resetKey func(strategy JWTStrategy)
+		strategy Signer
+		resetKey func(strategy Signer)
 	}{
 		{
-			d: "RS256JWTStrategy",
-			strategy: &RS256JWTStrategy{
-				PrivateKey: MustRSAKey(),
+			d: "DefaultSigner",
+			strategy: &DefaultSigner{
+				GetPrivateKey: func(_ context.Context) (interface{}, error) {
+					return rsaKey, nil
+				},
 			},
-			resetKey: func(strategy JWTStrategy) {
-				strategy.(*RS256JWTStrategy).PrivateKey = MustRSAKey()
+			resetKey: func(strategy Signer) {
+				rsaKey = MustRSAKey()
 			},
 		},
 		{
 			d: "ES256JWTStrategy",
-			strategy: &ES256JWTStrategy{
-				PrivateKey: MustECDSAKey(),
+			strategy: &DefaultSigner{
+				GetPrivateKey: func(_ context.Context) (interface{}, error) {
+					return ecdsKey, nil
+				},
 			},
-			resetKey: func(strategy JWTStrategy) {
-				strategy.(*ES256JWTStrategy).PrivateKey = MustECDSAKey()
+			resetKey: func(strategy Signer) {
+				ecdsKey = MustECDSAKey()
 			},
 		},
 	} {
@@ -169,18 +176,21 @@ func TestGenerateJWT(t *testing.T) {
 func TestValidateSignatureRejectsJWT(t *testing.T) {
 	for k, tc := range []struct {
 		d        string
-		strategy JWTStrategy
+		strategy Signer
 	}{
 		{
-			d: "RS256JWTStrategy",
-			strategy: &RS256JWTStrategy{
-				PrivateKey: MustRSAKey(),
+			d: "RS256",
+			strategy: &DefaultSigner{GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return gen.MustRSAKey(), nil
+			},
 			},
 		},
 		{
-			d: "ES256JWTStrategy",
-			strategy: &ES256JWTStrategy{
-				PrivateKey: MustECDSAKey(),
+			d: "ES256",
+			strategy: &DefaultSigner{
+				GetPrivateKey: func(_ context.Context) (interface{}, error) {
+					return gen.MustECDSAKey(), nil
+				},
 			},
 		},
 	} {

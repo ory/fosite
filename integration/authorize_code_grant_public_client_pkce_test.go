@@ -47,10 +47,10 @@ func TestAuthorizeCodeFlowWithPublicClientAndPKCE(t *testing.T) {
 }
 
 func runAuthorizeCodeGrantWithPublicClientAndPKCETest(t *testing.T, strategy interface{}) {
-	c := new(compose.Config)
+	c := new(fosite.Config)
 	c.EnforcePKCE = true
 	c.EnablePKCEPlainChallengeMethod = true
-	f := compose.Compose(c, fositeStore, strategy, nil, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2PKCEFactory, compose.OAuth2TokenIntrospectionFactory)
+	f := compose.Compose(c, fositeStore, strategy, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2PKCEFactory, compose.OAuth2TokenIntrospectionFactory)
 	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 

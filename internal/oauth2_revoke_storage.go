@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -18,7 +17,6 @@ type MockTokenRevocationStorage struct {
 	ctrl     *gomock.Controller
 	recorder *MockTokenRevocationStorageMockRecorder
 }
-
 
 // MockTokenRevocationStorageMockRecorder is the mock recorder for MockTokenRevocationStorage
 type MockTokenRevocationStorageMockRecorder struct {
@@ -152,19 +150,15 @@ func (mr *MockTokenRevocationStorageMockRecorder) RevokeRefreshToken(arg0, arg1 
 }
 
 // RevokeRefreshTokenMaybeGracePeriod mocks base method
-func (m *MockTokenRevocationStorage) RevokeRefreshTokenMaybeGracePeriod(ctx context.Context, requestID string, signature string) error {
+func (m *MockTokenRevocationStorage) RevokeRefreshTokenMaybeGracePeriod(arg0 context.Context, arg1, arg2 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RevokeRefreshTokenMaybeGracePeriod", ctx, requestID, signature)
+	ret := m.ctrl.Call(m, "RevokeRefreshTokenMaybeGracePeriod", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RevokeRefreshTokenMaybeGracePeriod indicates an expected call of RevokeRefreshTokenMaybeGracePeriod
-func (mr *MockTokenRevocationStorageMockRecorder) RevokeRefreshTokenMaybeGracePeriod(ctx, requestID interface{}, signature interface{}) *gomock.Call {
+func (mr *MockTokenRevocationStorageMockRecorder) RevokeRefreshTokenMaybeGracePeriod(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeRefreshTokenMaybeGracePeriod",
-		reflect.TypeOf((*MockTokenRevocationStorage)(nil).RevokeRefreshTokenMaybeGracePeriod),
-		ctx,
-		requestID,
-		signature)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeRefreshTokenMaybeGracePeriod", reflect.TypeOf((*MockTokenRevocationStorage)(nil).RevokeRefreshTokenMaybeGracePeriod), arg0, arg1, arg2)
 }

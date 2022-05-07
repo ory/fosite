@@ -41,12 +41,8 @@ func TestNewAuthorizeResponse(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := context.Background()
-	oauth2 := &Fosite{
-		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{handlers[0]},
-	}
-	duo := &Fosite{
-		AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{handlers[0], handlers[0]},
-	}
+	oauth2 := &Fosite{Config: &Config{AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{handlers[0]}}}
+	duo := &Fosite{Config: &Config{AuthorizeEndpointHandlers: AuthorizeEndpointHandlers{handlers[0], handlers[0]}}}
 	ar.EXPECT().SetSession(gomock.Eq(new(DefaultSession))).AnyTimes()
 	fooErr := errors.New("foo")
 	for k, c := range []struct {

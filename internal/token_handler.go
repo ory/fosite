@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -37,31 +36,31 @@ func (m *MockTokenEndpointHandler) EXPECT() *MockTokenEndpointHandlerMockRecorde
 }
 
 // CanHandleTokenEndpointRequest mocks base method
-func (m *MockTokenEndpointHandler) CanHandleTokenEndpointRequest(arg0 fosite.AccessRequester) bool {
+func (m *MockTokenEndpointHandler) CanHandleTokenEndpointRequest(arg0 context.Context, arg1 fosite.AccessRequester) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CanHandleTokenEndpointRequest", arg0)
+	ret := m.ctrl.Call(m, "CanHandleTokenEndpointRequest", arg0, arg1)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // CanHandleTokenEndpointRequest indicates an expected call of CanHandleTokenEndpointRequest
-func (mr *MockTokenEndpointHandlerMockRecorder) CanHandleTokenEndpointRequest(arg0 interface{}) *gomock.Call {
+func (mr *MockTokenEndpointHandlerMockRecorder) CanHandleTokenEndpointRequest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanHandleTokenEndpointRequest", reflect.TypeOf((*MockTokenEndpointHandler)(nil).CanHandleTokenEndpointRequest), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanHandleTokenEndpointRequest", reflect.TypeOf((*MockTokenEndpointHandler)(nil).CanHandleTokenEndpointRequest), arg0, arg1)
 }
 
 // CanSkipClientAuth mocks base method
-func (m *MockTokenEndpointHandler) CanSkipClientAuth(arg0 fosite.AccessRequester) bool {
+func (m *MockTokenEndpointHandler) CanSkipClientAuth(arg0 context.Context, arg1 fosite.AccessRequester) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CanSkipClientAuth", arg0)
+	ret := m.ctrl.Call(m, "CanSkipClientAuth", arg0, arg1)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // CanSkipClientAuth indicates an expected call of CanSkipClientAuth
-func (mr *MockTokenEndpointHandlerMockRecorder) CanSkipClientAuth(arg0 interface{}) *gomock.Call {
+func (mr *MockTokenEndpointHandlerMockRecorder) CanSkipClientAuth(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanSkipClientAuth", reflect.TypeOf((*MockTokenEndpointHandler)(nil).CanSkipClientAuth), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanSkipClientAuth", reflect.TypeOf((*MockTokenEndpointHandler)(nil).CanSkipClientAuth), arg0, arg1)
 }
 
 // HandleTokenEndpointRequest mocks base method

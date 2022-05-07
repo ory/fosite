@@ -22,6 +22,7 @@
 package fosite
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -34,7 +35,7 @@ import (
 	"github.com/asaskevich/govalidator"
 )
 
-var FormPostDefaultTemplate = template.Must(template.New("form_post").Parse(`<html>
+var DefaultFormPostTemplate = template.Must(template.New("form_post").Parse(`<html>
    <head>
       <title>Submit This Form</title>
    </head>
@@ -186,7 +187,7 @@ func IsValidRedirectURI(redirectURI *url.URL) bool {
 	return true
 }
 
-func IsRedirectURISecure(redirectURI *url.URL) bool {
+func IsRedirectURISecure(ctx context.Context, redirectURI *url.URL) bool {
 	return !(redirectURI.Scheme == "http" && !IsLocalhost(redirectURI))
 }
 
@@ -227,10 +228,9 @@ func URLSetFragment(source *url.URL, fragment url.Values) {
 	source.Fragment = f
 }
 
-func GetPostFormHTMLTemplate(f Fosite) *template.Template {
-	formPostHTMLTemplate := f.FormPostHTMLTemplate
-	if formPostHTMLTemplate == nil {
-		formPostHTMLTemplate = FormPostDefaultTemplate
+func GetPostFormHTMLTemplate(ctx context.Context, f *Fosite) *template.Template {
+	if t := f.Config.GetFormPostHTMLTemplate(ctx); t != nil {
+		return t
 	}
-	return formPostHTMLTemplate
+	return DefaultFormPostTemplate
 }

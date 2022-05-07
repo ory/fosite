@@ -22,13 +22,12 @@
 package compose
 
 import (
-	"crypto/rsa"
-
+	"context"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
 )
 
-type Factory func(config *Config, storage interface{}, strategy interface{}) interface{}
+type Factory func(config *fosite.Config, storage interface{}, strategy interface{}) interface{}
 
 // Compose takes a config, a storage, a strategy and handlers to instantiate an OAuth2Provider:
 //
@@ -37,59 +36,41 @@ type Factory func(config *Config, storage interface{}, strategy interface{}) int
 //  // var storage = new(MyFositeStorage)
 //  var config = Config {
 //  	AccessTokenLifespan: time.Minute * 30,
-// 	// check Config for further configuration options
+// 		// check Config for further configuration options
 //  }
 //
 //  var strategy = NewOAuth2HMACStrategy(config)
 //
 //  var oauth2Provider = Compose(
 //  	config,
-// 	storage,
-// 	strategy,
-//	NewOAuth2AuthorizeExplicitHandler,
-//	OAuth2ClientCredentialsGrantFactory,
-// 	// for a complete list refer to the docs of this package
+// 		storage,
+// 		strategy,
+//		NewOAuth2AuthorizeExplicitHandler,
+//		OAuth2ClientCredentialsGrantFactory,
+// 		// for a complete list refer to the docs of this package
 //  )
 //
 // Compose makes use of interface{} types in order to be able to handle a all types of stores, strategies and handlers.
-func Compose(config *Config, storage interface{}, strategy interface{}, hasher fosite.Hasher, factories ...Factory) fosite.OAuth2Provider {
-	if hasher == nil {
-		hasher = &fosite.BCrypt{WorkFactor: config.GetHashCost()}
+func Compose(config *fosite.Config, storage interface{}, strategy interface{}, factories ...Factory) fosite.OAuth2Provider {
+	if config.ClientSecretsHasher == nil {
+		config.ClientSecretsHasher = &fosite.BCrypt{Config: config}
 	}
 
-	f := &fosite.Fosite{
-		Store:                        storage.(fosite.Storage),
-		AuthorizeEndpointHandlers:    fosite.AuthorizeEndpointHandlers{},
-		TokenEndpointHandlers:        fosite.TokenEndpointHandlers{},
-		TokenIntrospectionHandlers:   fosite.TokenIntrospectionHandlers{},
-		RevocationHandlers:           fosite.RevocationHandlers{},
-		Hasher:                       hasher,
-		ScopeStrategy:                config.GetScopeStrategy(),
-		AudienceMatchingStrategy:     config.GetAudienceStrategy(),
-		SendDebugMessagesToClients:   config.SendDebugMessagesToClients,
-		TokenURL:                     config.TokenURL,
-		JWKSFetcherStrategy:          config.GetJWKSFetcherStrategy(),
-		MinParameterEntropy:          config.GetMinParameterEntropy(),
-		UseLegacyErrorFormat:         config.UseLegacyErrorFormat,
-		ClientAuthenticationStrategy: config.GetClientAuthenticationStrategy(),
-		ResponseModeHandlerExtension: config.ResponseModeHandlerExtension,
-		MessageCatalog:               config.MessageCatalog,
-		FormPostHTMLTemplate:         config.FormPostHTMLTemplate,
-	}
+	f := fosite.NewOAuth2Provider(storage.(fosite.Storage), config)
 
 	for _, factory := range factories {
 		res := factory(config, storage, strategy)
 		if ah, ok := res.(fosite.AuthorizeEndpointHandler); ok {
-			f.AuthorizeEndpointHandlers.Append(ah)
+			config.AuthorizeEndpointHandlers.Append(ah)
 		}
 		if th, ok := res.(fosite.TokenEndpointHandler); ok {
-			f.TokenEndpointHandlers.Append(th)
+			config.TokenEndpointHandlers.Append(th)
 		}
 		if tv, ok := res.(fosite.TokenIntrospector); ok {
-			f.TokenIntrospectionHandlers.Append(tv)
+			config.TokenIntrospectionHandlers.Append(tv)
 		}
 		if rh, ok := res.(fosite.RevocationHandler); ok {
-			f.RevocationHandlers.Append(rh)
+			config.RevocationHandlers.Append(rh)
 		}
 	}
 
@@ -97,19 +78,18 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 }
 
 // ComposeAllEnabled returns a fosite instance with all OAuth2 and OpenID Connect handlers enabled.
-func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *rsa.PrivateKey) fosite.OAuth2Provider {
+func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface{}) fosite.OAuth2Provider {
+	keyGetter := func(context.Context) (interface{}, error) {
+		return key, nil
+	}
 	return Compose(
 		config,
 		storage,
 		&CommonStrategy{
-			CoreStrategy:               NewOAuth2HMACStrategy(config, secret, nil),
-			OpenIDConnectTokenStrategy: NewOpenIDConnectStrategy(config, key),
-			JWTStrategy: &jwt.RS256JWTStrategy{
-				PrivateKey: key,
-			},
+			CoreStrategy:               NewOAuth2HMACStrategy(config),
+			OpenIDConnectTokenStrategy: NewOpenIDConnectStrategy(keyGetter, config),
+			Signer:                     &jwt.DefaultSigner{GetPrivateKey: keyGetter},
 		},
-		nil,
-
 		OAuth2AuthorizeExplicitFactory,
 		OAuth2AuthorizeImplicitFactory,
 		OAuth2ClientCredentialsGrantFactory,

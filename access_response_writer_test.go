@@ -39,7 +39,8 @@ func TestNewAccessResponse(t *testing.T) {
 	handler := internal.NewMockTokenEndpointHandler(ctrl)
 	defer ctrl.Finish()
 
-	f := &Fosite{}
+	config := &Config{}
+	f := &Fosite{Config: config}
 	for k, c := range []struct {
 		handlers  TokenEndpointHandlers
 		mock      func()
@@ -90,7 +91,7 @@ func TestNewAccessResponse(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			f.TokenEndpointHandlers = c.handlers
+			config.TokenEndpointHandlers = c.handlers
 			c.mock()
 			ar, err := f.NewAccessResponse(context.TODO(), nil)
 

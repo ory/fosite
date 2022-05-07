@@ -22,7 +22,9 @@
 package openid
 
 import (
+	"context"
 	"fmt"
+	"github.com/ory/fosite/internal/gen"
 	"net/url"
 	"testing"
 	"time"
@@ -33,7 +35,6 @@ import (
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
@@ -41,7 +42,9 @@ import (
 
 var hmacStrategy = &oauth2.HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{
-		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows-nobody-knows"),
+		Config: &fosite.Config{
+			GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows-nobody-knows"),
+		},
 	},
 }
 
@@ -53,40 +56,54 @@ type defaultSession struct {
 
 func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybridHandler {
 	var idStrategy = &DefaultStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: internal.MustRSAKey(),
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return gen.MustRSAKey(), nil
+			},
 		},
-		MinParameterEntropy: minParameterEntropy,
+		Config: &fosite.Config{
+			MinParameterEntropy: minParameterEntropy,
+		},
 	}
 
 	var j = &DefaultStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: key,
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return key, nil
+			},
 		},
-		MinParameterEntropy: minParameterEntropy,
+		Config: &fosite.Config{
+			MinParameterEntropy: minParameterEntropy,
+		},
 	}
 
+	config := &fosite.Config{
+		ScopeStrategy:         fosite.HierarchicScopeStrategy,
+		MinParameterEntropy:   minParameterEntropy,
+		AccessTokenLifespan:   time.Hour,
+		AuthorizeCodeLifespan: time.Hour,
+		RefreshTokenLifespan:  time.Hour,
+	}
 	return OpenIDConnectHybridHandler{
 		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
 			AuthorizeCodeStrategy: hmacStrategy,
-			AccessTokenLifespan:   time.Hour,
-			AuthCodeLifespan:      time.Hour,
-			RefreshTokenLifespan:  time.Hour,
 			AccessTokenStrategy:   hmacStrategy,
 			CoreStorage:           storage.NewMemoryStore(),
+			Config:                config,
 		},
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
-			AccessTokenLifespan: time.Hour,
+			Config: &fosite.Config{
+				AccessTokenLifespan: time.Hour,
+			},
 			AccessTokenStrategy: hmacStrategy,
 			AccessTokenStorage:  storage.NewMemoryStore(),
 		},
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
 		},
-		ScopeStrategy:                 fosite.HierarchicScopeStrategy,
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.JWTStrategy),
+		Config:                        config,
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(j.Signer, config),
 		OpenIDConnectRequestStorage:   storage.NewMemoryStore(),
-		MinParameterEntropy:           minParameterEntropy,
 	}
 }
 

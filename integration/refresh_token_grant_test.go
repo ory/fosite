@@ -23,6 +23,7 @@ package integration_test
 
 import (
 	"encoding/json"
+	"github.com/ory/fosite/internal/gen"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -37,7 +38,6 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/openid"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -63,9 +63,10 @@ func TestRefreshTokenFlow(t *testing.T) {
 			Username: "peteru",
 		},
 	}
-	fc := new(compose.Config)
+	fc := new(fosite.Config)
 	fc.RefreshTokenLifespan = -1
-	f := compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+	fc.GlobalSecret = []byte("some-secret-thats-random-some-secret-thats-random-")
+	f := compose.ComposeAllEnabled(fc, fositeStore, gen.MustRSAKey())
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 
@@ -174,9 +175,10 @@ func TestRefreshTokenFlow(t *testing.T) {
 		{
 			description: "should fail with expired refresh token",
 			setup: func(t *testing.T) {
-				fc = new(compose.Config)
+				fc = new(fosite.Config)
 				fc.RefreshTokenLifespan = time.Nanosecond
-				f = compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+				fc.GlobalSecret = []byte("some-secret-thats-random-some-secret-thats-random-")
+				f = compose.ComposeAllEnabled(fc, fositeStore, gen.MustRSAKey())
 				ts = mockServer(t, f, session)
 
 				oauthClient = newOAuth2Client(ts)
@@ -188,9 +190,10 @@ func TestRefreshTokenFlow(t *testing.T) {
 		{
 			description: "should pass with limited but not expired refresh token",
 			setup: func(t *testing.T) {
-				fc = new(compose.Config)
+				fc = new(fosite.Config)
 				fc.RefreshTokenLifespan = time.Minute
-				f = compose.ComposeAllEnabled(fc, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+				fc.GlobalSecret = []byte("some-secret-thats-random-some-secret-thats-random-")
+				f = compose.ComposeAllEnabled(fc, fositeStore, gen.MustRSAKey())
 				ts = mockServer(t, f, session)
 
 				oauthClient = newOAuth2Client(ts)

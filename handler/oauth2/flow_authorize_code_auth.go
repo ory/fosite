@@ -32,47 +32,35 @@ import (
 	"github.com/ory/fosite"
 )
 
-// AuthorizeExplicitGrantTypeHandler is a response handler for the Authorize Code grant using the explicit grant type
+var _ fosite.AuthorizeEndpointHandler = (*AuthorizeExplicitGrantHandler)(nil)
+var _ fosite.TokenEndpointHandler = (*AuthorizeExplicitGrantHandler)(nil)
+
+// AuthorizeExplicitGrantHandler is a response handler for the Authorize Code grant using the explicit grant type
 // as defined in https://tools.ietf.org/html/rfc6749#section-4.1
 type AuthorizeExplicitGrantHandler struct {
-	AccessTokenStrategy   AccessTokenStrategy
-	RefreshTokenStrategy  RefreshTokenStrategy
-	AuthorizeCodeStrategy AuthorizeCodeStrategy
-	CoreStorage           CoreStorage
-	//TokenRevocationStorage TokenRevocationStorage
-
-	// AuthCodeLifespan defines the lifetime of an authorize code.
-	AuthCodeLifespan time.Duration
-
-	// AccessTokenLifespan defines the lifetime of an access token.
-	AccessTokenLifespan time.Duration
-
-	// RefreshTokenLifespan defines the lifetime of a refresh token. Leave to 0 for unlimited lifetime.
-	RefreshTokenLifespan time.Duration
-
-	ScopeStrategy            fosite.ScopeStrategy
-	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
-
-	// SanitationWhiteList is a whitelist of form values that are required by the token endpoint. These values
-	// are safe for storage in a database (cleartext).
-	SanitationWhiteList []string
-
+	AccessTokenStrategy    AccessTokenStrategy
+	RefreshTokenStrategy   RefreshTokenStrategy
+	AuthorizeCodeStrategy  AuthorizeCodeStrategy
+	CoreStorage            CoreStorage
 	TokenRevocationStorage TokenRevocationStorage
-
-	IsRedirectURISecure func(*url.URL) bool
-
-	RefreshTokenScopes []string
-
-	// OmitRedirectScopeParam must be set to true if the scope query param is to be omitted
-	// in the authorization's redirect URI
-	OmitRedirectScopeParam bool
+	Config                 interface {
+		fosite.AuthorizeCodeLifespanProvider
+		fosite.AccessTokenLifespanProvider
+		fosite.RefreshTokenLifespanProvider
+		fosite.ScopeStrategyProvider
+		fosite.AudienceStrategyProvider
+		fosite.RedirectSecureCheckerProvider
+		fosite.RefreshTokenScopesProvider
+		fosite.OmitRedirectScopeParamProvider
+		fosite.SanitationAllowedProvider
+	}
 }
 
-func (c *AuthorizeExplicitGrantHandler) secureChecker() func(*url.URL) bool {
-	if c.IsRedirectURISecure == nil {
-		c.IsRedirectURISecure = fosite.IsRedirectURISecure
+func (c *AuthorizeExplicitGrantHandler) secureChecker(ctx context.Context) func(context.Context, *url.URL) bool {
+	if c.Config.GetRedirectSecureChecker(ctx) == nil {
+		return fosite.IsRedirectURISecure
 	}
-	return c.IsRedirectURISecure
+	return c.Config.GetRedirectSecureChecker(ctx)
 }
 
 func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -88,18 +76,18 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 	// 	 return errorsx.WithStack(fosite.ErrInvalidGrant)
 	// }
 
-	if !c.secureChecker()(ar.GetRedirectURI()) {
+	if !c.secureChecker(ctx)(ctx, ar.GetRedirectURI()) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/."))
 	}
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
-		if !c.ScopeStrategy(client.GetScopes(), scope) {
+		if !c.Config.GetScopeStrategy(ctx)(client.GetScopes(), scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
-	if err := c.AudienceMatchingStrategy(client.GetAudience(), ar.GetRequestedAudience()); err != nil {
+	if err := c.Config.GetAudienceStrategy(ctx)(client.GetAudience(), ar.GetRequestedAudience()); err != nil {
 		return err
 	}
 
@@ -112,14 +100,14 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthCodeLifespan))
-	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.GetSanitationWhiteList())); err != nil {
+	ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.Config.GetAuthorizeCodeLifespan(ctx)))
+	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.GetSanitationWhiteList(ctx))); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	resp.AddParameter("code", code)
 	resp.AddParameter("state", ar.GetState())
-	if !c.OmitRedirectScopeParam {
+	if !c.Config.GetOmitRedirectScopeParam(ctx) {
 		resp.AddParameter("scope", strings.Join(ar.GetGrantedScopes(), " "))
 	}
 
@@ -127,12 +115,10 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 	return nil
 }
 
-func (c *AuthorizeExplicitGrantHandler) GetSanitationWhiteList() []string {
-	if len(c.SanitationWhiteList) > 0 {
-		return c.SanitationWhiteList
+func (c *AuthorizeExplicitGrantHandler) GetSanitationWhiteList(ctx context.Context) []string {
+	if allowedList := c.Config.GetSanitationWhiteList(ctx); len(allowedList) > 0 {
+		return allowedList
 	}
-	return []string{
-		"code",
-		"redirect_uri",
-	}
+
+	return []string{"code", "redirect_uri"}
 }

@@ -22,6 +22,7 @@
 package fosite_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -65,11 +66,9 @@ func TestAuthorizedRequestValidators(t *testing.T) {
 }
 
 func TestMinParameterEntropy(t *testing.T) {
-	f := Fosite{}
-	assert.Equal(t, MinParameterEntropy, f.GetMinParameterEntropy())
+	f := Fosite{Config: new(Config)}
+	assert.Equal(t, MinParameterEntropy, f.GetMinParameterEntropy(context.Background()))
 
-	f = Fosite{
-		MinParameterEntropy: 42,
-	}
-	assert.Equal(t, 42, f.GetMinParameterEntropy())
+	f = Fosite{Config: &Config{MinParameterEntropy: 42}}
+	assert.Equal(t, 42, f.GetMinParameterEntropy(context.Background()))
 }

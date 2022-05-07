@@ -22,8 +22,10 @@
 package oauth2
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/ory/fosite/internal/gen"
 	"strings"
 	"testing"
 
@@ -31,22 +33,26 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
 )
 
 func TestIntrospectJWT(t *testing.T) {
+	rsaKey := gen.MustRSAKey()
 	strat := &DefaultJWTStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: internal.MustRSAKey(),
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return rsaKey, nil
+			},
+		},
+		Config: &fosite.Config{},
+	}
+
+	var v = &StatelessJWTValidator{
+		Signer: strat,
+		Config: &fosite.Config{
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
 		},
 	}
-
-	v := &StatelessJWTValidator{
-		JWTStrategy:   strat,
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
-	}
-
 	for k, c := range []struct {
 		description string
 		token       func() string
@@ -131,13 +137,15 @@ func TestIntrospectJWT(t *testing.T) {
 
 func BenchmarkIntrospectJWT(b *testing.B) {
 	strat := &DefaultJWTStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: internal.MustRSAKey(),
+		Signer: &jwt.DefaultSigner{GetPrivateKey: func(_ context.Context) (interface{}, error) {
+			return gen.MustRSAKey(), nil
 		},
+		},
+		Config: &fosite.Config{},
 	}
 
 	v := &StatelessJWTValidator{
-		JWTStrategy: strat,
+		Signer: strat,
 	}
 
 	jwt := jwtValidCase(fosite.AccessToken)

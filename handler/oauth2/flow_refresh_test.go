@@ -53,26 +53,24 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 		"hmac": &hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
-
 			store := storage.NewMemoryStore()
-			var h RefreshTokenGrantHandler
-
+			var handler *RefreshTokenGrantHandler
 			for _, c := range []struct {
 				description string
-				setup       func()
+				setup       func(config *fosite.Config)
 				expectErr   error
 				expect      func(t *testing.T)
 			}{
 				{
 					description: "should fail because not responsible",
 					expectErr:   fosite.ErrUnknownRequest,
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"123"}
 					},
 				},
 				{
 					description: "should fail because token invalid",
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"refresh_token"}}
 
@@ -82,7 +80,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				},
 				{
 					description: "should fail because token is valid but does not exist",
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"refresh_token"}}
 
@@ -94,7 +92,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				},
 				{
 					description: "should fail because client mismatches",
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
 							ID:         "foo",
@@ -116,7 +114,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				},
 				{
 					description: "should fail because token is expired",
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
 							ID:         "foo",
@@ -142,7 +140,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				},
 				{
 					description: "should fail because offline scope has been granted but client no longer allowed to request it",
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
 							ID:         "foo",
@@ -167,7 +165,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				},
 				{
 					description: "should pass",
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
 							ID:         "foo",
@@ -201,7 +199,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				},
 				{
 					description: "should fail without offline scope",
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
 							ID:         "foo",
@@ -227,8 +225,8 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				},
 				{
 					description: "should pass without offline scope when configured to allow refresh tokens",
-					setup: func() {
-						h.RefreshTokenScopes = []string{}
+					setup: func(config *fosite.Config) {
+						config.RefreshTokenScopes = []string{}
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
 							ID:         "foo",
@@ -262,7 +260,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				},
 				{
 					description: "should deny access on token reuse",
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.Client = &fosite.DefaultClient{
 							ID:         "foo",
@@ -292,21 +290,24 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
-					h = RefreshTokenGrantHandler{
-						TokenRevocationStorage:   store,
-						RefreshTokenStrategy:     strategy,
+					config := &fosite.Config{
 						AccessTokenLifespan:      time.Hour,
 						RefreshTokenLifespan:     time.Hour,
 						ScopeStrategy:            fosite.HierarchicScopeStrategy,
 						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 						RefreshTokenScopes:       []string{"offline"},
 					}
+					handler = &RefreshTokenGrantHandler{
+						TokenRevocationStorage: store,
+						RefreshTokenStrategy:   strategy,
+						Config:                 config,
+					}
 
 					areq = fosite.NewAccessRequest(&fosite.DefaultSession{})
 					areq.Form = url.Values{}
-					c.setup()
+					c.setup(config)
 
-					err := h.HandleTokenEndpointRequest(nil, areq)
+					err := handler.HandleTokenEndpointRequest(nil, areq)
 					if c.expectErr != nil {
 						require.EqualError(t, err, c.expectErr.Error())
 					} else {
@@ -393,11 +394,13 @@ func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					mockTransactional,
 					mockRevocationStore,
 				},
-				AccessTokenStrategy:      &hmacshaStrategy,
-				RefreshTokenStrategy:     &hmacshaStrategy,
-				AccessTokenLifespan:      time.Hour,
-				ScopeStrategy:            fosite.HierarchicScopeStrategy,
-				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+				AccessTokenStrategy:  &hmacshaStrategy,
+				RefreshTokenStrategy: &hmacshaStrategy,
+				Config: &fosite.Config{
+					AccessTokenLifespan:      time.Hour,
+					ScopeStrategy:            fosite.HierarchicScopeStrategy,
+					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+				},
 			}
 
 			if err := handler.HandleTokenEndpointRequest(propagatedContext, request); testCase.expectError != nil {
@@ -417,30 +420,22 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			h := RefreshTokenGrantHandler{
-				TokenRevocationStorage:   store,
-				RefreshTokenStrategy:     strategy,
-				AccessTokenStrategy:      strategy,
-				AccessTokenLifespan:      time.Hour,
-				ScopeStrategy:            fosite.HierarchicScopeStrategy,
-				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-			}
 			for _, c := range []struct {
 				description string
-				setup       func()
+				setup       func(config *fosite.Config)
 				check       func()
 				expectErr   error
 			}{
 				{
 					description: "should fail because not responsible",
 					expectErr:   fosite.ErrUnknownRequest,
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"313"}
 					},
 				},
 				{
 					description: "should pass",
-					setup: func() {
+					setup: func(config *fosite.Config) {
 						areq.ID = "req-id"
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}
 						areq.RequestedScope = fosite.Arguments{"foo", "bar"}
@@ -452,7 +447,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 						areq.Form.Add("refresh_token", token)
 					},
 					check: func() {
-						signature := strategy.RefreshTokenSignature(areq.Form.Get("refresh_token"))
+						signature := strategy.RefreshTokenSignature(context.Background(), areq.Form.Get("refresh_token"))
 
 						// The old refresh token should be deleted
 						_, err := store.GetRefreshTokenSession(nil, signature, nil)
@@ -468,12 +463,23 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
+					config := &fosite.Config{
+						AccessTokenLifespan:      time.Hour,
+						ScopeStrategy:            fosite.HierarchicScopeStrategy,
+						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+					}
+					h := RefreshTokenGrantHandler{
+						TokenRevocationStorage: store,
+						RefreshTokenStrategy:   strategy,
+						AccessTokenStrategy:    strategy,
+						Config:                 config,
+					}
 					areq = fosite.NewAccessRequest(&fosite.DefaultSession{})
 					aresp = fosite.NewAccessResponse()
 					areq.Client = &fosite.DefaultClient{}
 					areq.Form = url.Values{}
 
-					c.setup()
+					c.setup(config)
 
 					err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
 					if c.expectErr != nil {
@@ -1040,11 +1046,13 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					mockTransactional,
 					mockRevocationStore,
 				},
-				AccessTokenStrategy:      &hmacshaStrategy,
-				RefreshTokenStrategy:     &hmacshaStrategy,
-				AccessTokenLifespan:      time.Hour,
-				ScopeStrategy:            fosite.HierarchicScopeStrategy,
-				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+				AccessTokenStrategy:  &hmacshaStrategy,
+				RefreshTokenStrategy: &hmacshaStrategy,
+				Config: &fosite.Config{
+					AccessTokenLifespan:      time.Hour,
+					ScopeStrategy:            fosite.HierarchicScopeStrategy,
+					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+				},
 			}
 
 			if err := handler.PopulateTokenEndpointResponse(propagatedContext, request, response); testCase.expectError != nil {

@@ -22,9 +22,11 @@
 package oauth2
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/fosite/internal/gen"
 	"strings"
 	"testing"
 	"time"
@@ -33,14 +35,17 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
 )
 
+var rsaKey = gen.MustRSAKey()
 var j = &DefaultJWTStrategy{
-	JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
+	Signer: &jwt.DefaultSigner{
+		GetPrivateKey: func(_ context.Context) (interface{}, error) {
+			return rsaKey, nil
+		},
 	},
+	Config: &fosite.Config{},
 }
 
 // returns a valid JWT type. The JWTClaims.ExpiresAt time is intentionally
@@ -196,8 +201,10 @@ func TestAccessToken(t *testing.T) {
 			},
 		} {
 			t.Run(fmt.Sprintf("case=%d/%d", s, k), func(t *testing.T) {
-				jWithField := j.WithScopeField(scopeField)
-				token, signature, err := jWithField.GenerateAccessToken(nil, c.r)
+				j.Config = &fosite.Config{
+					JWTScopeClaimKey: scopeField,
+				}
+				token, signature, err := j.GenerateAccessToken(context.Background(), c.r)
 				assert.NoError(t, err)
 
 				parts := strings.Split(token, ".")
@@ -230,8 +237,8 @@ func TestAccessToken(t *testing.T) {
 				// Scope field is always a string.
 				assert.Equal(t, "email offline", claims["scope"])
 
-				validate := jWithField.signature(token)
-				err = jWithField.ValidateAccessToken(nil, c.r, token)
+				validate := j.signature(token)
+				err = j.ValidateAccessToken(context.Background(), c.r, token)
 				if c.pass {
 					assert.NoError(t, err)
 					assert.Equal(t, signature, validate)

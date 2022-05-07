@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -37,17 +36,17 @@ func (m *MockAccessTokenStrategy) EXPECT() *MockAccessTokenStrategyMockRecorder 
 }
 
 // AccessTokenSignature mocks base method
-func (m *MockAccessTokenStrategy) AccessTokenSignature(arg0 string) string {
+func (m *MockAccessTokenStrategy) AccessTokenSignature(arg0 context.Context, arg1 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AccessTokenSignature", arg0)
+	ret := m.ctrl.Call(m, "AccessTokenSignature", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // AccessTokenSignature indicates an expected call of AccessTokenSignature
-func (mr *MockAccessTokenStrategyMockRecorder) AccessTokenSignature(arg0 interface{}) *gomock.Call {
+func (mr *MockAccessTokenStrategyMockRecorder) AccessTokenSignature(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccessTokenSignature", reflect.TypeOf((*MockAccessTokenStrategy)(nil).AccessTokenSignature), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccessTokenSignature", reflect.TypeOf((*MockAccessTokenStrategy)(nil).AccessTokenSignature), arg0, arg1)
 }
 
 // GenerateAccessToken mocks base method

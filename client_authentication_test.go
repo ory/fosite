@@ -28,6 +28,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/ory/fosite/internal/gen"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -41,7 +42,6 @@ import (
 	jose "gopkg.in/square/go-jose.v2"
 
 	. "github.com/ory/fosite"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 )
 
@@ -88,12 +88,14 @@ func clientBasicAuthHeader(clientID, clientSecret string) http.Header {
 func TestAuthenticateClient(t *testing.T) {
 	const at = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
-	hasher := &BCrypt{WorkFactor: 6}
+	hasher := &BCrypt{Config: &Config{HashCost: 6}}
 	f := &Fosite{
-		JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
-		Store:               storage.NewMemoryStore(),
-		Hasher:              hasher,
-		TokenURL:            "token-url",
+		Store: storage.NewMemoryStore(),
+		Config: &Config{
+			JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
+			ClientSecretsHasher: hasher,
+			TokenURL:            "token-url",
+		},
 	}
 
 	barSecret, err := hasher.Hash(context.TODO(), []byte("bar"))
@@ -104,7 +106,7 @@ func TestAuthenticateClient(t *testing.T) {
 	complexSecret, err := hasher.Hash(context.TODO(), []byte(complexSecretRaw))
 	require.NoError(t, err)
 
-	rsaKey := internal.MustRSAKey()
+	rsaKey := gen.MustRSAKey()
 	rsaJwks := &jose.JSONWebKeySet{
 		Keys: []jose.JSONWebKey{
 			{
@@ -115,7 +117,7 @@ func TestAuthenticateClient(t *testing.T) {
 		},
 	}
 
-	ecdsaKey := internal.MustECDSAKey()
+	ecdsaKey := gen.MustECDSAKey()
 	ecdsaJwks := &jose.JSONWebKeySet{
 		Keys: []jose.JSONWebKey{
 			{
@@ -559,7 +561,7 @@ func TestAuthenticateClient(t *testing.T) {
 func TestAuthenticateClientTwice(t *testing.T) {
 	const at = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
-	key := internal.MustRSAKey()
+	key := gen.MustRSAKey()
 	client := &DefaultOpenIDConnectClient{
 		DefaultClient: &DefaultClient{
 			ID:     "bar",
@@ -579,12 +581,14 @@ func TestAuthenticateClientTwice(t *testing.T) {
 	store := storage.NewMemoryStore()
 	store.Clients[client.ID] = client
 
-	hasher := &BCrypt{WorkFactor: 6}
+	hasher := &BCrypt{&Config{HashCost: 6}}
 	f := &Fosite{
-		JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
-		Store:               store,
-		Hasher:              hasher,
-		TokenURL:            "token-url",
+		Store: store,
+		Config: &Config{
+			JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
+			ClientSecretsHasher: hasher,
+			TokenURL:            "token-url",
+		},
 	}
 
 	formValues := url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{

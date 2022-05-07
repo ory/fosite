@@ -45,7 +45,7 @@ func tokenRevocationHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session 
 		if err != nil {
 			t.Logf("Revoke request failed because %+v", err)
 		}
-		oauth2.WriteRevocationResponse(rw, err)
+		oauth2.WriteRevocationResponse(req.Context(), rw, err)
 	}
 }
 
@@ -55,11 +55,11 @@ func tokenIntrospectionHandler(t *testing.T, oauth2 fosite.OAuth2Provider, sessi
 		ar, err := oauth2.NewIntrospectionRequest(ctx, req, session)
 		if err != nil {
 			t.Logf("Introspection request failed because: %+v", err)
-			oauth2.WriteIntrospectionError(rw, err)
+			oauth2.WriteIntrospectionError(req.Context(), rw, err)
 			return
 		}
 
-		oauth2.WriteIntrospectionResponse(rw, ar)
+		oauth2.WriteIntrospectionResponse(req.Context(), rw, ar)
 	}
 }
 
@@ -91,7 +91,7 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 		if err != nil {
 			t.Logf("Access request failed because: %+v", err)
 			t.Logf("Request: %+v", ar)
-			oauth2.WriteAuthorizeError(rw, ar, err)
+			oauth2.WriteAuthorizeError(req.Context(), rw, ar, err)
 			return
 		}
 
@@ -118,11 +118,11 @@ func authEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fos
 		if err != nil {
 			t.Logf("Access request failed because: %+v", err)
 			t.Logf("Request: %+v", ar)
-			oauth2.WriteAuthorizeError(rw, ar, err)
+			oauth2.WriteAuthorizeError(req.Context(), rw, ar, err)
 			return
 		}
 
-		oauth2.WriteAuthorizeResponse(rw, ar, response)
+		oauth2.WriteAuthorizeResponse(req.Context(), rw, ar, response)
 	}
 }
 
@@ -154,7 +154,7 @@ func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw 
 		if err != nil {
 			t.Logf("Access request failed because: %+v", err)
 			t.Logf("Request: %+v", accessRequest)
-			provider.WriteAccessError(rw, accessRequest, err)
+			provider.WriteAccessError(req.Context(), rw, accessRequest, err)
 			return
 		}
 
@@ -166,10 +166,10 @@ func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw 
 		if err != nil {
 			t.Logf("Access request failed because: %+v", err)
 			t.Logf("Request: %+v", accessRequest)
-			provider.WriteAccessError(rw, accessRequest, err)
+			provider.WriteAccessError(req.Context(), rw, accessRequest, err)
 			return
 		}
 
-		provider.WriteAccessResponse(rw, accessRequest, response)
+		provider.WriteAccessResponse(req.Context(), rw, accessRequest, response)
 	}
 }
