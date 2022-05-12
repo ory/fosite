@@ -149,7 +149,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		claims.AccessTokenHash = hash
 	}
 
-	if resp.GetParameters().Get("state") == "" {
+	if !resp.GetParameters().Has("state") {
 		resp.AddParameter("state", ar.GetState())
 	}
 
