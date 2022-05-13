@@ -89,6 +89,31 @@ func (t *RevocationHandlers) Append(h RevocationHandler) {
 var _ OAuth2Provider = (*Fosite)(nil)
 
 type Configurator interface {
+	IDTokenIssuerProvider
+	IDTokenLifespanProvider
+	AllowedPromptsProvider
+	EnforcePKCEProvider
+	EnforcePKCEForPublicClientsProvider
+	EnablePKCEPlainChallengeMethodProvider
+	GrantTypeJWTBearerCanSkipClientAuthProvider
+	GrantTypeJWTBearerIDOptionalProvider
+	GrantTypeJWTBearerIssuedDateOptionalProvider
+	GetJWTMaxDurationProvider
+	AudienceStrategyProvider
+	ScopeStrategyProvider
+	RedirectSecureCheckerProvider
+	OmitRedirectScopeParamProvider
+	SanitationAllowedProvider
+	JWTScopeFieldProvider
+	AccessTokenIssuerProvider
+	DisableRefreshTokenValidationProvider
+	RefreshTokenScopesProvider
+	AccessTokenLifespanProvider
+	RefreshTokenLifespanProvider
+	AuthorizeCodeLifespanProvider
+	TokenEntropyProvider
+	RotatedGlobalSecretsProvider
+	GlobalSecretProvider
 	JWKSFetcherStrategyProvider
 	HTTPClientProvider
 	ScopeStrategyProvider

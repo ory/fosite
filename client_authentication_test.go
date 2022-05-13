@@ -117,7 +117,7 @@ func TestAuthenticateClient(t *testing.T) {
 		},
 	}
 
-	ecdsaKey := gen.MustECDSAKey()
+	ecdsaKey := gen.MustES256Key()
 	ecdsaJwks := &jose.JSONWebKeySet{
 		Keys: []jose.JSONWebKey{
 			{

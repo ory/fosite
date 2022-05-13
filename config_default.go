@@ -23,10 +23,10 @@ package fosite
 
 import (
 	"context"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ory/fosite/token/jwt"
 	"hash"
 	"html/template"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -186,7 +186,7 @@ type Config struct {
 	ClientSecretsHasher Hasher
 
 	// HTTPClient is the HTTP client to use for requests.
-	HTTPClient *http.Client
+	HTTPClient *retryablehttp.Client
 
 	// AuthorizeEndpointHandlers is a list of handlers that are called before the authorization endpoint is served.
 	AuthorizeEndpointHandlers AuthorizeEndpointHandlers
@@ -242,14 +242,17 @@ func (c *Config) GetRevocationHandlers(ctx context.Context) RevocationHandlers {
 	return c.RevocationHandlers
 }
 
-func (c *Config) GetHTTPClient(ctx context.Context) *http.Client {
+func (c *Config) GetHTTPClient(ctx context.Context) *retryablehttp.Client {
 	if c.HTTPClient == nil {
-		return http.DefaultClient
+		return retryablehttp.NewClient()
 	}
 	return c.HTTPClient
 }
 
 func (c *Config) GetSecretsHasher(ctx context.Context) Hasher {
+	if c.ClientSecretsHasher == nil {
+		c.ClientSecretsHasher = &BCrypt{Config: c}
+	}
 	return c.ClientSecretsHasher
 }
 

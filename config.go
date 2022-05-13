@@ -2,11 +2,11 @@ package fosite
 
 import (
 	"context"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 	"hash"
 	"html/template"
-	"net/http"
 	"net/url"
 	"time"
 )
@@ -208,7 +208,7 @@ type JWKSFetcherStrategyProvider interface {
 // HTTPClientProvider returns the provider for configuring the HTTP client.
 type HTTPClientProvider interface {
 	// GetHTTPClient returns the HTTP client provider.
-	GetHTTPClient(ctx context.Context) *http.Client
+	GetHTTPClient(ctx context.Context) *retryablehttp.Client
 }
 
 // ClientAuthenticationStrategyProvider returns the provider for configuring the client authentication strategy.

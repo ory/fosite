@@ -50,7 +50,7 @@ func (f *Fosite) findClientPublicJWK(ctx context.Context, oidcClient OpenIDConne
 	}
 
 	if location := oidcClient.GetJSONWebKeysURI(); len(location) > 0 {
-		keys, err := f.Config.GetJWKSFetcherStrategy(ctx).Resolve(location, false)
+		keys, err := f.Config.GetJWKSFetcherStrategy(ctx).Resolve(ctx, location, false)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func (f *Fosite) findClientPublicJWK(ctx context.Context, oidcClient OpenIDConne
 			return key, nil
 		}
 
-		keys, err = f.Config.GetJWKSFetcherStrategy(ctx).Resolve(location, true)
+		keys, err = f.Config.GetJWKSFetcherStrategy(ctx).Resolve(ctx, location, true)
 		if err != nil {
 			return nil, err
 		}
@@ -275,7 +275,7 @@ func (f *Fosite) checkClientSecret(ctx context.Context, client Client, clientSec
 func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool) (interface{}, error) {
 	keys := set.Keys
 	if len(keys) == 0 {
-		return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("The retrieved JSON Web Key Set does not contain any keys."))
+		return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("The retrieved JSON Web Key Set does not contain any cache."))
 	}
 
 	kid, ok := t.Header["kid"].(string)

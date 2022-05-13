@@ -41,6 +41,10 @@ func (rs ResponseModeTypes) Has(item ResponseModeType) bool {
 	return false
 }
 
+func NewDefaultResponseModeHandler() *DefaultResponseModeHandler {
+	return new(DefaultResponseModeHandler)
+}
+
 type DefaultResponseModeHandler struct{}
 
 func (d *DefaultResponseModeHandler) ResponseModes() ResponseModeTypes { return nil }

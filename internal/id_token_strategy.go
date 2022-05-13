@@ -12,30 +12,30 @@ import (
 	fosite "github.com/ory/fosite"
 )
 
-// MockOpenIDConnectTokenStrategy is a mock of OpenIDConnectTokenStrategy interface
+// MockOpenIDConnectTokenStrategy is a mock of OpenIDConnectTokenStrategy interface.
 type MockOpenIDConnectTokenStrategy struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpenIDConnectTokenStrategyMockRecorder
 }
 
-// MockOpenIDConnectTokenStrategyMockRecorder is the mock recorder for MockOpenIDConnectTokenStrategy
+// MockOpenIDConnectTokenStrategyMockRecorder is the mock recorder for MockOpenIDConnectTokenStrategy.
 type MockOpenIDConnectTokenStrategyMockRecorder struct {
 	mock *MockOpenIDConnectTokenStrategy
 }
 
-// NewMockOpenIDConnectTokenStrategy creates a new mock instance
+// NewMockOpenIDConnectTokenStrategy creates a new mock instance.
 func NewMockOpenIDConnectTokenStrategy(ctrl *gomock.Controller) *MockOpenIDConnectTokenStrategy {
 	mock := &MockOpenIDConnectTokenStrategy{ctrl: ctrl}
 	mock.recorder = &MockOpenIDConnectTokenStrategyMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenIDConnectTokenStrategy) EXPECT() *MockOpenIDConnectTokenStrategyMockRecorder {
 	return m.recorder
 }
 
-// GenerateIDToken mocks base method
+// GenerateIDToken mocks base method.
 func (m *MockOpenIDConnectTokenStrategy) GenerateIDToken(arg0 context.Context, arg1 fosite.Requester) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateIDToken", arg0, arg1)
@@ -44,7 +44,7 @@ func (m *MockOpenIDConnectTokenStrategy) GenerateIDToken(arg0 context.Context, a
 	return ret0, ret1
 }
 
-// GenerateIDToken indicates an expected call of GenerateIDToken
+// GenerateIDToken indicates an expected call of GenerateIDToken.
 func (mr *MockOpenIDConnectTokenStrategyMockRecorder) GenerateIDToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateIDToken", reflect.TypeOf((*MockOpenIDConnectTokenStrategy)(nil).GenerateIDToken), arg0, arg1)

@@ -136,7 +136,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			expectForm: url.Values{"scope": {"openid"}},
 		},
 		{
-			d:          "should fail because token invalid an no keys set",
+			d:          "should fail because token invalid an no cache set",
 			form:       url.Values{"scope": {"openid"}, "request_uri": {"foo"}},
 			client:     &DefaultOpenIDConnectClient{RequestObjectSigningAlgorithm: "RS256"},
 			expectErr:  ErrInvalidRequest,
