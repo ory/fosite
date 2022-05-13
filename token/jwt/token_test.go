@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"github.com/ory/fosite/internal/gen"
 	"strings"
 	"testing"
 	"time"
@@ -38,7 +39,7 @@ func TestUnsignedToken(t *testing.T) {
 }
 
 func TestJWTHeaders(t *testing.T) {
-	rawToken := makeSampleToken(nil, jose.RS256, MustRSAKey())
+	rawToken := makeSampleToken(nil, jose.RS256, gen.MustRSAKey())
 	tk, err := jwt.ParseSigned(rawToken)
 	require.NoError(t, err)
 	require.Len(t, tk.Headers, 1)
@@ -60,7 +61,7 @@ var (
 // it is not used in fosite and therefore not supported.
 func TestParser_Parse(t *testing.T) {
 	var (
-		defaultES256PrivateKey = MustECDSAKey()
+		defaultES256PrivateKey = gen.MustES256Key()
 		defaultSigningKey      = parseRSAPrivateKeyFromPEM(defaultPrivateKeyPEM)
 		publicECDSAKey         = func(*Token) (interface{}, error) { return &defaultES256PrivateKey.PublicKey, nil }
 		noneKey                = func(*Token) (interface{}, error) { return UnsafeAllowNoneSignatureType, nil }

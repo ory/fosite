@@ -25,6 +25,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ory/fosite/internal/gen"
+	"gopkg.in/square/go-jose.v2"
 	"strings"
 	"testing"
 	"time"
@@ -53,7 +54,7 @@ func TestHash(t *testing.T) {
 		{
 			d: "ES256",
 			strategy: &DefaultSigner{GetPrivateKey: func(_ context.Context) (interface{}, error) {
-				return gen.MustECDSAKey(), nil
+				return gen.MustES256Key(), nil
 			}},
 		},
 	} {
@@ -94,8 +95,7 @@ func TestAssign(t *testing.T) {
 }
 
 func TestGenerateJWT(t *testing.T) {
-	rsaKey := gen.MustRSAKey()
-	ecdsKey := gen.MustECDSAKey()
+	var key interface{} = gen.MustRSAKey()
 	for k, tc := range []struct {
 		d        string
 		strategy Signer
@@ -105,22 +105,36 @@ func TestGenerateJWT(t *testing.T) {
 			d: "DefaultSigner",
 			strategy: &DefaultSigner{
 				GetPrivateKey: func(_ context.Context) (interface{}, error) {
-					return rsaKey, nil
+					return key, nil
 				},
 			},
 			resetKey: func(strategy Signer) {
-				rsaKey = MustRSAKey()
+				key = gen.MustRSAKey()
 			},
 		},
 		{
 			d: "ES256JWTStrategy",
 			strategy: &DefaultSigner{
 				GetPrivateKey: func(_ context.Context) (interface{}, error) {
-					return ecdsKey, nil
+					return key, nil
 				},
 			},
 			resetKey: func(strategy Signer) {
-				ecdsKey = MustECDSAKey()
+				key = &jose.JSONWebKey{
+					Key:       gen.MustES521Key(),
+					Algorithm: "ES512",
+				}
+			},
+		},
+		{
+			d: "ES256JWTStrategy",
+			strategy: &DefaultSigner{
+				GetPrivateKey: func(_ context.Context) (interface{}, error) {
+					return key, nil
+				},
+			},
+			resetKey: func(strategy Signer) {
+				key = gen.MustES256Key()
 			},
 		},
 	} {
@@ -189,7 +203,7 @@ func TestValidateSignatureRejectsJWT(t *testing.T) {
 			d: "ES256",
 			strategy: &DefaultSigner{
 				GetPrivateKey: func(_ context.Context) (interface{}, error) {
-					return gen.MustECDSAKey(), nil
+					return gen.MustES256Key(), nil
 				},
 			},
 		},
