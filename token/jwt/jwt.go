@@ -62,7 +62,12 @@ func (j *DefaultSigner) Generate(ctx context.Context, claims MapClaims, header M
 	if err != nil {
 		return "", "", err
 	}
+
 	switch t := key.(type) {
+	case *jose.JSONWebKey:
+		return generateToken(claims, header, jose.SignatureAlgorithm(t.Algorithm), t.Key)
+	case jose.JSONWebKey:
+		return generateToken(claims, header, jose.SignatureAlgorithm(t.Algorithm), t.Key)
 	case *rsa.PrivateKey:
 		return generateToken(claims, header, jose.RS256, t)
 	case *ecdsa.PrivateKey:
@@ -70,9 +75,19 @@ func (j *DefaultSigner) Generate(ctx context.Context, claims MapClaims, header M
 	case jose.OpaqueSigner:
 		switch tt := t.Public().Key.(type) {
 		case *rsa.PrivateKey:
-			return generateToken(claims, header, jose.RS256, t)
+			alg := jose.RS256
+			if len(t.Algs()) > 0 {
+				alg = t.Algs()[0]
+			}
+
+			return generateToken(claims, header, alg, t)
 		case *ecdsa.PrivateKey:
-			return generateToken(claims, header, jose.ES256, t)
+			alg := jose.ES256
+			if len(t.Algs()) > 0 {
+				alg = t.Algs()[0]
+			}
+
+			return generateToken(claims, header, alg, t)
 		default:
 			return "", "", errors.Errorf("unsupported private / public key pairs: %T, %T", t, tt)
 		}
@@ -86,6 +101,10 @@ func (j *DefaultSigner) Validate(ctx context.Context, token string) (string, err
 	key, err := j.GetPrivateKey(ctx)
 	if err != nil {
 		return "", err
+	}
+
+	if t, ok := key.(*jose.JSONWebKey); ok {
+		key = t.Key
 	}
 
 	switch t := key.(type) {
@@ -106,6 +125,11 @@ func (j *DefaultSigner) Decode(ctx context.Context, token string) (*Token, error
 	if err != nil {
 		return nil, err
 	}
+
+	if t, ok := key.(*jose.JSONWebKey); ok {
+		key = t.Key
+	}
+
 	switch t := key.(type) {
 	case *rsa.PrivateKey:
 		return decodeToken(token, t.PublicKey)
