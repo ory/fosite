@@ -31,7 +31,7 @@ import (
 // OpenIDConnectExplicitFactory creates an OpenID Connect explicit ("authorize code flow") grant handler.
 //
 // **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
-func OpenIDConnectExplicitFactory(config *fosite.Config, storage interface{}, strategy interface{}) interface{} {
+func OpenIDConnectExplicitFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectExplicitHandler{
 		OpenIDConnectRequestStorage: storage.(openid.OpenIDConnectRequestStorage),
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
@@ -44,7 +44,7 @@ func OpenIDConnectExplicitFactory(config *fosite.Config, storage interface{}, st
 // OpenIDConnectRefreshFactory creates a handler for refreshing openid connect tokens.
 //
 // **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
-func OpenIDConnectRefreshFactory(_ *fosite.Config, _ interface{}, strategy interface{}) interface{} {
+func OpenIDConnectRefreshFactory(_ fosite.Configurator, _ interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectRefreshHandler{
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
@@ -55,7 +55,7 @@ func OpenIDConnectRefreshFactory(_ *fosite.Config, _ interface{}, strategy inter
 // OpenIDConnectImplicitFactory creates an OpenID Connect implicit ("implicit flow") grant handler.
 //
 // **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
-func OpenIDConnectImplicitFactory(config *fosite.Config, storage interface{}, strategy interface{}) interface{} {
+func OpenIDConnectImplicitFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectImplicitHandler{
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
@@ -73,7 +73,7 @@ func OpenIDConnectImplicitFactory(config *fosite.Config, storage interface{}, st
 // OpenIDConnectHybridFactory creates an OpenID Connect hybrid grant handler.
 //
 // **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
-func OpenIDConnectHybridFactory(config *fosite.Config, storage interface{}, strategy interface{}) interface{} {
+func OpenIDConnectHybridFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectHybridHandler{
 		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
 			AccessTokenStrategy:   strategy.(oauth2.AccessTokenStrategy),

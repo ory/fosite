@@ -53,7 +53,7 @@ func NewOAuth2HMACStrategy(config HMACSHAStrategyConfigurator) *oauth2.HMACSHASt
 	}
 }
 
-func NewOAuth2JWTStrategy(keyGetter func(context.Context) (interface{}, error), strategy *oauth2.HMACSHAStrategy, config *fosite.Config) *oauth2.DefaultJWTStrategy {
+func NewOAuth2JWTStrategy(keyGetter func(context.Context) (interface{}, error), strategy *oauth2.HMACSHAStrategy, config fosite.Configurator) *oauth2.DefaultJWTStrategy {
 	return &oauth2.DefaultJWTStrategy{
 		Signer:          &jwt.DefaultSigner{GetPrivateKey: keyGetter},
 		HMACSHAStrategy: strategy,
@@ -61,7 +61,7 @@ func NewOAuth2JWTStrategy(keyGetter func(context.Context) (interface{}, error), 
 	}
 }
 
-func NewOpenIDConnectStrategy(keyGetter func(context.Context) (interface{}, error), config *fosite.Config) *openid.DefaultStrategy {
+func NewOpenIDConnectStrategy(keyGetter func(context.Context) (interface{}, error), config fosite.Configurator) *openid.DefaultStrategy {
 	return &openid.DefaultStrategy{
 		Signer: &jwt.DefaultSigner{GetPrivateKey: keyGetter},
 		Config: config,

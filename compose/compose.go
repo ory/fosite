@@ -27,7 +27,7 @@ import (
 	"github.com/ory/fosite/token/jwt"
 )
 
-type Factory func(config *fosite.Config, storage interface{}, strategy interface{}) interface{}
+type Factory func(config fosite.Configurator, storage interface{}, strategy interface{}) interface{}
 
 // Compose takes a config, a storage, a strategy and handlers to instantiate an OAuth2Provider:
 //
@@ -52,10 +52,6 @@ type Factory func(config *fosite.Config, storage interface{}, strategy interface
 //
 // Compose makes use of interface{} types in order to be able to handle a all types of stores, strategies and handlers.
 func Compose(config *fosite.Config, storage interface{}, strategy interface{}, factories ...Factory) fosite.OAuth2Provider {
-	if config.ClientSecretsHasher == nil {
-		config.ClientSecretsHasher = &fosite.BCrypt{Config: config}
-	}
-
 	f := fosite.NewOAuth2Provider(storage.(fosite.Storage), config)
 
 	for _, factory := range factories {

@@ -67,11 +67,11 @@ type OpenIDConnectClient interface {
 	// discovery parameter.
 	GetRequestURIs() []string
 
-	// GetJSONWebKeys returns the JSON Web Key Set containing the public keys used by the client to authenticate.
+	// GetJSONWebKeys returns the JSON Web Key Set containing the public cache used by the client to authenticate.
 	GetJSONWebKeys() *jose.JSONWebKeySet
 
 	// GetJSONWebKeys returns the URL for lookup of JSON Web Key Set containing the
-	// public keys used by the client to authenticate.
+	// public cache used by the client to authenticate.
 	GetJSONWebKeysURI() string
 
 	// JWS [JWS] alg algorithm [JWA] that MUST be used for signing Request Objects sent to the OP.
