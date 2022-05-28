@@ -173,3 +173,27 @@ func tokenEndpointHandler(t *testing.T, provider fosite.OAuth2Provider) func(rw 
 		provider.WriteAccessResponse(rw, accessRequest, response)
 	}
 }
+
+func pushedAuthorizeRequestHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
+		ctx := fosite.NewContext()
+
+		ar, err := oauth2.NewPushedAuthorizeRequest(ctx, req)
+		if err != nil {
+			t.Logf("PAR request failed because: %+v", err)
+			t.Logf("Request: %+v", ar)
+			oauth2.WritePushedAuthorizeError(rw, ar, err)
+			return
+		}
+
+		response, err := oauth2.NewPushedAuthorizeResponse(ctx, ar, session)
+		if err != nil {
+			t.Logf("PAR response failed because: %+v", err)
+			t.Logf("Request: %+v", ar)
+			oauth2.WritePushedAuthorizeError(rw, ar, err)
+			return
+		}
+
+		oauth2.WritePushedAuthorizeResponse(rw, ar, response)
+	}
+}
