@@ -24,6 +24,7 @@ This library considered and implemented:
 - [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
 - [OAuth 2.0 for Native Apps](https://tools.ietf.org/html/rfc8252)
 - [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
+- [OAuth 2.0 Pushed Authorization Request](https://datatracker.ietf.org/doc/html/rfc9126)
 
 OAuth2 and OpenID Connect are difficult protocols. If you want quick wins, we
 strongly encourage you to look at [Hydra](https://github.com/ory-am/hydra).
