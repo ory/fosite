@@ -6,6 +6,14 @@ replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
 
 replace github.com/gobuffalo/packr => github.com/gobuffalo/packr v1.30.1
 
+replace github.com/gobuffalo/plush/v4 => github.com/gobuffalo/plush/v4 v4.1.11
+
+replace github.com/gorilla/sessions => github.com/gorilla/sessions v1.2.1
+
+replace github.com/tidwall/gjson => github.com/tidwall/gjson v1.14.1
+
+replace github.com/tidwall/match => github.com/tidwall/match v1.1.1
+
 require (
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
@@ -25,9 +33,9 @@ require (
 	github.com/spf13/afero v1.3.2 // indirect
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/text v0.3.3
+	golang.org/x/text v0.3.7
 	gopkg.in/square/go-jose.v2 v2.5.2-0.20210529014059-a5c7eec3c614
 )
 
