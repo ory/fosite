@@ -9,7 +9,6 @@ jobs:
   test:
     docker:
       - image: cimg/go:1.18
-    working_directory: /go/src/github.com/ory/fosite
     steps:
       - checkout
       - setup_remote_docker
