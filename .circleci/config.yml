@@ -8,7 +8,7 @@ orbs:
 jobs:
   test:
     docker:
-      - image: circleci/golang:1.18
+      - image: cimg/go:1.18
     working_directory: /go/src/github.com/ory/fosite
     steps:
       - checkout
