@@ -3,8 +3,9 @@
 
 **Table of Contents**
 
-- [0.0.0 (2022-05-06)](#000-2022-05-06)
+- [0.0.0 (2022-05-31)](#000-2022-05-31)
   - [Bug Fixes](#bug-fixes)
+  - [Code Refactoring](#code-refactoring)
 - [0.42.2 (2022-04-17)](#0422-2022-04-17)
   - [Bug Fixes](#bug-fixes-1)
   - [Code Generation](#code-generation)
@@ -19,7 +20,7 @@
 - [0.41.0 (2021-11-13)](#0410-2021-11-13)
   - [Bug Fixes](#bug-fixes-2)
   - [Code Generation](#code-generation-3)
-  - [Code Refactoring](#code-refactoring)
+  - [Code Refactoring](#code-refactoring-1)
   - [Documentation](#documentation-1)
   - [Features](#features-3)
 - [0.40.2 (2021-05-28)](#0402-2021-05-28)
@@ -28,7 +29,7 @@
   - [Bug Fixes](#bug-fixes-3)
 - [0.40.0 (2021-05-21)](#0400-2021-05-21)
   - [Bug Fixes](#bug-fixes-4)
-  - [Code Refactoring](#code-refactoring-1)
+  - [Code Refactoring](#code-refactoring-2)
   - [Documentation](#documentation-2)
   - [Features](#features-5)
   - [Tests](#tests)
@@ -44,11 +45,11 @@
 - [0.36.1 (2021-01-11)](#0361-2021-01-11)
   - [Bug Fixes](#bug-fixes-7)
   - [Chores](#chores)
-  - [Code Refactoring](#code-refactoring-2)
+  - [Code Refactoring](#code-refactoring-3)
 - [0.36.0 (2020-11-16)](#0360-2020-11-16)
   - [Breaking Changes](#breaking-changes-1)
     - [Bug Fixes](#bug-fixes-8)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-3)
     - [Features](#features-9)
 - [0.35.1 (2020-10-11)](#0351-2020-10-11)
@@ -74,11 +75,11 @@
     - [Features](#features-12)
 - [0.32.4 (2020-09-15)](#0324-2020-09-15)
   - [Code Generation](#code-generation-6)
-  - [Code Refactoring](#code-refactoring-4)
+  - [Code Refactoring](#code-refactoring-5)
   - [Documentation](#documentation-6)
 - [0.32.3 (2020-09-12)](#0323-2020-09-12)
   - [Bug Fixes](#bug-fixes-13)
-  - [Code Refactoring](#code-refactoring-5)
+  - [Code Refactoring](#code-refactoring-6)
   - [Documentation](#documentation-7)
   - [Features](#features-13)
 - [0.32.2 (2020-06-22)](#0322-2020-06-22)
@@ -363,17 +364,24 @@
 - [0.2.0 (2016-08-06)](#020-2016-08-06)
   - [Unclassified](#unclassified-118)
 - [0.1.0 (2016-08-01)](#010-2016-08-01)
-  - [Code Refactoring](#code-refactoring-6)
+  - [Code Refactoring](#code-refactoring-7)
   - [Documentation](#documentation-29)
   - [Unclassified](#unclassified-119)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-05-06)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-05-31)
 
 ### Bug Fixes
 
+- Bump dependencies ([5dab818](https://github.com/ory/fosite/commit/5dab818f9707e364dcfe56bc6fd2245049417cc1))
+- Cves in deps ([f5782c3](https://github.com/ory/fosite/commit/f5782c33814ec738ea188b0ffac50ef45e7f3eb8))
+- Linting ([222ca97](https://github.com/ory/fosite/commit/222ca97805edfb52a655969841c2ac2958cc6d36))
 - **rfc7523:** Comment mentioned incorrect granttype ([#668](https://github.com/ory/fosite/issues/668)) ([b41f187](https://github.com/ory/fosite/commit/b41f187703bc1c8dc43ac0ec1ea23569779974bb))
+
+### Code Refactoring
+
+- Move to go 1.17 ([d9d0fed](https://github.com/ory/fosite/commit/d9d0fedaad87044e4d38ba82e01d9e430d09514c))
 
 # [0.42.2](https://github.com/ory/fosite/compare/v0.42.1...v0.42.2) (2022-04-17)
 
