@@ -47,11 +47,11 @@ func TestHierarchicScopeStrategy(t *testing.T) {
 	assert.False(t, strategy(scopes, "bar"))
 	assert.False(t, strategy(scopes, "baz"))
 
-	scopes = []string{"fosite.cache.create", "fosite.cache.get", "fosite.cache.delete", "fosite.cache.update"}
-	assert.True(t, strategy(scopes, "fosite.cache.delete"))
-	assert.True(t, strategy(scopes, "fosite.cache.get"))
-	assert.True(t, strategy(scopes, "fosite.cache.get"))
-	assert.True(t, strategy(scopes, "fosite.cache.update"))
+	scopes = []string{"fosite.key.create", "fosite.key.get", "fosite.key.delete", "fosite.key.update"}
+	assert.True(t, strategy(scopes, "fosite.key.delete"))
+	assert.True(t, strategy(scopes, "fosite.key.get"))
+	assert.True(t, strategy(scopes, "fosite.key.get"))
+	assert.True(t, strategy(scopes, "fosite.key.update"))
 
 	scopes = []string{"hydra", "openid", "offline"}
 	assert.False(t, strategy(scopes, "foo.bar"))

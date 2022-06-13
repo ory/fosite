@@ -39,7 +39,7 @@ const defaultJWKSFetcherStrategyCachePrefix = "github.com/ory/fosite.DefaultJWKS
 // typically a client's jwks_uri.
 type JWKSFetcherStrategy interface {
 	// Resolve returns the JSON Web Key Set, or an error if something went wrong. The forceRefresh, if true, forces
-	// the strategy to fetch the cache from the remote. If forceRefresh is false, the strategy may use a caching strategy
+	// the strategy to fetch the key from the remote. If forceRefresh is false, the strategy may use a caching strategy
 	// to fetch the key.
 	Resolve(ctx context.Context, location string, ignoreCache bool) (*jose.JSONWebKeySet, error)
 }
@@ -101,7 +101,7 @@ func JWKSFetcherWithHTTPClient(client *retryablehttp.Client) func(*DefaultJWKSFe
 }
 
 // Resolve returns the JSON Web Key Set, or an error if something went wrong. The forceRefresh, if true, forces
-// the strategy to fetch the cache from the remote. If forceRefresh is false, the strategy may use a caching strategy
+// the strategy to fetch the key from the remote. If forceRefresh is false, the strategy may use a caching strategy
 // to fetch the key.
 func (s *DefaultJWKSFetcherStrategy) Resolve(ctx context.Context, location string, ignoreCache bool) (*jose.JSONWebKeySet, error) {
 	cacheKey := defaultJWKSFetcherStrategyCachePrefix + location
