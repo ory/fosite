@@ -28,6 +28,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ory/fosite/internal/gen"
 	"net/http"
 	"net/http/httptest"
@@ -95,6 +96,7 @@ func TestAuthenticateClient(t *testing.T) {
 			JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
 			ClientSecretsHasher: hasher,
 			TokenURL:            "token-url",
+			HTTPClient:          retryablehttp.NewClient(),
 		},
 	}
 
@@ -536,7 +538,7 @@ func TestAuthenticateClient(t *testing.T) {
 			store.Clients[tc.client.ID] = tc.client
 			f.Store = store
 
-			c, err := f.AuthenticateClient(nil, tc.r, tc.form)
+			c, err := f.AuthenticateClient(context.Background(), tc.r, tc.form)
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
 				return
