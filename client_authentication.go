@@ -275,7 +275,7 @@ func (f *Fosite) checkClientSecret(ctx context.Context, client Client, clientSec
 func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool) (interface{}, error) {
 	keys := set.Keys
 	if len(keys) == 0 {
-		return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("The retrieved JSON Web Key Set does not contain any cache."))
+		return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("The retrieved JSON Web Key Set does not contain any key."))
 	}
 
 	kid, ok := t.Header["kid"].(string)
