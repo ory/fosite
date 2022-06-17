@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2022-06-14)](#000-2022-06-14)
+- [0.0.0 (2022-06-17)](#000-2022-06-17)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -373,7 +373,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-06-14)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-06-17)
 
 ## Breaking Changes
 
@@ -432,6 +432,10 @@ Many internal interfaces have been changed, usually adding `ctx context.Context`
 - Move to go 1.17 ([d9d0fed](https://github.com/ory/fosite/commit/d9d0fedaad87044e4d38ba82e01d9e430d09514c))
 
 ### Features
+
+- Add `ory_at|pt|ac` prefixes to HMAC tokens ([b652335](https://github.com/ory/fosite/commit/b652335c965d5cc523faebad9c9792c4135cfb75)):
+
+  See https://github.com/ory/hydra/issues/2845
 
 - Introduce cache strategy for JWKS fetcher ([452f377](https://github.com/ory/fosite/commit/452f37728890c68524b9aa190e1cdb279414f802))
 - Support variety of JWT formats when `jose.JSONWebKey` is used ([2590eb8](https://github.com/ory/fosite/commit/2590eb83d1e66df998053bc2fb7381b9043c232e))
