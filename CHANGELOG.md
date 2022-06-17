@@ -438,6 +438,7 @@ Many internal interfaces have been changed, usually adding `ctx context.Context`
   See https://github.com/ory/hydra/issues/2845
 
 - Introduce cache strategy for JWKS fetcher ([452f377](https://github.com/ory/fosite/commit/452f37728890c68524b9aa190e1cdb279414f802))
+- Make http source contextualized ([9fc89e9](https://github.com/ory/fosite/commit/9fc89e9007c71354f7fe2d036ea6e175a2e5860b))
 - Support variety of JWT formats when `jose.JSONWebKey` is used ([2590eb8](https://github.com/ory/fosite/commit/2590eb83d1e66df998053bc2fb7381b9043c232e))
 
 ### Tests
