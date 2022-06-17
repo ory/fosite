@@ -33,9 +33,10 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	"github.com/ory/fosite/token/jwt"
 	"github.com/pkg/errors"
 	jose "gopkg.in/square/go-jose.v2"
+
+	"github.com/ory/fosite/token/jwt"
 )
 
 // ClientAuthenticationStrategy provides a method signature for authenticating a client request

@@ -23,6 +23,7 @@ package compose
 
 import (
 	"context"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
 )

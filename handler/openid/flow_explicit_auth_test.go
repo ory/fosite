@@ -24,8 +24,9 @@ package openid
 import (
 	"context"
 	"fmt"
-	"github.com/ory/fosite/internal/gen"
 	"testing"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"

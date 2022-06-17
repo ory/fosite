@@ -28,10 +28,11 @@ import (
 	"net/http"
 	"strings"
 
+	"gopkg.in/square/go-jose.v2"
+
 	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/x/errorsx"
-	"gopkg.in/square/go-jose.v2"
 
 	"github.com/pkg/errors"
 

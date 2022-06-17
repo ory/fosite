@@ -23,13 +23,14 @@ package integration_test
 
 import (
 	"encoding/json"
-	"github.com/ory/fosite/internal/gen"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

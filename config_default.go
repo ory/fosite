@@ -23,12 +23,14 @@ package fosite
 
 import (
 	"context"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/fosite/token/jwt"
 	"hash"
 	"html/template"
 	"net/url"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/fosite/token/jwt"
 
 	"github.com/ory/fosite/i18n"
 )

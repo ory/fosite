@@ -25,9 +25,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/ory/fosite/internal/gen"
 	"strings"
 	"testing"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

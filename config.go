@@ -2,13 +2,15 @@ package fosite
 
 import (
 	"context"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/fosite/i18n"
-	"github.com/ory/fosite/token/jwt"
 	"hash"
 	"html/template"
 	"net/url"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/fosite/i18n"
+	"github.com/ory/fosite/token/jwt"
 )
 
 // AuthorizeCodeLifespanProvider returns the provider for configuring the authorization code lifespan.

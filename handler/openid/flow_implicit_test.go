@@ -24,10 +24,11 @@ package openid
 import (
 	"context"
 	"fmt"
-	"github.com/ory/fosite/internal/gen"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"

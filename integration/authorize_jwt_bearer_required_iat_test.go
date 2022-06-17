@@ -23,10 +23,11 @@ package integration_test
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"

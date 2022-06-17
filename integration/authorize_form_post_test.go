@@ -24,11 +24,12 @@ package integration_test
 import (
 	"context"
 	"fmt"
-	"github.com/ory/fosite/internal/gen"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"

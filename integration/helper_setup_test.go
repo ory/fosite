@@ -26,10 +26,11 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"github.com/ory/fosite/internal/gen"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/gorilla/mux"
 	goauth "golang.org/x/oauth2"
