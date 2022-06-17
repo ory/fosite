@@ -47,9 +47,10 @@ type JWKSFetcherStrategy interface {
 
 // DefaultJWKSFetcherStrategy is a default implementation of the JWKSFetcherStrategy interface.
 type DefaultJWKSFetcherStrategy struct {
-	client *retryablehttp.Client
-	cache  *ristretto.Cache
-	ttl    time.Duration
+	client           *retryablehttp.Client
+	cache            *ristretto.Cache
+	ttl              time.Duration
+	clientSourceFunc func(ctx context.Context) *retryablehttp.Client
 }
 
 // NewDefaultJWKSFetcherStrategy returns a new instance of the DefaultJWKSFetcherStrategy.
@@ -101,6 +102,13 @@ func JWKSFetcherWithHTTPClient(client *retryablehttp.Client) func(*DefaultJWKSFe
 	}
 }
 
+// JWKSFetcherWithHTTPClientSource sets the HTTP client source function to use.
+func JWKSFetcherWithHTTPClientSource(clientSourceFunc func(ctx context.Context) *retryablehttp.Client) func(*DefaultJWKSFetcherStrategy) {
+	return func(s *DefaultJWKSFetcherStrategy) {
+		s.clientSourceFunc = clientSourceFunc
+	}
+}
+
 // Resolve returns the JSON Web Key Set, or an error if something went wrong. The forceRefresh, if true, forces
 // the strategy to fetch the key from the remote. If forceRefresh is false, the strategy may use a caching strategy
 // to fetch the key.
@@ -113,7 +121,12 @@ func (s *DefaultJWKSFetcherStrategy) Resolve(ctx context.Context, location strin
 			return nil, errorsx.WithStack(ErrServerError.WithHintf("Unable to create HTTP 'GET' request to fetch  JSON Web Keys from location '%s'.", location).WithWrap(err).WithDebug(err.Error()))
 		}
 
-		response, err := s.client.Do(req.WithContext(ctx))
+		hc := s.client
+		if s.clientSourceFunc != nil {
+			hc = s.clientSourceFunc(ctx)
+		}
+
+		response, err := hc.Do(req.WithContext(ctx))
 		if err != nil {
 			return nil, errorsx.WithStack(ErrServerError.WithHintf("Unable to fetch JSON Web Keys from location '%s'. Check for typos or other network issues.", location).WithWrap(err).WithDebug(err.Error()))
 		}

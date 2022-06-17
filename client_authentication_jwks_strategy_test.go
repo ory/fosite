@@ -146,10 +146,25 @@ func TestDefaultJWKSFetcherStrategy(t *testing.T) {
 	})
 
 	t.Run("JWKSFetcherWithHTTPClient", func(t *testing.T) {
-		assert.Panics(t, func() {
-			s := NewDefaultJWKSFetcherStrategy(JWKSFetcherWithHTTPClient(&retryablehttp.Client{HTTPClient: &http.Client{Transport: new(failingTripper)}}))
-			_, _ = s.Resolve(ctx, "https://google.com", false)
-		})
+		rt := retryablehttp.NewClient()
+		rt.RetryMax = 0
+		rt.HTTPClient = &http.Client{Transport: new(failingTripper)}
+		s := NewDefaultJWKSFetcherStrategy(JWKSFetcherWithHTTPClient(rt))
+		_, err := s.Resolve(ctx, "https://google.com", false)
+		require.ErrorIs(t, err, errRoundTrip)
+	})
+
+	t.Run("JWKSFetcherWithHTTPClientSource", func(t *testing.T) {
+		rt := retryablehttp.NewClient()
+		rt.RetryMax = 0
+		rt.HTTPClient = &http.Client{Transport: new(failingTripper)}
+		s := NewDefaultJWKSFetcherStrategy(
+			JWKSFetcherWithHTTPClient(retryablehttp.NewClient()),
+			JWKSFetcherWithHTTPClientSource(func(ctx context.Context) *retryablehttp.Client {
+				return rt
+			}))
+		_, err := s.Resolve(ctx, "https://www.google.com", false)
+		require.ErrorIs(t, err, errRoundTrip)
 	})
 
 	t.Run("case=error_network", func(t *testing.T) {
