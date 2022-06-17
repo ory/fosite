@@ -24,11 +24,13 @@ package jwt
 import (
 	"context"
 	"fmt"
-	"github.com/ory/fosite/internal/gen"
-	"gopkg.in/square/go-jose.v2"
 	"strings"
 	"testing"
 	"time"
+
+	"gopkg.in/square/go-jose.v2"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

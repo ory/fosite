@@ -27,8 +27,9 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ory/x/errorsx"
 	"golang.org/x/text/language"
+
+	"github.com/ory/x/errorsx"
 )
 
 // NewIntrospectionRequest initiates token introspection as defined in

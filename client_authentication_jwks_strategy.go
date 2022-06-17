@@ -24,9 +24,10 @@ package fosite
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/dgraph-io/ristretto"
 	"github.com/hashicorp/go-retryablehttp"
-	"time"
 
 	"github.com/ory/x/errorsx"
 

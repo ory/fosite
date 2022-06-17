@@ -24,10 +24,11 @@ package fosite
 import (
 	"testing"
 
-	"github.com/ory/fosite/i18n"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/text/language"
+
+	"github.com/ory/fosite/i18n"
 )
 
 func TestRFC6749Error(t *testing.T) {

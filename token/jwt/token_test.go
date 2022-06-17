@@ -1,10 +1,11 @@
 package jwt
 
 import (
-	"github.com/ory/fosite/internal/gen"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

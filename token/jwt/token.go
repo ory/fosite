@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/ory/x/errorsx"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
+
+	"github.com/ory/x/errorsx"
 )
 
 // Token represets a JWT Token

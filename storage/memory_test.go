@@ -3,9 +3,10 @@ package storage
 import (
 	"context"
 	"errors"
-	"github.com/ory/fosite"
 	"sync"
 	"testing"
+
+	"github.com/ory/fosite"
 )
 
 func TestMemoryStore_Authenticate(t *testing.T) {

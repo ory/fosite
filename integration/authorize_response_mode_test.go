@@ -23,13 +23,14 @@ package integration_test
 
 import (
 	"fmt"
-	"github.com/ory/fosite/internal/gen"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/stretchr/testify/assert"
 

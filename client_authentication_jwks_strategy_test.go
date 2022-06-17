@@ -24,14 +24,16 @@ package fosite
 import (
 	"context"
 	"encoding/json"
-	"github.com/dgraph-io/ristretto"
-	"github.com/hashicorp/go-retryablehttp"
-	"github.com/ory/fosite/internal/gen"
-	"github.com/pkg/errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/dgraph-io/ristretto"
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/pkg/errors"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
