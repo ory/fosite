@@ -423,7 +423,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			for _, c := range []struct {
 				description string
 				setup       func(config *fosite.Config)
-				check       func()
+				check       func(t *testing.T)
 				expectErr   error
 			}{
 				{
@@ -446,7 +446,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 						require.NoError(t, store.CreateRefreshTokenSession(nil, signature, areq))
 						areq.Form.Add("refresh_token", token)
 					},
-					check: func() {
+					check: func(t *testing.T) {
 						signature := strategy.RefreshTokenSignature(context.Background(), areq.Form.Get("refresh_token"))
 
 						// The old refresh token should be deleted
@@ -489,7 +489,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 					}
 
 					if c.check != nil {
-						c.check()
+						c.check(t)
 					}
 				})
 			}

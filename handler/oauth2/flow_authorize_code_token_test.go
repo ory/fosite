@@ -266,7 +266,7 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 
 			h := AuthorizeExplicitGrantHandler{
 				CoreStorage:            store,
-				AuthorizeCodeStrategy:  hmacshaStrategy,
+				AuthorizeCodeStrategy:  &hmacshaStrategy,
 				TokenRevocationStorage: store,
 				Config: &fosite.Config{
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
@@ -675,9 +675,9 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					mockTransactional,
 					mockCoreStore,
 				},
-				AccessTokenStrategy:   strategy,
-				RefreshTokenStrategy:  strategy,
-				AuthorizeCodeStrategy: strategy,
+				AccessTokenStrategy:   &strategy,
+				RefreshTokenStrategy:  &strategy,
+				AuthorizeCodeStrategy: &strategy,
 				Config: &fosite.Config{
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
 					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,

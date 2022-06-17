@@ -258,7 +258,6 @@ func TestRefreshTokenFlow(t *testing.T) {
 			var ob introspectionResponse
 			intro(token.AccessToken, &ob)
 
-			t.Logf("Token %s\n", token)
 			token.Expiry = token.Expiry.Add(-time.Hour * 24)
 
 			if c.beforeRefresh != nil {
