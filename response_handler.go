@@ -1,6 +1,9 @@
 package fosite
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
 // ResponseModeHandler provides a contract for handling custom response modes
 type ResponseModeHandler interface {
@@ -17,14 +20,14 @@ type ResponseModeHandler interface {
 	// Following headers are expected to be set by default:
 	// header.Set("Cache-Control", "no-store")
 	// header.Set("Pragma", "no-cache")
-	WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder)
+	WriteAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder)
 
 	// WriteAuthorizeError writes error responses
 	//
 	// Following headers are expected to be set by default:
 	// header.Set("Cache-Control", "no-store")
 	// header.Set("Pragma", "no-cache")
-	WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error)
+	WriteAuthorizeError(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, err error)
 }
 
 type ResponseModeTypes []ResponseModeType
@@ -38,10 +41,14 @@ func (rs ResponseModeTypes) Has(item ResponseModeType) bool {
 	return false
 }
 
+func NewDefaultResponseModeHandler() *DefaultResponseModeHandler {
+	return new(DefaultResponseModeHandler)
+}
+
 type DefaultResponseModeHandler struct{}
 
 func (d *DefaultResponseModeHandler) ResponseModes() ResponseModeTypes { return nil }
-func (d *DefaultResponseModeHandler) WriteAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
+func (d *DefaultResponseModeHandler) WriteAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, resp AuthorizeResponder) {
 }
-func (d *DefaultResponseModeHandler) WriteAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
+func (d *DefaultResponseModeHandler) WriteAuthorizeError(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 }

@@ -43,33 +43,22 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 	areq := fosite.NewAccessRequest(new(fosite.DefaultSession))
 	areq.Form = url.Values{}
-
-	h := ResourceOwnerPasswordCredentialsGrantHandler{
-		ResourceOwnerPasswordCredentialsGrantStorage: store,
-		HandleHelper: &HandleHelper{
-			AccessTokenStorage:   store,
-			AccessTokenLifespan:  time.Hour,
-			RefreshTokenLifespan: time.Hour,
-		},
-		ScopeStrategy:            fosite.HierarchicScopeStrategy,
-		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-	}
 	for k, c := range []struct {
 		description string
-		setup       func()
+		setup       func(config *fosite.Config)
 		expectErr   error
 		check       func(areq *fosite.AccessRequest)
 	}{
 		{
 			description: "should fail because not responsible",
 			expectErr:   fosite.ErrUnknownRequest,
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				areq.GrantTypes = fosite.Arguments{"123"}
 			},
 		},
 		{
 			description: "should fail because scope missing",
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}, Scopes: []string{}}
 				areq.RequestedScope = []string{"foo-scope"}
@@ -78,7 +67,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because audience missing",
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				areq.RequestedAudience = fosite.Arguments{"https://www.ory.sh/api"}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}, Scopes: []string{"foo-scope"}}
 			},
@@ -86,7 +75,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because invalid grant_type specified",
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"authorization_code"}, Scopes: []string{"foo-scope"}}
 			},
@@ -94,7 +83,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because invalid credentials",
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				areq.Form.Set("username", "peter")
 				areq.Form.Set("password", "pan")
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}, Scopes: []string{"foo-scope"}, Audience: []string{"https://www.ory.sh/api"}}
@@ -105,14 +94,14 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because error on lookup",
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should pass",
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				store.EXPECT().Authenticate(nil, "peter", "pan").Return(nil)
 			},
 			check: func(areq *fosite.AccessRequest) {
@@ -123,7 +112,21 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
-			c.setup()
+			config := &fosite.Config{
+				AccessTokenLifespan:      time.Hour,
+				RefreshTokenLifespan:     time.Hour,
+				ScopeStrategy:            fosite.HierarchicScopeStrategy,
+				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+			}
+			h := ResourceOwnerPasswordCredentialsGrantHandler{
+				ResourceOwnerPasswordCredentialsGrantStorage: store,
+				HandleHelper: &HandleHelper{
+					AccessTokenStorage: store,
+					Config:             config,
+				},
+				Config: config,
+			}
+			c.setup(config)
 			err := h.HandleTokenEndpointRequest(nil, areq)
 
 			if c.expectErr != nil {
@@ -149,24 +152,26 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 
 	var areq *fosite.AccessRequest
 	var aresp *fosite.AccessResponse
+	config := &fosite.Config{}
 	var h ResourceOwnerPasswordCredentialsGrantHandler
+	h.Config = config
 
 	for k, c := range []struct {
 		description string
-		setup       func()
+		setup       func(*fosite.Config)
 		expectErr   error
 		expect      func()
 	}{
 		{
 			description: "should fail because not responsible",
 			expectErr:   fosite.ErrUnknownRequest,
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				areq.GrantTypes = fosite.Arguments{""}
 			},
 		},
 		{
 			description: "should pass",
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				chgen.EXPECT().GenerateAccessToken(nil, areq).Return(mockAT, "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
@@ -177,7 +182,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should pass - offline scope",
-			setup: func() {
+			setup: func(config *fosite.Config) {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				areq.GrantScope("offline")
 				rtstr.EXPECT().GenerateRefreshToken(nil, areq).Return(mockRT, "bar", nil)
@@ -191,8 +196,8 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should pass - refresh token without offline scope",
-			setup: func() {
-				h.RefreshTokenScopes = []string{}
+			setup: func(config *fosite.Config) {
+				config.RefreshTokenScopes = []string{}
 				areq.GrantTypes = fosite.Arguments{"password"}
 				rtstr.EXPECT().GenerateRefreshToken(nil, areq).Return(mockRT, "bar", nil)
 				store.EXPECT().CreateRefreshTokenSession(nil, "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
@@ -208,17 +213,19 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			areq = fosite.NewAccessRequest(nil)
 			aresp = fosite.NewAccessResponse()
 			areq.Session = &fosite.DefaultSession{}
+			config := &fosite.Config{
+				RefreshTokenScopes:  []string{"offline"},
+				AccessTokenLifespan: time.Hour,
+			}
 			h = ResourceOwnerPasswordCredentialsGrantHandler{
 				ResourceOwnerPasswordCredentialsGrantStorage: store,
 				HandleHelper: &HandleHelper{
 					AccessTokenStorage:  store,
-					AccessTokenStrategy: chgen,
-					AccessTokenLifespan: time.Hour,
+					AccessTokenStrategy: chgen, Config: config,
 				},
-				RefreshTokenStrategy: rtstr,
-				RefreshTokenScopes:   []string{"offline"},
+				RefreshTokenStrategy: rtstr, Config: config,
 			}
-			c.setup()
+			c.setup(config)
 			err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())

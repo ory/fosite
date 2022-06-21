@@ -22,6 +22,7 @@
 package fosite_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -40,7 +41,7 @@ import (
 )
 
 func TestWriteIntrospectionError(t *testing.T) {
-	f := new(Fosite)
+	f := &Fosite{Config: new(Config)}
 	c := gomock.NewController(t)
 	defer c.Finish()
 
@@ -48,19 +49,19 @@ func TestWriteIntrospectionError(t *testing.T) {
 	rw.EXPECT().WriteHeader(http.StatusUnauthorized)
 	rw.EXPECT().Header().AnyTimes().Return(http.Header{})
 	rw.EXPECT().Write(gomock.Any())
-	f.WriteIntrospectionError(rw, errorsx.WithStack(ErrRequestUnauthorized))
+	f.WriteIntrospectionError(context.Background(), rw, errorsx.WithStack(ErrRequestUnauthorized))
 
 	rw.EXPECT().WriteHeader(http.StatusBadRequest)
 	rw.EXPECT().Write(gomock.Any())
-	f.WriteIntrospectionError(rw, errorsx.WithStack(ErrInvalidRequest))
+	f.WriteIntrospectionError(context.Background(), rw, errorsx.WithStack(ErrInvalidRequest))
 
 	rw.EXPECT().Write([]byte("{\"active\":false}\n"))
-	f.WriteIntrospectionError(rw, errors.New(""))
+	f.WriteIntrospectionError(context.Background(), rw, errors.New(""))
 
 	rw.EXPECT().Write([]byte("{\"active\":false}\n"))
-	f.WriteIntrospectionError(rw, errorsx.WithStack(ErrInactiveToken.WithWrap(ErrRequestUnauthorized)))
+	f.WriteIntrospectionError(context.Background(), rw, errorsx.WithStack(ErrInactiveToken.WithWrap(ErrRequestUnauthorized)))
 
-	f.WriteIntrospectionError(rw, nil)
+	f.WriteIntrospectionError(context.Background(), rw, nil)
 }
 
 func TestWriteIntrospectionResponse(t *testing.T) {
@@ -70,7 +71,7 @@ func TestWriteIntrospectionResponse(t *testing.T) {
 
 	rw := internal.NewMockResponseWriter(c)
 	rw.EXPECT().Write(gomock.Any()).AnyTimes()
-	f.WriteIntrospectionResponse(rw, &IntrospectionResponse{
+	f.WriteIntrospectionResponse(context.Background(), rw, &IntrospectionResponse{
 		AccessRequester: NewAccessRequest(nil),
 	})
 }
@@ -147,7 +148,7 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 	} {
 		t.Run(c.description, func(t *testing.T) {
 			c.setup()
-			f.WriteIntrospectionResponse(rw, ires)
+			f.WriteIntrospectionResponse(context.Background(), rw, ires)
 			var params struct {
 				Active   bool   `json:"active"`
 				Exp      *int64 `json:"exp"`

@@ -22,6 +22,7 @@
 package fosite_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -441,8 +442,10 @@ func TestWriteAuthorizeError(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			oauth2 := &Fosite{
-				SendDebugMessagesToClients: c.debug,
-				UseLegacyErrorFormat:       !c.doNotUseLegacyFormat,
+				Config: &Config{
+					SendDebugMessagesToClients: c.debug,
+					UseLegacyErrorFormat:       !c.doNotUseLegacyFormat,
+				},
 			}
 
 			ctrl := gomock.NewController(t)
@@ -451,7 +454,7 @@ func TestWriteAuthorizeError(t *testing.T) {
 			req := NewMockAuthorizeRequester(ctrl)
 
 			c.mock(rw, req)
-			oauth2.WriteAuthorizeError(rw, req, c.err)
+			oauth2.WriteAuthorizeError(context.Background(), rw, req, c.err)
 			c.checkHeader(t, k)
 			header = http.Header{}
 		})

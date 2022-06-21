@@ -19,9 +19,7 @@
  *
  */
 
-// REMARK: Copied here from fosite/internal to avoid circular dependencies only for test data
-
-package jwt
+package gen
 
 import (
 	"crypto/ecdsa"
@@ -39,8 +37,16 @@ func MustRSAKey() *rsa.PrivateKey {
 	return key
 }
 
-func MustECDSAKey() *ecdsa.PrivateKey {
+func MustES256Key() *ecdsa.PrivateKey {
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		panic(err)
+	}
+	return key
+}
+
+func MustES521Key() *ecdsa.PrivateKey {
+	key, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 	if err != nil {
 		panic(err)
 	}

@@ -37,6 +37,9 @@ type OpenIDConnectExplicitHandler struct {
 	*IDTokenHandleHelper
 }
 
+var _ fosite.AuthorizeEndpointHandler = (*OpenIDConnectExplicitHandler)(nil)
+var _ fosite.TokenEndpointHandler = (*OpenIDConnectExplicitHandler)(nil)
+
 var oidcParameters = []string{"grant_type",
 	"max_age",
 	"prompt",

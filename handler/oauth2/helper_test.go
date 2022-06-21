@@ -55,7 +55,9 @@ func TestIssueAccessToken(t *testing.T) {
 	helper := HandleHelper{
 		AccessTokenStorage:  accessStore,
 		AccessTokenStrategy: accessStrat,
-		AccessTokenLifespan: time.Hour,
+		Config: &fosite.Config{
+			AccessTokenLifespan: time.Hour,
+		},
 	}
 
 	areq.Session = &fosite.DefaultSession{}

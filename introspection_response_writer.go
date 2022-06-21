@@ -22,6 +22,7 @@
 package fosite
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -50,14 +51,14 @@ import (
 // specification.  In these cases, the authorization server MUST instead
 // respond with an introspection response with the "active" field set to
 // "false" as described in Section 2.2.
-func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
+func (f *Fosite) WriteIntrospectionError(ctx context.Context, rw http.ResponseWriter, err error) {
 	if err == nil {
 		return
 	}
 
 	// Inactive token errors should never written out as an error.
 	if !errors.Is(err, ErrInactiveToken) && (errors.Is(err, ErrInvalidRequest) || errors.Is(err, ErrRequestUnauthorized)) {
-		f.writeJsonError(rw, nil, err)
+		f.writeJsonError(ctx, rw, nil, err)
 		return
 	}
 
@@ -196,7 +197,7 @@ func (f *Fosite) WriteIntrospectionError(rw http.ResponseWriter, err error) {
 //	 {
 //	   "active": false
 //	 }
-func (f *Fosite) WriteIntrospectionResponse(rw http.ResponseWriter, r IntrospectionResponder) {
+func (f *Fosite) WriteIntrospectionResponse(ctx context.Context, rw http.ResponseWriter, r IntrospectionResponder) {
 	if !r.IsActive() {
 		_ = json.NewEncoder(rw).Encode(&struct {
 			Active bool `json:"active"`

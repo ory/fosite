@@ -138,11 +138,13 @@ func makeAuthorizeImplicitGrantTypeHandler(ctrl *gomock.Controller) (AuthorizeIm
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 
 	h := AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStorage:       store,
-		AccessTokenStrategy:      chgen,
-		AccessTokenLifespan:      time.Hour,
-		ScopeStrategy:            fosite.HierarchicScopeStrategy,
-		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+		AccessTokenStorage:  store,
+		AccessTokenStrategy: chgen,
+		Config: &fosite.Config{
+			AccessTokenLifespan:      time.Hour,
+			ScopeStrategy:            fosite.HierarchicScopeStrategy,
+			AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+		},
 	}
 
 	return h, store, chgen, aresp

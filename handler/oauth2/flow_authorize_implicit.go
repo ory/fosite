@@ -32,19 +32,20 @@ import (
 	"github.com/ory/fosite"
 )
 
+var _ fosite.AuthorizeEndpointHandler = (*AuthorizeImplicitGrantTypeHandler)(nil)
+
 // AuthorizeImplicitGrantTypeHandler is a response handler for the Authorize Code grant using the implicit grant type
 // as defined in https://tools.ietf.org/html/rfc6749#section-4.2
 type AuthorizeImplicitGrantTypeHandler struct {
 	AccessTokenStrategy AccessTokenStrategy
-
 	// AccessTokenStorage is used to persist session data across requests.
 	AccessTokenStorage AccessTokenStorage
 
-	// AccessTokenLifespan defines the lifetime of an access token.
-	AccessTokenLifespan time.Duration
-
-	ScopeStrategy            fosite.ScopeStrategy
-	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
+	Config interface {
+		fosite.AccessTokenLifespanProvider
+		fosite.ScopeStrategyProvider
+		fosite.AudienceStrategyProvider
+	}
 }
 
 func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -66,12 +67,12 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 
 	client := ar.GetClient()
 	for _, scope := range ar.GetRequestedScopes() {
-		if !c.ScopeStrategy(client.GetScopes(), scope) {
+		if !c.Config.GetScopeStrategy(ctx)(client.GetScopes(), scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
 
-	if err := c.AudienceMatchingStrategy(client.GetAudience(), ar.GetRequestedAudience()); err != nil {
+	if err := c.Config.GetAudienceStrategy(ctx)(client.GetAudience(), ar.GetRequestedAudience()); err != nil {
 		return err
 	}
 
@@ -84,7 +85,7 @@ func (c *AuthorizeImplicitGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx c
 func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// Only override expiry if none is set.
 	if ar.GetSession().GetExpiresAt(fosite.AccessToken).IsZero() {
-		ar.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan).Round(time.Second))
+		ar.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.Config.GetAccessTokenLifespan(ctx)).Round(time.Second))
 	}
 
 	// Generate the code
@@ -97,7 +98,7 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 	resp.AddParameter("access_token", token)
-	resp.AddParameter("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC())/time.Second), 10))
+	resp.AddParameter("expires_in", strconv.FormatInt(int64(getExpiresIn(ar, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx), time.Now().UTC())/time.Second), 10))
 	resp.AddParameter("token_type", "bearer")
 	resp.AddParameter("state", ar.GetState())
 	resp.AddParameter("scope", strings.Join(ar.GetGrantedScopes(), " "))

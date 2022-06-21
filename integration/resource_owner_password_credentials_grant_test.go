@@ -42,7 +42,7 @@ func TestResourceOwnerPasswordCredentialsFlow(t *testing.T) {
 }
 
 func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy hst.AccessTokenStrategy) {
-	f := compose.Compose(new(compose.Config), fositeStore, strategy, nil, compose.OAuth2ResourceOwnerPasswordCredentialsFactory)
+	f := compose.Compose(new(fosite.Config), fositeStore, strategy, compose.OAuth2ResourceOwnerPasswordCredentialsFactory)
 	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 

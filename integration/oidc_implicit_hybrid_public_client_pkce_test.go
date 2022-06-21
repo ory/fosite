@@ -29,6 +29,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ory/fosite/internal/gen"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -37,7 +39,6 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/openid"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -50,7 +51,9 @@ func TestOIDCImplicitFlowPublicClientPKCE(t *testing.T) {
 			Headers: &jwt.Headers{},
 		},
 	}
-	f := compose.ComposeAllEnabled(new(compose.Config), fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+	f := compose.ComposeAllEnabled(&fosite.Config{
+		GlobalSecret: []byte("some-secret-thats-random-some-secret-thats-random-"),
+	}, fositeStore, gen.MustRSAKey())
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 

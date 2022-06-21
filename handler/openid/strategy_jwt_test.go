@@ -35,10 +35,13 @@ import (
 
 func TestJWTStrategy_GenerateIDToken(t *testing.T) {
 	var j = &DefaultStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: key,
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return key, nil
+			}},
+		Config: &fosite.Config{
+			MinParameterEntropy: fosite.MinParameterEntropy,
 		},
-		MinParameterEntropy: fosite.MinParameterEntropy,
 	}
 
 	var req *fosite.AccessRequest

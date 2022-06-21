@@ -30,8 +30,10 @@ import (
 )
 
 type StatelessJWTValidator struct {
-	jwt.JWTStrategy
-	ScopeStrategy fosite.ScopeStrategy
+	jwt.Signer
+	Config interface {
+		fosite.ScopeStrategyProvider
+	}
 }
 
 // AccessTokenJWTToRequest tries to reconstruct fosite.Request from a JWT.
@@ -85,7 +87,7 @@ func AccessTokenJWTToRequest(token *jwt.Token) fosite.Requester {
 }
 
 func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token string, tokenUse fosite.TokenUse, accessRequest fosite.AccessRequester, scopes []string) (fosite.TokenUse, error) {
-	t, err := validate(ctx, v.JWTStrategy, token)
+	t, err := validate(ctx, v.Signer, token)
 	if err != nil {
 		return "", err
 	}
@@ -94,7 +96,7 @@ func (v *StatelessJWTValidator) IntrospectToken(ctx context.Context, token strin
 
 	requester := AccessTokenJWTToRequest(t)
 
-	if err := matchScopes(v.ScopeStrategy, requester.GetGrantedScopes(), scopes); err != nil {
+	if err := matchScopes(v.Config.GetScopeStrategy(ctx), requester.GetGrantedScopes(), scopes); err != nil {
 		return fosite.AccessToken, err
 	}
 

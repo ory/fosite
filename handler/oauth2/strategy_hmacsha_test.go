@@ -34,9 +34,11 @@ import (
 )
 
 var hmacshaStrategy = HMACSHAStrategy{
-	Enigma:                &hmac.HMACStrategy{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")},
-	AccessTokenLifespan:   time.Hour * 24,
-	AuthorizeCodeLifespan: time.Hour * 24,
+	Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
+	Config: &fosite.Config{
+		AccessTokenLifespan:   time.Hour * 24,
+		AuthorizeCodeLifespan: time.Hour * 24,
+	},
 }
 
 var hmacExpiredCase = fosite.Request{
@@ -96,14 +98,22 @@ func TestHMACAccessToken(t *testing.T) {
 			token, signature, err := hmacshaStrategy.GenerateAccessToken(nil, &c.r)
 			assert.NoError(t, err)
 			assert.Equal(t, strings.Split(token, ".")[1], signature)
+			assert.Contains(t, token, "ory_at_")
 
-			err = hmacshaStrategy.ValidateAccessToken(nil, &c.r, token)
-			if c.pass {
-				assert.NoError(t, err)
-				validate := hmacshaStrategy.Enigma.Signature(token)
-				assert.Equal(t, signature, validate)
-			} else {
-				assert.Error(t, err)
+			for k, token := range []string{
+				token,
+				strings.TrimPrefix(token, "ory_at_"),
+			} {
+				t.Run(fmt.Sprintf("prefix=%v", k == 0), func(t *testing.T) {
+					err = hmacshaStrategy.ValidateAccessToken(nil, &c.r, token)
+					if c.pass {
+						assert.NoError(t, err)
+						validate := hmacshaStrategy.Enigma.Signature(token)
+						assert.Equal(t, signature, validate)
+					} else {
+						assert.Error(t, err)
+					}
+				})
 			}
 		})
 	}
@@ -127,14 +137,22 @@ func TestHMACRefreshToken(t *testing.T) {
 			token, signature, err := hmacshaStrategy.GenerateRefreshToken(nil, &c.r)
 			assert.NoError(t, err)
 			assert.Equal(t, strings.Split(token, ".")[1], signature)
+			assert.Contains(t, token, "ory_rt_")
 
-			err = hmacshaStrategy.ValidateRefreshToken(nil, &c.r, token)
-			if c.pass {
-				assert.NoError(t, err)
-				validate := hmacshaStrategy.Enigma.Signature(token)
-				assert.Equal(t, signature, validate)
-			} else {
-				assert.Error(t, err)
+			for k, token := range []string{
+				token,
+				strings.TrimPrefix(token, "ory_rt_"),
+			} {
+				t.Run(fmt.Sprintf("prefix=%v", k == 0), func(t *testing.T) {
+					err = hmacshaStrategy.ValidateRefreshToken(nil, &c.r, token)
+					if c.pass {
+						assert.NoError(t, err)
+						validate := hmacshaStrategy.Enigma.Signature(token)
+						assert.Equal(t, signature, validate)
+					} else {
+						assert.Error(t, err)
+					}
+				})
 			}
 		})
 	}
@@ -158,14 +176,22 @@ func TestHMACAuthorizeCode(t *testing.T) {
 			token, signature, err := hmacshaStrategy.GenerateAuthorizeCode(nil, &c.r)
 			assert.NoError(t, err)
 			assert.Equal(t, strings.Split(token, ".")[1], signature)
+			assert.Contains(t, token, "ory_ac_")
 
-			err = hmacshaStrategy.ValidateAuthorizeCode(nil, &c.r, token)
-			if c.pass {
-				assert.NoError(t, err)
-				validate := hmacshaStrategy.Enigma.Signature(token)
-				assert.Equal(t, signature, validate)
-			} else {
-				assert.Error(t, err)
+			for k, token := range []string{
+				token,
+				strings.TrimPrefix(token, "ory_ac_"),
+			} {
+				t.Run(fmt.Sprintf("prefix=%v", k == 0), func(t *testing.T) {
+					err = hmacshaStrategy.ValidateAuthorizeCode(nil, &c.r, token)
+					if c.pass {
+						assert.NoError(t, err)
+						validate := hmacshaStrategy.Enigma.Signature(token)
+						assert.Equal(t, signature, validate)
+					} else {
+						assert.Error(t, err)
+					}
+				})
 			}
 		})
 	}

@@ -34,14 +34,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/fosite/token/jwt"
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/ory/fosite/internal/gen"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	jose "gopkg.in/square/go-jose.v2"
 
+	"github.com/ory/fosite/token/jwt"
+
 	. "github.com/ory/fosite"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 )
 
@@ -88,12 +92,15 @@ func clientBasicAuthHeader(clientID, clientSecret string) http.Header {
 func TestAuthenticateClient(t *testing.T) {
 	const at = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
-	hasher := &BCrypt{WorkFactor: 6}
+	hasher := &BCrypt{Config: &Config{HashCost: 6}}
 	f := &Fosite{
-		JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
-		Store:               storage.NewMemoryStore(),
-		Hasher:              hasher,
-		TokenURL:            "token-url",
+		Store: storage.NewMemoryStore(),
+		Config: &Config{
+			JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
+			ClientSecretsHasher: hasher,
+			TokenURL:            "token-url",
+			HTTPClient:          retryablehttp.NewClient(),
+		},
 	}
 
 	barSecret, err := hasher.Hash(context.TODO(), []byte("bar"))
@@ -104,7 +111,7 @@ func TestAuthenticateClient(t *testing.T) {
 	complexSecret, err := hasher.Hash(context.TODO(), []byte(complexSecretRaw))
 	require.NoError(t, err)
 
-	rsaKey := internal.MustRSAKey()
+	rsaKey := gen.MustRSAKey()
 	rsaJwks := &jose.JSONWebKeySet{
 		Keys: []jose.JSONWebKey{
 			{
@@ -115,7 +122,7 @@ func TestAuthenticateClient(t *testing.T) {
 		},
 	}
 
-	ecdsaKey := internal.MustECDSAKey()
+	ecdsaKey := gen.MustES256Key()
 	ecdsaJwks := &jose.JSONWebKeySet{
 		Keys: []jose.JSONWebKey{
 			{
@@ -534,7 +541,7 @@ func TestAuthenticateClient(t *testing.T) {
 			store.Clients[tc.client.ID] = tc.client
 			f.Store = store
 
-			c, err := f.AuthenticateClient(nil, tc.r, tc.form)
+			c, err := f.AuthenticateClient(context.Background(), tc.r, tc.form)
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
 				return
@@ -559,7 +566,7 @@ func TestAuthenticateClient(t *testing.T) {
 func TestAuthenticateClientTwice(t *testing.T) {
 	const at = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
-	key := internal.MustRSAKey()
+	key := gen.MustRSAKey()
 	client := &DefaultOpenIDConnectClient{
 		DefaultClient: &DefaultClient{
 			ID:     "bar",
@@ -579,12 +586,14 @@ func TestAuthenticateClientTwice(t *testing.T) {
 	store := storage.NewMemoryStore()
 	store.Clients[client.ID] = client
 
-	hasher := &BCrypt{WorkFactor: 6}
+	hasher := &BCrypt{&Config{HashCost: 6}}
 	f := &Fosite{
-		JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
-		Store:               store,
-		Hasher:              hasher,
-		TokenURL:            "token-url",
+		Store: store,
+		Config: &Config{
+			JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
+			ClientSecretsHasher: hasher,
+			TokenURL:            "token-url",
+		},
 	}
 
 	formValues := url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{

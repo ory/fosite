@@ -3,96 +3,100 @@
 
 **Table of Contents**
 
-- [0.0.0 (2022-05-06)](#000-2022-05-06)
-  - [Bug Fixes](#bug-fixes)
+- [0.0.0 (2022-06-17)](#000-2022-06-17)
+  - [Breaking Changes](#breaking-changes)
+    - [Bug Fixes](#bug-fixes)
+    - [Code Refactoring](#code-refactoring)
+    - [Features](#features)
+    - [Tests](#tests)
 - [0.42.2 (2022-04-17)](#0422-2022-04-17)
   - [Bug Fixes](#bug-fixes-1)
   - [Code Generation](#code-generation)
   - [Documentation](#documentation)
-  - [Features](#features)
+  - [Features](#features-1)
 - [0.42.1 (2022-02-03)](#0421-2022-02-03)
   - [Code Generation](#code-generation-1)
-  - [Features](#features-1)
+  - [Features](#features-2)
 - [0.42.0 (2022-01-06)](#0420-2022-01-06)
   - [Code Generation](#code-generation-2)
-  - [Features](#features-2)
+  - [Features](#features-3)
 - [0.41.0 (2021-11-13)](#0410-2021-11-13)
   - [Bug Fixes](#bug-fixes-2)
   - [Code Generation](#code-generation-3)
-  - [Code Refactoring](#code-refactoring)
+  - [Code Refactoring](#code-refactoring-1)
   - [Documentation](#documentation-1)
-  - [Features](#features-3)
-- [0.40.2 (2021-05-28)](#0402-2021-05-28)
   - [Features](#features-4)
+- [0.40.2 (2021-05-28)](#0402-2021-05-28)
+  - [Features](#features-5)
 - [0.40.1 (2021-05-23)](#0401-2021-05-23)
   - [Bug Fixes](#bug-fixes-3)
 - [0.40.0 (2021-05-21)](#0400-2021-05-21)
   - [Bug Fixes](#bug-fixes-4)
-  - [Code Refactoring](#code-refactoring-1)
+  - [Code Refactoring](#code-refactoring-2)
   - [Documentation](#documentation-2)
-  - [Features](#features-5)
-  - [Tests](#tests)
-- [0.39.0 (2021-03-08)](#0390-2021-03-08)
   - [Features](#features-6)
+  - [Tests](#tests-1)
+- [0.39.0 (2021-03-08)](#0390-2021-03-08)
+  - [Features](#features-7)
 - [0.38.0 (2021-02-23)](#0380-2021-02-23)
-  - [Breaking Changes](#breaking-changes)
+  - [Breaking Changes](#breaking-changes-1)
     - [Bug Fixes](#bug-fixes-5)
-    - [Features](#features-7)
+    - [Features](#features-8)
 - [0.37.0 (2021-02-05)](#0370-2021-02-05)
   - [Bug Fixes](#bug-fixes-6)
-  - [Features](#features-8)
+  - [Features](#features-9)
 - [0.36.1 (2021-01-11)](#0361-2021-01-11)
   - [Bug Fixes](#bug-fixes-7)
   - [Chores](#chores)
-  - [Code Refactoring](#code-refactoring-2)
+  - [Code Refactoring](#code-refactoring-3)
 - [0.36.0 (2020-11-16)](#0360-2020-11-16)
-  - [Breaking Changes](#breaking-changes-1)
+  - [Breaking Changes](#breaking-changes-2)
     - [Bug Fixes](#bug-fixes-8)
-    - [Code Refactoring](#code-refactoring-3)
+    - [Code Refactoring](#code-refactoring-4)
     - [Documentation](#documentation-3)
-    - [Features](#features-9)
+    - [Features](#features-10)
 - [0.35.1 (2020-10-11)](#0351-2020-10-11)
   - [Bug Fixes](#bug-fixes-9)
   - [Code Generation](#code-generation-4)
   - [Documentation](#documentation-4)
-  - [Features](#features-10)
+  - [Features](#features-11)
 - [0.35.0 (2020-10-06)](#0350-2020-10-06)
-  - [Breaking Changes](#breaking-changes-2)
+  - [Breaking Changes](#breaking-changes-3)
     - [Bug Fixes](#bug-fixes-10)
     - [Code Generation](#code-generation-5)
 - [0.34.1 (2020-10-02)](#0341-2020-10-02)
   - [Bug Fixes](#bug-fixes-11)
   - [Documentation](#documentation-5)
 - [0.34.0 (2020-09-24)](#0340-2020-09-24)
-  - [Breaking Changes](#breaking-changes-3)
+  - [Breaking Changes](#breaking-changes-4)
     - [Bug Fixes](#bug-fixes-12)
     - [Chores](#chores-1)
-    - [Features](#features-11)
+    - [Features](#features-12)
     - [Unclassified](#unclassified)
 - [0.33.0 (2020-09-16)](#0330-2020-09-16)
-  - [Breaking Changes](#breaking-changes-4)
-    - [Features](#features-12)
+  - [Breaking Changes](#breaking-changes-5)
+    - [Features](#features-13)
 - [0.32.4 (2020-09-15)](#0324-2020-09-15)
   - [Code Generation](#code-generation-6)
-  - [Code Refactoring](#code-refactoring-4)
+  - [Code Refactoring](#code-refactoring-5)
   - [Documentation](#documentation-6)
 - [0.32.3 (2020-09-12)](#0323-2020-09-12)
   - [Bug Fixes](#bug-fixes-13)
-  - [Code Refactoring](#code-refactoring-5)
+  - [Code Refactoring](#code-refactoring-6)
   - [Documentation](#documentation-7)
-  - [Features](#features-13)
-- [0.32.2 (2020-06-22)](#0322-2020-06-22)
   - [Features](#features-14)
+- [0.32.2 (2020-06-22)](#0322-2020-06-22)
+  - [Features](#features-15)
 - [0.32.1 (2020-06-05)](#0321-2020-06-05)
   - [Bug Fixes](#bug-fixes-14)
-  - [Features](#features-15)
+  - [Features](#features-16)
 - [0.32.0 (2020-05-28)](#0320-2020-05-28)
   - [Bug Fixes](#bug-fixes-15)
   - [Documentation](#documentation-8)
-  - [Features](#features-16)
+  - [Features](#features-17)
 - [0.31.3 (2020-05-09)](#0313-2020-05-09)
   - [Bug Fixes](#bug-fixes-16)
-  - [Features](#features-17)
+  - [Features](#features-18)
 - [0.31.2 (2020-04-16)](#0312-2020-04-16)
   - [Bug Fixes](#bug-fixes-17)
 - [0.31.1 (2020-04-16)](#0311-2020-04-16)
@@ -110,7 +114,7 @@
 - [0.30.3 (2020-03-04)](#0303-2020-03-04)
   - [Bug Fixes](#bug-fixes-22)
   - [Documentation](#documentation-11)
-  - [Features](#features-18)
+  - [Features](#features-19)
 - [0.30.2 (2019-11-21)](#0302-2019-11-21)
   - [Unclassified](#unclassified-2)
 - [0.30.1 (2019-09-23)](#0301-2019-09-23)
@@ -363,17 +367,83 @@
 - [0.2.0 (2016-08-06)](#020-2016-08-06)
   - [Unclassified](#unclassified-118)
 - [0.1.0 (2016-08-01)](#010-2016-08-01)
-  - [Code Refactoring](#code-refactoring-6)
+  - [Code Refactoring](#code-refactoring-7)
   - [Documentation](#documentation-29)
   - [Unclassified](#unclassified-119)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-05-06)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-06-17)
+
+## Breaking Changes
+
+Please be aware that several internal APIs have changed, as well as public methods. Most notably, we added the context to all `Write*` metods.
+
+```patch
+ type OAuth2Provider interface {
+-    WriteAuthorizeError(rw http.ResponseWriter, requester AuthorizeRequester, err error)
++    WriteAuthorizeError(ctx context.Context, rw http.ResponseWriter, requester AuthorizeRequester, err error)
+
+-    WriteAuthorizeResponse(rw http.ResponseWriter, requester AuthorizeRequester, responder AuthorizeResponder)
++    WriteAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, requester AuthorizeRequester, responder AuthorizeResponder)
+
+-    WriteAccessError(rw http.ResponseWriter, requester AccessRequester, err error)
++    WriteAccessError(ctx context.Context, rw http.ResponseWriter, requester AccessRequester, err error)
+
+-    WriteAccessResponse(rw http.ResponseWriter, requester AccessRequester, responder AccessResponder)
++    WriteAccessResponse(ctx context.Context, rw http.ResponseWriter, requester AccessRequester, responder AccessResponder)
+
+-    WriteRevocationResponse(rw http.ResponseWriter, err error)
++    WriteRevocationResponse(ctx context.Context, rw http.ResponseWriter, err error)
+
+-    WriteIntrospectionError(rw http.ResponseWriter, err error)
++    WriteIntrospectionError(ctx context.Context, rw http.ResponseWriter, err error)
+
+-    WriteIntrospectionResponse(rw http.ResponseWriter, r IntrospectionResponder)
++    WriteIntrospectionResponse(ctx context.Context, rw http.ResponseWriter, r IntrospectionResponder)
+ }
+```
+
+The default config struct has moved from package `github.com/ory/fosite/compose.Config` to `github.com/ory/fosite.Config`. Struct `github.com/ory/fosite.Fosite` no longer has any configuration parameters
+itself.
+
+Please note that the HMAC / global secret has to be set no longer in the compose call, but in the config initialization:
+
+```patch
+-compose.ComposeAllEnabled(&compose.Config{}, store, secret, privateKey)
++compose.ComposeAllEnabled(&fosite.Config{GlobalSecret: secret}, store, privateKey)
+```
+
+Many internal interfaces have been changed, usually adding `ctx context.Context` as the first parameter.
 
 ### Bug Fixes
 
+- Bump dependencies ([5dab818](https://github.com/ory/fosite/commit/5dab818f9707e364dcfe56bc6fd2245049417cc1))
+- Cves in deps ([f5782c3](https://github.com/ory/fosite/commit/f5782c33814ec738ea188b0ffac50ef45e7f3eb8))
+- Linting ([222ca97](https://github.com/ory/fosite/commit/222ca97805edfb52a655969841c2ac2958cc6d36))
 - **rfc7523:** Comment mentioned incorrect granttype ([#668](https://github.com/ory/fosite/issues/668)) ([b41f187](https://github.com/ory/fosite/commit/b41f187703bc1c8dc43ac0ec1ea23569779974bb))
+
+### Code Refactoring
+
+- **config:** Support hot reloading ([1661401](https://github.com/ory/fosite/commit/16614014a42b3905d065188c8f1f45433c4353f9)), closes [#666](https://github.com/ory/fosite/issues/666):
+
+  This patch updates the config system to be replacable and uses functions instead of struct fields. This allows implementing hot reloading mechanisms easily.
+
+- Move to go 1.17 ([d9d0fed](https://github.com/ory/fosite/commit/d9d0fedaad87044e4d38ba82e01d9e430d09514c))
+
+### Features
+
+- Add `ory_at|pt|ac` prefixes to HMAC tokens ([b652335](https://github.com/ory/fosite/commit/b652335c965d5cc523faebad9c9792c4135cfb75)):
+
+  See https://github.com/ory/hydra/issues/2845
+
+- Introduce cache strategy for JWKS fetcher ([452f377](https://github.com/ory/fosite/commit/452f37728890c68524b9aa190e1cdb279414f802))
+- Make http source contextualized ([9fc89e9](https://github.com/ory/fosite/commit/9fc89e9007c71354f7fe2d036ea6e175a2e5860b))
+- Support variety of JWT formats when `jose.JSONWebKey` is used ([2590eb8](https://github.com/ory/fosite/commit/2590eb83d1e66df998053bc2fb7381b9043c232e))
+
+### Tests
+
+- Fix panic ([fe60766](https://github.com/ory/fosite/commit/fe60766cdb1f0d22df7d9c4543b06cfd6dc7aea1))
 
 # [0.42.2](https://github.com/ory/fosite/compare/v0.42.1...v0.42.2) (2022-04-17)
 

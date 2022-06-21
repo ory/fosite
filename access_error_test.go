@@ -22,6 +22,7 @@
 package fosite_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -37,7 +38,7 @@ import (
 )
 
 func TestWriteAccessError(t *testing.T) {
-	f := &Fosite{}
+	f := &Fosite{Config: new(Config)}
 	header := http.Header{}
 	ctrl := gomock.NewController(t)
 	rw := NewMockResponseWriter(ctrl)
@@ -47,13 +48,14 @@ func TestWriteAccessError(t *testing.T) {
 	rw.EXPECT().WriteHeader(http.StatusBadRequest)
 	rw.EXPECT().Write(gomock.Any())
 
-	f.WriteAccessError(rw, nil, ErrInvalidRequest)
+	f.WriteAccessError(context.Background(), rw, nil, ErrInvalidRequest)
 }
 
 func TestWriteAccessError_RFC6749(t *testing.T) {
 	// https://tools.ietf.org/html/rfc6749#section-5.2
 
-	f := &Fosite{}
+	config := new(Config)
+	f := &Fosite{Config: config}
 
 	for k, c := range []struct {
 		err                *RFC6749Error
@@ -74,11 +76,11 @@ func TestWriteAccessError_RFC6749(t *testing.T) {
 		{ErrUnsupportedGrantType.WithDebug("some-debug"), "unsupported_grant_type", true, "some-debug", false},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			f.SendDebugMessagesToClients = c.debug
-			f.UseLegacyErrorFormat = c.includeExtraFields
+			config.SendDebugMessagesToClients = c.debug
+			config.UseLegacyErrorFormat = c.includeExtraFields
 
 			rw := httptest.NewRecorder()
-			f.WriteAccessError(rw, nil, c.err)
+			f.WriteAccessError(context.Background(), rw, nil, c.err)
 
 			var params struct {
 				Error       string `json:"error"`             // specified by RFC, required

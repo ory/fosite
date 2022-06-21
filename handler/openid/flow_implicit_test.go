@@ -22,48 +22,59 @@
 package openid
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/jwt"
 )
 
 func makeOpenIDConnectImplicitHandler(minParameterEntropy int) OpenIDConnectImplicitHandler {
-	var idStrategy = &DefaultStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: internal.MustRSAKey(),
-		},
+	config := &fosite.Config{
 		MinParameterEntropy: minParameterEntropy,
+		AccessTokenLifespan: time.Hour,
+		ScopeStrategy:       fosite.HierarchicScopeStrategy,
+	}
+
+	var idStrategy = &DefaultStrategy{
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+				return gen.MustRSAKey(), nil
+			},
+		},
+		Config: config,
 	}
 
 	var j = &DefaultStrategy{
-		JWTStrategy: &jwt.RS256JWTStrategy{
-			PrivateKey: key,
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+				return key, nil
+			},
 		},
-		MinParameterEntropy: minParameterEntropy,
+		Config: config,
 	}
 
 	return OpenIDConnectImplicitHandler{
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
-			AccessTokenLifespan: time.Hour,
+			Config:              config,
 			AccessTokenStrategy: hmacStrategy,
 			AccessTokenStorage:  storage.NewMemoryStore(),
 		},
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
 		},
-		ScopeStrategy:                 fosite.HierarchicScopeStrategy,
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(nil, j.JWTStrategy),
-		MinParameterEntropy:           minParameterEntropy,
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(j.Signer, config),
+		Config:                        config,
 	}
 }
 

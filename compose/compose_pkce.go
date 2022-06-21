@@ -22,17 +22,16 @@
 package compose
 
 import (
+	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/pkce"
 )
 
 // OAuth2PKCEFactory creates a PKCE handler.
-func OAuth2PKCEFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
+func OAuth2PKCEFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
 	return &pkce.Handler{
-		AuthorizeCodeStrategy:      strategy.(oauth2.AuthorizeCodeStrategy),
-		Storage:                    storage.(pkce.PKCERequestStorage),
-		Force:                      config.EnforcePKCE,
-		ForceForPublicClients:      config.EnforcePKCEForPublicClients,
-		EnablePlainChallengeMethod: config.EnablePKCEPlainChallengeMethod,
+		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
+		Storage:               storage.(pkce.PKCERequestStorage),
+		Config:                config,
 	}
 }

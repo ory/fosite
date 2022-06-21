@@ -13,30 +13,30 @@ import (
 	fosite "github.com/ory/fosite"
 )
 
-// MockAuthorizeCodeStorage is a mock of AuthorizeCodeStorage interface
+// MockAuthorizeCodeStorage is a mock of AuthorizeCodeStorage interface.
 type MockAuthorizeCodeStorage struct {
 	ctrl     *gomock.Controller
 	recorder *MockAuthorizeCodeStorageMockRecorder
 }
 
-// MockAuthorizeCodeStorageMockRecorder is the mock recorder for MockAuthorizeCodeStorage
+// MockAuthorizeCodeStorageMockRecorder is the mock recorder for MockAuthorizeCodeStorage.
 type MockAuthorizeCodeStorageMockRecorder struct {
 	mock *MockAuthorizeCodeStorage
 }
 
-// NewMockAuthorizeCodeStorage creates a new mock instance
+// NewMockAuthorizeCodeStorage creates a new mock instance.
 func NewMockAuthorizeCodeStorage(ctrl *gomock.Controller) *MockAuthorizeCodeStorage {
 	mock := &MockAuthorizeCodeStorage{ctrl: ctrl}
 	mock.recorder = &MockAuthorizeCodeStorageMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAuthorizeCodeStorage) EXPECT() *MockAuthorizeCodeStorageMockRecorder {
 	return m.recorder
 }
 
-// CreateAuthorizeCodeSession mocks base method
+// CreateAuthorizeCodeSession mocks base method.
 func (m *MockAuthorizeCodeStorage) CreateAuthorizeCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Requester) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAuthorizeCodeSession", arg0, arg1, arg2)
@@ -44,13 +44,13 @@ func (m *MockAuthorizeCodeStorage) CreateAuthorizeCodeSession(arg0 context.Conte
 	return ret0
 }
 
-// CreateAuthorizeCodeSession indicates an expected call of CreateAuthorizeCodeSession
+// CreateAuthorizeCodeSession indicates an expected call of CreateAuthorizeCodeSession.
 func (mr *MockAuthorizeCodeStorageMockRecorder) CreateAuthorizeCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuthorizeCodeSession", reflect.TypeOf((*MockAuthorizeCodeStorage)(nil).CreateAuthorizeCodeSession), arg0, arg1, arg2)
 }
 
-// GetAuthorizeCodeSession mocks base method
+// GetAuthorizeCodeSession mocks base method.
 func (m *MockAuthorizeCodeStorage) GetAuthorizeCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Session) (fosite.Requester, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAuthorizeCodeSession", arg0, arg1, arg2)
@@ -59,13 +59,13 @@ func (m *MockAuthorizeCodeStorage) GetAuthorizeCodeSession(arg0 context.Context,
 	return ret0, ret1
 }
 
-// GetAuthorizeCodeSession indicates an expected call of GetAuthorizeCodeSession
+// GetAuthorizeCodeSession indicates an expected call of GetAuthorizeCodeSession.
 func (mr *MockAuthorizeCodeStorageMockRecorder) GetAuthorizeCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthorizeCodeSession", reflect.TypeOf((*MockAuthorizeCodeStorage)(nil).GetAuthorizeCodeSession), arg0, arg1, arg2)
 }
 
-// InvalidateAuthorizeCodeSession mocks base method
+// InvalidateAuthorizeCodeSession mocks base method.
 func (m *MockAuthorizeCodeStorage) InvalidateAuthorizeCodeSession(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InvalidateAuthorizeCodeSession", arg0, arg1)
@@ -73,7 +73,7 @@ func (m *MockAuthorizeCodeStorage) InvalidateAuthorizeCodeSession(arg0 context.C
 	return ret0
 }
 
-// InvalidateAuthorizeCodeSession indicates an expected call of InvalidateAuthorizeCodeSession
+// InvalidateAuthorizeCodeSession indicates an expected call of InvalidateAuthorizeCodeSession.
 func (mr *MockAuthorizeCodeStorageMockRecorder) InvalidateAuthorizeCodeSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvalidateAuthorizeCodeSession", reflect.TypeOf((*MockAuthorizeCodeStorage)(nil).InvalidateAuthorizeCodeSession), arg0, arg1)

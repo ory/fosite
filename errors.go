@@ -28,9 +28,10 @@ import (
 	"net/url"
 	"strings"
 
+	"golang.org/x/text/language"
+
 	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
-	"golang.org/x/text/language"
 
 	stderr "errors"
 

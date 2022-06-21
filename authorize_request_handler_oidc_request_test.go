@@ -22,6 +22,7 @@
 package fosite
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
@@ -33,10 +34,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	jose "gopkg.in/square/go-jose.v2"
+
+	"github.com/ory/fosite/token/jwt"
 )
 
 func mustGenerateAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
@@ -94,7 +96,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 	reqJWK := httptest.NewServer(hJWK)
 	defer reqJWK.Close()
 
-	f := &Fosite{JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy()}
+	f := &Fosite{Config: &Config{JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy()}}
 	for k, tc := range []struct {
 		client Client
 		form   url.Values
@@ -135,7 +137,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 			expectForm: url.Values{"scope": {"openid"}},
 		},
 		{
-			d:          "should fail because token invalid an no keys set",
+			d:          "should fail because token invalid an no key set",
 			form:       url.Values{"scope": {"openid"}, "request_uri": {"foo"}},
 			client:     &DefaultOpenIDConnectClient{RequestObjectSigningAlgorithm: "RS256"},
 			expectErr:  ErrInvalidRequest,
@@ -211,7 +213,7 @@ func TestAuthorizeRequestParametersFromOpenIDConnectRequest(t *testing.T) {
 				},
 			}
 
-			err := f.authorizeRequestParametersFromOpenIDConnectRequest(req)
+			err := f.authorizeRequestParametersFromOpenIDConnectRequest(context.Background(), req)
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error(), "%+v", err)
 				if tc.expectErrReason != "" {
