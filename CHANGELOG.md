@@ -420,6 +420,7 @@ Many internal interfaces have been changed, usually adding `ctx context.Context`
 
 - Bump dependencies ([5dab818](https://github.com/ory/fosite/commit/5dab818f9707e364dcfe56bc6fd2245049417cc1))
 - Cves in deps ([f5782c3](https://github.com/ory/fosite/commit/f5782c33814ec738ea188b0ffac50ef45e7f3eb8))
+- Include `at_hash` claim in authcode flow's ID token ([#679](https://github.com/ory/fosite/issues/679)) ([c3b7bab](https://github.com/ory/fosite/commit/c3b7bab41db24b000f8e1416e1475e0aae4c310c))
 - Linting ([222ca97](https://github.com/ory/fosite/commit/222ca97805edfb52a655969841c2ac2958cc6d36))
 - **rfc7523:** Comment mentioned incorrect granttype ([#668](https://github.com/ory/fosite/issues/668)) ([b41f187](https://github.com/ory/fosite/commit/b41f187703bc1c8dc43ac0ec1ea23569779974bb))
 
