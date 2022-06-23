@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2022-06-17)](#000-2022-06-17)
+- [0.0.0 (2022-06-23)](#000-2022-06-23)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -373,7 +373,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-06-17)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-06-23)
 
 ## Breaking Changes
 
