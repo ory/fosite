@@ -295,7 +295,7 @@ func (f *Fosite) authorizeRequestFromPAR(ctx context.Context, r *http.Request, r
 
 	storage, ok := f.Store.(PARStorage)
 	if !ok {
-		return false, errorsx.WithStack(ErrServerError.WithHint("Invalid storage").WithDebug("PARStorage not implemented"))
+		return false, errorsx.WithStack(ErrServerError.WithDebug("Request failed because the 'PARStorage' interface is not implemented."))
 	}
 
 	// hydrate the requester
