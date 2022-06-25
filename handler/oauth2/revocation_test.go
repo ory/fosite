@@ -62,7 +62,7 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
-				rtStrat.EXPECT().RefreshTokenSignature(token)
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "foo"})
 			},
@@ -74,7 +74,7 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
-				rtStrat.EXPECT().RefreshTokenSignature(token)
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 				ar.EXPECT().GetID()
 				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
@@ -89,7 +89,7 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
-				atStrat.EXPECT().AccessTokenSignature(token)
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 				ar.EXPECT().GetID()
 				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
@@ -104,10 +104,10 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
-				atStrat.EXPECT().AccessTokenSignature(token)
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 
-				rtStrat.EXPECT().RefreshTokenSignature(token)
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 				ar.EXPECT().GetID()
 				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
@@ -122,10 +122,10 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
-				rtStrat.EXPECT().RefreshTokenSignature(token)
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 
-				atStrat.EXPECT().AccessTokenSignature(token)
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 				ar.EXPECT().GetID()
 				ar.EXPECT().GetClient().Return(&fosite.DefaultClient{ID: "bar"})
@@ -140,10 +140,10 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
-				rtStrat.EXPECT().RefreshTokenSignature(token)
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 
-				atStrat.EXPECT().AccessTokenSignature(token)
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 			},
 		},
@@ -154,10 +154,10 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
-				atStrat.EXPECT().AccessTokenSignature(token)
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 
-				rtStrat.EXPECT().RefreshTokenSignature(token)
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 			},
 		},
@@ -168,10 +168,10 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
-				atStrat.EXPECT().AccessTokenSignature(token)
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("random error"))
 
-				rtStrat.EXPECT().RefreshTokenSignature(token)
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 			},
 		},
@@ -182,10 +182,10 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
-				atStrat.EXPECT().AccessTokenSignature(token)
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
 
-				rtStrat.EXPECT().RefreshTokenSignature(token)
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("random error"))
 			},
 		},
@@ -196,7 +196,7 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.AccessToken
-				atStrat.EXPECT().AccessTokenSignature(token)
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 
 				ar.EXPECT().GetID()
@@ -212,7 +212,7 @@ func TestRevokeToken(t *testing.T) {
 			mock: func() {
 				token = "foo"
 				tokenType = fosite.RefreshToken
-				rtStrat.EXPECT().RefreshTokenSignature(token)
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
 				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(ar, nil)
 
 				ar.EXPECT().GetID()

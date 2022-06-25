@@ -22,6 +22,7 @@
 package fosite_test
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"testing"
@@ -34,7 +35,7 @@ import (
 )
 
 func TestWriteAuthorizeResponse(t *testing.T) {
-	oauth2 := &Fosite{}
+	oauth2 := &Fosite{Config: new(Config)}
 	header := http.Header{}
 	ctrl := gomock.NewController(t)
 	rw := NewMockResponseWriter(ctrl)
@@ -222,7 +223,7 @@ func TestWriteAuthorizeResponse(t *testing.T) {
 	} {
 		t.Logf("Starting test case %d", k)
 		c.setup()
-		oauth2.WriteAuthorizeResponse(rw, ar, resp)
+		oauth2.WriteAuthorizeResponse(context.Background(), rw, ar, resp)
 		c.expect()
 		header = http.Header{}
 		t.Logf("Passed test case %d", k)

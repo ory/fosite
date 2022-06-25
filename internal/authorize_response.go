@@ -12,54 +12,54 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockAuthorizeResponder is a mock of AuthorizeResponder interface
+// MockAuthorizeResponder is a mock of AuthorizeResponder interface.
 type MockAuthorizeResponder struct {
 	ctrl     *gomock.Controller
 	recorder *MockAuthorizeResponderMockRecorder
 }
 
-// MockAuthorizeResponderMockRecorder is the mock recorder for MockAuthorizeResponder
+// MockAuthorizeResponderMockRecorder is the mock recorder for MockAuthorizeResponder.
 type MockAuthorizeResponderMockRecorder struct {
 	mock *MockAuthorizeResponder
 }
 
-// NewMockAuthorizeResponder creates a new mock instance
+// NewMockAuthorizeResponder creates a new mock instance.
 func NewMockAuthorizeResponder(ctrl *gomock.Controller) *MockAuthorizeResponder {
 	mock := &MockAuthorizeResponder{ctrl: ctrl}
 	mock.recorder = &MockAuthorizeResponderMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockAuthorizeResponder) EXPECT() *MockAuthorizeResponderMockRecorder {
 	return m.recorder
 }
 
-// AddHeader mocks base method
+// AddHeader mocks base method.
 func (m *MockAuthorizeResponder) AddHeader(arg0, arg1 string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "AddHeader", arg0, arg1)
 }
 
-// AddHeader indicates an expected call of AddHeader
+// AddHeader indicates an expected call of AddHeader.
 func (mr *MockAuthorizeResponderMockRecorder) AddHeader(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddHeader", reflect.TypeOf((*MockAuthorizeResponder)(nil).AddHeader), arg0, arg1)
 }
 
-// AddParameter mocks base method
+// AddParameter mocks base method.
 func (m *MockAuthorizeResponder) AddParameter(arg0, arg1 string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "AddParameter", arg0, arg1)
 }
 
-// AddParameter indicates an expected call of AddParameter
+// AddParameter indicates an expected call of AddParameter.
 func (mr *MockAuthorizeResponderMockRecorder) AddParameter(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddParameter", reflect.TypeOf((*MockAuthorizeResponder)(nil).AddParameter), arg0, arg1)
 }
 
-// GetCode mocks base method
+// GetCode mocks base method.
 func (m *MockAuthorizeResponder) GetCode() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCode")
@@ -67,13 +67,13 @@ func (m *MockAuthorizeResponder) GetCode() string {
 	return ret0
 }
 
-// GetCode indicates an expected call of GetCode
+// GetCode indicates an expected call of GetCode.
 func (mr *MockAuthorizeResponderMockRecorder) GetCode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCode", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetCode))
 }
 
-// GetHeader mocks base method
+// GetHeader mocks base method.
 func (m *MockAuthorizeResponder) GetHeader() http.Header {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHeader")
@@ -81,13 +81,13 @@ func (m *MockAuthorizeResponder) GetHeader() http.Header {
 	return ret0
 }
 
-// GetHeader indicates an expected call of GetHeader
+// GetHeader indicates an expected call of GetHeader.
 func (mr *MockAuthorizeResponderMockRecorder) GetHeader() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeader", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetHeader))
 }
 
-// GetParameters mocks base method
+// GetParameters mocks base method.
 func (m *MockAuthorizeResponder) GetParameters() url.Values {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetParameters")
@@ -95,7 +95,7 @@ func (m *MockAuthorizeResponder) GetParameters() url.Values {
 	return ret0
 }
 
-// GetParameters indicates an expected call of GetParameters
+// GetParameters indicates an expected call of GetParameters.
 func (mr *MockAuthorizeResponderMockRecorder) GetParameters() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParameters", reflect.TypeOf((*MockAuthorizeResponder)(nil).GetParameters))

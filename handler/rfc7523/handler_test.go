@@ -66,18 +66,22 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupTest() {
 	s.accessRequest.Form = url.Values{}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
 	s.handler = &Handler{
-		Storage:                  s.mockStore,
-		ScopeStrategy:            fosite.HierarchicScopeStrategy,
-		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-		TokenURL:                 "https://www.example.com/token",
-		SkipClientAuth:           false,
-		JWTIDOptional:            false,
-		JWTIssuedDateOptional:    false,
-		JWTMaxDuration:           time.Hour * 24 * 30,
+		Storage: s.mockStore,
+		Config: &fosite.Config{
+			ScopeStrategy:                        fosite.HierarchicScopeStrategy,
+			AudienceMatchingStrategy:             fosite.DefaultAudienceMatchingStrategy,
+			TokenURL:                             "https://www.example.com/token",
+			GrantTypeJWTBearerCanSkipClientAuth:  false,
+			GrantTypeJWTBearerIDOptional:         false,
+			GrantTypeJWTBearerIssuedDateOptional: false,
+			GrantTypeJWTBearerMaxDuration:        time.Hour * 24 * 30,
+		},
 		HandleHelper: &oauth2.HandleHelper{
 			AccessTokenStrategy: s.mockAccessTokenStrategy,
 			AccessTokenStorage:  s.mockAccessTokenStore,
-			AccessTokenLifespan: time.Hour,
+			Config: &fosite.Config{
+				AccessTokenLifespan: time.Hour,
+			},
 		},
 	}
 }
@@ -104,7 +108,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestClientIsNotRegisteredForG
 	// arrange
 	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{"authorization_code"}}
-	s.handler.SkipClientAuth = false
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerCanSkipClientAuth = false
 
 	// act
 	err := s.handler.HandleTokenEndpointRequest(context.Background(), s.accessRequest)
@@ -325,7 +329,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestNotValidAudienceInAsserti
 	s.Equal(
 		fmt.Sprintf(
 			"The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim containing a value \"%s\" that identifies the authorization server as an intended audience.",
-			s.handler.TokenURL,
+			s.handler.Config.GetTokenURL(ctx),
 		),
 		err.(*fosite.RFC6749Error).HintField,
 	)
@@ -412,7 +416,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithoutRequiredI
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
 	cl.IssuedAt = nil
-	s.handler.JWTIssuedDateOptional = false
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerIssuedDateOptional = false
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
 
@@ -437,8 +441,8 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithIssueDateFar
 	issuedAt := time.Now().AddDate(0, 0, -31)
 	cl := s.createStandardClaim()
 	cl.IssuedAt = jwt.NewNumericDate(issuedAt)
-	s.handler.JWTIssuedDateOptional = false
-	s.handler.JWTMaxDuration = time.Hour * 24 * 30
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerIssuedDateOptional = false
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerMaxDuration = time.Hour * 24 * 30
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
 
@@ -467,8 +471,8 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithExpirationDa
 	cl := s.createStandardClaim()
 	cl.IssuedAt = jwt.NewNumericDate(time.Now().AddDate(0, 0, -15))
 	cl.Expiry = jwt.NewNumericDate(time.Now().AddDate(0, 0, 20))
-	s.handler.JWTIssuedDateOptional = false
-	s.handler.JWTMaxDuration = time.Hour * 24 * 30
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerIssuedDateOptional = false
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerMaxDuration = time.Hour * 24 * 30
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
 
@@ -497,8 +501,8 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithExpirationDa
 	cl := s.createStandardClaim()
 	cl.IssuedAt = nil
 	cl.Expiry = jwt.NewNumericDate(time.Now().AddDate(0, 0, 31))
-	s.handler.JWTIssuedDateOptional = true
-	s.handler.JWTMaxDuration = time.Hour * 24 * 30
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerIssuedDateOptional = true
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerMaxDuration = time.Hour * 24 * 30
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
 
@@ -688,7 +692,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionIsValidWhenJWTID
 	keyID := "my_key"
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
-	s.handler.JWTIDOptional = true
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerIDOptional = true
 	cl.ID = ""
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
@@ -709,7 +713,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionIsValidWhenJWTIs
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
 	cl.IssuedAt = nil
-	s.handler.JWTIssuedDateOptional = true
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerIssuedDateOptional = true
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
 	s.mockStore.EXPECT().GetPublicKeyScopes(ctx, cl.Issuer, cl.Subject, keyID).Return([]string{"valid_scope"}, nil)
@@ -731,7 +735,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestRequestIsValidWhenClientA
 	pubKey := s.createJWK(s.privateKey.Public(), keyID)
 	cl := s.createStandardClaim()
 	s.accessRequest.Client = &fosite.DefaultClient{}
-	s.handler.SkipClientAuth = true
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerCanSkipClientAuth = true
 	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
 	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
 	s.mockStore.EXPECT().GetPublicKeyScopes(ctx, cl.Issuer, cl.Subject, keyID).Return([]string{"valid_scope"}, nil)
@@ -839,18 +843,22 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) SetupTest() {
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
 	s.accessResponse = fosite.NewAccessResponse()
 	s.handler = &Handler{
-		Storage:                  s.mockStore,
-		ScopeStrategy:            fosite.HierarchicScopeStrategy,
-		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-		TokenURL:                 "https://www.example.com/token",
-		SkipClientAuth:           false,
-		JWTIDOptional:            false,
-		JWTIssuedDateOptional:    false,
-		JWTMaxDuration:           time.Hour * 24 * 30,
+		Storage: s.mockStore,
+		Config: &fosite.Config{
+			ScopeStrategy:                        fosite.HierarchicScopeStrategy,
+			AudienceMatchingStrategy:             fosite.DefaultAudienceMatchingStrategy,
+			TokenURL:                             "https://www.example.com/token",
+			GrantTypeJWTBearerCanSkipClientAuth:  false,
+			GrantTypeJWTBearerIDOptional:         false,
+			GrantTypeJWTBearerIssuedDateOptional: false,
+			GrantTypeJWTBearerMaxDuration:        time.Hour * 24 * 30,
+		},
 		HandleHelper: &oauth2.HandleHelper{
 			AccessTokenStrategy: s.mockAccessTokenStrategy,
 			AccessTokenStorage:  s.mockAccessTokenStore,
-			AccessTokenLifespan: time.Hour,
+			Config: &fosite.Config{
+				AccessTokenLifespan: time.Hour,
+			},
 		},
 	}
 }
@@ -877,7 +885,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestClientIsNotRegiste
 	// arrange
 	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{"authorization_code"}}
-	s.handler.SkipClientAuth = false
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerCanSkipClientAuth = false
 
 	// act
 	err := s.handler.PopulateTokenEndpointResponse(context.Background(), s.accessRequest, s.accessResponse)
@@ -908,7 +916,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestAccessTokenIssuedS
 	s.Equal(s.accessResponse.AccessToken, token, "access token expected in response")
 	s.Equal(s.accessResponse.TokenType, "bearer", "token type expected to be \"bearer\"")
 	s.Equal(
-		s.accessResponse.GetExtra("expires_in"), int64(s.handler.HandleHelper.AccessTokenLifespan.Seconds()),
+		s.accessResponse.GetExtra("expires_in"), int64(s.handler.HandleHelper.Config.GetAccessTokenLifespan(context.TODO()).Seconds()),
 		"token expiration time expected in response to be equal to AccessTokenLifespan setting in handler",
 	)
 	s.Equal(s.accessResponse.GetExtra("scope"), "", "no scopes expected in response")

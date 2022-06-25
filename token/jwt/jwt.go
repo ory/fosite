@@ -32,85 +32,85 @@ import (
 	"crypto/sha256"
 	"strings"
 
-	"github.com/ory/x/errorsx"
 	"gopkg.in/square/go-jose.v2"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
 )
 
-type JWTStrategy interface {
+type Signer interface {
 	Generate(ctx context.Context, claims MapClaims, header Mapper) (string, string, error)
 	Validate(ctx context.Context, token string) (string, error)
 	Hash(ctx context.Context, in []byte) ([]byte, error)
 	Decode(ctx context.Context, token string) (*Token, error)
 	GetSignature(ctx context.Context, token string) (string, error)
-	GetSigningMethodLength() int
+	GetSigningMethodLength(ctx context.Context) int
 }
 
 var SHA256HashSize = crypto.SHA256.Size()
 
-// RS256JWTStrategy is responsible for generating and validating JWT challenges
-type RS256JWTStrategy struct {
-	PrivateKey interface{}
+type GetPrivateKeyFunc func(ctx context.Context) (interface{}, error)
+
+// DefaultSigner is responsible for generating and validating JWT challenges
+type DefaultSigner struct {
+	GetPrivateKey GetPrivateKeyFunc
 }
 
 // Generate generates a new authorize code or returns an error. set secret
-func (j *RS256JWTStrategy) Generate(ctx context.Context, claims MapClaims, header Mapper) (string, string, error) {
-	return generateToken(claims, header, jose.RS256, j.PrivateKey)
+func (j *DefaultSigner) Generate(ctx context.Context, claims MapClaims, header Mapper) (string, string, error) {
+	key, err := j.GetPrivateKey(ctx)
+	if err != nil {
+		return "", "", err
+	}
+
+	switch t := key.(type) {
+	case *jose.JSONWebKey:
+		return generateToken(claims, header, jose.SignatureAlgorithm(t.Algorithm), t.Key)
+	case jose.JSONWebKey:
+		return generateToken(claims, header, jose.SignatureAlgorithm(t.Algorithm), t.Key)
+	case *rsa.PrivateKey:
+		return generateToken(claims, header, jose.RS256, t)
+	case *ecdsa.PrivateKey:
+		return generateToken(claims, header, jose.ES256, t)
+	case jose.OpaqueSigner:
+		switch tt := t.Public().Key.(type) {
+		case *rsa.PrivateKey:
+			alg := jose.RS256
+			if len(t.Algs()) > 0 {
+				alg = t.Algs()[0]
+			}
+
+			return generateToken(claims, header, alg, t)
+		case *ecdsa.PrivateKey:
+			alg := jose.ES256
+			if len(t.Algs()) > 0 {
+				alg = t.Algs()[0]
+			}
+
+			return generateToken(claims, header, alg, t)
+		default:
+			return "", "", errors.Errorf("unsupported private / public key pairs: %T, %T", t, tt)
+		}
+	default:
+		return "", "", errors.Errorf("unsupported private key type: %T", t)
+	}
 }
 
 // Validate validates a token and returns its signature or an error if the token is not valid.
-func (j *RS256JWTStrategy) Validate(ctx context.Context, token string) (string, error) {
-	switch t := j.PrivateKey.(type) {
+func (j *DefaultSigner) Validate(ctx context.Context, token string) (string, error) {
+	key, err := j.GetPrivateKey(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if t, ok := key.(*jose.JSONWebKey); ok {
+		key = t.Key
+	}
+
+	switch t := key.(type) {
 	case *rsa.PrivateKey:
 		return validateToken(token, t.PublicKey)
-	case jose.OpaqueSigner:
-		return validateToken(token, t.Public().Key)
-	default:
-		return "", errors.New("Unable to validate token. Invalid PrivateKey type")
-	}
-}
-
-// Decode will decode a JWT token
-func (j *RS256JWTStrategy) Decode(ctx context.Context, token string) (*Token, error) {
-	switch t := j.PrivateKey.(type) {
-	case *rsa.PrivateKey:
-		return decodeToken(token, t.PublicKey)
-	case jose.OpaqueSigner:
-		return decodeToken(token, t.Public().Key)
-	default:
-		return nil, errors.New("Unable to decode token. Invalid PrivateKey type")
-	}
-}
-
-// GetSignature will return the signature of a token
-func (j *RS256JWTStrategy) GetSignature(ctx context.Context, token string) (string, error) {
-	return getTokenSignature(token)
-}
-
-// Hash will return a given hash based on the byte input or an error upon fail
-func (j *RS256JWTStrategy) Hash(ctx context.Context, in []byte) ([]byte, error) {
-	return hashSHA256(in)
-}
-
-// GetSigningMethodLength will return the length of the signing method
-func (j *RS256JWTStrategy) GetSigningMethodLength() int {
-	return SHA256HashSize
-}
-
-// ES256JWTStrategy is responsible for generating and validating JWT challenges
-type ES256JWTStrategy struct {
-	PrivateKey interface{}
-}
-
-// Generate generates a new authorize code or returns an error. set secret
-func (j *ES256JWTStrategy) Generate(ctx context.Context, claims MapClaims, header Mapper) (string, string, error) {
-	return generateToken(claims, header, jose.ES256, j.PrivateKey)
-}
-
-// Validate validates a token and returns its signature or an error if the token is not valid.
-func (j *ES256JWTStrategy) Validate(ctx context.Context, token string) (string, error) {
-	switch t := j.PrivateKey.(type) {
 	case *ecdsa.PrivateKey:
 		return validateToken(token, t.PublicKey)
 	case jose.OpaqueSigner:
@@ -121,8 +121,19 @@ func (j *ES256JWTStrategy) Validate(ctx context.Context, token string) (string, 
 }
 
 // Decode will decode a JWT token
-func (j *ES256JWTStrategy) Decode(ctx context.Context, token string) (*Token, error) {
-	switch t := j.PrivateKey.(type) {
+func (j *DefaultSigner) Decode(ctx context.Context, token string) (*Token, error) {
+	key, err := j.GetPrivateKey(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if t, ok := key.(*jose.JSONWebKey); ok {
+		key = t.Key
+	}
+
+	switch t := key.(type) {
+	case *rsa.PrivateKey:
+		return decodeToken(token, t.PublicKey)
 	case *ecdsa.PrivateKey:
 		return decodeToken(token, t.PublicKey)
 	case jose.OpaqueSigner:
@@ -133,23 +144,23 @@ func (j *ES256JWTStrategy) Decode(ctx context.Context, token string) (*Token, er
 }
 
 // GetSignature will return the signature of a token
-func (j *ES256JWTStrategy) GetSignature(ctx context.Context, token string) (string, error) {
+func (j *DefaultSigner) GetSignature(ctx context.Context, token string) (string, error) {
 	return getTokenSignature(token)
 }
 
 // Hash will return a given hash based on the byte input or an error upon fail
-func (j *ES256JWTStrategy) Hash(ctx context.Context, in []byte) ([]byte, error) {
+func (j *DefaultSigner) Hash(ctx context.Context, in []byte) ([]byte, error) {
 	return hashSHA256(in)
 }
 
 // GetSigningMethodLength will return the length of the signing method
-func (j *ES256JWTStrategy) GetSigningMethodLength() int {
+func (j *DefaultSigner) GetSigningMethodLength(ctx context.Context) int {
 	return SHA256HashSize
 }
 
 func generateToken(claims MapClaims, header Mapper, signingMethod jose.SignatureAlgorithm, privateKey interface{}) (rawToken string, sig string, err error) {
 	if header == nil || claims == nil {
-		err = errors.New("Either claims or header is nil.")
+		err = errors.New("either claims or header is nil")
 		return
 	}
 
@@ -181,7 +192,7 @@ func validateToken(tokenStr string, verificationKey interface{}) (string, error)
 func getTokenSignature(token string) (string, error) {
 	split := strings.Split(token, ".")
 	if len(split) != 3 {
-		return "", errors.New("Header, body and signature must all be set")
+		return "", errors.New("header, body and signature must all be set")
 	}
 	return split[2], nil
 }

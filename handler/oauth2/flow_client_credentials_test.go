@@ -45,10 +45,14 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 		HandleHelper: &HandleHelper{
 			AccessTokenStorage:  store,
 			AccessTokenStrategy: chgen,
-			AccessTokenLifespan: time.Hour,
+			Config: &fosite.Config{
+				AccessTokenLifespan: time.Hour,
+			},
 		},
-		ScopeStrategy:            fosite.HierarchicScopeStrategy,
-		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+		Config: &fosite.Config{
+			ScopeStrategy:            fosite.HierarchicScopeStrategy,
+			AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+		},
 	}
 	for k, c := range []struct {
 		description string
@@ -126,9 +130,13 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 		HandleHelper: &HandleHelper{
 			AccessTokenStorage:  store,
 			AccessTokenStrategy: chgen,
-			AccessTokenLifespan: time.Hour,
+			Config: &fosite.Config{
+				AccessTokenLifespan: time.Hour,
+			},
 		},
-		ScopeStrategy: fosite.HierarchicScopeStrategy,
+		Config: &fosite.Config{
+			ScopeStrategy: fosite.HierarchicScopeStrategy,
+		},
 	}
 	for k, c := range []struct {
 		description string

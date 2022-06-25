@@ -27,6 +27,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -83,8 +85,8 @@ func (s *authorizeJWTBearerRequiredIATSuite) getClient() *clients.JWTBearer {
 }
 
 func (s *authorizeJWTBearerRequiredIATSuite) assertSuccessResponse(t *testing.T, token *clients.Token, err error) {
-	assert.Nil(t, err)
-	assert.NotNil(t, token)
+	require.NoError(t, err)
+	require.NotNil(t, token)
 
 	assert.Equal(t, token.TokenType, "bearer")
 	assert.Empty(t, token.RefreshToken)
@@ -103,7 +105,7 @@ func (s *authorizeJWTBearerRequiredIATSuite) assertBadResponse(t *testing.T, tok
 
 func TestAuthorizeJWTBearerRequiredIATSuite(t *testing.T) {
 	provider := compose.Compose(
-		&compose.Config{
+		&fosite.Config{
 			GrantTypeJWTBearerCanSkipClientAuth:  true,
 			GrantTypeJWTBearerIDOptional:         true,
 			GrantTypeJWTBearerIssuedDateOptional: false,
@@ -111,7 +113,6 @@ func TestAuthorizeJWTBearerRequiredIATSuite(t *testing.T) {
 		},
 		fositeStore,
 		jwtStrategy,
-		nil,
 		compose.OAuth2ClientCredentialsGrantFactory,
 		compose.RFC7523AssertionGrantFactory,
 	)

@@ -28,6 +28,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/square/go-jose.v2/jwt"
@@ -78,7 +80,7 @@ func (s *introspectJWTBearerTokenSuite) TestSuccessResponseWithMultipleScopesTok
 
 	scopes := []string{"fosite", "docker"}
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, scopes)
-	assert.Nil(s.T(), err)
+	require.NoError(s.T(), err)
 
 	response, err := s.clientIntrospect.IntrospectToken(
 		ctx,
@@ -97,7 +99,7 @@ func (s *introspectJWTBearerTokenSuite) TestUnActiveResponseWithInvalidScopes() 
 	ctx := context.Background()
 
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
-	assert.Nil(s.T(), err)
+	require.NoError(s.T(), err)
 
 	response, err := s.clientIntrospect.IntrospectToken(
 		ctx,
@@ -108,7 +110,7 @@ func (s *introspectJWTBearerTokenSuite) TestUnActiveResponseWithInvalidScopes() 
 		map[string]string{"Authorization": s.authorizationHeader},
 	)
 
-	assert.Nil(s.T(), err)
+	require.NoError(s.T(), err)
 	assert.NotNil(s.T(), response)
 	assert.False(s.T(), response.Active)
 }
@@ -117,7 +119,7 @@ func (s *introspectJWTBearerTokenSuite) TestSuccessResponseWithoutScopesForIntro
 	ctx := context.Background()
 
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
-	assert.Nil(s.T(), err)
+	require.NoError(s.T(), err)
 
 	response, err := s.clientIntrospect.IntrospectToken(
 		ctx,
@@ -135,7 +137,7 @@ func (s *introspectJWTBearerTokenSuite) TestSuccessResponseWithoutScopes() {
 	ctx := context.Background()
 
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, nil)
-	assert.Nil(s.T(), err)
+	require.NoError(s.T(), err)
 
 	response, err := s.clientIntrospect.IntrospectToken(
 		ctx,
@@ -153,7 +155,7 @@ func (s *introspectJWTBearerTokenSuite) TestSubjectHasAccessToScopeButNotInited(
 	ctx := context.Background()
 
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, nil)
-	assert.Nil(s.T(), err)
+	require.NoError(s.T(), err)
 
 	response, err := s.clientIntrospect.IntrospectToken(
 		ctx,
@@ -164,7 +166,7 @@ func (s *introspectJWTBearerTokenSuite) TestSubjectHasAccessToScopeButNotInited(
 		map[string]string{"Authorization": s.authorizationHeader},
 	)
 
-	assert.Nil(s.T(), err)
+	require.NoError(s.T(), err)
 	assert.NotNil(s.T(), response)
 	assert.False(s.T(), response.Active)
 }
@@ -172,7 +174,7 @@ func (s *introspectJWTBearerTokenSuite) TestSubjectHasAccessToScopeButNotInited(
 func (s *introspectJWTBearerTokenSuite) TestTheSameTokenInRequestAndHeader() {
 	ctx := context.Background()
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
-	assert.Nil(s.T(), err)
+	require.NoError(s.T(), err)
 
 	response, err := s.clientIntrospect.IntrospectToken(
 		ctx,
@@ -189,7 +191,7 @@ func (s *introspectJWTBearerTokenSuite) TestTheSameTokenInRequestAndHeader() {
 func (s *introspectJWTBearerTokenSuite) TestUnauthorizedResponseForRequestWithoutAuthorization() {
 	ctx := context.Background()
 	token, err := s.getJWTClient().GetToken(ctx, s.clientTokenPayload, s.scopes)
-	assert.Nil(s.T(), err)
+	require.NoError(s.T(), err)
 
 	response, err := s.clientIntrospect.IntrospectToken(
 		ctx,
@@ -244,7 +246,7 @@ func (s *introspectJWTBearerTokenSuite) assertUnauthorizedResponse(
 
 func TestIntrospectJWTBearerTokenSuite(t *testing.T) {
 	provider := compose.Compose(
-		&compose.Config{
+		&fosite.Config{
 			GrantTypeJWTBearerCanSkipClientAuth:  true,
 			GrantTypeJWTBearerIDOptional:         true,
 			GrantTypeJWTBearerIssuedDateOptional: true,
@@ -253,7 +255,6 @@ func TestIntrospectJWTBearerTokenSuite(t *testing.T) {
 		},
 		fositeStore,
 		jwtStrategy,
-		nil,
 		compose.OAuth2ClientCredentialsGrantFactory,
 		compose.RFC7523AssertionGrantFactory,
 		compose.OAuth2TokenIntrospectionFactory,

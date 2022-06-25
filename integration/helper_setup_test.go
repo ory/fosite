@@ -22,12 +22,15 @@
 package integration_test
 
 import (
+	"context"
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/gorilla/mux"
 	goauth "golang.org/x/oauth2"
@@ -38,7 +41,6 @@ import (
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/integration/clients"
-	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
@@ -177,16 +179,24 @@ func newJWTBearerAppClient(ts *httptest.Server) *clients.JWTBearer {
 
 var hmacStrategy = &oauth2.HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{
-		GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
+		Config: &fosite.Config{
+			GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
+		},
 	},
-	AccessTokenLifespan:   accessTokenLifespan,
-	AuthorizeCodeLifespan: authCodeLifespan,
+	Config: &fosite.Config{
+		AccessTokenLifespan:   accessTokenLifespan,
+		AuthorizeCodeLifespan: authCodeLifespan,
+	},
 }
 
+var defaultRSAKey = gen.MustRSAKey()
 var jwtStrategy = &oauth2.DefaultJWTStrategy{
-	JWTStrategy: &jwt.RS256JWTStrategy{
-		PrivateKey: internal.MustRSAKey(),
+	Signer: &jwt.DefaultSigner{
+		GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+			return defaultRSAKey, nil
+		},
 	},
+	Config:          &fosite.Config{},
 	HMACSHAStrategy: hmacStrategy,
 }
 

@@ -20,7 +20,9 @@ func TestNewPushedAuthorizeResponse(t *testing.T) {
 
 	ctx := context.Background()
 	oauth2 := &Fosite{
-		PushedAuthorizeEndpointHandlers: PushedAuthorizeEndpointHandlers{handlers[0]},
+		Config: &Config{
+			PushedAuthorizeEndpointHandlers: PushedAuthorizeEndpointHandlers{handlers[0]},
+		},
 	}
 	ar.EXPECT().SetSession(gomock.Eq(new(DefaultSession))).AnyTimes()
 	fooErr := errors.New("foo")

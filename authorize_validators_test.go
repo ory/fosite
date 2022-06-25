@@ -33,7 +33,7 @@ import (
 )
 
 func TestValidateResponseTypes(t *testing.T) {
-	f := &Fosite{}
+	f := &Fosite{Config: new(Config)}
 	for k, tc := range []struct {
 		rt        string
 		art       []string

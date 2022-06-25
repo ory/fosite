@@ -48,7 +48,7 @@ func TestPushedAuthorizeCodeFlow(t *testing.T) {
 }
 
 func runPushedAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
-	f := compose.Compose(new(compose.Config), fositeStore, strategy, nil, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2TokenIntrospectionFactory, compose.PushedAuthorizeHandlerFactory)
+	f := compose.Compose(new(fosite.Config), fositeStore, strategy, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2TokenIntrospectionFactory, compose.PushedAuthorizeHandlerFactory)
 	ts := mockServer(t, f, &fosite.DefaultSession{Subject: "foo-sub"})
 	defer ts.Close()
 
@@ -192,7 +192,7 @@ func checkStatusAndGetBody(t *testing.T, resp *http.Response, expectedStatusCode
 	require.Equal(t, expectedStatusCode, resp.StatusCode)
 	b, err := ioutil.ReadAll(resp.Body)
 	if err == nil {
-		fmt.Printf("DEBUG: body=%s\n", string(b))
+		fmt.Printf("PAR response: body=%s\n", string(b))
 	}
 	if expectedStatusCode != resp.StatusCode {
 		return nil, fmt.Errorf("Invalid status code %d", resp.StatusCode)

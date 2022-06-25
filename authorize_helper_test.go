@@ -23,6 +23,7 @@ package fosite_test
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/url"
 	"strings"
@@ -259,7 +260,7 @@ func TestIsRedirectURISecure(t *testing.T) {
 	} {
 		uu, err := url.Parse(c.u)
 		require.NoError(t, err)
-		assert.Equal(t, !c.err, fosite.IsRedirectURISecure(uu), "case %d", d)
+		assert.Equal(t, !c.err, fosite.IsRedirectURISecure(context.Background(), uu), "case %d", d)
 	}
 }
 
@@ -300,7 +301,7 @@ func TestWriteAuthorizeFormPostResponse(t *testing.T) {
 		var responseBuffer bytes.Buffer
 		redirectURL := "https://localhost:8080/cb"
 		//parameters :=
-		fosite.WriteAuthorizeFormPostResponse(redirectURL, c.parameters, fosite.FormPostDefaultTemplate, &responseBuffer)
+		fosite.WriteAuthorizeFormPostResponse(redirectURL, c.parameters, fosite.DefaultFormPostTemplate, &responseBuffer)
 		code, state, _, _, customParams, _, err := internal.ParseFormPostResponse(redirectURL, ioutil.NopCloser(bytes.NewReader(responseBuffer.Bytes())))
 		assert.NoError(t, err, "case %d", d)
 		c.check(code, state, customParams, d)

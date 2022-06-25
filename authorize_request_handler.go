@@ -28,10 +28,11 @@ import (
 	"net/http"
 	"strings"
 
+	"gopkg.in/square/go-jose.v2"
+
 	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/x/errorsx"
-	"gopkg.in/square/go-jose.v2"
 
 	"github.com/pkg/errors"
 
@@ -46,7 +47,7 @@ func wrapSigningKeyFailure(outer *RFC6749Error, inner error) *RFC6749Error {
 	return outer
 }
 
-func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *AuthorizeRequest, isPARRequest bool) error {
+func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(ctx context.Context, request *AuthorizeRequest, isPARRequest bool) error {
 	var scope Arguments = RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
 
 	// Even if a scope parameter is present in the Request Object value, a scope parameter MUST always be passed using
@@ -80,11 +81,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 			return errorsx.WithStack(ErrInvalidRequestURI.WithHintf("Request URI '%s' is not whitelisted by the OAuth 2.0 Client.", location))
 		}
 
-		hc := f.HTTPClient
-		if hc == nil {
-			hc = http.DefaultClient
-		}
-
+		hc := f.Config.GetHTTPClient(ctx)
 		response, err := hc.Get(location)
 		if err != nil {
 			return errorsx.WithStack(ErrInvalidRequestURI.WithHintf("Unable to fetch OpenID Connect request parameters from 'request_uri' because: %s.", err.Error()).WithWrap(err).WithDebug(err.Error()))
@@ -119,21 +116,21 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(request *Aut
 
 		switch t.Method {
 		case jose.RS256, jose.RS384, jose.RS512:
-			key, err := f.findClientPublicJWK(oidcClient, t, true)
+			key, err := f.findClientPublicJWK(ctx, oidcClient, t, true)
 			if err != nil {
 				return nil, wrapSigningKeyFailure(
 					ErrInvalidRequestObject.WithHint("Unable to retrieve RSA signing key from OAuth 2.0 Client."), err)
 			}
 			return key, nil
 		case jose.ES256, jose.ES384, jose.ES512:
-			key, err := f.findClientPublicJWK(oidcClient, t, false)
+			key, err := f.findClientPublicJWK(ctx, oidcClient, t, false)
 			if err != nil {
 				return nil, wrapSigningKeyFailure(
 					ErrInvalidRequestObject.WithHint("Unable to retrieve ECDSA signing key from OAuth 2.0 Client."), err)
 			}
 			return key, nil
 		case jose.PS256, jose.PS384, jose.PS512:
-			key, err := f.findClientPublicJWK(oidcClient, t, true)
+			key, err := f.findClientPublicJWK(ctx, oidcClient, t, true)
 			if err != nil {
 				return nil, wrapSigningKeyFailure(
 					ErrInvalidRequestObject.WithHint("Unable to retrieve RSA signing key from OAuth 2.0 Client."), err)
@@ -195,10 +192,10 @@ func (f *Fosite) validateAuthorizeRedirectURI(_ *http.Request, request *Authoriz
 	return nil
 }
 
-func (f *Fosite) validateAuthorizeScope(_ *http.Request, request *AuthorizeRequest) error {
+func (f *Fosite) validateAuthorizeScope(ctx context.Context, _ *http.Request, request *AuthorizeRequest) error {
 	scope := RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
 	for _, permission := range scope {
-		if !f.ScopeStrategy(request.Client.GetScopes(), permission) {
+		if !f.Config.GetScopeStrategy(ctx)(request.Client.GetScopes(), permission) {
 			return errorsx.WithStack(ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", permission))
 		}
 	}
@@ -234,7 +231,7 @@ func (f *Fosite) validateResponseTypes(r *http.Request, request *AuthorizeReques
 	return nil
 }
 
-func (f *Fosite) ParseResponseMode(r *http.Request, request *AuthorizeRequest) error {
+func (f *Fosite) ParseResponseMode(ctx context.Context, r *http.Request, request *AuthorizeRequest) error {
 	switch responseMode := r.Form.Get("response_mode"); responseMode {
 	case string(ResponseModeDefault):
 		request.ResponseMode = ResponseModeDefault
@@ -246,8 +243,8 @@ func (f *Fosite) ParseResponseMode(r *http.Request, request *AuthorizeRequest) e
 		request.ResponseMode = ResponseModeFormPost
 	default:
 		rm := ResponseModeType(responseMode)
-		if f.ResponseModeHandler().ResponseModes().Has(rm) {
-			request.ResponseMode = ResponseModeType(rm)
+		if f.ResponseModeHandler(ctx).ResponseModes().Has(rm) {
+			request.ResponseMode = rm
 			break
 		}
 		return errorsx.WithStack(ErrUnsupportedResponseMode.WithHintf("Request with unsupported response_mode \"%s\".", responseMode))
@@ -282,8 +279,14 @@ func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest
 }
 
 func (f *Fosite) authorizeRequestFromPAR(ctx context.Context, r *http.Request, request *AuthorizeRequest) (bool, error) {
+	configProvider, ok := f.Config.(PushedAuthorizeRequestConfigProvider)
+	if !ok {
+		// If the config provider is not implemented, PAR cannot be used.
+		return false, nil
+	}
+
 	requestURI := r.Form.Get("request_uri")
-	if requestURI == "" || !strings.HasPrefix(requestURI, f.PushedAuthorizationRequestURIPrefix) {
+	if requestURI == "" || !strings.HasPrefix(requestURI, configProvider.GetPushedAuthorizeRequestURIPrefix(ctx)) {
 		// nothing to do here
 		return false, nil
 	}
@@ -327,7 +330,7 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 
 func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPARRequest bool) (AuthorizeRequester, error) {
 	request := NewAuthorizeRequest()
-	request.Request.Lang = i18n.GetLangFromRequest(f.MessageCatalog, r)
+	request.Request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), r)
 
 	ctx = context.WithValue(ctx, RequestContextKey, r)
 	ctx = context.WithValue(ctx, AuthorizeRequestContextKey, request)
@@ -347,7 +350,7 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 		} else if isPAR {
 			// No need to continue
 			return request, nil
-		} else if f.EnforcePushedAuthorization {
+		} else if configProvider, ok := f.Config.(PushedAuthorizeRequestConfigProvider); ok && configProvider.EnforcePushedAuthorize(ctx) {
 			return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Pushed Authorization Requests are enforced but no such request was sent."))
 		}
 	}
@@ -363,13 +366,13 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 	//
 	// All other parse methods should come afterwards so that we ensure that the data is taken
 	// from the request_object if set.
-	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(request, isPARRequest); err != nil {
+	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(ctx, request, isPARRequest); err != nil {
 		return request, err
 	}
 
 	// The request context is now fully available and we can start processing the individual
 	// fields.
-	if err := f.ParseResponseMode(r, request); err != nil {
+	if err := f.ParseResponseMode(ctx, r, request); err != nil {
 		return request, err
 	}
 
@@ -377,11 +380,11 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 		return request, err
 	}
 
-	if err := f.validateAuthorizeScope(r, request); err != nil {
+	if err := f.validateAuthorizeScope(ctx, r, request); err != nil {
 		return request, err
 	}
 
-	if err := f.validateAuthorizeAudience(r, request); err != nil {
+	if err := f.validateAuthorizeAudience(ctx, r, request); err != nil {
 		return request, err
 	}
 
@@ -414,9 +417,9 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 	//
 	// https://tools.ietf.org/html/rfc6819#section-4.4.1.8
 	// The "state" parameter should not	be guessable
-	if len(request.State) < f.GetMinParameterEntropy() {
+	if len(request.State) < f.GetMinParameterEntropy(ctx) {
 		// We're assuming that using less then, by default, 8 characters for the state can not be considered "unguessable"
-		return request, errorsx.WithStack(ErrInvalidState.WithHintf("Request parameter 'state' must be at least be %d characters long to ensure sufficient entropy.", f.GetMinParameterEntropy()))
+		return request, errorsx.WithStack(ErrInvalidState.WithHintf("Request parameter 'state' must be at least be %d characters long to ensure sufficient entropy.", f.GetMinParameterEntropy(ctx)))
 	}
 
 	return request, nil

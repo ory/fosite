@@ -44,9 +44,11 @@ func TestIntrospectToken(t *testing.T) {
 	areq := fosite.NewAccessRequest(nil)
 	defer ctrl.Finish()
 
+	config := &fosite.Config{}
 	v := &CoreValidator{
 		CoreStrategy: chgen,
 		CoreStorage:  store,
+		Config:       config,
 	}
 	httpreq := &http.Request{Header: http.Header{}}
 
@@ -60,9 +62,9 @@ func TestIntrospectToken(t *testing.T) {
 			description: "should fail because no bearer token set",
 			setup: func() {
 				httpreq.Header.Set("Authorization", "bearer")
-				chgen.EXPECT().AccessTokenSignature("").Return("")
+				chgen.EXPECT().AccessTokenSignature(gomock.Any(), "").Return("")
 				store.EXPECT().GetAccessTokenSession(nil, "", nil).Return(nil, errors.New(""))
-				chgen.EXPECT().RefreshTokenSignature("").Return("")
+				chgen.EXPECT().RefreshTokenSignature(gomock.Any(), "").Return("")
 				store.EXPECT().GetRefreshTokenSession(nil, "", nil).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrRequestUnauthorized,
@@ -71,9 +73,9 @@ func TestIntrospectToken(t *testing.T) {
 			description: "should fail because retrieval fails",
 			setup: func() {
 				httpreq.Header.Set("Authorization", "bearer 1234")
-				chgen.EXPECT().AccessTokenSignature("1234").AnyTimes().Return("asdf")
+				chgen.EXPECT().AccessTokenSignature(gomock.Any(), "1234").AnyTimes().Return("asdf")
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
-				chgen.EXPECT().RefreshTokenSignature("1234").Return("asdf")
+				chgen.EXPECT().RefreshTokenSignature(gomock.Any(), "1234").Return("asdf")
 				store.EXPECT().GetRefreshTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrRequestUnauthorized,
@@ -83,7 +85,7 @@ func TestIntrospectToken(t *testing.T) {
 			setup: func() {
 				store.EXPECT().GetAccessTokenSession(nil, "asdf", nil).AnyTimes().Return(areq, nil)
 				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errorsx.WithStack(fosite.ErrTokenExpired))
-				chgen.EXPECT().RefreshTokenSignature("1234").Return("asdf")
+				chgen.EXPECT().RefreshTokenSignature(gomock.Any(), "1234").Return("asdf")
 				store.EXPECT().GetRefreshTokenSession(nil, "asdf", nil).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrTokenExpired,
@@ -91,7 +93,7 @@ func TestIntrospectToken(t *testing.T) {
 		{
 			description: "should fail because access token invalid",
 			setup: func() {
-				v.DisableRefreshTokenValidation = true
+				config.DisableRefreshTokenValidation = true
 				chgen.EXPECT().ValidateAccessToken(nil, areq, "1234").Return(errorsx.WithStack(fosite.ErrInvalidTokenFormat))
 			},
 			expectErr: fosite.ErrInvalidTokenFormat,

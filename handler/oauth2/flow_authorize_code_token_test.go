@@ -49,11 +49,10 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			var h AuthorizeExplicitGrantHandler
-
 			for _, c := range []struct {
 				areq        *fosite.AccessRequest
 				description string
-				setup       func(t *testing.T, areq *fosite.AccessRequest)
+				setup       func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config)
 				check       func(t *testing.T, aresp *fosite.AccessResponse)
 				expectErr   error
 			}{
@@ -77,7 +76,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						},
 					},
 					description: "should fail because authcode not found",
-					setup: func(t *testing.T, areq *fosite.AccessRequest) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
 						code, _, err := strategy.GenerateAuthorizeCode(nil, nil)
 						require.NoError(t, err)
 						areq.Form.Set("code", code)
@@ -97,7 +96,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						},
 					},
 					description: "should fail because validation failed",
-					setup: func(t *testing.T, areq *fosite.AccessRequest) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
 						require.NoError(t, store.CreateAuthorizeCodeSession(nil, "bar", areq))
 					},
 					expectErr: fosite.ErrInvalidRequest,
@@ -115,7 +114,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 							RequestedAt:  time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
 						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
 						require.NoError(t, err)
 						areq.Form.Add("code", code)
@@ -144,8 +143,8 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 							RequestedAt:  time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest) {
-						h.RefreshTokenScopes = []string{}
+					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+						config.RefreshTokenScopes = []string{}
 						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
 						require.NoError(t, err)
 						areq.Form.Add("code", code)
@@ -174,8 +173,8 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 							RequestedAt:  time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest) {
-						h.RefreshTokenScopes = []string{}
+					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+						config.RefreshTokenScopes = []string{}
 						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
 						require.NoError(t, err)
 						areq.Form.Add("code", code)
@@ -204,7 +203,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 							RequestedAt:  time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
 						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
 						require.NoError(t, err)
 						areq.Form.Add("code", code)
@@ -222,19 +221,22 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
-					h = AuthorizeExplicitGrantHandler{
-						CoreStorage:              store,
-						AuthorizeCodeStrategy:    strategy,
-						AccessTokenStrategy:      strategy,
-						RefreshTokenStrategy:     strategy,
+					config := &fosite.Config{
 						ScopeStrategy:            fosite.HierarchicScopeStrategy,
 						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 						AccessTokenLifespan:      time.Minute,
 						RefreshTokenScopes:       []string{"offline"},
 					}
+					h = AuthorizeExplicitGrantHandler{
+						CoreStorage:           store,
+						AuthorizeCodeStrategy: strategy,
+						AccessTokenStrategy:   strategy,
+						RefreshTokenStrategy:  strategy,
+						Config:                config,
+					}
 
 					if c.setup != nil {
-						c.setup(t, c.areq)
+						c.setup(t, c.areq, config)
 					}
 
 					aresp := fosite.NewAccessResponse()
@@ -263,12 +265,14 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			h := AuthorizeExplicitGrantHandler{
-				CoreStorage:              store,
-				AuthorizeCodeStrategy:    hmacshaStrategy,
-				ScopeStrategy:            fosite.HierarchicScopeStrategy,
-				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-				TokenRevocationStorage:   store,
-				AuthCodeLifespan:         time.Minute,
+				CoreStorage:            store,
+				AuthorizeCodeStrategy:  &hmacshaStrategy,
+				TokenRevocationStorage: store,
+				Config: &fosite.Config{
+					ScopeStrategy:            fosite.HierarchicScopeStrategy,
+					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+					AuthorizeCodeLifespan:    time.Minute,
+				},
 			}
 			for i, c := range []struct {
 				areq        *fosite.AccessRequest
@@ -671,12 +675,14 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					mockTransactional,
 					mockCoreStore,
 				},
-				AccessTokenStrategy:      strategy,
-				RefreshTokenStrategy:     strategy,
-				AuthorizeCodeStrategy:    strategy,
-				ScopeStrategy:            fosite.HierarchicScopeStrategy,
-				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-				AuthCodeLifespan:         time.Minute,
+				AccessTokenStrategy:   &strategy,
+				RefreshTokenStrategy:  &strategy,
+				AuthorizeCodeStrategy: &strategy,
+				Config: &fosite.Config{
+					ScopeStrategy:            fosite.HierarchicScopeStrategy,
+					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+					AuthorizeCodeLifespan:    time.Minute,
+				},
 			}
 
 			if err := handler.PopulateTokenEndpointResponse(propagatedContext, request, response); testCase.expectError != nil {

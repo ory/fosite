@@ -13,30 +13,30 @@ import (
 	fosite "github.com/ory/fosite"
 )
 
-// MockTokenIntrospector is a mock of TokenIntrospector interface
+// MockTokenIntrospector is a mock of TokenIntrospector interface.
 type MockTokenIntrospector struct {
 	ctrl     *gomock.Controller
 	recorder *MockTokenIntrospectorMockRecorder
 }
 
-// MockTokenIntrospectorMockRecorder is the mock recorder for MockTokenIntrospector
+// MockTokenIntrospectorMockRecorder is the mock recorder for MockTokenIntrospector.
 type MockTokenIntrospectorMockRecorder struct {
 	mock *MockTokenIntrospector
 }
 
-// NewMockTokenIntrospector creates a new mock instance
+// NewMockTokenIntrospector creates a new mock instance.
 func NewMockTokenIntrospector(ctrl *gomock.Controller) *MockTokenIntrospector {
 	mock := &MockTokenIntrospector{ctrl: ctrl}
 	mock.recorder = &MockTokenIntrospectorMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTokenIntrospector) EXPECT() *MockTokenIntrospectorMockRecorder {
 	return m.recorder
 }
 
-// IntrospectToken mocks base method
+// IntrospectToken mocks base method.
 func (m *MockTokenIntrospector) IntrospectToken(arg0 context.Context, arg1 string, arg2 fosite.TokenType, arg3 fosite.AccessRequester, arg4 []string) (fosite.TokenType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IntrospectToken", arg0, arg1, arg2, arg3, arg4)
@@ -45,7 +45,7 @@ func (m *MockTokenIntrospector) IntrospectToken(arg0 context.Context, arg1 strin
 	return ret0, ret1
 }
 
-// IntrospectToken indicates an expected call of IntrospectToken
+// IntrospectToken indicates an expected call of IntrospectToken.
 func (mr *MockTokenIntrospectorMockRecorder) IntrospectToken(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IntrospectToken", reflect.TypeOf((*MockTokenIntrospector)(nil).IntrospectToken), arg0, arg1, arg2, arg3, arg4)

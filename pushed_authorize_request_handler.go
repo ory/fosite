@@ -12,7 +12,7 @@ import (
 // NewPushedAuthorizeRequest validates the request and produces an AuthorizeRequester object that can be stored
 func (f *Fosite) NewPushedAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	request := NewAuthorizeRequest()
-	request.Request.Lang = i18n.GetLangFromRequest(f.MessageCatalog, r)
+	request.Request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), r)
 
 	if r.Method != "" && r.Method != "POST" {
 		return request, errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s', expected 'POST'.", r.Method))

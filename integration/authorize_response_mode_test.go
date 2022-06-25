@@ -30,6 +30,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/fosite/internal/gen"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/pkg/errors"
@@ -54,9 +56,10 @@ func TestAuthorizeResponseModes(t *testing.T) {
 			Headers: &jwt.Headers{},
 		},
 	}
-	f := compose.ComposeAllEnabled(&compose.Config{
+	f := compose.ComposeAllEnabled(&fosite.Config{
 		UseLegacyErrorFormat: true,
-	}, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+		GlobalSecret:         []byte("some-secret-thats-random-some-secret-thats-random-"),
+	}, fositeStore, gen.MustRSAKey())
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 
@@ -133,10 +136,10 @@ func TestAuthorizeResponseModes(t *testing.T) {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
 				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeQuery}
-				f.(*fosite.Fosite).UseLegacyErrorFormat = false
+				f.(*fosite.Fosite).Config.(*fosite.Config).UseLegacyErrorFormat = false
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
-				f.(*fosite.Fosite).UseLegacyErrorFormat = true // reset
+				f.(*fosite.Fosite).Config.(*fosite.Config).UseLegacyErrorFormat = true // reset
 				assert.NotEmpty(t, err["ErrorField"])
 				assert.Contains(t, err["DescriptionField"], "The client is not allowed to request response_mode 'form_post'.")
 				assert.Empty(t, err["HintField"])
@@ -192,10 +195,10 @@ func TestAuthorizeResponseModes(t *testing.T) {
 				state = "12345678901234567890"
 				oauthClient.Scopes = []string{"openid"}
 				responseModeClient.ResponseModes = []fosite.ResponseModeType{fosite.ResponseModeQuery}
-				f.(*fosite.Fosite).UseLegacyErrorFormat = false
+				f.(*fosite.Fosite).Config.(*fosite.Config).UseLegacyErrorFormat = false
 			},
 			check: func(t *testing.T, stateFromServer string, code string, token goauth.Token, iDToken string, err map[string]string) {
-				f.(*fosite.Fosite).UseLegacyErrorFormat = true // reset
+				f.(*fosite.Fosite).Config.(*fosite.Config).UseLegacyErrorFormat = true // reset
 
 				//assert.EqualValues(t, state, stateFromServer)
 				assert.NotEmpty(t, err["ErrorField"])

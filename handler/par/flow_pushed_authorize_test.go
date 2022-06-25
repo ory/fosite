@@ -24,11 +24,13 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 	requestURIPrefix := "urn:ietf:params:oauth:request_uri_diff:"
 	store := storage.NewMemoryStore()
 	handler := PushedAuthorizeHandler{
-		Storage:                  store,
-		PARContextLifetime:       30 * time.Minute,
-		RequestURIPrefix:         requestURIPrefix,
-		ScopeStrategy:            fosite.HierarchicScopeStrategy,
-		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+		Storage: store,
+		Config: &fosite.Config{
+			PushedAuthorizeContextLifespan:  30 * time.Minute,
+			PushedAuthorizeRequestURIPrefix: requestURIPrefix,
+			ScopeStrategy:                   fosite.HierarchicScopeStrategy,
+			AudienceMatchingStrategy:        fosite.DefaultAudienceMatchingStrategy,
+		},
 	}
 	for _, c := range []struct {
 		handler     PushedAuthorizeHandler

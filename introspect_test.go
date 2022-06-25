@@ -65,7 +65,8 @@ func TestIntrospect(t *testing.T) {
 	validator := internal.NewMockTokenIntrospector(ctrl)
 	defer ctrl.Finish()
 
-	f := compose.ComposeAllEnabled(new(compose.Config), storage.NewMemoryStore(), []byte{}, nil).(*Fosite)
+	config := new(Config)
+	f := compose.ComposeAllEnabled(config, storage.NewMemoryStore(), nil).(*Fosite)
 
 	req, _ := http.NewRequest("GET", "http://example.com/test", nil)
 	req.Header.Add("Authorization", "bearer some-token")
@@ -87,7 +88,7 @@ func TestIntrospect(t *testing.T) {
 			description: "should fail",
 			scopes:      []string{"foo"},
 			setup: func() {
-				f.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
+				config.TokenIntrospectionHandlers = TokenIntrospectionHandlers{validator}
 				validator.EXPECT().IntrospectToken(nil, "some-token", gomock.Any(), gomock.Any(), gomock.Any()).Return(TokenUse(""), ErrUnknownRequest)
 			},
 			expectErr: ErrRequestUnauthorized,

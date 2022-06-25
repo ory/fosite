@@ -22,11 +22,14 @@
 package integration_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/ory/fosite/internal/gen"
 
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
@@ -59,8 +62,8 @@ func TestAuthorizeFormPostResponseMode(t *testing.T) {
 			Headers: &jwt.Headers{},
 		},
 	}
-	config := &compose.Config{ResponseModeHandlerExtension: &decoratedFormPostResponse{}}
-	f := compose.ComposeAllEnabled(config, fositeStore, []byte("some-secret-thats-random-some-secret-thats-random-"), internal.MustRSAKey())
+	config := &fosite.Config{ResponseModeHandlerExtension: &decoratedFormPostResponse{}, GlobalSecret: []byte("some-secret-thats-random-some-secret-thats-random-")}
+	f := compose.ComposeAllEnabled(config, fositeStore, gen.MustRSAKey())
 	ts := mockServer(t, f, session)
 	defer ts.Close()
 
@@ -219,15 +222,19 @@ type decoratedFormPostResponse struct {
 func (m *decoratedFormPostResponse) ResponseModes() fosite.ResponseModeTypes {
 	return fosite.ResponseModeTypes{"decorated_form_post"}
 }
-func (m *decoratedFormPostResponse) WriteAuthorizeResponse(rw http.ResponseWriter, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) {
+
+func (m *decoratedFormPostResponse) WriteAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) {
 	rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
 	resp.AddParameter("custom_param", "foo")
-	fosite.WriteAuthorizeFormPostResponse(ar.GetRedirectURI().String(), resp.GetParameters(), fosite.GetPostFormHTMLTemplate(fosite.Fosite{}), rw)
+	fosite.WriteAuthorizeFormPostResponse(ar.GetRedirectURI().String(), resp.GetParameters(), fosite.GetPostFormHTMLTemplate(ctx,
+		fosite.NewOAuth2Provider(nil, new(fosite.Config))), rw)
 }
-func (m *decoratedFormPostResponse) WriteAuthorizeError(rw http.ResponseWriter, ar fosite.AuthorizeRequester, err error) {
+
+func (m *decoratedFormPostResponse) WriteAuthorizeError(ctx context.Context, rw http.ResponseWriter, ar fosite.AuthorizeRequester, err error) {
 	rfcerr := fosite.ErrorToRFC6749Error(err)
 	errors := rfcerr.ToValues()
 	errors.Set("state", ar.GetState())
 	errors.Add("custom_err_param", "bar")
-	fosite.WriteAuthorizeFormPostResponse(ar.GetRedirectURI().String(), errors, fosite.GetPostFormHTMLTemplate(fosite.Fosite{}), rw)
+	fosite.WriteAuthorizeFormPostResponse(ar.GetRedirectURI().String(), errors, fosite.GetPostFormHTMLTemplate(ctx,
+		fosite.NewOAuth2Provider(nil, new(fosite.Config))), rw)
 }

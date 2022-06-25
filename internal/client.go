@@ -12,30 +12,30 @@ import (
 	fosite "github.com/ory/fosite"
 )
 
-// MockClient is a mock of Client interface
+// MockClient is a mock of Client interface.
 type MockClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockClientMockRecorder
 }
 
-// MockClientMockRecorder is the mock recorder for MockClient
+// MockClientMockRecorder is the mock recorder for MockClient.
 type MockClientMockRecorder struct {
 	mock *MockClient
 }
 
-// NewMockClient creates a new mock instance
+// NewMockClient creates a new mock instance.
 func NewMockClient(ctrl *gomock.Controller) *MockClient {
 	mock := &MockClient{ctrl: ctrl}
 	mock.recorder = &MockClientMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockClient) EXPECT() *MockClientMockRecorder {
 	return m.recorder
 }
 
-// GetAudience mocks base method
+// GetAudience mocks base method.
 func (m *MockClient) GetAudience() fosite.Arguments {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAudience")
@@ -43,13 +43,13 @@ func (m *MockClient) GetAudience() fosite.Arguments {
 	return ret0
 }
 
-// GetAudience indicates an expected call of GetAudience
+// GetAudience indicates an expected call of GetAudience.
 func (mr *MockClientMockRecorder) GetAudience() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAudience", reflect.TypeOf((*MockClient)(nil).GetAudience))
 }
 
-// GetGrantTypes mocks base method
+// GetGrantTypes mocks base method.
 func (m *MockClient) GetGrantTypes() fosite.Arguments {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGrantTypes")
@@ -57,13 +57,13 @@ func (m *MockClient) GetGrantTypes() fosite.Arguments {
 	return ret0
 }
 
-// GetGrantTypes indicates an expected call of GetGrantTypes
+// GetGrantTypes indicates an expected call of GetGrantTypes.
 func (mr *MockClientMockRecorder) GetGrantTypes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGrantTypes", reflect.TypeOf((*MockClient)(nil).GetGrantTypes))
 }
 
-// GetHashedSecret mocks base method
+// GetHashedSecret mocks base method.
 func (m *MockClient) GetHashedSecret() []byte {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetHashedSecret")
@@ -71,27 +71,13 @@ func (m *MockClient) GetHashedSecret() []byte {
 	return ret0
 }
 
-// GetHashedSecret indicates an expected call of GetHashedSecret
+// GetHashedSecret indicates an expected call of GetHashedSecret.
 func (mr *MockClientMockRecorder) GetHashedSecret() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHashedSecret", reflect.TypeOf((*MockClient)(nil).GetHashedSecret))
 }
 
-// GetHashedSecret mocks base method
-func (m *MockClient) GetRotatedHashes() [][]byte {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRotatedHashes")
-	ret0, _ := ret[0].([][]byte)
-	return ret0
-}
-
-// GetHashedSecret indicates an expected call of GetHashedSecret
-func (mr *MockClientMockRecorder) GetRotatedHashes() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRotatedHashes", reflect.TypeOf((*MockClient)(nil).GetRotatedHashes))
-}
-
-// GetID mocks base method
+// GetID mocks base method.
 func (m *MockClient) GetID() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetID")
@@ -99,13 +85,13 @@ func (m *MockClient) GetID() string {
 	return ret0
 }
 
-// GetID indicates an expected call of GetID
+// GetID indicates an expected call of GetID.
 func (mr *MockClientMockRecorder) GetID() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetID", reflect.TypeOf((*MockClient)(nil).GetID))
 }
 
-// GetRedirectURIs mocks base method
+// GetRedirectURIs mocks base method.
 func (m *MockClient) GetRedirectURIs() []string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRedirectURIs")
@@ -113,13 +99,13 @@ func (m *MockClient) GetRedirectURIs() []string {
 	return ret0
 }
 
-// GetRedirectURIs indicates an expected call of GetRedirectURIs
+// GetRedirectURIs indicates an expected call of GetRedirectURIs.
 func (mr *MockClientMockRecorder) GetRedirectURIs() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRedirectURIs", reflect.TypeOf((*MockClient)(nil).GetRedirectURIs))
 }
 
-// GetResponseTypes mocks base method
+// GetResponseTypes mocks base method.
 func (m *MockClient) GetResponseTypes() fosite.Arguments {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetResponseTypes")
@@ -127,13 +113,13 @@ func (m *MockClient) GetResponseTypes() fosite.Arguments {
 	return ret0
 }
 
-// GetResponseTypes indicates an expected call of GetResponseTypes
+// GetResponseTypes indicates an expected call of GetResponseTypes.
 func (mr *MockClientMockRecorder) GetResponseTypes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponseTypes", reflect.TypeOf((*MockClient)(nil).GetResponseTypes))
 }
 
-// GetScopes mocks base method
+// GetScopes mocks base method.
 func (m *MockClient) GetScopes() fosite.Arguments {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetScopes")
@@ -141,13 +127,13 @@ func (m *MockClient) GetScopes() fosite.Arguments {
 	return ret0
 }
 
-// GetScopes indicates an expected call of GetScopes
+// GetScopes indicates an expected call of GetScopes.
 func (mr *MockClientMockRecorder) GetScopes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopes", reflect.TypeOf((*MockClient)(nil).GetScopes))
 }
 
-// IsPublic mocks base method
+// IsPublic mocks base method.
 func (m *MockClient) IsPublic() bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsPublic")
@@ -155,7 +141,7 @@ func (m *MockClient) IsPublic() bool {
 	return ret0
 }
 
-// IsPublic indicates an expected call of IsPublic
+// IsPublic indicates an expected call of IsPublic.
 func (mr *MockClientMockRecorder) IsPublic() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPublic", reflect.TypeOf((*MockClient)(nil).IsPublic))

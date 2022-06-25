@@ -127,17 +127,19 @@ func (s *DefaultSession) IDTokenClaims() *jwt.IDTokenClaims {
 }
 
 type DefaultStrategy struct {
-	jwt.JWTStrategy
+	jwt.Signer
 
-	Expiry time.Duration
-	Issuer string
-
-	MinParameterEntropy int
+	Config interface {
+		fosite.IDTokenIssuerProvider
+		fosite.IDTokenLifespanProvider
+		fosite.MinParameterEntropyProvider
+	}
 }
 
 func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.Requester) (token string, err error) {
-	if h.Expiry == 0 {
-		h.Expiry = defaultExpiryTime
+	expiry := h.Config.GetIDTokenLifespan(ctx)
+	if expiry == 0 {
+		expiry = defaultExpiryTime
 	}
 
 	sess, ok := requester.GetSession().(Session)
@@ -198,7 +200,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 		}
 
 		if tokenHintString := requester.GetRequestForm().Get("id_token_hint"); tokenHintString != "" {
-			tokenHint, err := h.JWTStrategy.Decode(ctx, tokenHintString)
+			tokenHint, err := h.Signer.Decode(ctx, tokenHintString)
 			var ve *jwt.ValidationError
 			if errors.As(err, &ve) && ve.Has(jwt.ValidationErrorExpired) {
 				// Expired ID Tokens are allowed as values to id_token_hint
@@ -215,7 +217,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	}
 
 	if claims.ExpiresAt.IsZero() {
-		claims.ExpiresAt = time.Now().UTC().Add(h.Expiry)
+		claims.ExpiresAt = time.Now().UTC().Add(expiry)
 	}
 
 	if claims.ExpiresAt.Before(time.Now().UTC()) {
@@ -227,14 +229,14 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	}
 
 	if claims.Issuer == "" {
-		claims.Issuer = h.Issuer
+		claims.Issuer = h.Config.GetIDTokenIssuer(ctx)
 	}
 
 	// OPTIONAL. String value used to associate a Client session with an ID Token, and to mitigate replay attacks.
 	if nonce := requester.GetRequestForm().Get("nonce"); len(nonce) == 0 {
-	} else if len(nonce) > 0 && len(nonce) < h.MinParameterEntropy {
+	} else if len(nonce) > 0 && len(nonce) < h.Config.GetMinParameterEntropy(ctx) {
 		// We're assuming that using less then, by default, 8 characters for the state can not be considered "unguessable"
-		return "", errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", h.MinParameterEntropy))
+		return "", errorsx.WithStack(fosite.ErrInsufficientEntropy.WithHintf("Parameter 'nonce' is set but does not satisfy the minimum entropy of %d characters.", h.Config.GetMinParameterEntropy(ctx)))
 	} else if len(nonce) > 0 {
 		claims.Nonce = nonce
 	}
@@ -242,6 +244,6 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	claims.Audience = stringslice.Unique(append(claims.Audience, requester.GetClient().GetID()))
 	claims.IssuedAt = time.Now().UTC()
 
-	token, _, err = h.JWTStrategy.Generate(ctx, claims.ToMapClaims(), sess.IDTokenHeaders())
+	token, _, err = h.Signer.Generate(ctx, claims.ToMapClaims(), sess.IDTokenHeaders())
 	return token, err
 }

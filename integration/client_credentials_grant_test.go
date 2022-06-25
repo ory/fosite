@@ -46,7 +46,7 @@ func TestClientCredentialsFlow(t *testing.T) {
 }
 
 func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
-	f := compose.Compose(new(compose.Config), fositeStore, strategy, nil, compose.OAuth2ClientCredentialsGrantFactory, compose.OAuth2TokenIntrospectionFactory)
+	f := compose.Compose(new(fosite.Config), fositeStore, strategy, compose.OAuth2ClientCredentialsGrantFactory, compose.OAuth2TokenIntrospectionFactory)
 	ts := mockServer(t, f, &fosite.DefaultSession{})
 	defer ts.Close()
 

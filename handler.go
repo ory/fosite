@@ -52,11 +52,11 @@ type TokenEndpointHandler interface {
 	// CanSkipClientAuth indicates if client authentication can be skipped. By default it MUST be false, unless you are
 	// implementing extension grant type, which allows unauthenticated client. CanSkipClientAuth must be called
 	// before HandleTokenEndpointRequest to decide, if AccessRequester will contain authenticated client.
-	CanSkipClientAuth(requester AccessRequester) bool
+	CanSkipClientAuth(ctx context.Context, requester AccessRequester) bool
 
 	// CanHandleRequest indicates, if TokenEndpointHandler can handle this request or not. If true,
 	// HandleTokenEndpointRequest can be called.
-	CanHandleTokenEndpointRequest(requester AccessRequester) bool
+	CanHandleTokenEndpointRequest(ctx context.Context, requester AccessRequester) bool
 }
 
 // RevocationHandler is the interface that allows token revocation for an OAuth2.0 provider.

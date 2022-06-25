@@ -9,6 +9,12 @@ import (
 
 // NewPushedAuthorizeResponse executes the handlers and builds the response
 func (f *Fosite) NewPushedAuthorizeResponse(ctx context.Context, ar AuthorizeRequester, session Session) (PushedAuthorizeResponder, error) {
+	// Get handlers. If no handlers are defined, this is considered a misconfigured Fosite instance.
+	handlersProvider, ok := f.Config.(PushedAuthorizeRequestHandlersProvider)
+	if !ok {
+		return nil, fmt.Errorf("invalid call because 'PushedAuthorizeRequestHandlersProvider' is not implemented.")
+	}
+
 	var resp = &PushedAuthorizeResponse{
 		Header: http.Header{},
 		Extra:  map[string]interface{}{},
@@ -18,7 +24,7 @@ func (f *Fosite) NewPushedAuthorizeResponse(ctx context.Context, ar AuthorizeReq
 	ctx = context.WithValue(ctx, PushedAuthorizeResponseContextKey, resp)
 
 	ar.SetSession(session)
-	for _, h := range f.PushedAuthorizeEndpointHandlers {
+	for _, h := range handlersProvider.GetPushedAuthorizeEndpointHandlers(ctx) {
 		if err := h.HandlePushedAuthorizeEndpointRequest(ctx, ar, resp); err != nil {
 			return nil, err
 		}
@@ -28,7 +34,7 @@ func (f *Fosite) NewPushedAuthorizeResponse(ctx context.Context, ar AuthorizeReq
 }
 
 // WritePushedAuthorizeResponse writes the PAR response
-func (f *Fosite) WritePushedAuthorizeResponse(rw http.ResponseWriter, ar AuthorizeRequester, resp PushedAuthorizeResponder) {
+func (f *Fosite) WritePushedAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, resp PushedAuthorizeResponder) {
 	// Set custom headers, e.g. "X-MySuperCoolCustomHeader" or "X-DONT-CACHE-ME"...
 	wh := rw.Header()
 	rh := resp.GetHeader()
@@ -53,17 +59,18 @@ func (f *Fosite) WritePushedAuthorizeResponse(rw http.ResponseWriter, ar Authori
 }
 
 // WritePushedAuthorizeError writes the PAR error
-func (f *Fosite) WritePushedAuthorizeError(rw http.ResponseWriter, ar AuthorizeRequester, err error) {
+func (f *Fosite) WritePushedAuthorizeError(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, err error) {
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 
-	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.UseLegacyErrorFormat).
-		WithExposeDebug(f.SendDebugMessagesToClients).WithLocalizer(f.MessageCatalog, getLangFromRequester(ar))
+	sendDebugMessagesToClient := f.Config.GetSendDebugMessagesToClients(ctx)
+	rfcerr := ErrorToRFC6749Error(err).WithLegacyFormat(f.Config.GetUseLegacyErrorFormat(ctx)).
+		WithExposeDebug(sendDebugMessagesToClient).WithLocalizer(f.Config.GetMessageCatalog(ctx), getLangFromRequester(ar))
 
 	js, err := json.Marshal(rfcerr)
 	if err != nil {
-		if f.SendDebugMessagesToClients {
+		if sendDebugMessagesToClient {
 			errorMessage := EscapeJSONString(err.Error())
 			http.Error(rw, fmt.Sprintf(`{"error":"server_error","error_description":"%s"}`, errorMessage), http.StatusInternalServerError)
 		} else {

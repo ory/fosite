@@ -47,7 +47,8 @@ func TestNewRevocationRequest(t *testing.T) {
 	ctx := gomock.AssignableToTypeOf(context.WithValue(context.TODO(), ContextKey("test"), nil))
 
 	client := &DefaultClient{}
-	fosite := &Fosite{Store: store, Hasher: hasher}
+	config := &Config{ClientSecretsHasher: hasher}
+	fosite := &Fosite{Store: store, Config: config}
 	for k, c := range []struct {
 		header    http.Header
 		form      url.Values
@@ -209,7 +210,7 @@ func TestNewRevocationRequest(t *testing.T) {
 			}
 			c.mock()
 			ctx := NewContext()
-			fosite.RevocationHandlers = c.handlers
+			config.RevocationHandlers = c.handlers
 			err := fosite.NewRevocationRequest(ctx, r)
 
 			if c.expectErr != nil {
@@ -227,7 +228,8 @@ func TestWriteRevocationResponse(t *testing.T) {
 	hasher := internal.NewMockHasher(ctrl)
 	defer ctrl.Finish()
 
-	fosite := &Fosite{Store: store, Hasher: hasher}
+	config := &Config{ClientSecretsHasher: hasher}
+	fosite := &Fosite{Store: store, Config: config}
 
 	type args struct {
 		rw  *httptest.ResponseRecorder
@@ -261,7 +263,7 @@ func TestWriteRevocationResponse(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		fosite.WriteRevocationResponse(tc.input.rw, tc.input.err)
+		fosite.WriteRevocationResponse(context.Background(), tc.input.rw, tc.input.err)
 		assert.Equal(t, tc.expectCode, tc.input.rw.Code)
 	}
 }
