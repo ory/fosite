@@ -30,7 +30,7 @@ type PushedAuthorizeHandler struct {
 func (c *PushedAuthorizeHandler) HandlePushedAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.PushedAuthorizeResponder) error {
 	configProvider, ok := c.Config.(fosite.PushedAuthorizeRequestConfigProvider)
 	if !ok {
-		return fmt.Errorf("unable to process the handler because the 'PushedAuthorizeRequestConfigProvider' has not been implemented.")
+		return errorsx.WithStack(fosite.ErrServerError.WithHint("OAuth 2.0 configuration provider does not support Pushed Authorization Requests"))
 	}
 
 	storage, ok := c.Storage.(fosite.PARStorage)
@@ -43,7 +43,7 @@ func (c *PushedAuthorizeHandler) HandlePushedAuthorizeEndpointRequest(ctx contex
 	}
 
 	if !c.secureChecker(ctx, ar.GetRedirectURI()) {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix `localhost`, for example: http://myapp.localhost/."))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix 'localhost', for example: http://myapp.localhost/."))
 	}
 
 	client := ar.GetClient()
