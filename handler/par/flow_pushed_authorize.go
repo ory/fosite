@@ -30,12 +30,12 @@ type PushedAuthorizeHandler struct {
 func (c *PushedAuthorizeHandler) HandlePushedAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.PushedAuthorizeResponder) error {
 	configProvider, ok := c.Config.(fosite.PushedAuthorizeRequestConfigProvider)
 	if !ok {
-		return fmt.Errorf("unable to process the handler because the 'PushedAuthorizeRequestConfigProvider' has not been implemented.")
+		return errorsx.WithStack(fosite.ErrServerError.WithHint(fosite.ErrorPARNotSupported).WithDebug(fosite.DebugPARConfigMissing))
 	}
 
 	storage, ok := c.Storage.(fosite.PARStorage)
 	if !ok {
-		return errorsx.WithStack(fosite.ErrServerError.WithHint("OAuth 2.0 storage provider does not support Pushed Authorization Requests"))
+		return errorsx.WithStack(fosite.ErrServerError.WithHint(fosite.ErrorPARNotSupported).WithDebug(fosite.DebugPARStorageInvalid))
 	}
 
 	if !ar.GetResponseTypes().HasOneOf("token", "code", "id_token") {

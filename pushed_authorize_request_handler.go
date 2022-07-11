@@ -9,6 +9,12 @@ import (
 	"github.com/ory/x/errorsx"
 )
 
+const (
+	ErrorPARNotSupported   = "The OAuth 2.0 provider does not support Pushed Authorization Requests"
+	DebugPARStorageInvalid = "'PARStorage' not implemented"
+	DebugPARConfigMissing  = "'PushedAuthorizeRequestConfigProvider' not implemented"
+)
+
 // NewPushedAuthorizeRequest validates the request and produces an AuthorizeRequester object that can be stored
 func (f *Fosite) NewPushedAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
 	request := NewAuthorizeRequest()

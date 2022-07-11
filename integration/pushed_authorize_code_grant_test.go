@@ -148,10 +148,15 @@ func runPushedAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 			err = json.Unmarshal(body, &m)
 
 			assert.NoError(t, err, "Error occurred when unamrshaling the body: %v", err)
-			assert.Condition(t, func() bool { return m["request_uri"].(string) != "" }, "request_uri is empty")
+
+			// validate request_uri
+			requestURI, _ := m["request_uri"].(string)
+			assert.NotEmpty(t, requestURI, "request_uri is empty")
 			assert.Condition(t, func() bool {
-				return strings.HasPrefix(m["request_uri"].(string), "urn:ietf:params:oauth:request_uri:")
-			}, "PAR Prefix is incorrect: %v", m["request_uri"].(string))
+				return strings.HasPrefix(requestURI, "urn:ietf:params:oauth:request_uri:")
+			}, "PAR Prefix is incorrect: %s", requestURI)
+
+			// validate expires_in
 			assert.EqualValues(t, 300, int(m["expires_in"].(float64)), "Invalid expires_in value=%v", m["expires_in"])
 
 			// call authorize
@@ -169,6 +174,8 @@ func runPushedAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 			if resp.StatusCode != http.StatusOK {
 				return
 			}
+
+			require.NotEmpty(t, resp.Request.URL.Query().Get("code"), "Auth code is empty")
 
 			token, err := oauthClient.Exchange(goauth.NoContext, resp.Request.URL.Query().Get("code"))
 			require.NoError(t, err)
