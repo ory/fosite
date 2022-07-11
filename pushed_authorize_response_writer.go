@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/ory/x/errorsx"
 )
 
 // NewPushedAuthorizeResponse executes the handlers and builds the response
@@ -12,7 +14,7 @@ func (f *Fosite) NewPushedAuthorizeResponse(ctx context.Context, ar AuthorizeReq
 	// Get handlers. If no handlers are defined, this is considered a misconfigured Fosite instance.
 	handlersProvider, ok := f.Config.(PushedAuthorizeRequestHandlersProvider)
 	if !ok {
-		return nil, fmt.Errorf("invalid call because 'PushedAuthorizeRequestHandlersProvider' is not implemented.")
+		return nil, errorsx.WithStack(ErrServerError.WithHint(ErrorPARNotSupported).WithDebug(DebugPARRequestsHandlerMissing))
 	}
 
 	var resp = &PushedAuthorizeResponse{
