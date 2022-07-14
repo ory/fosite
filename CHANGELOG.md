@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2022-06-29)](#000-2022-06-29)
+- [0.0.0 (2022-07-14)](#000-2022-07-14)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -373,7 +373,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-06-29)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-07-14)
 
 ## Breaking Changes
 
@@ -444,6 +444,7 @@ Many internal interfaces have been changed, usually adding `ctx context.Context`
 
 ### Tests
 
+- Fix assertions ([#683](https://github.com/ory/fosite/issues/683)) ([551b8b8](https://github.com/ory/fosite/commit/551b8b827cf0b7033aac80818a516ee3c5b8523e))
 - Fix panic ([fe60766](https://github.com/ory/fosite/commit/fe60766cdb1f0d22df7d9c4543b06cfd6dc7aea1))
 
 # [0.42.2](https://github.com/ory/fosite/compare/v0.42.1...v0.42.2) (2022-04-17)
