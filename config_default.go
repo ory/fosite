@@ -73,15 +73,39 @@ var (
 	_ TokenEndpointHandlersProvider                = (*Config)(nil)
 	_ TokenIntrospectionHandlersProvider           = (*Config)(nil)
 	_ RevocationHandlersProvider                   = (*Config)(nil)
+	_ DeviceCodeLifespanProvider                   = (*Config)(nil)
+	_ UserCodeLifeSpanProvider                     = (*Config)(nil)
 )
 
+type DeviceAuthorisationConfig struct {
+	// DeviceCodeLifespan sets how long a device code is going to be valid. Defaults to 15 minutes.
+	DeviceCodeLifespan time.Duration
+
+	// UserCodeLifespan sets how long a user code is going to be valid. Defaults to 15 minutes.
+	UserCodeLifespan time.Duration
+
+	// TokenPollingInterval sets how long a client SHOULD wait between polling requests to the token endpoint. Defaults to 5 seconds.
+	TokenPollingInterval time.Duration
+
+	// VerificationURI is the verification URI the end-user would navigate to as part of the user interaction defined in RFC8628 section-3.3 .
+	VerificationURI string
+}
+
+
 type Config struct {
+	DeviceAuthorisation DeviceAuthorisationConfig
 	// AccessTokenLifespan sets how long an access token is going to be valid. Defaults to one hour.
 	AccessTokenLifespan time.Duration
 
 	// RefreshTokenLifespan sets how long a refresh token is going to be valid. Defaults to 30 days. Set to -1 for
 	// refresh tokens that never expire.
 	RefreshTokenLifespan time.Duration
+
+	// DeviceCodeLifespan sets how long a Device code is going to be valid. 
+	DeviceCodeLifespan time.Duration
+	
+	// UserCodeLifeSpan sets how long a user code is going to be valid. 
+	UserCodeLifeSpan time.Duration
 
 	// AuthorizeCodeLifespan sets how long an authorize code is going to be valid. Defaults to fifteen minutes.
 	AuthorizeCodeLifespan time.Duration
@@ -192,6 +216,9 @@ type Config struct {
 
 	// AuthorizeEndpointHandlers is a list of handlers that are called before the authorization endpoint is served.
 	AuthorizeEndpointHandlers AuthorizeEndpointHandlers
+
+	// DeviceAuthorizeEndpointHandlers is a list of handlers that are called when the device auth is handled.
+	DeviceAuthorizeEndpointHandlers DeviceAuthorizeEndpointHandlers
 
 	// TokenEndpointHandlers is a list of handlers that are called before the token endpoint is served.
 	TokenEndpointHandlers TokenEndpointHandlers
@@ -381,6 +408,30 @@ func (c *Config) GetRefreshTokenLifespan(_ context.Context) time.Duration {
 		return time.Hour * 24 * 30
 	}
 	return c.RefreshTokenLifespan
+}
+
+// GetDeviceCodeLifespan sets how long a device code is going to be valid. Defaults to fifteen minutes.
+func (c *Config) GetDeviceCodeLifespan(_ context.Context) time.Duration {
+	if c.DeviceCodeLifespan == 0 {
+		return time.Minute * 15
+	}
+	return c.DeviceCodeLifespan
+}
+
+// GetUserCodeLifeSpan sets how long a user code is going to be valid. Defaults to fifteen minutes.
+func (c *Config) GetUserCodeLifeSpan(_ context.Context) time.Duration {
+	if c.UserCodeLifeSpan == 0 {
+		return time.Minute * 15
+	}
+	return c.UserCodeLifeSpan
+}
+
+// GetTokenPollingInterval returns how long a client should wait between requests to the token endpoint
+func (c *Config) GetTokenPollingInterval() time.Duration {
+	if c.DeviceAuthorisation.TokenPollingInterval == 0 {
+		return time.Second * 5
+	}
+	return c.DeviceAuthorisation.TokenPollingInterval
 }
 
 // GetHashCost returns the bcrypt cost factor. Defaults to 12.

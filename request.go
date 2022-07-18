@@ -41,6 +41,7 @@ type Request struct {
 	RequestedAudience Arguments    `json:"requestedAudience"`
 	GrantedAudience   Arguments    `json:"grantedAudience"`
 	Lang              language.Tag `json:"-"`
+	ConsentGranted    bool
 }
 
 func NewRequest() *Request {
@@ -198,4 +199,8 @@ func (a *Request) Sanitize(allowedParameters []string) Requester {
 
 func (a *Request) GetLang() language.Tag {
 	return a.Lang
+}
+
+func (a *Request) IsConsentGranted() bool {
+	return a.ConsentGranted
 }

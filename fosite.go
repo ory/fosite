@@ -44,6 +44,20 @@ func (a *AuthorizeEndpointHandlers) Append(h AuthorizeEndpointHandler) {
 	*a = append(*a, h)
 }
 
+// DeviceAuthorizeEndpointHandler is a list of AuthorizeEndpointHandler
+type DeviceAuthorizeEndpointHandlers []DeviceAuthorizeEndpointHandlers
+
+// Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+func (a *DeviceAuthorizeEndpointHandlers) Append(h DeviceAuthorizeEndpointHandlers) {
+	for _, this := range *a {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*a = append(*a, h)
+}
+
 // TokenEndpointHandlers is a list of TokenEndpointHandler
 type TokenEndpointHandlers []TokenEndpointHandler
 

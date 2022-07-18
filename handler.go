@@ -40,6 +40,18 @@ type AuthorizeEndpointHandler interface {
 	HandleAuthorizeEndpointRequest(ctx context.Context, requester AuthorizeRequester, responder AuthorizeResponder) error
 }
 
+type DeviceAuthorizeEndpointHandler interface {
+	// HandleDeviceAuthorizeRequest handles a device authorize endpoint request. To extend the handler's capabilities, the http request
+	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
+	// the device authorize request, he must return nil and NOT modify session nor responder neither requester.
+	//
+	// The following spec is a good example of what HandleDeviceAuthorizeRequest should do.
+	// * https://tools.ietf.org/html/rfc8628#section-3.2
+	HandleDeviceAuthorizeEndpointRequest(ctx context.Context, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder) error
+
+	AuthorizeDeviceCode(ctx context.Context, deviceCode string, requester Requester) error
+}
+
 type TokenEndpointHandler interface {
 	// PopulateTokenEndpointResponse is responsible for setting return values and should only be executed if
 	// the handler's HandleTokenEndpointRequest did not return ErrUnknownRequest.

@@ -25,6 +25,18 @@ type RefreshTokenLifespanProvider interface {
 	GetRefreshTokenLifespan(ctx context.Context) time.Duration
 }
 
+// DeviceCodeLifespanProvider returns the provider for configuring the device code lifespan.
+type DeviceCodeLifespanProvider interface {
+	// GetDeviceCodeLifespan returns the device code lifespan.
+	GetDeviceCodeLifespan(ctx context.Context) time.Duration
+}
+
+// UserCodeLifeSpanProvider returns the provider for configuring the device code lifespan.
+type UserCodeLifeSpanProvider interface {
+	// GeUserCodeLifeSpan returns the user code lifespan.
+	GetUserCodeLifeSpan(ctx context.Context) time.Duration
+}
+
 // AccessTokenLifespanProvider returns the provider for configuring the access token lifespan.
 type AccessTokenLifespanProvider interface {
 	// GetAccessTokenLifespan returns the access token lifespan.

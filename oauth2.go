@@ -39,6 +39,8 @@ const (
 	RefreshToken  TokenType = "refresh_token"
 	AuthorizeCode TokenType = "authorize_code"
 	IDToken       TokenType = "id_token"
+	DeviceCode    TokenType = "device_code"
+	UserCode      TokenType = "user_code"
 
 	BearerAccessToken string = "bearer"
 )
@@ -162,6 +164,30 @@ type OAuth2Provider interface {
 	// WriteIntrospectionResponse responds with token metadata discovered by token introspection as defined in
 	// https://tools.ietf.org/search/rfc7662#section-2.2
 	WriteIntrospectionResponse(ctx context.Context, rw http.ResponseWriter, r IntrospectionResponder)
+
+
+	// NewDeviceAuthorizeRequest returns an DeviceAuthorizeRequest.
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://tools.ietf.org/html/rfc8628#section-3.1
+	NewDeviceAuthorizeRequest(ctx context.Context, req *http.Request) (DeviceAuthorizeRequester, error)
+
+	AuthorizeDeviceCode(ctx context.Context, deviceCode string, requester Requester) error
+
+	// NewDeviceAuthorizeResponse persists generated device and user codes for the client returning a device authorize response
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://tools.ietf.org/html/rfc8628#section-3.2
+	NewDeviceAuthorizeResponse(ctx context.Context, requester DeviceAuthorizeRequester) (DeviceAuthorizeResponder, error)
+
+	// WriteDeviceAuthorizeError writes an device authorize request error response.
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://tools.ietf.org/html/rfc6749#section-5.2
+	// as per the requirement specified in https://tools.ietf.org/html/rfc8628#section-3.2
+	WriteDeviceAuthorizeError(rw http.ResponseWriter, requester DeviceAuthorizeRequester, err error)
+
+	WriteDeviceAuthorizeResponse(rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder)
 }
 
 // IntrospectionResponder is the response object that will be returned when token introspection was successful,
@@ -224,6 +250,8 @@ type Requester interface {
 	// GrantAudience marks a request's audience as granted.
 	GrantAudience(audience string)
 
+	IsConsentGranted() bool
+
 	// GetSession returns a pointer to the request's session or nil if none is set.
 	GetSession() (session Session)
 
@@ -282,6 +310,13 @@ type AuthorizeRequester interface {
 	Requester
 }
 
+// DeviceAuthorizeRequester is an Device authorize endpoint's request context.
+type DeviceAuthorizeRequester interface {
+	IsAuthorizationDenied() bool
+
+	Requester
+}
+
 // AccessResponder is a token endpoint's response.
 type AccessResponder interface {
 	// SetExtra sets a key value pair for the access response.
@@ -332,4 +367,37 @@ type AuthorizeResponder interface {
 type G11NContext interface {
 	// GetLang returns the current language in the context
 	GetLang() language.Tag
+}
+
+// DeviceAuthorizeResponder is an device authorization endpoint's response.
+type DeviceAuthorizeResponder interface {
+	// GetDeviceCode returns the response's device code
+	GetDeviceCode() string
+
+	SetDeviceCode(code string)
+
+	// GetUserCode returns the response's user code
+	GetUserCode() string
+
+	SetUserCode(code string)
+
+	// GetVerificationURI returns the response's verification uri
+	GetVerificationURI() string
+
+	SetVerificationURI(uri string)
+
+	// GetVerificationURIComplete returns the response's complete verification uri if set
+	GetVerificationURIComplete() string
+
+	SetVerificationURIComplete(uri string)
+
+	// GetExpiresIn returns the response's device code and user code lifetime in seconds if set
+	GetExpiresIn() int64
+
+	SetExpiresIn(seconds int64)
+
+	// GetInterval returns the response's polling interval if set
+	GetInterval() int
+
+	SetInterval(seconds int)
 }

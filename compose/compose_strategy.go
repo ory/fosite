@@ -45,6 +45,8 @@ type HMACSHAStrategyConfigurator interface {
 	fosite.GlobalSecretProvider
 	fosite.RotatedGlobalSecretsProvider
 	fosite.HMACHashingProvider
+	fosite.DeviceCodeLifespanProvider
+	fosite.UserCodeLifeSpanProvider
 }
 
 func NewOAuth2HMACStrategy(config HMACSHAStrategyConfigurator) *oauth2.HMACSHAStrategy {
