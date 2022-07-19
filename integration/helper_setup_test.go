@@ -117,6 +117,7 @@ var fositeStore = &storage.MemoryStore{
 	IDSessions:             map[string]fosite.Requester{},
 	AccessTokenRequestIDs:  map[string]string{},
 	RefreshTokenRequestIDs: map[string]string{},
+	PARSessions:            map[string]fosite.AuthorizeRequester{},
 }
 
 type defaultSession struct {
@@ -207,6 +208,7 @@ func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *
 	router.HandleFunc("/info", tokenInfoHandler(t, f, session))
 	router.HandleFunc("/introspect", tokenIntrospectionHandler(t, f, session))
 	router.HandleFunc("/revoke", tokenRevocationHandler(t, f, session))
+	router.HandleFunc("/par", pushedAuthorizeRequestHandler(t, f, session))
 
 	ts := httptest.NewServer(router)
 	return ts
