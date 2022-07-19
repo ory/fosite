@@ -63,7 +63,7 @@ func (f *Fosite) NewPushedAuthorizeRequest(ctx context.Context, r *http.Request)
 	}
 
 	if fr.GetRequestedScopes().Has("openid") && r.Form.Get("redirect_uri") == "" {
-		return fr, errorsx.WithStack(ErrInvalidRequest.WithHint("Redirect URI information is required."))
+		return fr, errorsx.WithStack(ErrInvalidRequest.WithHint("Query parameter 'redirect_uri' is required when performing an OpenID Connect flow."))
 	}
 
 	return fr, nil
