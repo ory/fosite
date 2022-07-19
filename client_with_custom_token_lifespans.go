@@ -101,7 +101,7 @@ func (c *DefaultClientWithCustomTokenLifespans) GetEffectiveLifespan(gt GrantTyp
 		} else if tt == IDToken {
 			cl = c.TokenLifespans.ImplicitGrantIDTokenLifespan
 		}
-	} else if gt == GrantTypeJwtBearer {
+	} else if gt == GrantTypeJWTBearer {
 		if tt == AccessToken {
 			cl = c.TokenLifespans.JwtBearerGrantAccessTokenLifespan
 		}

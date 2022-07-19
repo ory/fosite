@@ -114,7 +114,6 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 	}
 
 	atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypePassword, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
-
 	if err := c.IssueAccessToken(ctx, atLifespan, requester, responder); err != nil {
 		return err
 	}

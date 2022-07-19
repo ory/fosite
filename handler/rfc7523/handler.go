@@ -128,7 +128,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return err
 	}
 
-	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeJwtBearer, fosite.AccessToken, c.HandleHelper.Config.GetAccessTokenLifespan(ctx))
+	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeJWTBearer, fosite.AccessToken, c.HandleHelper.Config.GetAccessTokenLifespan(ctx))
 	session.SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
 	session.SetSubject(claims.Subject)
 
@@ -140,7 +140,7 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fos
 		return err
 	}
 
-	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeJwtBearer, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
+	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeJWTBearer, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
 	return c.IssueAccessToken(ctx, atLifespan, request, response)
 }
 
