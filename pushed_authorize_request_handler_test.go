@@ -53,9 +53,11 @@ func TestNewPushedAuthorizeRequest(t *testing.T) {
 	}{
 		/* empty request */
 		{
-			desc:          "empty request fails",
-			conf:          fosite,
-			r:             &http.Request{},
+			desc: "empty request fails",
+			conf: fosite,
+			r: &http.Request{
+				Method: "POST",
+			},
 			expectedError: ErrInvalidClient,
 			mock:          func() {},
 		},
@@ -638,7 +640,10 @@ func TestNewPushedAuthorizeRequest(t *testing.T) {
 
 			c.mock()
 			if c.r == nil {
-				c.r = &http.Request{Header: http.Header{}}
+				c.r = &http.Request{
+					Header: http.Header{},
+					Method: "POST",
+				}
 				if c.query != nil {
 					c.r.URL = &url.URL{RawQuery: c.query.Encode()}
 				}
