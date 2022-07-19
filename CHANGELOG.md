@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2022-07-14)](#000-2022-07-14)
+- [0.0.0 (2022-07-19)](#000-2022-07-19)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -373,7 +373,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-07-14)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-07-19)
 
 ## Breaking Changes
 
@@ -440,6 +440,10 @@ Many internal interfaces have been changed, usually adding `ctx context.Context`
 
 - Introduce cache strategy for JWKS fetcher ([452f377](https://github.com/ory/fosite/commit/452f37728890c68524b9aa190e1cdb279414f802))
 - Make http source contextualized ([9fc89e9](https://github.com/ory/fosite/commit/9fc89e9007c71354f7fe2d036ea6e175a2e5860b))
+- PAR implementation ([#660](https://github.com/ory/fosite/issues/660)) ([3de78db](https://github.com/ory/fosite/commit/3de78db805fe1c69b0fc5b853bfabeb19433feba)), closes [#628](https://github.com/ory/fosite/issues/628):
+
+  Implements [RFC9126 - Pushed Authorization Request](https://www.rfc-editor.org/rfc/rfc9126.html).
+
 - Support variety of JWT formats when `jose.JSONWebKey` is used ([2590eb8](https://github.com/ory/fosite/commit/2590eb83d1e66df998053bc2fb7381b9043c232e))
 
 ### Tests
