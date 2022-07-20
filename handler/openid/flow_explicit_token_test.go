@@ -113,13 +113,56 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			expectErr: fosite.ErrMisconfiguration,
 		},
 		{
-			description: "should pass",
+			description: "should pass with custom client lifespans",
 			setup: func() {
+				areq.Session = &DefaultSession{
+					Claims:  &jwt.IDTokenClaims{Subject: "peter"},
+					Headers: &jwt.Headers{},
+				}
+				areq.Client = &fosite.DefaultClientWithCustomTokenLifespans{
+					DefaultClient: &fosite.DefaultClient{
+						GrantTypes: fosite.Arguments{"authorization_code"},
+					},
+					TokenLifespans: &internal.TestLifespans,
+				}
+
 				r := fosite.NewAuthorizeRequest()
 				r.Session = areq.Session
 				r.GrantedScope = fosite.Arguments{"openid"}
 				r.Form.Set("nonce", "1111111111111111")
-				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).AnyTimes().Return(r, nil)
+				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).Times(1).Return(r, nil)
+			},
+			check: func(t *testing.T, aresp *fosite.AccessResponse) {
+				assert.NotEmpty(t, aresp.GetExtra("id_token"))
+				idToken, _ := aresp.GetExtra("id_token").(string)
+				decodedIdToken, err := jwt.Parse(idToken, func(token *jwt.Token) (interface{}, error) {
+					return key.PublicKey, nil
+				})
+				require.NoError(t, err)
+				claims := decodedIdToken.Claims
+				assert.NotEmpty(t, claims["at_hash"])
+				idTokenExp := internal.ExtractJwtExpClaim(t, idToken)
+				internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.AuthorizationCodeGrantIDTokenLifespan).UTC(), *idTokenExp, time.Minute)
+			},
+		},
+		{
+			description: "should pass",
+			setup: func() {
+				areq.Session = &DefaultSession{
+					Claims:  &jwt.IDTokenClaims{Subject: "peter"},
+					Headers: &jwt.Headers{},
+				}
+				areq.Client = &fosite.DefaultClientWithCustomTokenLifespans{
+					DefaultClient: &fosite.DefaultClient{
+						GrantTypes: fosite.Arguments{"authorization_code"},
+					},
+				}
+
+				r := fosite.NewAuthorizeRequest()
+				r.Session = areq.Session
+				r.GrantedScope = fosite.Arguments{"openid"}
+				r.Form.Set("nonce", "1111111111111111")
+				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).Return(r, nil)
 			},
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
@@ -138,6 +181,11 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because missing subject claim",
 			setup: func() {
 				areq.Session.(*DefaultSession).Claims.Subject = ""
+				r := fosite.NewAuthorizeRequest()
+				r.Session = areq.Session
+				r.GrantedScope = fosite.Arguments{"openid"}
+				r.Form.Set("nonce", "1111111111111111")
+				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).Return(r, nil)
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -145,46 +193,14 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			description: "should fail because missing session",
 			setup: func() {
 				areq.Session = nil
+				r := fosite.NewAuthorizeRequest()
+				r.Session = areq.Session
+				r.GrantedScope = fosite.Arguments{"openid"}
+				r.Form.Set("nonce", "1111111111111111")
+				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).Times(1).Return(r, nil)
 			},
 			expectErr: fosite.ErrServerError,
 		},
-		//		{
-		//			description: "should pass with custom client lifespans",
-		//			setup: func() {
-		//				aresp = fosite.NewAccessResponse()
-		//
-		//				areq.Client = &fosite.DefaultClientWithCustomTokenLifespans{
-		//					DefaultClient: &fosite.DefaultClient{
-		//						GrantTypes: fosite.Arguments{"authorization_code"},
-		//					},
-		//					TokenLifespans: &internal.TestLifespans,
-		//				}
-		//				areq.Session = &DefaultSession{
-		//					Claims: &jwt.IDTokenClaims{
-		//						Subject: "peter",
-		//					},
-		//					Headers: &jwt.Headers{},
-		//				}
-		//
-		//				r := fosite.NewAuthorizeRequest()
-		//				r.Session = areq.Session
-		//				r.GrantedScope = fosite.Arguments{"openid"}
-		//				r.Form.Set("nonce", "1111111111111111")
-		//				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).AnyTimes().Return(r, nil)
-		//			},
-		//			check: func(t *testing.T, aresp *fosite.AccessResponse) {
-		//				assert.NotEmpty(t, aresp.GetExtra("id_token"))
-		//				idToken, _ := aresp.GetExtra("id_token").(string)
-		//				decodedIdToken, err := jwt.Parse(idToken, func(token *jwt.Token) (interface{}, error) {
-		//					return key.PublicKey, nil
-		//				})
-		//				require.NoError(t, err)
-		//				claims := decodedIdToken.Claims
-		//				assert.NotEmpty(t, claims["at_hash"])
-		//				idTokenExp := internal.ExtractJwtExpClaim(t, idToken)
-		//				internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.AuthorizationCodeGrantIDTokenLifespan).UTC(), *idTokenExp, time.Minute)
-		//			},
-		//		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c.setup()
@@ -193,7 +209,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, err, "%+v", err)
 			}
 			if c.check != nil {
 				c.check(t, aresp)
