@@ -31,7 +31,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/text v0.3.3
+	golang.org/x/text v0.3.7
 	gopkg.in/square/go-jose.v2 v2.5.2-0.20210529014059-a5c7eec3c614
 )
 
