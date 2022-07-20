@@ -35,6 +35,7 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
+// #nosec G101
 const jwtBearerGrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
 type JWTBearer struct {
