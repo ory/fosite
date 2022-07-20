@@ -22,10 +22,11 @@
 package fosite
 
 import (
-	"github.com/stretchr/testify/require"
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/assert"
 )

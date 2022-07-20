@@ -33,10 +33,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	jose "gopkg.in/square/go-jose.v2"
+
+	"github.com/ory/fosite/token/jwt"
 )
 
 func mustGenerateAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {

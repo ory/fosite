@@ -7,8 +7,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ory/x/errorsx"
 	jjson "gopkg.in/square/go-jose.v2/json"
+
+	"github.com/ory/x/errorsx"
 )
 
 var TimeFunc = time.Now
