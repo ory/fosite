@@ -24,6 +24,7 @@ package openid
 import (
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
@@ -67,19 +68,19 @@ func TestGenerateIDToken(t *testing.T) {
 			setup: func() {
 				ar.Form.Set("nonce", "11111111111111111111111111111111111")
 				ar.SetSession(sess)
-				chgen.EXPECT().GenerateIDToken(nil, ar).Return("", fooErr)
+				chgen.EXPECT().GenerateIDToken(nil, time.Duration(0), ar).Return("", fooErr)
 			},
 			expectErr: fooErr,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				chgen.EXPECT().GenerateIDToken(nil, ar).AnyTimes().Return("asdf", nil)
+				chgen.EXPECT().GenerateIDToken(nil, time.Duration(0), ar).AnyTimes().Return("asdf", nil)
 			},
 		},
 	} {
 		c.setup()
-		token, err := h.generateIDToken(nil, ar)
+		token, err := h.generateIDToken(nil, time.Duration(0), ar)
 		assert.True(t, err == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if err == nil {
 			assert.NotEmpty(t, token, "(%d) %s", k, c.description)
@@ -102,7 +103,7 @@ func TestIssueExplicitToken(t *testing.T) {
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueExplicitIDToken(nil, ar, resp)
+	err := h.IssueExplicitIDToken(nil, time.Duration(0), ar, resp)
 	assert.NoError(t, err)
 }
 
@@ -119,7 +120,7 @@ func TestIssueImplicitToken(t *testing.T) {
 
 	resp.EXPECT().AddParameter("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueImplicitIDToken(nil, ar, resp)
+	err := h.IssueImplicitIDToken(nil, time.Duration(0), ar, resp)
 	assert.NoError(t, err)
 }
 

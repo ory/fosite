@@ -81,9 +81,12 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	// Credentials must not be passed around, potentially leaking to the database!
 	delete(request.GetRequestForm(), "password")
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan).Round(time.Second))
-	if c.RefreshTokenLifespan > -1 {
-		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.RefreshTokenLifespan).Round(time.Second))
+	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypePassword, fosite.AccessToken, c.AccessTokenLifespan)
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
+
+	rtLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypePassword, fosite.RefreshToken, c.RefreshTokenLifespan)
+	if rtLifespan > -1 {
+		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(rtLifespan).Round(time.Second))
 	}
 
 	return nil
@@ -106,7 +109,9 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) PopulateTokenEndpointResp
 		}
 	}
 
-	if err := c.IssueAccessToken(ctx, requester, responder); err != nil {
+	atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypePassword, fosite.AccessToken, c.AccessTokenLifespan)
+
+	if err := c.IssueAccessToken(ctx, atLifespan, requester, responder); err != nil {
 		return err
 	}
 

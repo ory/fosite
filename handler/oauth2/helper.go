@@ -35,7 +35,7 @@ type HandleHelper struct {
 	RefreshTokenLifespan time.Duration
 }
 
-func (h *HandleHelper) IssueAccessToken(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+func (h *HandleHelper) IssueAccessToken(ctx context.Context, defaultLifespan time.Duration, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	token, signature, err := h.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (h *HandleHelper) IssueAccessToken(ctx context.Context, requester fosite.Ac
 
 	responder.SetAccessToken(token)
 	responder.SetTokenType("bearer")
-	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, h.AccessTokenLifespan, time.Now().UTC()))
+	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, defaultLifespan, time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
 	return nil
 }

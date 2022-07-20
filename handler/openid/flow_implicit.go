@@ -23,6 +23,7 @@ package openid
 
 import (
 	"context"
+	"time"
 
 	"github.com/ory/x/errorsx"
 
@@ -40,6 +41,9 @@ type OpenIDConnectImplicitHandler struct {
 	RS256JWTStrategy *jwt.RS256JWTStrategy
 
 	MinParameterEntropy int
+
+	// IDTokenLifespan defines the lifetime of a refresh token.
+	IDTokenLifespan time.Duration
 }
 
 func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
@@ -102,7 +106,8 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		resp.AddParameter("state", ar.GetState())
 	}
 
-	if err := c.IssueImplicitIDToken(ctx, ar, resp); err != nil {
+	idTokenLifespan := fosite.GetEffectiveLifespan(ar.GetClient(), fosite.GrantTypeImplicit, fosite.IDToken, c.IDTokenLifespan)
+	if err := c.IssueImplicitIDToken(ctx, idTokenLifespan, ar, resp); err != nil {
 		return errorsx.WithStack(err)
 	}
 

@@ -24,18 +24,38 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
 	goauth "golang.org/x/oauth2"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/internal"
 )
+
+func introspect(t *testing.T, ts *httptest.Server, token string, p interface{}, username, password string) {
+	req, err := http.NewRequest("POST", ts.URL+"/introspect", strings.NewReader(url.Values{"token": {token}}.Encode()))
+	require.NoError(t, err)
+	req.SetBasicAuth(username, password)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, r.StatusCode, "%s", body)
+	require.NoError(t, json.Unmarshal(body, p))
+}
 
 func TestClientCredentialsFlow(t *testing.T) {
 	for _, strategy := range []oauth2.AccessTokenStrategy{
@@ -51,11 +71,13 @@ func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStra
 	defer ts.Close()
 
 	oauthClient := newOAuth2AppClient(ts)
+	fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
+	fositeStore.Clients["custom-lifespan-client"].(*fosite.DefaultClientWithCustomTokenLifespans).RedirectURIs[0] = ts.URL + "/callback"
 	for k, c := range []struct {
 		description string
 		setup       func()
 		err         bool
-		check       func(t *testing.T, r *http.Response)
+		check       func(t *testing.T, r *goauth.Token)
 		params      url.Values
 	}{
 		{
@@ -78,28 +100,51 @@ func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStra
 			description: "should pass",
 			setup: func() {
 			},
-			check: func(t *testing.T, r *http.Response) {
-				var b fosite.AccessRequest
-				b.Client = new(fosite.DefaultClient)
-				b.Session = new(defaultSession)
-				require.NoError(t, json.NewDecoder(r.Body).Decode(&b))
-				assert.EqualValues(t, fosite.Arguments{"https://www.ory.sh/api"}, b.RequestedAudience)
-				assert.EqualValues(t, fosite.Arguments{"https://www.ory.sh/api"}, b.GrantedAudience)
-				assert.EqualValues(t, "my-client", b.Session.(*defaultSession).Subject)
+			check: func(t *testing.T, token *goauth.Token) {
+				var j json.RawMessage
+				introspect(t, ts, token.AccessToken, &j, oauthClient.ClientID, oauthClient.ClientSecret)
+				assert.Equal(t, oauthClient.ClientID, gjson.GetBytes(j, "client_id").String())
+				assert.Equal(t, "fosite", gjson.GetBytes(j, "scope").String())
 			},
 		},
 		{
 			description: "should pass",
 			setup: func() {
 			},
-			check: func(t *testing.T, r *http.Response) {
-				var b fosite.AccessRequest
-				b.Client = new(fosite.DefaultClient)
-				b.Session = new(defaultSession)
-				require.NoError(t, json.NewDecoder(r.Body).Decode(&b))
-				assert.EqualValues(t, fosite.Arguments{}, b.RequestedAudience)
-				assert.EqualValues(t, fosite.Arguments{}, b.GrantedAudience)
-				assert.EqualValues(t, "my-client", b.Session.(*defaultSession).Subject)
+			check: func(t *testing.T, token *goauth.Token) {
+				var j json.RawMessage
+				introspect(t, ts, token.AccessToken, &j, oauthClient.ClientID, oauthClient.ClientSecret)
+				introspect(t, ts, token.AccessToken, &j, oauthClient.ClientID, oauthClient.ClientSecret)
+				assert.Equal(t, oauthClient.ClientID, gjson.GetBytes(j, "client_id").String())
+				assert.Equal(t, "fosite", gjson.GetBytes(j, "scope").String())
+				atReq, ok := fositeStore.AccessTokens[strings.Split(token.AccessToken, ".")[1]]
+				require.True(t, ok)
+				atExp := atReq.GetSession().GetExpiresAt(fosite.AccessToken)
+				internal.RequireEqualTime(t, time.Now().UTC().Add(time.Hour), atExp, time.Minute)
+				atExpIn := time.Duration(token.Extra("expires_in").(float64)) * time.Second
+				internal.RequireEqualDuration(t, time.Hour, atExpIn, time.Minute)
+			},
+		},
+		{
+			description: "should pass with custom client token lifespans",
+			setup: func() {
+				oauthClient.ClientID = "custom-lifespan-client"
+			},
+			check: func(t *testing.T, token *goauth.Token) {
+				var j json.RawMessage
+				introspect(t, ts, token.AccessToken, &j, oauthClient.ClientID, oauthClient.ClientSecret)
+				introspect(t, ts, token.AccessToken, &j, oauthClient.ClientID, oauthClient.ClientSecret)
+				assert.Equal(t, oauthClient.ClientID, gjson.GetBytes(j, "client_id").String())
+				assert.Equal(t, "fosite", gjson.GetBytes(j, "scope").String())
+
+				atReq, ok := fositeStore.AccessTokens[strings.Split(token.AccessToken, ".")[1]]
+				require.True(t, ok)
+				atExp := atReq.GetSession().GetExpiresAt(fosite.AccessToken)
+				internal.RequireEqualTime(t, time.Now().UTC().Add(*internal.TestLifespans.ClientCredentialsGrantAccessTokenLifespan), atExp, time.Minute)
+				atExpIn := time.Duration(token.Extra("expires_in").(float64)) * time.Second
+				internal.RequireEqualDuration(t, *internal.TestLifespans.ClientCredentialsGrantAccessTokenLifespan, atExpIn, time.Minute)
+				rtExp := atReq.GetSession().GetExpiresAt(fosite.RefreshToken)
+				internal.RequireEqualTime(t, time.Time{}, rtExp, time.Minute)
 			},
 		},
 	} {

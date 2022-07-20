@@ -159,9 +159,12 @@ func TestDefaultResponseMode_AuthorizeImplicit_EndpointHandler(t *testing.T) {
 	areq.State = "state"
 	areq.GrantedScope = fosite.Arguments{"scope"}
 	areq.ResponseTypes = fosite.Arguments{"token"}
-	areq.Client = &fosite.DefaultClient{
-		GrantTypes:    fosite.Arguments{"implicit"},
-		ResponseTypes: fosite.Arguments{"token"},
+	areq.Client = &fosite.DefaultClientWithCustomTokenLifespans{
+		DefaultClient: &fosite.DefaultClient{
+			GrantTypes:    fosite.Arguments{"implicit"},
+			ResponseTypes: fosite.Arguments{"token"},
+		},
+		TokenLifespans: &internal.TestLifespans,
 	}
 
 	store.EXPECT().CreateAccessTokenSession(nil, "ats", gomock.Eq(areq.Sanitize([]string{}))).AnyTimes().Return(nil)
@@ -176,4 +179,6 @@ func TestDefaultResponseMode_AuthorizeImplicit_EndpointHandler(t *testing.T) {
 	err := h.HandleAuthorizeEndpointRequest(nil, areq, aresp)
 	assert.NoError(t, err)
 	assert.Equal(t, fosite.ResponseModeFragment, areq.GetResponseMode())
+
+	internal.RequireEqualTime(t, time.Now().UTC().Add(*internal.TestLifespans.ImplicitGrantAccessTokenLifespan), areq.Session.GetExpiresAt(fosite.AccessToken), time.Minute)
 }

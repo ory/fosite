@@ -61,7 +61,8 @@ func (c *ClientCredentialsGrantHandler) HandleTokenEndpointRequest(_ context.Con
 	}
 	// if the client is not public, he has already been authenticated by the access request handler.
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan))
+	atLifespan := fosite.GetEffectiveLifespan(client, fosite.GrantTypeClientCredentials, fosite.AccessToken, c.AccessTokenLifespan)
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan))
 	return nil
 }
 
@@ -75,7 +76,9 @@ func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant 'client_credentials'."))
 	}
 
-	return c.IssueAccessToken(ctx, request, response)
+	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeClientCredentials, fosite.AccessToken, c.AccessTokenLifespan)
+
+	return c.IssueAccessToken(ctx, atLifespan, request, response)
 }
 
 func (c *ClientCredentialsGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
