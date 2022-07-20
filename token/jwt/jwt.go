@@ -32,8 +32,9 @@ import (
 	"crypto/sha256"
 	"strings"
 
-	"github.com/ory/x/errorsx"
 	"gopkg.in/square/go-jose.v2"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
 )

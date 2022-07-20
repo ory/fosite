@@ -1,10 +1,11 @@
 package fosite
 
 import (
-	"github.com/ory/fosite/i18n"
-	"github.com/ory/x/errorsx"
 	"github.com/pkg/errors"
 	"golang.org/x/text/language"
+
+	"github.com/ory/fosite/i18n"
+	"github.com/ory/x/errorsx"
 )
 
 // AddLocalizerToErr augments the error object with the localizer
