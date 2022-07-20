@@ -21,7 +21,9 @@
 
 package fosite
 
-import jose "gopkg.in/square/go-jose.v2"
+import (
+	jose "gopkg.in/square/go-jose.v2"
+)
 
 // Client represents a client or an app.
 type Client interface {

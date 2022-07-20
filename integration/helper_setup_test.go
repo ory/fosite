@@ -74,6 +74,18 @@ var fositeStore = &storage.MemoryStore{
 			Scopes:        []string{"fosite", "offline", "openid"},
 			Audience:      []string{tokenURL},
 		},
+		"custom-lifespan-client": &fosite.DefaultClientWithCustomTokenLifespans{
+			DefaultClient: &fosite.DefaultClient{
+				ID:             "custom-lifespan-client",
+				Secret:         []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`),            // = "foobar"
+				RotatedSecrets: [][]byte{[]byte(`$2y$10$X51gLxUQJ.hGw1epgHTE5u0bt64xM0COU7K9iAp.OFg8p2pUd.1zC `)}, // = "foobaz",
+				RedirectURIs:   []string{"http://localhost:3846/callback"},
+				ResponseTypes:  []string{"id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"},
+				GrantTypes:     []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+				Scopes:         []string{"fosite", "openid", "photos", "offline"},
+			},
+			TokenLifespans: &internal.TestLifespans,
+		},
 		"public-client": &fosite.DefaultClient{
 			ID:            "public-client",
 			Secret:        []byte{},

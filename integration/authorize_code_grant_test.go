@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -34,6 +35,7 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/internal"
 )
 
 func TestAuthorizeCodeFlow(t *testing.T) {
@@ -59,12 +61,13 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 
 	oauthClient := newOAuth2Client(ts)
 	fositeStore.Clients["my-client"].(*fosite.DefaultClient).RedirectURIs[0] = ts.URL + "/callback"
+	fositeStore.Clients["custom-lifespan-client"].(*fosite.DefaultClientWithCustomTokenLifespans).RedirectURIs[0] = ts.URL + "/callback"
 
 	var state string
 	for k, c := range []struct {
 		description    string
 		setup          func()
-		check          func(t *testing.T, r *http.Response)
+		check          func(t *testing.T, r *http.Response, token *goauth.Token)
 		params         []goauth.AuthCodeOption
 		authStatusCode int
 	}{
@@ -94,7 +97,7 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 				oauthClient = newOAuth2Client(ts)
 				state = "12345678901234567890"
 			},
-			check: func(t *testing.T, r *http.Response) {
+			check: func(t *testing.T, r *http.Response, _ *goauth.Token) {
 				var b fosite.AccessRequest
 				b.Client = new(fosite.DefaultClient)
 				b.Session = new(defaultSession)
@@ -110,6 +113,28 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 			setup: func() {
 				oauthClient = newOAuth2Client(ts)
 				state = "12345678901234567890"
+			},
+			authStatusCode: http.StatusOK,
+		},
+		{
+			description: "should pass with custom client token lifespans",
+			setup: func() {
+				oauthClient = newOAuth2Client(ts)
+				oauthClient.ClientID = "custom-lifespan-client"
+				oauthClient.Scopes = []string{"fosite", "offline"}
+				state = "12345678901234567890"
+			},
+			check: func(t *testing.T, r *http.Response, token *goauth.Token) {
+				var b fosite.AccessRequest
+				b.Client = new(fosite.DefaultClient)
+				b.Session = new(defaultSession)
+				require.NoError(t, json.NewDecoder(r.Body).Decode(&b))
+				atExp := b.Session.GetExpiresAt(fosite.AccessToken)
+				internal.RequireEqualTime(t, time.Now().UTC().Add(*internal.TestLifespans.AuthorizationCodeGrantAccessTokenLifespan), atExp, time.Minute)
+				atExpIn := time.Duration(token.Extra("expires_in").(float64)) * time.Second
+				internal.RequireEqualDuration(t, *internal.TestLifespans.AuthorizationCodeGrantAccessTokenLifespan, atExpIn, time.Minute)
+				rtExp := b.Session.GetExpiresAt(fosite.RefreshToken)
+				internal.RequireEqualTime(t, time.Now().UTC().Add(*internal.TestLifespans.AuthorizationCodeGrantRefreshTokenLifespan), rtExp, time.Minute)
 			},
 			authStatusCode: http.StatusOK,
 		},
@@ -132,7 +157,7 @@ func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 				assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 				if c.check != nil {
-					c.check(t, resp)
+					c.check(t, resp, token)
 				}
 			}
 		})

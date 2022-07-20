@@ -11,30 +11,30 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockTransactional is a mock of Transactional interface
+// MockTransactional is a mock of Transactional interface.
 type MockTransactional struct {
 	ctrl     *gomock.Controller
 	recorder *MockTransactionalMockRecorder
 }
 
-// MockTransactionalMockRecorder is the mock recorder for MockTransactional
+// MockTransactionalMockRecorder is the mock recorder for MockTransactional.
 type MockTransactionalMockRecorder struct {
 	mock *MockTransactional
 }
 
-// NewMockTransactional creates a new mock instance
+// NewMockTransactional creates a new mock instance.
 func NewMockTransactional(ctrl *gomock.Controller) *MockTransactional {
 	mock := &MockTransactional{ctrl: ctrl}
 	mock.recorder = &MockTransactionalMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTransactional) EXPECT() *MockTransactionalMockRecorder {
 	return m.recorder
 }
 
-// BeginTX mocks base method
+// BeginTX mocks base method.
 func (m *MockTransactional) BeginTX(arg0 context.Context) (context.Context, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BeginTX", arg0)
@@ -43,13 +43,13 @@ func (m *MockTransactional) BeginTX(arg0 context.Context) (context.Context, erro
 	return ret0, ret1
 }
 
-// BeginTX indicates an expected call of BeginTX
+// BeginTX indicates an expected call of BeginTX.
 func (mr *MockTransactionalMockRecorder) BeginTX(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BeginTX", reflect.TypeOf((*MockTransactional)(nil).BeginTX), arg0)
 }
 
-// Commit mocks base method
+// Commit mocks base method.
 func (m *MockTransactional) Commit(arg0 context.Context) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Commit", arg0)
@@ -57,13 +57,13 @@ func (m *MockTransactional) Commit(arg0 context.Context) error {
 	return ret0
 }
 
-// Commit indicates an expected call of Commit
+// Commit indicates an expected call of Commit.
 func (mr *MockTransactionalMockRecorder) Commit(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockTransactional)(nil).Commit), arg0)
 }
 
-// Rollback mocks base method
+// Rollback mocks base method.
 func (m *MockTransactional) Rollback(arg0 context.Context) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Rollback", arg0)
@@ -71,7 +71,7 @@ func (m *MockTransactional) Rollback(arg0 context.Context) error {
 	return ret0
 }
 
-// Rollback indicates an expected call of Rollback
+// Rollback indicates an expected call of Rollback.
 func (mr *MockTransactionalMockRecorder) Rollback(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockTransactional)(nil).Rollback), arg0)

@@ -36,6 +36,8 @@ import (
 
 type OpenIDConnectRefreshHandler struct {
 	*IDTokenHandleHelper
+
+	IDTokenLifespan time.Duration
 }
 
 func (c *OpenIDConnectRefreshHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
@@ -109,7 +111,8 @@ func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.
 	claims.CodeHash = ""
 	claims.IssuedAt = time.Now().Truncate(time.Second)
 
-	return c.IssueExplicitIDToken(ctx, requester, responder)
+	idTokenLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeRefreshToken, fosite.IDToken, c.IDTokenLifespan)
+	return c.IssueExplicitIDToken(ctx, idTokenLifespan, requester, responder)
 }
 
 func (c *OpenIDConnectRefreshHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {

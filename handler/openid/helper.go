@@ -28,6 +28,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"strconv"
+	"time"
 
 	"github.com/ory/fosite"
 )
@@ -61,8 +62,8 @@ func (i *IDTokenHandleHelper) GetAccessTokenHash(ctx context.Context, requester 
 	return base64.RawURLEncoding.EncodeToString(hashBuf.Bytes()[:hashBuf.Len()/2])
 }
 
-func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, fosr fosite.Requester) (token string, err error) {
-	token, err = i.IDTokenStrategy.GenerateIDToken(ctx, fosr)
+func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, lifespan time.Duration, fosr fosite.Requester) (token string, err error) {
+	token, err = i.IDTokenStrategy.GenerateIDToken(ctx, lifespan, fosr)
 	if err != nil {
 		return "", err
 	}
@@ -70,8 +71,9 @@ func (i *IDTokenHandleHelper) generateIDToken(ctx context.Context, fosr fosite.R
 	return token, nil
 }
 
-func (i *IDTokenHandleHelper) IssueImplicitIDToken(ctx context.Context, ar fosite.Requester, resp fosite.AuthorizeResponder) error {
-	token, err := i.generateIDToken(ctx, ar)
+func (i *IDTokenHandleHelper) IssueImplicitIDToken(ctx context.Context, lifespan time.Duration, ar fosite.Requester, resp fosite.AuthorizeResponder) error {
+
+	token, err := i.generateIDToken(ctx, lifespan, ar)
 	if err != nil {
 		return err
 	}
@@ -79,8 +81,8 @@ func (i *IDTokenHandleHelper) IssueImplicitIDToken(ctx context.Context, ar fosit
 	return nil
 }
 
-func (i *IDTokenHandleHelper) IssueExplicitIDToken(ctx context.Context, ar fosite.Requester, resp fosite.AccessResponder) error {
-	token, err := i.generateIDToken(ctx, ar)
+func (i *IDTokenHandleHelper) IssueExplicitIDToken(ctx context.Context, lifespan time.Duration, ar fosite.Requester, resp fosite.AccessResponder) error {
+	token, err := i.generateIDToken(ctx, lifespan, ar)
 	if err != nil {
 		return err
 	}

@@ -22,15 +22,19 @@
 package integration_test
 
 import (
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
+	goauth "golang.org/x/oauth2"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	hst "github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/internal"
 )
 
 func TestResourceOwnerPasswordCredentialsFlow(t *testing.T) {
@@ -51,6 +55,7 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy hst.Acc
 	for k, c := range []struct {
 		description string
 		setup       func()
+		check       func(t *testing.T, token *goauth.Token)
 		err         bool
 	}{
 		{
@@ -67,6 +72,23 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy hst.Acc
 				password = "secret"
 			},
 		},
+		{
+			description: "should pass with custom client token lifespans",
+			setup: func() {
+				oauthClient = newOAuth2Client(ts)
+				oauthClient.ClientID = "custom-lifespan-client"
+			},
+			check: func(t *testing.T, token *goauth.Token) {
+				s, err := fositeStore.GetAccessTokenSession(nil, strings.Split(token.AccessToken, ".")[1], nil)
+				require.NoError(t, err)
+				atExp := s.GetSession().GetExpiresAt(fosite.AccessToken)
+				internal.RequireEqualTime(t, time.Now().UTC().Add(*internal.TestLifespans.PasswordGrantAccessTokenLifespan), atExp, time.Minute)
+				atExpIn := time.Duration(token.Extra("expires_in").(float64)) * time.Second
+				internal.RequireEqualDuration(t, *internal.TestLifespans.PasswordGrantAccessTokenLifespan, atExpIn, time.Minute)
+				rtExp := s.GetSession().GetExpiresAt(fosite.RefreshToken)
+				internal.RequireEqualTime(t, time.Now().UTC().Add(*internal.TestLifespans.PasswordGrantRefreshTokenLifespan), rtExp, time.Minute)
+			},
+		},
 	} {
 		c.setup()
 
@@ -74,7 +96,12 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy hst.Acc
 		require.Equal(t, c.err, err != nil, "(%d) %s\n%s\n%s", k, c.description, c.err, err)
 		if !c.err {
 			assert.NotEmpty(t, token.AccessToken, "(%d) %s\n%s", k, c.description, token)
+
+			if c.check != nil {
+				c.check(t, token)
+			}
 		}
+
 		t.Logf("Passed test case %d", k)
 	}
 }

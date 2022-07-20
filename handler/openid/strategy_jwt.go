@@ -129,15 +129,17 @@ func (s *DefaultSession) IDTokenClaims() *jwt.IDTokenClaims {
 type DefaultStrategy struct {
 	jwt.JWTStrategy
 
-	Expiry time.Duration
 	Issuer string
 
 	MinParameterEntropy int
 }
 
-func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.Requester) (token string, err error) {
-	if h.Expiry == 0 {
-		h.Expiry = defaultExpiryTime
+// GenerateIDToken returns a JWT string.
+//
+// lifespan is ignored if requester.GetSession().IDTokenClaims().ExpiresAt is not zero.
+func (h DefaultStrategy) GenerateIDToken(ctx context.Context, lifespan time.Duration, requester fosite.Requester) (token string, err error) {
+	if lifespan == 0 {
+		lifespan = defaultExpiryTime
 	}
 
 	sess, ok := requester.GetSession().(Session)
@@ -215,7 +217,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	}
 
 	if claims.ExpiresAt.IsZero() {
-		claims.ExpiresAt = time.Now().UTC().Add(h.Expiry)
+		claims.ExpiresAt = time.Now().UTC().Add(lifespan)
 	}
 
 	if claims.ExpiresAt.Before(time.Now().UTC()) {

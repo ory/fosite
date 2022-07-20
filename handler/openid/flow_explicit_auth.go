@@ -23,6 +23,7 @@ package openid
 
 import (
 	"context"
+	"time"
 
 	"github.com/ory/x/errorsx"
 
@@ -33,6 +34,8 @@ type OpenIDConnectExplicitHandler struct {
 	// OpenIDConnectRequestStorage is the storage for open id connect sessions.
 	OpenIDConnectRequestStorage   OpenIDConnectRequestStorage
 	OpenIDConnectRequestValidator *OpenIDConnectRequestValidator
+
+	IDTokenLifespan time.Duration
 
 	*IDTokenHandleHelper
 }

@@ -83,7 +83,6 @@ func NewOpenIDConnectStrategy(config *Config, key *rsa.PrivateKey) *openid.Defau
 		JWTStrategy: &jwt.RS256JWTStrategy{
 			PrivateKey: key,
 		},
-		Expiry:              config.GetIDTokenLifespan(),
 		Issuer:              config.IDTokenIssuer,
 		MinParameterEntropy: config.GetMinParameterEntropy(),
 	}
@@ -94,7 +93,6 @@ func NewOpenIDConnectECDSAStrategy(config *Config, key *ecdsa.PrivateKey) *openi
 		JWTStrategy: &jwt.ES256JWTStrategy{
 			PrivateKey: key,
 		},
-		Expiry:              config.GetIDTokenLifespan(),
 		Issuer:              config.IDTokenIssuer,
 		MinParameterEntropy: config.GetMinParameterEntropy(),
 	}

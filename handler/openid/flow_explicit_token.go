@@ -74,7 +74,8 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 	// 	return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type id_token"))
 	// }
 
-	return c.IssueExplicitIDToken(ctx, authorize, responder)
+	idTokenLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeAuthorizationCode, fosite.IDToken, c.IDTokenLifespan)
+	return c.IssueExplicitIDToken(ctx, idTokenLifespan, authorize, responder)
 }
 
 func (c *OpenIDConnectExplicitHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {

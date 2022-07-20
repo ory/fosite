@@ -23,12 +23,14 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
 	"gopkg.in/square/go-jose.v2"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/internal"
 )
 
 type MemoryUserRelation struct {
@@ -118,6 +120,18 @@ func NewExampleStore() *MemoryStore {
 				GrantTypes:     []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
 				Scopes:         []string{"fosite", "openid", "photos", "offline"},
 			},
+			"custom-lifespan-client": &fosite.DefaultClientWithCustomTokenLifespans{
+				DefaultClient: &fosite.DefaultClient{
+					ID:             "custom-lifespan-client",
+					Secret:         []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`),            // = "foobar"
+					RotatedSecrets: [][]byte{[]byte(`$2y$10$X51gLxUQJ.hGw1epgHTE5u0bt64xM0COU7K9iAp.OFg8p2pUd.1zC `)}, // = "foobaz",
+					RedirectURIs:   []string{"http://localhost:3846/callback"},
+					ResponseTypes:  []string{"id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"},
+					GrantTypes:     []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+					Scopes:         []string{"fosite", "openid", "photos", "offline"},
+				},
+				TokenLifespans: &internal.TestLifespans,
+			},
 			"encoded:client": &fosite.DefaultClient{
 				ID:             "encoded:client",
 				Secret:         []byte(`$2a$10$A7M8b65dSSKGHF0H2sNkn.9Z0hT8U1Nv6OWPV3teUUaczXkVkxuDS`), // = "encoded&password"
@@ -183,6 +197,17 @@ func (s *MemoryStore) GetClient(_ context.Context, id string) (fosite.Client, er
 		return nil, fosite.ErrNotFound
 	}
 	return cl, nil
+}
+
+func (s *MemoryStore) SetTokenLifespans(clientID string, lifespans *fosite.ClientLifespanConfig) error {
+	if client, ok := s.Clients[clientID]; ok {
+		if clc, ok := client.(fosite.ClientWithCustomTokenLifespans); ok {
+			clc.SetTokenLifespans(lifespans)
+			return nil
+		}
+		return fosite.ErrorToRFC6749Error(errors.New("failed to set token lifespans due to failed client type assertion"))
+	}
+	return fosite.ErrNotFound
 }
 
 func (s *MemoryStore) ClientAssertionJWTValid(_ context.Context, jti string) error {

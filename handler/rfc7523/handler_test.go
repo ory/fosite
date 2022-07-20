@@ -914,3 +914,33 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestAccessTokenIssuedS
 	s.Equal(s.accessResponse.GetExtra("scope"), "", "no scopes expected in response")
 	s.Nil(s.accessResponse.GetExtra("refresh_token"), "refresh token not expected in response")
 }
+
+func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestAccessTokenIssuedSuccessfullyWithCustomLifespan() {
+	s.accessRequest.Client = &fosite.DefaultClientWithCustomTokenLifespans{
+		DefaultClient: &fosite.DefaultClient{
+			GrantTypes: []string{grantTypeJWTBearer},
+		},
+		TokenLifespans: &internal.TestLifespans,
+	}
+	// arrange
+	ctx := context.Background()
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
+	token := "token"
+	sig := "sig"
+	s.mockAccessTokenStrategy.EXPECT().GenerateAccessToken(ctx, s.accessRequest).Return(token, sig, nil)
+	s.mockAccessTokenStore.EXPECT().CreateAccessTokenSession(ctx, sig, s.accessRequest.Sanitize([]string{}))
+
+	// act
+	err := s.handler.PopulateTokenEndpointResponse(context.Background(), s.accessRequest, s.accessResponse)
+
+	// assert
+	s.NoError(err, "no error expected")
+	s.Equal(s.accessResponse.AccessToken, token, "access token expected in response")
+	s.Equal(s.accessResponse.TokenType, "bearer", "token type expected to be \"bearer\"")
+	s.Equal(
+		s.accessResponse.GetExtra("expires_in"), int64(internal.TestLifespans.JwtBearerGrantAccessTokenLifespan.Seconds()),
+		"token expiration time expected in response to be equal to the pertinent AccessTokenLifespan setting in client",
+	)
+	s.Equal(s.accessResponse.GetExtra("scope"), "", "no scopes expected in response")
+	s.Nil(s.accessResponse.GetExtra("refresh_token"), "refresh token not expected in response")
+}

@@ -204,21 +204,62 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 				return makeOpenIDConnectImplicitHandler(fosite.MinParameterEntropy)
 			},
 			check: func() {
-				assert.NotEmpty(t, aresp.GetParameters().Get("id_token"))
 				assert.NotEmpty(t, aresp.GetParameters().Get("state"))
 				assert.Empty(t, aresp.GetParameters().Get("access_token"))
+
+				idToken := aresp.GetParameters().Get("id_token")
+				assert.NotEmpty(t, idToken)
+				idTokenExp := internal.ExtractJwtExpClaim(t, idToken)
+				internal.RequireEqualTime(t, time.Now().Add(time.Hour), *idTokenExp, time.Minute)
+			},
+		},
+		{
+			description: "should pass with nondefault id token lifespan",
+			setup: func() OpenIDConnectImplicitHandler {
+				aresp = fosite.NewAuthorizeResponse()
+				areq.Session = &DefaultSession{
+					Claims: &jwt.IDTokenClaims{
+						Subject: "peter",
+					},
+					Headers: &jwt.Headers{},
+					Subject: "peter",
+				}
+				areq.ResponseTypes = fosite.Arguments{"id_token"}
+				areq.Client = &fosite.DefaultClientWithCustomTokenLifespans{
+					DefaultClient: &fosite.DefaultClient{
+						GrantTypes:    fosite.Arguments{"implicit"},
+						ResponseTypes: fosite.Arguments{"token", "id_token"},
+						Scopes:        []string{"openid", "fosite"},
+					},
+				}
+				areq.Client.(fosite.ClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
+				return makeOpenIDConnectImplicitHandler(fosite.MinParameterEntropy)
+			},
+			check: func() {
+				idToken := aresp.GetParameters().Get("id_token")
+				assert.NotEmpty(t, idToken)
+				assert.NotEmpty(t, aresp.GetParameters().Get("state"))
+				assert.Empty(t, aresp.GetParameters().Get("access_token"))
+				idTokenExp := internal.ExtractJwtExpClaim(t, idToken)
+				internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.ImplicitGrantIDTokenLifespan), *idTokenExp, time.Minute)
 			},
 		},
 		{
 			description: "should pass",
 			setup: func() OpenIDConnectImplicitHandler {
+				aresp = fosite.NewAuthorizeResponse()
 				areq.ResponseTypes = fosite.Arguments{"token", "id_token"}
 				return makeOpenIDConnectImplicitHandler(fosite.MinParameterEntropy)
 			},
 			check: func() {
-				assert.NotEmpty(t, aresp.GetParameters().Get("id_token"))
 				assert.NotEmpty(t, aresp.GetParameters().Get("state"))
+
+				idToken := aresp.GetParameters().Get("id_token")
+				assert.NotEmpty(t, idToken)
+				internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.ImplicitGrantIDTokenLifespan).UTC(), *internal.ExtractJwtExpClaim(t, idToken), time.Minute)
+
 				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
+				internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.ImplicitGrantAccessTokenLifespan).UTC(), areq.Session.GetExpiresAt(fosite.AccessToken), time.Minute)
 			},
 		},
 		{

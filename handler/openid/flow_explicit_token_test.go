@@ -24,6 +24,7 @@ package openid
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
@@ -129,12 +130,14 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				require.NoError(t, err)
 				claims := decodedIdToken.Claims
 				assert.NotEmpty(t, claims["at_hash"])
+				idTokenExp := internal.ExtractJwtExpClaim(t, idToken)
+				internal.RequireEqualTime(t, time.Now().Add(time.Hour), *idTokenExp, time.Minute)
 			},
 		},
 		{
 			description: "should fail because missing subject claim",
 			setup: func() {
-				session.Claims.Subject = ""
+				areq.Session.(*DefaultSession).Claims.Subject = ""
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -145,6 +148,43 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			},
 			expectErr: fosite.ErrServerError,
 		},
+		//		{
+		//			description: "should pass with custom client lifespans",
+		//			setup: func() {
+		//				aresp = fosite.NewAccessResponse()
+		//
+		//				areq.Client = &fosite.DefaultClientWithCustomTokenLifespans{
+		//					DefaultClient: &fosite.DefaultClient{
+		//						GrantTypes: fosite.Arguments{"authorization_code"},
+		//					},
+		//					TokenLifespans: &internal.TestLifespans,
+		//				}
+		//				areq.Session = &DefaultSession{
+		//					Claims: &jwt.IDTokenClaims{
+		//						Subject: "peter",
+		//					},
+		//					Headers: &jwt.Headers{},
+		//				}
+		//
+		//				r := fosite.NewAuthorizeRequest()
+		//				r.Session = areq.Session
+		//				r.GrantedScope = fosite.Arguments{"openid"}
+		//				r.Form.Set("nonce", "1111111111111111")
+		//				store.EXPECT().GetOpenIDConnectSession(nil, gomock.Any(), areq).AnyTimes().Return(r, nil)
+		//			},
+		//			check: func(t *testing.T, aresp *fosite.AccessResponse) {
+		//				assert.NotEmpty(t, aresp.GetExtra("id_token"))
+		//				idToken, _ := aresp.GetExtra("id_token").(string)
+		//				decodedIdToken, err := jwt.Parse(idToken, func(token *jwt.Token) (interface{}, error) {
+		//					return key.PublicKey, nil
+		//				})
+		//				require.NoError(t, err)
+		//				claims := decodedIdToken.Claims
+		//				assert.NotEmpty(t, claims["at_hash"])
+		//				idTokenExp := internal.ExtractJwtExpClaim(t, idToken)
+		//				internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.AuthorizationCodeGrantIDTokenLifespan).UTC(), *idTokenExp, time.Minute)
+		//			},
+		//		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			c.setup()
