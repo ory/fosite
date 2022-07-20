@@ -1,9 +1,9 @@
 version: 2.1
 
 orbs:
-  changelog: ory/changelog@0.1.4
-  nancy: ory/nancy@0.0.13
-  golangci: ory/golangci@0.0.11
+  changelog: ory/changelog@0.1.10
+  nancy: ory/nancy@0.0.19
+  golangci: ory/golangci@0.0.19
 
 jobs:
   test:
