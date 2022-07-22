@@ -38,6 +38,7 @@ func OpenIDConnectExplicitFactory(config *Config, storage interface{}, strategy 
 		},
 		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)).
 			WithRedirectSecureChecker(config.GetRedirectSecureChecker()),
+		IDTokenLifespan: config.IDTokenLifespan,
 	}
 }
 
@@ -49,6 +50,7 @@ func OpenIDConnectRefreshFactory(config *Config, storage interface{}, strategy i
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
+		IDTokenLifespan: config.IDTokenLifespan,
 	}
 }
 
@@ -69,6 +71,7 @@ func OpenIDConnectImplicitFactory(config *Config, storage interface{}, strategy 
 		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)).
 			WithRedirectSecureChecker(config.GetRedirectSecureChecker()),
 		MinParameterEntropy: config.GetMinParameterEntropy(),
+		IDTokenLifespan:     config.IDTokenLifespan,
 	}
 }
 
