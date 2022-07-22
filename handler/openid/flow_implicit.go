@@ -42,7 +42,6 @@ type OpenIDConnectImplicitHandler struct {
 
 	MinParameterEntropy int
 
-	// IDTokenLifespan defines the lifetime of a refresh token.
 	IDTokenLifespan time.Duration
 }
 
