@@ -214,6 +214,29 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			expectErr: fosite.ErrInvalidGrant,
 		},
 		{
+			description: "should pass with exact one state parameter in response",
+			setup: func() OpenIDConnectHybridHandler {
+				areq.Form = url.Values{"nonce": {"long-enough"}, "state": {""}}
+				areq.Client = &fosite.DefaultClient{
+					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
+					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
+					Scopes:        []string{"openid"},
+				}
+				return makeOpenIDConnectHybridHandler(fosite.MinParameterEntropy)
+			},
+			check: func() {
+				params := aresp.GetParameters()
+				var stateParam []string
+				for k, v := range params {
+					if k == "state" {
+						stateParam = v
+						break
+					}
+				}
+				assert.Len(t, stateParam, 1)
+			},
+		},
+		{
 			description: "should pass because nonce was set with sufficient entropy",
 			setup: func() OpenIDConnectHybridHandler {
 				areq.Form.Set("nonce", "some-foobar-nonce-win")
