@@ -24,8 +24,12 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/tidwall/gjson"
+	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,6 +49,20 @@ func TestClientCredentialsFlow(t *testing.T) {
 	}
 }
 
+func introspect(t *testing.T, ts *httptest.Server, token string, p interface{}, username, password string) {
+	req, err := http.NewRequest("POST", ts.URL+"/introspect", strings.NewReader(url.Values{"token": {token}}.Encode()))
+	require.NoError(t, err)
+	req.SetBasicAuth(username, password)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, r.StatusCode, "%s", body)
+	require.NoError(t, json.Unmarshal(body, p))
+}
+
 func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStrategy) {
 	f := compose.Compose(new(fosite.Config), fositeStore, strategy, compose.OAuth2ClientCredentialsGrantFactory, compose.OAuth2TokenIntrospectionFactory)
 	ts := mockServer(t, f, &fosite.DefaultSession{})
@@ -55,7 +73,7 @@ func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStra
 		description string
 		setup       func()
 		err         bool
-		check       func(t *testing.T, r *http.Response)
+		check       func(t *testing.T, token *goauth.Token)
 		params      url.Values
 	}{
 		{
@@ -78,28 +96,23 @@ func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStra
 			description: "should pass",
 			setup: func() {
 			},
-			check: func(t *testing.T, r *http.Response) {
-				var b fosite.AccessRequest
-				b.Client = new(fosite.DefaultClient)
-				b.Session = new(defaultSession)
-				require.NoError(t, json.NewDecoder(r.Body).Decode(&b))
-				assert.EqualValues(t, fosite.Arguments{"https://www.ory.sh/api"}, b.RequestedAudience)
-				assert.EqualValues(t, fosite.Arguments{"https://www.ory.sh/api"}, b.GrantedAudience)
-				assert.EqualValues(t, "my-client", b.Session.(*defaultSession).Subject)
+			check: func(t *testing.T, token *goauth.Token) {
+				var j json.RawMessage
+				introspect(t, ts, token.AccessToken, &j, oauthClient.ClientID, oauthClient.ClientSecret)
+				assert.Equal(t, oauthClient.ClientID, gjson.GetBytes(j, "client_id").String())
+				assert.Equal(t, "fosite", gjson.GetBytes(j, "scope").String())
 			},
 		},
 		{
 			description: "should pass",
 			setup: func() {
 			},
-			check: func(t *testing.T, r *http.Response) {
-				var b fosite.AccessRequest
-				b.Client = new(fosite.DefaultClient)
-				b.Session = new(defaultSession)
-				require.NoError(t, json.NewDecoder(r.Body).Decode(&b))
-				assert.EqualValues(t, fosite.Arguments{}, b.RequestedAudience)
-				assert.EqualValues(t, fosite.Arguments{}, b.GrantedAudience)
-				assert.EqualValues(t, "my-client", b.Session.(*defaultSession).Subject)
+			check: func(t *testing.T, token *goauth.Token) {
+				var j json.RawMessage
+				introspect(t, ts, token.AccessToken, &j, oauthClient.ClientID, oauthClient.ClientSecret)
+				introspect(t, ts, token.AccessToken, &j, oauthClient.ClientID, oauthClient.ClientSecret)
+				assert.Equal(t, oauthClient.ClientID, gjson.GetBytes(j, "client_id").String())
+				assert.Equal(t, "fosite", gjson.GetBytes(j, "scope").String())
 			},
 		},
 	} {
@@ -112,6 +125,11 @@ func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStra
 			if !c.err {
 				assert.NotEmpty(t, token.AccessToken, "(%d) %s\n%s", k, c.description, token)
 			}
+
+			if c.check != nil {
+				c.check(t, token)
+			}
+
 			t.Logf("Passed test case %d", k)
 		})
 	}

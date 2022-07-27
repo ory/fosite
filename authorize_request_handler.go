@@ -47,7 +47,7 @@ func wrapSigningKeyFailure(outer *RFC6749Error, inner error) *RFC6749Error {
 	return outer
 }
 
-func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(ctx context.Context, request *AuthorizeRequest) error {
+func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(ctx context.Context, request *AuthorizeRequest, isPARRequest bool) error {
 	var scope Arguments = RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
 
 	// Even if a scope parameter is present in the Request Object value, a scope parameter MUST always be passed using
@@ -155,6 +155,12 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(ctx context.
 	}
 
 	claims := token.Claims
+	// Reject the request if the "request_uri" authorization request
+	// parameter is provided.
+	if requestURI, _ := claims["request_uri"].(string); isPARRequest && requestURI != "" {
+		return errorsx.WithStack(ErrInvalidRequestObject.WithHint("Pushed Authorization Requests can not contain the 'request_uri' parameter."))
+	}
+
 	for k, v := range claims {
 		request.Form.Set(k, fmt.Sprintf("%s", v))
 	}
@@ -272,7 +278,57 @@ func (f *Fosite) validateResponseMode(r *http.Request, request *AuthorizeRequest
 	return nil
 }
 
+func (f *Fosite) authorizeRequestFromPAR(ctx context.Context, r *http.Request, request *AuthorizeRequest) (bool, error) {
+	configProvider, ok := f.Config.(PushedAuthorizeRequestConfigProvider)
+	if !ok {
+		// If the config provider is not implemented, PAR cannot be used.
+		return false, nil
+	}
+
+	requestURI := r.Form.Get("request_uri")
+	if requestURI == "" || !strings.HasPrefix(requestURI, configProvider.GetPushedAuthorizeRequestURIPrefix(ctx)) {
+		// nothing to do here
+		return false, nil
+	}
+
+	clientID := r.Form.Get("client_id")
+
+	storage, ok := f.Store.(PARStorage)
+	if !ok {
+		return false, errorsx.WithStack(ErrServerError.WithHint(ErrorPARNotSupported).WithDebug(DebugPARStorageInvalid))
+	}
+
+	// hydrate the requester
+	var parRequest AuthorizeRequester
+	var err error
+	if parRequest, err = storage.GetPARSession(ctx, requestURI); err != nil {
+		return false, errorsx.WithStack(ErrInvalidRequestURI.WithHint("Invalid PAR session").WithWrap(err).WithDebug(err.Error()))
+	}
+
+	// hydrate the request object
+	request.Merge(parRequest)
+	request.RedirectURI = parRequest.GetRedirectURI()
+	request.ResponseTypes = parRequest.GetResponseTypes()
+	request.State = parRequest.GetState()
+	request.ResponseMode = parRequest.GetResponseMode()
+
+	if err := storage.DeletePARSession(ctx, requestURI); err != nil {
+		return false, errorsx.WithStack(ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	}
+
+	// validate the clients match
+	if clientID != request.GetClient().GetID() {
+		return false, errorsx.WithStack(ErrInvalidRequest.WithHint("The 'client_id' must match the one sent in the pushed authorization request."))
+	}
+
+	return true, nil
+}
+
 func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
+	return f.newAuthorizeRequest(ctx, r, false)
+}
+
+func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPARRequest bool) (AuthorizeRequester, error) {
 	request := NewAuthorizeRequest()
 	request.Request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), r)
 
@@ -287,6 +343,18 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	// Save state to the request to be returned in error conditions (https://github.com/ory/hydra/issues/1642)
 	request.State = request.Form.Get("state")
 
+	// Check if this is a continuation from a pushed authorization request
+	if !isPARRequest {
+		if isPAR, err := f.authorizeRequestFromPAR(ctx, r, request); err != nil {
+			return request, err
+		} else if isPAR {
+			// No need to continue
+			return request, nil
+		} else if configProvider, ok := f.Config.(PushedAuthorizeRequestConfigProvider); ok && configProvider.EnforcePushedAuthorize(ctx) {
+			return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Pushed Authorization Requests are enforced but no such request was sent."))
+		}
+	}
+
 	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	if err != nil {
 		return request, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
@@ -298,7 +366,7 @@ func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (Auth
 	//
 	// All other parse methods should come afterwards so that we ensure that the data is taken
 	// from the request_object if set.
-	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(ctx, request); err != nil {
+	if err := f.authorizeRequestParametersFromOpenIDConnectRequest(ctx, request, isPARRequest); err != nil {
 		return request, err
 	}
 
