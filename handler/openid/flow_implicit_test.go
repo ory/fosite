@@ -214,7 +214,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should pass with nondefault id token lifespan",
+			description: "should pass with custom client id token lifespan",
 			setup: func() OpenIDConnectImplicitHandler {
 				aresp = fosite.NewAuthorizeResponse()
 				areq.Session = &DefaultSession{
@@ -232,7 +232,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 						Scopes:        []string{"openid", "fosite"},
 					},
 				}
-				areq.Client.(fosite.ClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
+				areq.Client.(*fosite.DefaultClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
 				return makeOpenIDConnectImplicitHandler(fosite.MinParameterEntropy)
 			},
 			check: func() {

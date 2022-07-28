@@ -201,7 +201,7 @@ func (s *MemoryStore) GetClient(_ context.Context, id string) (fosite.Client, er
 
 func (s *MemoryStore) SetTokenLifespans(clientID string, lifespans *fosite.ClientLifespanConfig) error {
 	if client, ok := s.Clients[clientID]; ok {
-		if clc, ok := client.(fosite.ClientWithCustomTokenLifespans); ok {
+		if clc, ok := client.(*fosite.DefaultClientWithCustomTokenLifespans); ok {
 			clc.SetTokenLifespans(lifespans)
 			return nil
 		}
