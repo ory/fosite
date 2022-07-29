@@ -52,10 +52,10 @@ type Session interface {
 
 // DefaultSession is a default implementation of the session interface.
 type DefaultSession struct {
-	ExpiresAt map[TokenType]time.Time
-	Username  string
-	Subject   string
-	Extra     map[string]interface{}
+	ExpiresAt map[TokenType]time.Time `json:"expires_at"`
+	Username  string                  `json:"username"`
+	Subject   string                  `json:"subject"`
+	Extra     map[string]interface{}  `json:"extra"`
 }
 
 func (s *DefaultSession) SetExpiresAt(key TokenType, exp time.Time) {

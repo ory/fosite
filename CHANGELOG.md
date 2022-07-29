@@ -439,6 +439,7 @@ Many internal interfaces have been changed, usually adding `ctx context.Context`
   See https://github.com/ory/hydra/issues/2845
 
 - Add json mappings to default session and its contents ([#688](https://github.com/ory/fosite/issues/688)) ([d8ecac4](https://github.com/ory/fosite/commit/d8ecac4077c446b71842372169abc37a02f9e1b7))
+- Add json mappings to generic session to match openid session ([#690](https://github.com/ory/fosite/issues/690)) ([2386b25](https://github.com/ory/fosite/commit/2386b259837ab89983f6d0ee37b147b36b171f5b))
 - Introduce cache strategy for JWKS fetcher ([452f377](https://github.com/ory/fosite/commit/452f37728890c68524b9aa190e1cdb279414f802))
 - Make http source contextualized ([9fc89e9](https://github.com/ory/fosite/commit/9fc89e9007c71354f7fe2d036ea6e175a2e5860b))
 - PAR implementation ([#660](https://github.com/ory/fosite/issues/660)) ([3de78db](https://github.com/ory/fosite/commit/3de78db805fe1c69b0fc5b853bfabeb19433feba)), closes [#628](https://github.com/ory/fosite/issues/628):
