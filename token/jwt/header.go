@@ -23,7 +23,7 @@ package jwt
 
 // Headers is the jwt headers
 type Headers struct {
-	Extra map[string]interface{}
+	Extra map[string]interface{} `json:"extra"`
 }
 
 func NewHeaders() *Headers {
