@@ -100,6 +100,20 @@ func (t *RevocationHandlers) Append(h RevocationHandler) {
 	*t = append(*t, h)
 }
 
+// PushedAuthorizeEndpointHandlers is a list of PushedAuthorizeEndpointHandler
+type PushedAuthorizeEndpointHandlers []PushedAuthorizeEndpointHandler
+
+// Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+func (a *PushedAuthorizeEndpointHandlers) Append(h PushedAuthorizeEndpointHandler) {
+	for _, this := range *a {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*a = append(*a, h)
+}
+
 var _ OAuth2Provider = (*Fosite)(nil)
 
 type Configurator interface {

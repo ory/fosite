@@ -35,4 +35,6 @@ const (
 	AccessResponseContextKey    = ContextKey("accessResponse")
 	AuthorizeRequestContextKey  = ContextKey("authorizeRequest")
 	AuthorizeResponseContextKey = ContextKey("authorizeResponse")
+	// PushedAuthorizeResponseContextKey is the response context
+	PushedAuthorizeResponseContextKey = ContextKey("pushedAuthorizeResponse")
 )

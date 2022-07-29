@@ -41,12 +41,14 @@ const (
 	IDToken       TokenType = "id_token"
 	DeviceCode    TokenType = "device_code"
 	UserCode      TokenType = "user_code"
+	// PushedAuthorizeRequestContext represents the PAR context object
+	PushedAuthorizeRequestContext TokenType = "par_context"
 
 	BearerAccessToken string = "bearer"
 )
 
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
-// Check fosite.Fosite for an implementation of this interface.
+// Check Fosite for an implementation of this interface.
 type OAuth2Provider interface {
 	// NewAuthorizeRequest returns an AuthorizeRequest.
 	//
@@ -188,6 +190,17 @@ type OAuth2Provider interface {
 	WriteDeviceAuthorizeError(ctx context.Context, rw http.ResponseWriter, requester DeviceAuthorizeRequester, err error)
 
 	WriteDeviceAuthorizeResponse(rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder)
+	// NewPushedAuthorizeRequest validates the request and produces an AuthorizeRequester object that can be stored
+	NewPushedAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error)
+
+	// NewPushedAuthorizeResponse executes the handlers and builds the response
+	NewPushedAuthorizeResponse(ctx context.Context, ar AuthorizeRequester, session Session) (PushedAuthorizeResponder, error)
+
+	// WritePushedAuthorizeResponse writes the PAR response
+	WritePushedAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, resp PushedAuthorizeResponder)
+
+	// WritePushedAuthorizeError writes the PAR error
+	WritePushedAuthorizeError(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, err error)
 }
 
 // IntrospectionResponder is the response object that will be returned when token introspection was successful,
@@ -361,6 +374,33 @@ type AuthorizeResponder interface {
 
 	// AddParameter adds key value pair to the response
 	AddParameter(key, value string)
+}
+
+// PushedAuthorizeResponder is the response object for PAR
+type PushedAuthorizeResponder interface {
+	// GetRequestURI returns the request_uri
+	GetRequestURI() string
+	// SetRequestURI sets the request_uri
+	SetRequestURI(requestURI string)
+	// GetExpiresIn gets the expires_in
+	GetExpiresIn() int
+	// SetExpiresIn sets the expires_in
+	SetExpiresIn(seconds int)
+
+	// GetHeader returns the response's header
+	GetHeader() (header http.Header)
+
+	// AddHeader adds an header key value pair to the response
+	AddHeader(key, value string)
+
+	// SetExtra sets a key value pair for the response.
+	SetExtra(key string, value interface{})
+
+	// GetExtra returns a key's value.
+	GetExtra(key string) interface{}
+
+	// ToMap converts the response to a map.
+	ToMap() map[string]interface{}
 }
 
 // G11NContext is the globalization context

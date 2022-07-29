@@ -284,6 +284,12 @@ type RevocationHandlersProvider interface {
 	GetRevocationHandlers(ctx context.Context) RevocationHandlers
 }
 
+// PushedAuthorizeEndpointHandlersProvider returns the provider for configuring the PAR handlers.
+type PushedAuthorizeRequestHandlersProvider interface {
+	// GetPushedAuthorizeEndpointHandlers returns the handlers.
+	GetPushedAuthorizeEndpointHandlers(ctx context.Context) PushedAuthorizeEndpointHandlers
+}
+
 // UseLegacyErrorFormatProvider returns the provider for configuring whether to use the legacy error format.
 //
 // DEPRECATED: Do not use this flag anymore.
@@ -292,4 +298,20 @@ type UseLegacyErrorFormatProvider interface {
 	//
 	// DEPRECATED: Do not use this flag anymore.
 	GetUseLegacyErrorFormat(ctx context.Context) bool
+}
+
+// PushedAuthorizeRequestConfigProvider is the configuration provider for pushed
+// authorization request.
+type PushedAuthorizeRequestConfigProvider interface {
+	// GetPushedAuthorizeRequestURIPrefix is the request URI prefix. This is
+	// usually 'urn:ietf:params:oauth:request_uri:'.
+	GetPushedAuthorizeRequestURIPrefix(ctx context.Context) string
+
+	// GetPushedAuthorizeContextLifespan is the lifespan of the short-lived PAR context.
+	GetPushedAuthorizeContextLifespan(ctx context.Context) time.Duration
+
+	// EnforcePushedAuthorize indicates if PAR is enforced. In this mode, a client
+	// cannot pass authorize parameters at the 'authorize' endpoint. The 'authorize' endpoint
+	// must contain the PAR request_uri.
+	EnforcePushedAuthorize(ctx context.Context) bool
 }

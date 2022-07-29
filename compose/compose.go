@@ -54,7 +54,6 @@ type Factory func(config fosite.Configurator, storage interface{}, strategy inte
 // Compose makes use of interface{} types in order to be able to handle a all types of stores, strategies and handlers.
 func Compose(config *fosite.Config, storage interface{}, strategy interface{}, factories ...Factory) fosite.OAuth2Provider {
 	f := fosite.NewOAuth2Provider(storage.(fosite.Storage), config)
-
 	for _, factory := range factories {
 		res := factory(config, storage, strategy)
 		if ah, ok := res.(fosite.AuthorizeEndpointHandler); ok {
@@ -71,6 +70,8 @@ func Compose(config *fosite.Config, storage interface{}, strategy interface{}, f
 		}
 		if dah, ok := res.(fosite.DeviceAuthorizeEndpointHandlers); ok {
 			config.DeviceAuthorizeEndpointHandlers.Append(dah)
+		if ph, ok := res.(fosite.PushedAuthorizeEndpointHandler); ok {
+			config.PushedAuthorizeEndpointHandlers.Append(ph)
 		}
 	}
 
@@ -106,5 +107,6 @@ func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface
 		OAuth2TokenRevocationFactory,
 
 		OAuth2PKCEFactory,
+		PushedAuthorizeHandlerFactory,
 	)
 }

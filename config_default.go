@@ -35,6 +35,11 @@ import (
 	"github.com/ory/fosite/i18n"
 )
 
+const (
+	defaultPARPrefix          = "urn:ietf:params:oauth:request_uri:"
+	defaultPARContextLifetime = 5 * time.Minute
+)
+
 var (
 	_ AuthorizeCodeLifespanProvider                = (*Config)(nil)
 	_ RefreshTokenLifespanProvider                 = (*Config)(nil)
@@ -76,6 +81,8 @@ var (
 	_ RevocationHandlersProvider                   = (*Config)(nil)
 	_ DeviceCodeLifespanProvider                   = (*Config)(nil)
 	_ UserCodeLifeSpanProvider                     = (*Config)(nil)
+	_ PushedAuthorizeRequestHandlersProvider       = (*Config)(nil)
+	_ PushedAuthorizeRequestConfigProvider         = (*Config)(nil)
 )
 
 type DeviceAuthorisationConfig struct {
@@ -230,6 +237,9 @@ type Config struct {
 	// RevocationHandlers is a list of handlers that are called before the revocation endpoint is served.
 	RevocationHandlers RevocationHandlers
 
+	// PushedAuthorizeEndpointHandlers is a list of handlers that are called before the PAR endpoint is served.
+	PushedAuthorizeEndpointHandlers PushedAuthorizeEndpointHandlers
+
 	// GlobalSecret is the global secret used to sign and verify signatures.
 	GlobalSecret []byte
 
@@ -238,6 +248,16 @@ type Config struct {
 
 	// HMACHasher is the hasher used to generate HMAC signatures.
 	HMACHasher func() hash.Hash
+
+	// PushedAuthorizeRequestURIPrefix is the URI prefix for the PAR request_uri.
+	// This is defaulted to 'urn:ietf:params:oauth:request_uri:'.
+	PushedAuthorizeRequestURIPrefix string
+
+	// PushedAuthorizeContextLifespan is the lifespan of the PAR context
+	PushedAuthorizeContextLifespan time.Duration
+
+	// IsPushedAuthorizeEnforced enforces pushed authorization request for /authorize
+	IsPushedAuthorizeEnforced bool
 }
 
 func (c *Config) GetGlobalSecret(ctx context.Context) []byte {
@@ -510,4 +530,35 @@ func (c *Config) GetClientAuthenticationStrategy(_ context.Context) ClientAuthen
 // GetDisableRefreshTokenValidation returns whether to disable the validation of the refresh token.
 func (c *Config) GetDisableRefreshTokenValidation(_ context.Context) bool {
 	return c.DisableRefreshTokenValidation
+}
+
+// GetPushedAuthorizeEndpointHandlers returns the handlers.
+func (c *Config) GetPushedAuthorizeEndpointHandlers(ctx context.Context) PushedAuthorizeEndpointHandlers {
+	return c.PushedAuthorizeEndpointHandlers
+}
+
+// GetPushedAuthorizeRequestURIPrefix is the request URI prefix. This is
+// usually 'urn:ietf:params:oauth:request_uri:'.
+func (c *Config) GetPushedAuthorizeRequestURIPrefix(ctx context.Context) string {
+	if c.PushedAuthorizeRequestURIPrefix == "" {
+		return defaultPARPrefix
+	}
+
+	return c.PushedAuthorizeRequestURIPrefix
+}
+
+// GetPushedAuthorizeContextLifespan is the lifespan of the short-lived PAR context.
+func (c *Config) GetPushedAuthorizeContextLifespan(ctx context.Context) time.Duration {
+	if c.PushedAuthorizeContextLifespan <= 0 {
+		return defaultPARContextLifetime
+	}
+
+	return c.PushedAuthorizeContextLifespan
+}
+
+// EnforcePushedAuthorize indicates if PAR is enforced. In this mode, a client
+// cannot pass authorize parameters at the 'authorize' endpoint. The 'authorize' endpoint
+// must contain the PAR request_uri.
+func (c *Config) EnforcePushedAuthorize(ctx context.Context) bool {
+	return c.IsPushedAuthorizeEnforced
 }
