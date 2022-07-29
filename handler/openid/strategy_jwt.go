@@ -51,11 +51,11 @@ type Session interface {
 
 // IDTokenSession is a session container for the id token
 type DefaultSession struct {
-	Claims    *jwt.IDTokenClaims
-	Headers   *jwt.Headers
-	ExpiresAt map[fosite.TokenType]time.Time
-	Username  string
-	Subject   string
+	Claims    *jwt.IDTokenClaims             `json:"id_token_claims"`
+	Headers   *jwt.Headers                   `json:"headers"`
+	ExpiresAt map[fosite.TokenType]time.Time `json:"expires_at"`
+	Username  string                         `json:"username"`
+	Subject   string                         `json:"subject"`
 }
 
 func NewDefaultSession() *DefaultSession {

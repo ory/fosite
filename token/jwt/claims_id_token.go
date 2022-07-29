@@ -29,20 +29,20 @@ import (
 
 // IDTokenClaims represent the claims used in open id connect requests
 type IDTokenClaims struct {
-	JTI                                 string
-	Issuer                              string
-	Subject                             string
-	Audience                            []string
-	Nonce                               string
-	ExpiresAt                           time.Time
-	IssuedAt                            time.Time
-	RequestedAt                         time.Time
-	AuthTime                            time.Time
-	AccessTokenHash                     string
-	AuthenticationContextClassReference string
-	AuthenticationMethodsReferences     []string
-	CodeHash                            string
-	Extra                               map[string]interface{}
+	JTI                                 string                 `json:"jti"`
+	Issuer                              string                 `json:"iss"`
+	Subject                             string                 `json:"sub"`
+	Audience                            []string               `json:"aud"`
+	Nonce                               string                 `json:"nonce"`
+	ExpiresAt                           time.Time              `json:"exp"`
+	IssuedAt                            time.Time              `json:"iat"`
+	RequestedAt                         time.Time              `json:"rat"`
+	AuthTime                            time.Time              `json:"auth_time"`
+	AccessTokenHash                     string                 `json:"at_hash"`
+	AuthenticationContextClassReference string                 `json:"acr"`
+	AuthenticationMethodsReferences     []string               `json:"amr"`
+	CodeHash                            string                 `json:"c_hash"`
+	Extra                               map[string]interface{} `json:"ext"`
 }
 
 // ToMap will transform the headers to a map structure
