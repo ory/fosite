@@ -35,6 +35,7 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
 )
 
@@ -56,7 +57,7 @@ func TestAuthorizeCodeFlowDupeCode(t *testing.T) {
 
 func runAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
 	f := compose.Compose(new(compose.Config), fositeStore, strategy, nil, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2TokenIntrospectionFactory)
-	ts := mockServer(t, f, &fosite.DefaultSession{Subject: "foo-sub"})
+	ts := mockServer(t, f, &openid.DefaultSession{Subject: "foo-sub"})
 	defer ts.Close()
 
 	oauthClient := newOAuth2Client(ts)
