@@ -70,6 +70,7 @@ var (
 	_ HTTPClientProvider                           = (*Config)(nil)
 	_ HMACHashingProvider                          = (*Config)(nil)
 	_ AuthorizeEndpointHandlersProvider            = (*Config)(nil)
+	_ DeviceAuthorizeEndpointHandlersProvider      = (*Config)(nil)
 	_ TokenEndpointHandlersProvider                = (*Config)(nil)
 	_ TokenIntrospectionHandlersProvider           = (*Config)(nil)
 	_ RevocationHandlersProvider                   = (*Config)(nil)
@@ -257,6 +258,10 @@ func (c *Config) GetHMACHasher(ctx context.Context) func() hash.Hash {
 
 func (c *Config) GetAuthorizeEndpointHandlers(ctx context.Context) AuthorizeEndpointHandlers {
 	return c.AuthorizeEndpointHandlers
+}
+
+func (c *Config) GetDeviceAuthorizeEndpointHandlers(ctx context.Context) DeviceAuthorizeEndpointHandlers {
+	return c.DeviceAuthorizeEndpointHandlers
 }
 
 func (c *Config) GetTokenEndpointHandlers(ctx context.Context) TokenEndpointHandlers {

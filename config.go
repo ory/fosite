@@ -260,6 +260,12 @@ type AuthorizeEndpointHandlersProvider interface {
 	GetAuthorizeEndpointHandlers(ctx context.Context) AuthorizeEndpointHandlers
 }
 
+// DeviceAuthorizeEndpointHandlersProvider returns the provider for configuring the authorize endpoint handlers.
+type DeviceAuthorizeEndpointHandlersProvider interface {
+	// GetAuthorizeEndpointHandlers returns the authorize endpoint handlers.
+	GetDeviceAuthorizeEndpointHandlers(ctx context.Context) DeviceAuthorizeEndpointHandlers
+}
+
 // TokenEndpointHandlersProvider returns the provider for configuring the token endpoint handlers.
 type TokenEndpointHandlersProvider interface {
 	// GetTokenEndpointHandlers returns the token endpoint handlers.

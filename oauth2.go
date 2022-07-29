@@ -185,7 +185,7 @@ type OAuth2Provider interface {
 	// The following specs must be considered in any implementation of this method:
 	// * https://tools.ietf.org/html/rfc6749#section-5.2
 	// as per the requirement specified in https://tools.ietf.org/html/rfc8628#section-3.2
-	WriteDeviceAuthorizeError(rw http.ResponseWriter, requester DeviceAuthorizeRequester, err error)
+	WriteDeviceAuthorizeError(ctx context.Context, rw http.ResponseWriter, requester DeviceAuthorizeRequester, err error)
 
 	WriteDeviceAuthorizeResponse(rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder)
 }
@@ -314,7 +314,7 @@ type AuthorizeRequester interface {
 type DeviceAuthorizeRequester interface {
 	IsAuthorizationDenied() bool
 
-	Requester
+	AccessRequester
 }
 
 // AccessResponder is a token endpoint's response.

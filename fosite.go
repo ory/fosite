@@ -44,7 +44,7 @@ func (a *AuthorizeEndpointHandlers) Append(h AuthorizeEndpointHandler) {
 	*a = append(*a, h)
 }
 
-// DeviceAuthorizeEndpointHandler is a list of AuthorizeEndpointHandler
+// DeviceAuthorizeEndpointHandler is a list of DeviceAuthorizeEndpointHandler
 type DeviceAuthorizeEndpointHandlers []DeviceAuthorizeEndpointHandlers
 
 // Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
@@ -145,6 +145,7 @@ type Configurator interface {
 	TokenURLProvider
 	GetSecretsHashingProvider
 	AuthorizeEndpointHandlersProvider
+	DeviceAuthorizeEndpointHandlersProvider
 	TokenEndpointHandlersProvider
 	TokenIntrospectionHandlersProvider
 	RevocationHandlersProvider

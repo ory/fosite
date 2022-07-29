@@ -137,16 +137,16 @@ func OAuth2DeviceAuthorizeFactory(config fosite.Configurator, storage interface{
 		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
 		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
 		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
-		AccessTokenLifespan:    config.GetAccessTokenLifespan(),
-		RefreshTokenLifespan:   config.GetRefreshTokenLifespan(),
+		// AccessTokenLifespan:    config.GetAccessTokenLifespan(),
+		// RefreshTokenLifespan:   config.GetRefreshTokenLifespan(),
 
 		DeviceCodeStrategy: strategy.(oauth2.DeviceCodeStrategy),
 		UserCodeStrategy:   strategy.(oauth2.UserCodeStrategy),
-		DeviceCodeLifespan: config.GetDeviceCodeLifespan(),
-		UserCodeLifespan:   config.GetUserCodeLifespan(),
-		PollingInterval:    config.GetTokenPollingInterval(),
-		VerificationURI:    config.DeviceAuthorisation.VerificationURI,
+		// DeviceCodeLifespan: config.GetDeviceCodeLifespan(),
+		// UserCodeLifespan:   config.GetUserCodeLifespan(),
+		// PollingInterval:    config.GetTokenPollingInterval(),
+		// VerificationURI:    config.DeviceAuthorisation.VerificationURI,
 
-		RefreshTokenScopes: config.GetRefreshTokenScopes(),
+		// RefreshTokenScopes: config.GetRefreshTokenScopes(),
 	}
 }
