@@ -34,12 +34,6 @@ func GetEffectiveLifespan(c Client, gt GrantType, tt TokenType, fallback time.Du
 type ClientWithCustomTokenLifespans interface {
 	// GetEffectiveLifespan either maps GrantType x TokenType to the client's configured lifespan, or returns the fallback value.
 	GetEffectiveLifespan(gt GrantType, tt TokenType, fallback time.Duration) time.Duration
-
-	GetTokenLifespans() *ClientLifespanConfig
-
-	// SetTokenLifespans configures the per Client x GrantType x TokenType lifespan that
-	// can be specified to override fosite's TokenType default lifespan.
-	SetTokenLifespans(lifespans *ClientLifespanConfig)
 }
 
 // ClientLifespanConfig holds default lifespan configuration for the different

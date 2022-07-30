@@ -295,7 +295,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 					Headers: &jwt.Headers{},
 					Subject: "peter",
 				}
-				areq.GetClient().(fosite.ClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
+				areq.GetClient().(*fosite.DefaultClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
 				return makeOpenIDConnectHybridHandler(fosite.MinParameterEntropy)
 			},
 			check: func() {

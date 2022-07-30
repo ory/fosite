@@ -244,7 +244,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 						Scopes:        []string{"openid", "fosite"},
 					},
 				}
-				areq.Client.(fosite.ClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
+				areq.Client.(*fosite.DefaultClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
 				return makeOpenIDConnectImplicitHandler(fosite.MinParameterEntropy)
 			},
 			check: func() {

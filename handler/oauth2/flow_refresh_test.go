@@ -209,7 +209,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 							},
 						}
 
-						areq.Client.(fosite.ClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
+						areq.Client.(*fosite.DefaultClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
 
 						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
 						require.NoError(t, err)
