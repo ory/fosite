@@ -34,6 +34,10 @@ type OpenIDConnectExplicitHandler struct {
 	OpenIDConnectRequestStorage   OpenIDConnectRequestStorage
 	OpenIDConnectRequestValidator *OpenIDConnectRequestValidator
 
+	Config interface {
+		fosite.IDTokenLifespanProvider
+	}
+
 	*IDTokenHandleHelper
 }
 

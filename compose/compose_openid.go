@@ -38,17 +38,19 @@ func OpenIDConnectExplicitFactory(config fosite.Configurator, storage interface{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
 		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(jwt.Signer), config),
+		Config:                        config,
 	}
 }
 
 // OpenIDConnectRefreshFactory creates a handler for refreshing openid connect tokens.
 //
 // **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
-func OpenIDConnectRefreshFactory(_ fosite.Configurator, _ interface{}, strategy interface{}) interface{} {
+func OpenIDConnectRefreshFactory(config fosite.Configurator, _ interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectRefreshHandler{
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
+		Config: config,
 	}
 }
 

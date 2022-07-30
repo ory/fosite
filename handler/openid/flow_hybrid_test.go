@@ -23,13 +23,16 @@ package openid
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/internal/gen"
 
+	cristaljwt "github.com/cristalhq/jwt/v4"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -268,6 +271,48 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 				assert.NotEmpty(t, aresp.GetParameters().Get("code"))
 				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
 				assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AuthorizeCode))
+			},
+		},
+		{
+			description: "should pass with custom client lifespans",
+			setup: func() OpenIDConnectHybridHandler {
+				aresp = fosite.NewAuthorizeResponse()
+				areq = fosite.NewAuthorizeRequest()
+				areq.Form.Set("nonce", "some-foobar-nonce-win")
+				areq.ResponseTypes = fosite.Arguments{"token", "code", "id_token"}
+				areq.Client = &fosite.DefaultClientWithCustomTokenLifespans{
+					DefaultClient: &fosite.DefaultClient{
+						GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
+						ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
+						Scopes:        []string{"openid"},
+					},
+				}
+				areq.GrantedScope = fosite.Arguments{"openid"}
+				areq.Session = &DefaultSession{
+					Claims: &jwt.IDTokenClaims{
+						Subject: "peter",
+					},
+					Headers: &jwt.Headers{},
+					Subject: "peter",
+				}
+				areq.GetClient().(fosite.ClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
+				return makeOpenIDConnectHybridHandler(fosite.MinParameterEntropy)
+			},
+			check: func() {
+				assert.NotEmpty(t, aresp.GetParameters().Get("code"))
+				internal.RequireEqualTime(t, time.Now().Add(1*time.Hour).UTC(), areq.GetSession().GetExpiresAt(fosite.AuthorizeCode), time.Second)
+
+				idToken := aresp.GetParameters().Get("id_token")
+				assert.NotEmpty(t, idToken)
+				assert.True(t, areq.GetSession().GetExpiresAt(fosite.IDToken).IsZero())
+				jwt, err := cristaljwt.ParseNoVerify([]byte(idToken))
+				require.NoError(t, err)
+				claims := &cristaljwt.RegisteredClaims{}
+				require.NoError(t, json.Unmarshal(jwt.Claims(), claims))
+				internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.ImplicitGrantIDTokenLifespan), claims.ExpiresAt.Time, time.Minute)
+
+				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
+				internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.ImplicitGrantAccessTokenLifespan).UTC(), areq.GetSession().GetExpiresAt(fosite.AccessToken), time.Second)
 			},
 		},
 		{

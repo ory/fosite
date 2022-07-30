@@ -16,6 +16,7 @@ replace github.com/tidwall/match => github.com/tidwall/match v1.1.1
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535
+	github.com/cristalhq/jwt/v4 v4.0.2
 	github.com/dgraph-io/ristretto v0.0.3
 	github.com/ecordell/optgen v0.0.6
 	github.com/golang/mock v1.6.0

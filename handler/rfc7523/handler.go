@@ -41,6 +41,7 @@ type Handler struct {
 	Storage RFC7523KeyStorage
 
 	Config interface {
+		fosite.AccessTokenLifespanProvider
 		fosite.TokenURLProvider
 		fosite.GrantTypeJWTBearerCanSkipClientAuthProvider
 		fosite.GrantTypeJWTBearerIDOptionalProvider
@@ -126,7 +127,9 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	if err != nil {
 		return err
 	}
-	session.SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.HandleHelper.Config.GetAccessTokenLifespan(ctx)).Round(time.Second))
+
+	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeJwtBearer, fosite.AccessToken, c.HandleHelper.Config.GetAccessTokenLifespan(ctx))
+	session.SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
 	session.SetSubject(claims.Subject)
 
 	return nil
@@ -137,7 +140,8 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fos
 		return err
 	}
 
-	return c.IssueAccessToken(ctx, request, response)
+	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeJwtBearer, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
+	return c.IssueAccessToken(ctx, atLifespan, request, response)
 }
 
 func (c *Handler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
