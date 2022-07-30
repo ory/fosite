@@ -156,10 +156,10 @@ func (h HMACSHAStrategy) GenerateDeviceCode(ctx context.Context, _ fosite.Reques
 }
 
 // ValidateDeviceCode checks the validity of the provided device code, returning an error if invalid
-func (h HMACSHAStrategy) ValidateDeviceCode(ctx context.Context, r fosite.Requester, token string) (err error) {
+func (h *HMACSHAStrategy) ValidateDeviceCode(ctx context.Context, r fosite.Requester, token string) (err error) {
 	var exp = r.GetSession().GetExpiresAt(fosite.DeviceCode)
-	if exp.IsZero() && r.GetRequestedAt().Add(h.DeviceCodeLifespan).Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", r.GetRequestedAt().Add(h.DeviceCodeLifespan)))
+	if exp.IsZero() && r.GetRequestedAt().Add(h.Config.GetDeviceCodeLifespan(ctx)).Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", r.GetRequestedAt().Add(h.Config.GetDeviceCodeLifespan(ctx))))
 	}
 	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
 		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", exp))
@@ -182,8 +182,8 @@ func (h HMACSHAStrategy) GenerateUserCode(ctx context.Context, _ fosite.Requeste
 
 func (h HMACSHAStrategy) ValidateUserCode(ctx context.Context, r fosite.Requester, token string) (err error) {
 	var exp = r.GetSession().GetExpiresAt(fosite.UserCode)
-	if exp.IsZero() && r.GetRequestedAt().Add(h.DeviceCodeLifespan).Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("User code expired at '%s'.", r.GetRequestedAt().Add(h.DeviceCodeLifespan)))
+	if exp.IsZero() && r.GetRequestedAt().Add(h.Config.GetDeviceCodeLifespan(ctx)).Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("User code expired at '%s'.", r.GetRequestedAt().Add(h.Config.GetDeviceCodeLifespan(ctx))))
 	}
 	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
 		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("User code expired at '%s'.", exp))
