@@ -29,25 +29,25 @@
 	 "github.com/ory/x/errorsx"
  )
  
- func (f *Fosite) NewDeviceAuthorizeRequest(ctx context.Context, r *http.Request) (DeviceAuthorizeRequester, error) {
+ func (f *Fosite) NewDeviceAuthorizeRequest(ctx context.Context, r *http.Request) (DeviceAuthorizeResponder, error) {
 	 request := NewDeviceAuthorizeRequest()
  
 	 if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		 return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
+		 return &DeviceAuthorizeResponse{}, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	 }
 	 request.Form = r.Form
  
 	 client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	 if err != nil {
-		 return request, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
+		 return &DeviceAuthorizeResponse{}, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
 	 }
 	 request.Client = client
  
-	 if err := f.validateDeviceAuthorizeScope(r, request); err != nil {
-		 return request, err
+	 if err := f.validateDeviceAuthorizeScope(ctx, r, request); err != nil {
+		 return &DeviceAuthorizeResponse{}, err
 	 }
  
-	 return request, nil
+	 return &DeviceAuthorizeResponse{}, nil
  }
  
  func (f *Fosite) AuthorizeDeviceCode(ctx context.Context, deviceCode string, requester Requester) error {
@@ -61,10 +61,10 @@
  }
  
  // validateDeviceAuthorizeScope checks that the requested scopes are allowed for the client
- func (f *Fosite) validateDeviceAuthorizeScope(_ *http.Request, request *DeviceAuthorizeRequest) error {
+ func (f *Fosite) validateDeviceAuthorizeScope(ctx context.Context, _ *http.Request, request *DeviceAuthorizeRequest) error {
 	 scope := RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
 	 for _, permission := range scope {
-		 if !f.ScopeStrategy(request.Client.GetScopes(), permission) {
+		 if !f.Config.GetScopeStrategy(ctx)(request.Client.GetScopes(), permission) {
 			 return errorsx.WithStack(ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", permission))
 		 }
 	 }
