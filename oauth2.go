@@ -168,7 +168,7 @@ type OAuth2Provider interface {
 	WriteIntrospectionResponse(ctx context.Context, rw http.ResponseWriter, r IntrospectionResponder)
 
 
-	// NewDeviceAuthorizeRequest returns an DeviceAuthorizeRequest.
+	// NewDeviceAuthorizeRequest returns a DeviceAuthorizeRequest.
 	//
 	// The following specs must be considered in any implementation of this method:
 	// * https://tools.ietf.org/html/rfc8628#section-3.1
