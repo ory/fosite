@@ -59,6 +59,7 @@ func makeOpenIDConnectExplicitHandler(ctrl *gomock.Controller, minParameterEntro
 			IDTokenStrategy: j,
 		},
 		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(j.Signer, config),
+		Config:                        config,
 	}, store
 }
 

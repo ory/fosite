@@ -198,6 +198,44 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 					},
 				},
 				{
+					description: "should pass with custom client lifespans",
+					setup: func(config *fosite.Config) {
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClientWithCustomTokenLifespans{
+							DefaultClient: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: fosite.Arguments{"refresh_token"},
+								Scopes:     []string{"foo", "bar", "offline"},
+							},
+						}
+
+						areq.Client.(*fosite.DefaultClientWithCustomTokenLifespans).SetTokenLifespans(&internal.TestLifespans)
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+							Client:         areq.Client,
+							GrantedScope:   fosite.Arguments{"foo", "offline"},
+							RequestedScope: fosite.Arguments{"foo", "bar", "offline"},
+							Session:        sess,
+							Form:           url.Values{"foo": []string{"bar"}},
+							RequestedAt:    time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+						})
+						require.NoError(t, err)
+					},
+					expect: func(t *testing.T) {
+						assert.NotEqual(t, sess, areq.Session)
+						assert.NotEqual(t, time.Now().UTC().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
+						assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.GrantedScope)
+						assert.Equal(t, fosite.Arguments{"foo", "bar", "offline"}, areq.RequestedScope)
+						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
+						internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.RefreshTokenGrantAccessTokenLifespan).UTC(), areq.GetSession().GetExpiresAt(fosite.AccessToken), time.Minute)
+						internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.RefreshTokenGrantRefreshTokenLifespan).UTC(), areq.GetSession().GetExpiresAt(fosite.RefreshToken), time.Minute)
+					},
+				},
+				{
 					description: "should fail without offline scope",
 					setup: func(config *fosite.Config) {
 						areq.GrantTypes = fosite.Arguments{"refresh_token"}

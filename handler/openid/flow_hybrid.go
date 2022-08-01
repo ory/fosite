@@ -42,6 +42,7 @@ type OpenIDConnectHybridHandler struct {
 	Enigma *jwt.DefaultSigner
 
 	Config interface {
+		fosite.IDTokenLifespanProvider
 		fosite.MinParameterEntropyProvider
 		fosite.ScopeStrategyProvider
 	}
@@ -160,7 +161,9 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		return nil
 	}
 
-	if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, ar, resp); err != nil {
+	// Hybrid flow uses implicit flow config for the id token's lifespan
+	idTokenLifespan := fosite.GetEffectiveLifespan(ar.GetClient(), fosite.GrantTypeImplicit, fosite.IDToken, c.Config.GetIDTokenLifespan(ctx))
+	if err := c.IDTokenHandleHelper.IssueImplicitIDToken(ctx, idTokenLifespan, ar, resp); err != nil {
 		return errorsx.WithStack(err)
 	}
 
