@@ -286,3 +286,15 @@ func (mr *MockAccessRequesterMockRecorder) SetSession(arg0 interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSession", reflect.TypeOf((*MockAccessRequester)(nil).SetSession), arg0)
 }
+
+// IsConsentGranted mocks base method.
+func (m *MockAccessRequester) IsConsentGranted(arg0 fosite.Session) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "IsConsentGranted", arg0)
+}
+
+// IsConsentGranted indicates an expected call of IsConsentGranted.
+func (mr *MockAccessRequesterMockRecorder) IsConsentGranted(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsConsentGranted", reflect.TypeOf((*MockAccessRequester)(nil).IsConsentGranted), arg0)
+}
