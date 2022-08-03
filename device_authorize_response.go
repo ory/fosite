@@ -19,14 +19,16 @@
  *
  */
 
- package fosite
+package fosite
 
- import (
-	 "net/http"
- )
- 
- // DeviceAuthorizeResponse is an implementation of DeviceAuthorizeResponder
+import (
+	"context"
+	"net/http"
+)
+
+// DeviceAuthorizeResponse is an implementation of DeviceAuthorizeResponder
  type DeviceAuthorizeResponse struct {
+	 context				 context.Context
 	 Header                  http.Header
 	 deviceCode              string
 	 userCode                string
@@ -38,7 +40,7 @@
  
  func NewDeviceAuthorizeResponse() *DeviceAuthorizeResponse {
 	 return &DeviceAuthorizeResponse{
-		 Header: http.Header{},
+		Header: http.Header{},
 	 }
  }
  
