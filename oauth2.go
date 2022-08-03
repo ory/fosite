@@ -172,7 +172,7 @@ type OAuth2Provider interface {
 	//
 	// The following specs must be considered in any implementation of this method:
 	// * https://tools.ietf.org/html/rfc8628#section-3.1
-	NewDeviceAuthorizeRequest(ctx context.Context, req *http.Request) (DeviceAuthorizeRequester, error)
+	NewDeviceAuthorizeRequest(ctx context.Context, req *http.Request) (DeviceAuthorizeResponder, error)
 
 	AuthorizeDeviceCode(ctx context.Context, deviceCode string, requester Requester) error
 
