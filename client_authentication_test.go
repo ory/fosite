@@ -93,14 +93,18 @@ func TestAuthenticateClient(t *testing.T) {
 	const at = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
 	hasher := &BCrypt{Config: &Config{HashCost: 6}}
-	f := &Fosite{
-		Store: storage.NewMemoryStore(),
-		Config: &Config{
+	getDefaultFositeConfig := func() *Config {
+		return &Config{
 			JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
 			ClientSecretsHasher: hasher,
 			TokenURL:            "token-url",
 			HTTPClient:          retryablehttp.NewClient(),
-		},
+		}
+	}
+
+	f := &Fosite{
+		Store: storage.NewMemoryStore(),
+		Config: getDefaultFositeConfig(),
 	}
 
 	barSecret, err := hasher.Hash(context.TODO(), []byte("bar"))
@@ -148,6 +152,7 @@ func TestAuthenticateClient(t *testing.T) {
 		r             *http.Request
 		form          url.Values
 		expectErr     error
+		clientSecretValidationStrategy ClientSecretValidationStrategy
 	}{
 		{
 			d:         "should fail because authentication can not be determined",
@@ -225,6 +230,34 @@ func TestAuthenticateClient(t *testing.T) {
 			form:      url.Values{"client_id": []string{"foo"}, "client_secret": []string{"baz"}},
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
+		},
+		{
+			d:         "should pass because client is confidential and custom secret validation doesn't return an error",
+			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_post"},
+			form:      url.Values{"client_id": []string{"foo"}, "client_secret": []string{"pass"}},
+			r:         new(http.Request),
+			expectErr: nil,
+			clientSecretValidationStrategy: func(ctx context.Context, client Client, bytes []byte) error {
+				if string(bytes) == "pass" {
+					return nil
+				}
+
+				return f.DefaultClientSecretValidationStrategy(ctx, client, bytes)
+			},
+		},
+		{
+			d:         "should fail because client is confidential and custom secret validation strategy returns an error",
+			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_post"},
+			form:      url.Values{"client_id": []string{"foo"}, "client_secret": []string{"fail"}},
+			r:         new(http.Request),
+			expectErr: ErrInvalidClient,
+			clientSecretValidationStrategy: func(ctx context.Context, client Client, bytes []byte) error {
+				if string(bytes) == "pass" {
+					return nil
+				}
+
+				return f.DefaultClientSecretValidationStrategy(ctx, client, bytes)
+			},
 		},
 		{
 			d:         "should fail because client is confidential and id does not exist in post body",
@@ -540,6 +573,15 @@ func TestAuthenticateClient(t *testing.T) {
 			store := storage.NewMemoryStore()
 			store.Clients[tc.client.ID] = tc.client
 			f.Store = store
+
+			if tc.clientSecretValidationStrategy != nil {
+				c := getDefaultFositeConfig()
+				c.ClientSecretValidationStrategy = tc.clientSecretValidationStrategy
+				f.Config = c
+				defer func() {
+					f.Config = getDefaultFositeConfig()
+				}()
+			}
 
 			c, err := f.AuthenticateClient(context.Background(), tc.r, tc.form)
 			if tc.expectErr != nil {
