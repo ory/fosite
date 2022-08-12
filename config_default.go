@@ -80,6 +80,7 @@ var (
 	_ RevocationHandlersProvider                   = (*Config)(nil)
 	_ PushedAuthorizeRequestHandlersProvider       = (*Config)(nil)
 	_ PushedAuthorizeRequestConfigProvider         = (*Config)(nil)
+	_ ClientSecretValidationStrategyProvider       = (*Config)(nil)
 )
 
 type Config struct {
@@ -230,6 +231,9 @@ type Config struct {
 
 	// IsPushedAuthorizeEnforced enforces pushed authorization request for /authorize
 	IsPushedAuthorizeEnforced bool
+
+	// ClientSecretValidationStrategy indicates the Strategy to validate client secrets
+	ClientSecretValidationStrategy ClientSecretValidationStrategy
 }
 
 func (c *Config) GetGlobalSecret(ctx context.Context) []byte {
@@ -505,4 +509,10 @@ func (c *Config) GetPushedAuthorizeContextLifespan(ctx context.Context) time.Dur
 // must contain the PAR request_uri.
 func (c *Config) EnforcePushedAuthorize(ctx context.Context) bool {
 	return c.IsPushedAuthorizeEnforced
+}
+
+
+// GetClientSecretValidationStrategy returns the client secret validation strategy.
+func (c *Config) GetClientSecretValidationStrategy(ctx context.Context) ClientSecretValidationStrategy {
+	return c.ClientSecretValidationStrategy
 }

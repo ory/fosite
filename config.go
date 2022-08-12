@@ -297,3 +297,9 @@ type PushedAuthorizeRequestConfigProvider interface {
 	// must contain the PAR request_uri.
 	EnforcePushedAuthorize(ctx context.Context) bool
 }
+
+// ClientSecretValidationStrategyProvider returns the provider for configuring the client secret validation strategy.
+type ClientSecretValidationStrategyProvider interface {
+	// GetClientSecretValidationStrategy returns the client secret validation strategy.
+	GetClientSecretValidationStrategy(ctx context.Context) ClientSecretValidationStrategy
+}

@@ -149,6 +149,7 @@ type Configurator interface {
 	TokenIntrospectionHandlersProvider
 	RevocationHandlersProvider
 	UseLegacyErrorFormatProvider
+	ClientSecretValidationStrategyProvider
 }
 
 func NewOAuth2Provider(s Storage, c Configurator) *Fosite {

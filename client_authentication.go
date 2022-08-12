@@ -42,6 +42,9 @@ import (
 // ClientAuthenticationStrategy provides a method signature for authenticating a client request
 type ClientAuthenticationStrategy func(context.Context, *http.Request, url.Values) (Client, error)
 
+// ClientSecretValidationStrategy provides a method signature for validating a client secret
+type ClientSecretValidationStrategy func(context.Context, Client, []byte) error
+
 //#nosec:gosec G101 - False Positive
 const clientAssertionJWTBearerType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
@@ -254,6 +257,14 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 }
 
 func (f *Fosite) checkClientSecret(ctx context.Context, client Client, clientSecret []byte) error {
+	if s := f.Config.GetClientSecretValidationStrategy(ctx); s != nil {
+		return s(ctx, client, clientSecret)
+	}
+	return f.DefaultClientSecretValidationStrategy(ctx, client, clientSecret)
+}
+
+// DefaultClientSecretValidationStrategy provides the fosite's default client secret validation strategy.
+func (f *Fosite) DefaultClientSecretValidationStrategy(ctx context.Context, client Client, clientSecret []byte) error {
 	var err error
 	err = f.Config.GetSecretsHasher(ctx).Compare(ctx, client.GetHashedSecret(), clientSecret)
 	if err == nil {
