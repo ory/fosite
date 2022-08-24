@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -64,6 +63,20 @@ func (mr *MockCoreStorageMockRecorder) CreateAuthorizeCodeSession(arg0, arg1, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAuthorizeCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).CreateAuthorizeCodeSession), arg0, arg1, arg2)
 }
 
+// CreateDeviceCodeSession mocks base method.
+func (m *MockCoreStorage) CreateDeviceCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Requester) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDeviceCodeSession", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateDeviceCodeSession indicates an expected call of CreateDeviceCodeSession.
+func (mr *MockCoreStorageMockRecorder) CreateDeviceCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDeviceCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).CreateDeviceCodeSession), arg0, arg1, arg2)
+}
+
 // CreateRefreshTokenSession mocks base method.
 func (m *MockCoreStorage) CreateRefreshTokenSession(arg0 context.Context, arg1 string, arg2 fosite.Requester) error {
 	m.ctrl.T.Helper()
@@ -76,6 +89,20 @@ func (m *MockCoreStorage) CreateRefreshTokenSession(arg0 context.Context, arg1 s
 func (mr *MockCoreStorageMockRecorder) CreateRefreshTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRefreshTokenSession", reflect.TypeOf((*MockCoreStorage)(nil).CreateRefreshTokenSession), arg0, arg1, arg2)
+}
+
+// CreateUserCodeSession mocks base method.
+func (m *MockCoreStorage) CreateUserCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Requester) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUserCodeSession", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateUserCodeSession indicates an expected call of CreateUserCodeSession.
+func (mr *MockCoreStorageMockRecorder) CreateUserCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUserCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).CreateUserCodeSession), arg0, arg1, arg2)
 }
 
 // DeleteAccessTokenSession mocks base method.
@@ -92,6 +119,20 @@ func (mr *MockCoreStorageMockRecorder) DeleteAccessTokenSession(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAccessTokenSession", reflect.TypeOf((*MockCoreStorage)(nil).DeleteAccessTokenSession), arg0, arg1)
 }
 
+// DeleteDeviceCodeSession mocks base method.
+func (m *MockCoreStorage) DeleteDeviceCodeSession(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteDeviceCodeSession", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteDeviceCodeSession indicates an expected call of DeleteDeviceCodeSession.
+func (mr *MockCoreStorageMockRecorder) DeleteDeviceCodeSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDeviceCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).DeleteDeviceCodeSession), arg0, arg1)
+}
+
 // DeleteRefreshTokenSession mocks base method.
 func (m *MockCoreStorage) DeleteRefreshTokenSession(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -104,6 +145,20 @@ func (m *MockCoreStorage) DeleteRefreshTokenSession(arg0 context.Context, arg1 s
 func (mr *MockCoreStorageMockRecorder) DeleteRefreshTokenSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRefreshTokenSession", reflect.TypeOf((*MockCoreStorage)(nil).DeleteRefreshTokenSession), arg0, arg1)
+}
+
+// DeleteUserCodeSession mocks base method.
+func (m *MockCoreStorage) DeleteUserCodeSession(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUserCodeSession", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteUserCodeSession indicates an expected call of DeleteUserCodeSession.
+func (mr *MockCoreStorageMockRecorder) DeleteUserCodeSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).DeleteUserCodeSession), arg0, arg1)
 }
 
 // GetAccessTokenSession mocks base method.
@@ -136,6 +191,21 @@ func (mr *MockCoreStorageMockRecorder) GetAuthorizeCodeSession(arg0, arg1, arg2 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthorizeCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).GetAuthorizeCodeSession), arg0, arg1, arg2)
 }
 
+// GetDeviceCodeSession mocks base method.
+func (m *MockCoreStorage) GetDeviceCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Session) (fosite.Requester, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeviceCodeSession", arg0, arg1, arg2)
+	ret0, _ := ret[0].(fosite.Requester)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeviceCodeSession indicates an expected call of GetDeviceCodeSession.
+func (mr *MockCoreStorageMockRecorder) GetDeviceCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).GetDeviceCodeSession), arg0, arg1, arg2)
+}
+
 // GetRefreshTokenSession mocks base method.
 func (m *MockCoreStorage) GetRefreshTokenSession(arg0 context.Context, arg1 string, arg2 fosite.Session) (fosite.Requester, error) {
 	m.ctrl.T.Helper()
@@ -149,6 +219,21 @@ func (m *MockCoreStorage) GetRefreshTokenSession(arg0 context.Context, arg1 stri
 func (mr *MockCoreStorageMockRecorder) GetRefreshTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRefreshTokenSession", reflect.TypeOf((*MockCoreStorage)(nil).GetRefreshTokenSession), arg0, arg1, arg2)
+}
+
+// GetUserCodeSession mocks base method.
+func (m *MockCoreStorage) GetUserCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Session) (fosite.Requester, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserCodeSession", arg0, arg1, arg2)
+	ret0, _ := ret[0].(fosite.Requester)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserCodeSession indicates an expected call of GetUserCodeSession.
+func (mr *MockCoreStorageMockRecorder) GetUserCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).GetUserCodeSession), arg0, arg1, arg2)
 }
 
 // InvalidateAuthorizeCodeSession mocks base method.

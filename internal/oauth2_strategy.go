@@ -9,7 +9,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -64,6 +63,20 @@ func (mr *MockCoreStrategyMockRecorder) AuthorizeCodeSignature(arg0 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthorizeCodeSignature", reflect.TypeOf((*MockCoreStrategy)(nil).AuthorizeCodeSignature), arg0)
 }
 
+// DeviceCodeSignature mocks base method.
+func (m *MockCoreStrategy) DeviceCodeSignature(arg0 string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeviceCodeSignature", arg0)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// DeviceCodeSignature indicates an expected call of DeviceCodeSignature.
+func (mr *MockCoreStrategyMockRecorder) DeviceCodeSignature(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeviceCodeSignature", reflect.TypeOf((*MockCoreStrategy)(nil).DeviceCodeSignature), arg0)
+}
+
 // GenerateAccessToken mocks base method.
 func (m *MockCoreStrategy) GenerateAccessToken(arg0 context.Context, arg1 fosite.Requester) (string, string, error) {
 	m.ctrl.T.Helper()
@@ -96,6 +109,21 @@ func (mr *MockCoreStrategyMockRecorder) GenerateAuthorizeCode(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateAuthorizeCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateAuthorizeCode), arg0, arg1)
 }
 
+// GenerateDeviceCode mocks base method.
+func (m *MockCoreStrategy) GenerateDeviceCode() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateDeviceCode")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GenerateDeviceCode indicates an expected call of GenerateDeviceCode.
+func (mr *MockCoreStrategyMockRecorder) GenerateDeviceCode() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateDeviceCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateDeviceCode))
+}
+
 // GenerateRefreshToken mocks base method.
 func (m *MockCoreStrategy) GenerateRefreshToken(arg0 context.Context, arg1 fosite.Requester) (string, string, error) {
 	m.ctrl.T.Helper()
@@ -110,6 +138,21 @@ func (m *MockCoreStrategy) GenerateRefreshToken(arg0 context.Context, arg1 fosit
 func (mr *MockCoreStrategyMockRecorder) GenerateRefreshToken(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateRefreshToken", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateRefreshToken), arg0, arg1)
+}
+
+// GenerateUserCode mocks base method.
+func (m *MockCoreStrategy) GenerateUserCode() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GenerateUserCode")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GenerateUserCode indicates an expected call of GenerateUserCode.
+func (mr *MockCoreStrategyMockRecorder) GenerateUserCode() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateUserCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateUserCode))
 }
 
 // RefreshTokenSignature mocks base method.

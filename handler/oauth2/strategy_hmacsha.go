@@ -109,7 +109,7 @@ func (h HMACSHAStrategy) GenerateUserCode() (token string, err error) {
 }
 
 func (h HMACSHAStrategy) GenerateDeviceCode() (token string, err error) {
-	length := 128
+	length := 100
 	base20 := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
 	rand.Seed(time.Now().Unix())
 

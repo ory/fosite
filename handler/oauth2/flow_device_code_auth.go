@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ory/fosite"
+	"github.com/ory/x/errorsx"
 )
 
 type AuthorizeDeviceGrantTypeHandler struct {
@@ -42,7 +43,7 @@ func (c *AuthorizeDeviceGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx con
 
 	fmt.Println("HandleAuthorizeEndpointRequest : original client id = " + session.GetClient().GetID())
 	if session.GetClient().GetID() != ar.GetClient().GetID() {
-		return fmt.Errorf("Device request clientID does not match conset clientID")
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
 	}
 
 	// FIX
