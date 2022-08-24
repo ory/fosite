@@ -23,7 +23,8 @@ package oauth2
 
 import (
 	"context"
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"time"
 
 	"github.com/ory/x/errorsx"
@@ -96,28 +97,27 @@ func (h HMACSHAStrategy) ValidateAuthorizeCode(_ context.Context, r fosite.Reque
 	return h.Enigma.Validate(token)
 }
 
-func (h HMACSHAStrategy) GenerateUserCode() (token string, err error) {
-	length := 8
-	base20 := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
-	rand.Seed(time.Now().Unix())
+func (h HMACSHAStrategy) generateRandomString(length int) (token string, err error) {
+	chars := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
+	chars_length := int64(len(chars))
 
 	code := make([]byte, length)
 	for i := 0; i < length; i++ {
-		code[i] = base20[rand.Intn(len(base20))]
+		num, err := rand.Int(rand.Reader, big.NewInt(chars_length))
+		if err != nil {
+			return "", err
+		}
+		code[i] = chars[num.Int64()]
 	}
 	return string(code), nil
 }
 
-func (h HMACSHAStrategy) GenerateDeviceCode() (token string, err error) {
-	length := 100
-	base20 := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
-	rand.Seed(time.Now().Unix())
+func (h HMACSHAStrategy) GenerateUserCode() (token string, err error) {
+	return h.generateRandomString(8)
+}
 
-	code := make([]byte, length)
-	for i := 0; i < length; i++ {
-		code[i] = base20[rand.Intn(len(base20))]
-	}
-	return string(code), nil
+func (h HMACSHAStrategy) GenerateDeviceCode() (token string, err error) {
+	return h.generateRandomString(100)
 }
 
 func (h HMACSHAStrategy) DeviceCodeSignature(token string) string {

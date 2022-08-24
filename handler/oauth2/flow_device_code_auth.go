@@ -51,7 +51,10 @@ func (c *AuthorizeDeviceGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx con
 	//	return fmt.Errorf("Device request expired")
 	//}
 
-	c.CoreStorage.CreateDeviceCodeSession(ctx, session.GetID(), ar)
+	err = c.CoreStorage.CreateDeviceCodeSession(ctx, session.GetID(), ar)
+	if err != nil {
+		return errorsx.WithStack(err)
+	}
 
 	ar.SetResponseTypeHandled("device_code")
 	return nil
