@@ -85,19 +85,34 @@ func (t *RevocationHandlers) Append(h RevocationHandler) {
 	*t = append(*t, h)
 }
 
+// DeviceAuthorizeEndpointHandler is a list of DeviceAuthorizeEndpointHandler
+type DeviceAuthorizeEndpointHandlers []DeviceAuthorizeEndpointHandler
+
+// Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+func (a *DeviceAuthorizeEndpointHandlers) Append(h DeviceAuthorizeEndpointHandler) {
+	for _, this := range *a {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*a = append(*a, h)
+}
+
 // Fosite implements OAuth2Provider.
 type Fosite struct {
-	Store                      Storage
-	AuthorizeEndpointHandlers  AuthorizeEndpointHandlers
-	TokenEndpointHandlers      TokenEndpointHandlers
-	TokenIntrospectionHandlers TokenIntrospectionHandlers
-	RevocationHandlers         RevocationHandlers
-	Hasher                     Hasher
-	ScopeStrategy              ScopeStrategy
-	AudienceMatchingStrategy   AudienceMatchingStrategy
-	JWKSFetcherStrategy        JWKSFetcherStrategy
-	HTTPClient                 *http.Client
-	UseLegacyErrorFormat       bool
+	Store                           Storage
+	AuthorizeEndpointHandlers       AuthorizeEndpointHandlers
+	DeviceAuthorizeEndpointHandlers DeviceAuthorizeEndpointHandlers
+	TokenEndpointHandlers           TokenEndpointHandlers
+	TokenIntrospectionHandlers      TokenIntrospectionHandlers
+	RevocationHandlers              RevocationHandlers
+	Hasher                          Hasher
+	ScopeStrategy                   ScopeStrategy
+	AudienceMatchingStrategy        AudienceMatchingStrategy
+	JWKSFetcherStrategy             JWKSFetcherStrategy
+	HTTPClient                      *http.Client
+	UseLegacyErrorFormat            bool
 
 	// TokenURL is the the URL of the Authorization Server's Token Endpoint.
 	TokenURL string

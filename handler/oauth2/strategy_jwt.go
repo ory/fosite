@@ -157,3 +157,15 @@ func (h *DefaultJWTStrategy) generate(ctx context.Context, tokenType fosite.Toke
 		return h.JWTStrategy.Generate(ctx, claims.ToMapClaims(), jwtSession.GetJWTHeader())
 	}
 }
+
+func (h DefaultJWTStrategy) DeviceCodeSignature(token string) string {
+	return h.HMACSHAStrategy.DeviceCodeSignature(token)
+}
+
+func (h *DefaultJWTStrategy) GenerateDeviceCode() (token string, err error) {
+	return h.HMACSHAStrategy.GenerateDeviceCode()
+}
+
+func (h *DefaultJWTStrategy) GenerateUserCode() (token string, err error) {
+	return h.HMACSHAStrategy.GenerateUserCode()
+}

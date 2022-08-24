@@ -41,6 +41,8 @@ const (
 	RefreshToken  TokenType = "refresh_token"
 	AuthorizeCode TokenType = "authorize_code"
 	IDToken       TokenType = "id_token"
+	DeviceCode    TokenType = "device_code"
+	UserCode      TokenType = "user_code"
 
 	GrantTypeImplicit          GrantType = "implicit"
 	GrantTypeRefreshToken      GrantType = "refresh_token"
@@ -73,6 +75,11 @@ type OAuth2Provider interface {
 	//   fragment component.
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
 	NewAuthorizeRequest(ctx context.Context, req *http.Request) (AuthorizeRequester, error)
+
+	// ToDo add ietf docs
+	NewDeviceAuthorizeRequest(ctx context.Context, req *http.Request) (Requester, error)
+	NewDeviceAuthorizeResponse(ctx context.Context, requester Requester) (DeviceAuthorizeResponder, error)
+	WriteDeviceAuthorizeResponse(rw http.ResponseWriter, requester Requester, responder DeviceAuthorizeResponder)
 
 	// NewAuthorizeResponse iterates through all response type handlers and returns their result or
 	// ErrUnsupportedResponseType if none of the handler's were able to handle it.
@@ -342,4 +349,24 @@ type AuthorizeResponder interface {
 type G11NContext interface {
 	// GetLang returns the current language in the context
 	GetLang() language.Tag
+}
+
+type DeviceAuthorizeResponder interface {
+	GetDeviceCode() string
+	SetDeviceCode(code string)
+
+	GetUserCode() string
+	SetUserCode(code string)
+
+	GetVerificationURI() string
+	SetVerificationURI(uri string)
+
+	GetVerificationURIComplete() string
+	SetVerificationURIComplete(uri string)
+
+	GetExpiresIn() int64
+	SetExpiresIn(seconds int64)
+
+	GetInterval() int
+	SetInterval(seconds int)
 }

@@ -31,6 +31,8 @@ type CoreStrategy interface {
 	AccessTokenStrategy
 	RefreshTokenStrategy
 	AuthorizeCodeStrategy
+	DeviceCodeStrategy
+	UserCodeStrategy
 }
 
 type AccessTokenStrategy interface {
@@ -49,4 +51,14 @@ type AuthorizeCodeStrategy interface {
 	AuthorizeCodeSignature(token string) string
 	GenerateAuthorizeCode(ctx context.Context, requester fosite.Requester) (token string, signature string, err error)
 	ValidateAuthorizeCode(ctx context.Context, requester fosite.Requester, token string) (err error)
+}
+
+type DeviceCodeStrategy interface {
+	DeviceCodeSignature(code string) string
+	GenerateDeviceCode() (code string, err error)
+}
+
+type UserCodeStrategy interface {
+	DeviceCodeSignature(code string) string
+	GenerateUserCode() (code string, err error)
 }

@@ -58,6 +58,8 @@ type MemoryStore struct {
 	AuthorizeCodes  map[string]StoreAuthorizeCode
 	IDSessions      map[string]fosite.Requester
 	AccessTokens    map[string]fosite.Requester
+	DeviceCodes     map[string]fosite.Requester
+	UserCodes       map[string]fosite.Requester
 	RefreshTokens   map[string]StoreRefreshToken
 	PKCES           map[string]fosite.Requester
 	Users           map[string]MemoryUserRelation
@@ -65,11 +67,15 @@ type MemoryStore struct {
 	// In-memory request ID to token signatures
 	AccessTokenRequestIDs  map[string]string
 	RefreshTokenRequestIDs map[string]string
+	DeviceCodesRequestIDs  map[string]string
+	UserCodesRequestIDs    map[string]string
 	// Public keys to check signature in auth grant jwt assertion.
 	IssuerPublicKeys map[string]IssuerPublicKeys
 
 	clientsMutex                sync.RWMutex
 	authorizeCodesMutex         sync.RWMutex
+	userCodesMutex              sync.RWMutex
+	deviceCodesMutex            sync.RWMutex
 	idSessionsMutex             sync.RWMutex
 	accessTokensMutex           sync.RWMutex
 	refreshTokensMutex          sync.RWMutex
@@ -78,6 +84,8 @@ type MemoryStore struct {
 	blacklistedJTIsMutex        sync.RWMutex
 	accessTokenRequestIDsMutex  sync.RWMutex
 	refreshTokenRequestIDsMutex sync.RWMutex
+	userCodesRequestIDsMutex    sync.RWMutex
+	deviceCodesRequestIDsMutex  sync.RWMutex
 	issuerPublicKeysMutex       sync.RWMutex
 }
 
@@ -478,4 +486,68 @@ func (s *MemoryStore) IsJWTUsed(ctx context.Context, jti string) (bool, error) {
 
 func (s *MemoryStore) MarkJWTUsedForTime(ctx context.Context, jti string, exp time.Time) error {
 	return s.SetClientAssertionJWT(ctx, jti, exp)
+}
+
+func (s *MemoryStore) CreateDeviceCodeSession(_ context.Context, signature string, req fosite.Requester) error {
+	// We first lock accessTokenRequestIDsMutex and then accessTokensMutex because this is the same order
+	// locking happens in RevokeAccessToken and using the same order prevents deadlocks.
+	s.deviceCodesRequestIDsMutex.Lock()
+	defer s.deviceCodesRequestIDsMutex.Unlock()
+	s.deviceCodesMutex.Lock()
+	defer s.deviceCodesMutex.Unlock()
+
+	s.DeviceCodes[signature] = req
+	s.DeviceCodesRequestIDs[req.GetID()] = signature
+	return nil
+}
+
+func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, _ fosite.Session) (fosite.Requester, error) {
+	s.deviceCodesMutex.RLock()
+	defer s.deviceCodesMutex.RUnlock()
+
+	rel, ok := s.DeviceCodes[signature]
+	if !ok {
+		return nil, fosite.ErrNotFound
+	}
+	return rel, nil
+}
+
+func (s *MemoryStore) DeleteDeviceCodeSession(_ context.Context, code string) error {
+	s.deviceCodesMutex.Lock()
+	defer s.deviceCodesMutex.Unlock()
+
+	delete(s.DeviceCodes, code)
+	return nil
+}
+
+func (s *MemoryStore) CreateUserCodeSession(_ context.Context, signature string, req fosite.Requester) error {
+	// We first lock accessTokenRequestIDsMutex and then accessTokensMutex because this is the same order
+	// locking happens in RevokeAccessToken and using the same order prevents deadlocks.
+	s.accessTokenRequestIDsMutex.Lock()
+	defer s.accessTokenRequestIDsMutex.Unlock()
+	s.accessTokensMutex.Lock()
+	defer s.accessTokensMutex.Unlock()
+
+	s.AccessTokens[signature] = req
+	s.AccessTokenRequestIDs[req.GetID()] = signature
+	return nil
+}
+
+func (s *MemoryStore) GetUserCodeSession(_ context.Context, signature string, _ fosite.Session) (fosite.Requester, error) {
+	s.accessTokensMutex.RLock()
+	defer s.accessTokensMutex.RUnlock()
+
+	rel, ok := s.AccessTokens[signature]
+	if !ok {
+		return nil, fosite.ErrNotFound
+	}
+	return rel, nil
+}
+
+func (s *MemoryStore) DeleteUserCodeSession(_ context.Context, code string) error {
+	s.userCodesMutex.Lock()
+	defer s.userCodesMutex.Unlock()
+
+	delete(s.UserCodes, code)
+	return nil
 }

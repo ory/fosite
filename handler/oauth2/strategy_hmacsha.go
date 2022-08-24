@@ -23,6 +23,7 @@ package oauth2
 
 import (
 	"context"
+	"math/rand"
 	"time"
 
 	"github.com/ory/x/errorsx"
@@ -93,4 +94,32 @@ func (h HMACSHAStrategy) ValidateAuthorizeCode(_ context.Context, r fosite.Reque
 	}
 
 	return h.Enigma.Validate(token)
+}
+
+func (h HMACSHAStrategy) GenerateUserCode() (token string, err error) {
+	length := 8
+	base20 := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
+	rand.Seed(time.Now().Unix())
+
+	code := make([]byte, length)
+	for i := 0; i < length; i++ {
+		code[i] = base20[rand.Intn(len(base20))]
+	}
+	return string(code), nil
+}
+
+func (h HMACSHAStrategy) GenerateDeviceCode() (token string, err error) {
+	length := 128
+	base20 := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
+	rand.Seed(time.Now().Unix())
+
+	code := make([]byte, length)
+	for i := 0; i < length; i++ {
+		code[i] = base20[rand.Intn(len(base20))]
+	}
+	return string(code), nil
+}
+
+func (h HMACSHAStrategy) DeviceCodeSignature(token string) string {
+	return h.Enigma.Signature(token)
 }

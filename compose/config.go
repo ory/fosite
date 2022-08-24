@@ -41,6 +41,12 @@ type Config struct {
 	// AuthorizeCodeLifespan sets how long an authorize code is going to be valid. Defaults to fifteen minutes.
 	AuthorizeCodeLifespan time.Duration
 
+	// DeviceCodeLifespan sets how long a device grant code can be valid for. Defaults to five minutes
+	DeviceCodeLifespan time.Duration
+
+	// DeviceCodeRetryInterval sets the interval that clients should check for device code grants
+	DeviceCodeRetryInterval time.Duration
+
 	// IDTokenLifespan sets the default id token lifetime. Defaults to one hour.
 	IDTokenLifespan time.Duration
 
@@ -80,6 +86,9 @@ type Config struct {
 	// to be compatible with the private_key_jwt client authentication method (see http://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth),
 	// this value MUST be set.
 	TokenURL string
+
+	// DeviceVerificationURL is the URL of the device verification endpoint, this is is included with the device code request responses
+	DeviceVerificationURL string
 
 	// JWKSFetcherStrategy is responsible for fetching JSON Web Keys from remote URLs. This is required when the private_key_jwt
 	// client authentication method is used. Defaults to fosite.DefaultJWKSFetcherStrategy.
@@ -174,6 +183,22 @@ func (c *Config) GetRefreshTokenLifespan() time.Duration {
 		return time.Hour * 24 * 30
 	}
 	return c.RefreshTokenLifespan
+}
+
+// GetDeviceCodeRetryInterval sets the interval that clients should check for device code grants
+func (c *Config) GetDeviceCodeRetryInterval() time.Duration {
+	if c.DeviceCodeLifespan == 0 {
+		return time.Second * 10
+	}
+	return c.DeviceCodeRetryInterval
+}
+
+// GetDeviceCodeLifespan sets how long a device code is valid for, Defaults for five minutes
+func (c *Config) GetDeviceCodeLifespan() time.Duration {
+	if c.DeviceCodeLifespan == 0 {
+		return time.Minute * 5
+	}
+	return c.DeviceCodeLifespan
 }
 
 // GetHashCost returns the bcrypt cost factor. Defaults to 12.

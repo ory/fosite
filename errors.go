@@ -221,6 +221,11 @@ var (
 		ErrorField:       errJTIKnownName,
 		CodeField:        http.StatusBadRequest,
 	}
+	ErrDeviceTokenPending = &RFC6749Error{
+		DescriptionField: "Device token, pending authentication or consent",
+		ErrorField:       errAuthorizationPending,
+		CodeField:        http.StatusForbidden,
+	}
 )
 
 const (
@@ -258,6 +263,7 @@ const (
 	errRequestURINotSupportedName   = "request_uri_not_supported"
 	errRegistrationNotSupportedName = "registration_not_supported"
 	errJTIKnownName                 = "jti_known"
+	errAuthorizationPending         = "authorization_pending"
 )
 
 type (
