@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ory/fosite"
@@ -22,8 +21,10 @@ func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context
 	if code == "" {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest.WithHint("device_code missing form body")))
 	}
+	codeSignature := d.UserCodeStrategy.DeviceCodeSignature(code)
 
-	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, code, requester.GetSession())
+	// Get the device code session to validate based on HMAC of the device code supplied
+	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrDeviceTokenPending)
@@ -55,7 +56,6 @@ func (d *AuthorizeDeviceGrantTypeHandler) CanSkipClientAuth(requester fosite.Acc
 }
 
 func (d *AuthorizeDeviceGrantTypeHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
-	fmt.Println("DeviceAuthorizationHandler : CanHandleTokenEndpointRequest")
 	return requester.GetGrantTypes().ExactOne(deviceCodeGrantType)
 }
 
@@ -69,8 +69,10 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	if code == "" {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest.WithHint("device_code missing form body")))
 	}
+	codeSignature := d.UserCodeStrategy.DeviceCodeSignature(code)
 
-	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, code, requester.GetSession())
+	// Get the device code session ready for exchange to auth / refresh / oidc sessions
+	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrConsentRequired)

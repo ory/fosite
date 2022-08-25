@@ -121,5 +121,5 @@ func (h HMACSHAStrategy) GenerateDeviceCode() (token string, err error) {
 }
 
 func (h HMACSHAStrategy) DeviceCodeSignature(token string) string {
-	return h.Enigma.Signature(token)
+	return h.Enigma.GenerateHMACForString(token)
 }

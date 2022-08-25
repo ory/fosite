@@ -19,6 +19,8 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 			store := storage.NewMemoryStore()
 			handler := AuthorizeDeviceGrantTypeHandler{
 				CoreStorage:           store,
+				DeviceCodeStrategy:    hmacshaStrategy,
+				UserCodeStrategy:      hmacshaStrategy,
 				AccessTokenStrategy:   strategy,
 				RefreshTokenStrategy:  strategy,
 				AuthorizeCodeStrategy: strategy,
@@ -95,7 +97,8 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 
 					if c.createDeviceSession {
 						c.areq.SetID("ID1")
-						store.CreateDeviceCodeSession(nil, c.areq.Form.Get("device_code"), c.areq)
+						deviceSignature := hmacshaStrategy.DeviceCodeSignature(c.areq.Form.Get("device_code"))
+						store.CreateDeviceCodeSession(nil, deviceSignature, c.areq)
 					}
 
 					err := c.handler.HandleTokenEndpointRequest(nil, c.areq)
@@ -124,6 +127,8 @@ func TestAuthorizeCode_PopulateDeviceTokenEndpointResponse(t *testing.T) {
 			offlineScope := []string{"offline"}
 			handler := AuthorizeDeviceGrantTypeHandler{
 				CoreStorage:           store,
+				DeviceCodeStrategy:    hmacshaStrategy,
+				UserCodeStrategy:      hmacshaStrategy,
 				AccessTokenStrategy:   strategy,
 				RefreshTokenStrategy:  strategy,
 				AuthorizeCodeStrategy: strategy,
@@ -202,7 +207,8 @@ func TestAuthorizeCode_PopulateDeviceTokenEndpointResponse(t *testing.T) {
 
 					if c.createDeviceSession {
 						c.areq.SetID("ID1")
-						store.CreateDeviceCodeSession(nil, c.areq.Form.Get("device_code"), c.areq)
+						deviceSig := hmacshaStrategy.DeviceCodeSignature(c.areq.Form.Get("device_code"))
+						store.CreateDeviceCodeSession(nil, deviceSig, c.areq)
 					}
 
 					resp := fosite.NewAccessResponse()

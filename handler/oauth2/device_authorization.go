@@ -32,12 +32,15 @@ func (d *DeviceAuthorizationHandler) HandleDeviceAuthorizeEndpointRequest(ctx co
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
+	userCodeSignature := d.UserCodeStrategy.DeviceCodeSignature(userCode)
+	deviceCodeSignature := d.UserCodeStrategy.DeviceCodeSignature(userCodeSignature)
+
 	// Set User Code expiry time
 	dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.UserCodeLifespan).Round(time.Second))
-	dar.SetID(deviceCode)
+	dar.SetID(deviceCodeSignature)
 
 	// Store the User Code session (this has no real data other that the uer and deviuce code), can be converted into a 'full' session after user auth
-	if err := d.DeviceCodeStorage.CreateUserCodeSession(ctx, userCode, dar); err != nil {
+	if err := d.DeviceCodeStorage.CreateUserCodeSession(ctx, userCodeSignature, dar); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 

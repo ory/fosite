@@ -19,6 +19,8 @@ func TestAuthorizeCode_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 			store := storage.NewMemoryStore()
 			handler := AuthorizeDeviceGrantTypeHandler{
 				CoreStorage:           store,
+				DeviceCodeStrategy:    hmacshaStrategy,
+				UserCodeStrategy:      hmacshaStrategy,
 				AccessTokenStrategy:   strategy,
 				RefreshTokenStrategy:  strategy,
 				AuthorizeCodeStrategy: strategy,
@@ -132,7 +134,8 @@ func TestAuthorizeCode_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 				t.Run("case="+c.description, func(t *testing.T) {
 
 					c.areq.SetID("ID1")
-					store.CreateUserCodeSession(nil, c.areq.Form.Get("user_code"), c.areq)
+					userCodeSig := hmacshaStrategy.DeviceCodeSignature(c.areq.Form.Get("user_code"))
+					store.CreateUserCodeSession(nil, userCodeSig, c.areq)
 
 					aresp := fosite.NewAuthorizeResponse()
 					err := c.handler.HandleAuthorizeEndpointRequest(nil, c.breq, aresp)

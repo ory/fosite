@@ -171,6 +171,17 @@ func (c *HMACStrategy) Signature(token string) string {
 	return split[1]
 }
 
+func (c *HMACStrategy) GenerateHMACForString(text string) string {
+	var signingKey [32]byte
+	copy(signingKey[:], c.GlobalSecret)
+
+	bytes := []byte(text)
+	hashBytes := c.generateHMAC(bytes, &signingKey)
+
+	b64 := base64.URLEncoding.EncodeToString(hashBytes)
+	return b64
+}
+
 func (c *HMACStrategy) generateHMAC(data []byte, key *[32]byte) []byte {
 	hasher := c.Hash
 	if hasher == nil {

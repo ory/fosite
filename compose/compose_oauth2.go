@@ -22,8 +22,6 @@
 package compose
 
 import (
-	"fmt"
-
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/token/jwt"
 )
@@ -31,7 +29,6 @@ import (
 // OAuth2AuthorizeExplicitFactory creates an OAuth2 authorize code grant ("authorize explicit flow") handler and registers
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeExplicitFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
-	fmt.Println("OAuth2AuthorizeExplicitFactory")
 	return &oauth2.AuthorizeExplicitGrantHandler{
 		AccessTokenStrategy:      strategy.(oauth2.AccessTokenStrategy),
 		RefreshTokenStrategy:     strategy.(oauth2.RefreshTokenStrategy),
@@ -79,6 +76,8 @@ func OAuth2RefreshTokenGrantFactory(config *Config, storage interface{}, strateg
 
 func OAuth2AuthorizeDeviceFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeDeviceGrantTypeHandler{
+		DeviceCodeStrategy:    strategy.(oauth2.DeviceCodeStrategy),
+		UserCodeStrategy:      strategy.(oauth2.UserCodeStrategy),
 		AccessTokenStrategy:   strategy.(oauth2.AccessTokenStrategy),
 		RefreshTokenStrategy:  strategy.(oauth2.RefreshTokenStrategy),
 		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
@@ -158,7 +157,6 @@ func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{},
 }
 
 func OAuth2DeviceAuthorizeFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
-	fmt.Println("OAuth2DeviceAuthorizeFactory")
 	return &oauth2.DeviceAuthorizationHandler{
 		DeviceCodeStorage:       storage.(oauth2.DeviceCodeStorage),
 		DeviceCodeStrategy:      strategy.(oauth2.DeviceCodeStrategy),

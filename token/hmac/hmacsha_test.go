@@ -76,6 +76,36 @@ func TestGenerate(t *testing.T) {
 	}
 }
 
+func TestGenerateFromString(t *testing.T) {
+	cg := HMACStrategy{
+		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
+	}
+	for _, c := range []struct {
+		text string
+		hash string
+	}{
+		{
+			text: "",
+			hash: "-n7EqD-bXkY3yYMH-ctEAGV8XLkU7Y6Bo6pbyT1agGA=",
+		},
+		{
+			text: " ",
+			hash: "zXJvonHTNSOOGj_QKl4RpIX_zXgD2YfXUfwuDKaTTIg=",
+		},
+		{
+			text: "Test",
+			hash: "TMeEaHS-cDC2nijiesCNtsOyBqHHtzWqAcWvceQT50g=",
+		},
+		{
+			text: "AnotherTest1234",
+			hash: "zHYDOZGjzhVjx5r8RlBhpnJemX5JxEEBUjVT01n3IFM=",
+		},
+	} {
+		hash := cg.GenerateHMACForString(c.text)
+		assert.Equal(t, c.hash, hash)
+	}
+}
+
 func TestValidateSignatureRejects(t *testing.T) {
 	var err error
 	cg := HMACStrategy{

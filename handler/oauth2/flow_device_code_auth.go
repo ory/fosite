@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ory/fosite"
@@ -11,6 +10,8 @@ import (
 
 type AuthorizeDeviceGrantTypeHandler struct {
 	CoreStorage           CoreStorage
+	DeviceCodeStrategy    DeviceCodeStrategy
+	UserCodeStrategy      UserCodeStrategy
 	AccessTokenStrategy   AccessTokenStrategy
 	RefreshTokenStrategy  RefreshTokenStrategy
 	AuthorizeCodeStrategy AuthorizeCodeStrategy
@@ -29,19 +30,16 @@ func (c *AuthorizeDeviceGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx con
 		return nil
 	}
 
-	fmt.Println("HandleAuthorizeEndpointRequest ++")
-
 	resp.AddParameter("state", ar.GetState())
 
-	user_code := ar.GetRequestForm().Get("user_code")
-	fmt.Println("HandleAuthorizeEndpointRequest : user_code = " + user_code)
+	userCode := ar.GetRequestForm().Get("user_code")
+	userCodeSignature := c.UserCodeStrategy.DeviceCodeSignature(userCode)
 
-	session, err := c.CoreStorage.GetUserCodeSession(ctx, user_code, ar.GetSession())
+	session, err := c.CoreStorage.GetUserCodeSession(ctx, userCodeSignature, ar.GetSession())
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("HandleAuthorizeEndpointRequest : original client id = " + session.GetClient().GetID())
 	if session.GetClient().GetID() != ar.GetClient().GetID() {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
 	}
@@ -51,6 +49,7 @@ func (c *AuthorizeDeviceGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx con
 	//	return fmt.Errorf("Device request expired")
 	//}
 
+	// session.GetID() is the HMAC signature of the device code generated in the inital request
 	err = c.CoreStorage.CreateDeviceCodeSession(ctx, session.GetID(), ar)
 	if err != nil {
 		return errorsx.WithStack(err)
