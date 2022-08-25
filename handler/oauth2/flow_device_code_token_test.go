@@ -30,7 +30,9 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 			for _, c := range []struct {
 				handler             AuthorizeDeviceGrantTypeHandler
 				areq                *fosite.AccessRequest
+				breq                *fosite.AccessRequest
 				createDeviceSession bool
+				expire              time.Duration
 				description         string
 				expectErr           error
 				expect              func(t *testing.T, areq *fosite.AccessRequest)
@@ -45,9 +47,18 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 							RequestedAt: time.Now().UTC(),
 						},
 					},
+					breq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"authorization_code"},
+						Request: fosite.Request{
+							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+						},
+					},
 					description:         "Should fail due to wrong grant type",
 					expectErr:           fosite.ErrUnknownRequest,
 					createDeviceSession: false,
+					expire:              time.Minute * 10,
 				},
 				{
 					handler: handler,
@@ -59,13 +70,31 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 							RequestedAt: time.Now().UTC(),
 						},
 					},
+					breq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+						},
+					},
 					description:         "Should fail due to no device_code supplied",
 					expectErr:           fosite.ErrUnknownRequest,
 					createDeviceSession: false,
+					expire:              time.Minute * 10,
 				},
 				{
 					handler: handler,
 					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+							Form:        url.Values{"device_code": {"ABC1234"}},
+						},
+					},
+					breq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
 							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
@@ -77,6 +106,7 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 					description:         "Should fail due to no user_code session available",
 					expectErr:           fosite.ErrDeviceTokenPending,
 					createDeviceSession: false,
+					expire:              time.Minute * 10,
 				},
 				{
 					handler: handler,
@@ -89,19 +119,82 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 							Form:        url.Values{"device_code": {"ABC1234"}},
 						},
 					},
+					breq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+							Form:        url.Values{"device_code": {"ABC1234"}},
+						},
+					},
 					description:         "Should pass as device_code form data and session are available",
 					createDeviceSession: true,
+					expire:              time.Minute * 10,
+				},
+				{
+					handler: handler,
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+							Form:        url.Values{"device_code": {"ABC1234"}},
+						},
+					},
+					breq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+							Form:        url.Values{"device_code": {"ABC1234"}},
+						},
+					},
+					description:         "Should fail as session expired",
+					createDeviceSession: true,
+					expire:              -(time.Minute * 10),
+					expectErr:           fosite.ErrTokenExpired,
+				},
+				{
+					handler: handler,
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+							Form:        url.Values{"device_code": {"ABC1234"}},
+						},
+					},
+					breq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Client:      &fosite.DefaultClient{ID: "bar", GrantTypes: []string{""}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+							Form:        url.Values{"device_code": {"ABC1234"}},
+						},
+					},
+					description:         "Should fail as session and request clients do not match",
+					createDeviceSession: true,
+					expire:              time.Minute * 10,
+					expectErr:           fosite.ErrInvalidGrant,
 				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
 
 					if c.createDeviceSession {
 						c.areq.SetID("ID1")
+						c.areq.Session = &fosite.DefaultSession{}
+						expireAt := time.Now().UTC().Add(c.expire)
+						c.areq.Session.SetExpiresAt(fosite.UserCode, expireAt)
 						deviceSignature := hmacshaStrategy.DeviceCodeSignature(c.areq.Form.Get("device_code"))
 						store.CreateDeviceCodeSession(nil, deviceSignature, c.areq)
 					}
 
-					err := c.handler.HandleTokenEndpointRequest(nil, c.areq)
+					err := c.handler.HandleTokenEndpointRequest(nil, c.breq)
 					if c.expectErr != nil {
 						require.EqualError(t, err, c.expectErr.Error())
 					} else {

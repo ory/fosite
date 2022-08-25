@@ -44,10 +44,10 @@ func (c *AuthorizeDeviceGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx con
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
 	}
 
-	// FIX
-	//if time.Now().After(session.GetSession().GetExpiresAt(fosite.UserCode)) {
-	//	return fmt.Errorf("Device request expired")
-	//}
+	expires := session.GetSession().GetExpiresAt(fosite.UserCode)
+	if time.Now().UTC().After(expires) {
+		return errorsx.WithStack(fosite.ErrTokenExpired)
+	}
 
 	// session.GetID() is the HMAC signature of the device code generated in the inital request
 	err = c.CoreStorage.CreateDeviceCodeSession(ctx, session.GetID(), ar)

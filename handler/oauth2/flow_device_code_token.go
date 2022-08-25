@@ -37,6 +37,11 @@ func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
 	}
 
+	expires := session.GetSession().GetExpiresAt(fosite.UserCode)
+	if time.Now().UTC().After(expires) {
+		return errorsx.WithStack(fosite.ErrTokenExpired)
+	}
+
 	requester.SetSession(session.GetSession())
 	requester.SetID(session.GetID())
 
