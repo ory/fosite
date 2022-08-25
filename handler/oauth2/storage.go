@@ -51,6 +51,14 @@ type AuthorizeCodeStorage interface {
 	InvalidateAuthorizeCodeSession(ctx context.Context, code string) (err error)
 }
 
+// DeviceAuthorizeStorage handles storage requests related to device authorization codes as part of the Device Authorisation Grant.
+
+// type DeviceAuthorizeStorage interface {
+// 	CreateDeviceAuthorizeSession(ctx context.Context, deviceCode string, userCode string, request fosite.Requester) (err error)
+
+// 	GetDeviceAuthorizeSession(ctx context.Context, deviceCode string, session fosite.Session) (request fosite.Requester, err error)
+// }
+
 type AccessTokenStorage interface {
 	CreateAccessTokenSession(ctx context.Context, signature string, request fosite.Requester) (err error)
 
@@ -65,4 +73,27 @@ type RefreshTokenStorage interface {
 	GetRefreshTokenSession(ctx context.Context, signature string, session fosite.Session) (request fosite.Requester, err error)
 
 	DeleteRefreshTokenSession(ctx context.Context, signature string) (err error)
+}
+
+type DeviceCodeStorage interface {
+	CreateDeviceCodeSession(ctx context.Context, signature string, request fosite.Requester) (err error)
+	UpdateDeviceCodeSession(ctx context.Context, signature string, request fosite.Requester) (err error)
+
+	// InvalidateDeviceCodeSession is called when a device code is being used. The state of the device code should
+	// be set to invalid and consecutive requests to GetDeviceCodeSession should return the
+	// ErrInvalidatedAuthorizeCode error.
+	// InvalidateDeviceCodeSession(ctx context.Context, code string) (err error)
+
+	GetDeviceCodeSession(ctx context.Context, code string, session fosite.Session) (request fosite.DeviceAuthorizeRequester, err error)
+	GetDeviceCodeSessionByRequestID(ctx context.Context, requestID string, session fosite.Session) (request fosite.DeviceAuthorizeRequester, err error)
+}
+
+type UserCodeStorage interface {
+	CreateUserCodeSession(ctx context.Context, signature string, request fosite.Requester) (err error)
+
+	GetUserCodeSession(ctx context.Context, code string, session fosite.Session) (request fosite.Requester, err error)
+
+	// InvalidateUserCodeSession is called when a user code has been used/claimed. The state of the user code should
+	// be set to invalid and consecutive requests to GetUserCodeSession should return the ErrInvalidatedUserCode error.
+	InvalidateUserCodeSession(ctx context.Context, code string) (err error)
 }

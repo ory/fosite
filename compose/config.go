@@ -30,9 +30,26 @@ import (
 	"github.com/ory/fosite/i18n"
 )
 
+type DeviceAuthorisationConfig struct {
+	// DeviceCodeLifespan sets how long a device code is going to be valid. Defaults to 15 minutes.
+	DeviceCodeLifespan time.Duration
+
+	// UserCodeLifespan sets how long a user code is going to be valid. Defaults to 15 minutes.
+	UserCodeLifespan time.Duration
+
+	// TokenPollingInterval sets how long a client SHOULD wait between polling requests to the token endpoint. Defaults to 5 seconds.
+	TokenPollingInterval time.Duration
+
+	// VerificationURI is the verification URI the end-user would navigate to as part of the user interaction defined in RFC8628 section-3.3 .
+	VerificationURI string
+}
+
+
 type Config struct {
 	// AccessTokenLifespan sets how long an access token is going to be valid. Defaults to one hour.
 	AccessTokenLifespan time.Duration
+
+	DeviceAuthorisation DeviceAuthorisationConfig
 
 	// RefreshTokenLifespan sets how long a refresh token is going to be valid. Defaults to 30 days. Set to -1 for
 	// refresh tokens that never expire.
@@ -149,6 +166,30 @@ func (c *Config) GetAuthorizeCodeLifespan() time.Duration {
 		return time.Minute * 15
 	}
 	return c.AuthorizeCodeLifespan
+}
+
+// GetDeviceCodeLifespan returns how long a device authorization device code should be valid. Defaults to fifteen minutes.
+func (c *Config) GetDeviceCodeLifespan() time.Duration {
+	if c.DeviceAuthorisation.DeviceCodeLifespan == 0 {
+		return time.Minute * 15
+	}
+	return c.DeviceAuthorisation.DeviceCodeLifespan
+}
+
+// GetUserCodeLifespan returns how long a device authorization user code should be valid. Defaults to fifteen minutes.
+func (c *Config) GetUserCodeLifespan() time.Duration {
+	if c.DeviceAuthorisation.UserCodeLifespan == 0 {
+		return time.Minute * 15
+	}
+	return c.DeviceAuthorisation.UserCodeLifespan
+}
+
+// GetTokenPollingInterval returns how long a client should wait between requests to the token endpoint
+func (c *Config) GetTokenPollingInterval() time.Duration {
+	if c.DeviceAuthorisation.TokenPollingInterval == 0 {
+		return time.Second * 5
+	}
+	return c.DeviceAuthorisation.TokenPollingInterval
 }
 
 // GeIDTokenLifespan returns how long an id token should be valid. Defaults to one hour.

@@ -141,3 +141,28 @@ func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{},
 		ScopeStrategy: config.GetScopeStrategy(),
 	}
 }
+
+// OAuth2DeviceAuthorizeFactory creates an OAuth2 device authorization grant ("device code flow") handler and registers
+// a device code and user code validator.
+func OAuth2DeviceAuthorizeFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.DeviceAuthorizationHandler{
+		DeviceCodeStorage: storage.(oauth2.DeviceCodeStorage),
+		UserCodeStorage:   storage.(oauth2.UserCodeStorage),
+
+		CoreStorage:            storage.(oauth2.CoreStorage),
+		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
+		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		AccessTokenLifespan:    config.GetAccessTokenLifespan(),
+		RefreshTokenLifespan:   config.GetRefreshTokenLifespan(),
+
+		DeviceCodeStrategy: strategy.(oauth2.DeviceCodeStrategy),
+		UserCodeStrategy:   strategy.(oauth2.UserCodeStrategy),
+		DeviceCodeLifespan: config.GetDeviceCodeLifespan(),
+		UserCodeLifespan:   config.GetUserCodeLifespan(),
+		PollingInterval:    config.GetTokenPollingInterval(),
+		VerificationURI:    config.DeviceAuthorisation.VerificationURI,
+
+		RefreshTokenScopes: config.GetRefreshTokenScopes(),
+	}
+}

@@ -43,6 +43,21 @@ func (a *AuthorizeEndpointHandlers) Append(h AuthorizeEndpointHandler) {
 	*a = append(*a, h)
 }
 
+// DeviceAuthorizeEndpointHandlers is a list of DeviceAuthorizeEndpointHandler
+type DeviceAuthorizeEndpointHandlers []DeviceAuthorizeEndpointHandler
+
+// Append adds an DeviceAuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+func (d *DeviceAuthorizeEndpointHandlers) Append(h DeviceAuthorizeEndpointHandler) {
+	for _, this := range *d {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*d = append(*d, h)
+}
+
+
 // TokenEndpointHandlers is a list of TokenEndpointHandler
 type TokenEndpointHandlers []TokenEndpointHandler
 
@@ -87,17 +102,18 @@ func (t *RevocationHandlers) Append(h RevocationHandler) {
 
 // Fosite implements OAuth2Provider.
 type Fosite struct {
-	Store                      Storage
-	AuthorizeEndpointHandlers  AuthorizeEndpointHandlers
-	TokenEndpointHandlers      TokenEndpointHandlers
-	TokenIntrospectionHandlers TokenIntrospectionHandlers
-	RevocationHandlers         RevocationHandlers
-	Hasher                     Hasher
-	ScopeStrategy              ScopeStrategy
-	AudienceMatchingStrategy   AudienceMatchingStrategy
-	JWKSFetcherStrategy        JWKSFetcherStrategy
-	HTTPClient                 *http.Client
-	UseLegacyErrorFormat       bool
+	Store                      		Storage
+	AuthorizeEndpointHandlers  		AuthorizeEndpointHandlers
+	DeviceAuthorizeEndpointHandlers DeviceAuthorizeEndpointHandlers
+	TokenEndpointHandlers      		TokenEndpointHandlers
+	TokenIntrospectionHandlers 		TokenIntrospectionHandlers
+	RevocationHandlers         		RevocationHandlers
+	Hasher                     		Hasher
+	ScopeStrategy              		ScopeStrategy
+	AudienceMatchingStrategy   		AudienceMatchingStrategy
+	JWKSFetcherStrategy        		JWKSFetcherStrategy
+	HTTPClient                 		*http.Client
+	UseLegacyErrorFormat       		bool
 
 	// TokenURL is the the URL of the Authorization Server's Token Endpoint.
 	TokenURL string

@@ -81,6 +81,15 @@ func (h DefaultJWTStrategy) AuthorizeCodeSignature(token string) string {
 	return h.HMACSHAStrategy.AuthorizeCodeSignature(token)
 }
 
+func (h DefaultJWTStrategy) DeviceCodeSignature(token string) string {
+	return h.HMACSHAStrategy.DeviceCodeSignature(token)
+}
+
+func (h DefaultJWTStrategy) UserCodeSignature(token string) string {
+	return h.HMACSHAStrategy.UserCodeSignature(token)
+}
+
+
 func (h *DefaultJWTStrategy) GenerateRefreshToken(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
 	return h.HMACSHAStrategy.GenerateRefreshToken(ctx, req)
 }
@@ -96,6 +105,23 @@ func (h *DefaultJWTStrategy) GenerateAuthorizeCode(ctx context.Context, req fosi
 func (h *DefaultJWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosite.Requester, token string) error {
 	return h.HMACSHAStrategy.ValidateAuthorizeCode(ctx, req, token)
 }
+
+func (h *DefaultJWTStrategy) GenerateDeviceCode(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
+	return h.HMACSHAStrategy.GenerateDeviceCode(ctx, req)
+}
+
+func (h *DefaultJWTStrategy) ValidateDeviceCode(ctx context.Context, req fosite.Requester, token string) error {
+	return h.HMACSHAStrategy.ValidateDeviceCode(ctx, req, token)
+}
+
+func (h *DefaultJWTStrategy) GenerateUserCode(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
+	return h.HMACSHAStrategy.GenerateUserCode(ctx, req)
+}
+
+func (h *DefaultJWTStrategy) ValidateUserCode(ctx context.Context, req fosite.Requester, token string) error {
+	return h.HMACSHAStrategy.ValidateUserCode(ctx, req, token)
+}
+
 
 func validate(ctx context.Context, jwtStrategy jwt.JWTStrategy, token string) (t *jwt.Token, err error) {
 	t, err = jwtStrategy.Decode(ctx, token)

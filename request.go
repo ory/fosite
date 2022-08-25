@@ -40,6 +40,7 @@ type Request struct {
 	Session           Session      `json:"session" gorethink:"session"`
 	RequestedAudience Arguments    `json:"requestedAudience"`
 	GrantedAudience   Arguments    `json:"grantedAudience"`
+	ConsentGranted    bool
 	Lang              language.Tag `json:"-"`
 }
 
@@ -194,6 +195,10 @@ func (a *Request) Sanitize(allowedParameters []string) Requester {
 	}
 
 	return b
+}
+
+func (a *Request) IsConsentGranted() bool {
+	return a.ConsentGranted
 }
 
 func (a *Request) GetLang() language.Tag {

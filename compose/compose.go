@@ -58,29 +58,33 @@ func Compose(config *Config, storage interface{}, strategy interface{}, hasher f
 	}
 
 	f := &fosite.Fosite{
-		Store:                        storage.(fosite.Storage),
-		AuthorizeEndpointHandlers:    fosite.AuthorizeEndpointHandlers{},
-		TokenEndpointHandlers:        fosite.TokenEndpointHandlers{},
-		TokenIntrospectionHandlers:   fosite.TokenIntrospectionHandlers{},
-		RevocationHandlers:           fosite.RevocationHandlers{},
-		Hasher:                       hasher,
-		ScopeStrategy:                config.GetScopeStrategy(),
-		AudienceMatchingStrategy:     config.GetAudienceStrategy(),
-		SendDebugMessagesToClients:   config.SendDebugMessagesToClients,
-		TokenURL:                     config.TokenURL,
-		JWKSFetcherStrategy:          config.GetJWKSFetcherStrategy(),
-		MinParameterEntropy:          config.GetMinParameterEntropy(),
-		UseLegacyErrorFormat:         config.UseLegacyErrorFormat,
-		ClientAuthenticationStrategy: config.GetClientAuthenticationStrategy(),
-		ResponseModeHandlerExtension: config.ResponseModeHandlerExtension,
-		MessageCatalog:               config.MessageCatalog,
-		FormPostHTMLTemplate:         config.FormPostHTMLTemplate,
+		Store:                        		storage.(fosite.Storage),
+		AuthorizeEndpointHandlers:    		fosite.AuthorizeEndpointHandlers{},
+		DeviceAuthorizeEndpointHandlers: 	fosite.DeviceAuthorizeEndpointHandlers{},
+		TokenEndpointHandlers:        		fosite.TokenEndpointHandlers{},
+		TokenIntrospectionHandlers:   		fosite.TokenIntrospectionHandlers{},
+		RevocationHandlers:           		fosite.RevocationHandlers{},
+		Hasher:                       		hasher,
+		ScopeStrategy:                		config.GetScopeStrategy(),
+		AudienceMatchingStrategy:     		config.GetAudienceStrategy(),
+		SendDebugMessagesToClients:   		config.SendDebugMessagesToClients,
+		TokenURL:                     		config.TokenURL,
+		JWKSFetcherStrategy:          		config.GetJWKSFetcherStrategy(),
+		MinParameterEntropy:          		config.GetMinParameterEntropy(),
+		UseLegacyErrorFormat:         		config.UseLegacyErrorFormat,
+		ClientAuthenticationStrategy: 		config.GetClientAuthenticationStrategy(),
+		ResponseModeHandlerExtension: 		config.ResponseModeHandlerExtension,
+		MessageCatalog:               		config.MessageCatalog,
+		FormPostHTMLTemplate:         		config.FormPostHTMLTemplate,
 	}
 
 	for _, factory := range factories {
 		res := factory(config, storage, strategy)
 		if ah, ok := res.(fosite.AuthorizeEndpointHandler); ok {
 			f.AuthorizeEndpointHandlers.Append(ah)
+		}
+		if dah, ok := res.(fosite.DeviceAuthorizeEndpointHandler); ok {
+			f.DeviceAuthorizeEndpointHandlers.Append(dah)
 		}
 		if th, ok := res.(fosite.TokenEndpointHandler); ok {
 			f.TokenEndpointHandlers.Append(th)
