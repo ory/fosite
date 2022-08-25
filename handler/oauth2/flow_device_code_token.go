@@ -73,7 +73,7 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, code, requester.GetSession())
 
 	if err != nil {
-		return errorsx.WithStack(errorsx.WithStack(fosite.ErrConsentRequired))
+		return errorsx.WithStack(fosite.ErrConsentRequired)
 	}
 
 	for _, scope := range session.GetGrantedScopes() {
@@ -89,9 +89,13 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	refresh, refreshSignature, err := d.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
-	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	var refresh, refreshSignature string
+
+	if d.canIssueRefreshToken(requester) {
+		refresh, refreshSignature, err = d.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
+		if err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
 	}
 
 	ctx, err = storage.MaybeBeginTx(ctx, d.CoreStorage)
@@ -135,10 +139,6 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 func (c *AuthorizeDeviceGrantTypeHandler) canIssueRefreshToken(request fosite.Requester) bool {
 	// Require one of the refresh token scopes, if set.
 	if len(c.RefreshTokenScopes) > 0 && !request.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...) {
-		return false
-	}
-	// Do not issue a refresh token to clients that cannot use the refresh token grant type.
-	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
 		return false
 	}
 	return true
