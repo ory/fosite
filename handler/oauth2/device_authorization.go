@@ -33,7 +33,7 @@ func (d *DeviceAuthorizationHandler) HandleDeviceAuthorizeEndpointRequest(ctx co
 	}
 
 	userCodeSignature := d.UserCodeStrategy.DeviceCodeSignature(userCode)
-	deviceCodeSignature := d.UserCodeStrategy.DeviceCodeSignature(userCodeSignature)
+	deviceCodeSignature := d.UserCodeStrategy.DeviceCodeSignature(deviceCode)
 
 	// Set User Code expiry time
 	dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.UserCodeLifespan).Round(time.Second))

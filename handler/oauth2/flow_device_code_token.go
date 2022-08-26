@@ -2,6 +2,7 @@ package oauth2
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ory/fosite"
@@ -23,6 +24,7 @@ func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context
 	}
 	codeSignature := d.UserCodeStrategy.DeviceCodeSignature(code)
 
+	fmt.Println(codeSignature)
 	// Get the device code session to validate based on HMAC of the device code supplied
 	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
@@ -37,13 +39,13 @@ func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
 	}
 
-	expires := session.GetSession().GetExpiresAt(fosite.UserCode)
-	if time.Now().UTC().After(expires) {
-		return errorsx.WithStack(fosite.ErrTokenExpired)
-	}
+	//expires := session.GetSession().GetExpiresAt(fosite.UserCode)
+	//if time.Now().UTC().After(expires) {
+	//	return errorsx.WithStack(fosite.ErrTokenExpired)
+	//}
 
-	requester.SetSession(session.GetSession())
-	requester.SetID(session.GetID())
+	//requester.SetSession(session.GetSession())
+	//requester.SetID(session.GetID())
 
 	atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeAuthorizationCode, fosite.AccessToken, d.AccessTokenLifespan)
 	requester.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
@@ -77,7 +79,7 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	codeSignature := d.UserCodeStrategy.DeviceCodeSignature(code)
 
 	// Get the device code session ready for exchange to auth / refresh / oidc sessions
-	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
+	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, fosite.NewRequest().Session)
 
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrConsentRequired)

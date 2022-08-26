@@ -2,6 +2,7 @@ package oauth2
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ory/fosite"
@@ -35,19 +36,22 @@ func (c *AuthorizeDeviceGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx con
 	userCode := ar.GetRequestForm().Get("user_code")
 	userCodeSignature := c.UserCodeStrategy.DeviceCodeSignature(userCode)
 
-	session, err := c.CoreStorage.GetUserCodeSession(ctx, userCodeSignature, ar.GetSession())
+	session, err := c.CoreStorage.GetUserCodeSession(ctx, userCodeSignature, fosite.NewRequest().Session)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("SUBJECT : " + ar.GetSession().GetSubject())
 
 	if session.GetClient().GetID() != ar.GetClient().GetID() {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
 	}
 
-	expires := session.GetSession().GetExpiresAt(fosite.UserCode)
-	if time.Now().UTC().After(expires) {
-		return errorsx.WithStack(fosite.ErrTokenExpired)
-	}
+	/*
+		expires := session.GetSession().GetExpiresAt(fosite.UserCode)
+		if time.Now().UTC().After(expires) {
+			return errorsx.WithStack(fosite.ErrTokenExpired)
+		}*/
 
 	// session.GetID() is the HMAC signature of the device code generated in the inital request
 	err = c.CoreStorage.CreateDeviceCodeSession(ctx, session.GetID(), ar)
