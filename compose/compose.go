@@ -128,10 +128,12 @@ func ComposeAllEnabled(config *Config, storage interface{}, secret []byte, key *
 		OpenIDConnectImplicitFactory,
 		OpenIDConnectHybridFactory,
 		OpenIDConnectRefreshFactory,
+		OpenIDConnectDeviceFactory,
 
 		OAuth2TokenIntrospectionFactory,
 		OAuth2TokenRevocationFactory,
 
 		OAuth2PKCEFactory,
+		OAuth2DevicePKCEFactory,
 	)
 }

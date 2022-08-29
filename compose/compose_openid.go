@@ -104,4 +104,23 @@ func OpenIDConnectHybridFactory(config *Config, storage interface{}, strategy in
 			WithRedirectSecureChecker(config.GetRedirectSecureChecker()),
 		MinParameterEntropy: config.GetMinParameterEntropy(),
 	}
+
+}
+
+// OpenIDConnectDeviceFactory creates an OpenID Connect device ("device code flow") grant handler.
+//
+// **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
+func OpenIDConnectDeviceFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
+	return &openid.OpenIDConnectDeviceHandler{
+		CoreStorage:                 storage.(oauth2.CoreStorage),
+		DeviceCodeStrategy:          strategy.(oauth2.DeviceCodeStrategy),
+		UserCodeStrategy:            strategy.(oauth2.UserCodeStrategy),
+		OpenIDConnectRequestStorage: storage.(openid.OpenIDConnectRequestStorage),
+		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
+			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
+		},
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(config.AllowedPromptValues, strategy.(jwt.JWTStrategy)).
+			WithRedirectSecureChecker(config.GetRedirectSecureChecker()),
+		IDTokenLifespan: config.IDTokenLifespan,
+	}
 }

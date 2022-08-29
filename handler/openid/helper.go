@@ -86,7 +86,6 @@ func (i *IDTokenHandleHelper) IssueExplicitIDToken(ctx context.Context, lifespan
 	if err != nil {
 		return err
 	}
-
 	resp.SetExtra("id_token", token)
 	return nil
 }
