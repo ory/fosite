@@ -259,8 +259,6 @@ type Requester interface {
 	// GrantAudience marks a request's audience as granted.
 	GrantAudience(audience string)
 
-	IsConsentGranted() bool
-
 	// GetSession returns a pointer to the request's session or nil if none is set.
 	GetSession() (session Session)
 
@@ -321,7 +319,9 @@ type AuthorizeRequester interface {
 
 // DeviceAuthorizeRequester is an Device authorize endpoint's request context.
 type DeviceAuthorizeRequester interface {
-	IsAuthorizationDenied() bool
+	// Check if a device has been authorized by an interactive sessions
+	IsDeviceAuthorizationGranted() bool
+	IsDeviceAuthorizationDenied() bool
 
 	Requester
 }

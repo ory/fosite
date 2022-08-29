@@ -83,11 +83,11 @@
 	 }
  
 	 // Check the state of authorisation
-	 if !deviceAuthorizeRequest.IsConsentGranted() {
+	 if !deviceAuthorizeRequest.IsDeviceAuthorizationGranted() {
 		 return errorsx.WithStack(fosite.ErrAuthorizationPending)
 	 }
  
-	 if deviceAuthorizeRequest.IsAuthorizationDenied() {
+	 if deviceAuthorizeRequest.IsDeviceAuthorizationDenied() {
 		 // do something
 	 }
  

@@ -27,12 +27,12 @@ type DeviceAuthorizeRequest struct {
 	Request
 }
 
-func (d DeviceAuthorizeRequest) IsConsentGranted() bool {
+func (d DeviceAuthorizeRequest) IsDeviceAuthorizationGranted() bool {
 	return d.ConsentGranted
 }
 
-func (d DeviceAuthorizeRequest) IsAuthorizationDenied() bool {
-	return !d.IsConsentGranted() && len(d.GetGrantedScopes()) == 0
+func (d DeviceAuthorizeRequest) IsDeviceAuthorizationDenied() bool {
+	return !d.IsDeviceAuthorizationGranted() && len(d.GetGrantedScopes()) == 0
 }
 
 func NewDeviceAuthorizeRequest() *DeviceAuthorizeRequest {
