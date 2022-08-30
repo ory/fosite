@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ory/fosite"
@@ -24,7 +23,6 @@ func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context
 	}
 	codeSignature := d.UserCodeStrategy.DeviceCodeSignature(code)
 
-	fmt.Println(codeSignature)
 	// Get the device code session to validate based on HMAC of the device code supplied
 	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
@@ -79,7 +77,7 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	codeSignature := d.UserCodeStrategy.DeviceCodeSignature(code)
 
 	// Get the device code session ready for exchange to auth / refresh / oidc sessions
-	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, fosite.NewRequest().Session)
+	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrConsentRequired)
