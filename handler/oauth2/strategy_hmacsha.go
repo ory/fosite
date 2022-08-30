@@ -50,7 +50,7 @@ func (h HMACSHAStrategy) DeviceCodeSignature(token string) string {
 }
 
 func (h HMACSHAStrategy) UserCodeSignature(token string) string {
-	return h.Enigma.Signature(token)
+	return token
 }
 
 func (h HMACSHAStrategy) RefreshTokenSignature(token string) string {

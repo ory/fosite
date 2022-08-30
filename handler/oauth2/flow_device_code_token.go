@@ -41,7 +41,7 @@ func (d *DeviceAuthorizationHandler) HandleTokenEndpointRequest(ctx context.Cont
 	}
 
 	if !request.GetClient().GetGrantTypes().Has(deviceCodeGrantType) {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"authorization_code\"."))
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \""+ deviceCodeGrantType +"\"."))
 	}
 
 	deviceCode := request.GetRequestForm().Get("device_code")
