@@ -17,17 +17,21 @@ func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest))
 	}
 
+	if !requester.GetClient().GetGrantTypes().Has(deviceCodeGrantType) {
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \""+ deviceCodeGrantType +"\"."))
+	}
+
 	code := requester.GetRequestForm().Get("device_code")
 	if code == "" {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest.WithHint("device_code missing form body")))
 	}
-	codeSignature := d.UserCodeStrategy.DeviceCodeSignature(code)
+	codeSignature := d.DeviceCodeStrategy.DeviceCodeSignature(code)
 
 	// Get the device code session to validate based on HMAC of the device code supplied
 	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
 	if err != nil {
-		return errorsx.WithStack(fosite.ErrDeviceTokenPending)
+		return errorsx.WithStack(fosite.ErrAuthorizationPending)
 	}
 
 	requester.SetRequestedScopes(session.GetRequestedScopes())
@@ -67,20 +71,25 @@ func (d *AuthorizeDeviceGrantTypeHandler) CanHandleTokenEndpointRequest(requeste
 func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 
 	if !d.CanHandleTokenEndpointRequest(requester) {
-		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest))
+		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
 	code := requester.GetRequestForm().Get("device_code")
 	if code == "" {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest.WithHint("device_code missing form body")))
 	}
-	codeSignature := d.UserCodeStrategy.DeviceCodeSignature(code)
+	codeSignature := d.DeviceCodeStrategy.DeviceCodeSignature(code)
+
+	if err := d.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code); err != nil {
+		// This needs to happen after store retrieval for the session to be hydrated properly
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
+	}
 
 	// Get the device code session ready for exchange to auth / refresh / oidc sessions
 	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
 	if err != nil {
-		return errorsx.WithStack(fosite.ErrConsentRequired)
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	for _, scope := range session.GetGrantedScopes() {

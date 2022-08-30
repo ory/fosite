@@ -45,7 +45,7 @@ func (c *OpenIDConnectDeviceHandler) PopulateTokenEndpointResponse(ctx context.C
 	if code == "" {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest.WithHint("device_code missing form body")))
 	}
-	codeSignature := c.UserCodeStrategy.DeviceCodeSignature(code)
+	codeSignature := c.DeviceCodeStrategy.DeviceCodeSignature(code)
 
 	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, codeSignature, requester)
 	if errors.Is(err, ErrNoSessionFound) {

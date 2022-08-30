@@ -23,8 +23,7 @@ package oauth2
 
 import (
 	"context"
-	"crypto/rand"
-	"math/big"
+	"math/rand"
 	"time"
 
 	"github.com/ory/x/errorsx"
@@ -38,6 +37,8 @@ type HMACSHAStrategy struct {
 	AccessTokenLifespan   time.Duration
 	RefreshTokenLifespan  time.Duration
 	AuthorizeCodeLifespan time.Duration
+	DeviceCodeLifespan    time.Duration
+	UserCodeLifespan      time.Duration
 }
 
 func (h HMACSHAStrategy) AccessTokenSignature(token string) string {
@@ -97,29 +98,53 @@ func (h HMACSHAStrategy) ValidateAuthorizeCode(_ context.Context, r fosite.Reque
 	return h.Enigma.Validate(token)
 }
 
-func (h HMACSHAStrategy) generateRandomString(length int) (token string, err error) {
-	chars := []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
-	chars_length := int64(len(chars))
+func (h HMACSHAStrategy) generateRandomString(length int) (token string) {
+	length = 6
+	base20 := [20]byte{'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Z'}
+	rand.Seed(time.Now().Unix())
 
 	code := make([]byte, length)
 	for i := 0; i < length; i++ {
-		num, err := rand.Int(rand.Reader, big.NewInt(chars_length))
-		if err != nil {
-			return "", err
-		}
-		code[i] = chars[num.Int64()]
+		code[i] = base20[rand.Intn(len(base20))]
 	}
-	return string(code), nil
+	return string(code)
 }
 
-func (h HMACSHAStrategy) GenerateUserCode() (token string, err error) {
-	return h.generateRandomString(8)
+func (h HMACSHAStrategy) GenerateUserCode() (token string, signature string, err error) {
+	token = h.generateRandomString(8)
+	return token, h.Enigma.GenerateHMACForString(token), nil
 }
 
-func (h HMACSHAStrategy) GenerateDeviceCode() (token string, err error) {
-	return h.generateRandomString(100)
+func (h HMACSHAStrategy) UserCodeSignature(token string) string {
+ 	return h.Enigma.GenerateHMACForString(token)
+}
+
+func (h HMACSHAStrategy) ValidateUserCode(_ context.Context, r fosite.Requester, code string) (err error) {
+	var exp = r.GetSession().GetExpiresAt(fosite.UserCode)
+	if exp.IsZero() && r.GetRequestedAt().Add(h.UserCodeLifespan).Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Access token expired at '%s'.", r.GetRequestedAt().Add(h.UserCodeLifespan)))
+	}
+	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Access token expired at '%s'.", exp))
+	}
+	return h.Enigma.Validate(code)
+}
+
+func (h HMACSHAStrategy) GenerateDeviceCode() (token string, signature string, err error) {
+	return h.Enigma.Generate()
 }
 
 func (h HMACSHAStrategy) DeviceCodeSignature(token string) string {
-	return h.Enigma.GenerateHMACForString(token)
+	return h.Enigma.Signature(token)
+}
+
+func (h HMACSHAStrategy) ValidateDeviceCode(_ context.Context, r fosite.Requester, code string) (err error) {
+	var exp = r.GetSession().GetExpiresAt(fosite.UserCode)
+	if exp.IsZero() && r.GetRequestedAt().Add(h.DeviceCodeLifespan).Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", r.GetRequestedAt().Add(h.DeviceCodeLifespan)))
+	}
+	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", exp))
+	}
+	return h.Enigma.Validate(code)
 }

@@ -44,8 +44,11 @@ type Config struct {
 	// DeviceCodeLifespan sets how long a device grant code can be valid for. Defaults to five minutes
 	DeviceCodeLifespan time.Duration
 
-	// DeviceCodeRetryInterval sets the interval that clients should check for device code grants
-	DeviceCodeRetryInterval time.Duration
+	// UserCodeLifespan sets how long a user grant code can be valid for. Defaults to five minutes
+	UserCodeLifespan time.Duration
+
+	// DeviceAuthTokenPollingInterval sets the interval that clients should check for device code grants
+	DeviceAuthTokenPollingInterval time.Duration
 
 	// IDTokenLifespan sets the default id token lifetime. Defaults to one hour.
 	IDTokenLifespan time.Duration
@@ -185,12 +188,12 @@ func (c *Config) GetRefreshTokenLifespan() time.Duration {
 	return c.RefreshTokenLifespan
 }
 
-// GetDeviceCodeRetryInterval sets the interval that clients should check for device code grants
-func (c *Config) GetDeviceCodeRetryInterval() time.Duration {
+// GetDeviceAuthTokenPollingInterval sets the interval that clients should check for device code grants
+func (c *Config) GetDeviceAuthTokenPollingInterval() time.Duration {
 	if c.DeviceCodeLifespan == 0 {
 		return time.Second * 10
 	}
-	return c.DeviceCodeRetryInterval
+	return c.DeviceAuthTokenPollingInterval
 }
 
 // GetDeviceCodeLifespan sets how long a device code is valid for, Defaults for five minutes
@@ -199,6 +202,14 @@ func (c *Config) GetDeviceCodeLifespan() time.Duration {
 		return time.Minute * 5
 	}
 	return c.DeviceCodeLifespan
+}
+
+// GetUserCodeLifespan sets how long a device code is valid for, Defaults for five minutes
+func (c *Config) GetUserCodeLifespan() time.Duration {
+	if c.UserCodeLifespan == 0 {
+		return time.Minute * 5
+	}
+	return c.UserCodeLifespan
 }
 
 // GetHashCost returns the bcrypt cost factor. Defaults to 12.

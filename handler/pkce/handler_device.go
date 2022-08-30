@@ -64,7 +64,7 @@ func (c *HandlerDevice) HandleDeviceAuthorizeEndpointRequest(ctx context.Context
 	client := ar.GetClient()
 	userCode := resp.GetUserCode()
 
-	userCodeSignature := c.UserCodeStrategy.DeviceCodeSignature(userCode)
+	userCodeSignature := c.UserCodeStrategy.UserCodeSignature(userCode)
 
 	session, err := c.CoreStorage.GetUserCodeSession(ctx, userCodeSignature, fosite.NewRequest().Session)
 	if err != nil {
@@ -153,7 +153,7 @@ func (c *HandlerDevice) HandleTokenEndpointRequest(ctx context.Context, request 
 	if code == "" {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest.WithHint("device_code missing form body")))
 	}
-	codeSignature := c.UserCodeStrategy.DeviceCodeSignature(code)
+	codeSignature := c.DeviceCodeStrategy.DeviceCodeSignature(code)
 
 	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, codeSignature, request.GetSession())
 	if errors.Is(err, fosite.ErrNotFound) {

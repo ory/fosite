@@ -159,11 +159,12 @@ func OAuth2StatelessJWTIntrospectionFactory(config *Config, storage interface{},
 func OAuth2DeviceAuthorizeFactory(config *Config, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.DeviceAuthorizationHandler{
 		DeviceCodeStorage:       storage.(oauth2.DeviceCodeStorage),
+		UserCodeStorage:         storage.(oauth2.UserCodeStorage),
 		DeviceCodeStrategy:      strategy.(oauth2.DeviceCodeStrategy),
 		UserCodeStrategy:        strategy.(oauth2.UserCodeStrategy),
 		DeviceCodeLifespan:      config.GetDeviceCodeLifespan(),
-		UserCodeLifespan:        config.GetDeviceCodeLifespan(),
+		UserCodeLifespan:        config.GetUserCodeLifespan(),
 		VerificationURI:         config.DeviceVerificationURL,
-		DeviceCodeRetryInterval: config.GetDeviceCodeRetryInterval(),
+		PollingInterval:         config.GetDeviceAuthTokenPollingInterval(),
 	}
 }
