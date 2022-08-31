@@ -96,11 +96,20 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	request.SetSession(originalRequest.GetSession().Clone())
-	request.SetRequestedScopes(originalRequest.GetRequestedScopes())
 	request.SetRequestedAudience(originalRequest.GetRequestedAudience())
 
-	for _, scope := range originalRequest.GetGrantedScopes() {
-		if !c.Config.GetScopeStrategy(ctx)(request.GetClient().GetScopes(), scope) {
+	if _, ok := request.GetRequestForm()["scope"]; ok {
+		requestedScopes := fosite.RemoveEmpty(strings.Split(request.GetRequestForm().Get("scope"), " "))
+		if len(requestedScopes) == 0 {
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The requested scope parameter is empty"))
+		}
+		request.SetRequestedScopes(requestedScopes)
+	} else {
+		request.SetRequestedScopes(originalRequest.GetGrantedScopes())
+	}
+
+	for _, scope := range request.GetRequestedScopes() {
+		if !c.Config.GetScopeStrategy(ctx)(originalRequest.GetGrantedScopes(), scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 		request.GrantScope(scope)
