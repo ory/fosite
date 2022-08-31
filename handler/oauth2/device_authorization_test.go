@@ -16,12 +16,11 @@ func Test_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 	defer ctrl.Finish()
 	store := storage.NewMemoryStore()
 	handler := DeviceAuthorizationHandler{
-		DeviceCodeStorage:  store,
-		DeviceCodeStrategy: hmacshaStrategy,
-		UserCodeStrategy:   hmacshaStrategy,
-		DeviceCodeLifespan: time.Minute * 5,
-		UserCodeLifespan:   time.Minute * 5,
-		VerificationURI:    "www.test.com",
+		DeviceCodeStorage:         store,
+		DeviceCodeStrategy:        hmacshaStrategy,
+		UserCodeStrategy:          hmacshaStrategy,
+		DeviceAndUserCodeLifespan: time.Minute * 5,
+		VerificationURI:           "www.test.com",
 	}
 
 	req := &fosite.AuthorizeRequest{

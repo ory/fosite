@@ -33,12 +33,11 @@ import (
 )
 
 type HMACSHAStrategy struct {
-	Enigma                *enigma.HMACStrategy
-	AccessTokenLifespan   time.Duration
-	RefreshTokenLifespan  time.Duration
-	AuthorizeCodeLifespan time.Duration
-	DeviceCodeLifespan    time.Duration
-	UserCodeLifespan      time.Duration
+	Enigma                    *enigma.HMACStrategy
+	AccessTokenLifespan       time.Duration
+	RefreshTokenLifespan      time.Duration
+	AuthorizeCodeLifespan     time.Duration
+	DeviceAndUserCodeLifespan time.Duration
 }
 
 func (h HMACSHAStrategy) AccessTokenSignature(token string) string {
@@ -121,8 +120,8 @@ func (h HMACSHAStrategy) UserCodeSignature(token string) string {
 
 func (h HMACSHAStrategy) ValidateUserCode(_ context.Context, r fosite.Requester, code string) (err error) {
 	var exp = r.GetSession().GetExpiresAt(fosite.UserCode)
-	if exp.IsZero() && r.GetRequestedAt().Add(h.UserCodeLifespan).Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Access token expired at '%s'.", r.GetRequestedAt().Add(h.UserCodeLifespan)))
+	if exp.IsZero() && r.GetRequestedAt().Add(h.DeviceAndUserCodeLifespan).Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Access token expired at '%s'.", r.GetRequestedAt().Add(h.DeviceAndUserCodeLifespan)))
 	}
 	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
 		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Access token expired at '%s'.", exp))
@@ -140,8 +139,8 @@ func (h HMACSHAStrategy) DeviceCodeSignature(token string) string {
 
 func (h HMACSHAStrategy) ValidateDeviceCode(_ context.Context, r fosite.Requester, code string) (err error) {
 	var exp = r.GetSession().GetExpiresAt(fosite.UserCode)
-	if exp.IsZero() && r.GetRequestedAt().Add(h.DeviceCodeLifespan).Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", r.GetRequestedAt().Add(h.DeviceCodeLifespan)))
+	if exp.IsZero() && r.GetRequestedAt().Add(h.DeviceAndUserCodeLifespan).Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", r.GetRequestedAt().Add(h.DeviceAndUserCodeLifespan)))
 	}
 	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
 		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", exp))

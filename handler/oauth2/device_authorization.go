@@ -15,11 +15,8 @@ type DeviceAuthorizationHandler struct {
 	UserCodeStorage         UserCodeStorage
 	DeviceCodeStrategy      DeviceCodeStrategy
 	UserCodeStrategy        UserCodeStrategy
-	// DeviceCodeLifespan defines the lifetime of the device code
-	DeviceCodeLifespan time.Duration
-
-	// UserCodeLifespan defines the lifetime of the user code
-	UserCodeLifespan time.Duration
+	// DeviceAndUserCodeLifespan defines the lifetime of the device/user code
+	DeviceAndUserCodeLifespan time.Duration
 
 	// PollingInterval defines the minimum amount of time in seconds that the client SHOULD wait between polling requests to the token endpoint.
 	PollingInterval time.Duration
@@ -38,7 +35,7 @@ func (d *DeviceAuthorizationHandler) HandleDeviceAuthorizeEndpointRequest(ctx co
 	}
 
 	// Set User Code expiry time
-	dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.UserCodeLifespan).Round(time.Second))
+	dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.DeviceAndUserCodeLifespan).Round(time.Second))
 	dar.SetID(deviceCodeSignature)
 
 	// Store the User Code session (this has no real data other that the uer and device code), can be converted into a 'full' session after user auth
