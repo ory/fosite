@@ -23,7 +23,8 @@ package oauth2
 
 import (
 	"context"
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"time"
 
 	"github.com/ory/x/errorsx"
@@ -97,21 +98,23 @@ func (h HMACSHAStrategy) ValidateAuthorizeCode(_ context.Context, r fosite.Reque
 	return h.Enigma.Validate(token)
 }
 
-func (h HMACSHAStrategy) generateRandomString(length int) (token string) {
-	length = 6
-	base20 := [20]byte{'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Z'}
-	rand.Seed(time.Now().Unix())
+func (h HMACSHAStrategy) generateRandomString(length int) (token string, err error) {
+	chars := [20]byte{'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Z'}
+	chars_length := int64(len(chars))
 
 	code := make([]byte, length)
 	for i := 0; i < length; i++ {
-		code[i] = base20[rand.Intn(len(base20))]
+		num, err := rand.Int(rand.Reader, big.NewInt(chars_length))
+		if err != nil {
+			return "", err
+		}
+		code[i] = chars[num.Int64()]
 	}
-	return string(code)
+	return string(code), nil
 }
 
-func (h HMACSHAStrategy) GenerateUserCode() (token string, signature string, err error) {
-	token = h.generateRandomString(8)
-	return token, h.Enigma.GenerateHMACForString(token), nil
+func (h HMACSHAStrategy) GenerateUserCode() (token string, err error) {
+	return h.generateRandomString(8)
 }
 
 func (h HMACSHAStrategy) UserCodeSignature(token string) string {
@@ -129,12 +132,12 @@ func (h HMACSHAStrategy) ValidateUserCode(_ context.Context, r fosite.Requester,
 	return h.Enigma.Validate(code)
 }
 
-func (h HMACSHAStrategy) GenerateDeviceCode() (token string, signature string, err error) {
-	return h.Enigma.Generate()
+func (h HMACSHAStrategy) GenerateDeviceCode() (token string, err error) {
+	return h.generateRandomString(100)
 }
 
 func (h HMACSHAStrategy) DeviceCodeSignature(token string) string {
-	return h.Enigma.Signature(token)
+	return h.Enigma.GenerateHMACForString(token)
 }
 
 func (h HMACSHAStrategy) ValidateDeviceCode(_ context.Context, r fosite.Requester, code string) (err error) {

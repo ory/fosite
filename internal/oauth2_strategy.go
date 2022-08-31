@@ -110,13 +110,12 @@ func (mr *MockCoreStrategyMockRecorder) GenerateAuthorizeCode(arg0, arg1 interfa
 }
 
 // GenerateDeviceCode mocks base method.
-func (m *MockCoreStrategy) GenerateDeviceCode() (string, string, error) {
+func (m *MockCoreStrategy) GenerateDeviceCode() (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateDeviceCode")
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GenerateDeviceCode indicates an expected call of GenerateDeviceCode.
@@ -142,13 +141,12 @@ func (mr *MockCoreStrategyMockRecorder) GenerateRefreshToken(arg0, arg1 interfac
 }
 
 // GenerateUserCode mocks base method.
-func (m *MockCoreStrategy) GenerateUserCode() (string, string, error) {
+func (m *MockCoreStrategy) GenerateUserCode() (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GenerateUserCode")
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GenerateUserCode indicates an expected call of GenerateUserCode.

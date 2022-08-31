@@ -170,7 +170,7 @@ func TestAuthorizeCode_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 					c.breq.Session = &fosite.DefaultSession{Subject: "A"}
 					expireAt := time.Now().UTC().Add(c.expire)
 					c.areq.Session.SetExpiresAt(fosite.UserCode, expireAt)
-					userCodeSig := hmacshaStrategy.DeviceCodeSignature(c.areq.Form.Get("user_code"))
+					userCodeSig := hmacshaStrategy.UserCodeSignature(c.areq.Form.Get("user_code"))
 					store.CreateUserCodeSession(nil, userCodeSig, c.areq)
 
 					aresp := fosite.NewAuthorizeResponse()
