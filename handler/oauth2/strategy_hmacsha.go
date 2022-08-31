@@ -118,7 +118,7 @@ func (h HMACSHAStrategy) GenerateUserCode() (token string, err error) {
 }
 
 func (h HMACSHAStrategy) UserCodeSignature(token string) string {
- 	return h.Enigma.GenerateHMACForString(token)
+	return h.Enigma.GenerateHMACForString(token)
 }
 
 func (h HMACSHAStrategy) ValidateUserCode(_ context.Context, r fosite.Requester, code string) (err error) {
@@ -129,7 +129,7 @@ func (h HMACSHAStrategy) ValidateUserCode(_ context.Context, r fosite.Requester,
 	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
 		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Access token expired at '%s'.", exp))
 	}
-	return h.Enigma.Validate(code)
+	return nil
 }
 
 func (h HMACSHAStrategy) GenerateDeviceCode() (token string, err error) {
@@ -143,10 +143,10 @@ func (h HMACSHAStrategy) DeviceCodeSignature(token string) string {
 func (h HMACSHAStrategy) ValidateDeviceCode(_ context.Context, r fosite.Requester, code string) (err error) {
 	var exp = r.GetSession().GetExpiresAt(fosite.UserCode)
 	if exp.IsZero() && r.GetRequestedAt().Add(h.DeviceAndUserCodeLifespan).Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", r.GetRequestedAt().Add(h.DeviceAndUserCodeLifespan)))
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("1 Device code expired at '%s'.", r.GetRequestedAt().Add(h.DeviceAndUserCodeLifespan)))
 	}
 	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Device code expired at '%s'.", exp))
+		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("2 Device code expired at '%s'.", exp))
 	}
-	return h.Enigma.Validate(code)
+	return nil
 }

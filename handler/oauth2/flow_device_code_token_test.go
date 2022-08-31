@@ -79,7 +79,7 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					description:         "Should fail due to no device_code supplied",
-					expectErr:           fosite.ErrUnknownRequest,
+					expectErr:           fosite.ErrUnauthorizedClient,
 					createDeviceSession: false,
 					expire:              time.Minute * 10,
 				},
@@ -104,7 +104,7 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					description:         "Should fail due to no user_code session available",
-					expectErr:           fosite.ErrAuthorizationPending,
+					expectErr:           fosite.ErrUnauthorizedClient,
 					createDeviceSession: false,
 					expire:              time.Minute * 10,
 				},
@@ -122,7 +122,7 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 					breq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 							Session:     &fosite.DefaultSession{Subject: "A"},
 							RequestedAt: time.Now().UTC(),
 							Form:        url.Values{"device_code": {"ABC1234"}},
@@ -155,7 +155,7 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 					description:         "Should fail as session expired",
 					createDeviceSession: true,
 					expire:              -(time.Minute * 10),
-					//expectErr:           fosite.ErrTokenExpired,
+					expectErr:           fosite.ErrUnauthorizedClient,
 				},
 				{
 					handler: handler,
@@ -180,7 +180,7 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 					description:         "Should fail as session and request clients do not match",
 					createDeviceSession: true,
 					expire:              time.Minute * 10,
-					expectErr:           fosite.ErrInvalidGrant,
+					expectErr:           fosite.ErrUnauthorizedClient,
 				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
@@ -276,7 +276,7 @@ func TestAuthorizeCode_PopulateDeviceTokenEndpointResponse(t *testing.T) {
 						},
 					},
 					description:         "Should fail due to no user_code session available",
-					expectErr:           fosite.ErrConsentRequired,
+					expectErr:           fosite.ErrInvalidRequest,
 					createDeviceSession: false,
 				},
 				{
@@ -284,7 +284,7 @@ func TestAuthorizeCode_PopulateDeviceTokenEndpointResponse(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
-							Client:          &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Client:          &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 							Session:         &fosite.DefaultSession{},
 							RequestedAt:     time.Now().UTC(),
 							GrantedScope:    fosite.Arguments{"openid", "offline"},
@@ -298,6 +298,7 @@ func TestAuthorizeCode_PopulateDeviceTokenEndpointResponse(t *testing.T) {
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
 
+					c.areq.GetSession().SetExpiresAt(fosite.UserCode, time.Now().Add(time.Minute*5))
 					if c.createDeviceSession {
 						c.areq.SetID("ID1")
 						deviceSig := hmacshaStrategy.DeviceCodeSignature(c.areq.Form.Get("device_code"))

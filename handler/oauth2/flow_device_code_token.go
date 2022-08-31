@@ -18,7 +18,7 @@ func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context
 	}
 
 	if !requester.GetClient().GetGrantTypes().Has(deviceCodeGrantType) {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \""+ deviceCodeGrantType +"\"."))
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"" + deviceCodeGrantType + "\"."))
 	}
 
 	code := requester.GetRequestForm().Get("device_code")
@@ -82,14 +82,14 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 
 	if err := d.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code); err != nil {
 		// This needs to happen after store retrieval for the session to be hydrated properly
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
+		return err
 	}
 
 	// Get the device code session ready for exchange to auth / refresh / oidc sessions
 	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
 	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	for _, scope := range session.GetGrantedScopes() {
