@@ -54,7 +54,7 @@ func (c *OpenIDConnectDeviceHandler) HandleAuthorizeEndpointRequest(ctx context.
 	}
 
 	userCode := ar.GetRequestForm().Get("user_code")
-	userCodeSignature := c.UserCodeStrategy.DeviceCodeSignature(userCode)
+	userCodeSignature := c.UserCodeStrategy.UserCodeSignature(userCode)
 
 	userSession, err := c.CoreStorage.GetUserCodeSession(ctx, userCodeSignature, fosite.NewRequest().Session)
 	if err != nil {

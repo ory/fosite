@@ -14,14 +14,15 @@ func Test_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	store := storage.NewMemoryStore()
+	deviceStore := storage.NewMemoryStore()
+	userStore := storage.NewMemoryStore()
 	handler := DeviceAuthorizationHandler{
-		DeviceCodeStorage:  store,
-		DeviceCodeStrategy: hmacshaStrategy,
-		UserCodeStrategy:   hmacshaStrategy,
-		DeviceCodeLifespan: time.Minute * 5,
-		UserCodeLifespan:   time.Minute * 5,
-		VerificationURI:    "www.test.com",
+		DeviceCodeStorage:         deviceStore,
+		UserCodeStorage:           userStore,
+		DeviceCodeStrategy:        hmacshaStrategy,
+		UserCodeStrategy:          hmacshaStrategy,
+		DeviceAndUserCodeLifespan: time.Minute * 5,
+		VerificationURI:           "www.test.com",
 	}
 
 	req := &fosite.AuthorizeRequest{

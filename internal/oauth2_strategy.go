@@ -169,6 +169,20 @@ func (mr *MockCoreStrategyMockRecorder) RefreshTokenSignature(arg0 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshTokenSignature", reflect.TypeOf((*MockCoreStrategy)(nil).RefreshTokenSignature), arg0)
 }
 
+// UserCodeSignature mocks base method.
+func (m *MockCoreStrategy) UserCodeSignature(arg0 string) string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserCodeSignature", arg0)
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// UserCodeSignature indicates an expected call of UserCodeSignature.
+func (mr *MockCoreStrategyMockRecorder) UserCodeSignature(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserCodeSignature", reflect.TypeOf((*MockCoreStrategy)(nil).UserCodeSignature), arg0)
+}
+
 // ValidateAccessToken mocks base method.
 func (m *MockCoreStrategy) ValidateAccessToken(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
 	m.ctrl.T.Helper()
@@ -197,6 +211,20 @@ func (mr *MockCoreStrategyMockRecorder) ValidateAuthorizeCode(arg0, arg1, arg2 i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateAuthorizeCode", reflect.TypeOf((*MockCoreStrategy)(nil).ValidateAuthorizeCode), arg0, arg1, arg2)
 }
 
+// ValidateDeviceCode mocks base method.
+func (m *MockCoreStrategy) ValidateDeviceCode(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateDeviceCode", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateDeviceCode indicates an expected call of ValidateDeviceCode.
+func (mr *MockCoreStrategyMockRecorder) ValidateDeviceCode(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateDeviceCode", reflect.TypeOf((*MockCoreStrategy)(nil).ValidateDeviceCode), arg0, arg1, arg2)
+}
+
 // ValidateRefreshToken mocks base method.
 func (m *MockCoreStrategy) ValidateRefreshToken(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
 	m.ctrl.T.Helper()
@@ -209,4 +237,18 @@ func (m *MockCoreStrategy) ValidateRefreshToken(arg0 context.Context, arg1 fosit
 func (mr *MockCoreStrategyMockRecorder) ValidateRefreshToken(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateRefreshToken", reflect.TypeOf((*MockCoreStrategy)(nil).ValidateRefreshToken), arg0, arg1, arg2)
+}
+
+// ValidateUserCode mocks base method.
+func (m *MockCoreStrategy) ValidateUserCode(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateUserCode", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateUserCode indicates an expected call of ValidateUserCode.
+func (mr *MockCoreStrategyMockRecorder) ValidateUserCode(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateUserCode", reflect.TypeOf((*MockCoreStrategy)(nil).ValidateUserCode), arg0, arg1, arg2)
 }

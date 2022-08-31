@@ -166,6 +166,18 @@ func (h *DefaultJWTStrategy) GenerateDeviceCode() (token string, err error) {
 	return h.HMACSHAStrategy.GenerateDeviceCode()
 }
 
+func (h *DefaultJWTStrategy) ValidateDeviceCode(context context.Context, r fosite.Requester, code string) (err error) {
+	return h.HMACSHAStrategy.ValidateDeviceCode(context, r, code)
+}
+
+func (h DefaultJWTStrategy) UserCodeSignature(token string) string {
+	return h.HMACSHAStrategy.UserCodeSignature(token)
+}
+
 func (h *DefaultJWTStrategy) GenerateUserCode() (token string, err error) {
 	return h.HMACSHAStrategy.GenerateUserCode()
+}
+
+func (h *DefaultJWTStrategy) ValidateUserCode(context context.Context, r fosite.Requester, code string) (err error) {
+	return h.HMACSHAStrategy.ValidateUserCode(context, r, code)
 }

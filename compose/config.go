@@ -41,11 +41,11 @@ type Config struct {
 	// AuthorizeCodeLifespan sets how long an authorize code is going to be valid. Defaults to fifteen minutes.
 	AuthorizeCodeLifespan time.Duration
 
-	// DeviceCodeLifespan sets how long a device grant code can be valid for. Defaults to five minutes
-	DeviceCodeLifespan time.Duration
+	// DeviceAndUserCodeLifespan sets how long a device grant code can be valid for. Defaults to five minutes
+	DeviceAndUserCodeLifespan time.Duration
 
-	// DeviceCodeRetryInterval sets the interval that clients should check for device code grants
-	DeviceCodeRetryInterval time.Duration
+	// DeviceAuthTokenPollingInterval sets the interval that clients should check for device code grants
+	DeviceAuthTokenPollingInterval time.Duration
 
 	// IDTokenLifespan sets the default id token lifetime. Defaults to one hour.
 	IDTokenLifespan time.Duration
@@ -185,20 +185,20 @@ func (c *Config) GetRefreshTokenLifespan() time.Duration {
 	return c.RefreshTokenLifespan
 }
 
-// GetDeviceCodeRetryInterval sets the interval that clients should check for device code grants
-func (c *Config) GetDeviceCodeRetryInterval() time.Duration {
-	if c.DeviceCodeLifespan == 0 {
+// GetDeviceAuthTokenPollingInterval sets the interval that clients should check for device code grants
+func (c *Config) GetDeviceAuthTokenPollingInterval() time.Duration {
+	if c.DeviceAuthTokenPollingInterval == 0 {
 		return time.Second * 10
 	}
-	return c.DeviceCodeRetryInterval
+	return c.DeviceAuthTokenPollingInterval
 }
 
-// GetDeviceCodeLifespan sets how long a device code is valid for, Defaults for five minutes
-func (c *Config) GetDeviceCodeLifespan() time.Duration {
-	if c.DeviceCodeLifespan == 0 {
+// GetDeviceAndUserCodeLifespan sets how long a device code is valid for, Defaults for five minutes
+func (c *Config) GetDeviceAndUserCodeLifespan() time.Duration {
+	if c.DeviceAndUserCodeLifespan == 0 {
 		return time.Minute * 5
 	}
-	return c.DeviceCodeLifespan
+	return c.DeviceAndUserCodeLifespan
 }
 
 // GetHashCost returns the bcrypt cost factor. Defaults to 12.

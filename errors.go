@@ -41,7 +41,11 @@ import (
 var (
 	// ErrInvalidatedAuthorizeCode is an error indicating that an authorization code has been
 	// used previously.
-	ErrInvalidatedAuthorizeCode = errors.New("Authorization code has ben invalidated")
+	ErrInvalidatedAuthorizeCode = errors.New("Authorization code has been invalidated")
+	// ErrInvalidatedDeviceCode is an error indicating that a device code has been used previously.
+	ErrInvalidatedDeviceCode = errors.New("Device code has been invalidated")
+	// ErrInvalidatedUserCode is an error indicating that a user code has been used previously.
+	ErrInvalidatedUserCode = errors.New("user code has been invalidated")
 	// ErrSerializationFailure is an error indicating that the transactional capable storage could not guarantee
 	// consistency of Update & Delete operations on the same rows between multiple sessions.
 	ErrSerializationFailure = errors.New("The request could not be completed due to concurrent access")
@@ -221,8 +225,8 @@ var (
 		ErrorField:       errJTIKnownName,
 		CodeField:        http.StatusBadRequest,
 	}
-	ErrDeviceTokenPending = &RFC6749Error{
-		DescriptionField: "Device token, pending authentication or consent",
+	ErrAuthorizationPending = &RFC6749Error{
+		DescriptionField: "The authorization request is still pending as the end user hasn't yet completed the user-interaction steps.",
 		ErrorField:       errAuthorizationPending,
 		CodeField:        http.StatusForbidden,
 	}

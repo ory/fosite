@@ -104,7 +104,7 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					description:         "Should fail due to no user_code session available",
-					expectErr:           fosite.ErrDeviceTokenPending,
+					expectErr:           fosite.ErrAuthorizationPending,
 					createDeviceSession: false,
 					expire:              time.Minute * 10,
 				},

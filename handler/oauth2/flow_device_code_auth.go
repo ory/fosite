@@ -34,7 +34,7 @@ func (c *AuthorizeDeviceGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx con
 	resp.AddParameter("state", ar.GetState())
 
 	userCode := ar.GetRequestForm().Get("user_code")
-	userCodeSignature := c.UserCodeStrategy.DeviceCodeSignature(userCode)
+	userCodeSignature := c.UserCodeStrategy.UserCodeSignature(userCode)
 
 	session, err := c.CoreStorage.GetUserCodeSession(ctx, userCodeSignature, fosite.NewRequest().Session)
 	if err != nil {
