@@ -22,6 +22,7 @@
 package oauth2
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -87,7 +88,7 @@ func TestIssueAccessToken(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := helper.IssueAccessToken(nil, areq, aresp)
+		err := helper.IssueAccessToken(nil, helper.Config.GetAccessTokenLifespan(context.TODO()), areq, aresp)
 		require.Equal(t, err == nil, c.err == nil)
 		if c.err != nil {
 			assert.EqualError(t, err, c.err.Error(), "Case %d", k)

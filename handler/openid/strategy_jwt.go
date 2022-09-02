@@ -51,11 +51,11 @@ type Session interface {
 
 // IDTokenSession is a session container for the id token
 type DefaultSession struct {
-	Claims    *jwt.IDTokenClaims
-	Headers   *jwt.Headers
-	ExpiresAt map[fosite.TokenType]time.Time
-	Username  string
-	Subject   string
+	Claims    *jwt.IDTokenClaims             `json:"id_token_claims"`
+	Headers   *jwt.Headers                   `json:"headers"`
+	ExpiresAt map[fosite.TokenType]time.Time `json:"expires_at"`
+	Username  string                         `json:"username"`
+	Subject   string                         `json:"subject"`
 }
 
 func NewDefaultSession() *DefaultSession {
@@ -136,10 +136,12 @@ type DefaultStrategy struct {
 	}
 }
 
-func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.Requester) (token string, err error) {
-	expiry := h.Config.GetIDTokenLifespan(ctx)
-	if expiry == 0 {
-		expiry = defaultExpiryTime
+// GenerateIDToken returns a JWT string.
+//
+// lifespan is ignored if requester.GetSession().IDTokenClaims().ExpiresAt is not zero.
+func (h DefaultStrategy) GenerateIDToken(ctx context.Context, lifespan time.Duration, requester fosite.Requester) (token string, err error) {
+	if lifespan == 0 {
+		lifespan = defaultExpiryTime
 	}
 
 	sess, ok := requester.GetSession().(Session)
@@ -217,7 +219,7 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, requester fosite.R
 	}
 
 	if claims.ExpiresAt.IsZero() {
-		claims.ExpiresAt = time.Now().UTC().Add(expiry)
+		claims.ExpiresAt = time.Now().UTC().Add(lifespan)
 	}
 
 	if claims.ExpiresAt.Before(time.Now().UTC()) {

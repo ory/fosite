@@ -25,6 +25,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
@@ -37,7 +38,7 @@ import (
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
-	h := &OpenIDConnectExplicitHandler{}
+	h := &OpenIDConnectExplicitHandler{Config: &fosite.Config{}}
 	areq := fosite.NewAccessRequest(nil)
 	areq.Client = &fosite.DefaultClient{
 		//ResponseTypes: fosite.Arguments{"id_token"},
@@ -101,6 +102,39 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			expectErr: fosite.ErrUnauthorizedClient,
 		},
 		{
+			description: "should pass with custom client lifespans",
+			setup: func(store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
+				req.Client = &fosite.DefaultClientWithCustomTokenLifespans{
+					DefaultClient: &fosite.DefaultClient{
+						GrantTypes: fosite.Arguments{"authorization_code"},
+					},
+					TokenLifespans: &internal.TestLifespans,
+				}
+				req.GrantTypes = fosite.Arguments{"authorization_code"}
+				req.Form.Set("code", "foobar")
+				storedSession := &DefaultSession{
+					Claims: &jwt.IDTokenClaims{Subject: "peter"},
+				}
+				storedReq := fosite.NewAuthorizeRequest()
+				storedReq.Session = storedSession
+				storedReq.GrantedScope = fosite.Arguments{"openid"}
+				storedReq.Form.Set("nonce", "1111111111111111")
+				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", req).Return(storedReq, nil)
+			},
+			check: func(t *testing.T, aresp *fosite.AccessResponse) {
+				assert.NotEmpty(t, aresp.GetExtra("id_token"))
+				idToken, _ := aresp.GetExtra("id_token").(string)
+				decodedIdToken, err := jwt.Parse(idToken, func(token *jwt.Token) (interface{}, error) {
+					return key.PublicKey, nil
+				})
+				require.NoError(t, err)
+				claims := decodedIdToken.Claims
+				assert.NotEmpty(t, claims["at_hash"])
+				idTokenExp := internal.ExtractJwtExpClaim(t, idToken)
+				internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.AuthorizationCodeGrantIDTokenLifespan).UTC(), *idTokenExp, time.Minute)
+			},
+		},
+		{
 			description: "should pass",
 			setup: func(store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.Client = &fosite.DefaultClient{
@@ -126,6 +160,8 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				require.NoError(t, err)
 				claims := decodedIdToken.Claims
 				assert.NotEmpty(t, claims["at_hash"])
+				idTokenExp := internal.ExtractJwtExpClaim(t, idToken)
+				internal.RequireEqualTime(t, time.Now().Add(time.Hour), *idTokenExp, time.Minute)
 			},
 		},
 		{
@@ -186,6 +222,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				IDTokenHandleHelper: &IDTokenHandleHelper{
 					IDTokenStrategy: j,
 				},
+				Config: &fosite.Config{},
 			}
 
 			c.setup(store, areq)

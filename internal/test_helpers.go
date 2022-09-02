@@ -22,16 +22,73 @@
 package internal
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
+	"testing"
 
 	"io"
 	"strconv"
 	"time"
 
+	cristaljwt "github.com/cristalhq/jwt/v4"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/net/html"
 	goauth "golang.org/x/oauth2"
+
+	fosite "github.com/ory/fosite"
 )
+
+func ptr(d time.Duration) *time.Duration {
+	return &d
+}
+
+var TestLifespans fosite.ClientLifespanConfig = fosite.ClientLifespanConfig{
+	AuthorizationCodeGrantAccessTokenLifespan:  ptr(31 * time.Hour),
+	AuthorizationCodeGrantIDTokenLifespan:      ptr(32 * time.Hour),
+	AuthorizationCodeGrantRefreshTokenLifespan: ptr(33 * time.Hour),
+	ClientCredentialsGrantAccessTokenLifespan:  ptr(34 * time.Hour),
+	ImplicitGrantAccessTokenLifespan:           ptr(35 * time.Hour),
+	ImplicitGrantIDTokenLifespan:               ptr(36 * time.Hour),
+	JwtBearerGrantAccessTokenLifespan:          ptr(37 * time.Hour),
+	PasswordGrantAccessTokenLifespan:           ptr(38 * time.Hour),
+	PasswordGrantRefreshTokenLifespan:          ptr(39 * time.Hour),
+	RefreshTokenGrantIDTokenLifespan:           ptr(40 * time.Hour),
+	RefreshTokenGrantAccessTokenLifespan:       ptr(41 * time.Hour),
+	RefreshTokenGrantRefreshTokenLifespan:      ptr(42 * time.Hour),
+}
+
+func RequireEqualDuration(t *testing.T, expected time.Duration, actual time.Duration, precision time.Duration) {
+	delta := expected - actual
+	if delta < 0 {
+		delta = -delta
+	}
+	require.Less(t, delta, precision, fmt.Sprintf("expected %s; got %s", expected, actual))
+}
+
+func RequireEqualTime(t *testing.T, expected time.Time, actual time.Time, precision time.Duration) {
+	delta := expected.Sub(actual)
+	if delta < 0 {
+		delta = -delta
+	}
+	require.Less(t, delta, precision, fmt.Sprintf(
+		"expected %s; got %s",
+		expected.Format(time.RFC3339Nano),
+		actual.Format(time.RFC3339Nano),
+	))
+}
+
+func ExtractJwtExpClaim(t *testing.T, token string) *time.Time {
+	jwt, err := cristaljwt.ParseNoVerify([]byte(token))
+	require.NoError(t, err)
+	claims := &cristaljwt.RegisteredClaims{}
+	require.NoError(t, json.Unmarshal(jwt.Claims(), claims))
+	if claims.ExpiresAt == nil {
+		return nil
+	}
+	return &claims.ExpiresAt.Time
+}
 
 func ParseFormPostResponse(redirectURL string, resp io.ReadCloser) (authorizationCode, stateFromServer, iDToken string, token goauth.Token, customParameters url.Values, rFC6749Error map[string]string, err error) {
 	token = goauth.Token{}

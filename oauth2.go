@@ -34,6 +34,8 @@ type TokenUse = TokenType
 
 type TokenType string
 
+type GrantType string
+
 const (
 	AccessToken   TokenType = "access_token"
 	RefreshToken  TokenType = "refresh_token"
@@ -41,6 +43,13 @@ const (
 	IDToken       TokenType = "id_token"
 	// PushedAuthorizeRequestContext represents the PAR context object
 	PushedAuthorizeRequestContext TokenType = "par_context"
+
+	GrantTypeImplicit          GrantType = "implicit"
+	GrantTypeRefreshToken      GrantType = "refresh_token"
+	GrantTypeAuthorizationCode GrantType = "authorization_code"
+	GrantTypePassword          GrantType = "password"
+	GrantTypeClientCredentials GrantType = "client_credentials"
+	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer" //nolint:gosec // this is not a hardcoded credential
 
 	BearerAccessToken string = "bearer"
 )

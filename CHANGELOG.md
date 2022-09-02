@@ -3,7 +3,7 @@
 
 **Table of Contents**
 
-- [0.0.0 (2022-07-19)](#000-2022-07-19)
+- [0.0.0 (2022-08-01)](#000-2022-08-01)
   - [Breaking Changes](#breaking-changes)
     - [Bug Fixes](#bug-fixes)
     - [Code Refactoring](#code-refactoring)
@@ -373,7 +373,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-07-19)
+# [0.0.0](https://github.com/ory/fosite/compare/v0.42.2...v0.0.0) (2022-08-01)
 
 ## Breaking Changes
 
@@ -423,6 +423,7 @@ Many internal interfaces have been changed, usually adding `ctx context.Context`
 - Include `at_hash` claim in authcode flow's ID token ([#679](https://github.com/ory/fosite/issues/679)) ([c3b7bab](https://github.com/ory/fosite/commit/c3b7bab41db24b000f8e1416e1475e0aae4c310c))
 - Linting ([222ca97](https://github.com/ory/fosite/commit/222ca97805edfb52a655969841c2ac2958cc6d36))
 - **rfc7523:** Comment mentioned incorrect granttype ([#668](https://github.com/ory/fosite/issues/668)) ([b41f187](https://github.com/ory/fosite/commit/b41f187703bc1c8dc43ac0ec1ea23569779974bb))
+- State check for hybrid flow ([#670](https://github.com/ory/fosite/issues/670)) ([37f8a0a](https://github.com/ory/fosite/commit/37f8a0ac12e47893459528cabb38b9879600286d))
 
 ### Code Refactoring
 
@@ -437,6 +438,12 @@ Many internal interfaces have been changed, usually adding `ctx context.Context`
 - Add `ory_at|pt|ac` prefixes to HMAC tokens ([b652335](https://github.com/ory/fosite/commit/b652335c965d5cc523faebad9c9792c4135cfb75)):
 
   See https://github.com/ory/hydra/issues/2845
+
+- Add json mappings to default session and its contents ([#688](https://github.com/ory/fosite/issues/688)) ([d8ecac4](https://github.com/ory/fosite/commit/d8ecac4077c446b71842372169abc37a02f9e1b7))
+- Add json mappings to generic session to match openid session ([#690](https://github.com/ory/fosite/issues/690)) ([2386b25](https://github.com/ory/fosite/commit/2386b259837ab89983f6d0ee37b147b36b171f5b))
+- Implement client token lifespan customization ([#684](https://github.com/ory/fosite/issues/684)) ([cfffe8c](https://github.com/ory/fosite/commit/cfffe8cec67a986e2abc736b940f9f0bab9ad7d9)):
+
+  This change introduces the ability to control the lifespan of tokens for each valid combination of Client, GrantType, and TokenType.
 
 - Introduce cache strategy for JWKS fetcher ([452f377](https://github.com/ory/fosite/commit/452f37728890c68524b9aa190e1cdb279414f802))
 - Make http source contextualized ([9fc89e9](https://github.com/ory/fosite/commit/9fc89e9007c71354f7fe2d036ea6e175a2e5860b))

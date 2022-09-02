@@ -39,6 +39,7 @@ type OpenIDConnectImplicitHandler struct {
 	RS256JWTStrategy                  *jwt.DefaultSigner
 
 	Config interface {
+		fosite.IDTokenLifespanProvider
 		fosite.MinParameterEntropyProvider
 		fosite.ScopeStrategyProvider
 	}
@@ -104,7 +105,8 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 		resp.AddParameter("state", ar.GetState())
 	}
 
-	if err := c.IssueImplicitIDToken(ctx, ar, resp); err != nil {
+	idTokenLifespan := fosite.GetEffectiveLifespan(ar.GetClient(), fosite.GrantTypeImplicit, fosite.IDToken, c.Config.GetIDTokenLifespan(ctx))
+	if err := c.IssueImplicitIDToken(ctx, idTokenLifespan, ar, resp); err != nil {
 		return errorsx.WithStack(err)
 	}
 
