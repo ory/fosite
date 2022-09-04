@@ -149,3 +149,27 @@ func (h *DefaultJWTStrategy) generate(ctx context.Context, tokenType fosite.Toke
 		return h.Signer.Generate(ctx, claims.ToMapClaims(), jwtSession.GetJWTHeader())
 	}
 }
+
+func (h DefaultJWTStrategy) DeviceCodeSignature(ctx context.Context, token string) string {
+	return h.HMACSHAStrategy.DeviceCodeSignature(ctx, token)
+}
+
+func (h *DefaultJWTStrategy) GenerateDeviceCode() (token string, err error) {
+	return h.HMACSHAStrategy.GenerateDeviceCode()
+}
+
+func (h *DefaultJWTStrategy) ValidateDeviceCode(context context.Context, r fosite.Requester, code string) (err error) {
+	return h.HMACSHAStrategy.ValidateDeviceCode(context, r, code)
+}
+
+func (h DefaultJWTStrategy) UserCodeSignature(ctx context.Context, token string) string {
+	return h.HMACSHAStrategy.UserCodeSignature(ctx, token)
+}
+
+func (h *DefaultJWTStrategy) GenerateUserCode() (token string, err error) {
+	return h.HMACSHAStrategy.GenerateUserCode()
+}
+
+func (h *DefaultJWTStrategy) ValidateUserCode(context context.Context, r fosite.Requester, code string) (err error) {
+	return h.HMACSHAStrategy.ValidateUserCode(context, r, code)
+}

@@ -62,7 +62,8 @@ func OpenIDConnectImplicitFactory(config fosite.Configurator, storage interface{
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
 			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
-			Config:              config,
+
+			Config: config,
 		},
 		Config: config,
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
@@ -95,5 +96,22 @@ func OpenIDConnectHybridFactory(config fosite.Configurator, storage interface{},
 		},
 		OpenIDConnectRequestStorage:   storage.(openid.OpenIDConnectRequestStorage),
 		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(jwt.Signer), config),
+	}
+}
+
+// OpenIDConnectDeviceFactory creates an OpenID Connect device ("device code flow") grant handler.
+//
+// **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
+func OpenIDConnectDeviceFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &openid.OpenIDConnectDeviceHandler{
+		CoreStorage:                 storage.(oauth2.CoreStorage),
+		DeviceCodeStrategy:          strategy.(oauth2.DeviceCodeStrategy),
+		UserCodeStrategy:            strategy.(oauth2.UserCodeStrategy),
+		OpenIDConnectRequestStorage: storage.(openid.OpenIDConnectRequestStorage),
+		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
+			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
+		},
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(jwt.Signer), config),
+		Config:                        config,
 	}
 }

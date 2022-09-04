@@ -35,3 +35,14 @@ func OAuth2PKCEFactory(config fosite.Configurator, storage interface{}, strategy
 		Config:                config,
 	}
 }
+
+func OAuth2DevicePKCEFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &pkce.HandlerDevice{
+		CoreStorage:           storage.(oauth2.CoreStorage),
+		DeviceCodeStrategy:    strategy.(oauth2.DeviceCodeStrategy),
+		UserCodeStrategy:      strategy.(oauth2.UserCodeStrategy),
+		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
+		Storage:               storage.(pkce.PKCERequestStorage),
+		Config:                config,
+	}
+}

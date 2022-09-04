@@ -6,10 +6,8 @@ package internal
 
 import (
 	reflect "reflect"
-	time "time"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -134,20 +132,6 @@ func (mr *MockClientMockRecorder) GetScopes() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScopes", reflect.TypeOf((*MockClient)(nil).GetScopes))
 }
 
-// GetTokenLifespan mocks base method.
-func (m *MockClient) GetTokenLifespan(arg0 fosite.GrantType, arg1 fosite.TokenType, arg2 time.Duration) time.Duration {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTokenLifespan", arg0, arg1, arg2)
-	ret0, _ := ret[0].(time.Duration)
-	return ret0
-}
-
-// GetTokenLifespan indicates an expected call of GetTokenLifespan.
-func (mr *MockClientMockRecorder) GetTokenLifespan(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTokenLifespan", reflect.TypeOf((*MockClient)(nil).GetTokenLifespan), arg0, arg1, arg2)
-}
-
 // IsPublic mocks base method.
 func (m *MockClient) IsPublic() bool {
 	m.ctrl.T.Helper()
@@ -160,16 +144,4 @@ func (m *MockClient) IsPublic() bool {
 func (mr *MockClientMockRecorder) IsPublic() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPublic", reflect.TypeOf((*MockClient)(nil).IsPublic))
-}
-
-// SetTokenLifespans mocks base method.
-func (m *MockClient) SetTokenLifespans(arg0 map[fosite.TokenType]time.Duration) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetTokenLifespans", arg0)
-}
-
-// SetTokenLifespans indicates an expected call of SetTokenLifespans.
-func (mr *MockClientMockRecorder) SetTokenLifespans(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTokenLifespans", reflect.TypeOf((*MockClient)(nil).SetTokenLifespans), arg0)
 }

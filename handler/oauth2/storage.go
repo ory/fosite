@@ -31,6 +31,8 @@ type CoreStorage interface {
 	AuthorizeCodeStorage
 	AccessTokenStorage
 	RefreshTokenStorage
+	DeviceCodeStorage
+	UserCodeStorage
 }
 
 // AuthorizeCodeStorage handles storage requests related to authorization codes.
@@ -65,4 +67,15 @@ type RefreshTokenStorage interface {
 	GetRefreshTokenSession(ctx context.Context, signature string, session fosite.Session) (request fosite.Requester, err error)
 
 	DeleteRefreshTokenSession(ctx context.Context, signature string) (err error)
+}
+
+type DeviceCodeStorage interface {
+	CreateDeviceCodeSession(ctx context.Context, signature string, request fosite.Requester) (err error)
+	GetDeviceCodeSession(ctx context.Context, code string, session fosite.Session) (request fosite.Requester, err error)
+	DeleteDeviceCodeSession(ctx context.Context, code string) (err error)
+}
+type UserCodeStorage interface {
+	CreateUserCodeSession(ctx context.Context, signature string, request fosite.Requester) (err error)
+	GetUserCodeSession(ctx context.Context, code string, session fosite.Session) (request fosite.Requester, err error)
+	DeleteUserCodeSession(ctx context.Context, code string) (err error)
 }

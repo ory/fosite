@@ -84,3 +84,13 @@ type PushedAuthorizeEndpointHandler interface {
 	// the pushed authorize request, he must return nil and NOT modify session nor responder neither requester.
 	HandlePushedAuthorizeEndpointRequest(ctx context.Context, requester AuthorizeRequester, responder PushedAuthorizeResponder) error
 }
+
+type DeviceAuthorizeEndpointHandler interface {
+	// HandleDeviceAuthorizeRequest handles a device authorize endpoint request. To extend the handler's capabilities, the http request
+	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
+	// the device authorize request, he must return nil and NOT modify session nor responder neither requester.
+	//
+	// The following spec is a good example of what HandleDeviceAuthorizeRequest should do.
+	// * https://tools.ietf.org/html/rfc8628#section-3.2
+	HandleDeviceAuthorizeEndpointRequest(ctx context.Context, requester Requester, responder DeviceAuthorizeResponder) error
+}

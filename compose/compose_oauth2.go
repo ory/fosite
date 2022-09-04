@@ -125,3 +125,25 @@ func OAuth2StatelessJWTIntrospectionFactory(config fosite.Configurator, storage 
 		Config: config,
 	}
 }
+
+func OAuth2AuthorizeDeviceFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.AuthorizeDeviceGrantTypeHandler{
+		DeviceCodeStrategy:    strategy.(oauth2.DeviceCodeStrategy),
+		UserCodeStrategy:      strategy.(oauth2.UserCodeStrategy),
+		AccessTokenStrategy:   strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:  strategy.(oauth2.RefreshTokenStrategy),
+		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
+		CoreStorage:           storage.(oauth2.CoreStorage),
+		Config:                config,
+	}
+}
+
+func OAuth2DeviceAuthorizeFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.DeviceAuthorizationHandler{
+		DeviceCodeStorage:  storage.(oauth2.DeviceCodeStorage),
+		UserCodeStorage:    storage.(oauth2.UserCodeStorage),
+		DeviceCodeStrategy: strategy.(oauth2.DeviceCodeStrategy),
+		UserCodeStrategy:   strategy.(oauth2.UserCodeStrategy),
+		Config:             config,
+	}
+}

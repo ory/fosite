@@ -32,24 +32,24 @@ type Factory func(config fosite.Configurator, storage interface{}, strategy inte
 
 // Compose takes a config, a storage, a strategy and handlers to instantiate an OAuth2Provider:
 //
-//  import "github.com/ory/fosite/compose"
+//	 import "github.com/ory/fosite/compose"
 //
-//  // var storage = new(MyFositeStorage)
-//  var config = Config {
-//  	AccessTokenLifespan: time.Minute * 30,
-// 		// check Config for further configuration options
-//  }
+//	 // var storage = new(MyFositeStorage)
+//	 var config = Config {
+//	 	AccessTokenLifespan: time.Minute * 30,
+//			// check Config for further configuration options
+//	 }
 //
-//  var strategy = NewOAuth2HMACStrategy(config)
+//	 var strategy = NewOAuth2HMACStrategy(config)
 //
-//  var oauth2Provider = Compose(
-//  	config,
-// 		storage,
-// 		strategy,
-//		NewOAuth2AuthorizeExplicitHandler,
-//		OAuth2ClientCredentialsGrantFactory,
-// 		// for a complete list refer to the docs of this package
-//  )
+//	 var oauth2Provider = Compose(
+//	 	config,
+//			storage,
+//			strategy,
+//			NewOAuth2AuthorizeExplicitHandler,
+//			OAuth2ClientCredentialsGrantFactory,
+//			// for a complete list refer to the docs of this package
+//	 )
 //
 // Compose makes use of interface{} types in order to be able to handle a all types of stores, strategies and handlers.
 func Compose(config *fosite.Config, storage interface{}, strategy interface{}, factories ...Factory) fosite.OAuth2Provider {
@@ -91,8 +91,10 @@ func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface
 		},
 		OAuth2AuthorizeExplicitFactory,
 		OAuth2AuthorizeImplicitFactory,
+		OAuth2AuthorizeDeviceFactory,
 		OAuth2ClientCredentialsGrantFactory,
 		OAuth2RefreshTokenGrantFactory,
+		OAuth2DeviceAuthorizeFactory,
 		OAuth2ResourceOwnerPasswordCredentialsFactory,
 		RFC7523AssertionGrantFactory,
 
@@ -100,11 +102,13 @@ func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface
 		OpenIDConnectImplicitFactory,
 		OpenIDConnectHybridFactory,
 		OpenIDConnectRefreshFactory,
+		OpenIDConnectDeviceFactory,
 
 		OAuth2TokenIntrospectionFactory,
 		OAuth2TokenRevocationFactory,
 
 		OAuth2PKCEFactory,
 		PushedAuthorizeHandlerFactory,
+		OAuth2DevicePKCEFactory,
 	)
 }
