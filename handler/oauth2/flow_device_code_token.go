@@ -76,15 +76,10 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	}
 	signature := d.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
 
-	if err := d.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code); err != nil {
-		// This needs to happen after store retrieval for the session to be hydrated properly
-		return err
-	}
-
 	// Get the device code session ready for exchange to auth / refresh / oidc sessions
 	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
 	} else if err := d.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code); err != nil {
 		// This needs to happen after store retrieval for the session to be hydrated properly
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
