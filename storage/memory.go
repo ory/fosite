@@ -555,7 +555,7 @@ func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, 
 	return rel, nil
 }
 
-func (s *MemoryStore) DeleteDeviceCodeSession(_ context.Context, code string) error {
+func (s *MemoryStore) InvalidateDeviceCodeSession(_ context.Context, code string) error {
 	s.deviceCodesMutex.Lock()
 	defer s.deviceCodesMutex.Unlock()
 
@@ -587,7 +587,7 @@ func (s *MemoryStore) GetUserCodeSession(_ context.Context, signature string, _ 
 	return rel, nil
 }
 
-func (s *MemoryStore) DeleteUserCodeSession(_ context.Context, code string) error {
+func (s *MemoryStore) InvalidateUserCodeSession(_ context.Context, code string) error {
 	s.userCodesMutex.Lock()
 	defer s.userCodesMutex.Unlock()
 

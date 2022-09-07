@@ -110,18 +110,19 @@ func (mr *MockCoreStrategyMockRecorder) GenerateAuthorizeCode(arg0, arg1 interfa
 }
 
 // GenerateDeviceCode mocks base method.
-func (m *MockCoreStrategy) GenerateDeviceCode() (string, error) {
+func (m *MockCoreStrategy) GenerateDeviceCode(arg0 context.Context) (string, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateDeviceCode")
+	ret := m.ctrl.Call(m, "GenerateDeviceCode", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GenerateDeviceCode indicates an expected call of GenerateDeviceCode.
-func (mr *MockCoreStrategyMockRecorder) GenerateDeviceCode() *gomock.Call {
+func (mr *MockCoreStrategyMockRecorder) GenerateDeviceCode(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateDeviceCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateDeviceCode))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateDeviceCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateDeviceCode), arg0)
 }
 
 // GenerateRefreshToken mocks base method.
@@ -141,18 +142,19 @@ func (mr *MockCoreStrategyMockRecorder) GenerateRefreshToken(arg0, arg1 interfac
 }
 
 // GenerateUserCode mocks base method.
-func (m *MockCoreStrategy) GenerateUserCode() (string, error) {
+func (m *MockCoreStrategy) GenerateUserCode(arg0 context.Context) (string, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateUserCode")
+	ret := m.ctrl.Call(m, "GenerateUserCode", arg0)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GenerateUserCode indicates an expected call of GenerateUserCode.
-func (mr *MockCoreStrategyMockRecorder) GenerateUserCode() *gomock.Call {
+func (mr *MockCoreStrategyMockRecorder) GenerateUserCode(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateUserCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateUserCode))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateUserCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateUserCode), arg0)
 }
 
 // RefreshTokenSignature mocks base method.
