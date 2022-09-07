@@ -284,7 +284,7 @@ func TestAuthorizeCode_PopulateDeviceTokenEndpointResponse(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 							Form:        url.Values{"device_code": {"ABC1234"}},
@@ -299,7 +299,7 @@ func TestAuthorizeCode_PopulateDeviceTokenEndpointResponse(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
-							Client:          &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
+							Client:          &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"refresh_token", "urn:ietf:params:oauth:grant-type:device_code"}},
 							Session:         &fosite.DefaultSession{},
 							RequestedAt:     time.Now().UTC(),
 							GrantedScope:    fosite.Arguments{"openid", "offline"},
@@ -317,11 +317,11 @@ func TestAuthorizeCode_PopulateDeviceTokenEndpointResponse(t *testing.T) {
 					if c.createDeviceSession {
 						c.areq.SetID("ID1")
 						deviceSig := hmacshaStrategy.DeviceCodeSignature(context.TODO(), c.areq.Form.Get("device_code"))
-						store.CreateDeviceCodeSession(nil, deviceSig, c.areq)
+						store.CreateDeviceCodeSession(context.TODO(), deviceSig, c.areq)
 					}
 
 					resp := fosite.NewAccessResponse()
-					err := c.handler.PopulateTokenEndpointResponse(nil, c.areq, resp)
+					err := c.handler.PopulateTokenEndpointResponse(context.TODO(), c.areq, resp)
 					if c.expectErr != nil {
 						require.EqualError(t, err, c.expectErr.Error())
 					} else {

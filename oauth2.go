@@ -77,6 +77,12 @@ type OAuth2Provider interface {
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
 	NewAuthorizeRequest(ctx context.Context, req *http.Request) (AuthorizeRequester, error)
 
+	// ToDo add ietf docs
+	NewDeviceAuthorizeGetRequest(ctx context.Context, req *http.Request) (DeviceAuthorizeRequester, error)
+	NewDeviceAuthorizePostRequest(ctx context.Context, req *http.Request) (DeviceAuthorizeRequester, error)
+	NewDeviceAuthorizeResponse(ctx context.Context, requester Requester) (DeviceAuthorizeResponder, error)
+	WriteDeviceAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, requester Requester, responder DeviceAuthorizeResponder)
+
 	// NewAuthorizeResponse iterates through all response type handlers and returns their result or
 	// ErrUnsupportedResponseType if none of the handler's were able to handle it.
 	//
@@ -187,11 +193,6 @@ type OAuth2Provider interface {
 
 	// WritePushedAuthorizeError writes the PAR error
 	WritePushedAuthorizeError(ctx context.Context, rw http.ResponseWriter, ar AuthorizeRequester, err error)
-
-	// ToDo add ietf docs
-	NewDeviceAuthorizeRequest(ctx context.Context, req *http.Request) (Requester, error)
-	NewDeviceAuthorizeResponse(ctx context.Context, requester Requester) (DeviceAuthorizeResponder, error)
-	WriteDeviceAuthorizeResponse(rw http.ResponseWriter, requester Requester, responder DeviceAuthorizeResponder)
 }
 
 // IntrospectionResponder is the response object that will be returned when token introspection was successful,
@@ -274,6 +275,17 @@ type Requester interface {
 type AccessRequester interface {
 	// GetGrantType returns the requests grant type.
 	GetGrantTypes() (grantTypes Arguments)
+
+	Requester
+}
+
+// DeviceAuthorizeRequester is an device authorize endpoint's request context.
+type DeviceAuthorizeRequester interface {
+	// SetDeviceCodeSignature set the device code signature
+	SetDeviceCodeSignature(signature string)
+
+	// GetDeviceCodeSignature returns the device code signature
+	GetDeviceCodeSignature() string
 
 	Requester
 }

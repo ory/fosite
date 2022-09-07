@@ -21,20 +21,22 @@
 
 package fosite
 
-import (
-	"context"
-	"fmt"
-)
+// DeviceAuthorizeRequest is an implementation of DeviceAuthorizeRequester
+type DeviceAuthorizeRequest struct {
+	DeviceCodeSignature string
+	Request
+}
 
-func (f *Fosite) NewDeviceAuthorizeResponse(ctx context.Context, r Requester) (DeviceAuthorizeResponder, error) {
-	var resp = NewDeviceAuthorizeResponse()
+func (d *DeviceAuthorizeRequest) GetDeviceCodeSignature() string {
+	return d.DeviceCodeSignature
+}
 
-	for _, h := range f.Config.GetDeviceAuthorizeEndpointHandlers(ctx) {
-		fmt.Println("NewDeviceAuthorizeResponse +++")
-		if err := h.HandleDeviceAuthorizeEndpointRequest(ctx, r, resp); err != nil {
-			return nil, err
-		}
+func (d *DeviceAuthorizeRequest) SetDeviceCodeSignature(signature string) {
+	d.DeviceCodeSignature = signature
+}
+
+func NewDeviceAuthorizeRequest() *DeviceAuthorizeRequest {
+	return &DeviceAuthorizeRequest{
+		Request: *NewRequest(),
 	}
-
-	return resp, nil
 }

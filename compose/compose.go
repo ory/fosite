@@ -71,6 +71,9 @@ func Compose(config *fosite.Config, storage interface{}, strategy interface{}, f
 		if ph, ok := res.(fosite.PushedAuthorizeEndpointHandler); ok {
 			config.PushedAuthorizeEndpointHandlers.Append(ph)
 		}
+		if dah, ok := res.(fosite.DeviceAuthorizeEndpointHandler); ok {
+			config.DeviceAuthorizeEndpointHandlers.Append(dah)
+		}
 	}
 
 	return f

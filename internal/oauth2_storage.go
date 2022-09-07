@@ -119,20 +119,6 @@ func (mr *MockCoreStorageMockRecorder) DeleteAccessTokenSession(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteAccessTokenSession", reflect.TypeOf((*MockCoreStorage)(nil).DeleteAccessTokenSession), arg0, arg1)
 }
 
-// DeleteDeviceCodeSession mocks base method.
-func (m *MockCoreStorage) DeleteDeviceCodeSession(arg0 context.Context, arg1 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteDeviceCodeSession", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteDeviceCodeSession indicates an expected call of DeleteDeviceCodeSession.
-func (mr *MockCoreStorageMockRecorder) DeleteDeviceCodeSession(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteDeviceCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).DeleteDeviceCodeSession), arg0, arg1)
-}
-
 // DeleteRefreshTokenSession mocks base method.
 func (m *MockCoreStorage) DeleteRefreshTokenSession(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -145,20 +131,6 @@ func (m *MockCoreStorage) DeleteRefreshTokenSession(arg0 context.Context, arg1 s
 func (mr *MockCoreStorageMockRecorder) DeleteRefreshTokenSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRefreshTokenSession", reflect.TypeOf((*MockCoreStorage)(nil).DeleteRefreshTokenSession), arg0, arg1)
-}
-
-// DeleteUserCodeSession mocks base method.
-func (m *MockCoreStorage) DeleteUserCodeSession(arg0 context.Context, arg1 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUserCodeSession", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteUserCodeSession indicates an expected call of DeleteUserCodeSession.
-func (mr *MockCoreStorageMockRecorder) DeleteUserCodeSession(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).DeleteUserCodeSession), arg0, arg1)
 }
 
 // GetAccessTokenSession mocks base method.
@@ -248,4 +220,32 @@ func (m *MockCoreStorage) InvalidateAuthorizeCodeSession(arg0 context.Context, a
 func (mr *MockCoreStorageMockRecorder) InvalidateAuthorizeCodeSession(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvalidateAuthorizeCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).InvalidateAuthorizeCodeSession), arg0, arg1)
+}
+
+// InvalidateDeviceCodeSession mocks base method.
+func (m *MockCoreStorage) InvalidateDeviceCodeSession(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InvalidateDeviceCodeSession", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InvalidateDeviceCodeSession indicates an expected call of InvalidateDeviceCodeSession.
+func (mr *MockCoreStorageMockRecorder) InvalidateDeviceCodeSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvalidateDeviceCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).InvalidateDeviceCodeSession), arg0, arg1)
+}
+
+// InvalidateUserCodeSession mocks base method.
+func (m *MockCoreStorage) InvalidateUserCodeSession(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InvalidateUserCodeSession", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InvalidateUserCodeSession indicates an expected call of InvalidateUserCodeSession.
+func (mr *MockCoreStorageMockRecorder) InvalidateUserCodeSession(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvalidateUserCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).InvalidateUserCodeSession), arg0, arg1)
 }

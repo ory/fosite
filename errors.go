@@ -41,7 +41,7 @@ import (
 var (
 	// ErrInvalidatedAuthorizeCode is an error indicating that an authorization code has been
 	// used previously.
-	ErrInvalidatedAuthorizeCode = errors.New("Authorization code has ben invalidated")
+	ErrInvalidatedAuthorizeCode = errors.New("Authorization code has been invalidated")
 	// ErrInvalidatedDeviceCode is an error indicating that a device code has been used previously.
 	ErrInvalidatedDeviceCode = errors.New("Device code has been invalidated")
 	// ErrInvalidatedUserCode is an error indicating that a user code has been used previously.
