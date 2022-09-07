@@ -55,33 +55,35 @@ func NewOpenIDConnectRequestValidator(strategy jwt.Signer, config openIDConnectR
 	}
 }
 
-func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req fosite.AuthorizeRequester) error {
+func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req fosite.Requester) error {
 	// prompt is case sensitive!
 	requiredPrompt := fosite.RemoveEmpty(strings.Split(req.GetRequestForm().Get("prompt"), " "))
 
-	if req.GetClient().IsPublic() {
-		// Threat: Malicious Client Obtains Existing Authorization by Fraud
-		// https://tools.ietf.org/html/rfc6819#section-4.2.3
-		//
-		//  Authorization servers should not automatically process repeat
-		//  authorizations to public clients unless the client is validated
-		//  using a pre-registered redirect URI
+	if ar, ok := req.(fosite.AuthorizeRequester); ok {
+		if req.GetClient().IsPublic() {
+			// Threat: Malicious Client Obtains Existing Authorization by Fraud
+			// https://tools.ietf.org/html/rfc6819#section-4.2.3
+			//
+			//  Authorization servers should not automatically process repeat
+			//  authorizations to public clients unless the client is validated
+			//  using a pre-registered redirect URI
 
-		// Client Impersonation
-		// https://tools.ietf.org/html/rfc8252#section-8.6#
-		//
-		//  As stated in Section 10.2 of OAuth 2.0 [RFC6749], the authorization
-		//  server SHOULD NOT process authorization requests automatically
-		//  without user consent or interaction, except when the identity of the
-		//  client can be assured.  This includes the case where the user has
-		//  previously approved an authorization request for a given client id --
-		//  unless the identity of the client can be proven, the request SHOULD
-		//  be processed as if no previous request had been approved.
+			// Client Impersonation
+			// https://tools.ietf.org/html/rfc8252#section-8.6#
+			//
+			//  As stated in Section 10.2 of OAuth 2.0 [RFC6749], the authorization
+			//  server SHOULD NOT process authorization requests automatically
+			//  without user consent or interaction, except when the identity of the
+			//  client can be assured.  This includes the case where the user has
+			//  previously approved an authorization request for a given client id --
+			//  unless the identity of the client can be proven, the request SHOULD
+			//  be processed as if no previous request had been approved.
 
-		checker := v.Config.GetRedirectSecureChecker(ctx)
-		if stringslice.Has(requiredPrompt, "none") {
-			if !checker(ctx, req.GetRedirectURI()) {
-				return errorsx.WithStack(fosite.ErrConsentRequired.WithHint("OAuth 2.0 Client is marked public and redirect uri is not considered secure (https missing), but \"prompt=none\" was requested."))
+			checker := v.Config.GetRedirectSecureChecker(ctx)
+			if stringslice.Has(requiredPrompt, "none") {
+				if !checker(ctx, ar.GetRedirectURI()) {
+					return errorsx.WithStack(fosite.ErrConsentRequired.WithHint("OAuth 2.0 Client is marked public and redirect uri is not considered secure (https missing), but \"prompt=none\" was requested."))
+				}
 			}
 		}
 	}

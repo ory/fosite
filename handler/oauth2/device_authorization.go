@@ -21,20 +21,17 @@ type DeviceAuthorizationHandler struct {
 
 func (d *DeviceAuthorizationHandler) HandleDeviceAuthorizeEndpointRequest(ctx context.Context, dar fosite.Requester, resp fosite.DeviceAuthorizeResponder) error {
 	fmt.Println("DeviceAuthorizationHandler :: HandleDeviceAuthorizeEndpointRequest ++")
-	deviceCode, err := d.DeviceCodeStrategy.GenerateDeviceCode()
+	deviceCode, deviceCodeSignature, err := d.DeviceCodeStrategy.GenerateDeviceCode(ctx)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	userCode, err := d.UserCodeStrategy.GenerateUserCode()
+	userCode, userCodeSignature, err := d.UserCodeStrategy.GenerateUserCode(ctx)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	fmt.Println("DeviceAuthorizationHandler :: HandleDeviceAuthorizeEndpointRequest +++")
-
-	userCodeSignature := d.UserCodeStrategy.UserCodeSignature(ctx, userCode)
-	deviceCodeSignature := d.DeviceCodeStrategy.DeviceCodeSignature(ctx, deviceCode)
 
 	// Set User Code expiry time
 	dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)).Round(time.Second))

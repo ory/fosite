@@ -42,14 +42,6 @@ func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
 	}
 
-	//expires := session.GetSession().GetExpiresAt(fosite.UserCode)
-	//if time.Now().UTC().After(expires) {
-	//	return errorsx.WithStack(fosite.ErrTokenExpired)
-	//}
-
-	//requester.SetSession(session.GetSession())
-	//requester.SetID(session.GetID())
-
 	atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeAuthorizationCode, fosite.AccessToken, d.Config.GetAccessTokenLifespan(ctx))
 	requester.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
 
@@ -66,6 +58,8 @@ func (d *AuthorizeDeviceGrantTypeHandler) CanSkipClientAuth(ctx context.Context,
 }
 
 func (d *AuthorizeDeviceGrantTypeHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
+	// grant_type REQUIRED.
+	// Value MUST be set to "urn:ietf:params:oauth:grant-type:device_code"
 	fmt.Println("CanHandleTokenEndpointRequest OAUTH")
 	return requester.GetGrantTypes().ExactOne(deviceCodeGrantType)
 }
@@ -80,7 +74,7 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	if code == "" {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest.WithHint("device_code missing form body")))
 	}
-	codeSignature := d.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
+	signature := d.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
 
 	if err := d.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code); err != nil {
 		// This needs to happen after store retrieval for the session to be hydrated properly
@@ -88,9 +82,11 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	}
 
 	// Get the device code session ready for exchange to auth / refresh / oidc sessions
-	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
-
+	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	} else if err := d.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code); err != nil {
+		// This needs to happen after store retrieval for the session to be hydrated properly
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
 	}
 
@@ -108,8 +104,7 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	}
 
 	var refresh, refreshSignature string
-
-	if d.canIssueRefreshToken(ctx, requester) {
+	if d.canIssueRefreshToken(ctx, d, session) {
 		refresh, refreshSignature, err = d.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
@@ -128,7 +123,7 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 		}
 	}()
 
-	if err = d.CoreStorage.DeleteDeviceCodeSession(ctx, code); err != nil {
+	if err = d.CoreStorage.InvalidateDeviceCodeSession(ctx, signature); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	} else if err = d.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
@@ -154,9 +149,14 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	return nil
 }
 
-func (c *AuthorizeDeviceGrantTypeHandler) canIssueRefreshToken(ctx context.Context, request fosite.Requester) bool {
+func (c *AuthorizeDeviceGrantTypeHandler) canIssueRefreshToken(ctx context.Context, config *AuthorizeDeviceGrantTypeHandler, request fosite.Requester) bool {
+	scope := config.Config.GetRefreshTokenScopes(ctx)
 	// Require one of the refresh token scopes, if set.
-	if len(c.Config.GetRefreshTokenScopes(ctx)) > 0 && !request.GetGrantedScopes().HasOneOf(c.Config.GetRefreshTokenScopes(ctx)...) {
+	if len(scope) > 0 && !request.GetGrantedScopes().HasOneOf(scope...) {
+		return false
+	}
+	// Do not issue a refresh token to clients that cannot use the refresh token grant type.
+	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
 		return false
 	}
 	return true

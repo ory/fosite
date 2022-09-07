@@ -173,7 +173,7 @@ func (c *HMACStrategy) Signature(token string) string {
 	return split[1]
 }
 
-func (c *HMACStrategy) GenerateHMACForString(text string, ctx context.Context) string {
+func (c *HMACStrategy) GenerateHMACForString(ctx context.Context, text string) string {
 	var signingKey [32]byte
 	copy(signingKey[:], c.Config.GetGlobalSecret(ctx))
 
