@@ -62,8 +62,7 @@ func OpenIDConnectImplicitFactory(config fosite.Configurator, storage interface{
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
 			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
 			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
-
-			Config: config,
+			Config:              config,
 		},
 		Config: config,
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{

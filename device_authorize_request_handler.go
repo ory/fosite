@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @author		Luke Stoward
+ * @author		Aeneas Rekkas <aeneas+oss@aeneas.io>
  * @copyright 	2015-2021 Aeneas Rekkas <aeneas+oss@aeneas.io>
  * @license 	Apache-2.0
  *
