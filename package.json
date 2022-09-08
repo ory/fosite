@@ -1,25 +1,23 @@
 {
-  "private": true,
   "version": "0.0.0",
-  "config": {
-    "prettierTarget": "*.md"
+  "private": true,
+  "homepage": "https://github.com/ory/fosite#readme",
+  "bugs": {
+    "url": "https://github.com/ory/fosite/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ory/fosite.git"
   },
-  "scripts": {
-    "format": "prettier --write ${npm_package_config_prettierTarget}",
-    "format:check": "prettier --check ${npm_package_config_prettierTarget}"
-  },
-  "author": "Ory",
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/ory/fosite/issues"
+  "author": "Ory",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
-  "homepage": "https://github.com/ory/fosite#readme",
   "devDependencies": {
-    "ory-prettier-styles": "^1.1.2",
-    "prettier": "^2.3.2"
+    "ory-prettier-styles": "1.3.0",
+    "prettier": "^2.7.1",
+    "prettier-plugin-packagejson": "^2.2.18"
   }
 }

@@ -1,18 +1,19 @@
 # Client Credentials Grant
 
-The following example configures a *fosite* *OAuth2 Provider* for issuing *JWT* *access tokens* using  the *Client Credentials Grant*. This grant allows a client to request access tokens using only its client credentials at the *Token Endpoint*(see [rfc6749 Section 4.4](https://tools.ietf.org/html/rfc6749#section-4.4). For this aim, this *how-to* configures:
+The following example configures a _fosite_ _OAuth2 Provider_ for issuing _JWT_ _access tokens_ using the _Client Credentials Grant_. This grant allows a client to request access tokens using only its client credentials at the _Token Endpoint_(see [rfc6749 Section 4.4](https://tools.ietf.org/html/rfc6749#section-4.4). For this aim, this _how-to_ configures:
 
-* RSA *JWT Strategy* to sign JWT *access tokens*
-* *Token Endpoint* http handler
-* A `fosite.OAuth2Provider` that provides the following services:
-    * Create and validate [*OAuth2 Access Token Requests*](https://tools.ietf.org/html/rfc6749#section-4.1.3) with *Client Credentials Grant*
-    * Create an [*Access Token Response*](https://tools.ietf.org/html/rfc6749#section-4.1.4) and
-    * Sends a [successful](https://tools.ietf.org/html/rfc6749#section-5.1) or [error](https://tools.ietf.org/html/rfc6749#section-5.2) HTTP response to client
+- RSA _JWT Strategy_ to sign JWT _access tokens_
+- _Token Endpoint_ http handler
+- A `fosite.OAuth2Provider` that provides the following services:
+  - Create and validate [_OAuth2 Access Token Requests_](https://tools.ietf.org/html/rfc6749#section-4.1.3) with _Client Credentials Grant_
+  - Create an [_Access Token Response_](https://tools.ietf.org/html/rfc6749#section-4.1.4) and
+  - Sends a [successful](https://tools.ietf.org/html/rfc6749#section-5.1) or [error](https://tools.ietf.org/html/rfc6749#section-5.2) HTTP response to client
 
 ## Code Example
 
 `token_handler.go`
-```golang
+
+````golang
 package main
 
 import (
@@ -68,9 +69,10 @@ func (t *tokenHandler) TokenHandler(w http.ResponseWriter, r *http.Request) {
 	t.oauth.WriteAccessResponse(w, ar, response)
 }
 
-```
+````
 
 `main.go`
+
 ```go
 package main
 
