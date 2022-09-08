@@ -258,7 +258,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 }
 
 func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
-	for k, strategy := range map[string]AuthorizeCodeStrategy{
+	for k, strategy := range map[string]CoreStrategy{
 		"hmac": &hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
