@@ -11,8 +11,7 @@ import (
 
 const deviceCodeGrantType = "urn:ietf:params:oauth:grant-type:device_code"
 
-func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) error {
-
+func (d *DeviceAuthorizationHandler) HandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) error {
 	if !d.CanHandleTokenEndpointRequest(ctx, requester) {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest))
 	}
@@ -52,18 +51,17 @@ func (d *AuthorizeDeviceGrantTypeHandler) HandleTokenEndpointRequest(ctx context
 	return nil
 }
 
-func (d *AuthorizeDeviceGrantTypeHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
+func (d *DeviceAuthorizationHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
 	return true
 }
 
-func (d *AuthorizeDeviceGrantTypeHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
+func (d *DeviceAuthorizationHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "urn:ietf:params:oauth:grant-type:device_code"
 	return requester.GetGrantTypes().ExactOne(deviceCodeGrantType)
 }
 
-func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
-
+func (d *DeviceAuthorizationHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !d.CanHandleTokenEndpointRequest(ctx, requester) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -142,7 +140,7 @@ func (d *AuthorizeDeviceGrantTypeHandler) PopulateTokenEndpointResponse(ctx cont
 	return nil
 }
 
-func (c *AuthorizeDeviceGrantTypeHandler) canIssueRefreshToken(ctx context.Context, config *AuthorizeDeviceGrantTypeHandler, request fosite.Requester) bool {
+func (c *DeviceAuthorizationHandler) canIssueRefreshToken(ctx context.Context, config *DeviceAuthorizationHandler, request fosite.Requester) bool {
 	scope := config.Config.GetRefreshTokenScopes(ctx)
 	// Require one of the refresh token scopes, if set.
 	if len(scope) > 0 && !request.GetGrantedScopes().HasOneOf(scope...) {
