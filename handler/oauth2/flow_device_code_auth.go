@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/x/errorsx"
@@ -37,8 +36,6 @@ func (c *AuthorizeDeviceGrantTypeHandler) HandleAuthorizeEndpointRequest(ctx con
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("SUBJECT : " + ar.GetSession().GetSubject())
 
 	if session.GetClient().GetID() != ar.GetClient().GetID() {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))

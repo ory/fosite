@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ory/fosite"
@@ -20,7 +19,6 @@ type DeviceAuthorizationHandler struct {
 }
 
 func (d *DeviceAuthorizationHandler) HandleDeviceAuthorizeEndpointRequest(ctx context.Context, dar fosite.Requester, resp fosite.DeviceAuthorizeResponder) error {
-	fmt.Println("DeviceAuthorizationHandler :: HandleDeviceAuthorizeEndpointRequest ++")
 	deviceCode, deviceCodeSignature, err := d.DeviceCodeStrategy.GenerateDeviceCode(ctx)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
@@ -31,20 +29,14 @@ func (d *DeviceAuthorizationHandler) HandleDeviceAuthorizeEndpointRequest(ctx co
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	fmt.Println("DeviceAuthorizationHandler :: HandleDeviceAuthorizeEndpointRequest +++")
-
 	// Set User Code expiry time
 	dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)).Round(time.Second))
 	dar.SetID(deviceCodeSignature)
-
-	fmt.Println("DeviceAuthorizationHandler :: HandleDeviceAuthorizeEndpointRequest ++++")
 
 	// Store the User Code session (this has no real data other that the uer and device code), can be converted into a 'full' session after user auth
 	if err := d.UserCodeStorage.CreateUserCodeSession(ctx, userCodeSignature, dar); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
-
-	fmt.Println("DeviceAuthorizationHandler :: HandleDeviceAuthorizeEndpointRequest +++++")
 
 	// Populate the response fields
 	resp.SetDeviceCode(deviceCode)

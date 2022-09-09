@@ -2,7 +2,6 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ory/fosite"
@@ -60,7 +59,6 @@ func (d *AuthorizeDeviceGrantTypeHandler) CanSkipClientAuth(ctx context.Context,
 func (d *AuthorizeDeviceGrantTypeHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "urn:ietf:params:oauth:grant-type:device_code"
-	fmt.Println("CanHandleTokenEndpointRequest OAUTH")
 	return requester.GetGrantTypes().ExactOne(deviceCodeGrantType)
 }
 

@@ -45,8 +45,6 @@ type HandlerDevice struct {
 }
 
 func (c *HandlerDevice) HandleDeviceAuthorizeEndpointRequest(ctx context.Context, ar fosite.Requester, resp fosite.DeviceAuthorizeResponder) error {
-	fmt.Println("HandlerDevice :: HandleDeviceAuthorizeEndpointRequest ++")
-
 	if !ar.GetClient().GetGrantTypes().Has("urn:ietf:params:oauth:grant-type:device_code") {
 		return nil
 	}
@@ -66,8 +64,6 @@ func (c *HandlerDevice) HandleDeviceAuthorizeEndpointRequest(ctx context.Context
 	if err := c.validate(ctx, challenge, method, client); err != nil {
 		return err
 	}
-
-	fmt.Println("PKCE ID : " + session.GetID())
 
 	if err := c.Storage.CreatePKCERequestSession(ctx, session.GetID(), ar.Sanitize([]string{
 		"code_challenge",
@@ -145,8 +141,6 @@ func (c *HandlerDevice) HandleTokenEndpointRequest(ctx context.Context, request 
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest.WithHint("device_code missing form body")))
 	}
 	codeSignature := c.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
-
-	fmt.Println("PKCE ID : " + codeSignature)
 
 	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, codeSignature, request.GetSession())
 	if errors.Is(err, fosite.ErrNotFound) {
@@ -242,8 +236,7 @@ func (c *HandlerDevice) CanSkipClientAuth(ctx context.Context, requester fosite.
 }
 
 func (c *HandlerDevice) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
-	fmt.Println("CanHandleTokenEndpointRequest PKCE")
 	// grant_type REQUIRED.
-	// Value MUST be set to "authorization_code"
+	// Value MUST be set to "urn:ietf:params:oauth:grant-type:device_code"
 	return requester.GetGrantTypes().ExactOne("urn:ietf:params:oauth:grant-type:device_code")
 }

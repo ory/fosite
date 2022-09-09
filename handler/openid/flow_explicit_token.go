@@ -23,7 +23,6 @@ package openid
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ory/x/errorsx"
 
@@ -84,6 +83,5 @@ func (c *OpenIDConnectExplicitHandler) CanSkipClientAuth(ctx context.Context, re
 }
 
 func (c *OpenIDConnectExplicitHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
-	fmt.Println("CanHandleTokenEndpointRequest EXPL TOKEN")
 	return requester.GetGrantTypes().ExactOne("authorization_code")
 }
