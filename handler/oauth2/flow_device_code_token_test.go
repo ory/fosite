@@ -20,8 +20,8 @@ func TestAuthorizeCode_HandleDeviceTokenEndpointRequest(t *testing.T) {
 			store := storage.NewMemoryStore()
 			handler := AuthorizeDeviceGrantTypeHandler{
 				CoreStorage:           store,
-				DeviceCodeStrategy:    hmacshaStrategy,
-				UserCodeStrategy:      hmacshaStrategy,
+				DeviceCodeStrategy:    &hmacshaStrategy,
+				UserCodeStrategy:      &hmacshaStrategy,
 				AccessTokenStrategy:   strategy,
 				RefreshTokenStrategy:  strategy,
 				AuthorizeCodeStrategy: strategy,
@@ -228,8 +228,8 @@ func TestAuthorizeCode_PopulateDeviceTokenEndpointResponse(t *testing.T) {
 			store := storage.NewMemoryStore()
 			handler := AuthorizeDeviceGrantTypeHandler{
 				CoreStorage:           store,
-				DeviceCodeStrategy:    hmacshaStrategy,
-				UserCodeStrategy:      hmacshaStrategy,
+				DeviceCodeStrategy:    &hmacshaStrategy,
+				UserCodeStrategy:      &hmacshaStrategy,
 				AccessTokenStrategy:   strategy,
 				RefreshTokenStrategy:  strategy,
 				AuthorizeCodeStrategy: strategy,

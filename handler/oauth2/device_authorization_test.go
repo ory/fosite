@@ -19,8 +19,8 @@ func Test_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 	handler := DeviceAuthorizationHandler{
 		DeviceCodeStorage:  deviceStore,
 		UserCodeStorage:    userStore,
-		DeviceCodeStrategy: hmacshaStrategy,
-		UserCodeStrategy:   hmacshaStrategy,
+		DeviceCodeStrategy: &hmacshaStrategy,
+		UserCodeStrategy:   &hmacshaStrategy,
 		Config: &fosite.Config{
 			DeviceAndUserCodeLifespan:      time.Minute * 10,
 			DeviceAuthTokenPollingInterval: time.Second * 10,
