@@ -27,6 +27,8 @@ import (
 	"net/http"
 )
 
+// TODO: Do documentation
+
 func (f *Fosite) WriteDeviceAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, r Requester, resp DeviceAuthorizeResponder) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	rw.Header().Set("Cache-Control", "no-store")

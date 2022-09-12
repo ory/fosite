@@ -19,6 +19,7 @@ package fosite
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/id_token_strategy.go github.com/ory/fosite/handler/openid OpenIDConnectTokenStrategy
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/pkce_storage_strategy.go github.com/ory/fosite/handler/pkce PKCERequestStorage
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/authorize_handler.go github.com/ory/fosite AuthorizeEndpointHandler
+//go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/device_authorize_handler.go github.com/ory/fosite DeviceAuthorizeEndpointHandler
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/revoke_handler.go github.com/ory/fosite RevocationHandler
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/token_handler.go github.com/ory/fosite TokenEndpointHandler
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/introspector.go github.com/ory/fosite TokenIntrospector
@@ -28,3 +29,5 @@ package fosite
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/access_response.go github.com/ory/fosite AccessResponder
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/authorize_request.go github.com/ory/fosite AuthorizeRequester
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/authorize_response.go github.com/ory/fosite AuthorizeResponder
+//go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/device_authorize_request.go github.com/ory/fosite DeviceAuthorizeRequester
+//go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/device_authorize_response.go github.com/ory/fosite DeviceAuthorizeResponder

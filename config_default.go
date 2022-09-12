@@ -222,6 +222,7 @@ type Config struct {
 	// PushedAuthorizeEndpointHandlers is a list of handlers that are called before the PAR endpoint is served.
 	PushedAuthorizeEndpointHandlers PushedAuthorizeEndpointHandlers
 
+	// DeviceAuthorizeEndpointHandlers is a list of handlers that are called before the device authorization endpoint is served.
 	DeviceAuthorizeEndpointHandlers DeviceAuthorizeEndpointHandlers
 
 	// GlobalSecret is the global secret used to sign and verify signatures.

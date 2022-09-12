@@ -19,6 +19,7 @@ mockgen -package internal -destination internal/authorize_code_strategy.go githu
 mockgen -package internal -destination internal/id_token_strategy.go github.com/ory/fosite/handler/openid OpenIDConnectTokenStrategy
 mockgen -package internal -destination internal/pkce_storage_strategy.go github.com/ory/fosite/handler/pkce PKCERequestStorage
 mockgen -package internal -destination internal/authorize_handler.go github.com/ory/fosite AuthorizeEndpointHandler
+mockgen -package internal -destination internal/device_authorize_handler.go github.com/ory/fosite DeviceAuthorizeEndpointHandler
 mockgen -package internal -destination internal/revoke_handler.go github.com/ory/fosite RevocationHandler
 mockgen -package internal -destination internal/token_handler.go github.com/ory/fosite TokenEndpointHandler
 mockgen -package internal -destination internal/introspector.go github.com/ory/fosite TokenIntrospector
@@ -28,5 +29,7 @@ mockgen -package internal -destination internal/access_request.go github.com/ory
 mockgen -package internal -destination internal/access_response.go github.com/ory/fosite AccessResponder
 mockgen -package internal -destination internal/authorize_request.go github.com/ory/fosite AuthorizeRequester
 mockgen -package internal -destination internal/authorize_response.go github.com/ory/fosite AuthorizeResponder
+mockgen -package internal -destination internal/device_authorize_request.go github.com/ory/fosite DeviceAuthorizeRequester
+mockgen -package internal -destination internal/device_authorize_response.go github.com/ory/fosite DeviceAuthorizeResponder
 
 goimports -w internal/

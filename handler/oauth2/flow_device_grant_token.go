@@ -76,9 +76,6 @@ func (d *DeviceAuthorizationHandler) PopulateTokenEndpointResponse(ctx context.C
 	session, err := d.CoreStorage.GetDeviceCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
-	} else if err := d.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code); err != nil {
-		// This needs to happen after store retrieval for the session to be hydrated properly
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	for _, scope := range session.GetGrantedScopes() {

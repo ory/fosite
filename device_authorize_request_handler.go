@@ -35,19 +35,19 @@ func (f *Fosite) NewDeviceAuthorizeGetRequest(ctx context.Context, r *http.Reque
 	request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), r)
 
 	if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
+		return nil, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	}
 	request.Form = r.Form
 
 	if request.GetRequestForm().Has("device_verifier") {
 		client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 		if err != nil {
-			return request, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
+			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
 		}
 		request.Client = client
 
 		if !client.GetGrantTypes().Has("urn:ietf:params:oauth:grant-type:device_code") {
-			return request, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not have the 'urn:ietf:params:oauth:grant-type:device_code' grant.").WithWrap(err).WithDebug(err.Error()))
+			return nil, errorsx.WithStack(ErrInvalidGrant.WithHint("The requested OAuth 2.0 Client does not have the 'urn:ietf:params:oauth:grant-type:device_code' grant."))
 		}
 	}
 
@@ -59,18 +59,22 @@ func (f *Fosite) NewDeviceAuthorizePostRequest(ctx context.Context, req *http.Re
 	request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), req)
 
 	if err := req.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
-		return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
+		return nil, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	}
 	request.Form = req.PostForm
 
 	client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 	if err != nil {
-		return request, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
+		return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
 	}
 	request.Client = client
 
+	if !client.GetGrantTypes().Has("urn:ietf:params:oauth:grant-type:device_code") {
+		return nil, errorsx.WithStack(ErrInvalidGrant.WithHint("The requested OAuth 2.0 Client does not have the 'urn:ietf:params:oauth:grant-type:device_code' grant."))
+	}
+
 	if err := f.validateDeviceAuthorizeScope(ctx, req, request); err != nil {
-		return request, err
+		return nil, err
 	}
 
 	return request, nil

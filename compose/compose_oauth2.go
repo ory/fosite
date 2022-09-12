@@ -126,6 +126,8 @@ func OAuth2StatelessJWTIntrospectionFactory(config fosite.Configurator, storage 
 	}
 }
 
+// OAuth2AuthorizeExplicitFactory creates an OAuth2 device code grant ("Device Authorization Grant") handler and registers
+// an access token, refresh token and device code validator.
 func OAuth2DeviceAuthorizeFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
 	return &oauth2.DeviceAuthorizationHandler{
 		DeviceCodeStrategy:   strategy.(oauth2.DeviceCodeStrategy),

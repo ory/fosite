@@ -14,11 +14,9 @@ func Test_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	deviceStore := storage.NewMemoryStore()
-	userStore := storage.NewMemoryStore()
+	store := storage.NewMemoryStore()
 	handler := DeviceAuthorizationHandler{
-		DeviceCodeStorage:  deviceStore,
-		UserCodeStorage:    userStore,
+		CoreStorage:        store,
 		DeviceCodeStrategy: &hmacshaStrategy,
 		UserCodeStrategy:   &hmacshaStrategy,
 		Config: &fosite.Config{
@@ -39,7 +37,7 @@ func Test_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 			Session: &fosite.DefaultSession{},
 		},
 	}
-	resp := fosite.NewDeviceAuthorizeResponse()
+	resp := &fosite.DeviceAuthorizeResponse{}
 
 	handler.HandleDeviceAuthorizeEndpointRequest(nil, req, resp)
 

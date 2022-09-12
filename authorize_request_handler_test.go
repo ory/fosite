@@ -170,9 +170,9 @@ func TestNewAuthorizeRequest(t *testing.T) {
 			},
 			expectedError: ErrInvalidScope,
 		},
-		/* fails because scope not given */
+		/* fails because audience not given */
 		{
-			desc: "should fail because client does not have scope baz",
+			desc: "should fail because client does not have audience https://www.ory.sh/api",
 			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
 				"redirect_uri":  {"https://foo.bar/cb"},

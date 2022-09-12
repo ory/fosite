@@ -21,21 +21,13 @@
 
 package fosite
 
-import "context"
-
 type DeviceAuthorizeResponse struct {
-	context                 context.Context
 	deviceCode              string
 	userCode                string
 	verificationURI         string
 	verificationURIComplete string
 	interval                int
 	expiresIn               int64
-}
-
-// GetDeviceCode returns the response's device code
-func NewDeviceAuthorizeResponse() *DeviceAuthorizeResponse {
-	return &DeviceAuthorizeResponse{}
 }
 
 func (d *DeviceAuthorizeResponse) GetDeviceCode() string {
