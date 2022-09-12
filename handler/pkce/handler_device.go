@@ -25,7 +25,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
+	"regexp"
 
 	"github.com/ory/x/errorsx"
 
@@ -35,14 +35,23 @@ import (
 	"github.com/ory/fosite/handler/oauth2"
 )
 
+var _ fosite.TokenEndpointHandler = (*HandlerDevice)(nil)
+
 type HandlerDevice struct {
-	CoreStorage           oauth2.CoreStorage
-	DeviceCodeStrategy    oauth2.DeviceCodeStrategy
-	UserCodeStrategy      oauth2.UserCodeStrategy
-	AuthorizeCodeStrategy oauth2.AuthorizeCodeStrategy
-	Storage               PKCERequestStorage
-	Config                fosite.Configurator
+	DeviceCodeStrategy oauth2.DeviceCodeStrategy
+	UserCodeStrategy   oauth2.UserCodeStrategy
+	Storage            PKCERequestStorage
+	Config             interface {
+		fosite.GlobalSecretProvider
+		fosite.EnforcePKCEProvider
+		fosite.EnforcePKCEForPublicClientsProvider
+		fosite.EnablePKCEPlainChallengeMethodProvider
+	}
 }
+
+var _ fosite.TokenEndpointHandler = (*HandlerDevice)(nil)
+
+var deviceVerifierWrongFormat = regexp.MustCompile(`[^\w\.\-~]`)
 
 func (c *HandlerDevice) HandleDeviceAuthorizeEndpointRequest(ctx context.Context, ar fosite.Requester, resp fosite.DeviceAuthorizeResponder) error {
 	if !ar.GetClient().GetGrantTypes().Has("urn:ietf:params:oauth:grant-type:device_code") {
@@ -52,27 +61,23 @@ func (c *HandlerDevice) HandleDeviceAuthorizeEndpointRequest(ctx context.Context
 	challenge := ar.GetRequestForm().Get("code_challenge")
 	method := ar.GetRequestForm().Get("code_challenge_method")
 	client := ar.GetClient()
-	userCode := resp.GetUserCode()
-
-	userCodeSignature := c.UserCodeStrategy.UserCodeSignature(ctx, userCode)
-
-	session, err := c.CoreStorage.GetUserCodeSession(ctx, userCodeSignature, fosite.NewRequest().Session)
-	if err != nil {
-		return err
-	}
 
 	if err := c.validate(ctx, challenge, method, client); err != nil {
 		return err
 	}
 
-	if err := c.Storage.CreatePKCERequestSession(ctx, session.GetID(), ar.Sanitize([]string{
+	code := resp.GetDeviceCode()
+	if len(code) == 0 {
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("The PKCE handler must be loaded after the device code handler."))
+	}
+
+	signature := c.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
+	if err := c.Storage.CreatePKCERequestSession(ctx, signature, ar.Sanitize([]string{
 		"code_challenge",
 		"code_challenge_method",
 	})); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
-
-	fmt.Println(resp)
 
 	return nil
 }
@@ -85,7 +90,6 @@ func (c *HandlerDevice) validate(ctx context.Context, challenge string, method s
 		// error response with the "error" value set to "invalid_request".  The
 		// "error_description" or the response of "error_uri" SHOULD explain the
 		// nature of error, e.g., code challenge required.
-
 		if c.Config.GetEnforcePKCE(ctx) {
 			return errorsx.WithStack(fosite.ErrInvalidRequest.
 				WithHint("Clients must include a code_challenge when performing the authorize code flow, but it is missing.").
@@ -137,19 +141,15 @@ func (c *HandlerDevice) HandleTokenEndpointRequest(ctx context.Context, request 
 	verifier := request.GetRequestForm().Get("code_verifier")
 
 	code := request.GetRequestForm().Get("device_code")
-	if code == "" {
-		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest.WithHint("device_code missing form body")))
-	}
-	codeSignature := c.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
-
-	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, codeSignature, request.GetSession())
+	signature := c.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
+	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, signature, request.GetSession())
 	if errors.Is(err, fosite.ErrNotFound) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to find initial PKCE data tied to this request").WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	if err := c.Storage.DeletePKCERequestSession(ctx, codeSignature); err != nil {
+	if err := c.Storage.DeletePKCERequestSession(ctx, signature); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
@@ -177,7 +177,7 @@ func (c *HandlerDevice) HandleTokenEndpointRequest(ctx context.Context, request 
 	} else if len(verifier) > 128 {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The PKCE code verifier can not be longer than 128 characters."))
-	} else if verifierWrongFormat.MatchString(verifier) {
+	} else if deviceVerifierWrongFormat.MatchString(verifier) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The PKCE code verifier must only contain [a-Z], [0-9], '-', '.', '_', '~'."))
 	}
