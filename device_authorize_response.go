@@ -30,6 +30,10 @@ type DeviceAuthorizeResponse struct {
 	expiresIn               int64
 }
 
+func NewDeviceAuthorizeResponse() *DeviceAuthorizeResponse {
+	return &DeviceAuthorizeResponse{}
+}
+
 func (d *DeviceAuthorizeResponse) GetDeviceCode() string {
 	return d.deviceCode
 }

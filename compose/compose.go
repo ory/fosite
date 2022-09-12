@@ -104,7 +104,6 @@ func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface
 		OpenIDConnectImplicitFactory,
 		OpenIDConnectHybridFactory,
 		OpenIDConnectRefreshFactory,
-		OpenIDConnectDeviceFactory,
 
 		OAuth2TokenIntrospectionFactory,
 		OAuth2TokenRevocationFactory,
