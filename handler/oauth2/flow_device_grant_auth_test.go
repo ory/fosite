@@ -44,7 +44,8 @@ func Test_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 	assert.NotEmpty(t, resp.GetDeviceCode())
 	assert.NotEmpty(t, resp.GetUserCode())
 	assert.Equal(t, len(resp.GetUserCode()), 8)
-	assert.Equal(t, len(resp.GetDeviceCode()), 100)
+	assert.Contains(t, resp.GetDeviceCode(), "ory_dc_")
+	assert.Contains(t, resp.GetDeviceCode(), ".")
 	assert.Equal(t, resp.GetVerificationURI(), "www.test.com")
 
 }

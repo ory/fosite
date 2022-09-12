@@ -252,15 +252,23 @@ func TestHMACDeviceCode(t *testing.T) {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			token, signature, err := hmacshaStrategy.GenerateDeviceCode(nil)
 			assert.NoError(t, err)
-			assert.Equal(t, 100, len(token))
+			assert.Equal(t, strings.Split(token, ".")[1], signature)
+			assert.Contains(t, token, "ory_dc_")
 
-			err = hmacshaStrategy.ValidateDeviceCode(nil, &c.r, token)
-			if c.pass {
-				assert.NoError(t, err)
-				validate := hmacshaStrategy.Enigma.GenerateHMACForString(nil, token)
-				assert.Equal(t, signature, validate)
-			} else {
-				assert.Error(t, err)
+			for k, token := range []string{
+				token,
+				strings.TrimPrefix(token, "ory_dc_"),
+			} {
+				t.Run(fmt.Sprintf("prefix=%v", k == 0), func(t *testing.T) {
+					err = hmacshaStrategy.ValidateDeviceCode(nil, &c.r, token)
+					if c.pass {
+						assert.NoError(t, err)
+						validate := hmacshaStrategy.Enigma.Signature(token)
+						assert.Equal(t, signature, validate)
+					} else {
+						assert.Error(t, err)
+					}
+				})
 			}
 		})
 	}
