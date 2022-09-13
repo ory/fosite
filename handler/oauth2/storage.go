@@ -73,8 +73,11 @@ type DeviceCodeStorage interface {
 	// CreateDeviceCodeSession stores the device request for a given device code.
 	CreateDeviceCodeSession(ctx context.Context, signature string, request fosite.Requester) (err error)
 
+	// UpdateDeviceCodeSessionByRequestId udpate in store the device request for a given device code.
+	UpdateDeviceCodeSessionByRequestId(ctx context.Context, id string, request fosite.Requester) (err error)
+
 	// GetDeviceCodeSession hydrates the session based on the given device code and returns the device request.
-	// If the user code has been invalidated with `InvalidateDeviceCodeSession`, this
+	// If the device code has been invalidated with `InvalidateDeviceCodeSession`, this
 	// method should return the ErrInvalidatedDeviceCode error.
 	//
 	// Make sure to also return the fosite.Requester value when returning the fosite.ErrInvalidatedDeviceCode error!

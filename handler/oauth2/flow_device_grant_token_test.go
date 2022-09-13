@@ -81,7 +81,7 @@ func TestDeviceAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						require.NoError(t, err)
 						areq.Form.Set("device_code", code)
 					},
-					expectErr: fosite.ErrInvalidRequest,
+					expectErr: fosite.ErrServerError,
 				},
 				{
 					areq: &fosite.AccessRequest{
@@ -293,27 +293,27 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 							RequestedAt: time.Now().UTC(),
 						},
 					},
-					description: "should fail because device code could not be retrieved (1)",
+					description: "should fail because device code could not be retrieved",
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
 						deviceCode, _, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 						areq.Form = url.Values{"device_code": {deviceCode}}
 					},
-					expectErr: fosite.ErrAuthorizationPending,
+					expectErr: fosite.ErrInvalidGrant,
 				},
-				// {
-				// 	areq: &fosite.AccessRequest{
-				// 		GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
-				// 		Request: fosite.Request{
-				// 			Form:        url.Values{"device_code": {"AAAA"}},
-				// 			Client:      &fosite.DefaultClient{GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
-				// 			Session:     &fosite.DefaultSession{},
-				// 			RequestedAt: time.Now().UTC(),
-				// 		},
-				// 	},
-				// 	description: "should fail because device code validation failed",
-				// 	expectErr:   fosite.ErrInvalidGrant,
-				// },
+				{
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Form:        url.Values{"device_code": {"AAAA"}},
+							Client:      &fosite.DefaultClient{GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+						},
+					},
+					description: "should fail because device code validation failed",
+					expectErr:   fosite.ErrInvalidGrant,
+				},
 				{
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
@@ -365,34 +365,61 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
 					},
 				},
-				// {
-				// 	areq: &fosite.AccessRequest{
-				// 		GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
-				// 		Request: fosite.Request{
-				// 			Form: url.Values{},
-				// 			Client: &fosite.DefaultClient{
-				// 				GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
-				// 			},
-				// 			GrantedScope: fosite.Arguments{"foo", "offline"},
-				// 			Session:      &fosite.DefaultSession{},
-				// 			RequestedAt:  time.Now().UTC(),
-				// 		},
-				// 	},
-				// 	check: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
-				// 		assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
-				// 		assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
-				// 	},
-				// 	setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
-				// 		code, sig, err := strategy.GenerateDeviceCode(context.TODO())
-				// 		require.NoError(t, err)
-				// 		areq.Form.Add("device_code", code)
+				{
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Form: url.Values{},
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
+							GrantedScope: fosite.Arguments{"foo", "offline"},
+							Session:      &fosite.DefaultSession{},
+							RequestedAt:  time.Now().UTC(),
+						},
+					},
+					check: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
+						assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
+						assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
+						code, sig, err := strategy.GenerateAuthorizeCode(nil, nil)
+						require.NoError(t, err)
+						areq.Form.Add("code", code)
 
-				// 		require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), sig, areq))
-				// 		require.NoError(t, store.InvalidateDeviceCodeSession(context.TODO(), sig))
-				// 	},
-				// 	description: "should fail because device code has expired",
-				// 	expectErr:   fosite.ErrExpiredToken,
-				// },
+						require.NoError(t, store.CreateAuthorizeCodeSession(nil, sig, areq))
+						require.NoError(t, store.InvalidateAuthorizeCodeSession(nil, sig))
+					},
+					description: "should fail because code has been used already",
+					expectErr:   fosite.ErrInvalidGrant,
+				},
+				{
+					areq: &fosite.AccessRequest{
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+						Request: fosite.Request{
+							Form: url.Values{},
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
+							GrantedScope: fosite.Arguments{"foo", "offline"},
+							Session:      &fosite.DefaultSession{},
+							RequestedAt:  time.Now().UTC(),
+						},
+					},
+					check: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
+						assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
+						assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
+						code, sig, err := strategy.GenerateDeviceCode(context.TODO())
+						require.NoError(t, err)
+						areq.Form.Add("device_code", code)
+						areq.GetSession().SetExpiresAt(fosite.DeviceCode, time.Now().Add(-time.Hour).UTC().Round(time.Second))
+						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), sig, areq))
+					},
+					description: "should fail because device code has expired",
+					expectErr:   fosite.ErrDeviceExpiredToken,
+				},
 			} {
 				t.Run(fmt.Sprintf("case=%d/description=%s", i, c.description), func(t *testing.T) {
 					if c.setup != nil {

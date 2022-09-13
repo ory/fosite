@@ -62,18 +62,18 @@ func (mr *MockDeviceAuthorizeRequesterMockRecorder) GetClient() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClient", reflect.TypeOf((*MockDeviceAuthorizeRequester)(nil).GetClient))
 }
 
-// GetDeviceCodeSignature mocks base method.
-func (m *MockDeviceAuthorizeRequester) GetDeviceCodeSignature() string {
+// GetDeviceRequestId mocks base method.
+func (m *MockDeviceAuthorizeRequester) GetDeviceRequestId() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDeviceCodeSignature")
+	ret := m.ctrl.Call(m, "GetDeviceRequestId")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// GetDeviceCodeSignature indicates an expected call of GetDeviceCodeSignature.
-func (mr *MockDeviceAuthorizeRequesterMockRecorder) GetDeviceCodeSignature() *gomock.Call {
+// GetDeviceRequestId indicates an expected call of GetDeviceRequestId.
+func (mr *MockDeviceAuthorizeRequesterMockRecorder) GetDeviceRequestId() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceCodeSignature", reflect.TypeOf((*MockDeviceAuthorizeRequester)(nil).GetDeviceCodeSignature))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeviceRequestId", reflect.TypeOf((*MockDeviceAuthorizeRequester)(nil).GetDeviceRequestId))
 }
 
 // GetGrantedAudience mocks base method.
@@ -238,16 +238,16 @@ func (mr *MockDeviceAuthorizeRequesterMockRecorder) Sanitize(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sanitize", reflect.TypeOf((*MockDeviceAuthorizeRequester)(nil).Sanitize), arg0)
 }
 
-// SetDeviceCodeSignature mocks base method.
-func (m *MockDeviceAuthorizeRequester) SetDeviceCodeSignature(arg0 string) {
+// SetDeviceRequestId mocks base method.
+func (m *MockDeviceAuthorizeRequester) SetDeviceRequestId(arg0 string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetDeviceCodeSignature", arg0)
+	m.ctrl.Call(m, "SetDeviceRequestId", arg0)
 }
 
-// SetDeviceCodeSignature indicates an expected call of SetDeviceCodeSignature.
-func (mr *MockDeviceAuthorizeRequesterMockRecorder) SetDeviceCodeSignature(arg0 interface{}) *gomock.Call {
+// SetDeviceRequestId indicates an expected call of SetDeviceRequestId.
+func (mr *MockDeviceAuthorizeRequesterMockRecorder) SetDeviceRequestId(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeviceCodeSignature", reflect.TypeOf((*MockDeviceAuthorizeRequester)(nil).SetDeviceCodeSignature), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeviceRequestId", reflect.TypeOf((*MockDeviceAuthorizeRequester)(nil).SetDeviceRequestId), arg0)
 }
 
 // SetID mocks base method.

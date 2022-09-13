@@ -121,7 +121,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	return nil
 }
 
-func canIssueRefreshToken(ctx context.Context, c *AuthorizeExplicitGrantHandler, request fosite.Requester) bool {
+func (*AuthorizeExplicitGrantHandler) canIssueRefreshToken(ctx context.Context, c *AuthorizeExplicitGrantHandler, request fosite.Requester) bool {
 	scope := c.Config.GetRefreshTokenScopes(ctx)
 	// Require one of the refresh token scopes, if set.
 	if len(scope) > 0 && !request.GetGrantedScopes().HasOneOf(scope...) {
@@ -163,7 +163,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	var refresh, refreshSignature string
-	if canIssueRefreshToken(ctx, c, authorizeRequest) {
+	if c.canIssueRefreshToken(ctx, c, authorizeRequest) {
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))

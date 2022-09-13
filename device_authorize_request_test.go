@@ -47,7 +47,7 @@ func TestDeviceAuthorizeRequest(t *testing.T) {
 		},
 		{
 			ar: &DeviceAuthorizeRequest{
-				DeviceCodeSignature: "AAAA",
+				DeviceRequestId: "a-uuid-xxx",
 				Request: Request{
 					Client: &DefaultClient{RedirectURIs: []string{""}},
 				},
@@ -64,7 +64,7 @@ func TestDeviceAuthorizeRequest(t *testing.T) {
 		},
 	} {
 		assert.Equal(t, c.ar.Client, c.ar.GetClient(), "%d", k)
-		assert.Equal(t, c.ar.DeviceCodeSignature, c.ar.GetDeviceCodeSignature(), "%d", k)
+		assert.Equal(t, c.ar.DeviceRequestId, c.ar.GetDeviceRequestId(), "%d", k)
 		assert.Equal(t, c.ar.RequestedAt, c.ar.GetRequestedAt(), "%d", k)
 		assert.Equal(t, c.ar.RequestedScope, c.ar.GetRequestedScopes(), "%d", k)
 
