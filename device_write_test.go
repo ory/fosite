@@ -42,8 +42,8 @@ func TestWriteDeviceAuthorizeResponse(t *testing.T) {
 	}}
 
 	rw := httptest.NewRecorder()
-	ar := &DeviceAuthorizeRequest{}
-	resp := &DeviceAuthorizeResponse{}
+	ar := &Request{}
+	resp := &DeviceResponse{}
 	resp.SetUserCode("AAAA")
 	resp.SetDeviceCode("BBBB")
 	resp.SetInterval(int(
@@ -57,7 +57,7 @@ func TestWriteDeviceAuthorizeResponse(t *testing.T) {
 		oauth2.Config.GetDeviceVerificationURL(context.TODO()) + "?user_code=" + resp.GetUserCode(),
 	)
 
-	oauth2.WriteDeviceAuthorizeResponse(context.Background(), rw, ar, resp)
+	oauth2.WriteDeviceResponse(context.Background(), rw, ar, resp)
 	var params struct {
 		DeviceCode              string `json:"device_code"`
 		UserCode                string `json:"user_code"`

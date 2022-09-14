@@ -23,7 +23,11 @@ type DeviceAndUserCodeLifespanProvider interface {
 	GetDeviceAndUserCodeLifespan(ctx context.Context) time.Duration
 }
 
-type DeviceUriProvider interface {
+type DeviceAuthorizeProvider interface {
+	GetDeviceDone(ctx context.Context) string
+}
+
+type DeviceProvider interface {
 	GetDeviceVerificationURL(ctx context.Context) string
 	GetDeviceAuthTokenPollingInterval(ctx context.Context) time.Duration
 }
@@ -281,7 +285,15 @@ type PushedAuthorizeRequestHandlersProvider interface {
 	GetPushedAuthorizeEndpointHandlers(ctx context.Context) PushedAuthorizeEndpointHandlers
 }
 
+// DeviceEndpointHandlersProvider returns the provider for setting up the Device handlers.
+type DeviceEndpointHandlersProvider interface {
+	// GetDeviceEndpointHandlers returns the handlers.
+	GetDeviceEndpointHandlers(ctx context.Context) DeviceEndpointHandlers
+}
+
+// DeviceAuthorizeEndpointHandlersProvider returns the provider for setting up the Device Authorize handlers.
 type DeviceAuthorizeEndpointHandlersProvider interface {
+	// GetDeviceAuthorizeEndpointHandlers returns the handlers.
 	GetDeviceAuthorizeEndpointHandlers(ctx context.Context) DeviceAuthorizeEndpointHandlers
 }
 

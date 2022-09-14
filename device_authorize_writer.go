@@ -23,30 +23,14 @@ package fosite
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 )
 
 // TODO: Do documentation
 
-func (f *Fosite) WriteDeviceAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, r Requester, resp DeviceAuthorizeResponder) {
-	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+func (f *Fosite) WriteDeviceAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder) {
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
-
-	_ = json.NewEncoder(rw).Encode(struct {
-		DeviceCode              string `json:"device_code"`
-		UserCode                string `json:"user_code"`
-		VerificationURI         string `json:"verification_uri"`
-		VerificationURIComplete string `json:"verification_uri_complete,omitempty"`
-		ExpiresIn               int64  `json:"expires_in"`
-		Interval                int    `json:"interval,omitempty"`
-	}{
-		DeviceCode:              resp.GetDeviceCode(),
-		UserCode:                resp.GetUserCode(),
-		VerificationURI:         resp.GetVerificationURI(),
-		VerificationURIComplete: resp.GetVerificationURIComplete(),
-		ExpiresIn:               resp.GetExpiresIn(),
-		Interval:                resp.GetInterval(),
-	})
+	rw.Header().Set("Location", f.Config.GetDeviceDone(ctx))
+	rw.WriteHeader(http.StatusSeeOther)
 }

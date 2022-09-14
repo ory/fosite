@@ -25,23 +25,24 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/fosite"
-	"github.com/ory/fosite/storage"
 	"github.com/ory/x/errorsx"
-	"github.com/pkg/errors"
-)
 
-const deviceCodeGrantType = "urn:ietf:params:oauth:grant-type:device_code"
+	"github.com/ory/fosite/storage"
+
+	"github.com/pkg/errors"
+
+	"github.com/ory/fosite"
+)
 
 // HandleTokenEndpointRequest implements
 // * https://tools.ietf.org/html/rfc8628#section-3.4 (everything)
-func (c *DeviceAuthorizationHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
+func (c *DeviceHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
 	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest))
 	}
 
-	if !request.GetClient().GetGrantTypes().Has(deviceCodeGrantType) {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"" + deviceCodeGrantType + "\"."))
+	if !request.GetClient().GetGrantTypes().Has("urn:ietf:params:oauth:grant-type:device_code") {
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"urn:ietf:params:oauth:grant-type:device_code\"."))
 	}
 
 	code := request.GetRequestForm().Get("device_code")
@@ -51,7 +52,7 @@ func (c *DeviceAuthorizationHandler) HandleTokenEndpointRequest(ctx context.Cont
 		if authorizeRequest == nil {
 			return fosite.ErrServerError.
 				WithHint("Misconfigured code lead to an error that prohibited the OAuth 2.0 Framework from processing this request.").
-				WithDebug("GetAuthorizeCodeSession must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedAuthorizeCode\".")
+				WithDebug("GetDeviceCodeSession must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedDeviceCode\".")
 		}
 
 		// If an authorize code is used twice, we revoke all refresh and access tokens associated with this request.
@@ -113,7 +114,7 @@ func (c *DeviceAuthorizationHandler) HandleTokenEndpointRequest(ctx context.Cont
 	return nil
 }
 
-func (*DeviceAuthorizationHandler) canIssueRefreshToken(ctx context.Context, c *DeviceAuthorizationHandler, request fosite.Requester) bool {
+func (*DeviceHandler) canIssueRefreshToken(ctx context.Context, c *DeviceHandler, request fosite.Requester) bool {
 	scope := c.Config.GetRefreshTokenScopes(ctx)
 	// Require one of the refresh token scopes, if set.
 	if len(scope) > 0 && !request.GetGrantedScopes().HasOneOf(scope...) {
@@ -126,7 +127,7 @@ func (*DeviceAuthorizationHandler) canIssueRefreshToken(ctx context.Context, c *
 	return true
 }
 
-func (c *DeviceAuthorizationHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
+func (c *DeviceHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) error {
 	if !c.CanHandleTokenEndpointRequest(ctx, requester) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -200,12 +201,12 @@ func (c *DeviceAuthorizationHandler) PopulateTokenEndpointResponse(ctx context.C
 	return nil
 }
 
-func (c *DeviceAuthorizationHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
+func (c *DeviceHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
 	return true
 }
 
-func (c *DeviceAuthorizationHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
+func (c *DeviceHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "urn:ietf:params:oauth:grant-type:device_code"
-	return requester.GetGrantTypes().ExactOne(deviceCodeGrantType)
+	return requester.GetGrantTypes().ExactOne("urn:ietf:params:oauth:grant-type:device_code")
 }

@@ -250,3 +250,17 @@ func (mr *MockCoreStorageMockRecorder) InvalidateUserCodeSession(arg0, arg1 inte
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvalidateUserCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).InvalidateUserCodeSession), arg0, arg1)
 }
+
+// UpdateDeviceCodeSession mocks base method.
+func (m *MockCoreStorage) UpdateDeviceCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Requester) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateDeviceCodeSession", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateDeviceCodeSession indicates an expected call of UpdateDeviceCodeSession.
+func (mr *MockCoreStorageMockRecorder) UpdateDeviceCodeSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDeviceCodeSession", reflect.TypeOf((*MockCoreStorage)(nil).UpdateDeviceCodeSession), arg0, arg1, arg2)
+}

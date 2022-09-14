@@ -77,12 +77,6 @@ type OAuth2Provider interface {
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
 	NewAuthorizeRequest(ctx context.Context, req *http.Request) (AuthorizeRequester, error)
 
-	// ToDo add ietf docs
-	NewDeviceAuthorizeGetRequest(ctx context.Context, req *http.Request) (DeviceAuthorizeRequester, error)
-	NewDeviceAuthorizePostRequest(ctx context.Context, req *http.Request) (DeviceAuthorizeRequester, error)
-	NewDeviceAuthorizeResponse(ctx context.Context, requester Requester) (DeviceAuthorizeResponder, error)
-	WriteDeviceAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, requester Requester, responder DeviceAuthorizeResponder)
-
 	// NewAuthorizeResponse iterates through all response type handlers and returns their result or
 	// ErrUnsupportedResponseType if none of the handler's were able to handle it.
 	//
@@ -125,6 +119,37 @@ type OAuth2Provider interface {
 	//   making the authorization request.
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.2.2 (everything MUST be implemented)
 	WriteAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, requester AuthorizeRequester, responder AuthorizeResponder)
+
+	// NewDeviceAuthorizeRequest returns an DeviceAuthorizeRequest.
+	// TODO Add documentation
+	NewDeviceAuthorizeRequest(ctx context.Context, req *http.Request) (DeviceAuthorizeRequester, error)
+
+	// NewDeviceAuthorizeResponse
+	// TODO Add documentation
+	NewDeviceAuthorizeResponse(ctx context.Context, requester DeviceAuthorizeRequester, session Session) (DeviceAuthorizeResponder, error)
+
+	// WriteDeviceAuthorizeResponse
+	// TODO Add documentation
+	WriteDeviceAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder)
+
+	// NewDeviceRequest validate the OAuth 2.0 Device Authorization Flow Request
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://www.rfc-editor.org/rfc/rfc8628#section-3.1 (everything MUST be implemented)
+	NewDeviceRequest(ctx context.Context, req *http.Request) (DeviceRequester, error)
+
+	// NewDeviceResponse persists the DeviceCodeSession and UserCodeSession in the store
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://www.rfc-editor.org/rfc/rfc8628#section-3.2 (everything MUST be implemented)
+	NewDeviceResponse(ctx context.Context, requester DeviceRequester) (DeviceResponder, error)
+
+	// WriteDeviceAuthorizeResponse return to the user both codes and
+	// some configuration informations in a JSON formated manner
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://www.rfc-editor.org/rfc/rfc8628#section-3.2 (everything MUST be implemented)
+	WriteDeviceResponse(ctx context.Context, rw http.ResponseWriter, requester DeviceRequester, responder DeviceResponder)
 
 	// NewAccessRequest creates a new access request object and validates
 	// various parameters.
@@ -279,13 +304,18 @@ type AccessRequester interface {
 	Requester
 }
 
+// DeviceRequester is an device endpoint's request context.
+type DeviceRequester interface {
+	Requester
+}
+
 // DeviceAuthorizeRequester is an device authorize endpoint's request context.
 type DeviceAuthorizeRequester interface {
 	// SetDeviceRequestId set the device request id
-	SetDeviceRequestId(signature string)
+	SetDeviceCodeSignature(signature string)
 
 	// GetDeviceRequestId returns the device code signature
-	GetDeviceRequestId() string
+	GetDeviceCodeSignature() string
 
 	Requester
 }
@@ -404,6 +434,9 @@ type G11NContext interface {
 }
 
 type DeviceAuthorizeResponder interface {
+}
+
+type DeviceResponder interface {
 	GetDeviceCode() string
 	SetDeviceCode(code string)
 

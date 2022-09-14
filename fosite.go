@@ -100,7 +100,21 @@ func (a *PushedAuthorizeEndpointHandlers) Append(h PushedAuthorizeEndpointHandle
 	*a = append(*a, h)
 }
 
-// DeviceAuthorizeEndpointHandler is a list of DeviceAuthorizeEndpointHandler
+// DeviceEndpointHandlers is a list of DeviceEndpointHandler
+type DeviceEndpointHandlers []DeviceEndpointHandler
+
+// Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+func (a *DeviceEndpointHandlers) Append(h DeviceEndpointHandler) {
+	for _, this := range *a {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*a = append(*a, h)
+}
+
+// DeviceEndpointHandlers is a list of DeviceEndpointHandler
 type DeviceAuthorizeEndpointHandlers []DeviceAuthorizeEndpointHandler
 
 // Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
@@ -164,8 +178,10 @@ type Configurator interface {
 	TokenIntrospectionHandlersProvider
 	RevocationHandlersProvider
 	UseLegacyErrorFormatProvider
+	DeviceEndpointHandlersProvider
 	DeviceAuthorizeEndpointHandlersProvider
-	DeviceUriProvider
+	DeviceProvider
+	DeviceAuthorizeProvider
 }
 
 func NewOAuth2Provider(s Storage, c Configurator) *Fosite {

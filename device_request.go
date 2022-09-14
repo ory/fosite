@@ -21,19 +21,13 @@
 
 package fosite
 
-import (
-	"context"
-)
+// DeviceRequest is an implementation of DeviceRequester
+type DeviceRequest struct {
+	Request
+}
 
-func (f *Fosite) NewDeviceAuthorizeResponse(ctx context.Context, dar DeviceAuthorizeRequester, session Session) (DeviceAuthorizeResponder, error) {
-	var resp = &DeviceAuthorizeResponse{}
-
-	dar.SetSession(session)
-	for _, h := range f.Config.GetDeviceAuthorizeEndpointHandlers(ctx) {
-		if err := h.HandleDeviceAuthorizeEndpointRequest(ctx, dar, resp); err != nil {
-			return nil, err
-		}
+func NewDeviceRequest() *DeviceRequest {
+	return &DeviceRequest{
+		Request: *NewRequest(),
 	}
-
-	return resp, nil
 }

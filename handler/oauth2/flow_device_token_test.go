@@ -48,7 +48,7 @@ func TestDeviceAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			var h DeviceAuthorizationHandler
+			var h DeviceHandler
 			for _, c := range []struct {
 				areq        *fosite.AccessRequest
 				description string
@@ -209,7 +209,7 @@ func TestDeviceAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						AccessTokenLifespan:      time.Minute,
 						RefreshTokenScopes:       []string{"offline"},
 					}
-					h = DeviceAuthorizationHandler{
+					h = DeviceHandler{
 						CoreStorage:          store,
 						DeviceCodeStrategy:   strategy,
 						UserCodeStrategy:     strategy,
@@ -247,7 +247,7 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			h := DeviceAuthorizationHandler{
+			h := DeviceHandler{
 				CoreStorage:        store,
 				DeviceCodeStrategy: &hmacshaStrategy,
 				UserCodeStrategy:   &hmacshaStrategy,
@@ -653,7 +653,7 @@ func TestDeviceAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.
 			mockCoreStore = internal.NewMockCoreStorage(ctrl)
 			testCase.setup()
 
-			handler := DeviceAuthorizationHandler{
+			handler := DeviceHandler{
 				CoreStorage: transactionalStore{
 					mockTransactional,
 					mockCoreStore,

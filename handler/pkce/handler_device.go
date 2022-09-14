@@ -42,7 +42,6 @@ type HandlerDevice struct {
 	UserCodeStrategy   oauth2.UserCodeStrategy
 	Storage            PKCERequestStorage
 	Config             interface {
-		fosite.GlobalSecretProvider
 		fosite.EnforcePKCEProvider
 		fosite.EnforcePKCEForPublicClientsProvider
 		fosite.EnablePKCEPlainChallengeMethodProvider
@@ -53,7 +52,7 @@ var _ fosite.TokenEndpointHandler = (*HandlerDevice)(nil)
 
 var deviceVerifierWrongFormat = regexp.MustCompile(`[^\w\.\-~]`)
 
-func (c *HandlerDevice) HandleDeviceAuthorizeEndpointRequest(ctx context.Context, ar fosite.Requester, resp fosite.DeviceAuthorizeResponder) error {
+func (c *HandlerDevice) HandleDeviceEndpointRequest(ctx context.Context, ar fosite.Requester, resp fosite.DeviceResponder) error {
 	if !ar.GetClient().GetGrantTypes().Has("urn:ietf:params:oauth:grant-type:device_code") {
 		return nil
 	}

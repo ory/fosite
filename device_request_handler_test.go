@@ -37,7 +37,7 @@ import (
 	. "github.com/ory/fosite/internal"
 )
 
-func TestNewDeviceAuthorizeRequest(t *testing.T) {
+func TestNewDeviceRequest(t *testing.T) {
 	var store *MockStorage
 	for k, c := range []struct {
 		desc          string
@@ -48,55 +48,87 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 		mock          func()
 		expect        *DeviceAuthorizeRequest
 	}{
-		/* invalid client */
+		/* empty request */
 		{
-			desc:          "invalid client fails",
+			desc:          "empty request fails",
 			conf:          &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
-			query:         url.Values{"device_verifier": []string{"AAAA"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Any()).Return(nil, errors.New("foo"))
 			},
 		},
-		/* success case */
+		/* invalid client */
 		{
-			desc: "empty request should pass",
+			desc: "invalid client fails",
 			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
-			r:    &http.Request{},
-			mock: func() {},
-			expect: &DeviceAuthorizeRequest{
-				Request: Request{},
+			r: &http.Request{
+				PostForm: url.Values{
+					"client_id": {"1234"},
+					"scope":     {"foo bar"},
+				},
+			},
+			expectedError: ErrInvalidClient,
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Any()).Return(nil, errors.New("foo"))
 			},
 		},
+		/* fails because scope not given */
 		{
-			desc: "should pass",
+			desc: "should fail because client does not have scope baz",
 			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
-			query: url.Values{
-				"device_verifier": {"AAAA"},
-				"client_id":       {"1234"},
+			r: &http.Request{
+				PostForm: url.Values{
+					"client_id": {"1234"},
+					"scope":     {"foo bar baz"},
+				},
 			},
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+					Scopes:     []string{"foo", "bar"},
+				}, nil)
+			},
+			expectedError: ErrInvalidScope,
+		},
+		/* success case */
+		{
+			desc: "should pass",
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
+			r: &http.Request{
+				PostForm: url.Values{
+					"client_id": {"1234"},
+					"scope":     {"foo bar"},
+				},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					Scopes:     []string{"foo", "bar"},
 					GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
 				}, nil)
 			},
 			expect: &DeviceAuthorizeRequest{
 				Request: Request{
 					Client: &DefaultClient{
-						GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+						Scopes: []string{"foo", "bar"},
 					},
+					RequestedScope: []string{"foo", "bar"},
 				},
 			},
 		},
+		/* should fail because doesn't have proper grant */
 		{
-			desc: "should fail client doesn't have device grant",
+			desc: "should pass",
 			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
-			query: url.Values{
-				"device_verifier": {"AAAA"},
-				"client_id":       {"1234"},
+			r: &http.Request{
+				PostForm: url.Values{
+					"client_id": {"1234"},
+					"scope":     {"foo bar"},
+				},
 			},
 			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{}, nil)
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					Scopes: []string{"foo", "bar"},
+				}, nil)
 			},
 			expectedError: ErrInvalidGrant,
 		},
@@ -109,13 +141,10 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 			c.mock()
 			if c.r == nil {
 				c.r = &http.Request{Header: http.Header{}}
-				if c.query != nil {
-					c.r.URL = &url.URL{RawQuery: c.query.Encode()}
-				}
 			}
 
 			c.conf.Store = store
-			ar, err := c.conf.NewDeviceAuthorizeRequest(context.Background(), c.r)
+			ar, err := c.conf.NewDeviceRequest(context.Background(), c.r)
 			if c.expectedError != nil {
 				assert.EqualError(t, err, c.expectedError.Error())
 			} else {

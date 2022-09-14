@@ -23,16 +23,16 @@ package fosite
 
 // DeviceAuthorizeRequest is an implementation of DeviceAuthorizeRequester
 type DeviceAuthorizeRequest struct {
-	DeviceRequestId string
+	deviceCodeSignature string
 	Request
 }
 
-func (d *DeviceAuthorizeRequest) GetDeviceRequestId() string {
-	return d.DeviceRequestId
+func (d *DeviceAuthorizeRequest) GetDeviceCodeSignature() string {
+	return d.deviceCodeSignature
 }
 
-func (d *DeviceAuthorizeRequest) SetDeviceRequestId(id string) {
-	d.DeviceRequestId = id
+func (d *DeviceAuthorizeRequest) SetDeviceCodeSignature(signature string) {
+	d.deviceCodeSignature = signature
 }
 
 func NewDeviceAuthorizeRequest() *DeviceAuthorizeRequest {

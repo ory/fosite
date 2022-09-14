@@ -25,12 +25,11 @@ import (
 	"context"
 )
 
-func (f *Fosite) NewDeviceAuthorizeResponse(ctx context.Context, dar DeviceAuthorizeRequester, session Session) (DeviceAuthorizeResponder, error) {
-	var resp = &DeviceAuthorizeResponse{}
+func (f *Fosite) NewDeviceResponse(ctx context.Context, r DeviceRequester) (DeviceResponder, error) {
+	var resp = &DeviceResponse{}
 
-	dar.SetSession(session)
-	for _, h := range f.Config.GetDeviceAuthorizeEndpointHandlers(ctx) {
-		if err := h.HandleDeviceAuthorizeEndpointRequest(ctx, dar, resp); err != nil {
+	for _, h := range f.Config.GetDeviceEndpointHandlers(ctx) {
+		if err := h.HandleDeviceEndpointRequest(ctx, r, resp); err != nil {
 			return nil, err
 		}
 	}

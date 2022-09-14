@@ -544,16 +544,16 @@ func (s *MemoryStore) CreateDeviceCodeSession(_ context.Context, signature strin
 	return nil
 }
 
-func (s *MemoryStore) UpdateDeviceCodeSessionByRequestId(_ context.Context, id string, req fosite.Requester) error {
+func (s *MemoryStore) UpdateDeviceCodeSession(_ context.Context, signature string, req fosite.Requester) error {
 	s.deviceCodesRequestIDsMutex.Lock()
 	defer s.deviceCodesRequestIDsMutex.Unlock()
+	s.deviceCodesMutex.Lock()
+	defer s.deviceCodesMutex.Unlock()
 
-	if signature, exists := s.DeviceCodesRequestIDs[id]; exists {
-		_, ok := s.DeviceCodes[signature]
-		if !ok {
-			return fosite.ErrNotFound
-		}
+	// Only update if exist
+	if _, exists := s.DeviceCodes[signature]; exists {
 		s.DeviceCodes[signature] = req
+		s.DeviceCodesRequestIDs[req.GetID()] = signature
 	}
 	return nil
 }

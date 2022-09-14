@@ -36,7 +36,7 @@ func (m *MockDeviceAuthorizeEndpointHandler) EXPECT() *MockDeviceAuthorizeEndpoi
 }
 
 // HandleDeviceAuthorizeEndpointRequest mocks base method.
-func (m *MockDeviceAuthorizeEndpointHandler) HandleDeviceAuthorizeEndpointRequest(arg0 context.Context, arg1 fosite.Requester, arg2 fosite.DeviceAuthorizeResponder) error {
+func (m *MockDeviceAuthorizeEndpointHandler) HandleDeviceAuthorizeEndpointRequest(arg0 context.Context, arg1 fosite.DeviceAuthorizeRequester, arg2 fosite.DeviceAuthorizeResponder) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HandleDeviceAuthorizeEndpointRequest", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

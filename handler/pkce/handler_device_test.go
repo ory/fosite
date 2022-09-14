@@ -76,8 +76,8 @@ func TestPKCEHandlerDevice_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 		UserCodeStrategy:   new(oauth2.HMACSHAStrategy),
 		Config:             &config,
 	}
-	w := fosite.NewDeviceAuthorizeResponse()
-	r := fosite.NewDeviceAuthorizeRequest()
+	w := fosite.NewDeviceResponse()
+	r := fosite.NewDeviceRequest()
 	config.GlobalSecret = []byte("thisissecret")
 
 	w.SetDeviceCode("foo")
@@ -87,32 +87,32 @@ func TestPKCEHandlerDevice_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 
 	c := &fosite.DefaultClient{}
 	r.Client = c
-	require.NoError(t, h.HandleDeviceAuthorizeEndpointRequest(context.Background(), r, w))
+	require.NoError(t, h.HandleDeviceEndpointRequest(context.Background(), r, w))
 
 	c = &fosite.DefaultClient{
 		GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
 	}
 	r.Client = c
-	require.Error(t, h.HandleDeviceAuthorizeEndpointRequest(context.Background(), r, w))
+	require.Error(t, h.HandleDeviceEndpointRequest(context.Background(), r, w))
 
 	c.Public = true
 	config.EnablePKCEPlainChallengeMethod = true
-	require.NoError(t, h.HandleDeviceAuthorizeEndpointRequest(context.Background(), r, w))
+	require.NoError(t, h.HandleDeviceEndpointRequest(context.Background(), r, w))
 
 	c.Public = false
 	config.EnablePKCEPlainChallengeMethod = true
-	require.NoError(t, h.HandleDeviceAuthorizeEndpointRequest(context.Background(), r, w))
+	require.NoError(t, h.HandleDeviceEndpointRequest(context.Background(), r, w))
 
 	config.EnablePKCEPlainChallengeMethod = false
-	require.Error(t, h.HandleDeviceAuthorizeEndpointRequest(context.Background(), r, w))
+	require.Error(t, h.HandleDeviceEndpointRequest(context.Background(), r, w))
 
 	r.Form.Set("code_challenge_method", "S256")
 	r.Form.Set("code_challenge", "")
 	config.EnforcePKCE = true
-	require.Error(t, h.HandleDeviceAuthorizeEndpointRequest(context.Background(), r, w))
+	require.Error(t, h.HandleDeviceEndpointRequest(context.Background(), r, w))
 
 	r.Form.Set("code_challenge", "challenge")
-	require.NoError(t, h.HandleDeviceAuthorizeEndpointRequest(context.Background(), r, w))
+	require.NoError(t, h.HandleDeviceEndpointRequest(context.Background(), r, w))
 }
 
 func TestPKCEHandlerDevice_HandlerDeviceValidate(t *testing.T) {
