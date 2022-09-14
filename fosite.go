@@ -103,7 +103,7 @@ func (a *PushedAuthorizeEndpointHandlers) Append(h PushedAuthorizeEndpointHandle
 // DeviceEndpointHandlers is a list of DeviceEndpointHandler
 type DeviceEndpointHandlers []DeviceEndpointHandler
 
-// Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+// Append adds an DeviceEndpointHandlers to this list. Ignores duplicates based on reflect.TypeOf.
 func (a *DeviceEndpointHandlers) Append(h DeviceEndpointHandler) {
 	for _, this := range *a {
 		if reflect.TypeOf(this) == reflect.TypeOf(h) {
@@ -114,10 +114,10 @@ func (a *DeviceEndpointHandlers) Append(h DeviceEndpointHandler) {
 	*a = append(*a, h)
 }
 
-// DeviceEndpointHandlers is a list of DeviceEndpointHandler
+// DeviceAuthorizeEndpointHandlers is a list of DeviceAuthorizeEndpointHandler
 type DeviceAuthorizeEndpointHandlers []DeviceAuthorizeEndpointHandler
 
-// Append adds an AuthorizeEndpointHandler to this list. Ignores duplicates based on reflect.TypeOf.
+// Append adds an DeviceAuthorizeEndpointHandlers to this list. Ignores duplicates based on reflect.TypeOf.
 func (a *DeviceAuthorizeEndpointHandlers) Append(h DeviceAuthorizeEndpointHandler) {
 	for _, this := range *a {
 		if reflect.TypeOf(this) == reflect.TypeOf(h) {

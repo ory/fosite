@@ -311,10 +311,10 @@ type DeviceRequester interface {
 
 // DeviceAuthorizeRequester is an device authorize endpoint's request context.
 type DeviceAuthorizeRequester interface {
-	// SetDeviceRequestId set the device request id
+	// SetDeviceCodeSignature set the device code signature
 	SetDeviceCodeSignature(signature string)
 
-	// GetDeviceRequestId returns the device code signature
+	// GetDeviceCodeSignature returns the device code signature
 	GetDeviceCodeSignature() string
 
 	Requester
