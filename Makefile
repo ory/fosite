@@ -1,4 +1,4 @@
-format: node_modules .bin/goimports  # formats the source code
+format: .bin/goimports node_modules  # formats the source code
 	.bin/goimports -w .
 	npm exec -- prettier --write .
 
