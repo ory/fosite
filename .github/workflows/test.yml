@@ -1,4 +1,4 @@
-name: Format
+name: Unit tests
 
 on:
   pull_request:
