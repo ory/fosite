@@ -1,5 +1,5 @@
-format: node_modules  # formats the source code
-	goreturns -w -local github.com/ory $$(listx .)
+format: node_modules .bin/goimports  # formats the source code
+	.bin/goimports -w .
 	npm exec -- prettier --write .
 
 help:
@@ -7,6 +7,9 @@ help:
 
 test:  # runs all tests
 	go test ./...
+
+.bin/goimports:
+	GOBIN=$(shell pwd)/.bin go install golang.org/x/tools/cmd/goimports@latest
 
 node_modules: package-lock.json
 	npm ci
