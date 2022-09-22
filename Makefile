@@ -8,7 +8,7 @@ help:
 test:  # runs all tests
 	go test ./...
 
-.bin/goimports:
+.bin/goimports: Makefile
 	GOBIN=$(shell pwd)/.bin go install golang.org/x/tools/cmd/goimports@latest
 
 node_modules: package-lock.json

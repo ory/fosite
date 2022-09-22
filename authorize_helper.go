@@ -54,26 +54,27 @@ var DefaultFormPostTemplate = template.Must(template.New("form_post").Parse(`<ht
 // uri validation.
 //
 // Considered specifications
-// * https://tools.ietf.org/html/rfc6749#section-3.1.2.3
-//   If multiple redirection URIs have been registered, if only part of
-//   the redirection URI has been registered, or if no redirection URI has
-//   been registered, the client MUST include a redirection URI with the
-//   authorization request using the "redirect_uri" request parameter.
 //
-//   When a redirection URI is included in an authorization request, the
-//   authorization server MUST compare and match the value received
-//   against at least one of the registered redirection URIs (or URI
-//   components) as defined in [RFC3986] Section 6, if any redirection
-//   URIs were registered.  If the client registration included the full
-//   redirection URI, the authorization server MUST compare the two URIs
-//   using simple string comparison as defined in [RFC3986] Section 6.2.1.
+//   - https://tools.ietf.org/html/rfc6749#section-3.1.2.3
+//     If multiple redirection URIs have been registered, if only part of
+//     the redirection URI has been registered, or if no redirection URI has
+//     been registered, the client MUST include a redirection URI with the
+//     authorization request using the "redirect_uri" request parameter.
+//
+//     When a redirection URI is included in an authorization request, the
+//     authorization server MUST compare and match the value received
+//     against at least one of the registered redirection URIs (or URI
+//     components) as defined in [RFC3986] Section 6, if any redirection
+//     URIs were registered.  If the client registration included the full
+//     redirection URI, the authorization server MUST compare the two URIs
+//     using simple string comparison as defined in [RFC3986] Section 6.2.1.
 //
 // * https://tools.ietf.org/html/rfc6819#section-4.4.1.7
-//   * The authorization server may also enforce the usage and validation
+//   - The authorization server may also enforce the usage and validation
 //     of pre-registered redirect URIs (see Section 5.2.3.5).  This will
 //     allow for early recognition of authorization "code" disclosure to
 //     counterfeit clients.
-//   * The attacker will need to use another redirect URI for its
+//   - The attacker will need to use another redirect URI for its
 //     authorization process rather than the target web site because it
 //     needs to intercept the flow.  So, if the authorization server
 //     associates the authorization "code" with the redirect URI of a
@@ -168,11 +169,11 @@ func isLoopbackAddress(address string) bool {
 // IsValidRedirectURI validates a redirect_uri as specified in:
 //
 // * https://tools.ietf.org/html/rfc6749#section-3.1.2
-//   * The redirection endpoint URI MUST be an absolute URI as defined by [RFC3986] Section 4.3.
-//   * The endpoint URI MUST NOT include a fragment component.
-// * https://tools.ietf.org/html/rfc3986#section-4.3
-//   absolute-URI  = scheme ":" hier-part [ "?" query ]
-// * https://tools.ietf.org/html/rfc6819#section-5.1.1
+//   - The redirection endpoint URI MUST be an absolute URI as defined by [RFC3986] Section 4.3.
+//   - The endpoint URI MUST NOT include a fragment component.
+//   - https://tools.ietf.org/html/rfc3986#section-4.3
+//     absolute-URI  = scheme ":" hier-part [ "?" query ]
+//   - https://tools.ietf.org/html/rfc6819#section-5.1.1
 func IsValidRedirectURI(redirectURI *url.URL) bool {
 	// We need to explicitly check for a scheme
 	if !govalidator.IsRequestURL(redirectURI.String()) {

@@ -28,8 +28,8 @@ type Arguments []string
 // Matches performs an case-insensitive, out-of-order check that the items
 // provided exist and equal all of the args in arguments.
 // Note:
-// - Providing a list that includes duplicate string-case items will return not
-//   matched.
+//   - Providing a list that includes duplicate string-case items will return not
+//     matched.
 func (r Arguments) Matches(items ...string) bool {
 	if len(r) != len(items) {
 		return false

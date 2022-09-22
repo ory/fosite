@@ -189,14 +189,13 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 
 // Reference: https://tools.ietf.org/html/rfc6819#section-5.2.2.3
 //
-//     The basic idea is to change the refresh token
-//     value with every refresh request in order to detect attempts to
-//     obtain access tokens using old refresh tokens.  Since the
-//     authorization server cannot determine whether the attacker or the
-//     legitimate client is trying to access, in case of such an access
-//     attempt the valid refresh token and the access authorization
-//     associated with it are both revoked.
-//
+//	The basic idea is to change the refresh token
+//	value with every refresh request in order to detect attempts to
+//	obtain access tokens using old refresh tokens.  Since the
+//	authorization server cannot determine whether the attacker or the
+//	legitimate client is trying to access, in case of such an access
+//	attempt the valid refresh token and the access authorization
+//	associated with it are both revoked.
 func (c *RefreshTokenGrantHandler) handleRefreshTokenReuse(ctx context.Context, signature string, req fosite.Requester) (err error) {
 	ctx, err = storage.MaybeBeginTx(ctx, c.TokenRevocationStorage)
 	if err != nil {
