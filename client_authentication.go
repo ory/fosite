@@ -42,7 +42,7 @@ import (
 // ClientAuthenticationStrategy provides a method signature for authenticating a client request
 type ClientAuthenticationStrategy func(context.Context, *http.Request, url.Values) (Client, error)
 
-//#nosec:gosec G101 - False Positive
+// #nosec:gosec G101 - False Positive
 const clientAssertionJWTBearerType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
 func (f *Fosite) findClientPublicJWK(ctx context.Context, oidcClient OpenIDConnectClient, t *jwt.Token, expectsRSAKey bool) (interface{}, error) {

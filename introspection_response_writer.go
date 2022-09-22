@@ -157,27 +157,26 @@ func (f *Fosite) WriteIntrospectionError(ctx context.Context, rw http.ResponseWr
 // make authorization decisions.  See Section 4 for more information
 // regarding the trade off when the response is cached.
 //
-//
 // For example, the following response contains a set of information
 // about an active token:
 //
 // The following is a non-normative example response:
 //
-//	 HTTP/1.1 200 OK
-//	 Content-Type: application/json
+//	HTTP/1.1 200 OK
+//	Content-Type: application/json
 //
-//	 {
-//	   "active": true,
-//	   "client_id": "l238j323ds-23ij4",
-//	   "username": "jdoe",
-//	   "scope": "read write dolphin",
-//	   "sub": "Z5O3upPC88QrAjx00dis",
-//	   "aud": "https://protected.example.net/resource",
-//	   "iss": "https://server.example.com/",
-//	   "exp": 1419356238,
-//	   "iat": 1419350238,
-//	   "extension_field": "twenty-seven"
-//	 }
+//	{
+//	  "active": true,
+//	  "client_id": "l238j323ds-23ij4",
+//	  "username": "jdoe",
+//	  "scope": "read write dolphin",
+//	  "sub": "Z5O3upPC88QrAjx00dis",
+//	  "aud": "https://protected.example.net/resource",
+//	  "iss": "https://server.example.com/",
+//	  "exp": 1419356238,
+//	  "iat": 1419350238,
+//	  "extension_field": "twenty-seven"
+//	}
 //
 // If the introspection call is properly authorized but the token is not
 // active, does not exist on this server, or the protected resource is
@@ -191,12 +190,12 @@ func (f *Fosite) WriteIntrospectionError(ctx context.Context, rw http.ResponseWr
 // The following is a non-normative example response for a token that
 // has been revoked or is otherwise invalid:
 //
-//	 HTTP/1.1 200 OK
-//	 Content-Type: application/json
+//	HTTP/1.1 200 OK
+//	Content-Type: application/json
 //
-//	 {
-//	   "active": false
-//	 }
+//	{
+//	  "active": false
+//	}
 func (f *Fosite) WriteIntrospectionResponse(ctx context.Context, rw http.ResponseWriter, r IntrospectionResponder) {
 	if !r.IsActive() {
 		_ = json.NewEncoder(rw).Encode(&struct {
