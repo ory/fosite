@@ -15,4 +15,3 @@ jobs:
       - run: make format
       - name: Indicate formatting issues
         run: git diff HEAD --exit-code --color
-
