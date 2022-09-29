@@ -17,10 +17,10 @@ import (
 
 // Should pass
 //
-// * https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#Terminology
-//   The OAuth 2.0 specification allows for registration of space-separated response_type parameter values.
-//   If a Response Type contains one of more space characters (%20), it is compared as a space-delimited list of
-//   values in which the order of values does not matter.
+//   - https://openid.net/specs/oauth-v2-multiple-response-types-1_0.html#Terminology
+//     The OAuth 2.0 specification allows for registration of space-separated response_type parameter values.
+//     If a Response Type contains one of more space characters (%20), it is compared as a space-delimited list of
+//     values in which the order of values does not matter.
 func TestNewPushedAuthorizeRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockStorage(ctrl)

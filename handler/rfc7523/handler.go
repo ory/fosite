@@ -34,7 +34,7 @@ import (
 	"github.com/ory/x/errorsx"
 )
 
-//#nosec:gosec G101 - False Positive
+// #nosec:gosec G101 - False Positive
 const grantTypeJWTBearer = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
 type Handler struct {
