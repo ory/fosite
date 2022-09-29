@@ -52,7 +52,7 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 		{
 			desc:          "invalid client fails",
 			conf:          &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
-			query:         url.Values{"device_verifier": []string{"AAAA"}},
+			query:         url.Values{"device_verifier": []string{"BBBB"}},
 			expectedError: ErrInvalidClient,
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Any()).Return(nil, errors.New("foo"))

@@ -38,7 +38,8 @@ func (f *Fosite) NewDeviceAuthorizeRequest(ctx context.Context, r *http.Request)
 	}
 	request.Form = r.Form
 
-	if request.GetRequestForm().Has("device_verifier") {
+	verifier := request.GetRequestForm().Get("device_verifier")
+	if verifier != "" {
 		client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
 		if err != nil {
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
