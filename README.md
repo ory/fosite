@@ -246,29 +246,35 @@ looking at some examples:
 
 ### Globalization
 
-Fosite does not natively carry translations for error messages and hints, but offers an interface that allows the
-consumer to define catalog bundles and an implementation to translate. This is available through
-the [MessageCatalog](i18n/i18n.go) interface. The functions defined are self-explanatory. The `DefaultMessageCatalog`
-illustrates this. Compose config has been extended to take in an instance of the `MessageCatalog`.
+Fosite does not natively carry translations for error messages and hints, but
+offers an interface that allows the consumer to define catalog bundles and an
+implementation to translate. This is available through the
+[MessageCatalog](i18n/i18n.go) interface. The functions defined are
+self-explanatory. The `DefaultMessageCatalog` illustrates this. Compose config
+has been extended to take in an instance of the `MessageCatalog`.
 
 #### Building translated files
 
 There are three possible "message key" types:
 
-1. Value of `RFC6749Error.ErrorField`: This is a string like `invalid_request` and correlates to most errors produced by
-   Fosite.
-2. Hint identifier passed into `RFC6749Error.WithHintIDOrDefaultf`: This func is not used extensively in Fosite but, in
-   time, most `WithHint` and `WithHintf` will be replaced with this function.
-3. Free text string format passed into `RFC6749Error.WithHint` and `RFC6749Error.WithHintf`: This function is used in
-   Fosite and Hydra extensively and any message catalog implementation can use the format string parameter as the
-   message key.
+1. Value of `RFC6749Error.ErrorField`: This is a string like `invalid_request`
+   and correlates to most errors produced by Fosite.
+2. Hint identifier passed into `RFC6749Error.WithHintIDOrDefaultf`: This func is
+   not used extensively in Fosite but, in time, most `WithHint` and `WithHintf`
+   will be replaced with this function.
+3. Free text string format passed into `RFC6749Error.WithHint` and
+   `RFC6749Error.WithHintf`: This function is used in Fosite and Hydra
+   extensively and any message catalog implementation can use the format string
+   parameter as the message key.
 
-An example of a message catalog can be seen in the [i18n_test.go](i18n/i18n_test.go).
+An example of a message catalog can be seen in the
+[i18n_test.go](i18n/i18n_test.go).
 
 #### Generating the `en` messages file
 
-This is a WIP at the moment, but effectively any scripting language can be used to generate this. It would need to
-traverse all files in the source code and extract the possible message identifiers based on the different message key
+This is a WIP at the moment, but effectively any scripting language can be used
+to generate this. It would need to traverse all files in the source code and
+extract the possible message identifiers based on the different message key
 types.
 
 ### Quickstart
