@@ -173,15 +173,15 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		return err
 	}
 
-	responder.SetAccessToken(accessToken)
-	responder.SetTokenType("bearer")
-	atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeRefreshToken, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
-	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, atLifespan, time.Now().UTC()))
-	responder.SetScopes(requester.GetGrantedScopes())
-	responder.SetExtra("refresh_token", refreshToken)
-
 	if err = storage.MaybeCommitTx(ctx, c.TokenRevocationStorage); err != nil {
 		return err
+	} else {
+		responder.SetAccessToken(accessToken)
+		responder.SetTokenType("bearer")
+		atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeRefreshToken, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
+		responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, atLifespan, time.Now().UTC()))
+		responder.SetScopes(requester.GetGrantedScopes())
+		responder.SetExtra("refresh_token", refreshToken)
 	}
 
 	return nil
