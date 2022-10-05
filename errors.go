@@ -228,12 +228,12 @@ var (
 	ErrAuthorizationPending = &RFC6749Error{
 		DescriptionField: "The authorization request is still pending as the end user hasn't yet completed the user-interaction steps.",
 		ErrorField:       errAuthorizationPending,
-		CodeField:        http.StatusForbidden,
+		CodeField:        http.StatusBadRequest,
 	}
 	ErrDeviceExpiredToken = &RFC6749Error{
 		DescriptionField: "The device_code has expired, and the device authorization session has concluded.",
 		ErrorField:       errDeviceExpiredToken,
-		CodeField:        http.StatusForbidden,
+		CodeField:        http.StatusBadRequest,
 	}
 )
 
