@@ -1,3 +1,5 @@
+// Copyright © 2022 Ory Corp
+
 package jwt
 
 // Validation provides a backwards compatible error definition
