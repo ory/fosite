@@ -13,7 +13,7 @@ test:  # runs all tests
 	GOBIN=$(shell pwd)/.bin go install golang.org/x/tools/cmd/goimports@latest
 
 .bin/ory: Makefile
-	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.1.43
+	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.1.44
 	touch .bin/ory
 
 node_modules: package-lock.json
