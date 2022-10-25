@@ -162,6 +162,35 @@ func TestRevokeToken(t *testing.T) {
 			},
 		},
 		{
+
+			description: "should pass - refresh token discovery first; refresh token is inactive",
+			expectErr:   nil,
+			client:      &fosite.DefaultClient{ID: "bar"},
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.RefreshToken
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrInactiveToken)
+
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
+			},
+		},
+		{
+			description: "should pass - access token discovery first; refresh token is inactive",
+			expectErr:   nil,
+			client:      &fosite.DefaultClient{ID: "bar"},
+			mock: func() {
+				token = "foo"
+				tokenType = fosite.AccessToken
+				atStrat.EXPECT().AccessTokenSignature(gomock.Any(), token)
+				store.EXPECT().GetAccessTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrNotFound)
+
+				rtStrat.EXPECT().RefreshTokenSignature(gomock.Any(), token)
+				store.EXPECT().GetRefreshTokenSession(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fosite.ErrInactiveToken)
+			},
+		},
+		{
 			description: "should fail - store error for access token get",
 			expectErr:   fosite.ErrTemporarilyUnavailable,
 			client:      &fosite.DefaultClient{ID: "bar"},

@@ -80,8 +80,9 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 }
 
 func storeErrorsToRevocationError(err1, err2 error) error {
-	// both errors are 404 or nil <=> the token is revoked
-	if (errors.Is(err1, fosite.ErrNotFound) || err1 == nil) && (errors.Is(err2, fosite.ErrNotFound) || err2 == nil) {
+	// both errors are fosite.ErrNotFound and fosite.ErrInactiveToken or nil <=> the token is revoked
+	if (errors.Is(err1, fosite.ErrNotFound) || errors.Is(err1, fosite.ErrInactiveToken) || err1 == nil) &&
+		(errors.Is(err2, fosite.ErrNotFound) || errors.Is(err2, fosite.ErrInactiveToken) || err2 == nil) {
 		return nil
 	}
 
