@@ -150,15 +150,17 @@ func TestRefreshTokenFlow(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because scope is no longer allowed",
+			description: "should pass even if client scope is no longer allowed",
 			setup: func(t *testing.T) {
 				oauthClient.ClientID = refreshCheckClient.ID
 				oauthClient.Scopes = []string{"fosite", "offline", "openid"}
 			},
 			beforeRefresh: func(t *testing.T) {
-				refreshCheckClient.Scopes = []string{"offline", "openid"}
+				// The client scopes are irrelevant after the refresh token has been granted.
+				refreshCheckClient.Scopes = nil
 			},
-			pass: false,
+			pass:  true,
+			check: func(t *testing.T, original, refreshed *oauth2.Token, or, rr *introspectionResponse) {},
 		},
 		{
 			description: "should fail because audience is no longer allowed",
