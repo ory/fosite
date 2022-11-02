@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ory/x/errorsx"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
@@ -78,13 +77,39 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	}
 
 	request.SetSession(originalRequest.GetSession().Clone())
-	request.SetRequestedScopes(originalRequest.GetRequestedScopes())
+
+	/*
+			There are two key points in the following spec section this addresses:
+				1. If omitted the scope param should be treated as the same as the scope originally granted by the resource owner.
+				2. The REQUESTED scope MUST NOT include any scope not originally granted.
+
+			scope
+					OPTIONAL.  The scope of the access request as described by Section 3.3.  The requested scope MUST NOT
+		  			include any scope not originally granted by the resource owner, and if omitted is treated as equal to
+		   			the scope originally granted by the resource owner.
+
+			See https://www.rfc-editor.org/rfc/rfc6749#section-6
+	*/
+	switch scope := request.GetRequestForm().Get("scope"); scope {
+	case "":
+		// Addresses point 1 of the text in RFC6749 Section 6.
+		request.SetRequestedScopes(originalRequest.GetGrantedScopes())
+	default:
+		request.SetRequestedScopes(fosite.RemoveEmpty(strings.Split(scope, " ")))
+	}
+
 	request.SetRequestedAudience(originalRequest.GetRequestedAudience())
 
-	for _, scope := range originalRequest.GetGrantedScopes() {
+	for _, scope := range request.GetRequestedScopes() {
+		// Addresses point 2 of the text in RFC6749 Section 6.
+		if !originalRequest.GetGrantedScopes().Has(scope) {
+			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The requested scope '%s' was not originally granted by the resource owner.", scope))
+		}
+
 		if !c.Config.GetScopeStrategy(ctx)(request.GetClient().GetScopes(), scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
+
 		request.GrantScope(scope)
 	}
 
