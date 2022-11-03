@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package fosite
 
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/hash.go github.com/ory/fosite Hasher
