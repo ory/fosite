@@ -142,6 +142,7 @@ func NewExampleStore() *MemoryStore {
 		AccessTokenRequestIDs:  map[string]string{},
 		RefreshTokenRequestIDs: map[string]string{},
 		IssuerPublicKeys:       map[string]IssuerPublicKeys{},
+		PARSessions:            map[string]fosite.AuthorizeRequester{},
 	}
 }
 
