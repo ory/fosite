@@ -1,4 +1,5 @@
 // Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
 // Package jwt is able to generate and validate json web tokens.
 // Follows https://tools.ietf.org/html/draft-ietf-oauth-json-web-token-32
