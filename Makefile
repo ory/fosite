@@ -1,7 +1,9 @@
+authors:  # updates the AUTHORS file
+	curl https://raw.githubusercontent.com/ory/ci/master/authors/authors.sh | env PRODUCT="Ory Fosite" bash
+
 format: .bin/goimports .bin/ory node_modules  # formats the source code
 	.bin/ory dev headers copyright --type=open-source
 	.bin/goimports -w .
-	curl https://raw.githubusercontent.com/ory/ci/master/authors/authors.sh | env PRODUCT="Ory Fosite" bash
 	npm exec -- prettier --write .
 
 help:
