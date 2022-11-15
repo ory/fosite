@@ -176,7 +176,7 @@ type IntrospectionResponder interface {
 	// IsActive returns true if the introspected token is active and false otherwise.
 	IsActive() bool
 
-	// AccessRequester returns nil when IsActive() is false and the original access request object otherwise.
+	// GetAccessRequester returns nil when IsActive() is false and the original access request object otherwise.
 	GetAccessRequester() AccessRequester
 
 	// GetTokenUse optionally returns the type of the token that was introspected. This could be "access_token", "refresh_token",
@@ -217,7 +217,7 @@ type Requester interface {
 	// AppendRequestedScope appends a scope to the request.
 	AppendRequestedScope(scope string)
 
-	// GetGrantScopes returns all granted scopes.
+	// GetGrantedScopes returns all granted scopes.
 	GetGrantedScopes() (grantedScopes Arguments)
 
 	// GetGrantedAudience returns all granted audiences.
@@ -245,9 +245,31 @@ type Requester interface {
 	Sanitize(allowedParameters []string) Requester
 }
 
+// RefreshTokenAccessRequester is an extended AccessRequester implementation that allows preserving
+// the original Requester.
+type RefreshTokenAccessRequester interface {
+	// GetRefreshTokenRequestedScopes returns the request's scopes specifically for the refresh token.
+	GetRefreshTokenRequestedScopes() (scopes Arguments)
+
+	// SetRefreshTokenRequestedScopes sets the request's scopes specifically for the refresh token.
+	SetRefreshTokenRequestedScopes(scopes Arguments)
+
+	// GetRefreshTokenGrantedScopes returns all granted scopes specifically for the refresh token.
+	GetRefreshTokenGrantedScopes() (scopes Arguments)
+
+	// SetRefreshTokenGrantedScopes sets all granted scopes specifically for the refresh token.
+	SetRefreshTokenGrantedScopes(scopes Arguments)
+
+	// SetGrantedScopes sets all granted scopes. This is specifically used in the refresh flow to restore the originally
+	// granted scopes to the session.
+	SetGrantedScopes(scopes Arguments)
+
+	AccessRequester
+}
+
 // AccessRequester is a token endpoint's request context.
 type AccessRequester interface {
-	// GetGrantType returns the requests grant type.
+	// GetGrantTypes returns the requests grant type.
 	GetGrantTypes() (grantTypes Arguments)
 
 	Requester
@@ -305,7 +327,7 @@ type AccessResponder interface {
 	// SetTokenType set's the responses mandatory token type
 	SetTokenType(tokenType string)
 
-	// SetAccessToken returns the responses access token.
+	// GetAccessToken returns the responses access token.
 	GetAccessToken() (token string)
 
 	// GetTokenType returns the responses token type.
