@@ -48,7 +48,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	if errors.Is(err, fosite.ErrInactiveToken) {
 		// Detected refresh token reuse
 		if rErr := c.handleRefreshTokenReuse(ctx, signature, originalRequest); rErr != nil {
-			return errorsx.WithStack(fosite.ErrServerError.WithWrap(rErr).WithDebug(rErr.Error()))
+			return errorsx.WithStack(rErr)
 		}
 
 		return errorsx.WithStack(fosite.ErrInactiveToken.WithWrap(err).WithDebug(err.Error()))
