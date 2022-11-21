@@ -83,5 +83,11 @@ func (f *Fosite) WriteAuthorizeError(ctx context.Context, rw http.ResponseWriter
 	}
 
 	rw.Header().Set("Location", redirectURIString)
-	rw.WriteHeader(http.StatusSeeOther)
+
+	switch ar.GetRequestMethod() {
+	case http.MethodGet:
+		rw.WriteHeader(http.StatusFound)
+	default:
+		rw.WriteHeader(http.StatusSeeOther)
+	}
 }
