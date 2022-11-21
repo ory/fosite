@@ -265,3 +265,92 @@ func TestRefreshTokenFlow(t *testing.T) {
 		})
 	}
 }
+
+func TestRefreshTokenFlowScopeNarrowing(t *testing.T) {
+	session := &defaultSession{
+		DefaultSession: &openid.DefaultSession{
+			Claims: &jwt.IDTokenClaims{
+				Subject: "peter",
+			},
+			Headers:  &jwt.Headers{},
+			Subject:  "peter",
+			Username: "peteru",
+		},
+	}
+	fc := new(fosite.Config)
+	fc.RefreshTokenLifespan = -1
+	fc.GlobalSecret = []byte("some-secret-thats-random-some-secret-thats-random-")
+	f := compose.ComposeAllEnabled(fc, fositeStore, gen.MustRSAKey())
+	ts := mockServer(t, f, session)
+	defer ts.Close()
+
+	fc.ScopeStrategy = fosite.ExactScopeStrategy
+
+	oauthClient := newOAuth2Client(ts)
+	oauthClient.Scopes = []string{"openid", "offline", "offline_access", "foo", "bar"}
+	oauthClient.ClientID = "grant-all-requested-scopes-client"
+
+	state := "1234567890"
+
+	testRefreshingClient := &fosite.DefaultClient{
+		ID:            "grant-all-requested-scopes-client",
+		Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
+		RedirectURIs:  []string{ts.URL + "/callback"},
+		ResponseTypes: []string{"code"},
+		GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+		Scopes:        []string{"openid", "offline_access", "offline", "foo", "bar", "baz"},
+		Audience:      []string{"https://www.ory.sh/api"},
+	}
+
+	fositeStore.Clients["grant-all-requested-scopes-client"] = testRefreshingClient
+
+	resp, err := http.Get(oauthClient.AuthCodeURL(state))
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+
+	token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"), oauth2.SetAuthURLParam("client_id", oauthClient.ClientID))
+	require.NoError(t, err)
+	require.NotEmpty(t, token.AccessToken)
+	require.NotEmpty(t, token.RefreshToken)
+
+	assert.Equal(t, "openid offline offline_access foo bar", token.Extra("scope"))
+
+	token1Refresh, err := doRefresh(oauthClient, token, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, token1Refresh.AccessToken)
+	require.NotEmpty(t, token1Refresh.RefreshToken)
+
+	assert.Equal(t, "openid offline offline_access foo bar", token1Refresh.Extra("scope"))
+
+	token2Refresh, err := doRefresh(oauthClient, token1Refresh, []string{"openid", "offline_access", "foo"})
+	require.NoError(t, err)
+	require.NotEmpty(t, token2Refresh.AccessToken)
+	require.NotEmpty(t, token2Refresh.RefreshToken)
+
+	assert.Equal(t, "openid offline_access foo", token2Refresh.Extra("scope"))
+
+	token3Refresh, err := doRefresh(oauthClient, token2Refresh, []string{"openid", "offline", "offline_access", "foo", "bar"})
+	require.NoError(t, err)
+	require.NotEmpty(t, token3Refresh.AccessToken)
+	require.NotEmpty(t, token3Refresh.RefreshToken)
+
+	assert.Equal(t, "openid offline offline_access foo bar", token3Refresh.Extra("scope"))
+
+	token4Refresh, err := doRefresh(oauthClient, token3Refresh, []string{"openid", "offline", "offline_access", "foo", "bar", "baz"})
+	require.Error(t, err)
+	require.Nil(t, token4Refresh)
+	require.Contains(t, err.Error(), "The requested scope is invalid, unknown, or malformed. The requested scope 'baz' was not originally granted by the resource owner.")
+}
+
+func doRefresh(client *oauth2.Config, t *oauth2.Token, scopes []string) (token *oauth2.Token, err error) {
+	opts := []oauth2.AuthCodeOption{
+		oauth2.SetAuthURLParam("refresh_token", t.RefreshToken),
+		oauth2.SetAuthURLParam("grant_type", "refresh_token"),
+	}
+
+	if len(scopes) != 0 {
+		opts = append(opts, oauth2.SetAuthURLParam("scope", strings.Join(scopes, " ")), oauth2.SetAuthURLParam("client_id", client.ClientID))
+	}
+
+	return client.Exchange(oauth2.NoContext, "", opts...)
+}
