@@ -159,7 +159,7 @@ func TestGenerateFromString(t *testing.T) {
 			hash: "zHYDOZGjzhVjx5r8RlBhpnJemX5JxEEBUjVT01n3IFM=",
 		},
 	} {
-		hash := cg.GenerateHMACForString(context.Background(), c.text)
+		hash, _ := cg.GenerateHMACForString(context.Background(), c.text)
 		assert.Equal(t, c.hash, hash)
 	}
 }

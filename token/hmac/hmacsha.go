@@ -170,15 +170,24 @@ func (c *HMACStrategy) Signature(token string) string {
 	return split[1]
 }
 
-func (c *HMACStrategy) GenerateHMACForString(ctx context.Context, text string) string {
+func (c *HMACStrategy) GenerateHMACForString(ctx context.Context, text string) (string, error) {
 	var signingKey [32]byte
-	copy(signingKey[:], c.Config.GetGlobalSecret(ctx))
+
+	secrets, err := c.Config.GetGlobalSecret(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if len(secrets) < minimumSecretLength {
+		return "", errors.Errorf("secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got %d byte", len(secrets))
+	}
+	copy(signingKey[:], secrets)
 
 	bytes := []byte(text)
 	hashBytes := c.generateHMAC(ctx, bytes, &signingKey)
 
 	b64 := base64.URLEncoding.EncodeToString(hashBytes)
-	return b64
+	return b64, nil
 }
 
 func (c *HMACStrategy) generateHMAC(ctx context.Context, data []byte, key *[32]byte) []byte {
