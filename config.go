@@ -190,13 +190,13 @@ type TokenEntropyProvider interface {
 // GlobalSecretProvider returns the provider for configuring the global secret.
 type GlobalSecretProvider interface {
 	// GetGlobalSecret returns the global secret.
-	GetGlobalSecret(ctx context.Context) []byte
+	GetGlobalSecret(ctx context.Context) ([]byte, error)
 }
 
 // RotatedGlobalSecretsProvider returns the provider for configuring the rotated global secrets.
 type RotatedGlobalSecretsProvider interface {
 	// GetRotatedGlobalSecrets returns the rotated global secrets.
-	GetRotatedGlobalSecrets(ctx context.Context) [][]byte
+	GetRotatedGlobalSecrets(ctx context.Context) ([][]byte, error)
 }
 
 // HMACHashingProvider returns the provider for configuring the hash function.

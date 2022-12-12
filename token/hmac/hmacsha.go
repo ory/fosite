@@ -51,12 +51,17 @@ func (c *HMACStrategy) Generate(ctx context.Context) (string, string, error) {
 	c.Lock()
 	defer c.Unlock()
 
-	if len(c.Config.GetGlobalSecret(ctx)) < minimumSecretLength {
-		return "", "", errors.Errorf("secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got %d byte", len(c.Config.GetGlobalSecret(ctx)))
+	secrets, err := c.Config.GetGlobalSecret(ctx)
+	if err != nil {
+		return "", "", err
+	}
+
+	if len(secrets) < minimumSecretLength {
+		return "", "", errors.Errorf("secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got %d byte", len(secrets))
 	}
 
 	var signingKey [32]byte
-	copy(signingKey[:], c.Config.GetGlobalSecret(ctx))
+	copy(signingKey[:], secrets)
 
 	entropy := c.Config.GetTokenEntropy(ctx)
 	if entropy < minimumEntropy {
@@ -86,11 +91,21 @@ func (c *HMACStrategy) Generate(ctx context.Context) (string, string, error) {
 func (c *HMACStrategy) Validate(ctx context.Context, token string) (err error) {
 	var keys [][]byte
 
-	if len(c.Config.GetGlobalSecret(ctx)) > 0 {
-		keys = append(keys, c.Config.GetGlobalSecret(ctx))
+	secrets, err := c.Config.GetGlobalSecret(ctx)
+	if err != nil {
+		return err
 	}
 
-	keys = append(keys, c.Config.GetRotatedGlobalSecrets(ctx)...)
+	rotatedSecrets, err := c.Config.GetRotatedGlobalSecrets(ctx)
+	if err != nil {
+		return err
+	}
+
+	if len(secrets) > 0 {
+		keys = append(keys, secrets)
+	}
+
+	keys = append(keys, rotatedSecrets...)
 	for _, key := range keys {
 		if err = c.validate(ctx, key, token); err == nil {
 			return nil

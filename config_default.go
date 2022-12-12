@@ -233,16 +233,16 @@ type Config struct {
 	IsPushedAuthorizeEnforced bool
 }
 
-func (c *Config) GetGlobalSecret(ctx context.Context) []byte {
-	return c.GlobalSecret
+func (c *Config) GetGlobalSecret(ctx context.Context) ([]byte, error) {
+	return c.GlobalSecret, nil
 }
 
 func (c *Config) GetUseLegacyErrorFormat(ctx context.Context) bool {
 	return c.UseLegacyErrorFormat
 }
 
-func (c *Config) GetRotatedGlobalSecrets(ctx context.Context) [][]byte {
-	return c.RotatedGlobalSecrets
+func (c *Config) GetRotatedGlobalSecrets(ctx context.Context) ([][]byte, error) {
+	return c.RotatedGlobalSecrets, nil
 }
 
 func (c *Config) GetHMACHasher(ctx context.Context) func() hash.Hash {
