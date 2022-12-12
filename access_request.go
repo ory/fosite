@@ -50,7 +50,3 @@ func (a *AccessRequest) GetRefreshTokenGrantedScopes() (scopes Arguments) {
 func (a *AccessRequest) SetRefreshTokenGrantedScopes(scopes Arguments) {
 	a.RefreshTokenGrantedScope = scopes
 }
-
-func (a *AccessRequest) SetGrantedScopes(scopes Arguments) {
-	a.GrantedScope = scopes
-}

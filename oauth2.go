@@ -260,10 +260,6 @@ type RefreshTokenAccessRequester interface {
 	// SetRefreshTokenGrantedScopes sets all granted scopes specifically for the refresh token.
 	SetRefreshTokenGrantedScopes(scopes Arguments)
 
-	// SetGrantedScopes sets all granted scopes. This is specifically used in the refresh flow to restore the originally
-	// granted scopes to the session.
-	SetGrantedScopes(scopes Arguments)
-
 	AccessRequester
 }
 

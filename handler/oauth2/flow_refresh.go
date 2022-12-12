@@ -186,15 +186,11 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	}
 
 	if rtRequest, ok := requester.(fosite.RefreshTokenAccessRequester); ok {
-		r := requester.Sanitize([]string{}).(*fosite.Request)
-		r.SetID(ts.GetID())
+		rtStoreReq := requester.Sanitize([]string{}).(*fosite.Request)
+		rtStoreReq.SetID(ts.GetID())
 
-		rtStoreReq := &fosite.AccessRequest{
-			Request: *r,
-		}
-
-		rtStoreReq.SetRequestedScopes(rtRequest.GetRefreshTokenRequestedScopes())
-		rtStoreReq.SetGrantedScopes(rtRequest.GetRefreshTokenGrantedScopes())
+		rtStoreReq.RequestedScope = rtRequest.GetRefreshTokenRequestedScopes()
+		rtStoreReq.GrantedScope = rtRequest.GetRefreshTokenGrantedScopes()
 
 		if err = c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, rtStoreReq); err != nil {
 			return err
