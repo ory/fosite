@@ -107,16 +107,3 @@ func OAuth2StatelessJWTIntrospectionFactory(config fosite.Configurator, storage 
 		Config: config,
 	}
 }
-
-// OAuth2DeviceFactory creates an OAuth2 device code grant ("Device Authorization Grant") handler and registers
-// an user code, device code, access token and a refresh token validator.
-func OAuth2DeviceFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
-	return &oauth2.DeviceHandler{
-		DeviceCodeStrategy:   strategy.(oauth2.DeviceCodeStrategy),
-		UserCodeStrategy:     strategy.(oauth2.UserCodeStrategy),
-		AccessTokenStrategy:  strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy: strategy.(oauth2.RefreshTokenStrategy),
-		CoreStorage:          storage.(oauth2.CoreStorage),
-		Config:               config,
-	}
-}

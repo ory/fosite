@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 /*
  * Copyright © 2015-2021 Aeneas Rekkas <aeneas+oss@aeneas.io>
  *
@@ -26,8 +29,9 @@ import (
 	"net/http"
 )
 
-// TODO: Do documentation
-
+// Once the user has approved the grant he will be redirected on his loggin machine
+// to a webpage (usally hosted in hydra-ui) to understand that he was connected successfully
+// and that he can close this tab and return to his non-interactive device;
 func (f *Fosite) WriteDeviceAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder) {
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")

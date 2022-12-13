@@ -1,23 +1,5 @@
-/*
- * Copyright © 2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @author		Aeneas Rekkas <aeneas+oss@aeneas.io>
- * @copyright 	2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
- * @license 	Apache-2.0
- *
- */
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
 package pkce
 
@@ -32,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
-	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/storage"
 )
 
@@ -40,8 +22,8 @@ type mockDeviceCodeStrategy struct {
 	signature string
 }
 
-func (m *mockDeviceCodeStrategy) DeviceCodeSignature(ctx context.Context, token string) string {
-	return m.signature
+func (m *mockDeviceCodeStrategy) DeviceCodeSignature(ctx context.Context, token string) (signature string, err error) {
+	return m.signature, nil
 }
 
 func (m *mockDeviceCodeStrategy) GenerateDeviceCode(ctx context.Context) (token string, signature string, err error) {
@@ -52,28 +34,11 @@ func (m *mockDeviceCodeStrategy) ValidateDeviceCode(ctx context.Context, request
 	return nil
 }
 
-type mockUserCodeStrategy struct {
-	signature string
-}
-
-func (m *mockUserCodeStrategy) UserCodeSignature(ctx context.Context, token string) string {
-	return m.signature
-}
-
-func (m *mockUserCodeStrategy) GenerateUserCode(ctx context.Context) (token string, signature string, err error) {
-	return "", "", nil
-}
-
-func (m *mockUserCodeStrategy) ValidateUserCode(ctx context.Context, requester fosite.Requester, token string) (err error) {
-	return nil
-}
-
-func TestPKCEHandlerDevice_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
+func TestPKCEHandlerDevice_HandleAuthorizeEndpointRequest(t *testing.T) {
 	var config fosite.Config
-	h := &HandlerDevice{
+	h := &Handler{
 		Storage:            storage.NewMemoryStore(),
-		DeviceCodeStrategy: new(oauth2.HMACSHAStrategy),
-		UserCodeStrategy:   new(oauth2.HMACSHAStrategy),
+		DeviceCodeStrategy: new(rfc8628.DefaultDeviceStrategy),
 		Config:             &config,
 	}
 	w := fosite.NewDeviceResponse()
@@ -115,14 +80,12 @@ func TestPKCEHandlerDevice_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 	require.NoError(t, h.HandleDeviceEndpointRequest(context.Background(), r, w))
 }
 
-func TestPKCEHandlerDevice_HandlerDeviceValidate(t *testing.T) {
+func TestPKCEHandlerDevice_HandlerValidate(t *testing.T) {
 	s := storage.NewMemoryStore()
 	ds := &mockDeviceCodeStrategy{}
-	us := &mockUserCodeStrategy{}
 	config := &fosite.Config{}
-	h := &HandlerDevice{
+	h := &Handler{
 		Storage:            s,
-		UserCodeStrategy:   us,
 		DeviceCodeStrategy: ds,
 		Config:             config,
 	}
@@ -149,6 +112,7 @@ func TestPKCEHandlerDevice_HandlerDeviceValidate(t *testing.T) {
 			d:         "fails because not auth code flow",
 			grant:     "not_urn:ietf:params:oauth:grant-type:device_code",
 			expectErr: fosite.ErrUnknownRequest,
+			client:    &fosite.DefaultClient{Public: false},
 		},
 		{
 			d:           "passes with private client",
@@ -286,12 +250,13 @@ func TestPKCEHandlerDevice_HandlerDeviceValidate(t *testing.T) {
 			ar := fosite.NewAuthorizeRequest()
 			ar.Form.Add("code_challenge", tc.challenge)
 			ar.Form.Add("code_challenge_method", tc.method)
-			require.NoError(t, s.CreatePKCERequestSession(nil, fmt.Sprintf("valid-code-%d", k), ar))
+			require.NoError(t, s.CreatePKCERequestSession(context.TODO(), fmt.Sprintf("valid-code-%d", k), ar))
 
 			r := fosite.NewAccessRequest(nil)
 			r.Client = tc.client
 			r.GrantTypes = fosite.Arguments{tc.grant}
 			r.Form.Add("code_verifier", tc.verifier)
+			r.Form.Add("device_code", tc.code)
 			if tc.expectErr == nil {
 				require.NoError(t, h.HandleTokenEndpointRequest(context.Background(), r))
 			} else {
@@ -370,7 +335,7 @@ func TestPKCEHandlerDevice_HandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
-			h := &HandlerDevice{
+			h := &Handler{
 				Config: &fosite.Config{
 					EnforcePKCE:                    tc.force,
 					EnforcePKCEForPublicClients:    tc.forcePublic,

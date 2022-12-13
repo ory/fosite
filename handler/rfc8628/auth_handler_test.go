@@ -1,4 +1,7 @@
-package oauth2
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
+package rfc8628_test
 
 import (
 	"testing"
@@ -6,19 +9,18 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite"
+	. "github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/storage"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
-
+func Test_HandleDeviceEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	store := storage.NewMemoryStore()
-	handler := DeviceHandler{
-		CoreStorage:        store,
-		DeviceCodeStrategy: &hmacshaStrategy,
-		UserCodeStrategy:   &hmacshaStrategy,
+	handler := DeviceAuthHandler{
+		Storage:  store,
+		Strategy: &hmacshaStrategy,
 		Config: &fosite.Config{
 			DeviceAndUserCodeLifespan:      time.Minute * 10,
 			DeviceAuthTokenPollingInterval: time.Second * 10,
@@ -44,5 +46,4 @@ func Test_HandleDeviceAuthorizeEndpointRequest(t *testing.T) {
 	assert.Contains(t, resp.GetDeviceCode(), "ory_dc_")
 	assert.Contains(t, resp.GetDeviceCode(), ".")
 	assert.Equal(t, resp.GetVerificationURI(), "www.test.com")
-
 }

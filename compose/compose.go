@@ -74,6 +74,7 @@ func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface
 		storage,
 		&CommonStrategy{
 			CoreStrategy:               NewOAuth2HMACStrategy(config),
+			RFC8628CodeStrategy:        NewRFC8628CodeStrategy(config),
 			OpenIDConnectTokenStrategy: NewOpenIDConnectStrategy(keyGetter, config),
 			Signer:                     &jwt.DefaultSigner{GetPrivateKey: keyGetter},
 		},
@@ -81,9 +82,9 @@ func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface
 		OAuth2AuthorizeImplicitFactory,
 		OAuth2ClientCredentialsGrantFactory,
 		OAuth2RefreshTokenGrantFactory,
-		OAuth2DeviceFactory,
 		OAuth2ResourceOwnerPasswordCredentialsFactory,
 		RFC7523AssertionGrantFactory,
+		RFC8628DeviceFactory,
 
 		OpenIDConnectExplicitFactory,
 		OpenIDConnectImplicitFactory,
@@ -96,6 +97,5 @@ func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface
 
 		OAuth2PKCEFactory,
 		PushedAuthorizeHandlerFactory,
-		OAuth2DevicePKCEFactory,
 	)
 }

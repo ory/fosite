@@ -79,6 +79,8 @@ type DeviceEndpointHandler interface {
 
 type DeviceAuthorizeEndpointHandler interface {
 	// HandleDeviceAuthorizeEndpointRequest handles a device authorize endpoint request.
-	// TODO doc
+	// To extend the handler's capabilities, the http request is passed along, if further
+	// information retrieval is required. If the handler feels that he is not responsible for
+	// the authorize request, he must return nil and NOT modify session nor responder neither requester.
 	HandleDeviceAuthorizeEndpointRequest(ctx context.Context, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder) error
 }

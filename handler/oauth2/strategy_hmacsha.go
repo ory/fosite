@@ -5,9 +5,7 @@ package oauth2
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
-	"math/big"
 	"strings"
 	"time"
 
@@ -23,7 +21,6 @@ type HMACSHAStrategy struct {
 		fosite.AccessTokenLifespanProvider
 		fosite.RefreshTokenLifespanProvider
 		fosite.AuthorizeCodeLifespanProvider
-		fosite.DeviceAndUserCodeLifespanProvider
 	}
 	prefix *string
 }
@@ -122,65 +119,4 @@ func (h *HMACSHAStrategy) ValidateAuthorizeCode(ctx context.Context, r fosite.Re
 	}
 
 	return h.Enigma.Validate(ctx, h.trimPrefix(token, "ac"))
-}
-
-func (h *HMACSHAStrategy) generateRandomString(length int) (token string, err error) {
-	chars := [20]byte{'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Z'}
-	chars_length := int64(len(chars))
-
-	code := make([]byte, length)
-	for i := 0; i < length; i++ {
-		num, err := rand.Int(rand.Reader, big.NewInt(chars_length))
-		if err != nil {
-			return "", err
-		}
-		code[i] = chars[num.Int64()]
-	}
-	return string(code), nil
-}
-
-func (h *HMACSHAStrategy) GenerateUserCode(ctx context.Context) (token string, signature string, err error) {
-	userCode, err := h.generateRandomString(8)
-	return userCode, h.UserCodeSignature(ctx, userCode), err
-}
-
-func (h *HMACSHAStrategy) UserCodeSignature(ctx context.Context, token string) string {
-	return h.Enigma.GenerateHMACForString(ctx, token)
-}
-
-func (h *HMACSHAStrategy) ValidateUserCode(ctx context.Context, r fosite.Requester, code string) (err error) {
-	var exp = r.GetSession().GetExpiresAt(fosite.UserCode)
-	if exp.IsZero() && r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx)).Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("User code expired at '%s'.", r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx))))
-	}
-	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("User code expired at '%s'.", exp))
-	}
-	return nil
-}
-
-func (h *HMACSHAStrategy) GenerateDeviceCode(ctx context.Context) (token string, signature string, err error) {
-	token, sig, err := h.Enigma.Generate(ctx)
-	if err != nil {
-		return "", "", err
-	}
-
-	return h.setPrefix(token, "dc"), sig, nil
-}
-
-func (h *HMACSHAStrategy) DeviceCodeSignature(ctx context.Context, token string) string {
-	return h.Enigma.Signature(token)
-}
-
-func (h *HMACSHAStrategy) ValidateDeviceCode(ctx context.Context, r fosite.Requester, code string) (err error) {
-	var exp = r.GetSession().GetExpiresAt(fosite.DeviceCode)
-	if exp.IsZero() && r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx)).Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("Device code expired at '%s'.", r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx))))
-	}
-
-	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
-		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("Device code expired at '%s'.", exp))
-	}
-
-	return h.Enigma.Validate(ctx, h.trimPrefix(code, "dc"))
 }

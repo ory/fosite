@@ -5,7 +5,6 @@ package oauth2
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -13,14 +12,21 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/hmac"
 )
 
 var hmacshaStrategy = HMACSHAStrategy{
 	Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
 	Config: &fosite.Config{
-		AccessTokenLifespan:       time.Hour * 24,
-		AuthorizeCodeLifespan:     time.Hour * 24,
+		AccessTokenLifespan:   time.Hour * 24,
+		AuthorizeCodeLifespan: time.Hour * 24,
+	},
+}
+
+var RFC8628HMACSHAStrategy = rfc8628.DefaultDeviceStrategy{
+	Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
+	Config: &fosite.Config{
 		DeviceAndUserCodeLifespan: time.Hour * 24,
 	},
 }
@@ -34,8 +40,6 @@ var hmacExpiredCase = fosite.Request{
 			fosite.AccessToken:   time.Now().UTC().Add(-time.Hour),
 			fosite.AuthorizeCode: time.Now().UTC().Add(-time.Hour),
 			fosite.RefreshToken:  time.Now().UTC().Add(-time.Hour),
-			fosite.UserCode:      time.Now().UTC().Add(-time.Hour),
-			fosite.DeviceCode:    time.Now().UTC().Add(-time.Hour),
 		},
 	},
 }
@@ -49,8 +53,6 @@ var hmacValidCase = fosite.Request{
 			fosite.AccessToken:   time.Now().UTC().Add(time.Hour),
 			fosite.AuthorizeCode: time.Now().UTC().Add(time.Hour),
 			fosite.RefreshToken:  time.Now().UTC().Add(time.Hour),
-			fosite.UserCode:      time.Now().UTC().Add(time.Hour),
-			fosite.DeviceCode:    time.Now().UTC().Add(time.Hour),
 		},
 	},
 }
@@ -172,77 +174,6 @@ func TestHMACAuthorizeCode(t *testing.T) {
 			} {
 				t.Run(fmt.Sprintf("prefix=%v", k == 0), func(t *testing.T) {
 					err = hmacshaStrategy.ValidateAuthorizeCode(nil, &c.r, token)
-					if c.pass {
-						assert.NoError(t, err)
-						validate := hmacshaStrategy.Enigma.Signature(token)
-						assert.Equal(t, signature, validate)
-					} else {
-						assert.Error(t, err)
-					}
-				})
-			}
-		})
-	}
-}
-
-func TestHMACUserCode(t *testing.T) {
-	for k, c := range []struct {
-		r    fosite.Request
-		pass bool
-	}{
-		{
-			r:    hmacValidCase,
-			pass: true,
-		},
-		{
-			r:    hmacExpiredCase,
-			pass: false,
-		},
-	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			userCode, signature, err := hmacshaStrategy.GenerateUserCode(nil)
-			assert.NoError(t, err)
-			regex := regexp.MustCompile("[BCDFGHJKLMNPQRSTVWXZ]{8}")
-			assert.Equal(t, len(regex.FindString(userCode)), len(userCode))
-
-			err = hmacshaStrategy.ValidateUserCode(nil, &c.r, userCode)
-			if c.pass {
-				assert.NoError(t, err)
-				validate := hmacshaStrategy.Enigma.GenerateHMACForString(nil, userCode)
-				assert.Equal(t, signature, validate)
-			} else {
-				assert.Error(t, err)
-			}
-		})
-	}
-}
-
-func TestHMACDeviceCode(t *testing.T) {
-	for k, c := range []struct {
-		r    fosite.Request
-		pass bool
-	}{
-		{
-			r:    hmacValidCase,
-			pass: true,
-		},
-		{
-			r:    hmacExpiredCase,
-			pass: false,
-		},
-	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
-			token, signature, err := hmacshaStrategy.GenerateDeviceCode(nil)
-			assert.NoError(t, err)
-			assert.Equal(t, strings.Split(token, ".")[1], signature)
-			assert.Contains(t, token, "ory_dc_")
-
-			for k, token := range []string{
-				token,
-				strings.TrimPrefix(token, "ory_dc_"),
-			} {
-				t.Run(fmt.Sprintf("prefix=%v", k == 0), func(t *testing.T) {
-					err = hmacshaStrategy.ValidateDeviceCode(nil, &c.r, token)
 					if c.pass {
 						assert.NoError(t, err)
 						validate := hmacshaStrategy.Enigma.Signature(token)

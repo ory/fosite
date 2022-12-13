@@ -1,31 +1,15 @@
-/*
- * Copyright © 2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @author		Aeneas Rekkas <aeneas+oss@aeneas.io>
- * @copyright 	2015-2018 Aeneas Rekkas <aeneas+oss@aeneas.io>
- * @license 	Apache-2.0
- *
- */
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
 
 package fosite_test
 
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -44,6 +28,7 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 		conf          *Fosite
 		r             *http.Request
 		query         url.Values
+		form          url.Values
 		expectedError error
 		mock          func()
 		expect        *DeviceAuthorizeRequest
@@ -89,6 +74,26 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 			},
 		},
 		{
+			desc: "should pass (body)",
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
+			form: url.Values{
+				"device_verifier": {"AAAA"},
+				"client_id":       {"1234"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+				}, nil)
+			},
+			expect: &DeviceAuthorizeRequest{
+				Request: Request{
+					Client: &DefaultClient{
+						GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+					},
+				},
+			},
+		},
+		{
 			desc: "should fail client doesn't have device grant",
 			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			query: url.Values{
@@ -111,6 +116,11 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 				c.r = &http.Request{Header: http.Header{}}
 				if c.query != nil {
 					c.r.URL = &url.URL{RawQuery: c.query.Encode()}
+				}
+				if c.form != nil {
+					c.r.Method = "POST"
+					c.r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+					c.r.Body = io.NopCloser(strings.NewReader(c.form.Encode()))
 				}
 			}
 

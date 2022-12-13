@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
@@ -25,6 +26,8 @@ type AuthorizeExplicitGrantHandler struct {
 	AuthorizeCodeStrategy  AuthorizeCodeStrategy
 	CoreStorage            CoreStorage
 	TokenRevocationStorage TokenRevocationStorage
+	DeviceStrategy         rfc8628.RFC8628CodeStrategy
+	DeviceStorage          rfc8628.RFC8628CodeStorage
 	Config                 interface {
 		fosite.AuthorizeCodeLifespanProvider
 		fosite.AccessTokenLifespanProvider

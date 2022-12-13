@@ -1,3 +1,6 @@
+// Copyright © 2022 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 /*
  * Copyright © 2015-2021 Aeneas Rekkas <aeneas+oss@aeneas.io>
  *
@@ -45,7 +48,7 @@ func (f *Fosite) NewDeviceRequest(ctx context.Context, req *http.Request) (Devic
 	}
 	request.Client = client
 
-	if !client.GetGrantTypes().Has("urn:ietf:params:oauth:grant-type:device_code") {
+	if !client.GetGrantTypes().Has(string(GrantTypeDeviceCode)) {
 		return nil, errorsx.WithStack(ErrInvalidGrant.WithHint("The requested OAuth 2.0 Client does not have the 'urn:ietf:params:oauth:grant-type:device_code' grant."))
 	}
 

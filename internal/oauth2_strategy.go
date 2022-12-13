@@ -67,20 +67,6 @@ func (mr *MockCoreStrategyMockRecorder) AuthorizeCodeSignature(arg0, arg1 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthorizeCodeSignature", reflect.TypeOf((*MockCoreStrategy)(nil).AuthorizeCodeSignature), arg0, arg1)
 }
 
-// DeviceCodeSignature mocks base method.
-func (m *MockCoreStrategy) DeviceCodeSignature(arg0 context.Context, arg1 string) string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeviceCodeSignature", arg0, arg1)
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// DeviceCodeSignature indicates an expected call of DeviceCodeSignature.
-func (mr *MockCoreStrategyMockRecorder) DeviceCodeSignature(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeviceCodeSignature", reflect.TypeOf((*MockCoreStrategy)(nil).DeviceCodeSignature), arg0, arg1)
-}
-
 // GenerateAccessToken mocks base method.
 func (m *MockCoreStrategy) GenerateAccessToken(arg0 context.Context, arg1 fosite.Requester) (string, string, error) {
 	m.ctrl.T.Helper()
@@ -113,22 +99,6 @@ func (mr *MockCoreStrategyMockRecorder) GenerateAuthorizeCode(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateAuthorizeCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateAuthorizeCode), arg0, arg1)
 }
 
-// GenerateDeviceCode mocks base method.
-func (m *MockCoreStrategy) GenerateDeviceCode(arg0 context.Context) (string, string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateDeviceCode", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GenerateDeviceCode indicates an expected call of GenerateDeviceCode.
-func (mr *MockCoreStrategyMockRecorder) GenerateDeviceCode(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateDeviceCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateDeviceCode), arg0)
-}
-
 // GenerateRefreshToken mocks base method.
 func (m *MockCoreStrategy) GenerateRefreshToken(arg0 context.Context, arg1 fosite.Requester) (string, string, error) {
 	m.ctrl.T.Helper()
@@ -145,22 +115,6 @@ func (mr *MockCoreStrategyMockRecorder) GenerateRefreshToken(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateRefreshToken", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateRefreshToken), arg0, arg1)
 }
 
-// GenerateUserCode mocks base method.
-func (m *MockCoreStrategy) GenerateUserCode(arg0 context.Context) (string, string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GenerateUserCode", arg0)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GenerateUserCode indicates an expected call of GenerateUserCode.
-func (mr *MockCoreStrategyMockRecorder) GenerateUserCode(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateUserCode", reflect.TypeOf((*MockCoreStrategy)(nil).GenerateUserCode), arg0)
-}
-
 // RefreshTokenSignature mocks base method.
 func (m *MockCoreStrategy) RefreshTokenSignature(arg0 context.Context, arg1 string) string {
 	m.ctrl.T.Helper()
@@ -173,20 +127,6 @@ func (m *MockCoreStrategy) RefreshTokenSignature(arg0 context.Context, arg1 stri
 func (mr *MockCoreStrategyMockRecorder) RefreshTokenSignature(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RefreshTokenSignature", reflect.TypeOf((*MockCoreStrategy)(nil).RefreshTokenSignature), arg0, arg1)
-}
-
-// UserCodeSignature mocks base method.
-func (m *MockCoreStrategy) UserCodeSignature(arg0 context.Context, arg1 string) string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UserCodeSignature", arg0, arg1)
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// UserCodeSignature indicates an expected call of UserCodeSignature.
-func (mr *MockCoreStrategyMockRecorder) UserCodeSignature(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserCodeSignature", reflect.TypeOf((*MockCoreStrategy)(nil).UserCodeSignature), arg0, arg1)
 }
 
 // ValidateAccessToken mocks base method.
@@ -217,20 +157,6 @@ func (mr *MockCoreStrategyMockRecorder) ValidateAuthorizeCode(arg0, arg1, arg2 i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateAuthorizeCode", reflect.TypeOf((*MockCoreStrategy)(nil).ValidateAuthorizeCode), arg0, arg1, arg2)
 }
 
-// ValidateDeviceCode mocks base method.
-func (m *MockCoreStrategy) ValidateDeviceCode(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateDeviceCode", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ValidateDeviceCode indicates an expected call of ValidateDeviceCode.
-func (mr *MockCoreStrategyMockRecorder) ValidateDeviceCode(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateDeviceCode", reflect.TypeOf((*MockCoreStrategy)(nil).ValidateDeviceCode), arg0, arg1, arg2)
-}
-
 // ValidateRefreshToken mocks base method.
 func (m *MockCoreStrategy) ValidateRefreshToken(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
 	m.ctrl.T.Helper()
@@ -243,18 +169,4 @@ func (m *MockCoreStrategy) ValidateRefreshToken(arg0 context.Context, arg1 fosit
 func (mr *MockCoreStrategyMockRecorder) ValidateRefreshToken(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateRefreshToken", reflect.TypeOf((*MockCoreStrategy)(nil).ValidateRefreshToken), arg0, arg1, arg2)
-}
-
-// ValidateUserCode mocks base method.
-func (m *MockCoreStrategy) ValidateUserCode(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateUserCode", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ValidateUserCode indicates an expected call of ValidateUserCode.
-func (mr *MockCoreStrategyMockRecorder) ValidateUserCode(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateUserCode", reflect.TypeOf((*MockCoreStrategy)(nil).ValidateUserCode), arg0, arg1, arg2)
 }

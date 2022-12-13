@@ -23,18 +23,22 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest))
 	}
 
-	if !request.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"authorization_code\"."))
+	if isAuthorizationCode(request) {
+		if !request.GetClient().GetGrantTypes().Has("authorization_code") {
+			return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"authorization_code\"."))
+		}
+	} else if isDeviceCode(request) {
+		if !request.GetClient().GetGrantTypes().Has(string(fosite.GrantTypeDeviceCode)) {
+			return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"urn:ietf:params:oauth:grant-type:device_code\"."))
+		}
 	}
 
-	code := request.GetRequestForm().Get("code")
-	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
-	if errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) {
+	code, _, authorizeRequest, err := c.getCodeAndSession(ctx, request)
+	if errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) || errors.Is(err, fosite.ErrInvalidatedDeviceCode) {
 		if authorizeRequest == nil {
 			return fosite.ErrServerError.
 				WithHint("Misconfigured code lead to an error that prohibited the OAuth 2.0 Framework from processing this request.").
-				WithDebug("GetAuthorizeCodeSession must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedAuthorizeCode\".")
+				WithDebug("getCodeSession must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedAuthorizeCode\" or \"ErrInvalidatedDeviceCode\".")
 		}
 
 		// If an authorize code is used twice, we revoke all refresh and access tokens associated with this request.
@@ -56,10 +60,18 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	// The authorization server MUST verify that the authorization code is valid
-	// This needs to happen after store retrieval for the session to be hydrated properly
-	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
+	if isAuthorizationCode(request) {
+		// The authorization server MUST verify that the authorization code is valid
+		// This needs to happen after store retrieval for the session to be hydrated properly
+		if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
+			return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
+		}
+	} else if isDeviceCode(request) {
+		// The authorization server MUST verify that the device code is valid
+		// This needs to happen after store retrieval for the session to be hydrated properly
+		if err := c.DeviceStrategy.ValidateDeviceCode(ctx, request, code); err != nil {
+			return errorsx.WithStack(err)
+		}
 	}
 
 	// Override scopes
@@ -121,14 +133,19 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	code := requester.GetRequestForm().Get("code")
-	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
+	code, signature, authorizeRequest, err := c.getCodeAndSession(ctx, requester)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	} else if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
-		// This needs to happen after store retrieval for the session to be hydrated properly
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
+	} else if isAuthorizationCode(requester) {
+		if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
+			// This needs to happen after store retrieval for the session to be hydrated properly
+			return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
+		}
+	} else if isDeviceCode(requester) {
+		if err := c.DeviceStrategy.ValidateDeviceCode(ctx, requester, code); err != nil {
+			// This needs to happen after store retrieval for the session to be hydrated properly
+			return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
+		}
 	}
 
 	for _, scope := range authorizeRequest.GetGrantedScopes() {
@@ -164,9 +181,17 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		}
 	}()
 
-	if err = c.CoreStorage.InvalidateAuthorizeCodeSession(ctx, signature); err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	} else if err = c.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
+	if isAuthorizationCode(requester) {
+		if err = c.CoreStorage.InvalidateAuthorizeCodeSession(ctx, signature); err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
+	} else if isDeviceCode(requester) {
+		if err = c.DeviceStorage.InvalidateDeviceCodeSession(ctx, signature); err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
+	}
+
+	if err = c.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	} else if refreshSignature != "" {
 		if err = c.CoreStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester.Sanitize([]string{})); err != nil {
@@ -191,11 +216,41 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 }
 
 func (c *AuthorizeExplicitGrantHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
-	return false
+	return isDeviceCode(requester)
 }
 
 func (c *AuthorizeExplicitGrantHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
+	return isDeviceCode(requester) || isAuthorizationCode(requester)
+}
+
+func (c *AuthorizeExplicitGrantHandler) getCodeAndSession(ctx context.Context, requester fosite.AccessRequester) (code string, signature string, request fosite.Requester, err error) {
+	if isAuthorizationCode(requester) {
+		code := requester.GetRequestForm().Get("code")
+		signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
+		req, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
+		return code, signature, req, err
+	} else if isDeviceCode(requester) {
+		code := requester.GetRequestForm().Get("device_code")
+		signature, err := c.DeviceStrategy.DeviceCodeSignature(ctx, code)
+		if err != nil {
+			return "", "", nil, errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
+		req, err := c.DeviceStorage.GetDeviceCodeSession(ctx, signature, requester.GetSession())
+		return code, signature, req, err
+	}
+
+	// We should never fall here
+	return "", "", nil, errorsx.WithStack(fosite.ErrAccessDenied.WithHint("This OAuth 2.0 request could not be identified"))
+}
+
+func isDeviceCode(requester fosite.AccessRequester) bool {
+	// grant_type REQUIRED.
+	// Value MUST be set to "urn:ietf:params:oauth:grant-type:device_code"
+	return requester.GetGrantTypes().ExactOne(string(fosite.GrantTypeDeviceCode)) // && len(requester.GetRequestForm().Get("device_code")) > 0
+}
+
+func isAuthorizationCode(requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code"
-	return requester.GetGrantTypes().ExactOne("authorization_code")
+	return requester.GetGrantTypes().ExactOne("authorization_code") // && len(requester.GetRequestForm().Get("code")) > 0
 }

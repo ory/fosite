@@ -245,12 +245,13 @@ func TestPKCEHandlerValidate(t *testing.T) {
 			ar := fosite.NewAuthorizeRequest()
 			ar.Form.Add("code_challenge", tc.challenge)
 			ar.Form.Add("code_challenge_method", tc.method)
-			require.NoError(t, s.CreatePKCERequestSession(nil, fmt.Sprintf("valid-code-%d", k), ar))
+			require.NoError(t, s.CreatePKCERequestSession(context.TODO(), fmt.Sprintf("valid-code-%d", k), ar))
 
 			r := fosite.NewAccessRequest(nil)
 			r.Client = tc.client
 			r.GrantTypes = fosite.Arguments{tc.grant}
 			r.Form.Add("code_verifier", tc.verifier)
+			r.Form.Add("code", tc.code)
 			if tc.expectErr == nil {
 				require.NoError(t, h.HandleTokenEndpointRequest(context.Background(), r))
 			} else {
