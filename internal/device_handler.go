@@ -39,7 +39,7 @@ func (m *MockDeviceEndpointHandler) EXPECT() *MockDeviceEndpointHandlerMockRecor
 }
 
 // HandleDeviceEndpointRequest mocks base method.
-func (m *MockDeviceEndpointHandler) HandleDeviceEndpointRequest(arg0 context.Context, arg1 fosite.Requester, arg2 fosite.DeviceResponder) error {
+func (m *MockDeviceEndpointHandler) HandleDeviceEndpointRequest(arg0 context.Context, arg1 fosite.DeviceRequester, arg2 fosite.DeviceResponder) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "HandleDeviceEndpointRequest", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
