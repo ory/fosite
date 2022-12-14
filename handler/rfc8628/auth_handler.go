@@ -22,7 +22,7 @@ type DeviceAuthHandler struct {
 
 // DeviceAuthorizationHandler is a response handler for the Device Authorisation Grant as
 // defined in https://tools.ietf.org/html/rfc8628#section-3.1
-func (d *DeviceAuthHandler) HandleDeviceEndpointRequest(ctx context.Context, dar fosite.Requester, resp fosite.DeviceResponder) error {
+func (d *DeviceAuthHandler) HandleDeviceEndpointRequest(ctx context.Context, dar fosite.DeviceRequester, resp fosite.DeviceResponder) error {
 	deviceCode, deviceCodeSignature, err := d.Strategy.GenerateDeviceCode(ctx)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))

@@ -54,7 +54,7 @@ func NewOpenIDConnectStrategy(keyGetter func(context.Context) (interface{}, erro
 	}
 }
 
-func NewRFC8628CodeStrategy(config fosite.Configurator) *rfc8628.DefaultDeviceStrategy {
+func NewDeviceStrategy(config fosite.Configurator) *rfc8628.DefaultDeviceStrategy {
 	return &rfc8628.DefaultDeviceStrategy{
 		Enigma: &hmac.HMACStrategy{Config: config},
 		Config: config,

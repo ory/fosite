@@ -17,6 +17,8 @@ import (
 )
 
 type DefaultDeviceStrategy struct {
+	RFC8628CodeStrategy
+
 	Enigma *enigma.HMACStrategy
 	Config interface {
 		fosite.DeviceAndUserCodeLifespanProvider

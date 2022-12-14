@@ -54,6 +54,8 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 			debug += "Revocation of refresh_token lead to error " + revErr.Error() + "."
 		}
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(hint).WithDebug(debug))
+	} else if errors.Is(err, fosite.ErrAuthorizationPending) {
+		return errorsx.WithStack(err)
 	} else if err != nil && errors.Is(err, fosite.ErrNotFound) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {

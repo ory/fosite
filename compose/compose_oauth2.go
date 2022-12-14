@@ -6,6 +6,7 @@ package compose
 import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -16,8 +17,10 @@ func OAuth2AuthorizeExplicitFactory(config fosite.Configurator, storage interfac
 		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
 		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
 		AuthorizeCodeStrategy:  strategy.(oauth2.AuthorizeCodeStrategy),
+		DeviceStrategy:         strategy.(rfc8628.RFC8628CodeStrategy),
 		CoreStorage:            storage.(oauth2.CoreStorage),
 		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		DeviceStorage:          storage.(rfc8628.RFC8628CodeStorage),
 		Config:                 config,
 	}
 }

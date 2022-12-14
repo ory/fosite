@@ -74,7 +74,7 @@ type DeviceEndpointHandler interface {
 	//
 	// The following spec is a good example of what HandleDeviceAuthorizeRequest should do.
 	// * https://tools.ietf.org/html/rfc8628#section-3.2
-	HandleDeviceEndpointRequest(ctx context.Context, requester Requester, responder DeviceResponder) error
+	HandleDeviceEndpointRequest(ctx context.Context, requester DeviceRequester, responder DeviceResponder) error
 }
 
 type DeviceAuthorizeEndpointHandler interface {

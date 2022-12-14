@@ -37,7 +37,7 @@ func (f *Fosite) NewDeviceRequest(ctx context.Context, req *http.Request) (Devic
 	request := NewDeviceRequest()
 	request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), req)
 
-	if err := req.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
+	if err := req.ParseForm(); err != nil {
 		return nil, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	}
 	request.Form = req.PostForm
