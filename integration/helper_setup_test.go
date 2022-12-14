@@ -23,6 +23,7 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/integration/clients"
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/hmac"
@@ -123,6 +124,8 @@ var accessTokenLifespan = time.Hour
 
 var authCodeLifespan = time.Minute
 
+var deviceAndUserCodeLifespan = time.Hour
+
 func createIssuerPublicKey(issuer, subject, keyID string, key crypto.PublicKey, scopes []string) storage.IssuerPublicKeys {
 	return storage.IssuerPublicKeys{
 		Issuer: issuer,
@@ -172,15 +175,32 @@ func newJWTBearerAppClient(ts *httptest.Server) *clients.JWTBearer {
 	return clients.NewJWTBearer(ts.URL + tokenRelativePath)
 }
 
-var hmacStrategy = &oauth2.HMACSHAStrategy{
-	Enigma: &hmac.HMACStrategy{
+type GlobaStrategy struct {
+	oauth2.CoreStrategy
+	rfc8628.RFC8628CodeStrategy
+}
+
+var hmacStrategy = &GlobaStrategy{
+	&oauth2.HMACSHAStrategy{
+		Enigma: &hmac.HMACStrategy{
+			Config: &fosite.Config{
+				GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
+			},
+		},
 		Config: &fosite.Config{
-			GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
+			AccessTokenLifespan:   accessTokenLifespan,
+			AuthorizeCodeLifespan: authCodeLifespan,
 		},
 	},
-	Config: &fosite.Config{
-		AccessTokenLifespan:   accessTokenLifespan,
-		AuthorizeCodeLifespan: authCodeLifespan,
+	&rfc8628.DefaultDeviceStrategy{
+		Enigma: &hmac.HMACStrategy{
+			Config: &fosite.Config{
+				GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
+			},
+		},
+		Config: &fosite.Config{
+			DeviceAndUserCodeLifespan: deviceAndUserCodeLifespan,
+		},
 	},
 }
 
@@ -191,8 +211,18 @@ var jwtStrategy = &oauth2.DefaultJWTStrategy{
 			return defaultRSAKey, nil
 		},
 	},
-	Config:          &fosite.Config{},
-	HMACSHAStrategy: hmacStrategy,
+	Config: &fosite.Config{},
+	HMACSHAStrategy: &oauth2.HMACSHAStrategy{
+		Enigma: &hmac.HMACStrategy{
+			Config: &fosite.Config{
+				GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
+			},
+		},
+		Config: &fosite.Config{
+			AccessTokenLifespan:   accessTokenLifespan,
+			AuthorizeCodeLifespan: authCodeLifespan,
+		},
+	},
 }
 
 func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {
