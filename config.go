@@ -7,6 +7,7 @@ import (
 	"context"
 	"hash"
 	"html/template"
+	"io"
 	"net/url"
 	"time"
 
@@ -238,6 +239,12 @@ type MessageCatalogProvider interface {
 type FormPostHTMLTemplateProvider interface {
 	// GetFormPostHTMLTemplate returns the form post HTML template.
 	GetFormPostHTMLTemplate(ctx context.Context) *template.Template
+}
+
+// WriteAuthorizeFormPostResponseProvider returns the provider for writing authorize form_post response.
+type WriteAuthorizeFormPostResponseProvider interface {
+	// GetWriteAuthorizeFormPostResponse returns the returns the function for writing form_post response.
+	GetWriteAuthorizeFormPostResponse(ctx context.Context) func(rw io.Writer, template *template.Template, redirectURL string, parameters url.Values)
 }
 
 type TokenURLProvider interface {

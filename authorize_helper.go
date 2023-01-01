@@ -32,6 +32,16 @@ var DefaultFormPostTemplate = template.Must(template.New("form_post").Parse(`<ht
    </body>
 </html>`))
 
+func DefaultWriteAuthorizeFormPostResponse(rw io.Writer, template *template.Template, redirectURL string, parameters url.Values) {
+	_ = template.Execute(rw, struct {
+		RedirURL   string
+		Parameters url.Values
+	}{
+		RedirURL:   redirectURL,
+		Parameters: parameters,
+	})
+}
+
 // MatchRedirectURIWithClientRedirectURIs if the given uri is a registered redirect uri. Does not perform
 // uri validation.
 //
@@ -186,16 +196,6 @@ func IsLocalhost(redirectURI *url.URL) bool {
 	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "::1" || hn == "localhost"
 }
 
-func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, template *template.Template, rw io.Writer) {
-	_ = template.Execute(rw, struct {
-		RedirURL   string
-		Parameters url.Values
-	}{
-		RedirURL:   redirectURL,
-		Parameters: parameters,
-	})
-}
-
 // Deprecated: Do not use.
 func URLSetFragment(source *url.URL, fragment url.Values) {
 	var f string
@@ -216,4 +216,11 @@ func GetPostFormHTMLTemplate(ctx context.Context, f *Fosite) *template.Template 
 		return t
 	}
 	return DefaultFormPostTemplate
+}
+
+func GetWriteAuthorizeFormPostResponse(ctx context.Context, f *Fosite) func(rw io.Writer, template *template.Template, redirectURL string, parameters url.Values) {
+	if t := f.Config.GetWriteAuthorizeFormPostResponse(ctx); t != nil {
+		return t
+	}
+	return DefaultWriteAuthorizeFormPostResponse
 }

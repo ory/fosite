@@ -208,8 +208,11 @@ func (m *decoratedFormPostResponse) ResponseModes() fosite.ResponseModeTypes {
 func (m *decoratedFormPostResponse) WriteAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) {
 	rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
 	resp.AddParameter("custom_param", "foo")
-	fosite.WriteAuthorizeFormPostResponse(ar.GetRedirectURI().String(), resp.GetParameters(), fosite.GetPostFormHTMLTemplate(ctx,
-		fosite.NewOAuth2Provider(nil, new(fosite.Config))), rw)
+
+	provider := fosite.NewOAuth2Provider(nil, new(fosite.Config))
+
+	writeAuthorizeFormPostResponse := fosite.GetWriteAuthorizeFormPostResponse(ctx, provider)
+	writeAuthorizeFormPostResponse(rw, fosite.GetPostFormHTMLTemplate(ctx, provider), ar.GetRedirectURI().String(), resp.GetParameters())
 }
 
 func (m *decoratedFormPostResponse) WriteAuthorizeError(ctx context.Context, rw http.ResponseWriter, ar fosite.AuthorizeRequester, err error) {
@@ -217,6 +220,9 @@ func (m *decoratedFormPostResponse) WriteAuthorizeError(ctx context.Context, rw 
 	errors := rfcerr.ToValues()
 	errors.Set("state", ar.GetState())
 	errors.Add("custom_err_param", "bar")
-	fosite.WriteAuthorizeFormPostResponse(ar.GetRedirectURI().String(), errors, fosite.GetPostFormHTMLTemplate(ctx,
-		fosite.NewOAuth2Provider(nil, new(fosite.Config))), rw)
+
+	provider := fosite.NewOAuth2Provider(nil, new(fosite.Config))
+
+	writeAuthorizeFormPostResponse := fosite.GetWriteAuthorizeFormPostResponse(ctx, provider)
+	writeAuthorizeFormPostResponse(rw, fosite.GetPostFormHTMLTemplate(ctx, provider), ar.GetRedirectURI().String(), errors)
 }
