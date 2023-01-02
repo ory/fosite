@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package internal
@@ -7,11 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
-	"testing"
-
 	"io"
+	"net/url"
 	"strconv"
+	"testing"
 	"time"
 
 	cristaljwt "github.com/cristalhq/jwt/v4"
@@ -19,7 +18,7 @@ import (
 	"golang.org/x/net/html"
 	goauth "golang.org/x/oauth2"
 
-	fosite "github.com/ory/fosite"
+	"github.com/ory/fosite"
 )
 
 func ptr(d time.Duration) *time.Duration {

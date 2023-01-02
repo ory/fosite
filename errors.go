@@ -1,10 +1,11 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
 
 import (
 	"encoding/json"
+	stderr "errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,8 +15,6 @@ import (
 
 	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
-
-	stderr "errors"
 
 	"github.com/pkg/errors"
 )
