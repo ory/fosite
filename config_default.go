@@ -26,6 +26,7 @@ var (
 	_ AuthorizeCodeLifespanProvider                = (*Config)(nil)
 	_ RefreshTokenLifespanProvider                 = (*Config)(nil)
 	_ AccessTokenLifespanProvider                  = (*Config)(nil)
+	_ TokenPrefixProvider                          = (*Config)(nil)
 	_ ScopeStrategyProvider                        = (*Config)(nil)
 	_ AudienceStrategyProvider                     = (*Config)(nil)
 	_ RedirectSecureCheckerProvider                = (*Config)(nil)
@@ -71,6 +72,9 @@ type Config struct {
 	// RefreshTokenLifespan sets how long a refresh token is going to be valid. Defaults to 30 days. Set to -1 for
 	// refresh tokens that never expire.
 	RefreshTokenLifespan time.Duration
+
+	// TokenPrefix sets the prefix for hmac tokens to help identify tokens. Defaults to "ory"
+	TokenPrefix string
 
 	// AuthorizeCodeLifespan sets how long an authorize code is going to be valid. Defaults to fifteen minutes.
 	AuthorizeCodeLifespan time.Duration
@@ -326,6 +330,13 @@ func (c *Config) GetOmitRedirectScopeParam(ctx context.Context) bool {
 
 func (c *Config) GetAccessTokenIssuer(ctx context.Context) string {
 	return c.AccessTokenIssuer
+}
+
+func (c *Config) GetTokenPrefixProvider(_ context.Context) string {
+	if c.TokenPrefix == "" {
+		c.TokenPrefix = "ory"
+	}
+	return c.TokenPrefix
 }
 
 func (c *Config) GetJWTScopeField(ctx context.Context) jwt.JWTScopeFieldEnum {

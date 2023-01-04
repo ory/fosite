@@ -178,3 +178,20 @@ func TestHMACAuthorizeCode(t *testing.T) {
 		})
 	}
 }
+
+func TestHMACTokenPrefix(t *testing.T) {
+	t.Run("PrefixToken", func(t *testing.T) {
+		hmacshaStrategy = HMACSHAStrategy{
+			Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
+			Config: &fosite.Config{
+				AccessTokenLifespan:   time.Hour * 24,
+				AuthorizeCodeLifespan: time.Hour * 24,
+				TokenPrefix:           "abc",
+			},
+		}
+		token, signature, err := hmacshaStrategy.GenerateAccessToken(nil, &hmacValidCase)
+		assert.NoError(t, err)
+		assert.Equal(t, strings.Split(token, ".")[1], signature)
+		assert.Contains(t, token, "abc_at_")
+	})
+}

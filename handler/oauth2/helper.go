@@ -13,6 +13,7 @@ import (
 type HandleHelperConfigProvider interface {
 	fosite.AccessTokenLifespanProvider
 	fosite.RefreshTokenLifespanProvider
+	fosite.TokenPrefixProvider
 }
 
 type HandleHelper struct {

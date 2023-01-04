@@ -32,6 +32,7 @@ var hmacStrategy = &oauth2.HMACSHAStrategy{
 			GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows-nobody-knows"),
 		},
 	},
+	Config: &fosite.Config{},
 }
 
 type defaultSession struct {

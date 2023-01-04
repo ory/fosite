@@ -29,6 +29,7 @@ type AuthorizeExplicitGrantHandler struct {
 		fosite.AuthorizeCodeLifespanProvider
 		fosite.AccessTokenLifespanProvider
 		fosite.RefreshTokenLifespanProvider
+		fosite.TokenPrefixProvider
 		fosite.ScopeStrategyProvider
 		fosite.AudienceStrategyProvider
 		fosite.RedirectSecureCheckerProvider

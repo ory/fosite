@@ -30,6 +30,7 @@ type ResourceOwnerPasswordCredentialsGrantHandler struct {
 		fosite.RefreshTokenScopesProvider
 		fosite.RefreshTokenLifespanProvider
 		fosite.AccessTokenLifespanProvider
+		fosite.TokenPrefixProvider
 	}
 }
 

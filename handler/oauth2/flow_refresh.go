@@ -26,6 +26,7 @@ type RefreshTokenGrantHandler struct {
 	Config                 interface {
 		fosite.AccessTokenLifespanProvider
 		fosite.RefreshTokenLifespanProvider
+		fosite.TokenPrefixProvider
 		fosite.ScopeStrategyProvider
 		fosite.AudienceStrategyProvider
 		fosite.RefreshTokenScopesProvider

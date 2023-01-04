@@ -27,6 +27,7 @@ type OpenIDConnectHybridHandler struct {
 		fosite.IDTokenLifespanProvider
 		fosite.MinParameterEntropyProvider
 		fosite.ScopeStrategyProvider
+		fosite.TokenPrefixProvider
 	}
 }
 
