@@ -5,12 +5,11 @@ package rfc8628
 
 import (
 	"context"
-	"crypto/rand"
-	"math/big"
 	"strings"
 	"time"
 
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/randx"
 
 	"github.com/ory/fosite"
 	enigma "github.com/ory/fosite/token/hmac"
@@ -25,26 +24,12 @@ type DefaultDeviceStrategy struct {
 	}
 }
 
-func (h *DefaultDeviceStrategy) generateRandomString(length int) (token string, err error) {
-	chars := [20]byte{'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Z'}
-	chars_length := int64(len(chars))
-
-	code := make([]byte, length)
-	for i := 0; i < length; i++ {
-		num, err := rand.Int(rand.Reader, big.NewInt(chars_length))
-		if err != nil {
-			return "", err
-		}
-		code[i] = chars[num.Int64()]
-	}
-	return string(code), nil
-}
-
 func (h *DefaultDeviceStrategy) GenerateUserCode(ctx context.Context) (token string, signature string, err error) {
-	userCode, err := h.generateRandomString(8)
+	seq, err := randx.RuneSequence(8, []rune("BCDFGHJKLMNPQRSTVWXZ"))
 	if err != nil {
 		return "", "", err
 	}
+	userCode := string(seq)
 	signUserCode, signErr := h.UserCodeSignature(ctx, userCode)
 	if signErr != nil {
 		return "", "", err
