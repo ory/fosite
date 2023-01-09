@@ -32,9 +32,6 @@ import (
 // Once the user has approved the grant he will be redirected on his loggin machine
 // to a webpage (usally hosted in hydra-ui) to understand that he was connected successfully
 // and that he can close this tab and return to his non-interactive device;
-func (f *Fosite) WriteDeviceAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder) {
-	rw.Header().Set("Cache-Control", "no-store")
-	rw.Header().Set("Pragma", "no-cache")
-	rw.Header().Set("Location", f.Config.GetDeviceDone(ctx))
-	rw.WriteHeader(http.StatusSeeOther)
+func (f *Fosite) WriteDeviceAuthorizeResponse(ctx context.Context, r *http.Request, rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder) {
+	http.Redirect(rw, r, f.Config.GetDeviceDone(ctx), http.StatusSeeOther)
 }

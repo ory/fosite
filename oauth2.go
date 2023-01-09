@@ -115,7 +115,7 @@ type OAuth2Provider interface {
 
 	// WriteDeviceAuthorizeResponse
 	// Once the user is authorized, it is being redirect to the login page;
-	WriteDeviceAuthorizeResponse(ctx context.Context, rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder)
+	WriteDeviceAuthorizeResponse(ctx context.Context, r *http.Request, rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder)
 
 	// NewDeviceRequest validate the OAuth 2.0 Device Authorization Flow Request
 	//
