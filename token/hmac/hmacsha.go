@@ -186,7 +186,7 @@ func (c *HMACStrategy) GenerateHMACForString(ctx context.Context, text string) (
 	bytes := []byte(text)
 	hashBytes := c.generateHMAC(ctx, bytes, &signingKey)
 
-	b64 := base64.URLEncoding.EncodeToString(hashBytes)
+	b64 := base64.RawURLEncoding.EncodeToString(hashBytes)
 	return b64, nil
 }
 

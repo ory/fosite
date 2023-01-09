@@ -144,19 +144,19 @@ func TestGenerateFromString(t *testing.T) {
 	}{
 		{
 			text: "",
-			hash: "-n7EqD-bXkY3yYMH-ctEAGV8XLkU7Y6Bo6pbyT1agGA=",
+			hash: "-n7EqD-bXkY3yYMH-ctEAGV8XLkU7Y6Bo6pbyT1agGA",
 		},
 		{
 			text: " ",
-			hash: "zXJvonHTNSOOGj_QKl4RpIX_zXgD2YfXUfwuDKaTTIg=",
+			hash: "zXJvonHTNSOOGj_QKl4RpIX_zXgD2YfXUfwuDKaTTIg",
 		},
 		{
 			text: "Test",
-			hash: "TMeEaHS-cDC2nijiesCNtsOyBqHHtzWqAcWvceQT50g=",
+			hash: "TMeEaHS-cDC2nijiesCNtsOyBqHHtzWqAcWvceQT50g",
 		},
 		{
 			text: "AnotherTest1234",
-			hash: "zHYDOZGjzhVjx5r8RlBhpnJemX5JxEEBUjVT01n3IFM=",
+			hash: "zHYDOZGjzhVjx5r8RlBhpnJemX5JxEEBUjVT01n3IFM",
 		},
 	} {
 		hash, _ := cg.GenerateHMACForString(context.Background(), c.text)
