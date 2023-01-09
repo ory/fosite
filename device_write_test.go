@@ -5,7 +5,6 @@ package fosite_test
 
 import (
 	"context"
-	"encoding/json"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -40,23 +39,17 @@ func TestWriteDeviceAuthorizeResponse(t *testing.T) {
 	)
 
 	oauth2.WriteDeviceResponse(context.Background(), rw, ar, resp)
-	var params struct {
-		DeviceCode              string `json:"device_code"`
-		UserCode                string `json:"user_code"`
-		VerificationURI         string `json:"verification_uri"`
-		VerificationURIComplete string `json:"verification_uri_complete,omitempty"`
-		ExpiresIn               int64  `json:"expires_in"`
-		Interval                int    `json:"interval,omitempty"`
-	}
 
 	assert.Equal(t, 200, rw.Code)
-	err := json.NewDecoder(rw.Body).Decode(&params)
+
+	wroteDeviceResponse := DeviceResponse{}
+	err := wroteDeviceResponse.FromJson(rw.Body)
 	require.NoError(t, err)
 
-	assert.Equal(t, resp.GetUserCode(), params.UserCode)
-	assert.Equal(t, resp.GetDeviceCode(), params.DeviceCode)
-	assert.Equal(t, resp.GetVerificationURI(), params.VerificationURI)
-	assert.Equal(t, resp.GetVerificationURIComplete(), params.VerificationURIComplete)
-	assert.Equal(t, resp.GetInterval(), params.Interval)
-	assert.Equal(t, resp.GetExpiresIn(), params.ExpiresIn)
+	assert.Equal(t, resp.GetUserCode(), wroteDeviceResponse.UserCode)
+	assert.Equal(t, resp.GetDeviceCode(), wroteDeviceResponse.DeviceCode)
+	assert.Equal(t, resp.GetVerificationURI(), wroteDeviceResponse.VerificationURI)
+	assert.Equal(t, resp.GetVerificationURIComplete(), wroteDeviceResponse.VerificationURIComplete)
+	assert.Equal(t, resp.GetInterval(), wroteDeviceResponse.Interval)
+	assert.Equal(t, resp.GetExpiresIn(), wroteDeviceResponse.ExpiresIn)
 }

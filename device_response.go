@@ -3,16 +3,24 @@
 
 package fosite
 
-import "net/http"
+import (
+	"encoding/json"
+	"io"
+	"net/http"
+)
+
+type deviceResponse struct {
+	Header                  http.Header
+	DeviceCode              string `json:"device_code"`
+	UserCode                string `json:"user_code"`
+	VerificationURI         string `json:"verification_uri"`
+	VerificationURIComplete string `json:"verification_uri_complete,omitempty"`
+	ExpiresIn               int64  `json:"expires_in"`
+	Interval                int    `json:"interval,omitempty"`
+}
 
 type DeviceResponse struct {
-	Header                  http.Header
-	deviceCode              string
-	userCode                string
-	verificationURI         string
-	verificationURIComplete string
-	interval                int
-	expiresIn               int64
+	deviceResponse
 }
 
 func NewDeviceResponse() *DeviceResponse {
@@ -20,62 +28,70 @@ func NewDeviceResponse() *DeviceResponse {
 }
 
 func (d *DeviceResponse) GetDeviceCode() string {
-	return d.deviceCode
+	return d.deviceResponse.DeviceCode
 }
 
 // GetUserCode returns the response's user code
 func (d *DeviceResponse) SetDeviceCode(code string) {
-	d.deviceCode = code
+	d.deviceResponse.DeviceCode = code
 }
 
 func (d *DeviceResponse) GetUserCode() string {
-	return d.userCode
+	return d.deviceResponse.UserCode
 }
 
 func (d *DeviceResponse) SetUserCode(code string) {
-	d.userCode = code
+	d.deviceResponse.UserCode = code
 }
 
 // GetVerificationURI returns the response's verification uri
 func (d *DeviceResponse) GetVerificationURI() string {
-	return d.verificationURI
+	return d.deviceResponse.VerificationURI
 }
 
 func (d *DeviceResponse) SetVerificationURI(uri string) {
-	d.verificationURI = uri
+	d.deviceResponse.VerificationURI = uri
 }
 
 // GetVerificationURIComplete returns the response's complete verification uri if set
 func (d *DeviceResponse) GetVerificationURIComplete() string {
-	return d.verificationURIComplete
+	return d.deviceResponse.VerificationURIComplete
 }
 
 func (d *DeviceResponse) SetVerificationURIComplete(uri string) {
-	d.verificationURIComplete = uri
+	d.deviceResponse.VerificationURIComplete = uri
 }
 
 // GetExpiresIn returns the response's device code and user code lifetime in seconds if set
 func (d *DeviceResponse) GetExpiresIn() int64 {
-	return d.expiresIn
+	return d.deviceResponse.ExpiresIn
 }
 
 func (d *DeviceResponse) SetExpiresIn(seconds int64) {
-	d.expiresIn = seconds
+	d.deviceResponse.ExpiresIn = seconds
 }
 
 // GetInterval returns the response's polling interval if set
 func (d *DeviceResponse) GetInterval() int {
-	return d.interval
+	return d.deviceResponse.Interval
 }
 
 func (d *DeviceResponse) SetInterval(seconds int) {
-	d.interval = seconds
+	d.deviceResponse.Interval = seconds
 }
 
 func (a *DeviceResponse) GetHeader() http.Header {
-	return a.Header
+	return a.deviceResponse.Header
 }
 
 func (a *DeviceResponse) AddHeader(key, value string) {
-	a.Header.Add(key, value)
+	a.deviceResponse.Header.Add(key, value)
+}
+
+func (d *DeviceResponse) FromJson(r io.Reader) error {
+	return json.NewDecoder(r).Decode(&d.deviceResponse)
+}
+
+func (d *DeviceResponse) ToJson(rw io.Writer) error {
+	return json.NewEncoder(rw).Encode(&d.deviceResponse)
 }
