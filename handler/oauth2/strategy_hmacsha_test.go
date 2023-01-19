@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/fosite"
-	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/hmac"
 )
 
@@ -21,13 +20,6 @@ var hmacshaStrategy = HMACSHAStrategy{
 	Config: &fosite.Config{
 		AccessTokenLifespan:   time.Hour * 24,
 		AuthorizeCodeLifespan: time.Hour * 24,
-	},
-}
-
-var RFC8628HMACSHAStrategy = rfc8628.DefaultDeviceStrategy{
-	Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
-	Config: &fosite.Config{
-		DeviceAndUserCodeLifespan: time.Hour * 24,
 	},
 }
 

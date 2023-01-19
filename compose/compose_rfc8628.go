@@ -5,6 +5,7 @@ package compose
 
 import (
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/rfc8628"
 )
 
@@ -15,5 +16,20 @@ func RFC8628DeviceFactory(config fosite.Configurator, storage interface{}, strat
 		Strategy: strategy.(rfc8628.RFC8628CodeStrategy),
 		Storage:  storage.(rfc8628.RFC8628CodeStorage),
 		Config:   config,
+	}
+}
+
+// OAuth2DeviceCodeFactory creates an OAuth2 device authorization grant ("device authorization flow") handler and registers
+// an access token, refresh token and authorize code validator.
+func OAuth2DeviceAuthorizationTokenFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.GenericCodeTokenEndpointHandler{
+		CodeTokenEndpointHandler: &rfc8628.DeviceAuthorizeHandler{
+			DeviceStrategy: strategy.(rfc8628.DeviceCodeStrategy),
+			DeviceStorage:  storage.(rfc8628.DeviceCodeStorage),
+		},
+		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
+		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
+		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		Config:                 config,
 	}
 }

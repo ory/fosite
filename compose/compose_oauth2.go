@@ -6,21 +6,28 @@ package compose
 import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
-	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/jwt"
 )
 
 // OAuth2AuthorizeExplicitFactory creates an OAuth2 authorize code grant ("authorize explicit flow") handler and registers
 // an access token, refresh token and authorize code validator.
-func OAuth2AuthorizeExplicitFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
-	return &oauth2.AuthorizeExplicitGrantHandler{
+func OAuth2AuthorizeExplicitAuthFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.AuthorizeExplicitGrantAuthHandler{
+		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
+		AuthorizeCodeStorage:  storage.(oauth2.AuthorizeCodeStorage),
+		Config:                config,
+	}
+}
+func OAuth2AuthorizeExplicitTokenFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.GenericCodeTokenEndpointHandler{
+		CodeTokenEndpointHandler: &oauth2.AuthorizeExplicitGrantTokenHandler{
+			AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
+			AuthorizeCodeStorage:  storage.(oauth2.AuthorizeCodeStorage),
+		},
 		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
 		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
-		AuthorizeCodeStrategy:  strategy.(oauth2.AuthorizeCodeStrategy),
-		DeviceStrategy:         strategy.(rfc8628.RFC8628CodeStrategy),
 		CoreStorage:            storage.(oauth2.CoreStorage),
 		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
-		DeviceStorage:          storage.(rfc8628.RFC8628CodeStorage),
 		Config:                 config,
 	}
 }

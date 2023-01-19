@@ -30,7 +30,7 @@ func TestPushedAuthorizeCodeFlow(t *testing.T) {
 }
 
 func runPushedAuthorizeCodeGrantTest(t *testing.T, strategy interface{}) {
-	f := compose.Compose(new(fosite.Config), fositeStore, strategy, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2TokenIntrospectionFactory, compose.PushedAuthorizeHandlerFactory)
+	f := compose.Compose(new(fosite.Config), fositeStore, strategy, compose.OAuth2AuthorizeExplicitAuthFactory, compose.OAuth2AuthorizeExplicitTokenFactory, compose.OAuth2TokenIntrospectionFactory, compose.PushedAuthorizeHandlerFactory)
 	ts := mockServer(t, f, &fosite.DefaultSession{Subject: "foo-sub"})
 	defer ts.Close()
 

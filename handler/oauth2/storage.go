@@ -10,7 +10,6 @@ import (
 )
 
 type CoreStorage interface {
-	AuthorizeCodeStorage
 	AccessTokenStorage
 	RefreshTokenStorage
 }

@@ -27,7 +27,7 @@ func TestAuthorizeCodeFlowWithPublicClient(t *testing.T) {
 }
 
 func runAuthorizeCodeGrantWithPublicClientTest(t *testing.T, strategy interface{}) {
-	f := compose.Compose(new(fosite.Config), fositeStore, strategy, compose.OAuth2AuthorizeExplicitFactory, compose.OAuth2TokenIntrospectionFactory)
+	f := compose.Compose(new(fosite.Config), fositeStore, strategy, compose.OAuth2AuthorizeExplicitAuthFactory, compose.OAuth2AuthorizeExplicitTokenFactory, compose.OAuth2TokenIntrospectionFactory)
 	ts := mockServer(t, f, &fosite.DefaultSession{Subject: "foo-sub"})
 	defer ts.Close()
 

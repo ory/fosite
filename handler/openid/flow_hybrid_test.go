@@ -70,11 +70,11 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybrid
 		AuthorizeCodeLifespan: time.Hour,
 		RefreshTokenLifespan:  time.Hour,
 	}
+	store := storage.NewMemoryStore()
 	return OpenIDConnectHybridHandler{
-		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
+		AuthorizeExplicitGrantAuthHandler: &oauth2.AuthorizeExplicitGrantAuthHandler{
 			AuthorizeCodeStrategy: hmacStrategy,
-			AccessTokenStrategy:   hmacStrategy,
-			CoreStorage:           storage.NewMemoryStore(),
+			AuthorizeCodeStorage:  store,
 			Config:                config,
 		},
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{

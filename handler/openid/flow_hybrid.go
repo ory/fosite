@@ -16,7 +16,7 @@ import (
 
 type OpenIDConnectHybridHandler struct {
 	AuthorizeImplicitGrantTypeHandler *oauth2.AuthorizeImplicitGrantTypeHandler
-	AuthorizeExplicitGrantHandler     *oauth2.AuthorizeExplicitGrantHandler
+	AuthorizeExplicitGrantAuthHandler *oauth2.AuthorizeExplicitGrantAuthHandler
 	IDTokenHandleHelper               *IDTokenHandleHelper
 	OpenIDConnectRequestValidator     *OpenIDConnectRequestValidator
 	OpenIDConnectRequestStorage       OpenIDConnectRequestStorage
@@ -85,7 +85,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 			return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant 'authorization_code'."))
 		}
 
-		code, signature, err := c.AuthorizeExplicitGrantHandler.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
+		code, signature, err := c.AuthorizeExplicitGrantAuthHandler.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
@@ -98,8 +98,8 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		// }
 
 		// This is required because we must limit the authorize code lifespan.
-		ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthorizeExplicitGrantHandler.Config.GetAuthorizeCodeLifespan(ctx)).Round(time.Second))
-		if err := c.AuthorizeExplicitGrantHandler.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.AuthorizeExplicitGrantHandler.GetSanitationWhiteList(ctx))); err != nil {
+		ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthorizeExplicitGrantAuthHandler.Config.GetAuthorizeCodeLifespan(ctx)).Round(time.Second))
+		if err := c.AuthorizeExplicitGrantAuthHandler.AuthorizeCodeStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.AuthorizeExplicitGrantAuthHandler.GetSanitationWhiteList(ctx))); err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 

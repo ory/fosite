@@ -4,6 +4,7 @@
 package rfc8628_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -38,7 +39,7 @@ func Test_HandleDeviceEndpointRequest(t *testing.T) {
 	}
 	resp := &fosite.DeviceResponse{}
 
-	handler.HandleDeviceEndpointRequest(nil, req, resp)
+	handler.HandleDeviceEndpointRequest(context.TODO(), req, resp)
 
 	assert.NotEmpty(t, resp.GetDeviceCode())
 	assert.NotEmpty(t, resp.GetUserCode())

@@ -59,11 +59,9 @@ func OpenIDConnectImplicitFactory(config fosite.Configurator, storage interface{
 // **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
 func OpenIDConnectHybridFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectHybridHandler{
-		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
-			AccessTokenStrategy:   strategy.(oauth2.AccessTokenStrategy),
-			RefreshTokenStrategy:  strategy.(oauth2.RefreshTokenStrategy),
+		AuthorizeExplicitGrantAuthHandler: &oauth2.AuthorizeExplicitGrantAuthHandler{
 			AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
-			CoreStorage:           storage.(oauth2.CoreStorage),
+			AuthorizeCodeStorage:  storage.(oauth2.AuthorizeCodeStorage),
 			Config:                config,
 		},
 		Config: config,
