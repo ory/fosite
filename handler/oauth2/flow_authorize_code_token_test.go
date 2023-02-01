@@ -1,4 +1,4 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oauth2
@@ -9,12 +9,12 @@ import (
 	"net/url"
 	"testing" //"time"
 
+	//"github.com/golang/mock/gomock"
+	"time"
+
 	"github.com/golang/mock/gomock"
 
 	"github.com/ory/fosite/internal"
-
-	//"github.com/golang/mock/gomock"
-	"time"
 
 	"github.com/ory/fosite" //"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
