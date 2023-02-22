@@ -22,32 +22,73 @@ import (
 )
 
 func TestUnsignedToken(t *testing.T) {
-	key := UnsafeAllowNoneSignatureType
-	token := NewWithClaims(SigningMethodNone, MapClaims{
-		"aud": "foo",
-		"exp": time.Now().UTC().Add(time.Hour).Unix(),
-		"iat": time.Now().UTC().Unix(),
-		"sub": "nestor",
-	})
-	rawToken, err := token.SignedString(key)
-	require.NoError(t, err)
-	require.NotEmpty(t, rawToken)
-	parts := strings.Split(rawToken, ".")
-	require.Len(t, parts, 3)
-	require.Empty(t, parts[2])
-	tk, err := jwt.ParseSigned(rawToken)
-	require.NoError(t, err)
-	require.Len(t, tk.Headers, 1)
-	require.Equal(t, "JWT", tk.Headers[0].ExtraHeaders[jose.HeaderKey("typ")])
+	var testCases = []struct {
+		name         string
+		jwtHeaders   map[string]interface{}
+		expectedType string
+	}{
+		{
+			name:         "set JWT as 'typ' when the the type is not specified in the headers",
+			jwtHeaders:   map[string]interface{}{},
+			expectedType: "JWT",
+		},
+		{
+			name:         "'typ' set explicitly",
+			jwtHeaders:   map[string]interface{}{"typ": "at+jwt"},
+			expectedType: "at+jwt",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			key := UnsafeAllowNoneSignatureType
+			token := NewWithClaims(SigningMethodNone, MapClaims{
+				"aud": "foo",
+				"exp": time.Now().UTC().Add(time.Hour).Unix(),
+				"iat": time.Now().UTC().Unix(),
+				"sub": "nestor",
+			})
+			token.Header = tc.jwtHeaders
+			rawToken, err := token.SignedString(key)
+			require.NoError(t, err)
+			require.NotEmpty(t, rawToken)
+			parts := strings.Split(rawToken, ".")
+			require.Len(t, parts, 3)
+			require.Empty(t, parts[2])
+			tk, err := jwt.ParseSigned(rawToken)
+			require.NoError(t, err)
+			require.Len(t, tk.Headers, 1)
+			require.Equal(t, tc.expectedType, tk.Headers[0].ExtraHeaders[jose.HeaderKey("typ")])
+		})
+	}
 }
 
 func TestJWTHeaders(t *testing.T) {
-	rawToken := makeSampleToken(nil, jose.RS256, gen.MustRSAKey())
-	tk, err := jwt.ParseSigned(rawToken)
-	require.NoError(t, err)
-	require.Len(t, tk.Headers, 1)
-	require.Equal(t, tk.Headers[0].Algorithm, "RS256")
-	require.Equal(t, "JWT", tk.Headers[0].ExtraHeaders[jose.HeaderKey("typ")])
+	var testCases = []struct {
+		name         string
+		jwtHeaders   map[string]interface{}
+		expectedType string
+	}{
+		{
+			name:         "set JWT as 'typ' when the the type is not specified in the headers",
+			jwtHeaders:   map[string]interface{}{},
+			expectedType: "JWT",
+		},
+		{
+			name:         "'typ' set explicitly",
+			jwtHeaders:   map[string]interface{}{"typ": "at+jwt"},
+			expectedType: "at+jwt",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rawToken := makeSampleTokenWithCustomHeaders(nil, jose.RS256, tc.jwtHeaders, gen.MustRSAKey())
+			tk, err := jwt.ParseSigned(rawToken)
+			require.NoError(t, err)
+			require.Len(t, tk.Headers, 1)
+			require.Equal(t, tk.Headers[0].Algorithm, "RS256")
+			require.Equal(t, tc.expectedType, tk.Headers[0].ExtraHeaders[jose.HeaderKey("typ")])
+		})
+	}
 }
 
 var keyFuncError error = fmt.Errorf("error loading key")
@@ -409,6 +450,18 @@ func TestParser_Parse(t *testing.T) {
 
 func makeSampleToken(c MapClaims, m jose.SignatureAlgorithm, key interface{}) string {
 	token := NewWithClaims(m, c)
+	s, e := token.SignedString(key)
+
+	if e != nil {
+		panic(e.Error())
+	}
+
+	return s
+}
+
+func makeSampleTokenWithCustomHeaders(c MapClaims, m jose.SignatureAlgorithm, headers map[string]interface{}, key interface{}) string {
+	token := NewWithClaims(m, c)
+	token.Header = headers
 	s, e := token.SignedString(key)
 
 	if e != nil {

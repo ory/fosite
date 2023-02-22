@@ -109,7 +109,9 @@ func (t *Token) SignedString(k interface{}) (rawToken string, err error) {
 
 func unsignedToken(t *Token) (string, error) {
 	t.Header["alg"] = "none"
-	t.Header[string(JWTHeaderType)] = JWTHeaderTypeValue
+	if _, ok := t.Header[string(JWTHeaderType)]; !ok {
+		t.Header[string(JWTHeaderType)] = JWTHeaderTypeValue
+	}
 	hbytes, err := json.Marshal(&t.Header)
 	if err != nil {
 		return "", errorsx.WithStack(err)
