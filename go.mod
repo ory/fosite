@@ -1,15 +1,5 @@
 module github.com/ory/fosite
 
-replace github.com/dgrijalva/jwt-go => github.com/form3tech-oss/jwt-go v3.2.1+incompatible
-
-replace github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
-
-replace github.com/gobuffalo/packr => github.com/gobuffalo/packr v1.30.1
-
-replace github.com/gobuffalo/plush/v4 => github.com/gobuffalo/plush/v4 v4.1.11
-
-replace github.com/gorilla/sessions => github.com/gorilla/sessions v1.2.1
-
 replace github.com/tidwall/gjson => github.com/tidwall/gjson v1.14.1
 
 replace github.com/tidwall/match => github.com/tidwall/match v1.1.1
@@ -35,8 +25,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/gjson v1.7.1
-	golang.org/x/crypto v0.1.0
-	golang.org/x/net v0.7.0
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/text v0.7.0
 	gopkg.in/square/go-jose.v2 v2.5.2-0.20210529014059-a5c7eec3c614
