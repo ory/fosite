@@ -14,7 +14,7 @@ func NewHeaders() *Headers {
 
 // ToMap will transform the headers to a map structure
 func (h *Headers) ToMap() map[string]interface{} {
-	var filter = map[string]bool{"alg": true, "typ": true}
+	var filter = map[string]bool{"alg": true}
 	var extra = map[string]interface{}{}
 
 	// filter known values from extra.
