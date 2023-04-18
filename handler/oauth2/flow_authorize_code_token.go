@@ -18,7 +18,12 @@ type AuthorizeExplicitGrantTokenHandler struct {
 	AuthorizeCodeStorage  AuthorizeCodeStorage
 }
 
+type AuthorizeExplicitTokenEndpointHandler struct {
+	GenericCodeTokenEndpointHandler
+}
+
 var _ CodeTokenEndpointHandler = (*AuthorizeExplicitGrantTokenHandler)(nil)
+var _ fosite.TokenEndpointHandler = (*AuthorizeExplicitTokenEndpointHandler)(nil)
 
 func (c *AuthorizeExplicitGrantTokenHandler) ValidateGrantTypes(ctx context.Context, requester fosite.AccessRequester) error {
 	if !requester.GetClient().GetGrantTypes().Has("authorization_code") {

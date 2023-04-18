@@ -12,14 +12,19 @@ import (
 	"github.com/ory/fosite"
 )
 
-var _ oauth2.CodeTokenEndpointHandler = (*DeviceAuthorizeHandler)(nil)
-
-// DeviceAuthorizeHandler is a response handler for the Device UserCode introduced in the Device Authorize Grant
+// DeviceAuthorizeHandler is a response handler for the Device Code introduced in the Device Authorize Grant
 // as defined in https://www.rfc-editor.org/rfc/rfc8628
 type DeviceAuthorizeHandler struct {
 	DeviceStrategy DeviceCodeStrategy
 	DeviceStorage  DeviceCodeStorage
 }
+
+type DeviceCodeTokenEndpointHandler struct {
+	oauth2.GenericCodeTokenEndpointHandler
+}
+
+var _ oauth2.CodeTokenEndpointHandler = (*DeviceAuthorizeHandler)(nil)
+var _ fosite.TokenEndpointHandler = (*DeviceCodeTokenEndpointHandler)(nil)
 
 func (c *DeviceAuthorizeHandler) ValidateGrantTypes(ctx context.Context, requester fosite.AccessRequester) error {
 	if !requester.GetClient().GetGrantTypes().Has(string(fosite.GrantTypeDeviceCode)) {

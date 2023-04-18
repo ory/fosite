@@ -21,15 +21,18 @@ func RFC8628DeviceFactory(config fosite.Configurator, storage interface{}, strat
 
 // OAuth2DeviceCodeFactory creates an OAuth2 device authorization grant ("device authorization flow") handler and registers
 // an access token, refresh token and authorize code validator.
-func OAuth2DeviceAuthorizationTokenFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
-	return &oauth2.GenericCodeTokenEndpointHandler{
-		CodeTokenEndpointHandler: &rfc8628.DeviceAuthorizeHandler{
-			DeviceStrategy: strategy.(rfc8628.DeviceCodeStrategy),
-			DeviceStorage:  storage.(rfc8628.DeviceCodeStorage),
+func RFC8628DeviceAuthorizationTokenFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &rfc8628.DeviceCodeTokenEndpointHandler{
+		GenericCodeTokenEndpointHandler: oauth2.GenericCodeTokenEndpointHandler{
+			CodeTokenEndpointHandler: &rfc8628.DeviceAuthorizeHandler{
+				DeviceStrategy: strategy.(rfc8628.DeviceCodeStrategy),
+				DeviceStorage:  storage.(rfc8628.DeviceCodeStorage),
+			},
+			AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
+			RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
+			CoreStorage:            storage.(oauth2.CoreStorage),
+			TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+			Config:                 config,
 		},
-		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
-		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
-		Config:                 config,
 	}
 }
