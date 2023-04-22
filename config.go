@@ -150,6 +150,12 @@ type GrantTypeJWTBearerCanSkipClientAuthProvider interface {
 	GetGrantTypeJWTBearerCanSkipClientAuth(ctx context.Context) bool
 }
 
+// GrantTypeTokenExchangeCanSkipClientAuthProvider returns the provider for configuring the grant type Token Exchange can skip client auth.
+type GrantTypeTokenExchangeCanSkipClientAuthProvider interface {
+	// GetGrantTypeTokenExchangeCanSkipClientAuth returns the grant type Token Exchange can skip client auth.
+	GetGrantTypeTokenExchangeCanSkipClientAuth(ctx context.Context) CanSkipClientAuthenticationStrategy
+}
+
 // GrantTypeJWTBearerIDOptionalProvider returns the provider for configuring the grant type JWT bearer ID optional.
 type GrantTypeJWTBearerIDOptionalProvider interface {
 	// GetGrantTypeJWTBearerIDOptional returns the grant type JWT bearer ID optional.

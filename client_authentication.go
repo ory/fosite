@@ -21,6 +21,9 @@ import (
 	"github.com/ory/fosite/token/jwt"
 )
 
+// CanSkipClientAuthenticationStrategy provides a method signature for checking if client authentication can be skipped.
+type CanSkipClientAuthenticationStrategy func(context.Context, AccessRequester) bool
+
 // ClientAuthenticationStrategy provides a method signature for authenticating a client request
 type ClientAuthenticationStrategy func(context.Context, *http.Request, url.Values) (Client, error)
 

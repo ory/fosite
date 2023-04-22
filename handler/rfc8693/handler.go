@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ory/fosite"
-	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/x/errorsx"
@@ -22,18 +21,17 @@ const (
 	tokenTypeAT      = "urn:ietf:params:oauth:token-type:access_token"
 )
 
-func TokenExchangeGrantFactory(config *compose.CommonStrategy, storage, strategy interface{}) interface{} {
-	return nil
-}
-
 type Handler struct {
-	Storage                  RFC8693Storage
-	Strategy                 ClientAuthenticationStrategy
-	ScopeStrategy            fosite.ScopeStrategy
-	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
-	RefreshTokenStrategy     oauth2.RefreshTokenStrategy
-	RefreshTokenStorage      oauth2.RefreshTokenStorage
-	fosite.RefreshTokenScopesProvider
+	Storage              RFC8693Storage
+	RefreshTokenStorage  oauth2.RefreshTokenStorage
+	RefreshTokenStrategy oauth2.RefreshTokenStrategy
+
+	Config interface {
+		fosite.GrantTypeTokenExchangeCanSkipClientAuthProvider
+		fosite.ScopeStrategyProvider
+		fosite.AudienceStrategyProvider
+		fosite.RefreshTokenScopesProvider
+	}
 
 	*oauth2.HandleHelper
 }
@@ -136,14 +134,14 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, requester fosi
 
 	// Check and grant scope.
 	for _, scope := range requester.GetRequestedScopes() {
-		if !c.ScopeStrategy(client.GetScopes(), scope) {
+		if !c.Config.GetScopeStrategy(ctx)(client.GetScopes(), scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 		requester.GrantScope(scope)
 	}
 
 	// Check and grant audience.
-	if err := c.AudienceMatchingStrategy(client.GetAudience(), requester.GetRequestedAudience()); err != nil {
+	if err := c.Config.GetAudienceStrategy(ctx)(client.GetAudience(), requester.GetRequestedAudience()); err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("audience not match: %v", err))
 	}
 	for _, audience := range requester.GetRequestedAudience() {
@@ -164,7 +162,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, requester fosi
 		requester.SetSession(&fosite.DefaultSession{
 			Subject: subject,
 		})
-		requester.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.Config.GetAccessTokenLifespan(ctx)))
+		requester.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.HandleHelper.Config.GetAccessTokenLifespan(ctx)))
 		return nil
 	case tokenTypeAT:
 		or, err := c.verifyAccessTokenAsSubjectToken(ctx, client.GetID(), params)
@@ -189,14 +187,13 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, requester f
 		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHintf("The OAuth 2.0 Client is not allowed to use authorization grant '%s'.", fosite.GrantTypeTokenExchange))
 	}
 
-	atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeTokenExchange, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
+	atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeTokenExchange, fosite.AccessToken, c.HandleHelper.Config.GetAccessTokenLifespan(ctx))
 
 	if err := c.IssueAccessToken(ctx, atLifespan, requester, responder); err != nil {
 		return err
 	}
 
 	if canIssueRefreshToken(ctx, c, requester) {
-		fmt.Println(requester)
 		refresh, refreshSignature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
@@ -211,7 +208,7 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, requester f
 }
 
 func canIssueRefreshToken(ctx context.Context, c *Handler, requester fosite.Requester) bool {
-	scope := c.GetRefreshTokenScopes(ctx)
+	scope := c.Config.GetRefreshTokenScopes(ctx)
 	// Require one of the refresh token scopes, if set.
 	if len(scope) > 0 && !requester.GetGrantedScopes().HasOneOf(scope...) {
 		return false
@@ -223,8 +220,12 @@ func canIssueRefreshToken(ctx context.Context, c *Handler, requester fosite.Requ
 	return true
 }
 
-func (c *Handler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
-	return c.Strategy.CanSkipClientAuth(requester)
+func (c *Handler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
+	if s := c.Config.GetGrantTypeTokenExchangeCanSkipClientAuth(ctx); s != nil {
+		return s(ctx, requester)
+	}
+
+	return false
 }
 
 func (c *Handler) keyFunc(ctx context.Context) jwt.Keyfunc {

@@ -30,6 +30,7 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 
 	h := Handler{
 		Storage: teStore,
+		Config:  &fosite.Config{},
 		HandleHelper: &fositeOAuth2.HandleHelper{
 			AccessTokenStorage:  atStore,
 			AccessTokenStrategy: chgen,
@@ -37,9 +38,7 @@ func TestTokenExchange_HandleTokenEndpointRequest(t *testing.T) {
 				AccessTokenLifespan: time.Hour,
 			},
 		},
-		ScopeStrategy:            fosite.HierarchicScopeStrategy,
-		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-		RefreshTokenStorage:      rtStore,
+		RefreshTokenStorage: rtStore,
 	}
 
 	for _, c := range []struct {
@@ -286,13 +285,9 @@ func TestTokenExchange_PopulateTokenEndpointResponse(t *testing.T) {
 				AccessTokenLifespan: time.Hour,
 			},
 		},
-		ScopeStrategy:            fosite.HierarchicScopeStrategy,
-		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
-		RefreshTokenStrategy:     rtStrategy,
-		RefreshTokenStorage:      rtStore,
-		RefreshTokenScopesProvider: &fosite.Config{
-			RefreshTokenScopes: []string{"offline", "offline_access"},
-		},
+		Config:               &fosite.Config{},
+		RefreshTokenStrategy: rtStrategy,
+		RefreshTokenStorage:  rtStore,
 	}
 	for _, c := range []struct {
 		name      string
