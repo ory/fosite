@@ -1,9 +1,7 @@
-// Copyright © 2022 Ory Corp
+// Copyright © 2023 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc8693
-
-//go:generate mockgen -source=storage.go -destination=../../internal/oauth2_token_exchange_storage.go -package=internal
 
 import (
 	"context"
