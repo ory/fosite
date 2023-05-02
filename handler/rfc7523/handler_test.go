@@ -17,10 +17,10 @@ import (
 
 	"github.com/ory/fosite/handler/oauth2"
 
+	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/square/go-jose.v2"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"

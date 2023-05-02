@@ -15,10 +15,10 @@ import (
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/internal/gen"
 
+	"github.com/go-jose/go-jose/v3"
 	"github.com/gorilla/mux"
 	goauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	"gopkg.in/square/go-jose.v2"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
