@@ -87,6 +87,7 @@ func runClientCredentialsGrantTest(t *testing.T, strategy oauth2.AccessTokenStra
 				introspect(t, ts, token.AccessToken, &j, oauthClient.ClientID, oauthClient.ClientSecret)
 				assert.Equal(t, oauthClient.ClientID, gjson.GetBytes(j, "client_id").String())
 				assert.Equal(t, "fosite", gjson.GetBytes(j, "scope").String())
+				assert.Equal(t, "[\"https://www.ory.sh/api\"]", gjson.GetBytes(j, "aud").String())
 			},
 		},
 		{
