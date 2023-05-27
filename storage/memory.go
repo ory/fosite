@@ -140,6 +140,7 @@ func NewExampleStore() *MemoryStore {
 		RefreshTokens:          map[string]StoreRefreshToken{},
 		PKCES:                  map[string]fosite.Requester{},
 		AccessTokenRequestIDs:  map[string]string{},
+		BlacklistedJTIs:        map[string]time.Time{},
 		RefreshTokenRequestIDs: map[string]string{},
 		IssuerPublicKeys:       map[string]IssuerPublicKeys{},
 		PARSessions:            map[string]fosite.AuthorizeRequester{},

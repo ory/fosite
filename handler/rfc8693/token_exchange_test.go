@@ -5,9 +5,6 @@ package rfc8693_test
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/rsa"
-	"encoding/json"
 	"net/url"
 	"testing"
 	"time"
@@ -16,12 +13,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/square/go-jose.v2"
 
+	"github.com/ory/fosite/internal/gen"
 	"github.com/ory/fosite/storage"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
@@ -30,22 +26,25 @@ import (
 	. "github.com/ory/fosite/handler/rfc8693"
 )
 
+// expose key to verify id_token
+var key = gen.MustRSAKey()
+
 func TestAccessTokenExchangeImpersonation(t *testing.T) {
 	store := storage.NewExampleStore()
-	jwks := getJWKS()
+	jwtName := "urn:custom:jwt"
+
+	jwtSigner := &jwt.DefaultSigner{
+		GetPrivateKey: func(_ context.Context) (interface{}, error) {
+			return key, nil
+		},
+	}
+
 	customJWTType := &JWTType{
-		Name: "urn:custom:jwt",
+		Name: jwtName,
 		JWTValidationConfig: JWTValidationConfig{
 			ValidateJTI: true,
 			ValidateFunc: jwt.Keyfunc(func(t *jwt.Token) (interface{}, error) {
-				if _, ok := t.Header["kid"].(string); !ok {
-					return nil, errors.New("invalid kid")
-				}
-				if _, ok := t.Claims["iss"].(string); !ok {
-					return nil, errors.New("invalid iss")
-				}
-
-				return findPublicKey(t, jwks, true)
+				return key.PublicKey, nil
 			}),
 			JWTLifetimeToleranceWindow: 15 * time.Minute,
 		},
@@ -95,6 +94,16 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 		Storage:              store,
 	}
 
+	customJWTHandler := &CustomJWTTypeHandler{
+		Config: config,
+		JWTStrategy: &jwt.DefaultSigner{
+			GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return key, nil
+			},
+		},
+		Storage: store,
+	}
+
 	for _, c := range []struct {
 		handlers    []fosite.TokenEndpointHandler
 		areq        *fosite.AccessRequest
@@ -122,6 +131,41 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 			description: "should pass because a valid access token is exchanged for another access token",
 			expect: func(t *testing.T, areq *fosite.AccessRequest, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.AccessToken, "Access token is empty; %+v", aresp)
+				req, err := introspectAccessToken(context.Background(), aresp.AccessToken, coreStrategy, store)
+				require.NoError(t, err, "Error occurred during introspection; err=%v", err)
+
+				assert.EqualValues(t, "peter", req.GetSession().GetSubject(), "Subject did not match the expected value")
+			},
+		},
+		{
+			handlers: []fosite.TokenEndpointHandler{genericTEHandler, accessTokenHandler, customJWTHandler},
+			areq: &fosite.AccessRequest{
+				Request: fosite.Request{
+					ID:     uuid.New(),
+					Client: store.Clients["my-client"],
+					Form: url.Values{
+						"subject_token_type": []string{jwtName},
+						"subject_token": []string{createJWT(context.Background(), jwtSigner, jwt.MapClaims{
+							"subject": "peter_for_jwt",
+							"jti":     uuid.New(),
+							"iss":     "https://customory.com",
+							"sub":     "peter",
+							"exp":     time.Now().Add(15 * time.Minute).Unix(),
+						})},
+					},
+					Session: &rfc8693.DefaultSession{
+						DefaultSession: &openid.DefaultSession{},
+						Extra:          map[string]interface{}{},
+					},
+				},
+			},
+			description: "should pass because a valid custom JWT is exchanged for access token",
+			expect: func(t *testing.T, areq *fosite.AccessRequest, aresp *fosite.AccessResponse) {
+				assert.NotEmpty(t, aresp.AccessToken, "Access token is empty; %+v", aresp)
+				req, err := introspectAccessToken(context.Background(), aresp.AccessToken, coreStrategy, store)
+				require.NoError(t, err, "Error occurred during introspection; err=%v", err)
+
+				assert.EqualValues(t, "peter_for_jwt", req.GetSession().GetSubject(), "Subject did not match the expected value")
 			},
 		},
 	} {
@@ -183,10 +227,15 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 				}
 			}
 
+			var rfcerr *fosite.RFC6749Error
+			rfcerr, _ = err.(*fosite.RFC6749Error)
+			if rfcerr == nil {
+				rfcerr = fosite.ErrServerError
+			}
 			if c.expectErr != nil {
-				require.EqualError(t, err, c.expectErr.Error())
+				require.EqualError(t, err, c.expectErr.Error(), "Error received: %v, rfcerr=%s", err, rfcerr.GetDescription())
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, err, "Error received: %v, rfcerr=%s", err, rfcerr.GetDescription())
 			}
 
 			if c.expect != nil {
@@ -194,77 +243,6 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 			}
 		})
 	}
-}
-
-func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool) (interface{}, error) {
-	keys := set.Keys
-	if len(keys) == 0 {
-		return nil, errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("The retrieved JSON Web Key Set does not contain any key."))
-	}
-
-	kid, ok := t.Header["kid"].(string)
-	if ok {
-		keys = set.Key(kid)
-	}
-
-	if len(keys) == 0 {
-		return nil, errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("The JSON Web Token uses signing key with kid '%s', which could not be found.", kid))
-	}
-
-	for _, key := range keys {
-		if key.Use != "sig" {
-			continue
-		}
-		if expectsRSAKey {
-			if k, ok := key.Key.(*rsa.PublicKey); ok {
-				return k, nil
-			}
-		} else {
-			if k, ok := key.Key.(*ecdsa.PublicKey); ok {
-				return k, nil
-			}
-		}
-	}
-
-	if expectsRSAKey {
-		return nil, errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("Unable to find RSA public key with use='sig' for kid '%s' in JSON Web Key Set.", kid))
-	} else {
-		return nil, errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("Unable to find ECDSA public key with use='sig' for kid '%s' in JSON Web Key Set.", kid))
-	}
-}
-
-func getJWKS() *jose.JSONWebKeySet {
-	jwks := &jose.JSONWebKeySet{}
-	jwksStr := `{"keys":[
-		{
-			"kty": "RSA",
-			"e": "AQAB",
-			"kid": "demojwtsigner",
-			"use": "sig",
-			"n": "nyEEwueLcSFRUSPdy9AL5Vf6X7QDuL8mFMOR2liM1LeluSHCSYIoN-h6xxMkwDfr6626EOhJVxMxeBuLaG-_3QWWjvicUdIpevj73U1jqQT7MaMPI3ms7rm0v1OHfabyLbrCjDniL_8Ym15H_RwVqF31kXIcKVqMtJWRWkeoOrSSqUq4h28rRDUi8HXUTAvSoQYnZ-J-sICME7G-ZYVJtIQObT6AjMuM_y54vCH8ViVE9aOQ2rV3Wi-TKEgiV9Ik1KB6EdzCB4CYK2HYy_OgheF0ggeWuwHOegBpVR4BqlQyZJKJyhKhWZhfYHmWkm_V-7KZtrWHoVQ_NhOAcT18qw"
-		},
-		{
-			"kty": "RSA",
-			"e": "AQAB",
-			"use": "sig",
-			"kid": "cibarsa",
-			"n": "mP6Zt6qN3YEE4asCoMmvVEJcXTv00I1AamJvmkUx0Ax9-w_AcBa7zeEgysEK0CQG2jXLGaRQ-W0D74Z5K_aAnx7dbRSmArxe-dlGm08_KoOwErh2dHq5_GezYURTWddv_2hjObJcoxQtzKmQQCbcLH_8_AGdVO6KZYfPElPqsEW1VEdiFkOgL3LPw2KRVPB3g6yj3t2Ot9edB8AnKwyD8eFDpV48Q-w9DfgqY_XlOYTDgtpBDGADP_XScL5Le7wZRfZp1N4qRYeak2NjKMDUpxPt0tX5d-GHjTG6ph9J-hzBFnSbUUpQEHol7fAVy6GFOwVbY9-yJkoV7CebstDryQ"
-		},
-		{
-			"kty": "EC",
-			"use": "sig",
-			"crv": "P-521",
-			"kid": "cibaec521",
-			"x": "AVnfaEpeCrVt8mozqVaJ37hW7JBhHVu9q8BK0w6-wTAhJ8FBoWFxOPGT-Kc0-h0weNTh1UMGEoXmXFArN6qGp1yz",
-			"y": "AN6HK2bqfD2Y_3r6_WZa5Z6IyZao8Aw9OZBJ0IMrbnmay6z0-Oghqd7NChR6BORkizLetSe-4HbOxllPSztHFP2d"
-		}
-	]}`
-
-	if err := json.Unmarshal([]byte(jwksStr), jwks); err != nil {
-		panic(err.Error())
-	}
-
-	return jwks
 }
 
 func createAccessToken(ctx context.Context, coreStrategy oauth2.CoreStrategy, storage oauth2.AccessTokenStorage, client fosite.Client) string {
@@ -290,4 +268,20 @@ func createAccessToken(ctx context.Context, coreStrategy oauth2.CoreStrategy, st
 	}
 
 	return token
+}
+
+func createJWT(ctx context.Context, signer jwt.Signer, claims jwt.MapClaims) string {
+	token, _, err := signer.Generate(ctx, claims, &jwt.Headers{})
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return token
+}
+
+func introspectAccessToken(ctx context.Context, token string, coreStrategy oauth2.CoreStrategy, storage oauth2.CoreStorage) (
+	fosite.Requester, error) {
+	sig := coreStrategy.AccessTokenSignature(ctx, token)
+	or, err := storage.GetAccessTokenSession(ctx, sig, &fosite.DefaultSession{})
+	return or, err
 }
