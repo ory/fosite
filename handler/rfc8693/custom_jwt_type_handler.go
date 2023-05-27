@@ -13,7 +13,7 @@ import (
 )
 
 type CustomJWTTypeHandler struct {
-	Config      ConfigProvider
+	Config      fosite.RFC8693ConfigProvider
 	JWTStrategy jwt.Signer
 	Storage
 }
@@ -49,7 +49,7 @@ func (c *CustomJWTTypeHandler) HandleTokenEndpointRequest(ctx context.Context, r
 		} else {
 			session.SetSubjectToken(unpacked)
 			// Get the subject and populate session
-			if subject, err := c.Storage.GetSubjectForTokenExchange(ctx, request); err != nil {
+			if subject, err := c.Storage.GetSubjectForTokenExchange(ctx, request, unpacked); err != nil {
 				return err
 			} else {
 				session.SetSubject(subject)
@@ -103,7 +103,7 @@ func (c *CustomJWTTypeHandler) CanHandleTokenEndpointRequest(requester fosite.Ac
 	return requester.GetGrantTypes().ExactOne("urn:ietf:params:oauth:grant-type:token-exchange")
 }
 
-func (c *CustomJWTTypeHandler) validate(ctx context.Context, request fosite.AccessRequester, tokenType TokenType, token string) (map[string]interface{}, error) {
+func (c *CustomJWTTypeHandler) validate(ctx context.Context, request fosite.AccessRequester, tokenType fosite.RFC8693TokenType, token string) (map[string]interface{}, error) {
 
 	jwtType, _ := tokenType.(*JWTType)
 	if jwtType == nil {
@@ -157,7 +157,7 @@ func (c *CustomJWTTypeHandler) validate(ctx context.Context, request fosite.Acce
 	return map[string]interface{}(claims), nil
 }
 
-func (c *CustomJWTTypeHandler) issue(ctx context.Context, request fosite.AccessRequester, tokenType TokenType, response fosite.AccessResponder) error {
+func (c *CustomJWTTypeHandler) issue(ctx context.Context, request fosite.AccessRequester, tokenType fosite.RFC8693TokenType, response fosite.AccessResponder) error {
 	jwtType, _ := tokenType.(*JWTType)
 	if jwtType == nil {
 		return errorsx.WithStack(

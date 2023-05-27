@@ -19,5 +19,5 @@ type Storage interface {
 	// GetSubjectForTokenExchange computes the session subject and is used for token types where there is no way
 	// to know the subject value. For some token types, such as access and refresh tokens, the subject is well-defined
 	// and this function is not called.
-	GetSubjectForTokenExchange(ctx context.Context, requester fosite.Requester) (string, error)
+	GetSubjectForTokenExchange(ctx context.Context, requester fosite.Requester, subjectToken map[string]interface{}) (string, error)
 }

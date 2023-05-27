@@ -12,7 +12,7 @@ import (
 )
 
 type RefreshTokenTypeHandler struct {
-	Config               ConfigProvider
+	Config               fosite.RFC8693ConfigProvider
 	RefreshTokenLifespan time.Duration
 	RefreshTokenScopes   []string
 	oauth2.CoreStrategy

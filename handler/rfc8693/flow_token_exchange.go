@@ -10,14 +10,14 @@ import (
 
 // TokenExchangeGrantHandler is the grant handler for RFC8693
 type TokenExchangeGrantHandler struct {
-	Config                   ConfigProvider
+	Config                   fosite.RFC8693ConfigProvider
 	ScopeStrategy            fosite.ScopeStrategy
 	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.2
 func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
+	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -143,7 +143,7 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.3.3
 func (c *TokenExchangeGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, responder fosite.AccessResponder) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
+	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -178,13 +178,12 @@ func (c *TokenExchangeGrantHandler) PopulateTokenEndpointResponse(ctx context.Co
 }
 
 // CanSkipClientAuth indicates if client auth can be skipped
-func (c *TokenExchangeGrantHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+func (c *TokenExchangeGrantHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
 	return false
 }
 
 // CanHandleTokenEndpointRequest indicates if the token endpoint request can be handled
-func (c *TokenExchangeGrantHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+func (c *TokenExchangeGrantHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
-	// Value MUST be set to "password".
 	return requester.GetGrantTypes().ExactOne("urn:ietf:params:oauth:grant-type:token-exchange")
 }

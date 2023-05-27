@@ -10,7 +10,7 @@ import (
 )
 
 type IDTokenTypeHandler struct {
-	Config             ConfigProvider
+	Config             fosite.Configurator
 	JWTStrategy        jwt.Signer
 	IssueStrategy      openid.OpenIDConnectTokenStrategy
 	ValidationStrategy openid.OpenIDConnectTokenValidationStrategy
@@ -70,7 +70,9 @@ func (c *IDTokenTypeHandler) PopulateTokenEndpointResponse(ctx context.Context, 
 	form := request.GetRequestForm()
 	requestedTokenType := form.Get("requested_token_type")
 	if requestedTokenType == "" {
-		requestedTokenType = c.Config.GetDefaultRequestedTokenType(ctx)
+		if config, ok := c.Config.(fosite.RFC8693ConfigProvider); ok {
+			requestedTokenType = config.GetDefaultRequestedTokenType(ctx)
+		}
 	}
 
 	if requestedTokenType != IDTokenType {
@@ -103,7 +105,11 @@ func (c *IDTokenTypeHandler) validate(ctx context.Context, request fosite.Access
 		return nil, errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Unable to parse the id_token").WithWrap(err).WithDebug(err.Error()))
 	}
 
-	expectedIssuer := c.Config.GetIssuer(ctx)
+	expectedIssuer := ""
+	if config, ok := c.Config.(fosite.AccessTokenIssuerProvider); ok {
+		expectedIssuer = config.GetAccessTokenIssuer(ctx)
+	}
+
 	if !claims.VerifyIssuer(expectedIssuer, true) {
 		return nil, errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("Claim 'iss' from token must match the '%s'.", expectedIssuer))
 	}

@@ -12,7 +12,7 @@ import (
 )
 
 type AccessTokenTypeHandler struct {
-	Config               ConfigProvider
+	Config               fosite.RFC8693ConfigProvider
 	AccessTokenLifespan  time.Duration
 	RefreshTokenLifespan time.Duration
 	RefreshTokenScopes   []string
@@ -23,7 +23,7 @@ type AccessTokenTypeHandler struct {
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.2
 func (c *AccessTokenTypeHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !c.CanHandleTokenEndpointRequest(request) {
+	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -62,7 +62,7 @@ func (c *AccessTokenTypeHandler) HandleTokenEndpointRequest(ctx context.Context,
 // PopulateTokenEndpointResponse implements https://tools.ietf.org/html/rfc6749#section-4.3.3
 func (c *AccessTokenTypeHandler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, responder fosite.AccessResponder) error {
 
-	if !c.CanHandleTokenEndpointRequest(request) {
+	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
@@ -89,12 +89,12 @@ func (c *AccessTokenTypeHandler) PopulateTokenEndpointResponse(ctx context.Conte
 }
 
 // CanSkipClientAuth indicates if client auth can be skipped
-func (c *AccessTokenTypeHandler) CanSkipClientAuth(requester fosite.AccessRequester) bool {
+func (c *AccessTokenTypeHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
 	return false
 }
 
 // CanHandleTokenEndpointRequest indicates if the token endpoint request can be handled
-func (c *AccessTokenTypeHandler) CanHandleTokenEndpointRequest(requester fosite.AccessRequester) bool {
+func (c *AccessTokenTypeHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "password".
 	return requester.GetGrantTypes().ExactOne("urn:ietf:params:oauth:grant-type:token-exchange")
