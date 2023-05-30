@@ -3,6 +3,8 @@
 
 package rfc8693
 
+import "github.com/ory/fosite"
+
 type Client interface {
 	// GetSupportedSubjectTokenTypes indicates the token types allowed for subject_token
 	GetSupportedSubjectTokenTypes() []string
@@ -10,7 +12,7 @@ type Client interface {
 	GetSupportedActorTokenTypes() []string
 	// GetSupportedRequestTokenTypes indicates the token types allowed for requested_token_type
 	GetSupportedRequestTokenTypes() []string
-	// GetAllowedClientIDsForTokenExchange indicates the clients that are allowed to
-	// exchange the subject token for an impersonated or delegated token.
-	GetAllowedClientIDsForTokenExchange() []string
+	// TokenExchangeAllowed checks if the subject token client allows the specified client
+	// to perform the exchange
+	TokenExchangeAllowed(client fosite.Client) bool
 }

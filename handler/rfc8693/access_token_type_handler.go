@@ -129,19 +129,7 @@ func (c *AccessTokenTypeHandler) validate(ctx context.Context, request fosite.Ac
 
 	// Check if the client is allowed to exchange this token
 	if subjectTokenClient, ok := or.GetClient().(Client); ok {
-		allowedClientIDs := subjectTokenClient.GetAllowedClientIDsForTokenExchange()
-		allowed := false
-		if len(allowedClientIDs) == 0 {
-			allowed = true
-		} else {
-			for _, cid := range allowedClientIDs {
-				if client.GetID() == cid {
-					allowed = true
-					break
-				}
-			}
-		}
-
+		allowed := subjectTokenClient.TokenExchangeAllowed(client)
 		if !allowed {
 			return nil, nil, errors.WithStack(fosite.ErrRequestForbidden.WithHintf(
 				"The OAuth 2.0 client is not permitted to exchange a subject token issued to client %s", subjectTokenClientID))
