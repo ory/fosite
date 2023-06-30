@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 2
           repository: ory/hydra
-          ref: master
+          ref: hperl/update-go-jose # switch back to "master" once merged
       - uses: actions/setup-go@v2
         with:
           go-version: "^1.19.0"

@@ -4,7 +4,7 @@
 package fosite
 
 import (
-	"gopkg.in/square/go-jose.v2"
+	"github.com/go-jose/go-jose/v3"
 )
 
 // Client represents a client or an app.
