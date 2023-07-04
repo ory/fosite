@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"gopkg.in/square/go-jose.v2"
+	"github.com/go-jose/go-jose/v3"
 )
 
 // RFC7523KeyStorage holds information needed to validate jwt assertion in authorization grants.
