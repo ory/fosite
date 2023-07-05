@@ -50,7 +50,9 @@ func (f *Fosite) WriteAuthorizeError(ctx context.Context, rw http.ResponseWriter
 	var redirectURIString string
 	if ar.GetResponseMode() == ResponseModeFormPost {
 		rw.Header().Set("Content-Type", "text/html;charset=UTF-8")
-		WriteAuthorizeFormPostResponse(redirectURI.String(), errors, GetPostFormHTMLTemplate(ctx, f), rw)
+
+		writeAuthorizeFormPostResponse := GetWriteAuthorizeFormPostResponse(ctx, f)
+		writeAuthorizeFormPostResponse(rw, GetPostFormHTMLTemplate(ctx, f), redirectURI.String(), errors)
 		return
 	} else if ar.GetResponseMode() == ResponseModeFragment {
 		redirectURIString = redirectURI.String() + "#" + errors.Encode()

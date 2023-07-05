@@ -124,6 +124,7 @@ type Configurator interface {
 	ResponseModeHandlerExtensionProvider
 	MessageCatalogProvider
 	FormPostHTMLTemplateProvider
+	WriteAuthorizeFormPostResponseProvider
 	TokenURLProvider
 	GetSecretsHashingProvider
 	AuthorizeEndpointHandlersProvider
