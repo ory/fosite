@@ -86,6 +86,8 @@ func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface
 		OAuth2TokenIntrospectionFactory,
 		OAuth2TokenRevocationFactory,
 
+		OIDCUserinfoVerifiableCredentialFactory,
+
 		OAuth2PKCEFactory,
 		PushedAuthorizeHandlerFactory,
 	)
