@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/pborman/uuid"
+	"github.com/google/uuid"
 	"golang.org/x/text/language"
 )
 
@@ -39,7 +39,7 @@ func NewRequest() *Request {
 
 func (a *Request) GetID() string {
 	if a.ID == "" {
-		a.ID = uuid.New()
+		a.ID = uuid.New().String()
 	}
 	return a.ID
 }

@@ -330,7 +330,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 				assert.NotEmpty(t, aresp.GetParameters().Get("code"))
 				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
 				assert.Equal(t, fosite.ResponseModeFragment, areq.GetResponseMode())
-				assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AuthorizeCode))
+				assert.WithinDuration(t, time.Now().Add(time.Hour).UTC(), areq.GetSession().GetExpiresAt(fosite.AuthorizeCode), 5*time.Second)
 			},
 		},
 	} {

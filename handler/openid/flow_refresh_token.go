@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/pborman/uuid"
+	"github.com/google/uuid"
 
 	"github.com/ory/x/errorsx"
 
@@ -91,7 +91,7 @@ func (c *OpenIDConnectRefreshHandler) PopulateTokenEndpointResponse(ctx context.
 	}
 
 	claims.AccessTokenHash = c.GetAccessTokenHash(ctx, requester, responder)
-	claims.JTI = uuid.New()
+	claims.JTI = uuid.New().String()
 	claims.CodeHash = ""
 	claims.IssuedAt = time.Now().Truncate(time.Second)
 

@@ -16,9 +16,9 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/go-jose/go-jose/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/square/go-jose.v2"
 
 	"github.com/ory/fosite/token/jwt"
 )

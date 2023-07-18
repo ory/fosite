@@ -10,7 +10,7 @@ import (
 	"errors"
 	"time"
 
-	jjson "gopkg.in/square/go-jose.v2/json"
+	jjson "github.com/go-jose/go-jose/v3/json"
 
 	"github.com/ory/x/errorsx"
 )
