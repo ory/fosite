@@ -7,9 +7,6 @@ type AccessRequest struct {
 	GrantTypes       Arguments `json:"grantTypes" gorethink:"grantTypes"`
 	HandledGrantType Arguments `json:"handledGrantType" gorethink:"handledGrantType"`
 
-	RefreshTokenRequestedScope Arguments
-	RefreshTokenGrantedScope   Arguments
-
 	Request
 }
 
@@ -27,26 +24,21 @@ func (a *AccessRequest) GetGrantTypes() Arguments {
 	return a.GrantTypes
 }
 
-func (a *AccessRequest) GetRefreshTokenRequestedScopes() (scopes Arguments) {
-	if a.RefreshTokenRequestedScope == nil {
-		return a.RequestedScope
+func (a *AccessRequest) SetGrantedScopes(scopes Arguments) {
+	a.GrantedScope = scopes
+}
+
+func (a *AccessRequest) SanitizeRestoreRefreshTokenOriginalRequester(requester Requester) Requester {
+	r := a.Sanitize(nil).(*Request)
+
+	ar := &AccessRequest{
+		Request: *r,
 	}
 
-	return a.RefreshTokenRequestedScope
-}
+	ar.SetID(requester.GetID())
 
-func (a *AccessRequest) SetRefreshTokenRequestedScopes(scopes Arguments) {
-	a.RefreshTokenRequestedScope = scopes
-}
+	ar.SetRequestedScopes(requester.GetRequestedScopes())
+	ar.SetGrantedScopes(requester.GetGrantedScopes())
 
-func (a *AccessRequest) GetRefreshTokenGrantedScopes() (scopes Arguments) {
-	if a.RefreshTokenGrantedScope == nil {
-		return a.GrantedScope
-	}
-
-	return a.RefreshTokenGrantedScope
-}
-
-func (a *AccessRequest) SetRefreshTokenGrantedScopes(scopes Arguments) {
-	a.RefreshTokenGrantedScope = scopes
+	return ar
 }

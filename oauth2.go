@@ -248,17 +248,9 @@ type Requester interface {
 // RefreshTokenAccessRequester is an extended AccessRequester implementation that allows preserving
 // the original Requester.
 type RefreshTokenAccessRequester interface {
-	// GetRefreshTokenRequestedScopes returns the request's scopes specifically for the refresh token.
-	GetRefreshTokenRequestedScopes() (scopes Arguments)
-
-	// SetRefreshTokenRequestedScopes sets the request's scopes specifically for the refresh token.
-	SetRefreshTokenRequestedScopes(scopes Arguments)
-
-	// GetRefreshTokenGrantedScopes returns all granted scopes specifically for the refresh token.
-	GetRefreshTokenGrantedScopes() (scopes Arguments)
-
-	// SetRefreshTokenGrantedScopes sets all granted scopes specifically for the refresh token.
-	SetRefreshTokenGrantedScopes(scopes Arguments)
+	// SanitizeRestoreRefreshTokenOriginalRequester returns a sanitized copy of this Requester and mutates the relevant
+	// values from the provided Requester which is the original refresh token session Requester.
+	SanitizeRestoreRefreshTokenOriginalRequester(requester Requester) Requester
 
 	AccessRequester
 }

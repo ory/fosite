@@ -97,13 +97,6 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		request.SetRequestedScopes(fosite.RemoveEmpty(strings.Split(scope, " ")))
 	}
 
-	// If a new refresh token is issued, the refresh token scope MUST be identical to that of the refresh token included
-	// by the client in the request.
-	if rtRequest, ok := request.(fosite.RefreshTokenAccessRequester); ok {
-		rtRequest.SetRefreshTokenRequestedScopes(originalRequest.GetRequestedScopes())
-		rtRequest.SetRefreshTokenGrantedScopes(originalRequest.GetGrantedScopes())
-	}
-
 	request.SetRequestedAudience(originalRequest.GetRequestedAudience())
 
 	strategy := c.Config.GetScopeStrategy(ctx)
@@ -167,30 +160,28 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		err = c.handleRefreshTokenEndpointStorageError(ctx, err)
 	}()
 
-	ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
+	originalRequest, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
 	if err != nil {
 		return err
-	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
+	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, originalRequest.GetID()); err != nil {
 		return err
 	}
 
-	if err := c.TokenRevocationStorage.RevokeRefreshTokenMaybeGracePeriod(ctx, ts.GetID(), signature); err != nil {
+	if err := c.TokenRevocationStorage.RevokeRefreshTokenMaybeGracePeriod(ctx, originalRequest.GetID(), signature); err != nil {
 		return err
 	}
 
 	storeReq := requester.Sanitize([]string{})
-	storeReq.SetID(ts.GetID())
+	storeReq.SetID(originalRequest.GetID())
 
 	if err = c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, storeReq); err != nil {
 		return err
 	}
 
 	if rtRequest, ok := requester.(fosite.RefreshTokenAccessRequester); ok {
-		rtStoreReq := requester.Sanitize([]string{}).(*fosite.Request)
-		rtStoreReq.SetID(ts.GetID())
+		rtStoreReq := rtRequest.SanitizeRestoreRefreshTokenOriginalRequester(originalRequest)
 
-		rtStoreReq.RequestedScope = rtRequest.GetRefreshTokenRequestedScopes()
-		rtStoreReq.GrantedScope = rtRequest.GetRefreshTokenGrantedScopes()
+		rtStoreReq.SetSession(requester.GetSession().Clone())
 
 		if err = c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, rtStoreReq); err != nil {
 			return err
