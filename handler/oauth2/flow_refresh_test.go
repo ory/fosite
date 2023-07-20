@@ -222,6 +222,8 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 						areq.Form.Add("refresh_token", token)
 						areq.Form.Add("scope", "foo bar offline")
+						areq.SetRequestedScopes(fosite.Arguments{"foo", "bar", "offline"})
+
 						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
 							Client:         areq.Client,
 							GrantedScope:   fosite.Arguments{"foo", "bar", "baz", "offline"},
@@ -252,6 +254,8 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 
 						areq.Form.Add("refresh_token", token)
 						areq.Form.Add("scope", "foo bar offline")
+						areq.SetRequestedScopes(fosite.Arguments{"foo", "bar", "offline"})
+
 						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
 							Client:         areq.Client,
 							GrantedScope:   fosite.Arguments{"foo", "baz", "offline"},

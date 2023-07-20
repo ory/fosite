@@ -19,6 +19,7 @@ import (
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
+	hoauth2 "github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal/gen"
 	"github.com/ory/fosite/token/jwt"
@@ -267,84 +268,11 @@ func TestRefreshTokenFlow(t *testing.T) {
 }
 
 func TestRefreshTokenFlowScopeParameter(t *testing.T) {
-	ctx := context.Background()
-
-	session := &defaultSession{
-		DefaultSession: &openid.DefaultSession{
-			Claims: &jwt.IDTokenClaims{
-				Subject: "peter",
-			},
-			Headers:  &jwt.Headers{},
-			Subject:  "peter",
-			Username: "peteru",
-		},
-	}
-	fc := new(fosite.Config)
-	fc.GlobalSecret = []byte("some-secret-thats-random-some-secret-thats-random-")
-	f := compose.ComposeAllEnabled(fc, fositeStore, gen.MustRSAKey())
-	ts := mockServer(t, f, session)
-	defer ts.Close()
-
-	fc.ScopeStrategy = fosite.ExactScopeStrategy
-
-	client := newOAuth2Client(ts)
-	client.Scopes = []string{"openid", "offline", "offline_access", "foo", "bar"}
-	client.ClientID = "grant-all-requested-scopes-client"
-
-	state := "1234567890"
-
-	testRefreshingClient := &fosite.DefaultClient{
-		ID:            "grant-all-requested-scopes-client",
-		Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
-		RedirectURIs:  []string{ts.URL + "/callback"},
-		ResponseTypes: []string{"code"},
-		GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
-		Scopes:        []string{"openid", "offline_access", "offline", "foo", "bar", "baz"},
-		Audience:      []string{"https://www.ory.sh/api"},
-	}
-
-	fositeStore.Clients["grant-all-requested-scopes-client"] = testRefreshingClient
-
-	s := compose.NewOAuth2HMACStrategy(fc)
-
-	originalScopes := fosite.Arguments{"openid", "offline", "offline_access", "foo", "bar"}
-
-	testCases := []struct {
+	type testCase struct {
 		name     string
 		scopes   fosite.Arguments
 		expected fosite.Arguments
 		err      string
-	}{
-		{
-			"ShouldGrantOriginalScopesWhenOmitted",
-			nil,
-			originalScopes,
-			"",
-		},
-		{
-			"ShouldNarrowScopesWhenIncluded",
-			fosite.Arguments{"openid", "offline_access", "foo"},
-			fosite.Arguments{"openid", "offline_access", "foo"},
-			"",
-		},
-		{
-			"ShouldGrantOriginalScopesWhenOmittedAfterNarrowing",
-			nil,
-			originalScopes,
-			"",
-		},
-		{
-			"ShouldGrantOriginalScopesExplicitlyRequested",
-			originalScopes,
-			originalScopes,
-			"",
-		},
-		{
-			"ShouldErrorWhenBroadeningScopesAllowedByClientButNotOriginallyGranted",
-			fosite.Arguments{"openid", "offline", "offline_access", "foo", "bar", "baz"},
-			nil,
-			"The requested scope is invalid, unknown, or malformed. The requested scope 'baz' was not originally granted by the resource owner.",
-		},
 	}
 
 	type step struct {
@@ -352,98 +280,279 @@ func TestRefreshTokenFlowScopeParameter(t *testing.T) {
 		SessionAT, SessionRT fosite.Requester
 	}
 
-	entries := make([]step, len(testCases)+1)
+	originalScopes := fosite.Arguments{"openid", "offline", "offline_access", "foo", "bar"}
 
-	resp, err := http.Get(client.AuthCodeURL(state))
-	require.NoError(t, err)
-	require.Equal(t, http.StatusOK, resp.StatusCode)
+	scenarios := []struct {
+		name      string
+		ignore    bool
+		checkTime bool
+		testCases []testCase
+	}{
+		{
+			"ShouldPassRFC",
+			false,
+			true,
+			[]testCase{
+				{
+					"ShouldGrantOriginalScopesWhenOmitted",
+					nil,
+					originalScopes,
+					"",
+				},
+				{
+					"ShouldNarrowScopesWhenIncluded",
+					fosite.Arguments{"openid", "offline_access", "foo"},
+					fosite.Arguments{"openid", "offline_access", "foo"},
+					"",
+				},
+				{
+					"ShouldGrantOriginalScopesWhenOmittedAfterNarrowing",
+					nil,
+					originalScopes,
+					"",
+				},
+				{
+					"ShouldGrantOriginalScopesExplicitlyRequested",
+					originalScopes,
+					originalScopes,
+					"",
+				},
+				{
+					"ShouldErrorWhenBroadeningScopesAllowedByClientButNotOriginallyGranted",
+					fosite.Arguments{"openid", "offline", "offline_access", "foo", "bar", "baz"},
+					nil,
+					"The requested scope is invalid, unknown, or malformed. The requested scope 'baz' was not originally granted by the resource owner.",
+				},
+			},
+		},
+		{
+			"ShouldPassIgnoreFilter",
+			true,
+			false,
+			[]testCase{
+				{
+					"ShouldGrantOriginalScopesWhenOmitted",
+					nil,
+					originalScopes,
+					"",
+				},
+				{
+					"ShouldNarrowScopesWhenIncluded",
+					fosite.Arguments{"openid", "offline_access", "foo"},
+					fosite.Arguments{"openid", "offline_access", "foo"},
+					"",
+				},
+				{
+					"ShouldGrantOriginalScopesWhenOmittedAfterNarrowing",
+					nil,
+					originalScopes,
+					"",
+				},
+				{
+					"ShouldGrantOriginalScopesExplicitlyRequested",
+					originalScopes,
+					originalScopes,
+					"",
+				},
+				{
+					"ShouldErrorWhenBroadeningScopesAllowedByClientButNotOriginallyGranted",
+					fosite.Arguments{"openid", "offline", "offline_access", "foo", "bar", "baz"},
+					fosite.Arguments{"openid", "offline", "offline_access", "foo", "bar"},
+					"",
+				},
+			},
+		},
+	}
 
-	entries[0].OAuth2, err = client.Exchange(ctx, resp.Request.URL.Query().Get("code"), oauth2.SetAuthURLParam("client_id", client.ClientID))
+	state := "1234567890"
 
-	require.NoError(t, err)
-	require.NotEmpty(t, entries[0].OAuth2.AccessToken)
-	require.NotEmpty(t, entries[0].OAuth2.RefreshToken)
+	for _, scenario := range scenarios {
+		t.Run(scenario.name, func(t *testing.T) {
+			ctx := context.Background()
 
-	assert.Equal(t, strings.Join(originalScopes, " "), entries[0].OAuth2.Extra("scope"))
-
-	entries[0].SessionAT, err = fositeStore.GetAccessTokenSession(ctx, s.AccessTokenSignature(ctx, entries[0].OAuth2.AccessToken), nil)
-	require.NoError(t, err)
-
-	entries[0].SessionRT, err = fositeStore.GetRefreshTokenSession(ctx, s.RefreshTokenSignature(ctx, entries[0].OAuth2.RefreshToken), nil)
-	require.NoError(t, err)
-
-	assert.ElementsMatch(t, entries[0].SessionAT.GetRequestedScopes(), originalScopes)
-	assert.ElementsMatch(t, entries[0].SessionRT.GetRequestedScopes(), originalScopes)
-	assert.ElementsMatch(t, entries[0].SessionAT.GetGrantedScopes(), originalScopes)
-	assert.ElementsMatch(t, entries[0].SessionRT.GetGrantedScopes(), originalScopes)
-	assert.Equal(t, strings.Join(originalScopes, " "), entries[0].OAuth2.Extra("scope"))
-
-	for i, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			time.Sleep(time.Second)
-
-			idx := i + 1
-
-			opts := []oauth2.AuthCodeOption{
-				oauth2.SetAuthURLParam("refresh_token", entries[i].OAuth2.RefreshToken),
-				oauth2.SetAuthURLParam("grant_type", "refresh_token"),
+			session := &defaultSession{
+				DefaultSession: &openid.DefaultSession{
+					Claims: &jwt.IDTokenClaims{
+						Subject: "peter",
+					},
+					Headers:  &jwt.Headers{},
+					Subject:  "peter",
+					Username: "peteru",
+				},
 			}
 
-			if len(tc.scopes) != 0 {
-				opts = append(opts, oauth2.SetAuthURLParam("scope", strings.Join(tc.scopes, " ")), oauth2.SetAuthURLParam("client_id", client.ClientID))
-			}
+			fc := new(fosite.Config)
+			fc.GlobalSecret = []byte("some-secret-thats-random-some-secret-thats-random-")
+			fc.ScopeStrategy = fosite.ExactScopeStrategy
 
-			entries[idx].OAuth2, err = client.Exchange(ctx, "", opts...)
-			if len(tc.err) != 0 {
-				require.Error(t, err)
-				require.Nil(t, entries[idx].OAuth2)
-				require.Contains(t, err.Error(), tc.err)
+			s := compose.NewOAuth2HMACStrategy(fc)
 
-				return
-			}
+			var f fosite.OAuth2Provider
 
-			require.NoError(t, err)
-			require.NotEmpty(t, entries[idx].OAuth2.AccessToken)
-			require.NotEmpty(t, entries[idx].OAuth2.RefreshToken)
-
-			entries[idx].SessionAT, err = fositeStore.GetAccessTokenSession(ctx, s.AccessTokenSignature(ctx, entries[idx].OAuth2.AccessToken), nil)
-			require.NoError(t, err)
-
-			entries[idx].SessionRT, err = fositeStore.GetRefreshTokenSession(ctx, s.RefreshTokenSignature(ctx, entries[idx].OAuth2.RefreshToken), nil)
-			require.NoError(t, err)
-
-			if len(tc.scopes) != 0 {
-				assert.ElementsMatch(t, entries[idx].SessionAT.GetRequestedScopes(), tc.scopes)
-				assert.Equal(t, strings.Join(tc.expected, " "), entries[idx].OAuth2.Extra("scope"))
-			} else {
-				assert.ElementsMatch(t, entries[idx].SessionAT.GetRequestedScopes(), originalScopes)
-				assert.Equal(t, strings.Join(originalScopes, " "), entries[idx].OAuth2.Extra("scope"))
-			}
-			assert.ElementsMatch(t, entries[idx].SessionAT.GetGrantedScopes(), tc.expected)
-			assert.ElementsMatch(t, entries[idx].SessionRT.GetRequestedScopes(), originalScopes)
-			assert.ElementsMatch(t, entries[idx].SessionRT.GetGrantedScopes(), originalScopes)
-
-			var (
-				j     int
-				entry step
-			)
-
-			assert.Equal(t, entries[idx].SessionAT.GetID(), entries[idx].SessionRT.GetID())
-
-			for j, entry = range entries {
-				if j == idx {
-					break
+			if scenario.ignore {
+				keyGetter := func(context.Context) (interface{}, error) {
+					return gen.MustRSAKey(), nil
 				}
 
-				assert.Equal(t, entries[idx].SessionAT.GetID(), entry.SessionAT.GetID())
-				assert.Equal(t, entries[idx].SessionAT.GetID(), entry.SessionRT.GetID())
-				assert.Equal(t, entries[idx].SessionRT.GetID(), entry.SessionAT.GetID())
-				assert.Equal(t, entries[idx].SessionRT.GetID(), entry.SessionRT.GetID())
+				// OAuth2RefreshTokenGrantFactory creates an OAuth2 refresh grant handler and registers
+				// an access token, refresh token and authorize code validator.nmj
+				factoryRefresh := func(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+					return &hoauth2.RefreshTokenGrantHandler{
+						AccessTokenStrategy:                    strategy.(hoauth2.AccessTokenStrategy),
+						RefreshTokenStrategy:                   strategy.(hoauth2.RefreshTokenStrategy),
+						TokenRevocationStorage:                 storage.(hoauth2.TokenRevocationStorage),
+						Config:                                 config,
+						IgnoreRequestedScopeNotInOriginalGrant: true,
+					}
+				}
 
-				assert.Greater(t, entries[idx].SessionAT.GetSession().GetExpiresAt(fosite.AccessToken).Unix(), entry.SessionAT.GetSession().GetExpiresAt(fosite.AccessToken).Unix())
-				assert.Greater(t, entries[idx].SessionRT.GetSession().GetExpiresAt(fosite.RefreshToken).Unix(), entry.SessionRT.GetSession().GetExpiresAt(fosite.RefreshToken).Unix())
-				assert.Greater(t, entries[idx].SessionAT.GetRequestedAt().Unix(), entry.SessionAT.GetRequestedAt().Unix())
-				assert.Greater(t, entries[idx].SessionRT.GetRequestedAt().Unix(), entry.SessionRT.GetRequestedAt().Unix())
+				f = compose.Compose(
+					fc,
+					fositeStore,
+					&compose.CommonStrategy{
+						CoreStrategy:               compose.NewOAuth2HMACStrategy(fc),
+						OpenIDConnectTokenStrategy: compose.NewOpenIDConnectStrategy(keyGetter, fc),
+						Signer:                     &jwt.DefaultSigner{GetPrivateKey: keyGetter},
+					},
+					compose.OAuth2AuthorizeExplicitFactory,
+					compose.OAuth2AuthorizeImplicitFactory,
+					compose.OAuth2ClientCredentialsGrantFactory,
+					factoryRefresh,
+					compose.OAuth2ResourceOwnerPasswordCredentialsFactory,
+					compose.RFC7523AssertionGrantFactory,
+
+					compose.OpenIDConnectExplicitFactory,
+					compose.OpenIDConnectImplicitFactory,
+					compose.OpenIDConnectHybridFactory,
+					compose.OpenIDConnectRefreshFactory,
+
+					compose.OAuth2TokenIntrospectionFactory,
+					compose.OAuth2TokenRevocationFactory,
+
+					compose.OAuth2PKCEFactory,
+					compose.PushedAuthorizeHandlerFactory,
+				)
+			} else {
+				f = compose.ComposeAllEnabled(fc, fositeStore, gen.MustRSAKey())
+			}
+
+			ts := mockServer(t, f, session)
+			defer ts.Close()
+
+			client := newOAuth2Client(ts)
+			client.Scopes = []string{"openid", "offline", "offline_access", "foo", "bar"}
+			client.ClientID = "grant-all-requested-scopes-client"
+
+			testRefreshingClient := &fosite.DefaultClient{
+				ID:            "grant-all-requested-scopes-client",
+				Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
+				RedirectURIs:  []string{ts.URL + "/callback"},
+				ResponseTypes: []string{"code"},
+				GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+				Scopes:        []string{"openid", "offline_access", "offline", "foo", "bar", "baz"},
+				Audience:      []string{"https://www.ory.sh/api"},
+			}
+
+			fositeStore.Clients["grant-all-requested-scopes-client"] = testRefreshingClient
+
+			entries := make([]step, len(scenario.testCases)+1)
+
+			resp, err := http.Get(client.AuthCodeURL(state))
+			require.NoError(t, err)
+			require.Equal(t, http.StatusOK, resp.StatusCode)
+
+			entries[0].OAuth2, err = client.Exchange(ctx, resp.Request.URL.Query().Get("code"), oauth2.SetAuthURLParam("client_id", client.ClientID))
+
+			require.NoError(t, err)
+			require.NotEmpty(t, entries[0].OAuth2.AccessToken)
+			require.NotEmpty(t, entries[0].OAuth2.RefreshToken)
+
+			assert.Equal(t, strings.Join(originalScopes, " "), entries[0].OAuth2.Extra("scope"))
+
+			entries[0].SessionAT, err = fositeStore.GetAccessTokenSession(ctx, s.AccessTokenSignature(ctx, entries[0].OAuth2.AccessToken), nil)
+			require.NoError(t, err)
+
+			entries[0].SessionRT, err = fositeStore.GetRefreshTokenSession(ctx, s.RefreshTokenSignature(ctx, entries[0].OAuth2.RefreshToken), nil)
+			require.NoError(t, err)
+
+			assert.ElementsMatch(t, entries[0].SessionAT.GetRequestedScopes(), originalScopes)
+			assert.ElementsMatch(t, entries[0].SessionRT.GetRequestedScopes(), originalScopes)
+			assert.ElementsMatch(t, entries[0].SessionAT.GetGrantedScopes(), originalScopes)
+			assert.ElementsMatch(t, entries[0].SessionRT.GetGrantedScopes(), originalScopes)
+			assert.Equal(t, strings.Join(originalScopes, " "), entries[0].OAuth2.Extra("scope"))
+
+			for i, tc := range scenario.testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					if scenario.checkTime {
+						time.Sleep(time.Second)
+					}
+
+					idx := i + 1
+
+					opts := []oauth2.AuthCodeOption{
+						oauth2.SetAuthURLParam("refresh_token", entries[i].OAuth2.RefreshToken),
+						oauth2.SetAuthURLParam("grant_type", "refresh_token"),
+					}
+
+					if len(tc.scopes) != 0 {
+						opts = append(opts, oauth2.SetAuthURLParam("scope", strings.Join(tc.scopes, " ")), oauth2.SetAuthURLParam("client_id", client.ClientID))
+					}
+
+					entries[idx].OAuth2, err = client.Exchange(ctx, "", opts...)
+					if len(tc.err) != 0 {
+						require.Error(t, err)
+						require.Nil(t, entries[idx].OAuth2)
+						require.Contains(t, err.Error(), tc.err)
+
+						return
+					}
+
+					require.NoError(t, err)
+					require.NotEmpty(t, entries[idx].OAuth2.AccessToken)
+					require.NotEmpty(t, entries[idx].OAuth2.RefreshToken)
+
+					entries[idx].SessionAT, err = fositeStore.GetAccessTokenSession(ctx, s.AccessTokenSignature(ctx, entries[idx].OAuth2.AccessToken), nil)
+					require.NoError(t, err)
+
+					entries[idx].SessionRT, err = fositeStore.GetRefreshTokenSession(ctx, s.RefreshTokenSignature(ctx, entries[idx].OAuth2.RefreshToken), nil)
+					require.NoError(t, err)
+
+					if len(tc.scopes) != 0 {
+						assert.ElementsMatch(t, entries[idx].SessionAT.GetRequestedScopes(), tc.scopes)
+						assert.Equal(t, strings.Join(tc.expected, " "), entries[idx].OAuth2.Extra("scope"))
+					} else {
+						assert.ElementsMatch(t, entries[idx].SessionAT.GetRequestedScopes(), originalScopes)
+						assert.Equal(t, strings.Join(originalScopes, " "), entries[idx].OAuth2.Extra("scope"))
+					}
+					assert.ElementsMatch(t, entries[idx].SessionAT.GetGrantedScopes(), tc.expected)
+					assert.ElementsMatch(t, entries[idx].SessionRT.GetRequestedScopes(), originalScopes)
+					assert.ElementsMatch(t, entries[idx].SessionRT.GetGrantedScopes(), originalScopes)
+
+					var (
+						j     int
+						entry step
+					)
+
+					assert.Equal(t, entries[idx].SessionAT.GetID(), entries[idx].SessionRT.GetID())
+
+					for j, entry = range entries {
+						if j == idx {
+							break
+						}
+
+						assert.Equal(t, entries[idx].SessionAT.GetID(), entry.SessionAT.GetID())
+						assert.Equal(t, entries[idx].SessionAT.GetID(), entry.SessionRT.GetID())
+						assert.Equal(t, entries[idx].SessionRT.GetID(), entry.SessionAT.GetID())
+						assert.Equal(t, entries[idx].SessionRT.GetID(), entry.SessionRT.GetID())
+
+						if scenario.checkTime {
+							assert.Greater(t, entries[idx].SessionAT.GetSession().GetExpiresAt(fosite.AccessToken).Unix(), entry.SessionAT.GetSession().GetExpiresAt(fosite.AccessToken).Unix())
+							assert.Greater(t, entries[idx].SessionRT.GetSession().GetExpiresAt(fosite.RefreshToken).Unix(), entry.SessionRT.GetSession().GetExpiresAt(fosite.RefreshToken).Unix())
+							assert.Greater(t, entries[idx].SessionAT.GetRequestedAt().Unix(), entry.SessionAT.GetRequestedAt().Unix())
+							assert.Greater(t, entries[idx].SessionRT.GetRequestedAt().Unix(), entry.SessionRT.GetRequestedAt().Unix())
+						}
+					}
+				})
 			}
 		})
 	}

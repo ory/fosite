@@ -29,6 +29,11 @@ type RefreshTokenGrantHandler struct {
 		fosite.AudienceStrategyProvider
 		fosite.RefreshTokenScopesProvider
 	}
+
+	// IgnoreRequestedScopeNotInOriginalGrant determines the action to take when the requested scopes in the refresh
+	// flow were not originally granted. If false which is the default the handler will automatically return an error.
+	// If true the handler will filter out / ignore the scopes which were not originally granted.
+	IgnoreRequestedScopeNotInOriginalGrant bool
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
@@ -89,12 +94,10 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 			See https://www.rfc-editor.org/rfc/rfc6749#section-6
 	*/
-	switch scope := request.GetRequestForm().Get("scope"); scope {
-	case "":
-		// Addresses point 1 of the text in RFC6749 Section 6.
+
+	// Addresses point 1 of the text in RFC6749 Section 6.
+	if len(request.GetRequestedScopes()) == 0 {
 		request.SetRequestedScopes(originalRequest.GetGrantedScopes())
-	default:
-		request.SetRequestedScopes(fosite.RemoveEmpty(strings.Split(scope, " ")))
 	}
 
 	request.SetRequestedAudience(originalRequest.GetRequestedAudience())
@@ -103,9 +106,15 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	originalScopes := originalRequest.GetGrantedScopes()
 
 	for _, scope := range request.GetRequestedScopes() {
-		// Addresses point 2 of the text in RFC6749 Section 6.
 		if !strategy(originalScopes, scope) {
-			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The requested scope '%s' was not originally granted by the resource owner.", scope))
+			if c.IgnoreRequestedScopeNotInOriginalGrant {
+				// Skips addressing point 2 of the text in RFC6749 Section 6 and instead just prevents the scope
+				// requested from being granted.
+				continue
+			} else {
+				// Addresses point 2 of the text in RFC6749 Section 6.
+				return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The requested scope '%s' was not originally granted by the resource owner.", scope))
+			}
 		}
 
 		if !strategy(request.GetClient().GetScopes(), scope) {
