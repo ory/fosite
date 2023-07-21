@@ -63,7 +63,7 @@ func mustGenerateNoneAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.Priv
 
 // returns an http basic authorization header, encoded using application/x-www-form-urlencoded
 func clientBasicAuthHeader(clientID, clientSecret string) http.Header {
-	creds := url.QueryEscape(clientID) + ":" + url.QueryEscape(clientSecret)
+	creds := clientID + ":" + clientSecret
 	return http.Header{
 		"Authorization": {
 			"Basic " + base64.StdEncoding.EncodeToString([]byte(creds)),
@@ -222,6 +222,12 @@ func TestAuthenticateClient(t *testing.T) {
 			r:      &http.Request{Header: clientBasicAuthHeader("foo", "bar")},
 		},
 		{
+			d:      "should pass because client is confidential and id and secret match in header with special characters",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: complexSecret}, TokenEndpointAuthMethod: "client_secret_basic"},
+			form:   url.Values{},
+			r:      &http.Request{Header: clientBasicAuthHeader("foo", "foo %66%6F%6F@$<§!✓")},
+		},
+		{
 			d:      "should pass because client is confidential and id and rotated secret match in header",
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: []byte("invalid_hash"), RotatedSecrets: [][]byte{barSecret}}, TokenEndpointAuthMethod: "client_secret_basic"},
 			form:   url.Values{},
@@ -255,18 +261,18 @@ func TestAuthenticateClient(t *testing.T) {
 			expectErr: ErrInvalidClient,
 		},
 		{
-			d:         "should fail because client id is not encoded using application/x-www-form-urlencoded",
+			d:         "should fail because client id is not valid",
 			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_basic"},
 			form:      url.Values{},
 			r:         &http.Request{Header: http.Header{"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte("%%%%%%:foo"))}}},
-			expectErr: ErrInvalidRequest,
+			expectErr: ErrInvalidClient,
 		},
 		{
-			d:         "should fail because client secret is not encoded using application/x-www-form-urlencoded",
+			d:         "should fail because client secret is not valid",
 			client:    &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "foo", Secret: barSecret}, TokenEndpointAuthMethod: "client_secret_basic"},
 			form:      url.Values{},
 			r:         &http.Request{Header: http.Header{"Authorization": {"Basic " + base64.StdEncoding.EncodeToString([]byte("foo:%%%%%%%"))}}},
-			expectErr: ErrInvalidRequest,
+			expectErr: ErrInvalidClient,
 		},
 		{
 			d:         "should fail because client is confidential and id does not exist in header",

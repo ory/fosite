@@ -7,10 +7,12 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/ory/x/errorsx"
@@ -293,15 +295,48 @@ func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool) (i
 }
 
 func clientCredentialsFromRequest(r *http.Request, form url.Values) (clientID, clientSecret string, err error) {
-	if id, secret, ok := r.BasicAuth(); !ok {
+	var ok bool
+
+	switch clientID, clientSecret, ok, err = clientCredentialsFromBasicAuth(r); {
+	case err != nil:
+		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("The client credentials in the HTTP authorization header could not be parsed. Either the scheme was missing, the scheme was invalid, or the value had malformed data.").WithWrap(err).WithDebug(err.Error()))
+	case ok:
+		return clientID, clientSecret, nil
+	default:
 		return clientCredentialsFromRequestBody(form, true)
-	} else if clientID, err = url.QueryUnescape(id); err != nil {
-		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("The client id in the HTTP authorization header could not be decoded from 'application/x-www-form-urlencoded'.").WithWrap(err).WithDebug(err.Error()))
-	} else if clientSecret, err = url.QueryUnescape(secret); err != nil {
-		return "", "", errorsx.WithStack(ErrInvalidRequest.WithHint("The client secret in the HTTP authorization header could not be decoded from 'application/x-www-form-urlencoded'.").WithWrap(err).WithDebug(err.Error()))
+	}
+}
+
+func clientCredentialsFromBasicAuth(r *http.Request) (clientID, clientSecret string, ok bool, err error) {
+	auth := r.Header.Get("Authorization")
+
+	if auth == "" {
+		return "", "", false, nil
 	}
 
-	return clientID, clientSecret, nil
+	scheme, value, ok := strings.Cut(auth, " ")
+
+	if !ok {
+		return "", "", false, errors.New("failed to parse http authorization header: invalid scheme: the scheme was missing")
+	}
+
+	if !strings.EqualFold(scheme, "Basic") {
+		return "", "", false, fmt.Errorf("failed to parse http authorization header: invalid scheme: expected the Basic scheme but received %s", scheme)
+	}
+
+	c, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		return "", "", false, fmt.Errorf("failed to parse http authorization header: invalid value: malformed base64 data: %w", err)
+	}
+
+	cs := string(c)
+
+	clientID, clientSecret, ok = strings.Cut(cs, ":")
+	if !ok {
+		return "", "", false, errors.New("failed to parse http authorization header: invalid value: the basic scheme separator was missing")
+	}
+
+	return clientID, clientSecret, true, nil
 }
 
 func clientCredentialsFromRequestBody(form url.Values, forceID bool) (clientID, clientSecret string, err error) {
