@@ -6,7 +6,7 @@ package fosite
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -76,7 +76,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(ctx context.
 			return errorsx.WithStack(ErrInvalidRequestURI.WithHintf("Unable to fetch OpenID Connect request parameters from 'request_uri' because status code '%d' was expected, but got '%d'.", http.StatusOK, response.StatusCode))
 		}
 
-		body, err := ioutil.ReadAll(response.Body)
+		body, err := io.ReadAll(response.Body)
 		if err != nil {
 			return errorsx.WithStack(ErrInvalidRequestURI.WithHintf("Unable to fetch OpenID Connect request parameters from 'request_uri' because body parsing failed with: %s.", err).WithWrap(err).WithDebug(err.Error()))
 		}

@@ -25,7 +25,7 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 	areq.Client = &fosite.DefaultClient{
 		//ResponseTypes: fosite.Arguments{"id_token"},
 	}
-	assert.EqualError(t, h.HandleTokenEndpointRequest(nil, areq), fosite.ErrUnknownRequest.Error())
+	assert.EqualError(t, h.HandleTokenEndpointRequest(context.Background(), areq), fosite.ErrUnknownRequest.Error())
 }
 
 func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
@@ -47,7 +47,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			setup: func(store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", req).Return(nil, ErrNoSessionFound)
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(nil, ErrNoSessionFound)
 			},
 			expectErr: fosite.ErrUnknownRequest,
 		},
@@ -56,7 +56,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			setup: func(store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", req).Return(nil, errors.New(""))
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -65,7 +65,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			setup: func(store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", req).Return(fosite.NewAuthorizeRequest(), nil)
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(fosite.NewAuthorizeRequest(), nil)
 			},
 			expectErr: fosite.ErrMisconfiguration,
 		},
@@ -79,7 +79,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				req.Form.Set("code", "foobar")
 				storedReq := fosite.NewAuthorizeRequest()
 				storedReq.GrantedScope = fosite.Arguments{"openid"}
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", req).Return(storedReq, nil)
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(storedReq, nil)
 			},
 			expectErr: fosite.ErrUnauthorizedClient,
 		},
@@ -101,7 +101,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				storedReq.Session = storedSession
 				storedReq.GrantedScope = fosite.Arguments{"openid"}
 				storedReq.Form.Set("nonce", "1111111111111111")
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", req).Return(storedReq, nil)
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(storedReq, nil)
 			},
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
@@ -131,7 +131,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				storedReq.Session = storedSession
 				storedReq.GrantedScope = fosite.Arguments{"openid"}
 				storedReq.Form.Set("nonce", "1111111111111111")
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", req).Return(storedReq, nil)
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(storedReq, nil)
 			},
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
@@ -157,7 +157,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				storedReq := fosite.NewAuthorizeRequest()
 				storedReq.Session = storedSession
 				storedReq.GrantedScope = fosite.Arguments{"openid"}
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", req).Return(storedReq, nil)
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(storedReq, nil)
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -169,7 +169,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				storedReq := fosite.NewAuthorizeRequest()
 				storedReq.Session = nil
 				storedReq.GrantScope("openid")
-				store.EXPECT().GetOpenIDConnectSession(nil, "foobar", req).Return(storedReq, nil)
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(storedReq, nil)
 			},
 			expectErr: fosite.ErrServerError,
 		},
@@ -208,7 +208,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			}
 
 			c.setup(store, areq)
-			err := h.PopulateTokenEndpointResponse(nil, areq, aresp)
+			err := h.PopulateTokenEndpointResponse(context.Background(), areq, aresp)
 
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())

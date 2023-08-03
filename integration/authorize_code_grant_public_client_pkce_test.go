@@ -6,7 +6,7 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -100,7 +100,7 @@ func runAuthorizeCodeGrantWithPublicClientAndPKCETest(t *testing.T, strategy int
 				require.NoError(t, err)
 				defer resp.Body.Close()
 
-				body, err := ioutil.ReadAll(resp.Body)
+				body, err := io.ReadAll(resp.Body)
 				require.NoError(t, err)
 
 				if c.tokenStatusCode != 0 {

@@ -97,6 +97,7 @@ func TestDefaultWorkFactor(t *testing.T) {
 	}
 
 	cost, err := bcrypt.Cost(hash)
+	assert.NoError(t, err)
 	if cost != 12 {
 		t.Errorf("got cost factor %d", cost)
 	}

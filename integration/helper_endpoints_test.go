@@ -16,10 +16,6 @@ import (
 	"github.com/ory/fosite/handler/oauth2"
 )
 
-type stackTracer interface {
-	StackTrace() errors.StackTrace
-}
-
 func tokenRevocationHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		ctx := fosite.NewContext()
