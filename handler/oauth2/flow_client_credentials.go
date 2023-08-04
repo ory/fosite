@@ -20,6 +20,7 @@ type ClientCredentialsGrantHandler struct {
 		fosite.ScopeStrategyProvider
 		fosite.AudienceStrategyProvider
 		fosite.AccessTokenLifespanProvider
+		fosite.TokenPrefixProvider
 	}
 }
 

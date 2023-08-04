@@ -34,6 +34,12 @@ type AccessTokenLifespanProvider interface {
 	GetAccessTokenLifespan(ctx context.Context) time.Duration
 }
 
+// TokenPrefixProvider returns the provider for configuring the token prefix.
+type TokenPrefixProvider interface {
+	// GetAccessTokenLifespan returns the access token lifespan.
+	GetTokenPrefixProvider(ctx context.Context) string
+}
+
 // IDTokenLifespanProvider returns the provider for configuring the ID token lifespan.
 type IDTokenLifespanProvider interface {
 	// GetIDTokenLifespan returns the ID token lifespan.

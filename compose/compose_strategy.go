@@ -22,6 +22,7 @@ type CommonStrategy struct {
 type HMACSHAStrategyConfigurator interface {
 	fosite.AccessTokenLifespanProvider
 	fosite.RefreshTokenLifespanProvider
+	fosite.TokenPrefixProvider
 	fosite.AuthorizeCodeLifespanProvider
 	fosite.TokenEntropyProvider
 	fosite.GlobalSecretProvider

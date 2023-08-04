@@ -24,6 +24,7 @@ type Handler struct {
 
 	Config interface {
 		fosite.AccessTokenLifespanProvider
+		fosite.TokenPrefixProvider
 		fosite.TokenURLProvider
 		fosite.GrantTypeJWTBearerCanSkipClientAuthProvider
 		fosite.GrantTypeJWTBearerIDOptionalProvider

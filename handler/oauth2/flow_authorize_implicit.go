@@ -25,6 +25,7 @@ type AuthorizeImplicitGrantTypeHandler struct {
 
 	Config interface {
 		fosite.AccessTokenLifespanProvider
+		fosite.TokenPrefixProvider
 		fosite.ScopeStrategyProvider
 		fosite.AudienceStrategyProvider
 	}

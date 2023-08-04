@@ -106,6 +106,7 @@ type Configurator interface {
 	RefreshTokenScopesProvider
 	AccessTokenLifespanProvider
 	RefreshTokenLifespanProvider
+	TokenPrefixProvider
 	AuthorizeCodeLifespanProvider
 	TokenEntropyProvider
 	RotatedGlobalSecretsProvider
