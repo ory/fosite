@@ -115,8 +115,7 @@ func TestAuthenticateClient(t *testing.T) {
 		},
 	}
 
-	var h http.HandlerFunc
-	h = func(w http.ResponseWriter, r *http.Request) {
+	var h http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		require.NoError(t, json.NewEncoder(w).Encode(rsaJwks))
 	}
 	ts := httptest.NewServer(h)
@@ -586,12 +585,12 @@ func TestAuthenticateClientTwice(t *testing.T) {
 		"aud": "token-url",
 	}, key, "kid-foo")}, "client_assertion_type": []string{at}}
 
-	c, err := f.AuthenticateClient(nil, new(http.Request), formValues)
+	c, err := f.AuthenticateClient(context.Background(), new(http.Request), formValues)
 	require.NoError(t, err, "%#v", err)
 	assert.Equal(t, client, c)
 
 	// replay the request and expect it to fail
-	c, err = f.AuthenticateClient(nil, new(http.Request), formValues)
+	c, err = f.AuthenticateClient(context.Background(), new(http.Request), formValues)
 	require.Error(t, err)
 	assert.EqualError(t, err, ErrJTIKnown.Error())
 	assert.Nil(t, c)

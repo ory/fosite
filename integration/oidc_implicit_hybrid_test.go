@@ -4,6 +4,7 @@
 package integration_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -151,7 +152,7 @@ func TestOIDCImplicitFlow(t *testing.T) {
 				Expiry:       time.Now().UTC().Add(time.Duration(expires) * time.Second),
 			}
 
-			httpClient := oauthClient.Client(oauth2.NoContext, token)
+			httpClient := oauthClient.Client(context.Background(), token)
 			resp, err = httpClient.Get(ts.URL + "/info")
 			require.NoError(t, err)
 			assert.Equal(t, http.StatusOK, resp.StatusCode)
