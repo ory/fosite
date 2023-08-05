@@ -71,6 +71,17 @@ type OpenIDConnectClient interface {
 	GetTokenEndpointAuthSigningAlgorithm() string
 }
 
+// ClientWithAllowedVerificationKeys adds a security control to the client configuration to only allow
+// specific verification keys. This ensures that a key that is valid for client X can't be used for client Y
+// unless allowed. This becomes especially important for cases where the clients are controlled by third-parties
+// and are issued specific keys from a central organization, which may be the OP's org or a central regulatory authority,
+// and the security controls of the clients cannot be guaranteed.
+type ClientWithAllowedVerificationKeys interface {
+	// AllowedVerificationKeys provides a list of key IDs that can be used in the JWT
+	// header for private_key_jwt authentication and for JWT bearer grant flow
+	AllowedVerificationKeys() []string
+}
+
 // ResponseModeClient represents a client capable of handling response_mode
 type ResponseModeClient interface {
 	// GetResponseMode returns the response modes that client is allowed to send

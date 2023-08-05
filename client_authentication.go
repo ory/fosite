@@ -8,7 +8,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -16,7 +15,6 @@ import (
 	"github.com/ory/x/errorsx"
 
 	"github.com/go-jose/go-jose/v3"
-	"github.com/pkg/errors"
 
 	"github.com/ory/fosite/token/jwt"
 )
@@ -54,7 +52,7 @@ func (f *Fosite) findClientPublicJWK(ctx context.Context, oidcClient OpenIDConne
 }
 
 // AuthenticateClient authenticates client requests using the configured strategy
-// `Fosite.ClientAuthenticationStrategy`, if nil it uses `Fosite.DefaultClientAuthenticationStrategy`
+// `ClientAuthenticationStrategy`, if nil it uses `DefaultClientAuthenticationStrategy`
 func (f *Fosite) AuthenticateClient(ctx context.Context, r *http.Request, form url.Values) (Client, error) {
 	if s := f.Config.GetClientAuthenticationStrategy(ctx); s != nil {
 		return s(ctx, r, form)
@@ -71,81 +69,80 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 			return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("The client_assertion request parameter must be set when using client_assertion_type of '%s'.", clientAssertionJWTBearerType))
 		}
 
-		var clientID string
-		var client Client
+		// for backward compatibility
+		if f.JWTHelper == nil {
+			f.JWTHelper = &JWTHelper{
+				JWTStrategy: nil,
+				Config:      f.Config,
+			}
+		}
 
-		token, err := jwt.ParseWithClaims(assertion, jwt.MapClaims{}, func(t *jwt.Token) (interface{}, error) {
-			var err error
-			clientID, _, err = clientCredentialsFromRequestBody(form, false)
-			if err != nil {
-				return nil, err
-			}
-
-			if clientID == "" {
-				claims := t.Claims
-				if sub, ok := claims["sub"].(string); !ok {
-					return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The claim 'sub' from the client_assertion JSON Web Token is undefined."))
-				} else {
-					clientID = sub
-				}
-			}
-
-			client, err = f.Store.GetClient(ctx, clientID)
-			if err != nil {
-				return nil, errorsx.WithStack(ErrInvalidClient.WithWrap(err).WithDebug(err.Error()))
-			}
-
-			oidcClient, ok := client.(OpenIDConnectClient)
-			if !ok {
-				return nil, errorsx.WithStack(ErrInvalidRequest.WithHint("The server configuration does not support OpenID Connect specific authentication methods."))
-			}
-
-			switch oidcClient.GetTokenEndpointAuthMethod() {
-			case "private_key_jwt":
-				break
-			case "none":
-				return nil, errorsx.WithStack(ErrInvalidClient.WithHint("This requested OAuth 2.0 client does not support client authentication, however 'client_assertion' was provided in the request."))
-			case "client_secret_post":
-				fallthrough
-			case "client_secret_basic":
-				return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("This requested OAuth 2.0 client only supports client authentication method '%s', however 'client_assertion' was provided in the request.", oidcClient.GetTokenEndpointAuthMethod()))
-			case "client_secret_jwt":
-				fallthrough
-			default:
-				return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("This requested OAuth 2.0 client only supports client authentication method '%s', however that method is not supported by this server.", oidcClient.GetTokenEndpointAuthMethod()))
-			}
-
-			if oidcClient.GetTokenEndpointAuthSigningAlgorithm() != fmt.Sprintf("%s", t.Header["alg"]) {
-				return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("The 'client_assertion' uses signing algorithm '%s' but the requested OAuth 2.0 Client enforces signing algorithm '%s'.", t.Header["alg"], oidcClient.GetTokenEndpointAuthSigningAlgorithm()))
-			}
-			switch t.Method {
-			case jose.RS256, jose.RS384, jose.RS512:
-				return f.findClientPublicJWK(ctx, oidcClient, t, true)
-			case jose.ES256, jose.ES384, jose.ES512:
-				return f.findClientPublicJWK(ctx, oidcClient, t, false)
-			case jose.PS256, jose.PS384, jose.PS512:
-				return f.findClientPublicJWK(ctx, oidcClient, t, true)
-			case jose.HS256, jose.HS384, jose.HS512:
-				return nil, errorsx.WithStack(ErrInvalidClient.WithHint("This authorization server does not support client authentication method 'client_secret_jwt'."))
-			default:
-				return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("The 'client_assertion' request parameter uses unsupported signing algorithm '%s'.", t.Header["alg"]))
-			}
-		})
+		// Parse the assertion
+		token, parsedToken, isJWE, err := f.newToken(assertion, "client_assertion", ErrInvalidClient)
 		if err != nil {
-			// Do not re-process already enhanced errors
-			var e *jwt.ValidationError
-			if errors.As(err, &e) {
-				if e.Inner != nil {
-					return nil, e.Inner
-				}
-				return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Unable to verify the integrity of the 'client_assertion' value.").WithWrap(err).WithDebug(err.Error()))
-			}
-			return nil, err
-		} else if err := token.Claims.Valid(); err != nil {
-			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Unable to verify the request object because its claims could not be validated, check if the expiry time is set correctly.").WithWrap(err).WithDebug(err.Error()))
+			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Unable to parse the client_assertion").WithWrap(err).WithDebug(err.Error()))
 		}
 
 		claims := token.Claims
+
+		// Validate client
+		clientID, _, err := clientCredentialsFromRequestBody(form, false)
+		if err != nil {
+			return nil, err
+		}
+
+		if clientID == "" {
+			if isJWE {
+				return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The 'client_id' must be part of the request when encrypted client_assertion is used."))
+			}
+
+			if sub, ok := claims["sub"].(string); !ok {
+				return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The claim 'sub' from the client_assertion JSON Web Token is undefined."))
+			} else {
+				clientID = sub
+			}
+		}
+
+		client, err := f.Store.GetClient(ctx, clientID)
+		if err != nil {
+			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client could not be authenticated.").WithWrap(err).WithDebug(err.Error()))
+		}
+
+		oidcClient, ok := client.(OpenIDConnectClient)
+		if !ok {
+			return nil, errorsx.WithStack(ErrInvalidRequest.WithHint("The server configuration does not support OpenID Connect specific authentication methods."))
+		}
+
+		switch oidcClient.GetTokenEndpointAuthMethod() {
+		case "private_key_jwt":
+			break
+		case "none":
+			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("This requested OAuth 2.0 client does not support client authentication, however 'client_assertion' was provided in the request."))
+		case "client_secret_post":
+			fallthrough
+		case "client_secret_basic":
+			return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("This requested OAuth 2.0 client only supports client authentication method '%s', however 'client_assertion' was provided in the request.", oidcClient.GetTokenEndpointAuthMethod()))
+		case "client_secret_jwt":
+			fallthrough
+		default:
+			return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("This requested OAuth 2.0 client only supports client authentication method '%s', however that method is not supported by this server.", oidcClient.GetTokenEndpointAuthMethod()))
+		}
+
+		// Validate signature
+		if !isJWE && oidcClient.GetTokenEndpointAuthSigningAlgorithm() != "" && oidcClient.GetTokenEndpointAuthSigningAlgorithm() != parsedToken.Headers[0].Algorithm {
+			return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("The client_assertion uses signing algorithm '%s', but the requested OAuth 2.0 Client enforces signing algorithm '%s'.", parsedToken.Headers[0].Algorithm, oidcClient.GetTokenEndpointAuthSigningAlgorithm()))
+		}
+
+		if token, parsedToken, err = f.ValidateParsedAssertionWithClient(ctx, "client_assertion", assertion, token, parsedToken, oidcClient, false, ErrInvalidClient); err != nil {
+			return nil, err
+		}
+
+		if isJWE && oidcClient.GetTokenEndpointAuthSigningAlgorithm() != "" && oidcClient.GetTokenEndpointAuthSigningAlgorithm() != parsedToken.Headers[0].Algorithm {
+			return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("The client_assertion uses signing algorithm '%s', but the requested OAuth 2.0 Client enforces signing algorithm '%s'.", parsedToken.Headers[0].Algorithm, oidcClient.GetTokenEndpointAuthSigningAlgorithm()))
+		}
+
+		claims = token.Claims
+
 		var jti string
 		if !claims.VerifyIssuer(clientID, true) {
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Claim 'iss' from 'client_assertion' must match the 'client_id' of the OAuth 2.0 Client."))
