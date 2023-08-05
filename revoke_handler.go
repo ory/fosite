@@ -10,8 +10,6 @@ import (
 	"net/http"
 
 	"github.com/ory/x/errorsx"
-	"github.com/ory/x/otelx"
-	"go.opentelemetry.io/otel/trace"
 
 	"github.com/pkg/errors"
 )
@@ -34,9 +32,6 @@ import (
 // An invalid token type hint value is ignored by the authorization
 // server and does not influence the revocation response.
 func (f *Fosite) NewRevocationRequest(ctx context.Context, r *http.Request) (err error) {
-	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("github.com/ory/fosite").Start(ctx, "Fosite.NewRevocationRequest")
-	defer otelx.End(span, &err)
-
 	ctx = context.WithValue(ctx, RequestContextKey, r)
 
 	if r.Method != "POST" {
