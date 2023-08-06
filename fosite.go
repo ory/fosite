@@ -142,8 +142,6 @@ type Fosite struct {
 	Store Storage
 
 	Config Configurator
-
-	*JWTHelper
 }
 
 // GetMinParameterEntropy returns MinParameterEntropy if set. Defaults to fosite.MinParameterEntropy.

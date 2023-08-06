@@ -62,6 +62,7 @@ var (
 	_ RevocationHandlersProvider                   = (*Config)(nil)
 	_ PushedAuthorizeRequestHandlersProvider       = (*Config)(nil)
 	_ PushedAuthorizeRequestConfigProvider         = (*Config)(nil)
+	_ JWTStrategyProvider                          = (*Config)(nil)
 )
 
 type Config struct {
@@ -212,6 +213,9 @@ type Config struct {
 
 	// IsPushedAuthorizeEnforced enforces pushed authorization request for /authorize
 	IsPushedAuthorizeEnforced bool
+
+	// JWTStrategy is used to provide additional JWT encrypt/decrypt/sign/verify capabilities
+	JWTStrategy jwt.Strategy
 }
 
 func (c *Config) GetGlobalSecret(ctx context.Context) ([]byte, error) {
@@ -487,4 +491,9 @@ func (c *Config) GetPushedAuthorizeContextLifespan(ctx context.Context) time.Dur
 // must contain the PAR request_uri.
 func (c *Config) EnforcePushedAuthorize(ctx context.Context) bool {
 	return c.IsPushedAuthorizeEnforced
+}
+
+// GetJWTStrategy returns the JWT strategy.
+func (c *Config) GetJWTStrategy(ctx context.Context) jwt.Strategy {
+	return c.JWTStrategy
 }

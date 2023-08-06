@@ -5,16 +5,12 @@ package fosite
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/rsa"
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/ory/x/errorsx"
-
-	"github.com/go-jose/go-jose/v3"
 
 	"github.com/ory/fosite/token/jwt"
 )
@@ -26,29 +22,11 @@ type ClientAuthenticationStrategy func(context.Context, *http.Request, url.Value
 const clientAssertionJWTBearerType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
 func (f *Fosite) findClientPublicJWK(ctx context.Context, oidcClient OpenIDConnectClient, t *jwt.Token, expectsRSAKey bool) (interface{}, error) {
-	if set := oidcClient.GetJSONWebKeys(); set != nil {
-		return findPublicKey(t, set, expectsRSAKey)
+	if oidcClient.GetJSONWebKeys() == nil && oidcClient.GetJSONWebKeysURI() == "" {
+		return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The OAuth 2.0 Client has no JSON Web Keys set registered, but they are needed to complete the request."))
 	}
 
-	if location := oidcClient.GetJSONWebKeysURI(); len(location) > 0 {
-		keys, err := f.Config.GetJWKSFetcherStrategy(ctx).Resolve(ctx, location, false)
-		if err != nil {
-			return nil, err
-		}
-
-		if key, err := findPublicKey(t, keys, expectsRSAKey); err == nil {
-			return key, nil
-		}
-
-		keys, err = f.Config.GetJWKSFetcherStrategy(ctx).Resolve(ctx, location, true)
-		if err != nil {
-			return nil, err
-		}
-
-		return findPublicKey(t, keys, expectsRSAKey)
-	}
-
-	return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The OAuth 2.0 Client has no JSON Web Keys set registered, but they are needed to complete the request."))
+	return findPublicJWK(ctx, f.Config, t, oidcClient.GetJSONWebKeysURI(), oidcClient.GetJSONWebKeys(), expectsRSAKey, ErrInvalidClient)
 }
 
 // AuthenticateClient authenticates client requests using the configured strategy
@@ -69,16 +47,8 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 			return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("The client_assertion request parameter must be set when using client_assertion_type of '%s'.", clientAssertionJWTBearerType))
 		}
 
-		// for backward compatibility
-		if f.JWTHelper == nil {
-			f.JWTHelper = &JWTHelper{
-				JWTStrategy: nil,
-				Config:      f.Config,
-			}
-		}
-
 		// Parse the assertion
-		token, parsedToken, isJWE, err := f.newToken(assertion, "client_assertion", ErrInvalidClient)
+		token, parsedToken, isJWE, err := newToken(assertion, "client_assertion", ErrInvalidClient)
 		if err != nil {
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Unable to parse the client_assertion").WithWrap(err).WithDebug(err.Error()))
 		}
@@ -133,7 +103,9 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("The client_assertion uses signing algorithm '%s', but the requested OAuth 2.0 Client enforces signing algorithm '%s'.", parsedToken.Headers[0].Algorithm, oidcClient.GetTokenEndpointAuthSigningAlgorithm()))
 		}
 
-		if token, parsedToken, err = f.ValidateParsedAssertionWithClient(ctx, "client_assertion", assertion, token, parsedToken, oidcClient, false, ErrInvalidClient); err != nil {
+		ctx = context.WithValue(ctx, AssertionTypeContextKey, "client_assertion")
+		ctx = context.WithValue(ctx, BaseErrorContextKey, ErrInvalidClient)
+		if token, parsedToken, err = ValidateParsedAssertionWithClient(ctx, f.Config, assertion, token, parsedToken, oidcClient, false); err != nil {
 			return nil, err
 		}
 
@@ -246,43 +218,6 @@ func (f *Fosite) checkClientSecret(ctx context.Context, client Client, clientSec
 	}
 
 	return err
-}
-
-func findPublicKey(t *jwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool) (interface{}, error) {
-	keys := set.Keys
-	if len(keys) == 0 {
-		return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("The retrieved JSON Web Key Set does not contain any key."))
-	}
-
-	kid, ok := t.Header["kid"].(string)
-	if ok {
-		keys = set.Key(kid)
-	}
-
-	if len(keys) == 0 {
-		return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("The JSON Web Token uses signing key with kid '%s', which could not be found.", kid))
-	}
-
-	for _, key := range keys {
-		if key.Use != "sig" {
-			continue
-		}
-		if expectsRSAKey {
-			if k, ok := key.Key.(*rsa.PublicKey); ok {
-				return k, nil
-			}
-		} else {
-			if k, ok := key.Key.(*ecdsa.PublicKey); ok {
-				return k, nil
-			}
-		}
-	}
-
-	if expectsRSAKey {
-		return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("Unable to find RSA public key with use='sig' for kid '%s' in JSON Web Key Set.", kid))
-	} else {
-		return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("Unable to find ECDSA public key with use='sig' for kid '%s' in JSON Web Key Set.", kid))
-	}
 }
 
 func clientCredentialsFromRequest(r *http.Request, form url.Values) (clientID, clientSecret string, err error) {

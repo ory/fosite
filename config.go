@@ -300,3 +300,9 @@ type PushedAuthorizeRequestConfigProvider interface {
 	// must contain the PAR request_uri.
 	EnforcePushedAuthorize(ctx context.Context) bool
 }
+
+// JWTStrategyProvider returns the provider for configuring the JWT strategy.
+type JWTStrategyProvider interface {
+	// GetJWTStrategy returns the JWT strategy.
+	GetJWTStrategy(ctx context.Context) jwt.Strategy
+}

@@ -107,17 +107,15 @@ func TestAuthenticateClient(t *testing.T) {
 		ClientSecretsHasher: hasher,
 		TokenURL:            "token-url",
 		HTTPClient:          retryablehttp.NewClient(),
+		JWTStrategy: jwt.NewDefaultStrategy(
+			func(ctx context.Context, context *jwt.KeyContext) (interface{}, error) {
+				return encKey, nil
+			}),
 	}
 
 	f := &Fosite{
 		Store:  storage.NewMemoryStore(),
 		Config: config,
-		JWTHelper: &JWTHelper{
-			Config: config,
-			JWTStrategy: jwt.NewDefaultStrategy(func(ctx context.Context, context *jwt.KeyContext) (interface{}, error) {
-				return encKey, nil
-			}),
-		},
 	}
 
 	barSecret, err := hasher.Hash(context.TODO(), []byte("bar"))

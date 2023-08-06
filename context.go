@@ -19,4 +19,7 @@ const (
 	AuthorizeResponseContextKey = ContextKey("authorizeResponse")
 	// PushedAuthorizeResponseContextKey is the response context
 	PushedAuthorizeResponseContextKey = ContextKey("pushedAuthorizeResponse")
+
+	AssertionTypeContextKey = ContextKey("assertionType")
+	BaseErrorContextKey     = ContextKey("baseError")
 )

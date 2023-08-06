@@ -36,42 +36,43 @@ type JWTValidationConfig struct {
 	NoneAlgAllowed bool `json:"none"`
 }
 
-// JWTHelper provides JWT helper functions that is used across
-type JWTHelper struct {
-	// JWTStrategy is the strategy used to build and validate JWTs
-	JWTStrategy fjwt.Strategy
-	Config      Configurator
-}
-
 // ValidateParsedAssertionWithClient validates the parsed assertion based on the jwks_uri, jwks etc. configured on the client
-func (f *JWTHelper) ValidateParsedAssertionWithClient(ctx context.Context, assertionType string, assertion string, token *fjwt.Token, parsedToken *jwt.JSONWebToken, oidcClient OpenIDConnectClient, isNoneAlgAllowed bool, baseError *RFC6749Error) (
+func ValidateParsedAssertionWithClient(ctx context.Context, config Configurator, assertion string, token *fjwt.Token, parsedToken *jwt.JSONWebToken, oidcClient OpenIDConnectClient, isNoneAlgAllowed bool) (
 	*fjwt.Token, *jwt.JSONWebToken, error) {
+
 	jwksURI := oidcClient.GetJSONWebKeysURI()
 	jwks := oidcClient.GetJSONWebKeys()
 	allowedKeys := []string{}
-	if oidcClientEx, ok := oidcClient.(ClientWithAllowedVerificationKeys); ok {
-		allowedKeys = oidcClientEx.AllowedVerificationKeys()
+	if c, ok := oidcClient.(ClientWithAllowedVerificationKeys); ok {
+		allowedKeys = c.AllowedVerificationKeys()
 	}
 
-	return f.ValidateParsedAssertion(ctx, assertionType, assertion, token, parsedToken, &JWTValidationConfig{
+	return ValidateParsedAssertion(ctx, config, assertion, token, parsedToken, &JWTValidationConfig{
 		AllowedSigningKeys: allowedKeys,
 		AllowedSigningAlgs: []string{oidcClient.GetTokenEndpointAuthSigningAlgorithm()},
 		JSONWebKeysURI:     jwksURI,
 		JSONWebKeys:        jwks,
 		NoneAlgAllowed:     isNoneAlgAllowed,
-	}, baseError)
+	})
 }
 
 // ValidateParsedAssertion validates the parsed assertion based on the jwks_uri, jwks etc. that is passed in
-func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType string, assertion string, token *fjwt.Token, parsedToken *jwt.JSONWebToken, config *JWTValidationConfig, baseError *RFC6749Error) (
+func ValidateParsedAssertion(ctx context.Context, config Configurator, assertion string, token *fjwt.Token, parsedToken *jwt.JSONWebToken, verificationConfig *JWTValidationConfig) (
 	*fjwt.Token, *jwt.JSONWebToken, error) {
 
 	var err error
+	baseError := getBaseError(ctx)
+	assertionType := getAssertionType(ctx)
 
-	if f.JWTStrategy != nil && len(token.Method) == 0 { // JWE
+	var jwtStrategy fjwt.Strategy
+	if c, ok := config.(JWTStrategyProvider); ok {
+		jwtStrategy = c.GetJWTStrategy(ctx)
+	}
+
+	if jwtStrategy != nil && len(token.Method) == 0 { // JWE
 		alg, _ := token.Header["alg"].(string)
 		enc, _ := token.Header["enc"].(string)
-		assertion, err = f.JWTStrategy.DecryptWithSettings(ctx,
+		assertion, err = jwtStrategy.DecryptWithSettings(ctx,
 			&fjwt.KeyContext{
 				EncryptionKeyID:            parsedToken.Headers[0].KeyID,
 				EncryptionAlgorithm:        alg,
@@ -103,7 +104,7 @@ func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType s
 				return nil, nil, errorsx.WithStack(baseError.WithHintf("Unable to verify the integrity of the '%s' value.", assertionType).WithWrap(err).WithDebug(err.Error()))
 			}
 			token.Claims = mapClaims
-			err = f.validateJWTClaims(ctx, mapClaims, assertionType, baseError)
+			err = validateJWTClaims(ctx, mapClaims, assertionType, baseError)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -113,7 +114,7 @@ func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType s
 	}
 
 	if token.Method == fjwt.SigningMethodNone {
-		if !config.NoneAlgAllowed {
+		if !verificationConfig.NoneAlgAllowed {
 			return nil, nil, errorsx.WithStack(baseError.WithHintf("'none' is disallowed as a signing method of the '%s'.", assertionType))
 		}
 
@@ -122,22 +123,22 @@ func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType s
 
 	claims := token.Claims
 	signingAlg := parsedToken.Headers[0].Algorithm
-	if len(config.AllowedSigningAlgs) > 0 && !Arguments(config.AllowedSigningAlgs).Has(signingAlg) {
+	if len(verificationConfig.AllowedSigningAlgs) > 0 && !Arguments(verificationConfig.AllowedSigningAlgs).Has(signingAlg) {
 		return nil, nil, errorsx.WithStack(baseError.WithHintf("The 'alg' used in the '%s' is not allowed.", assertionType))
 	}
 
 	signingKey := parsedToken.Headers[0].KeyID
-	if len(config.AllowedSigningKeys) > 0 && !Arguments(config.AllowedSigningKeys).Has(signingKey) {
+	if len(verificationConfig.AllowedSigningKeys) > 0 && !Arguments(verificationConfig.AllowedSigningKeys).Has(signingKey) {
 		return nil, nil, errorsx.WithStack(baseError.WithHintf("The 'kid' used in the '%s' is not allowed.", assertionType))
 	}
 
 	// Validate signature
-	if config.JSONWebKeysURI == "" && config.JSONWebKeys == nil {
-		if f.JWTStrategy == nil {
+	if verificationConfig.JSONWebKeysURI == "" && verificationConfig.JSONWebKeys == nil {
+		if jwtStrategy == nil {
 			return nil, nil, errorsx.WithStack(baseError.WithHintf("Unable to verify the integrity of the '%s' value.", assertionType).WithWrap(err).WithDebug(err.Error()))
 		}
 
-		_, err := f.JWTStrategy.ValidateWithSettings(ctx,
+		_, err := jwtStrategy.ValidateWithSettings(ctx,
 			&fjwt.KeyContext{
 				SigningKeyID:     parsedToken.Headers[0].KeyID,
 				SigningAlgorithm: parsedToken.Headers[0].Algorithm,
@@ -151,19 +152,19 @@ func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType s
 		var err error
 		switch token.Method {
 		case jose.RS256, jose.RS384, jose.RS512:
-			key, err = f.findPublicJWK(ctx, token, config.JSONWebKeysURI, config.JSONWebKeys, true, baseError)
+			key, err = findPublicJWK(ctx, config, token, verificationConfig.JSONWebKeysURI, verificationConfig.JSONWebKeys, true, baseError)
 			if err != nil {
 				return nil, nil, wrapSigningKeyFailure(
 					baseError.WithHint("Unable to retrieve RSA signing key from the JSON Web Key Set."), err)
 			}
 		case jose.ES256, jose.ES384, jose.ES512:
-			key, err = f.findPublicJWK(ctx, token, config.JSONWebKeysURI, config.JSONWebKeys, false, baseError)
+			key, err = findPublicJWK(ctx, config, token, verificationConfig.JSONWebKeysURI, verificationConfig.JSONWebKeys, false, baseError)
 			if err != nil {
 				return nil, nil, wrapSigningKeyFailure(
 					baseError.WithHint("Unable to retrieve ECDSA signing key from the JSON Web Key Set."), err)
 			}
 		case jose.PS256, jose.PS384, jose.PS512:
-			key, err = f.findPublicJWK(ctx, token, config.JSONWebKeysURI, config.JSONWebKeys, true, baseError)
+			key, err = findPublicJWK(ctx, config, token, verificationConfig.JSONWebKeysURI, verificationConfig.JSONWebKeys, true, baseError)
 			if err != nil {
 				return nil, nil, wrapSigningKeyFailure(
 					baseError.WithHint("Unable to retrieve RSA signing key from the JSON Web Key Set."), err)
@@ -184,7 +185,7 @@ func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType s
 		}
 	}
 
-	err = f.validateJWTClaims(ctx, claims, assertionType, baseError)
+	err = validateJWTClaims(ctx, claims, assertionType, baseError)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -192,7 +193,7 @@ func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType s
 	return token, parsedToken, nil
 }
 
-func (f *JWTHelper) validateJWTClaims(ctx context.Context, claims fjwt.MapClaims, assertionType string, baseError *RFC6749Error) error {
+func validateJWTClaims(ctx context.Context, claims fjwt.MapClaims, assertionType string, baseError *RFC6749Error) error {
 	// Validate claims
 	// This validation is performed to be backwards compatible
 	// with jwt-go library behavior
@@ -218,7 +219,7 @@ func (f *JWTHelper) validateJWTClaims(ctx context.Context, claims fjwt.MapClaims
 	return nil
 }
 
-func (f *JWTHelper) newToken(assertion string, assertionType string, baseError *RFC6749Error) (*fjwt.Token, *jwt.JSONWebToken, bool, error) {
+func newToken(assertion string, assertionType string, baseError *RFC6749Error) (*fjwt.Token, *jwt.JSONWebToken, bool, error) {
 	var err error
 	var parsedToken *jwt.JSONWebToken
 
@@ -267,7 +268,7 @@ func (f *JWTHelper) newToken(assertion string, assertionType string, baseError *
 	return token, parsedToken, isJWE, nil
 }
 
-func (f *JWTHelper) findPublicKey(t *fjwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool, baseError *RFC6749Error) (interface{}, error) {
+func findPublicKey(t *fjwt.Token, set *jose.JSONWebKeySet, expectsRSAKey bool, baseError *RFC6749Error) (interface{}, error) {
 	keys := set.Keys
 	if len(keys) == 0 {
 		return nil, errorsx.WithStack(baseError.WithHint("The retrieved JSON Web Key Set does not contain any keys"))
@@ -304,26 +305,26 @@ func (f *JWTHelper) findPublicKey(t *fjwt.Token, set *jose.JSONWebKeySet, expect
 	return nil, errorsx.WithStack(baseError.WithHintf("Unable to find ECDSA public key with use='sig' for kid '%s' in JSON Web Key Set.", kid))
 }
 
-func (f *JWTHelper) findPublicJWK(ctx context.Context, t *fjwt.Token, jwksURI string, jwks *jose.JSONWebKeySet, expectsRSAKey bool, baseError *RFC6749Error) (interface{}, error) {
+func findPublicJWK(ctx context.Context, config Configurator, t *fjwt.Token, jwksURI string, jwks *jose.JSONWebKeySet, expectsRSAKey bool, baseError *RFC6749Error) (interface{}, error) {
 	if jwks != nil {
-		return f.findPublicKey(t, jwks, expectsRSAKey, baseError)
+		return findPublicKey(t, jwks, expectsRSAKey, baseError)
 	}
 
-	keys, err := f.Config.GetJWKSFetcherStrategy(ctx).Resolve(ctx, jwksURI, false)
+	keys, err := config.GetJWKSFetcherStrategy(ctx).Resolve(ctx, jwksURI, false)
 	if err != nil {
 		return nil, err
 	}
 
-	if key, err := f.findPublicKey(t, keys, expectsRSAKey, baseError); err == nil {
+	if key, err := findPublicKey(t, keys, expectsRSAKey, baseError); err == nil {
 		return key, nil
 	}
 
-	keys, err = f.Config.GetJWKSFetcherStrategy(ctx).Resolve(ctx, jwksURI, true)
+	keys, err = config.GetJWKSFetcherStrategy(ctx).Resolve(ctx, jwksURI, true)
 	if err != nil {
 		return nil, errorsx.WithStack(baseError.WithHintf(fmt.Sprintf("%s", err)))
 	}
 
-	return f.findPublicKey(t, keys, expectsRSAKey, baseError)
+	return findPublicKey(t, keys, expectsRSAKey, baseError)
 }
 
 // if underline value of v is not a pointer
@@ -335,4 +336,20 @@ func pointer(v interface{}) interface{} {
 		return value.Interface()
 	}
 	return v
+}
+
+func getBaseError(ctx context.Context) *RFC6749Error {
+	if e, ok := ctx.Value(BaseErrorContextKey).(*RFC6749Error); ok {
+		return e
+	}
+
+	return ErrInvalidClient
+}
+
+func getAssertionType(ctx context.Context) string {
+	if at, ok := ctx.Value(AssertionTypeContextKey).(string); ok {
+		return at
+	}
+
+	return "assertion"
 }
