@@ -137,10 +137,6 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 			return nil, err
 		}
 
-		if isJWE && oidcClient.GetTokenEndpointAuthSigningAlgorithm() != "" && oidcClient.GetTokenEndpointAuthSigningAlgorithm() != parsedToken.Headers[0].Algorithm {
-			return nil, errorsx.WithStack(ErrInvalidClient.WithHintf("The client_assertion uses signing algorithm '%s', but the requested OAuth 2.0 Client enforces signing algorithm '%s'.", parsedToken.Headers[0].Algorithm, oidcClient.GetTokenEndpointAuthSigningAlgorithm()))
-		}
-
 		claims = token.Claims
 
 		var jti string

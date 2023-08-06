@@ -18,6 +18,24 @@ import (
 	"github.com/ory/x/errorsx"
 )
 
+// JWTValidationConfig provides configuration to validate JWTs
+type JWTValidationConfig struct {
+	// AllowedSigningKeys are the key IDs that are allowed to verify a JWT
+	AllowedSigningKeys []string `json:"kids"`
+
+	// AllowedSigningAlgs are the algorithms allowed for a signed JWT
+	AllowedSigningAlgs []string `json:"algs"`
+
+	// JSONWebKeysURI is the remote URI from which the JWKS is fetched
+	JSONWebKeysURI string `json:"jwks_uri"`
+
+	// JSONWebKeys in place of JSONWebKeyURI
+	JSONWebKeys *jose.JSONWebKeySet `json:"jwks"`
+
+	// NoneAlgAllowed indicates if the signing algorithm can be "none"
+	NoneAlgAllowed bool `json:"none"`
+}
+
 // JWTHelper provides JWT helper functions that is used across
 type JWTHelper struct {
 	// JWTStrategy is the strategy used to build and validate JWTs
@@ -35,11 +53,17 @@ func (f *JWTHelper) ValidateParsedAssertionWithClient(ctx context.Context, asser
 		allowedKeys = oidcClientEx.AllowedVerificationKeys()
 	}
 
-	return f.ValidateParsedAssertion(ctx, assertionType, assertion, token, parsedToken, jwksURI, jwks, allowedKeys, isNoneAlgAllowed, baseError)
+	return f.ValidateParsedAssertion(ctx, assertionType, assertion, token, parsedToken, &JWTValidationConfig{
+		AllowedSigningKeys: allowedKeys,
+		AllowedSigningAlgs: []string{oidcClient.GetTokenEndpointAuthSigningAlgorithm()},
+		JSONWebKeysURI:     jwksURI,
+		JSONWebKeys:        jwks,
+		NoneAlgAllowed:     isNoneAlgAllowed,
+	}, baseError)
 }
 
 // ValidateParsedAssertion validates the parsed assertion based on the jwks_uri, jwks etc. that is passed in
-func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType string, assertion string, token *fjwt.Token, parsedToken *jwt.JSONWebToken, jwksURI string, jwks *jose.JSONWebKeySet, allowedKeys []string, isNoneAlgAllowed bool, baseError *RFC6749Error) (
+func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType string, assertion string, token *fjwt.Token, parsedToken *jwt.JSONWebToken, config *JWTValidationConfig, baseError *RFC6749Error) (
 	*fjwt.Token, *jwt.JSONWebToken, error) {
 
 	var err error
@@ -89,7 +113,7 @@ func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType s
 	}
 
 	if token.Method == fjwt.SigningMethodNone {
-		if !isNoneAlgAllowed {
+		if !config.NoneAlgAllowed {
 			return nil, nil, errorsx.WithStack(baseError.WithHintf("'none' is disallowed as a signing method of the '%s'.", assertionType))
 		}
 
@@ -97,12 +121,18 @@ func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType s
 	}
 
 	claims := token.Claims
-	if !f.verificationKeyAllowed(allowedKeys, parsedToken.Headers[0].KeyID) {
+	signingAlg := parsedToken.Headers[0].Algorithm
+	if len(config.AllowedSigningAlgs) > 0 && !Arguments(config.AllowedSigningAlgs).Has(signingAlg) {
+		return nil, nil, errorsx.WithStack(baseError.WithHintf("The 'alg' used in the '%s' is not allowed.", assertionType))
+	}
+
+	signingKey := parsedToken.Headers[0].KeyID
+	if len(config.AllowedSigningKeys) > 0 && !Arguments(config.AllowedSigningKeys).Has(signingKey) {
 		return nil, nil, errorsx.WithStack(baseError.WithHintf("The 'kid' used in the '%s' is not allowed.", assertionType))
 	}
 
 	// Validate signature
-	if jwksURI == "" && jwks == nil {
+	if config.JSONWebKeysURI == "" && config.JSONWebKeys == nil {
 		if f.JWTStrategy == nil {
 			return nil, nil, errorsx.WithStack(baseError.WithHintf("Unable to verify the integrity of the '%s' value.", assertionType).WithWrap(err).WithDebug(err.Error()))
 		}
@@ -121,19 +151,19 @@ func (f *JWTHelper) ValidateParsedAssertion(ctx context.Context, assertionType s
 		var err error
 		switch token.Method {
 		case jose.RS256, jose.RS384, jose.RS512:
-			key, err = f.findPublicJWK(ctx, token, jwksURI, jwks, true, baseError)
+			key, err = f.findPublicJWK(ctx, token, config.JSONWebKeysURI, config.JSONWebKeys, true, baseError)
 			if err != nil {
 				return nil, nil, wrapSigningKeyFailure(
 					baseError.WithHint("Unable to retrieve RSA signing key from the JSON Web Key Set."), err)
 			}
 		case jose.ES256, jose.ES384, jose.ES512:
-			key, err = f.findPublicJWK(ctx, token, jwksURI, jwks, false, baseError)
+			key, err = f.findPublicJWK(ctx, token, config.JSONWebKeysURI, config.JSONWebKeys, false, baseError)
 			if err != nil {
 				return nil, nil, wrapSigningKeyFailure(
 					baseError.WithHint("Unable to retrieve ECDSA signing key from the JSON Web Key Set."), err)
 			}
 		case jose.PS256, jose.PS384, jose.PS512:
-			key, err = f.findPublicJWK(ctx, token, jwksURI, jwks, true, baseError)
+			key, err = f.findPublicJWK(ctx, token, config.JSONWebKeysURI, config.JSONWebKeys, true, baseError)
 			if err != nil {
 				return nil, nil, wrapSigningKeyFailure(
 					baseError.WithHint("Unable to retrieve RSA signing key from the JSON Web Key Set."), err)
@@ -186,21 +216,6 @@ func (f *JWTHelper) validateJWTClaims(ctx context.Context, claims fjwt.MapClaims
 	}
 
 	return nil
-}
-
-// verificationKeyAllowed checks if the key ID is allowed
-func (f *JWTHelper) verificationKeyAllowed(allowedKeys []string, kid string) bool {
-	if len(kid) == 0 || len(allowedKeys) == 0 {
-		return true // nothing to verify
-	}
-
-	for _, allowedKey := range allowedKeys {
-		if strings.EqualFold(allowedKey, kid) {
-			return true // found match, the kid is allowed
-		}
-	}
-
-	return false
 }
 
 func (f *JWTHelper) newToken(assertion string, assertionType string, baseError *RFC6749Error) (*fjwt.Token, *jwt.JSONWebToken, bool, error) {
