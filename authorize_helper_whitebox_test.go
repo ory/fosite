@@ -37,7 +37,7 @@ func TestIsLookbackAddress(t *testing.T) {
 			false,
 		},
 		{
-			"ShouldReturnTrue12700255WithPort",
+			"ShouldReturnFalse12700255WithPort",
 			"127.0.0.255:1230",
 			false,
 		},
