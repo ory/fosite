@@ -106,7 +106,11 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 	originalScopes := originalRequest.GetGrantedScopes()
 
 	for _, scope := range request.GetRequestedScopes() {
-		if !strategy(originalScopes, scope) {
+		// Utilizing the fosite.ScopeStrategy from the configuration here could be a mistake in some scenarios.
+		// The client could under certain circumstances be able to escape their originally granted scopes with carefully
+		// crafted requests and/or a custom scope strategy has not been implemented with this specific scenario in mind.
+		// This should always be an exact comparison for these reasons.
+		if !originalScopes.Has(scope) {
 			if c.IgnoreRequestedScopeNotInOriginalGrant {
 				// Skips addressing point 2 of the text in RFC6749 Section 6 and instead just prevents the scope
 				// requested from being granted.
