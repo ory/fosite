@@ -246,6 +246,7 @@ func TestAuthorizeResponseModes(t *testing.T) {
 				// form_post
 				require.NoError(t, err)
 				code, state, iDToken, token, _, errResp, err = internal.ParseFormPostResponse(fositeStore.Clients["response-mode-client"].GetRedirectURIs()[0], resp.Body)
+				require.NoError(t, err)
 			} else {
 				t.FailNow()
 			}

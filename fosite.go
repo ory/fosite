@@ -134,6 +134,7 @@ type Configurator interface {
 	RefreshTokenScopesProvider
 	AccessTokenLifespanProvider
 	RefreshTokenLifespanProvider
+	VerifiableCredentialsNonceLifespanProvider
 	AuthorizeCodeLifespanProvider
 	DeviceAndUserCodeLifespanProvider
 	TokenEntropyProvider

@@ -47,6 +47,12 @@ type AccessTokenLifespanProvider interface {
 	GetAccessTokenLifespan(ctx context.Context) time.Duration
 }
 
+// VerifiableCredentialsNonceLifespanProvider returns the provider for configuring the access token lifespan.
+type VerifiableCredentialsNonceLifespanProvider interface {
+	// GetNonceLifespan returns the nonce lifespan.
+	GetVerifiableCredentialsNonceLifespan(ctx context.Context) time.Duration
+}
+
 // IDTokenLifespanProvider returns the provider for configuring the ID token lifespan.
 type IDTokenLifespanProvider interface {
 	// GetIDTokenLifespan returns the ID token lifespan.
