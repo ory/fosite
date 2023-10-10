@@ -388,7 +388,7 @@ func (c *Config) GetAuthorizeCodeLifespan(_ context.Context) time.Duration {
 }
 
 func (c *Config) GetDeviceAndUserCodeLifespan(_ context.Context) time.Duration {
-	if c.AuthorizeCodeLifespan == 0 {
+	if c.DeviceAndUserCodeLifespan == 0 {
 		return time.Minute * 10
 	}
 	return c.DeviceAndUserCodeLifespan
