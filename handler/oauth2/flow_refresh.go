@@ -126,34 +126,29 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 
 	signature := c.RefreshTokenStrategy.RefreshTokenSignature(ctx, requester.GetRequestForm().Get("refresh_token"))
 
-	ctx, err = storage.MaybeBeginTx(ctx, c.TokenRevocationStorage)
-	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	}
 	defer func() {
 		err = c.handleRefreshTokenEndpointStorageError(ctx, err)
 	}()
 
-	ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
-	if err != nil {
-		return err
-	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
-		return err
-	}
-
-	if err := c.TokenRevocationStorage.RevokeRefreshTokenMaybeGracePeriod(ctx, ts.GetID(), signature); err != nil {
-		return err
-	}
-
-	storeReq := requester.Sanitize([]string{})
-	storeReq.SetID(ts.GetID())
-
-	if err = c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, storeReq); err != nil {
-		return err
-	}
-
-	if err = c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq); err != nil {
-		return err
+	if err := storage.MaybeTransaction(ctx, c.TokenRevocationStorage, func(ctx context.Context) error {
+		ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
+		if err != nil {
+			return err
+		}
+		if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
+			return err
+		}
+		if err := c.TokenRevocationStorage.RevokeRefreshTokenMaybeGracePeriod(ctx, ts.GetID(), signature); err != nil {
+			return err
+		}
+		storeReq := requester.Sanitize([]string{})
+		storeReq.SetID(ts.GetID())
+		if err := c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, storeReq); err != nil {
+			return err
+		}
+		return c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq)
+	}); err != nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	responder.SetAccessToken(accessToken)
@@ -162,10 +157,6 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, atLifespan, time.Now().UTC()))
 	responder.SetScopes(requester.GetGrantedScopes())
 	responder.SetExtra("refresh_token", refreshToken)
-
-	if err = storage.MaybeCommitTx(ctx, c.TokenRevocationStorage); err != nil {
-		return err
-	}
 
 	return nil
 }
@@ -179,44 +170,26 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 //	legitimate client is trying to access, in case of such an access
 //	attempt the valid refresh token and the access authorization
 //	associated with it are both revoked.
-func (c *RefreshTokenGrantHandler) handleRefreshTokenReuse(ctx context.Context, signature string, req fosite.Requester) (err error) {
-	ctx, err = storage.MaybeBeginTx(ctx, c.TokenRevocationStorage)
-	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	}
-	defer func() {
-		err = c.handleRefreshTokenEndpointStorageError(ctx, err)
-	}()
-
-	if err = c.TokenRevocationStorage.DeleteRefreshTokenSession(ctx, signature); err != nil {
-		return err
-	} else if err = c.TokenRevocationStorage.RevokeRefreshToken(
-		ctx, req.GetID(),
-	); err != nil && !errors.Is(err, fosite.ErrNotFound) {
-		return err
-	} else if err = c.TokenRevocationStorage.RevokeAccessToken(
-		ctx, req.GetID(),
-	); err != nil && !errors.Is(err, fosite.ErrNotFound) {
-		return err
-	}
-
-	if err = storage.MaybeCommitTx(ctx, c.TokenRevocationStorage); err != nil {
-		return err
-	}
-
-	return nil
+func (c *RefreshTokenGrantHandler) handleRefreshTokenReuse(ctx context.Context, signature string, req fosite.Requester) error {
+	err := storage.MaybeTransaction(ctx, c.TokenRevocationStorage, func(ctx context.Context) error {
+		if err := c.TokenRevocationStorage.DeleteRefreshTokenSession(ctx, signature); err != nil {
+			return err
+		}
+		if err := c.TokenRevocationStorage.RevokeRefreshToken(ctx, req.GetID()); err != nil && !errors.Is(err, fosite.ErrNotFound) {
+			return err
+		}
+		if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, req.GetID()); err != nil && !errors.Is(err, fosite.ErrNotFound) {
+			return err
+		}
+		return nil
+	})
+	return c.handleRefreshTokenEndpointStorageError(ctx, err)
 }
 
 func (c *RefreshTokenGrantHandler) handleRefreshTokenEndpointStorageError(ctx context.Context, storageErr error) (err error) {
 	if storageErr == nil {
 		return nil
 	}
-
-	defer func() {
-		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.TokenRevocationStorage); rollBackTxnErr != nil {
-			err = errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebugf("error: %s; rollback error: %s", err, rollBackTxnErr))
-		}
-	}()
 
 	if errors.Is(storageErr, fosite.ErrSerializationFailure) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.

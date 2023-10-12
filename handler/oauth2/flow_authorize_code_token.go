@@ -152,26 +152,21 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		}
 	}
 
-	ctx, err = storage.MaybeBeginTx(ctx, c.CoreStorage)
-	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	}
-	defer func() {
-		if err != nil {
-			if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
-				err = errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebugf("error: %s; rollback error: %s", err, rollBackTxnErr))
-			}
-		}
-	}()
-
-	if err = c.CoreStorage.InvalidateAuthorizeCodeSession(ctx, signature); err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	} else if err = c.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	} else if refreshSignature != "" {
-		if err = c.CoreStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester.Sanitize([]string{})); err != nil {
+	if err := storage.MaybeTransaction(ctx, c.CoreStorage, func(ctx context.Context) error {
+		if err := c.CoreStorage.InvalidateAuthorizeCodeSession(ctx, signature); err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
+		if err := c.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
+		if refreshSignature != "" {
+			if err := c.CoreStorage.CreateRefreshTokenSession(ctx, refreshSignature, requester.Sanitize([]string{})); err != nil {
+				return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+			}
+		}
+		return nil
+	}); err != nil {
+		return err // error already wrapped inside tx callback
 	}
 
 	responder.SetAccessToken(access)
@@ -182,11 +177,6 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	if refresh != "" {
 		responder.SetExtra("refresh_token", refresh)
 	}
-
-	if err = storage.MaybeCommitTx(ctx, c.CoreStorage); err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	}
-
 	return nil
 }
 
