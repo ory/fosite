@@ -107,3 +107,10 @@ func OAuth2StatelessJWTIntrospectionFactory(config fosite.Configurator, storage 
 		Config: config,
 	}
 }
+
+// OAuth2NoneResponseTypeFactory creates an OAuth2 handler which handles the "none" response type.
+func OAuth2NoneResponseTypeFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.NoneResponseTypeHandler{
+		Config: config,
+	}
+}
