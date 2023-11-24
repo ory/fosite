@@ -15,3 +15,11 @@ func TestSession(t *testing.T) {
 	assert.Empty(t, s.GetUsername())
 	assert.Nil(t, s.Clone())
 }
+
+func TestZeroSession(t *testing.T) {
+	var s *DefaultSession = new(DefaultSession)
+	assert.Empty(t, s.GetSubject())
+	assert.Empty(t, s.GetUsername())
+	assert.Empty(t, s.Clone())
+	assert.Empty(t, s.GetExpiresAt(AccessToken))
+}
