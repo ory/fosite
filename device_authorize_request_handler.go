@@ -9,9 +9,18 @@ import (
 
 	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/otelx"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func (f *Fosite) NewDeviceAuthorizeRequest(ctx context.Context, r *http.Request) (DeviceAuthorizeRequester, error) {
+func (f *Fosite) NewDeviceAuthorizeRequest(ctx context.Context, r *http.Request) (_ DeviceAuthorizeRequester, err error) {
+	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("github.com/ory/fosite").Start(ctx, "Fosite.NewDeviceAuthorizeRequest")
+	defer otelx.End(span, &err)
+
+	return f.newDeviceAuthorizeRequest(ctx, r)
+}
+
+func (f *Fosite) newDeviceAuthorizeRequest(ctx context.Context, r *http.Request) (DeviceAuthorizeRequester, error) {
 	request := NewDeviceAuthorizeRequest()
 	request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), r)
 
