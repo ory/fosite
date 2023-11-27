@@ -31,7 +31,7 @@ func (d *DeviceResponse) GetDeviceCode() string {
 	return d.deviceResponse.DeviceCode
 }
 
-// GetUserCode returns the response's user code
+// SetDeviceCode returns the response's user code
 func (d *DeviceResponse) SetDeviceCode(code string) {
 	d.deviceResponse.DeviceCode = code
 }
