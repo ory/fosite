@@ -136,7 +136,7 @@ type OAuth2Provider interface {
 	// time
 	NewDeviceResponse(ctx context.Context, requester DeviceRequester) (DeviceResponder, error)
 
-	// WriteDeviceAuthorizeResponse return to the user both codes and
+	// WriteDeviceResponse return to the user both codes and
 	// some configuration informations in a JSON formated manner
 	//
 	// The following specs must be considered in any implementation of this method:
