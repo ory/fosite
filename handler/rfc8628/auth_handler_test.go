@@ -24,7 +24,7 @@ func Test_HandleDeviceEndpointRequest(t *testing.T) {
 		Strategy: &hmacshaStrategy,
 		Config: &fosite.Config{
 			DeviceAndUserCodeLifespan:      time.Minute * 10,
-			DeviceAuthTokenPollingInterval: time.Second * 10,
+			DeviceAuthTokenPollingInterval: time.Second * 5,
 			DeviceVerificationURL:          "www.test.com",
 			AccessTokenLifespan:            time.Hour,
 			RefreshTokenLifespan:           time.Hour,

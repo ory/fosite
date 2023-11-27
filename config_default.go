@@ -544,7 +544,7 @@ func (c *Config) GetDeviceVerificationURL(ctx context.Context) string {
 
 func (c *Config) GetDeviceAuthTokenPollingInterval(ctx context.Context) time.Duration {
 	if c.DeviceAuthTokenPollingInterval == 0 {
-		return time.Second * 10
+		return time.Second * 5
 	}
 	return c.DeviceAuthTokenPollingInterval
 }
