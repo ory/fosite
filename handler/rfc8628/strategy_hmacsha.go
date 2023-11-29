@@ -25,7 +25,7 @@ type DefaultDeviceStrategy struct {
 }
 
 func (h *DefaultDeviceStrategy) GenerateUserCode(ctx context.Context) (token string, signature string, err error) {
-	seq, err := randx.RuneSequence(8, []rune("BCDFGHJKLMNPQRSTVWXZ"))
+	seq, err := randx.RuneSequence(8, []rune(randx.AlphaUpperNoVowels))
 	if err != nil {
 		return "", "", err
 	}
