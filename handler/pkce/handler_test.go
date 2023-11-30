@@ -251,7 +251,6 @@ func TestPKCEHandlerValidate(t *testing.T) {
 			r.Client = tc.client
 			r.GrantTypes = fosite.Arguments{tc.grant}
 			r.Form.Add("code_verifier", tc.verifier)
-			r.Form.Add("code", tc.code)
 			if tc.expectErr == nil {
 				require.NoError(t, h.HandleTokenEndpointRequest(context.Background(), r))
 			} else {

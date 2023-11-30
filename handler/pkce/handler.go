@@ -15,14 +15,12 @@ import (
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
-	"github.com/ory/fosite/handler/rfc8628"
 )
 
 var _ fosite.TokenEndpointHandler = (*Handler)(nil)
 
 type Handler struct {
 	AuthorizeCodeStrategy oauth2.AuthorizeCodeStrategy
-	DeviceCodeStrategy    rfc8628.DeviceCodeStrategy
 	Storage               PKCERequestStorage
 	Config                interface {
 		fosite.EnforcePKCEProvider
@@ -35,51 +33,27 @@ var _ fosite.TokenEndpointHandler = (*Handler)(nil)
 
 var verifierWrongFormat = regexp.MustCompile("[^\\w\\.\\-~]")
 
-func (c *Handler) HandleDeviceEndpointRequest(ctx context.Context, dr fosite.DeviceRequester, resp fosite.DeviceResponder) error {
-	return c.handlePkceEndpointRequest(ctx, dr, resp)
-}
-
 func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
-	return c.handlePkceEndpointRequest(ctx, ar, resp)
-}
-
-func (c *Handler) handlePkceEndpointRequest(ctx context.Context, r fosite.Requester, resp fosite.Responder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
-	if !(isAuthorizationCode(r) || isDeviceCode(r)) {
+	if !ar.GetResponseTypes().Has("code") {
 		return nil
 	}
 
-	challenge := r.GetRequestForm().Get("code_challenge")
-	method := r.GetRequestForm().Get("code_challenge_method")
-	client := r.GetClient()
+	challenge := ar.GetRequestForm().Get("code_challenge")
+	method := ar.GetRequestForm().Get("code_challenge_method")
+	client := ar.GetClient()
 
 	if err := c.validate(ctx, challenge, method, client); err != nil {
 		return err
 	}
 
-	var signature string
-	if authorizeResp, ok := resp.(fosite.AuthorizeResponder); ok {
-		code := authorizeResp.GetCode()
-		if len(code) == 0 {
-			return errorsx.WithStack(fosite.ErrServerError.WithDebug("The PKCE handler must be loaded after the authorize/device code handler."))
-		}
-		signature = c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	} else if deviceResp, ok := resp.(fosite.DeviceResponder); ok {
-		code := deviceResp.GetDeviceCode()
-		if len(code) == 0 {
-			return errorsx.WithStack(fosite.ErrServerError.WithDebug("The PKCE handler must be loaded after the device code handler."))
-		}
-
-		var err error
-		signature, err = c.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
-		if err != nil {
-			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-		}
-	} else {
-		return errorsx.WithStack(fosite.ErrServerError.WithDebug("This PKCE handle could not find the proper response type"))
+	code := resp.GetCode()
+	if len(code) == 0 {
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("The PKCE handler must be loaded after the authorize code handler."))
 	}
 
-	if err := c.Storage.CreatePKCERequestSession(ctx, signature, r.Sanitize([]string{
+	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
+	if err := c.Storage.CreatePKCERequestSession(ctx, signature, ar.Sanitize([]string{
 		"code_challenge",
 		"code_challenge_method",
 	})); err != nil {
@@ -89,7 +63,7 @@ func (c *Handler) handlePkceEndpointRequest(ctx context.Context, r fosite.Reques
 	return nil
 }
 
-func (c *Handler) validate(ctx context.Context, challenge string, method string, client fosite.Client) error {
+func (c *Handler) validate(ctx context.Context, challenge, method string, client fosite.Client) error {
 	if challenge == "" {
 		// If the server requires Proof Key for Code Exchange (PKCE) by OAuth
 		// clients and the client does not send the "code_challenge" in
@@ -147,19 +121,8 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	// endpoint MUST use to verify the "code_verifier".
 	verifier := request.GetRequestForm().Get("code_verifier")
 
-	var signature string
-	if request.GetGrantTypes().ExactOne("authorization_code") {
-		code := request.GetRequestForm().Get("code")
-		signature = c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	} else if request.GetGrantTypes().ExactOne(string(fosite.GrantTypeDeviceCode)) {
-		var err error
-		code := request.GetRequestForm().Get("device_code")
-		signature, err = c.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
-		if err != nil {
-			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-		}
-	}
-
+	code := request.GetRequestForm().Get("code")
+	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
 	authorizeRequest, err := c.Storage.GetPKCERequestSession(ctx, signature, request.GetSession())
 	if errors.Is(err, fosite.ErrNotFound) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to find initial PKCE data tied to this request").WithWrap(err).WithDebug(err.Error()))
@@ -254,15 +217,7 @@ func (c *Handler) CanSkipClientAuth(ctx context.Context, requester fosite.Access
 }
 
 func (c *Handler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
-	return requester.GetGrantTypes().ExactOne("authorization_code") ||
-		requester.GetGrantTypes().ExactOne(string(fosite.GrantTypeDeviceCode))
-}
-
-func isDeviceCode(r fosite.Requester) bool {
-	return r.GetClient().GetGrantTypes().Has(string(fosite.GrantTypeDeviceCode))
-}
-
-func isAuthorizationCode(r fosite.Requester) bool {
-	ar, ok := r.(*fosite.AuthorizeRequest)
-	return ok && ar.GetResponseTypes().Has("code")
+	// grant_type REQUIRED.
+	// Value MUST be set to "authorization_code"
+	return requester.GetGrantTypes().ExactOne("authorization_code")
 }
