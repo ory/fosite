@@ -6,7 +6,7 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -101,7 +101,7 @@ func TestOIDCImplicitFlowPublicClientPKCE(t *testing.T) {
 			require.NoError(t, err)
 			defer resp.Body.Close()
 
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			require.NoError(t, err)
 
 			assert.Equal(t, resp.StatusCode, http.StatusOK)

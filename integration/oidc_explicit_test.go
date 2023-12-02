@@ -4,8 +4,9 @@
 package integration_test
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -155,7 +156,7 @@ func TestOpenIDConnectExplicitFlow(t *testing.T) {
 			require.NoError(t, err)
 			defer resp.Body.Close()
 
-			body, _ := ioutil.ReadAll(resp.Body)
+			body, _ := io.ReadAll(resp.Body)
 			require.Equal(t, c.authStatusCode, resp.StatusCode, "Got response: %s", body)
 			if resp.StatusCode >= 400 {
 				assert.Equal(t, c.expectAuthErr, strings.Replace(string(body), "error: ", "", 1))
@@ -168,7 +169,7 @@ func TestOpenIDConnectExplicitFlow(t *testing.T) {
 			if resp.StatusCode == http.StatusOK {
 				time.Sleep(time.Second)
 
-				token, err := oauthClient.Exchange(oauth2.NoContext, resp.Request.URL.Query().Get("code"))
+				token, err := oauthClient.Exchange(context.Background(), resp.Request.URL.Query().Get("code"))
 				if c.expectTokenErr != "" {
 					require.Error(t, err)
 					assert.True(t, strings.Contains(err.Error(), c.expectTokenErr), err.Error())
