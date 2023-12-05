@@ -23,15 +23,10 @@ func (f *Fosite) NewDeviceUserRequest(ctx context.Context, r *http.Request) (_ D
 func (f *Fosite) newDeviceUserRequest(ctx context.Context, r *http.Request) (DeviceUserRequester, error) {
 	request := NewDeviceUserRequest()
 	request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), r)
+	request.Form = r.URL.Query()
 
-	if err := r.ParseForm(); err != nil {
-		return nil, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
-	}
-	request.Form = r.Form
-
-	verifier := request.GetRequestForm().Get("device_verifier")
-	if verifier != "" {
-		client, err := f.Store.GetClient(ctx, request.GetRequestForm().Get("client_id"))
+	if r.URL.Query().Has("device_verifier") {
+		client, err := f.Store.GetClient(ctx, r.URL.Query().Get("client_id"))
 		if err != nil {
 			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("The requested OAuth 2.0 Client does not exist.").WithWrap(err).WithDebug(err.Error()))
 		}
