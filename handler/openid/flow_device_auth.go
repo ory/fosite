@@ -22,7 +22,7 @@ type OpenIDConnectDeviceHandler struct {
 	*IDTokenHandleHelper
 }
 
-func (c *OpenIDConnectDeviceHandler) HandleDeviceAuthorizeEndpointRequest(ctx context.Context, ar fosite.DeviceAuthorizeRequester, resp fosite.DeviceAuthorizeResponder) error {
+func (c *OpenIDConnectDeviceHandler) HandleDeviceUserEndpointRequest(ctx context.Context, ar fosite.DeviceUserRequester, resp fosite.DeviceUserResponder) error {
 	if !(ar.GetGrantedScopes().Has("openid")) {
 		return nil
 	}

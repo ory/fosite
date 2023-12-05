@@ -498,7 +498,7 @@ func TestDeviceValidatePrompt(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			t.Logf("%s", tc.idTokenHint)
-			err := v.ValidatePrompt(context.TODO(), &fosite.DeviceAuthorizeRequest{
+			err := v.ValidatePrompt(context.TODO(), &fosite.DeviceUserRequest{
 				Request: fosite.Request{
 					Form:    url.Values{"prompt": {tc.prompt}, "id_token_hint": {tc.idTokenHint}},
 					Client:  &fosite.DefaultClient{Public: tc.isPublic},

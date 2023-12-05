@@ -26,7 +26,7 @@ type DeviceAndUserCodeLifespanProvider interface {
 	GetDeviceAndUserCodeLifespan(ctx context.Context) time.Duration
 }
 
-type DeviceAuthorizeProvider interface {
+type DeviceUserProvider interface {
 	GetDeviceDone(ctx context.Context) string
 }
 
@@ -300,10 +300,10 @@ type DeviceEndpointHandlersProvider interface {
 	GetDeviceEndpointHandlers(ctx context.Context) DeviceEndpointHandlers
 }
 
-// DeviceAuthorizeEndpointHandlersProvider returns the provider for setting up the Device Authorize handlers.
-type DeviceAuthorizeEndpointHandlersProvider interface {
-	// GetDeviceAuthorizeEndpointHandlers returns the handlers.
-	GetDeviceAuthorizeEndpointHandlers(ctx context.Context) DeviceAuthorizeEndpointHandlers
+// DeviceUserEndpointHandlersProvider returns the provider for setting up the Device Authorize handlers.
+type DeviceUserEndpointHandlersProvider interface {
+	// GetDeviceUserEndpointHandlers returns the handlers.
+	GetDeviceUserEndpointHandlers(ctx context.Context) DeviceUserEndpointHandlers
 }
 
 // UseLegacyErrorFormatProvider returns the provider for configuring whether to use the legacy error format.

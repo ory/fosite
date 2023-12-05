@@ -72,15 +72,15 @@ type DeviceEndpointHandler interface {
 	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
 	// the device authorize request, he must return nil and NOT modify session nor responder neither requester.
 	//
-	// The following spec is a good example of what HandleDeviceAuthorizeRequest should do.
+	// The following spec is a good example of what HandleDeviceUserRequest should do.
 	// * https://tools.ietf.org/html/rfc8628#section-3.2
 	HandleDeviceEndpointRequest(ctx context.Context, requester DeviceRequester, responder DeviceResponder) error
 }
 
-type DeviceAuthorizeEndpointHandler interface {
-	// HandleDeviceAuthorizeEndpointRequest handles a device authorize endpoint request.
+type DeviceUserEndpointHandler interface {
+	// HandleDeviceUserEndpointRequest handles a device authorize endpoint request.
 	// To extend the handler's capabilities, the http request is passed along, if further
 	// information retrieval is required. If the handler feels that he is not responsible for
 	// the authorize request, he must return nil and NOT modify session nor responder neither requester.
-	HandleDeviceAuthorizeEndpointRequest(ctx context.Context, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder) error
+	HandleDeviceUserEndpointRequest(ctx context.Context, requester DeviceUserRequester, responder DeviceUserResponder) error
 }

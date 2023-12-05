@@ -40,7 +40,7 @@ var RFC8628HMACSHAStrategy = DefaultDeviceStrategy{
 	},
 }
 
-func TestDeviceAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
+func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 	for k, strategy := range map[string]struct {
 		oauth2.CoreStrategy
 		RFC8628CodeStrategy
@@ -212,7 +212,7 @@ func TestDeviceAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						RefreshTokenScopes:       []string{"offline"},
 					}
 					h = oauth2.GenericCodeTokenEndpointHandler{
-						CodeTokenEndpointHandler: &DeviceAuthorizeHandler{
+						CodeTokenEndpointHandler: &DeviceUserHandler{
 							DeviceStrategy: strategy,
 							DeviceStorage:  store,
 						},
@@ -245,7 +245,7 @@ func TestDeviceAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 	}
 }
 
-func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
+func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 	for k, strategy := range map[string]struct {
 		oauth2.CoreStrategy
 		RFC8628CodeStrategy
@@ -256,7 +256,7 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			h := oauth2.GenericCodeTokenEndpointHandler{
-				CodeTokenEndpointHandler: &DeviceAuthorizeHandler{
+				CodeTokenEndpointHandler: &DeviceUserHandler{
 					DeviceStrategy: strategy.RFC8628CodeStrategy,
 					DeviceStorage:  store,
 				},
@@ -271,10 +271,10 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 			}
 			for i, c := range []struct {
 				areq        *fosite.AccessRequest
-				authreq     *fosite.DeviceAuthorizeRequest
+				authreq     *fosite.DeviceUserRequest
 				description string
-				setup       func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest)
-				check       func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest)
+				setup       func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceUserRequest)
+				check       func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceUserRequest)
 				expectErr   error
 			}{
 				{
@@ -306,7 +306,7 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					description: "should fail because device code could not be retrieved",
-					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceUserRequest) {
 						deviceCode, _, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 						areq.Form = url.Values{"device_code": {deviceCode}}
@@ -335,14 +335,14 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 							RequestedAt: time.Now().UTC(),
 						},
 					},
-					authreq: &fosite.DeviceAuthorizeRequest{
+					authreq: &fosite.DeviceUserRequest{
 						Request: fosite.Request{
 							Client:         &fosite.DefaultClient{ID: "bar"},
 							RequestedScope: fosite.Arguments{"a", "b"},
 						},
 					},
 					description: "should fail because client mismatch",
-					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceUserRequest) {
 						token, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 						areq.Form = url.Values{"device_code": {token}}
@@ -360,7 +360,7 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 							RequestedAt: time.Now().UTC(),
 						},
 					},
-					authreq: &fosite.DeviceAuthorizeRequest{
+					authreq: &fosite.DeviceUserRequest{
 						Request: fosite.Request{
 							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 							Session:        &fosite.DefaultSession{},
@@ -369,7 +369,7 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					description: "should pass",
-					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceUserRequest) {
 						token, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 
@@ -390,11 +390,11 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 							RequestedAt:  time.Now().UTC(),
 						},
 					},
-					check: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
+					check: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceUserRequest) {
 						assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
 						assert.Equal(t, time.Now().Add(time.Minute).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceAuthorizeRequest) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceUserRequest) {
 						code, sig, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 						areq.Form.Add("device_code", code)
@@ -427,7 +427,7 @@ func TestDeviceAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 	}
 }
 
-func TestDeviceAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
+func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	var mockTransactional *internal.MockTransactional
 	var mockCoreStore *internal.MockCoreStorage
 	var mockDeviceStore *internal.MockRFC8628CodeStorage
@@ -646,7 +646,7 @@ func TestDeviceAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.
 			testCase.setup()
 
 			handler := oauth2.GenericCodeTokenEndpointHandler{
-				CodeTokenEndpointHandler: &DeviceAuthorizeHandler{
+				CodeTokenEndpointHandler: &DeviceUserHandler{
 					DeviceStrategy: &deviceStrategy,
 					DeviceStorage: deviceTransactionalStore{
 						mockTransactional,

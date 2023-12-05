@@ -29,9 +29,9 @@ import (
 	"net/http"
 )
 
-// Once the user has approved the grant he will be redirected on his loggin machine
+// Once the user has approved the grant he will be redirected on his interactive device
 // to a webpage (usally hosted in hydra-ui) to understand that he was connected successfully
-// and that he can close this tab and return to his non-interactive device;
-func (f *Fosite) WriteDeviceAuthorizeResponse(ctx context.Context, r *http.Request, rw http.ResponseWriter, requester DeviceAuthorizeRequester, responder DeviceAuthorizeResponder) {
+// and that he can close this tab safely and return to his non-interactive device;
+func (f *Fosite) WriteDeviceUserResponse(ctx context.Context, r *http.Request, rw http.ResponseWriter, requester DeviceUserRequester, responder DeviceUserResponder) {
 	http.Redirect(rw, r, f.Config.GetDeviceDone(ctx), http.StatusSeeOther)
 }

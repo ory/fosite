@@ -21,7 +21,7 @@ import (
 	. "github.com/ory/fosite/internal"
 )
 
-func TestNewDeviceAuthorizeRequest(t *testing.T) {
+func TestNewDeviceUserRequest(t *testing.T) {
 	var store *MockStorage
 	for k, c := range []struct {
 		desc          string
@@ -31,7 +31,7 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 		form          url.Values
 		expectedError error
 		mock          func()
-		expect        *DeviceAuthorizeRequest
+		expect        *DeviceUserRequest
 	}{
 		/* invalid client */
 		{
@@ -49,7 +49,7 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
 			r:    &http.Request{},
 			mock: func() {},
-			expect: &DeviceAuthorizeRequest{
+			expect: &DeviceUserRequest{
 				Request: Request{},
 			},
 		},
@@ -65,7 +65,7 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 					GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
 				}, nil)
 			},
-			expect: &DeviceAuthorizeRequest{
+			expect: &DeviceUserRequest{
 				Request: Request{
 					Client: &DefaultClient{
 						GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
@@ -85,7 +85,7 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 					GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
 				}, nil)
 			},
-			expect: &DeviceAuthorizeRequest{
+			expect: &DeviceUserRequest{
 				Request: Request{
 					Client: &DefaultClient{
 						GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
@@ -125,7 +125,7 @@ func TestNewDeviceAuthorizeRequest(t *testing.T) {
 			}
 
 			c.conf.Store = store
-			ar, err := c.conf.NewDeviceAuthorizeRequest(context.Background(), c.r)
+			ar, err := c.conf.NewDeviceUserRequest(context.Background(), c.r)
 			if c.expectedError != nil {
 				assert.EqualError(t, err, c.expectedError.Error())
 			} else {

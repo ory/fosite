@@ -213,8 +213,8 @@ type Config struct {
 	// DeviceEndpointHandlers is a list of handlers that are called before the device endpoint is served.
 	DeviceEndpointHandlers DeviceEndpointHandlers
 
-	// DeviceAuthorizeEndpointHandlers is a list of handlers that are called before the device authorize endpoint is served.
-	DeviceAuthorizeEndpointHandlers DeviceAuthorizeEndpointHandlers
+	// DeviceUserEndpointHandlers is a list of handlers that are called before the device authorize endpoint is served.
+	DeviceUserEndpointHandlers DeviceUserEndpointHandlers
 
 	// GlobalSecret is the global secret used to sign and verify signatures.
 	GlobalSecret []byte
@@ -268,8 +268,8 @@ func (c *Config) GetDeviceEndpointHandlers(ctx context.Context) DeviceEndpointHa
 	return c.DeviceEndpointHandlers
 }
 
-func (c *Config) GetDeviceAuthorizeEndpointHandlers(ctx context.Context) DeviceAuthorizeEndpointHandlers {
-	return c.DeviceAuthorizeEndpointHandlers
+func (c *Config) GetDeviceUserEndpointHandlers(ctx context.Context) DeviceUserEndpointHandlers {
+	return c.DeviceUserEndpointHandlers
 }
 
 func (c *Config) GetRevocationHandlers(ctx context.Context) RevocationHandlers {

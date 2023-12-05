@@ -18,7 +18,7 @@ import (
 func TestNewDeviceResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	handlers := []*MockDeviceEndpointHandler{NewMockDeviceEndpointHandler(ctrl)}
-	dar := NewMockDeviceAuthorizeRequester(ctrl)
+	dar := NewMockDeviceUserRequester(ctrl)
 	defer ctrl.Finish()
 
 	ctx := context.Background()

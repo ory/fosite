@@ -96,11 +96,11 @@ func (a *DeviceEndpointHandlers) Append(h DeviceEndpointHandler) {
 	*a = append(*a, h)
 }
 
-// DeviceAuthorizeEndpointHandlers is a list of DeviceAuthorizeEndpointHandler
-type DeviceAuthorizeEndpointHandlers []DeviceAuthorizeEndpointHandler
+// DeviceUserEndpointHandlers is a list of DeviceUserEndpointHandler
+type DeviceUserEndpointHandlers []DeviceUserEndpointHandler
 
-// Append adds an DeviceAuthorizeEndpointHandlers to this list. Ignores duplicates based on reflect.TypeOf.
-func (a *DeviceAuthorizeEndpointHandlers) Append(h DeviceAuthorizeEndpointHandler) {
+// Append adds an DeviceUserEndpointHandlers to this list. Ignores duplicates based on reflect.TypeOf.
+func (a *DeviceUserEndpointHandlers) Append(h DeviceUserEndpointHandler) {
 	for _, this := range *a {
 		if reflect.TypeOf(this) == reflect.TypeOf(h) {
 			return
@@ -162,9 +162,9 @@ type Configurator interface {
 	RevocationHandlersProvider
 	UseLegacyErrorFormatProvider
 	DeviceEndpointHandlersProvider
-	DeviceAuthorizeEndpointHandlersProvider
+	DeviceUserEndpointHandlersProvider
 	DeviceProvider
-	DeviceAuthorizeProvider
+	DeviceUserProvider
 }
 
 func NewOAuth2Provider(s Storage, c Configurator) *Fosite {

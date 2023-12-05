@@ -12,9 +12,9 @@ import (
 	"github.com/ory/fosite"
 )
 
-// DeviceAuthorizeHandler is a response handler for the Device Code introduced in the Device Authorize Grant
+// DeviceUserHandler is a response handler for the Device Code introduced in the Device Authorize Grant
 // as defined in https://www.rfc-editor.org/rfc/rfc8628
-type DeviceAuthorizeHandler struct {
+type DeviceUserHandler struct {
 	DeviceStrategy DeviceCodeStrategy
 	DeviceStorage  DeviceCodeStorage
 }
@@ -23,10 +23,10 @@ type DeviceCodeTokenEndpointHandler struct {
 	oauth2.GenericCodeTokenEndpointHandler
 }
 
-var _ oauth2.CodeTokenEndpointHandler = (*DeviceAuthorizeHandler)(nil)
+var _ oauth2.CodeTokenEndpointHandler = (*DeviceUserHandler)(nil)
 var _ fosite.TokenEndpointHandler = (*DeviceCodeTokenEndpointHandler)(nil)
 
-func (c *DeviceAuthorizeHandler) ValidateGrantTypes(ctx context.Context, requester fosite.AccessRequester) error {
+func (c *DeviceUserHandler) ValidateGrantTypes(ctx context.Context, requester fosite.AccessRequester) error {
 	if !requester.GetClient().GetGrantTypes().Has(string(fosite.GrantTypeDeviceCode)) {
 		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"urn:ietf:params:oauth:grant-type:device_code\"."))
 	}
@@ -34,11 +34,11 @@ func (c *DeviceAuthorizeHandler) ValidateGrantTypes(ctx context.Context, request
 	return nil
 }
 
-func (c *DeviceAuthorizeHandler) ValidateCode(ctx context.Context, request fosite.AccessRequester, code string) error {
+func (c *DeviceUserHandler) ValidateCode(ctx context.Context, request fosite.AccessRequester, code string) error {
 	return c.DeviceStrategy.ValidateDeviceCode(ctx, request, code)
 }
 
-func (c *DeviceAuthorizeHandler) GetCodeAndSession(ctx context.Context, requester fosite.AccessRequester) (code string, signature string, request fosite.Requester, err error) {
+func (c *DeviceUserHandler) GetCodeAndSession(ctx context.Context, requester fosite.AccessRequester) (code string, signature string, request fosite.Requester, err error) {
 	code = requester.GetRequestForm().Get("device_code")
 	signature, err = c.DeviceStrategy.DeviceCodeSignature(ctx, code)
 	if err != nil {
@@ -48,15 +48,15 @@ func (c *DeviceAuthorizeHandler) GetCodeAndSession(ctx context.Context, requeste
 	return code, signature, req, err
 }
 
-func (c *DeviceAuthorizeHandler) InvalidateSession(ctx context.Context, signature string) error {
+func (c *DeviceUserHandler) InvalidateSession(ctx context.Context, signature string) error {
 	return c.DeviceStorage.InvalidateDeviceCodeSession(ctx, signature)
 }
 
 // implement TokenEndpointHandler
-func (c *DeviceAuthorizeHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
+func (c *DeviceUserHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
 	return requester.GetGrantTypes().ExactOne(string(fosite.GrantTypeDeviceCode))
 }
 
-func (c *DeviceAuthorizeHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
+func (c *DeviceUserHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
 	return requester.GetGrantTypes().ExactOne(string(fosite.GrantTypeDeviceCode))
 }

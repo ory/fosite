@@ -28,7 +28,7 @@ func TestNewDeviceRequest(t *testing.T) {
 		query         url.Values
 		expectedError error
 		mock          func()
-		expect        *DeviceAuthorizeRequest
+		expect        *DeviceUserRequest
 	}{
 		/* empty request */
 		{
@@ -88,7 +88,7 @@ func TestNewDeviceRequest(t *testing.T) {
 					GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
 				}, nil)
 			},
-			expect: &DeviceAuthorizeRequest{
+			expect: &DeviceUserRequest{
 				Request: Request{
 					Client: &DefaultClient{
 						Scopes: []string{"foo", "bar"},

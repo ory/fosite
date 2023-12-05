@@ -10,25 +10,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDeviceAuthorizeRequest(t *testing.T) {
+func TestDeviceUserRequest(t *testing.T) {
 	for k, c := range []struct {
-		ar *DeviceAuthorizeRequest
+		ar *DeviceUserRequest
 	}{
 		{
-			ar: NewDeviceAuthorizeRequest(),
+			ar: NewDeviceUserRequest(),
 		},
 		{
-			ar: &DeviceAuthorizeRequest{},
+			ar: &DeviceUserRequest{},
 		},
 		{
-			ar: &DeviceAuthorizeRequest{
+			ar: &DeviceUserRequest{
 				Request: Request{
 					Client: &DefaultClient{RedirectURIs: []string{""}},
 				},
 			},
 		},
 		{
-			ar: &DeviceAuthorizeRequest{
+			ar: &DeviceUserRequest{
 				signature: "AAAA",
 				Request: Request{
 					Client: &DefaultClient{RedirectURIs: []string{""}},
@@ -36,7 +36,7 @@ func TestDeviceAuthorizeRequest(t *testing.T) {
 			},
 		},
 		{
-			ar: &DeviceAuthorizeRequest{
+			ar: &DeviceUserRequest{
 				Request: Request{
 					Client:         &DefaultClient{RedirectURIs: []string{"https://foobar.com/cb"}},
 					RequestedAt:    time.Now().UTC(),

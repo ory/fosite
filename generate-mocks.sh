@@ -23,7 +23,7 @@ mockgen -package internal -destination internal/id_token_strategy.go github.com/
 mockgen -package internal -destination internal/pkce_storage_strategy.go github.com/ory/fosite/handler/pkce PKCERequestStorage
 mockgen -package internal -destination internal/authorize_handler.go github.com/ory/fosite AuthorizeEndpointHandler
 mockgen -package internal -destination internal/device_handler.go github.com/ory/fosite DeviceEndpointHandler
-mockgen -package internal -destination internal/device_authorize_handler.go github.com/ory/fosite DeviceAuthorizeEndpointHandler
+mockgen -package internal -destination internal/device_user_handler.go github.com/ory/fosite DeviceUserEndpointHandler
 mockgen -package internal -destination internal/revoke_handler.go github.com/ory/fosite RevocationHandler
 mockgen -package internal -destination internal/token_handler.go github.com/ory/fosite TokenEndpointHandler
 mockgen -package internal -destination internal/introspector.go github.com/ory/fosite TokenIntrospector
@@ -33,8 +33,8 @@ mockgen -package internal -destination internal/access_request.go github.com/ory
 mockgen -package internal -destination internal/access_response.go github.com/ory/fosite AccessResponder
 mockgen -package internal -destination internal/authorize_request.go github.com/ory/fosite AuthorizeRequester
 mockgen -package internal -destination internal/authorize_response.go github.com/ory/fosite AuthorizeResponder
-mockgen -package internal -destination internal/device_authorize_request.go github.com/ory/fosite DeviceAuthorizeRequester
-mockgen -package internal -destination internal/device_authorize_response.go github.com/ory/fosite DeviceAuthorizeResponder
+mockgen -package internal -destination internal/device_user_request.go github.com/ory/fosite DeviceUserRequester
+mockgen -package internal -destination internal/device_user_response.go github.com/ory/fosite DeviceUserResponder
 mockgen -package internal -destination internal/device_request.go github.com/ory/fosite DeviceRequester
 mockgen -package internal -destination internal/device_response.go github.com/ory/fosite DeviceResponder
 

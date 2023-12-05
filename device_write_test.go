@@ -15,7 +15,7 @@ import (
 	. "github.com/ory/fosite"
 )
 
-func TestWriteDeviceAuthorizeResponse(t *testing.T) {
+func TestWriteDeviceUserResponse(t *testing.T) {
 	oauth2 := &Fosite{Config: &Config{
 		DeviceAndUserCodeLifespan:      time.Minute,
 		DeviceAuthTokenPollingInterval: time.Minute,
