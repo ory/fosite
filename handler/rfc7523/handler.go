@@ -5,6 +5,7 @@ package rfc7523
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/ory/fosite/handler/oauth2"
@@ -228,13 +229,11 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 		)
 	}
 
-	if !claims.Audience.Contains(c.Config.GetTokenURL(ctx)) {
+	if !audienceMatchesTokenURLs(claims, c.Config.GetTokenURLs(ctx)) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHintf(
-				"The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim containing a value \"%s\" that identifies the authorization server as an intended audience.",
-				c.Config.GetTokenURL(ctx),
-			),
-		)
+				`The JWT in "assertion" request parameter MUST contain an "aud" (audience) claim containing a value "%s" that identifies the authorization server as an intended audience.`,
+				strings.Join(c.Config.GetTokenURLs(ctx), `" or "`)))
 	}
 
 	if claims.Expiry == nil {
@@ -297,6 +296,15 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 	}
 
 	return nil
+}
+
+func audienceMatchesTokenURLs(claims jwt.Claims, tokenURLs []string) bool {
+	for _, tokenURL := range tokenURLs {
+		if claims.Audience.Contains(tokenURL) {
+			return true
+		}
+	}
+	return false
 }
 
 type extendedSession interface {
