@@ -211,6 +211,12 @@ var (
 		ErrorField:       errAuthorizationPending,
 		CodeField:        http.StatusBadRequest,
 	}
+	ErrPollingRateLimited = &RFC6749Error{
+		DescriptionField: "The authorization request was rate-limited to prevent system overload.",
+		HintField:        "Ensure that you don't call the token endpoint sooner than the polling interval",
+		ErrorField:       errPollingIntervalRateLimited,
+		CodeField:        http.StatusTooManyRequests,
+	}
 	ErrDeviceExpiredToken = &RFC6749Error{
 		DescriptionField: "The device_code has expired, and the device authorization session has concluded.",
 		ErrorField:       errDeviceExpiredToken,
@@ -254,6 +260,7 @@ const (
 	errRegistrationNotSupportedName = "registration_not_supported"
 	errJTIKnownName                 = "jti_known"
 	errAuthorizationPending         = "authorization_pending"
+	errPollingIntervalRateLimited   = "polling_interval_rate_limited"
 	errDeviceExpiredToken           = "expired_token"
 )
 

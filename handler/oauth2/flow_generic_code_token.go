@@ -74,6 +74,8 @@ func (c *GenericCodeTokenEndpointHandler) HandleTokenEndpointRequest(ctx context
 	} else if errors.Is(err, fosite.ErrAuthorizationPending) {
 		// Don't print a stacktrace as it spams logs
 		return err
+	} else if errors.Is(err, fosite.ErrPollingRateLimited) {
+		return errorsx.WithStack(err)
 	} else if err != nil && errors.Is(err, fosite.ErrNotFound) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {

@@ -10,8 +10,13 @@ import (
 )
 
 type RFC8628CodeStrategy interface {
+	DeviceRateLimitStrategy
 	DeviceCodeStrategy
 	UserCodeStrategy
+}
+
+type DeviceRateLimitStrategy interface {
+	ShouldRateLimit(ctx context.Context, code string) bool
 }
 
 type DeviceCodeStrategy interface {

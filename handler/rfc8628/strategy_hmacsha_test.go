@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/patrickmn/go-cache"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/fosite"
@@ -19,11 +20,13 @@ import (
 )
 
 var hmacshaStrategy = DefaultDeviceStrategy{
-	Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
+	Enigma:           &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
+	RateLimiterCache: cache.New(24*time.Minute, 2*24*time.Minute),
 	Config: &fosite.Config{
-		AccessTokenLifespan:       time.Minute * 24,
-		AuthorizeCodeLifespan:     time.Minute * 24,
-		DeviceAndUserCodeLifespan: time.Minute * 24,
+		AccessTokenLifespan:            time.Minute * 24,
+		AuthorizeCodeLifespan:          time.Minute * 24,
+		DeviceAndUserCodeLifespan:      time.Minute * 24,
+		DeviceAuthTokenPollingInterval: 400 * time.Millisecond,
 	},
 }
 
@@ -147,4 +150,19 @@ func TestHMACDeviceCode(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRateLimit(t *testing.T) {
+	t.Run("ratelimit no-wait", func(t *testing.T) {
+		hmacshaStrategy.RateLimiterCache.Flush()
+		assert.False(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
+		assert.True(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
+	})
+
+	t.Run("ratelimit wait", func(t *testing.T) {
+		hmacshaStrategy.RateLimiterCache.Flush()
+		assert.False(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
+		time.Sleep(500 * time.Millisecond)
+		assert.False(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
+	})
 }

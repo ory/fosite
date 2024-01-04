@@ -298,6 +298,11 @@ type AccessRequester interface {
 	Requester
 }
 
+// DeviceRequestThrottler is a device api to throttle request
+type DeviceRequestThrottler interface {
+	ShouldRateLimit(deviceCode string, client Client) bool
+}
+
 // DeviceRequester is an device endpoint's request context.
 type DeviceRequester interface {
 	Requester

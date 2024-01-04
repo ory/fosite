@@ -5,24 +5,29 @@ package rfc8628
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/randx"
+	"github.com/patrickmn/go-cache"
+	"golang.org/x/time/rate"
 
 	"github.com/ory/fosite"
 	enigma "github.com/ory/fosite/token/hmac"
 )
 
 type DefaultDeviceStrategy struct {
-	RFC8628CodeStrategy
-
-	Enigma *enigma.HMACStrategy
-	Config interface {
+	Enigma           *enigma.HMACStrategy
+	RateLimiterCache *cache.Cache
+	Config           interface {
+		fosite.DeviceProvider
 		fosite.DeviceAndUserCodeLifespanProvider
 	}
 }
+
+var _ RFC8628CodeStrategy = (*DefaultDeviceStrategy)(nil)
 
 func (h *DefaultDeviceStrategy) GenerateUserCode(ctx context.Context) (token string, signature string, err error) {
 	seq, err := randx.RuneSequence(8, []rune(randx.AlphaUpperNoVowels))
@@ -76,4 +81,24 @@ func (h *DefaultDeviceStrategy) ValidateDeviceCode(ctx context.Context, r fosite
 	}
 
 	return h.Enigma.Validate(ctx, strings.TrimPrefix(code, "ory_dc_"))
+}
+
+func (t *DefaultDeviceStrategy) ShouldRateLimit(context context.Context, code string) bool {
+	key := code + "_limiter"
+
+	if x, found := t.RateLimiterCache.Get(key); found {
+		return !x.(*rate.Limiter).Allow()
+	}
+
+	rateLimiter := rate.NewLimiter(
+		rate.Every(
+			t.Config.GetDeviceAuthTokenPollingInterval(context),
+		),
+		1,
+	)
+
+	print(time.Now().String() + " -> " + strconv.FormatBool(!rateLimiter.Allow()) + "\n")
+
+	t.RateLimiterCache.Set(key, rateLimiter, cache.DefaultExpiration)
+	return false
 }

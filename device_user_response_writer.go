@@ -7,12 +7,12 @@ import (
 	"context"
 )
 
-func (f *Fosite) NewDeviceUserResponse(ctx context.Context, dar DeviceUserRequester, session Session) (DeviceUserResponder, error) {
+func (f *Fosite) NewDeviceUserResponse(ctx context.Context, dur DeviceUserRequester, session Session) (DeviceUserResponder, error) {
 	var resp = &DeviceUserResponse{}
 
-	dar.SetSession(session)
+	dur.SetSession(session)
 	for _, h := range f.Config.GetDeviceUserEndpointHandlers(ctx) {
-		if err := h.HandleDeviceUserEndpointRequest(ctx, dar, resp); err != nil {
+		if err := h.HandleDeviceUserEndpointRequest(ctx, dur, resp); err != nil {
 			return nil, err
 		}
 	}

@@ -212,7 +212,7 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 						RefreshTokenScopes:       []string{"offline"},
 					}
 					h = oauth2.GenericCodeTokenEndpointHandler{
-						CodeTokenEndpointHandler: &DeviceUserHandler{
+						CodeTokenEndpointHandler: &DeviceHandler{
 							DeviceStrategy: strategy,
 							DeviceStorage:  store,
 						},
@@ -256,7 +256,7 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			h := oauth2.GenericCodeTokenEndpointHandler{
-				CodeTokenEndpointHandler: &DeviceUserHandler{
+				CodeTokenEndpointHandler: &DeviceHandler{
 					DeviceStrategy: strategy.RFC8628CodeStrategy,
 					DeviceStorage:  store,
 				},
@@ -646,7 +646,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			testCase.setup()
 
 			handler := oauth2.GenericCodeTokenEndpointHandler{
-				CodeTokenEndpointHandler: &DeviceUserHandler{
+				CodeTokenEndpointHandler: &DeviceHandler{
 					DeviceStrategy: &deviceStrategy,
 					DeviceStorage: deviceTransactionalStore{
 						mockTransactional,

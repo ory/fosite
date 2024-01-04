@@ -12,6 +12,7 @@ import (
 	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
+	"github.com/patrickmn/go-cache"
 )
 
 type CommonStrategy struct {
@@ -57,6 +58,10 @@ func NewOpenIDConnectStrategy(keyGetter func(context.Context) (interface{}, erro
 func NewDeviceStrategy(config fosite.Configurator) *rfc8628.DefaultDeviceStrategy {
 	return &rfc8628.DefaultDeviceStrategy{
 		Enigma: &hmac.HMACStrategy{Config: config},
+		RateLimiterCache: cache.New(
+			config.GetDeviceAndUserCodeLifespan(context.TODO()),
+			config.GetDeviceAndUserCodeLifespan(context.TODO())*2,
+		),
 		Config: config,
 	}
 }
