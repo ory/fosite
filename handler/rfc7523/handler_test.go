@@ -12,6 +12,7 @@ import (
 	mrand "math/rand"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -331,8 +332,8 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestNotValidAudienceInAsserti
 	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because of invalid audience claim in assertion")
 	s.Equal(
 		fmt.Sprintf(
-			"The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim containing a value \"%s\" that identifies the authorization server as an intended audience.",
-			s.handler.Config.GetTokenURL(ctx),
+			`The JWT in "assertion" request parameter MUST contain an "aud" (audience) claim containing a value "%s" that identifies the authorization server as an intended audience.`,
+			strings.Join(s.handler.Config.GetTokenURLs(ctx), `" or "`),
 		),
 		fosite.ErrorToRFC6749Error(err).HintField,
 	)

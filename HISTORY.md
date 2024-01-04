@@ -1,7 +1,7 @@
 **THIS DOCUMENT HAS MOVED**
 
 This file is no longer being updated and kept for historical reasons. Please
-check the [CHANGELOG](changelog.md) instead!
+check the [CHANGELOG](CHANGELOG.md) instead!
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
