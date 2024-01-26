@@ -309,7 +309,7 @@ func TestIsRedirectURISecureStrict(t *testing.T) {
 	} {
 		uu, err := url.Parse(c.u)
 		require.NoError(t, err)
-		assert.Equal(t, !c.err, fosite.IsRedirectURISecureStrict(uu), "case %d", d)
+		assert.Equal(t, !c.err, fosite.IsRedirectURISecureStrict(context.Background(), uu), "case %d", d)
 	}
 }
 
