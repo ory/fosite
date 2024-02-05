@@ -120,7 +120,7 @@ type OAuth2Provider interface {
 	//
 	// The following specs must be considered in any implementation of this method:
 	// * https://tools.ietf.org/html/rfc6749#section-5.2 (everything)
-	WriteAccessError(ctx context.Context, rw http.ResponseWriter, requester AccessRequester, err error)
+	WriteAccessError(ctx context.Context, rw http.ResponseWriter, requester Requester, err error)
 
 	// WriteAccessResponse writes the access response.
 	//

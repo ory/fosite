@@ -10,11 +10,12 @@ import (
 	"net/http"
 )
 
-func (f *Fosite) WriteAccessError(ctx context.Context, rw http.ResponseWriter, req AccessRequester, err error) {
+// Convert an error to an http response as per RFC6749
+func (f *Fosite) WriteAccessError(ctx context.Context, rw http.ResponseWriter, req Requester, err error) {
 	f.writeJsonError(ctx, rw, req, err)
 }
 
-func (f *Fosite) writeJsonError(ctx context.Context, rw http.ResponseWriter, requester AccessRequester, err error) {
+func (f *Fosite) writeJsonError(ctx context.Context, rw http.ResponseWriter, requester Requester, err error) {
 	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	rw.Header().Set("Cache-Control", "no-store")
 	rw.Header().Set("Pragma", "no-cache")
