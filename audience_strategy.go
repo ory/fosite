@@ -92,10 +92,10 @@ func GetAudiences(form url.Values) []string {
 	}
 }
 
-func (f *Fosite) validateAuthorizeAudience(ctx context.Context, r *http.Request, request *AuthorizeRequest) error {
-	audience := GetAudiences(request.Form)
+func (f *Fosite) validateAudience(ctx context.Context, r *http.Request, request Requester) error {
+	audience := GetAudiences(request.GetRequestForm())
 
-	if err := f.Config.GetAudienceStrategy(ctx)(request.Client.GetAudience(), audience); err != nil {
+	if err := f.Config.GetAudienceStrategy(ctx)(request.GetClient().GetAudience(), audience); err != nil {
 		return err
 	}
 
