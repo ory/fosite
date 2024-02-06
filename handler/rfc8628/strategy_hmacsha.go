@@ -39,7 +39,7 @@ func (h *DefaultDeviceStrategy) GenerateUserCode(ctx context.Context) (token str
 }
 
 func (h *DefaultDeviceStrategy) UserCodeSignature(ctx context.Context, token string) (signature string, err error) {
-	return h.Enigma.Signature(token), nil
+	return h.Enigma.GenerateHMACForString(ctx, token)
 }
 
 func (h *DefaultDeviceStrategy) ValidateUserCode(ctx context.Context, r fosite.Requester, code string) (err error) {

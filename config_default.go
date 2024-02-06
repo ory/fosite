@@ -84,6 +84,15 @@ type Config struct {
 	// IDTokenIssuer sets the default issuer of the ID Token.
 	IDTokenIssuer string
 
+	// Sets how long a device user/device code pair is valid for
+	DeviceAndUserCodeLifespan time.Duration
+
+	// DeviceAuthTokenPollingInterval sets the interval that clients should check for device code grants
+	DeviceAuthTokenPollingInterval time.Duration
+
+	// DeviceVerificationURL is the URL of the device verification endpoint, this is is included with the device code request responses
+	DeviceVerificationURL string
+
 	// HashCost sets the cost of the password hashing cost. Defaults to 12.
 	HashCost int
 
@@ -213,6 +222,9 @@ type Config struct {
 	// PushedAuthorizeContextLifespan is the lifespan of the PAR context
 	PushedAuthorizeContextLifespan time.Duration
 
+	// DeviceEndpointHandlers is a list of handlers that are called before the device endpoint is served.
+	DeviceEndpointHandlers DeviceEndpointHandlers
+
 	// IsPushedAuthorizeEnforced enforces pushed authorization request for /authorize
 	IsPushedAuthorizeEnforced bool
 }
@@ -243,6 +255,10 @@ func (c *Config) GetTokenEndpointHandlers(ctx context.Context) TokenEndpointHand
 
 func (c *Config) GetTokenIntrospectionHandlers(ctx context.Context) TokenIntrospectionHandlers {
 	return c.TokenIntrospectionHandlers
+}
+
+func (c *Config) GetDeviceEndpointHandlers(ctx context.Context) DeviceEndpointHandlers {
+	return c.DeviceEndpointHandlers
 }
 
 func (c *Config) GetRevocationHandlers(ctx context.Context) RevocationHandlers {
@@ -396,6 +412,13 @@ func (c *Config) GetRefreshTokenLifespan(_ context.Context) time.Duration {
 	return c.RefreshTokenLifespan
 }
 
+func (c *Config) GetDeviceAndUserCodeLifespan(_ context.Context) time.Duration {
+	if c.DeviceAndUserCodeLifespan == 0 {
+		return time.Minute * 10
+	}
+	return c.DeviceAndUserCodeLifespan
+}
+
 // GetBCryptCost returns the bcrypt cost factor. Defaults to 12.
 func (c *Config) GetBCryptCost(_ context.Context) int {
 	if c.HashCost == 0 {
@@ -498,4 +521,15 @@ func (c *Config) GetPushedAuthorizeContextLifespan(ctx context.Context) time.Dur
 // must contain the PAR request_uri.
 func (c *Config) EnforcePushedAuthorize(ctx context.Context) bool {
 	return c.IsPushedAuthorizeEnforced
+}
+
+func (c *Config) GetDeviceVerificationURL(ctx context.Context) string {
+	return c.DeviceVerificationURL
+}
+
+func (c *Config) GetDeviceAuthTokenPollingInterval(ctx context.Context) time.Duration {
+	if c.DeviceAuthTokenPollingInterval == 0 {
+		return time.Second * 5
+	}
+	return c.DeviceAuthTokenPollingInterval
 }
