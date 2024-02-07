@@ -175,3 +175,27 @@ func pushedAuthorizeRequestHandler(t *testing.T, oauth2 fosite.OAuth2Provider, s
 		oauth2.WritePushedAuthorizeResponse(ctx, rw, ar, response)
 	}
 }
+
+func deviceAuthorizationEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
+		ctx := fosite.NewContext()
+
+		r, err := oauth2.NewDeviceRequest(ctx, req)
+		if err != nil {
+			t.Logf("Device auth request failed because: %+v", err)
+			t.Logf("Request: %+v", r)
+			oauth2.WriteAccessError(ctx, rw, r, err)
+			return
+		}
+
+		response, err := oauth2.NewDeviceResponse(ctx, r, session)
+		if err != nil {
+			t.Logf("Device auth response failed because: %+v", err)
+			t.Logf("Request: %+v", r)
+			oauth2.WriteAccessError(ctx, rw, r, err)
+			return
+		}
+
+		oauth2.WriteDeviceResponse(ctx, rw, r, response)
+	}
+}
