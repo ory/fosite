@@ -41,6 +41,8 @@ const (
 
 	tokenURL          = "https://www.ory.sh/api"
 	tokenRelativePath = "/token"
+
+	deviceAuthRelativePath = "/device/auth"
 )
 
 var (
@@ -55,7 +57,7 @@ var fositeStore = &storage.MemoryStore{
 			Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 			RedirectURIs:  []string{"http://localhost:3846/callback"},
 			ResponseTypes: []string{"id_token", "code", "token", "token code", "id_token code", "token id_token", "token code id_token"},
-			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials", "urn:ietf:params:oauth:grant-type:device_code"},
 			Scopes:        []string{"fosite", "offline", "openid"},
 			Audience:      []string{tokenURL},
 		},
@@ -113,6 +115,10 @@ var fositeStore = &storage.MemoryStore{
 	AccessTokenRequestIDs:  map[string]string{},
 	RefreshTokenRequestIDs: map[string]string{},
 	PARSessions:            map[string]fosite.AuthorizeRequester{},
+	DeviceCodes:            map[string]fosite.Requester{},
+	UserCodes:              map[string]fosite.Requester{},
+	DeviceCodesRequestIDs:  map[string]string{},
+	UserCodesRequestIDs:    map[string]string{},
 }
 
 type defaultSession struct {
@@ -204,6 +210,7 @@ func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *
 	router.HandleFunc("/introspect", tokenIntrospectionHandler(t, f, session))
 	router.HandleFunc("/revoke", tokenRevocationHandler(t, f, session))
 	router.HandleFunc("/par", pushedAuthorizeRequestHandler(t, f, session))
+	router.HandleFunc(deviceAuthRelativePath, deviceAuthorizationEndpointHandler(t, f, session))
 
 	ts := httptest.NewServer(router)
 	return ts
