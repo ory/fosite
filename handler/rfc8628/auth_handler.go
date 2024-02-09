@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc8628
@@ -7,10 +7,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/fosite"
 	"github.com/ory/x/errorsx"
+
+	"github.com/ory/fosite"
 )
 
+// DeviceAuthHandler is a response handler for the Device Authorisation Grant as
+// defined in https://tools.ietf.org/html/rfc8628#section-3.1
 type DeviceAuthHandler struct {
 	Storage  RFC8628CoreStorage
 	Strategy RFC8628CodeStrategy
@@ -20,8 +23,7 @@ type DeviceAuthHandler struct {
 	}
 }
 
-// DeviceAuthorizationHandler is a response handler for the Device Authorisation Grant as
-// defined in https://tools.ietf.org/html/rfc8628#section-3.1
+// HandleDeviceEndpointRequest implements https://tools.ietf.org/html/rfc8628#section-3.1
 func (d *DeviceAuthHandler) HandleDeviceEndpointRequest(ctx context.Context, dar fosite.DeviceRequester, resp fosite.DeviceResponder) error {
 	deviceCode, deviceCodeSignature, err := d.Strategy.GenerateDeviceCode(ctx)
 	if err != nil {

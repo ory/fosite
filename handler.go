@@ -67,6 +67,7 @@ type PushedAuthorizeEndpointHandler interface {
 	HandlePushedAuthorizeEndpointRequest(ctx context.Context, requester AuthorizeRequester, responder PushedAuthorizeResponder) error
 }
 
+// DeviceEndpointHandler is the interface that handles https://tools.ietf.org/html/rfc8628
 type DeviceEndpointHandler interface {
 	// HandleDeviceEndpointRequest handles a device authorize endpoint request. To extend the handler's capabilities, the http request
 	// is passed along, if further information retrieval is required. If the handler feels that he is not responsible for

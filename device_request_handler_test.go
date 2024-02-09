@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite_test
@@ -33,94 +33,87 @@ func TestNewDeviceRequestWithPublicClient(t *testing.T) {
 		expectedError error
 		mock          func()
 		expect        DeviceRequester
-	}{
-		/* invalid Method */
-		{
-			expectedError: ErrInvalidRequest,
-			method:        "GET",
-			mock:          func() {},
+		description   string
+	}{{
+		description:   "invalid method",
+		expectedError: ErrInvalidRequest,
+		method:        "GET",
+		mock:          func() {},
+	}, {
+		description:   "empty request",
+		expectedError: ErrInvalidRequest,
+		method:        "POST",
+		mock:          func() {},
+	}, {
+		description: "invalid client",
+		form: url.Values{
+			"client_id": {"client_id"},
+			"scope":     {"foo bar"},
 		},
-		/* empty request */
-		{
-			expectedError: ErrInvalidRequest,
-			method:        "POST",
-			mock:          func() {},
+		expectedError: ErrInvalidClient,
+		method:        "POST",
+		mock: func() {
+			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(nil, errors.New(""))
 		},
-		/* invalid client */
-		{
-			form: url.Values{
-				"client_id": {"client_id"},
-				"scope":     {"foo bar"},
-			},
-			expectedError: ErrInvalidClient,
-			method:        "POST",
-			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(nil, errors.New(""))
-			},
+	}, {
+		description: "fails because scope not allowed",
+		form: url.Values{
+			"client_id": {"client_id"},
+			"scope":     {"17 42 foo"},
 		},
-		/* fails because scope not allowed */
-		{
-			form: url.Values{
-				"client_id": {"client_id"},
-				"scope":     {"17 42 foo"},
-			},
-			method: "POST",
-			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-				client.Public = true
-				client.Scopes = []string{"17", "42"}
-				client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
-			},
-			expectedError: ErrInvalidScope,
+		method: "POST",
+		mock: func() {
+			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
+			client.Public = true
+			client.Scopes = []string{"17", "42"}
+			client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
 		},
-		/* fails because scope not allowed */
-		{
-			form: url.Values{
-				"client_id": {"client_id"},
-				"scope":     {"17 42"},
-				"audience":  {"aud"},
-			},
-			method: "POST",
-			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-				client.Public = true
-				client.Scopes = []string{"17", "42"}
-				client.Audience = []string{"aud2"}
-				client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
-			},
-			expectedError: ErrInvalidRequest,
+		expectedError: ErrInvalidScope,
+	}, {
+		description: "fails because audience not allowed",
+		form: url.Values{
+			"client_id": {"client_id"},
+			"scope":     {"17 42"},
+			"audience":  {"aud"},
 		},
-		/* should fail because doesn't have proper grant */
-		{
-			form: url.Values{
-				"client_id": {"client_id"},
-				"scope":     {"17 42"},
-			},
-			method: "POST",
-			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-				client.Public = true
-				client.Scopes = []string{"17", "42"}
-				client.GrantTypes = []string{"authorization_code"}
-			},
-			expectedError: ErrInvalidGrant,
+		method: "POST",
+		mock: func() {
+			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
+			client.Public = true
+			client.Scopes = []string{"17", "42"}
+			client.Audience = []string{"aud2"}
+			client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
 		},
-		/* success case */
-		{
-			form: url.Values{
-				"client_id": {"client_id"},
-				"scope":     {"17 42"},
-			},
-			method: "POST",
-			mock: func() {
-				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-				client.Public = true
-				client.Scopes = []string{"17", "42"}
-				client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
-			},
+		expectedError: ErrInvalidRequest,
+	}, {
+		description: "fails because it doesn't have the proper grant",
+		form: url.Values{
+			"client_id": {"client_id"},
+			"scope":     {"17 42"},
 		},
-	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+		method: "POST",
+		mock: func() {
+			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
+			client.Public = true
+			client.Scopes = []string{"17", "42"}
+			client.GrantTypes = []string{"authorization_code"}
+		},
+		expectedError: ErrInvalidGrant,
+	}, {
+		description: "success",
+		form: url.Values{
+			"client_id": {"client_id"},
+			"scope":     {"17 42"},
+		},
+		method: "POST",
+		mock: func() {
+			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
+			client.Public = true
+			client.Scopes = []string{"17", "42"}
+			client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+		},
+	}} {
+		t.Run(fmt.Sprintf("case=%d description=%s", k, c.description), func(t *testing.T) {
 			c.mock()
 			r := &http.Request{
 				Header:   c.header,
