@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -7,6 +7,7 @@ import (
 	"context"
 )
 
+// NewDeviceResponse returns a new DeviceResponder
 func (f *Fosite) NewDeviceResponse(ctx context.Context, r DeviceRequester, session Session) (DeviceResponder, error) {
 	var resp = &DeviceResponse{}
 

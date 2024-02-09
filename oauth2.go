@@ -402,23 +402,36 @@ type G11NContext interface {
 	GetLang() language.Tag
 }
 
+// DeviceResponder is the device authorization endpoint's response
 type DeviceResponder interface {
+	// GetDeviceCode returns the device_code
 	GetDeviceCode() string
+	// SetDeviceCode sets the device_code
 	SetDeviceCode(code string)
 
+	// GetUserCode returns the user_code
 	GetUserCode() string
+	// SetUserCode sets the user_code
 	SetUserCode(code string)
 
+	// GetVerificationURI returns the verification_uri
 	GetVerificationURI() string
+	// SetVerificationURI sets the verification_uri
 	SetVerificationURI(uri string)
 
+	// GetVerificationURIComplete returns the verification_uri_complete
 	GetVerificationURIComplete() string
+	// SetVerificationURIComplete sets the verification_uri_complete
 	SetVerificationURIComplete(uri string)
 
+	// GetExpiresIn returns the expires_in
 	GetExpiresIn() int64
+	// SetExpiresIn sets the expires_in
 	SetExpiresIn(seconds int64)
 
+	// GetInterval returns the interval
 	GetInterval() int
+	// SetInterval sets the interval
 	SetInterval(seconds int)
 
 	// GetHeader returns the response's header

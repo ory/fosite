@@ -1,26 +1,5 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
-
-/*
- * Copyright © 2015-2021 Aeneas Rekkas <aeneas+oss@aeneas.io>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @author		Aeneas Rekkas <aeneas+oss@aeneas.io>
- * @copyright 	2015-2021 Aeneas Rekkas <aeneas+oss@aeneas.io>
- * @license 	Apache-2.0
- *
- */
 
 package fosite
 
@@ -29,12 +8,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ory/fosite/i18n"
 	"github.com/ory/x/errorsx"
 	"github.com/ory/x/otelx"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/ory/fosite/i18n"
 )
 
+// NewDeviceRequest parses an http Request returns a Device request
 func (f *Fosite) NewDeviceRequest(ctx context.Context, r *http.Request) (_ DeviceRequester, err error) {
 	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("github.com/ory/fosite").Start(ctx, "Fosite.NewAccessRequest")
 	defer otelx.End(span, &err)
@@ -42,11 +23,13 @@ func (f *Fosite) NewDeviceRequest(ctx context.Context, r *http.Request) (_ Devic
 	request := NewDeviceRequest()
 	request.Lang = i18n.GetLangFromRequest(f.Config.GetMessageCatalog(ctx), r)
 
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		return request, errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s', expected 'POST'.", r.Method))
-	} else if err := r.ParseForm(); err != nil {
+	}
+	if err := r.ParseForm(); err != nil {
 		return nil, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
-	} else if len(r.PostForm) == 0 {
+	}
+	if len(r.PostForm) == 0 {
 		return request, errorsx.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
 	}
 	request.Form = r.PostForm
