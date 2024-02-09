@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc8628
@@ -10,6 +10,7 @@ import (
 	"github.com/ory/fosite/handler/oauth2"
 )
 
+// RFC8628CoreStorage is the storage needed for the DeviceAuthHandler
 type RFC8628CoreStorage interface {
 	DeviceCodeStorage
 	UserCodeStorage
@@ -17,6 +18,7 @@ type RFC8628CoreStorage interface {
 	oauth2.RefreshTokenStorage
 }
 
+// DeviceCodeStorage handles the device_code storage
 type DeviceCodeStorage interface {
 	// CreateDeviceCodeSession stores the device request for a given device code.
 	CreateDeviceCodeSession(ctx context.Context, signature string, request fosite.Requester) (err error)
@@ -34,6 +36,7 @@ type DeviceCodeStorage interface {
 	InvalidateDeviceCodeSession(ctx context.Context, signature string) (err error)
 }
 
+// UserCodeStorage handles the user_code storage
 type UserCodeStorage interface {
 	// CreateUserCodeSession stores the device request for a given user code.
 	CreateUserCodeSession(ctx context.Context, signature string, request fosite.Requester) (err error)

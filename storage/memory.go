@@ -514,6 +514,7 @@ func (s *MemoryStore) DeletePARSession(ctx context.Context, requestURI string) (
 	return nil
 }
 
+// CreateDeviceCodeSession stores the device code session
 func (s *MemoryStore) CreateDeviceCodeSession(_ context.Context, signature string, req fosite.Requester) error {
 	// We first lock accessTokenRequestIDsMutex and then accessTokensMutex because this is the same order
 	// locking happens in RevokeAccessToken and using the same order prevents deadlocks.
@@ -527,6 +528,7 @@ func (s *MemoryStore) CreateDeviceCodeSession(_ context.Context, signature strin
 	return nil
 }
 
+// UpdateDeviceCodeSession updates the device code session
 func (s *MemoryStore) UpdateDeviceCodeSession(_ context.Context, signature string, req fosite.Requester) error {
 	s.deviceCodesRequestIDsMutex.Lock()
 	defer s.deviceCodesRequestIDsMutex.Unlock()
@@ -541,6 +543,7 @@ func (s *MemoryStore) UpdateDeviceCodeSession(_ context.Context, signature strin
 	return nil
 }
 
+// GetDeviceCodeSession gets the device code session
 func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, _ fosite.Session) (fosite.Requester, error) {
 	s.deviceCodesMutex.RLock()
 	defer s.deviceCodesMutex.RUnlock()
@@ -552,6 +555,7 @@ func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, 
 	return rel, nil
 }
 
+// InvalidateDeviceCodeSession invalidates the device code session
 func (s *MemoryStore) InvalidateDeviceCodeSession(_ context.Context, code string) error {
 	s.deviceCodesRequestIDsMutex.Lock()
 	defer s.deviceCodesRequestIDsMutex.Unlock()
@@ -562,6 +566,7 @@ func (s *MemoryStore) InvalidateDeviceCodeSession(_ context.Context, code string
 	return nil
 }
 
+// CreateUserCodeSession stores the user code session
 func (s *MemoryStore) CreateUserCodeSession(_ context.Context, signature string, req fosite.Requester) error {
 	s.userCodesRequestIDsMutex.Lock()
 	defer s.userCodesRequestIDsMutex.Unlock()
@@ -573,6 +578,7 @@ func (s *MemoryStore) CreateUserCodeSession(_ context.Context, signature string,
 	return nil
 }
 
+// GetUserCodeSession gets the user code session
 func (s *MemoryStore) GetUserCodeSession(_ context.Context, signature string, _ fosite.Session) (fosite.Requester, error) {
 	s.userCodesMutex.RLock()
 	defer s.userCodesMutex.RUnlock()
@@ -584,6 +590,7 @@ func (s *MemoryStore) GetUserCodeSession(_ context.Context, signature string, _ 
 	return rel, nil
 }
 
+// GetUserCodeSession invalidates the user code session
 func (s *MemoryStore) InvalidateUserCodeSession(_ context.Context, code string) error {
 	s.userCodesRequestIDsMutex.Lock()
 	defer s.userCodesRequestIDsMutex.Unlock()

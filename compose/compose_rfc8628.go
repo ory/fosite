@@ -1,6 +1,8 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
+// Package compose provides various objects which can be used to
+// instantiate OAuth2Providers with different functionality.
 package compose
 
 import (

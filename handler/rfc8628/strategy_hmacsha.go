@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc8628
@@ -14,6 +14,7 @@ import (
 	enigma "github.com/ory/fosite/token/hmac"
 )
 
+// DefaultDeviceStrategy implements the default device strategy
 type DefaultDeviceStrategy struct {
 	Enigma           *enigma.HMACStrategy
 	RateLimiterCache *cache.Cache
@@ -25,7 +26,8 @@ type DefaultDeviceStrategy struct {
 
 var _ RFC8628CodeStrategy = (*DefaultDeviceStrategy)(nil)
 
-func (h *DefaultDeviceStrategy) GenerateUserCode(ctx context.Context) (token string, signature string, err error) {
+// GenerateUserCode generates a user_code
+func (h *DefaultDeviceStrategy) GenerateUserCode(ctx context.Context) (string, string, error) {
 	seq, err := randx.RuneSequence(8, []rune(randx.AlphaUpper))
 	if err != nil {
 		return "", "", err
@@ -38,16 +40,19 @@ func (h *DefaultDeviceStrategy) GenerateUserCode(ctx context.Context) (token str
 	return userCode, signUserCode, nil
 }
 
-func (h *DefaultDeviceStrategy) UserCodeSignature(ctx context.Context, token string) (signature string, err error) {
+// UserCodeSignature generates a user_code signature
+func (h *DefaultDeviceStrategy) UserCodeSignature(ctx context.Context, token string) (string, error) {
 	return h.Enigma.GenerateHMACForString(ctx, token)
 }
 
-func (h *DefaultDeviceStrategy) ValidateUserCode(ctx context.Context, r fosite.Requester, code string) (err error) {
+// ValidateUserCode validates a user_code
+func (h *DefaultDeviceStrategy) ValidateUserCode(ctx context.Context, r fosite.Requester, code string) error {
 	// TODO
 	return nil
 }
 
-func (h *DefaultDeviceStrategy) GenerateDeviceCode(ctx context.Context) (token string, signature string, err error) {
+// GenerateDeviceCode generates a device_code
+func (h *DefaultDeviceStrategy) GenerateDeviceCode(ctx context.Context) (string, string, error) {
 	token, sig, err := h.Enigma.Generate(ctx)
 	if err != nil {
 		return "", "", err
@@ -56,15 +61,18 @@ func (h *DefaultDeviceStrategy) GenerateDeviceCode(ctx context.Context) (token s
 	return "ory_dc_" + token, sig, nil
 }
 
-func (h *DefaultDeviceStrategy) DeviceCodeSignature(ctx context.Context, token string) (signature string, err error) {
+// DeviceCodeSignature generates a device_code signature
+func (h *DefaultDeviceStrategy) DeviceCodeSignature(ctx context.Context, token string) (string, error) {
 	return h.Enigma.Signature(token), nil
 }
 
-func (h *DefaultDeviceStrategy) ValidateDeviceCode(ctx context.Context, r fosite.Requester, code string) (err error) {
+// ValidateDeviceCode validates a device_code
+func (h *DefaultDeviceStrategy) ValidateDeviceCode(ctx context.Context, r fosite.Requester, code string) error {
 	// TODO
 	return nil
 }
 
+// ShouldRateLimit is used to decide whether a request should be rate-limites
 func (t *DefaultDeviceStrategy) ShouldRateLimit(context context.Context, code string) bool {
 	key := code + "_limiter"
 

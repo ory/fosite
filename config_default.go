@@ -18,8 +18,10 @@ import (
 )
 
 const (
-	defaultPARPrefix          = "urn:ietf:params:oauth:request_uri:"
-	defaultPARContextLifetime = 5 * time.Minute
+	defaultPARPrefix                 = "urn:ietf:params:oauth:request_uri:"
+	defaultPARContextLifetime        = 5 * time.Minute
+	defaultDeviceAndUserCodeLifespan = 10 * time.Minute
+	defaultAuthTokenPollingInterval  = 5 * time.Second
 )
 
 var (
@@ -257,6 +259,7 @@ func (c *Config) GetTokenIntrospectionHandlers(ctx context.Context) TokenIntrosp
 	return c.TokenIntrospectionHandlers
 }
 
+// GetDeviceEndpointHandlers return the Device Endpoint Handlers
 func (c *Config) GetDeviceEndpointHandlers(ctx context.Context) DeviceEndpointHandlers {
 	return c.DeviceEndpointHandlers
 }
@@ -412,9 +415,11 @@ func (c *Config) GetRefreshTokenLifespan(_ context.Context) time.Duration {
 	return c.RefreshTokenLifespan
 }
 
+// GetDeviceAndUserCodeLifespan returns how long the device and user codes should be valid.
+// Defaults to 10 minutes
 func (c *Config) GetDeviceAndUserCodeLifespan(_ context.Context) time.Duration {
 	if c.DeviceAndUserCodeLifespan == 0 {
-		return time.Minute * 10
+		return defaultDeviceAndUserCodeLifespan
 	}
 	return c.DeviceAndUserCodeLifespan
 }
@@ -523,13 +528,15 @@ func (c *Config) EnforcePushedAuthorize(ctx context.Context) bool {
 	return c.IsPushedAuthorizeEnforced
 }
 
+// GetDeviceVerificationURL returns the device verification URL
 func (c *Config) GetDeviceVerificationURL(ctx context.Context) string {
 	return c.DeviceVerificationURL
 }
 
+// GetDeviceAuthTokenPollingInterval returns configured device token endpoint polling interval
 func (c *Config) GetDeviceAuthTokenPollingInterval(ctx context.Context) time.Duration {
 	if c.DeviceAuthTokenPollingInterval == 0 {
-		return time.Second * 5
+		return defaultAuthTokenPollingInterval
 	}
 	return c.DeviceAuthTokenPollingInterval
 }
