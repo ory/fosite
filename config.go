@@ -46,6 +46,7 @@ type IDTokenLifespanProvider interface {
 	GetIDTokenLifespan(ctx context.Context) time.Duration
 }
 
+// DeviceAndUserCodeLifespanProvider returns the provider for configuring the device and user code lifespan
 type DeviceAndUserCodeLifespanProvider interface {
 	GetDeviceAndUserCodeLifespan(ctx context.Context) time.Duration
 }
@@ -80,6 +81,7 @@ type DisableRefreshTokenValidationProvider interface {
 	GetDisableRefreshTokenValidation(ctx context.Context) bool
 }
 
+// DeviceProvider returns the provider for configuring the device flow
 type DeviceProvider interface {
 	GetDeviceVerificationURL(ctx context.Context) string
 	GetDeviceAuthTokenPollingInterval(ctx context.Context) time.Duration

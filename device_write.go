@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -8,8 +8,7 @@ import (
 	"net/http"
 )
 
-// TODO: Do documentation
-
+// WriteDeviceResponse writes the device response
 func (f *Fosite) WriteDeviceResponse(ctx context.Context, rw http.ResponseWriter, requester DeviceRequester, responder DeviceResponder) {
 	// Set custom headers, e.g. "X-MySuperCoolCustomHeader" or "X-DONT-CACHE-ME"...
 	wh := rw.Header()
@@ -23,15 +22,17 @@ func (f *Fosite) WriteDeviceResponse(ctx context.Context, rw http.ResponseWriter
 	rw.Header().Set("Pragma", "no-cache")
 
 	deviceResponse := &DeviceResponse{
-		deviceResponse{
-			DeviceCode:              responder.GetDeviceCode(),
-			UserCode:                responder.GetUserCode(),
-			VerificationURI:         responder.GetVerificationURI(),
-			VerificationURIComplete: responder.GetVerificationURIComplete(),
-			ExpiresIn:               responder.GetExpiresIn(),
-			Interval:                responder.GetInterval(),
-		},
+		DeviceCode:              responder.GetDeviceCode(),
+		UserCode:                responder.GetUserCode(),
+		VerificationURI:         responder.GetVerificationURI(),
+		VerificationURIComplete: responder.GetVerificationURIComplete(),
+		ExpiresIn:               responder.GetExpiresIn(),
+		Interval:                responder.GetInterval(),
 	}
 
-	_ = deviceResponse.ToJson(rw)
+	err := deviceResponse.ToJson(rw)
+	if err != nil {
+		http.Error(rw, ErrServerError.WithWrap(err).WithDebug(err.Error()).Error(), http.StatusInternalServerError)
+		return
+	}
 }

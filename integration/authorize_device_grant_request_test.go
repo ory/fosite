@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package integration_test
@@ -100,7 +100,7 @@ func runDeviceFlowTest(t *testing.T, strategy interface{}) {
 			err:         false,
 		},
 	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case=%d description=%s", k, c.description), func(t *testing.T) {
 			// Restore client
 			fositeStore.Clients["device-client"] = &fosite.DefaultClient{
 				ID:         "device-client",
