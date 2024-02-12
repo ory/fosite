@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 // Package hmac is the default implementation for generating and validating challenges. It uses SHA-512/256 to
