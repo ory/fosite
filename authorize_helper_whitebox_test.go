@@ -4,6 +4,7 @@
 package fosite
 
 import (
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,14 +35,25 @@ func TestIsLookbackAddress(t *testing.T) {
 			"ShouldReturnTrueIPv6LoopbackWithPort",
 			"[::1]:1230",
 			true,
-		}, {
-			"ShouldReturnFalse12700255",
+		},
+		{
+			"ShouldReturnTrue12700255",
 			"127.0.0.255",
+			true,
+		},
+		{
+			"ShouldReturnTrue12700255WithPort",
+			"127.0.0.255:1230",
+			true,
+		},
+		{
+			"ShouldReturnFalse128001",
+			"128.0.0.1",
 			false,
 		},
 		{
-			"ShouldReturnFalse12700255WithPort",
-			"127.0.0.255:1230",
+			"ShouldReturnFalse128001WithPort",
+			"128.0.0.1:1230",
 			false,
 		},
 		{
@@ -63,7 +75,8 @@ func TestIsLookbackAddress(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, isLoopbackAddress(tc.have))
+			u := url.URL{Host: tc.have}
+			assert.Equal(t, tc.expected, isLoopbackAddress(u.Hostname()))
 		})
 	}
 }

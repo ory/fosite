@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"net"
 	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/ory/x/errorsx"
@@ -130,7 +130,7 @@ func isMatchingAsLoopback(requested *url.URL, registeredURI string) bool {
 	//
 	// Source: https://tools.ietf.org/html/rfc8252#section-7.3
 	if requested.Scheme == "http" &&
-		isLoopbackAddress(requested.Host) &&
+		isLoopbackAddress(requested.Hostname()) &&
 		registered.Hostname() == requested.Hostname() &&
 		// The port is skipped here - see codedoc above!
 		registered.Path == requested.Path &&
@@ -141,14 +141,9 @@ func isMatchingAsLoopback(requested *url.URL, registeredURI string) bool {
 	return false
 }
 
-var (
-	regexLoopbackAddress = regexp.MustCompile(`^(127\.0\.0\.1|\[::1])(:\d+)?$`)
-)
-
-// Check if address is either an IPv4 loopback or an IPv6 loopback-
-// An optional port is ignored
-func isLoopbackAddress(address string) bool {
-	return regexLoopbackAddress.MatchString(address)
+// Check if address is either an IPv4 loopback or an IPv6 loopback.
+func isLoopbackAddress(hostname string) bool {
+	return net.ParseIP(hostname).IsLoopback()
 }
 
 // IsValidRedirectURI validates a redirect_uri as specified in:
@@ -186,7 +181,7 @@ func IsRedirectURISecureStrict(ctx context.Context, redirectURI *url.URL) bool {
 
 func IsLocalhost(redirectURI *url.URL) bool {
 	hn := redirectURI.Hostname()
-	return strings.HasSuffix(hn, ".localhost") || hn == "127.0.0.1" || hn == "::1" || hn == "localhost"
+	return strings.HasSuffix(hn, ".localhost") || isLoopbackAddress(hn) || hn == "localhost"
 }
 
 func WriteAuthorizeFormPostResponse(redirectURL string, parameters url.Values, template *template.Template, rw io.Writer) {
