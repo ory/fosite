@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oauth2
@@ -50,27 +50,27 @@ func TestIssueAccessToken(t *testing.T) {
 	}{
 		{
 			mock: func() {
-				accessStrat.EXPECT().GenerateAccessToken(nil, areq).Return("", "", errors.New(""))
+				accessStrat.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return("", "", errors.New(""))
 			},
 			err: errors.New(""),
 		},
 		{
 			mock: func() {
-				accessStrat.EXPECT().GenerateAccessToken(nil, areq).Return("token", "signature", nil)
-				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", gomock.Eq(areq.Sanitize([]string{}))).Return(errors.New(""))
+				accessStrat.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return("token", "signature", nil)
+				accessStore.EXPECT().CreateAccessTokenSession(gomock.Any(), "signature", gomock.Eq(areq.Sanitize([]string{}))).Return(errors.New(""))
 			},
 			err: errors.New(""),
 		},
 		{
 			mock: func() {
-				accessStrat.EXPECT().GenerateAccessToken(nil, areq).Return("token", "signature", nil)
-				accessStore.EXPECT().CreateAccessTokenSession(nil, "signature", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
+				accessStrat.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return("token", "signature", nil)
+				accessStore.EXPECT().CreateAccessTokenSession(gomock.Any(), "signature", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 			},
 			err: nil,
 		},
 	} {
 		c.mock()
-		err := helper.IssueAccessToken(nil, helper.Config.GetAccessTokenLifespan(context.TODO()), areq, aresp)
+		err := helper.IssueAccessToken(context.Background(), helper.Config.GetAccessTokenLifespan(context.TODO()), areq, aresp)
 		require.Equal(t, err == nil, c.err == nil)
 		if c.err != nil {
 			assert.EqualError(t, err, c.err.Error(), "Case %d", k)

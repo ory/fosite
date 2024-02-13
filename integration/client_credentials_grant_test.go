@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package integration_test
@@ -6,7 +6,7 @@ package integration_test
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -41,7 +41,7 @@ func introspect(t *testing.T, ts *httptest.Server, token string, p interface{}, 
 	r, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, r.StatusCode, "%s", body)
 	require.NoError(t, json.Unmarshal(body, p))

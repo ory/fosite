@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oauth2
@@ -46,7 +46,7 @@ func TestIntrospectJWT(t *testing.T) {
 			description: "should fail because jwt is expired",
 			token: func() string {
 				jwt := jwtExpiredCase(fosite.AccessToken)
-				token, _, err := strat.GenerateAccessToken(nil, jwt)
+				token, _, err := strat.GenerateAccessToken(context.Background(), jwt)
 				assert.NoError(t, err)
 				return token
 			},
@@ -57,7 +57,7 @@ func TestIntrospectJWT(t *testing.T) {
 			token: func() string {
 				jwt := jwtValidCase(fosite.AccessToken)
 				jwt.GrantedScope = []string{"foo", "bar"}
-				token, _, err := strat.GenerateAccessToken(nil, jwt)
+				token, _, err := strat.GenerateAccessToken(context.Background(), jwt)
 				assert.NoError(t, err)
 				return token
 			},
@@ -67,7 +67,7 @@ func TestIntrospectJWT(t *testing.T) {
 			description: "should fail because scope was not granted",
 			token: func() string {
 				jwt := jwtValidCase(fosite.AccessToken)
-				token, _, err := strat.GenerateAccessToken(nil, jwt)
+				token, _, err := strat.GenerateAccessToken(context.Background(), jwt)
 				assert.NoError(t, err)
 				return token
 			},
@@ -78,7 +78,7 @@ func TestIntrospectJWT(t *testing.T) {
 			description: "should fail because signature is invalid",
 			token: func() string {
 				jwt := jwtValidCase(fosite.AccessToken)
-				token, _, err := strat.GenerateAccessToken(nil, jwt)
+				token, _, err := strat.GenerateAccessToken(context.Background(), jwt)
 				assert.NoError(t, err)
 				parts := strings.Split(token, ".")
 				require.Len(t, parts, 3, "%s - %v", token, parts)
@@ -94,7 +94,7 @@ func TestIntrospectJWT(t *testing.T) {
 			description: "should pass",
 			token: func() string {
 				jwt := jwtValidCase(fosite.AccessToken)
-				token, _, err := strat.GenerateAccessToken(nil, jwt)
+				token, _, err := strat.GenerateAccessToken(context.Background(), jwt)
 				assert.NoError(t, err)
 				return token
 			},
@@ -106,7 +106,7 @@ func TestIntrospectJWT(t *testing.T) {
 			}
 
 			areq := fosite.NewAccessRequest(nil)
-			_, err := v.IntrospectToken(nil, c.token(), fosite.AccessToken, areq, c.scopes)
+			_, err := v.IntrospectToken(context.Background(), c.token(), fosite.AccessToken, areq, c.scopes)
 
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())
@@ -132,12 +132,12 @@ func BenchmarkIntrospectJWT(b *testing.B) {
 	}
 
 	jwt := jwtValidCase(fosite.AccessToken)
-	token, _, err := strat.GenerateAccessToken(nil, jwt)
+	token, _, err := strat.GenerateAccessToken(context.Background(), jwt)
 	assert.NoError(b, err)
 	areq := fosite.NewAccessRequest(nil)
 
 	for n := 0; n < b.N; n++ {
-		_, err = v.IntrospectToken(nil, token, fosite.AccessToken, areq, []string{})
+		_, err = v.IntrospectToken(context.Background(), token, fosite.AccessToken, areq, []string{})
 	}
 
 	assert.NoError(b, err)

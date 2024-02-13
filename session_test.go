@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -14,4 +14,12 @@ func TestSession(t *testing.T) {
 	assert.Empty(t, s.GetSubject())
 	assert.Empty(t, s.GetUsername())
 	assert.Nil(t, s.Clone())
+}
+
+func TestZeroSession(t *testing.T) {
+	var s *DefaultSession = new(DefaultSession)
+	assert.Empty(t, s.GetSubject())
+	assert.Empty(t, s.GetUsername())
+	assert.Empty(t, s.Clone())
+	assert.Empty(t, s.GetExpiresAt(AccessToken))
 }

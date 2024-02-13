@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package openid
@@ -97,7 +97,7 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			setup: func() OpenIDConnectExplicitHandler {
 				h, store := makeOpenIDConnectExplicitHandler(ctrl, fosite.MinParameterEntropy)
 				aresp.EXPECT().GetCode().AnyTimes().Return("codeexample")
-				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).Return(errors.New(""))
+				store.EXPECT().CreateOpenIDConnectSession(gomock.Any(), "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).Return(errors.New(""))
 				return h
 			},
 			expectErr: fosite.ErrServerError,
@@ -106,14 +106,14 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 			description: "should pass",
 			setup: func() OpenIDConnectExplicitHandler {
 				h, store := makeOpenIDConnectExplicitHandler(ctrl, fosite.MinParameterEntropy)
-				store.EXPECT().CreateOpenIDConnectSession(nil, "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).AnyTimes().Return(nil)
+				store.EXPECT().CreateOpenIDConnectSession(gomock.Any(), "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).AnyTimes().Return(nil)
 				return h
 			},
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			h := c.setup()
-			err := h.HandleAuthorizeEndpointRequest(nil, areq, aresp)
+			err := h.HandleAuthorizeEndpointRequest(context.Background(), areq, aresp)
 
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())

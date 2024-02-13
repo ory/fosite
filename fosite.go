@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -106,6 +106,7 @@ type Configurator interface {
 	RefreshTokenScopesProvider
 	AccessTokenLifespanProvider
 	RefreshTokenLifespanProvider
+	VerifiableCredentialsNonceLifespanProvider
 	AuthorizeCodeLifespanProvider
 	TokenEntropyProvider
 	RotatedGlobalSecretsProvider

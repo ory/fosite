@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -141,11 +141,14 @@ func isMatchingAsLoopback(requested *url.URL, registeredURI string) bool {
 	return false
 }
 
+var (
+	regexLoopbackAddress = regexp.MustCompile(`^(127\.0\.0\.1|\[::1])(:\d+)?$`)
+)
+
 // Check if address is either an IPv4 loopback or an IPv6 loopback-
 // An optional port is ignored
 func isLoopbackAddress(address string) bool {
-	match, _ := regexp.MatchString("^(127.0.0.1|\\[::1\\])(:?)(\\d*)$", address)
-	return match
+	return regexLoopbackAddress.MatchString(address)
 }
 
 // IsValidRedirectURI validates a redirect_uri as specified in:

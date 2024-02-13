@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -193,15 +193,13 @@ func (f *Fosite) WriteIntrospectionResponse(ctx context.Context, rw http.Respons
 	extraClaimsSession, ok := r.GetAccessRequester().GetSession().(ExtraClaimsSession)
 	if ok {
 		extraClaims := extraClaimsSession.GetExtraClaims()
-		if extraClaims != nil {
-			for name, value := range extraClaims {
-				switch name {
-				// We do not allow these to be set through extra claims.
-				case "exp", "client_id", "scope", "iat", "sub", "aud", "username":
-					continue
-				default:
-					response[name] = value
-				}
+		for name, value := range extraClaims {
+			switch name {
+			// We do not allow these to be set through extra claims.
+			case "exp", "client_id", "scope", "iat", "sub", "aud", "username":
+				continue
+			default:
+				response[name] = value
 			}
 		}
 	}

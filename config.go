@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -32,6 +32,12 @@ type RefreshTokenLifespanProvider interface {
 type AccessTokenLifespanProvider interface {
 	// GetAccessTokenLifespan returns the access token lifespan.
 	GetAccessTokenLifespan(ctx context.Context) time.Duration
+}
+
+// VerifiableCredentialsNonceLifespanProvider returns the provider for configuring the access token lifespan.
+type VerifiableCredentialsNonceLifespanProvider interface {
+	// GetNonceLifespan returns the nonce lifespan.
+	GetVerifiableCredentialsNonceLifespan(ctx context.Context) time.Duration
 }
 
 // IDTokenLifespanProvider returns the provider for configuring the ID token lifespan.
@@ -241,8 +247,8 @@ type FormPostHTMLTemplateProvider interface {
 }
 
 type TokenURLProvider interface {
-	// GetTokenURL returns the token URL.
-	GetTokenURL(ctx context.Context) string
+	// GetTokenURLs returns the token URL.
+	GetTokenURLs(ctx context.Context) []string
 }
 
 // AuthorizeEndpointHandlersProvider returns the provider for configuring the authorize endpoint handlers.

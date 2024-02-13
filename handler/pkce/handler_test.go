@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package pkce
@@ -245,7 +245,7 @@ func TestPKCEHandlerValidate(t *testing.T) {
 			ar := fosite.NewAuthorizeRequest()
 			ar.Form.Add("code_challenge", tc.challenge)
 			ar.Form.Add("code_challenge_method", tc.method)
-			require.NoError(t, s.CreatePKCERequestSession(nil, fmt.Sprintf("valid-code-%d", k), ar))
+			require.NoError(t, s.CreatePKCERequestSession(context.Background(), fmt.Sprintf("valid-code-%d", k), ar))
 
 			r := fosite.NewAccessRequest(nil)
 			r.Client = tc.client

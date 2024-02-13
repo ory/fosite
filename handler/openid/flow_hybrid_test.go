@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package openid
@@ -32,12 +32,6 @@ var hmacStrategy = &oauth2.HMACSHAStrategy{
 			GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows-nobody-knows"),
 		},
 	},
-}
-
-type defaultSession struct {
-	Claims  *jwt.IDTokenClaims
-	Headers *jwt.Headers
-	*fosite.DefaultSession
 }
 
 func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybridHandler {
@@ -91,20 +85,6 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybrid
 		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(j.Signer, config),
 		OpenIDConnectRequestStorage:   storage.NewMemoryStore(),
 	}
-}
-
-func (s *defaultSession) IDTokenHeaders() *jwt.Headers {
-	if s.Headers == nil {
-		s.Headers = &jwt.Headers{}
-	}
-	return s.Headers
-}
-
-func (s *defaultSession) IDTokenClaims() *jwt.IDTokenClaims {
-	if s.Claims == nil {
-		s.Claims = &jwt.IDTokenClaims{}
-	}
-	return s.Claims
 }
 
 func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
@@ -336,7 +316,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			h := c.setup()
-			err := h.HandleAuthorizeEndpointRequest(nil, areq, aresp)
+			err := h.HandleAuthorizeEndpointRequest(context.Background(), areq, aresp)
 
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())
