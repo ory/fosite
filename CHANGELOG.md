@@ -1,3 +1,6 @@
+**This file is no longer being updated and kept for historical reasons. Please check
+the [GitHub releases](https://github.com/ory/fosite/releases) instead!**
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
