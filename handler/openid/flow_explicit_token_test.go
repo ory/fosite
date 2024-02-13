@@ -102,6 +102,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				storedReq.GrantedScope = fosite.Arguments{"openid"}
 				storedReq.Form.Set("nonce", "1111111111111111")
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(storedReq, nil)
+				store.EXPECT().DeleteOpenIDConnectSession(gomock.Any(), "foobar").Return(nil)
 			},
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
@@ -132,6 +133,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				storedReq.GrantedScope = fosite.Arguments{"openid"}
 				storedReq.Form.Set("nonce", "1111111111111111")
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(storedReq, nil)
+				store.EXPECT().DeleteOpenIDConnectSession(gomock.Any(), "foobar").Return(nil)
 			},
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
@@ -170,6 +172,25 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				storedReq.Session = nil
 				storedReq.GrantScope("openid")
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(storedReq, nil)
+			},
+			expectErr: fosite.ErrServerError,
+		},
+		{
+			description: "should fail because storage returns error when deleting openid session",
+			setup: func(store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
+				req.Client = &fosite.DefaultClient{
+					GrantTypes: fosite.Arguments{"authorization_code"},
+				}
+				req.GrantTypes = fosite.Arguments{"authorization_code"}
+				req.Form.Set("code", "foobar")
+				storedSession := &DefaultSession{
+					Claims: &jwt.IDTokenClaims{Subject: "peter"},
+				}
+				storedReq := fosite.NewAuthorizeRequest()
+				storedReq.Session = storedSession
+				storedReq.GrantedScope = fosite.Arguments{"openid"}
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(storedReq, nil)
+				store.EXPECT().DeleteOpenIDConnectSession(gomock.Any(), "foobar").Return(errors.New("delete openid session err"))
 			},
 			expectErr: fosite.ErrServerError,
 		},
