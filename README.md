@@ -315,10 +315,11 @@ panic("unable to create private key")
 // check the api docs of fosite.Config for further configuration options
 var config = &fosite.Config{
 	AccessTokenLifespan: time.Minute * 30,
+	GlobalSecret: secret,
 	// ...
 }
 
-var oauth2Provider = compose.ComposeAllEnabled(config, storage, secret, privateKey)
+var oauth2Provider = compose.ComposeAllEnabled(config, storage, privateKey)
 
 // The authorize endpoint is usually at "https://mydomain.com/oauth2/auth".
 func authorizeHandlerFunc(rw http.ResponseWriter, req *http.Request) {

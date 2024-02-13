@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite_test
@@ -309,7 +309,7 @@ func TestIsRedirectURISecureStrict(t *testing.T) {
 	} {
 		uu, err := url.Parse(c.u)
 		require.NoError(t, err)
-		assert.Equal(t, !c.err, fosite.IsRedirectURISecureStrict(uu), "case %d", d)
+		assert.Equal(t, !c.err, fosite.IsRedirectURISecureStrict(context.Background(), uu), "case %d", d)
 	}
 }
 

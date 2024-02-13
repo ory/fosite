@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -263,8 +263,8 @@ func (c *Config) GetSecretsHasher(ctx context.Context) Hasher {
 	return c.ClientSecretsHasher
 }
 
-func (c *Config) GetTokenURL(ctx context.Context) string {
-	return c.TokenURL
+func (c *Config) GetTokenURLs(ctx context.Context) []string {
+	return []string{c.TokenURL}
 }
 
 func (c *Config) GetFormPostHTMLTemplate(ctx context.Context) *template.Template {
