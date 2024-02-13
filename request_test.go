@@ -73,9 +73,13 @@ func TestSanitizeRequest(t *testing.T) {
 		RequestedScope: Arguments{"asdff"},
 		GrantedScope:   []string{"asdf"},
 		Form: url.Values{
-			"foo": []string{"fasdf"},
-			"bar": []string{"fasdf", "faaaa"},
-			"baz": []string{"fasdf"},
+			"foo":           []string{"fasdf"},
+			"bar":           []string{"fasdf", "faaaa"},
+			"baz":           []string{"fasdf"},
+			"grant_type":    []string{"code"},
+			"response_type": []string{"id_token"},
+			"client_id":     []string{"1234"},
+			"scope":         []string{"read"},
 		},
 		Session: new(DefaultSession),
 	}
@@ -92,6 +96,10 @@ func TestSanitizeRequest(t *testing.T) {
 	assert.Equal(t, "fasdf", a.GetRequestForm().Get("bar"))
 	assert.Equal(t, []string{"fasdf", "faaaa"}, a.GetRequestForm()["bar"])
 	assert.Equal(t, "fasdf", a.GetRequestForm().Get("baz"))
+	assert.Equal(t, "code", a.GetRequestForm().Get("grant_type"))
+	assert.Equal(t, "id_token", a.GetRequestForm().Get("response_type"))
+	assert.Equal(t, "1234", a.GetRequestForm().Get("client_id"))
+	assert.Equal(t, "read", a.GetRequestForm().Get("scope"))
 }
 
 func TestIdentifyRequest(t *testing.T) {
