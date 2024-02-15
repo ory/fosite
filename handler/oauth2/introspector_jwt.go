@@ -100,6 +100,10 @@ func IsJWTProfileAccessToken(token *jwt.Token) bool {
 		ok  bool
 	)
 
+	if token == nil {
+		return false
+	}
+
 	if raw, ok = token.Header[string(jwt.JWTHeaderType)]; !ok {
 		return false
 	}
