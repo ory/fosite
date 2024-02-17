@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package storage
@@ -165,7 +165,6 @@ func (s *MemoryStore) GetOpenIDConnectSession(_ context.Context, authorizeCode s
 	return cl, nil
 }
 
-// DeleteOpenIDConnectSession is not really called from anywhere and it is deprecated.
 func (s *MemoryStore) DeleteOpenIDConnectSession(_ context.Context, authorizeCode string) error {
 	s.idSessionsMutex.Lock()
 	defer s.idSessionsMutex.Unlock()

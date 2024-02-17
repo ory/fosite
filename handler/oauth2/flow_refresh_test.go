@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oauth2
@@ -159,7 +159,11 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						require.NoError(t, err)
 
 						areq.Form.Add("refresh_token", token)
+
+						orReqID := areq.GetID() + "_OR"
+						areq.Form.Add("or_request_id", orReqID)
 						err = store.CreateRefreshTokenSession(context.Background(), sig, &fosite.Request{
+							ID:             orReqID,
 							Client:         areq.Client,
 							GrantedScope:   fosite.Arguments{"foo", "offline"},
 							RequestedScope: fosite.Arguments{"foo", "bar", "offline"},
@@ -177,6 +181,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
 						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
 						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
+						assert.EqualValues(t, areq.Form.Get("or_request_id"), areq.GetID(), "Requester ID should be replaced based on the refresh token session")
 					},
 				},
 				{

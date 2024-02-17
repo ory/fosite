@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -159,10 +159,12 @@ func (a *Request) Merge(request Requester) {
 	}
 }
 
+var defaultAllowedParameters = []string{"grant_type", "response_type", "scope", "client_id"}
+
 func (a *Request) Sanitize(allowedParameters []string) Requester {
 	b := new(Request)
 	allowed := map[string]bool{}
-	for _, v := range allowedParameters {
+	for _, v := range append(allowedParameters, defaultAllowedParameters...) {
 		allowed[v] = true
 	}
 
