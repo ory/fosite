@@ -48,9 +48,9 @@ func (j *DefaultSigner) Generate(ctx context.Context, claims MapClaims, header M
 
 	switch t := key.(type) {
 	case *jose.JSONWebKey:
-		return generateToken(claims, header, jose.SignatureAlgorithm(t.Algorithm), t.Key)
+		return generateToken(claims, header, jose.SignatureAlgorithm(t.Algorithm), t)
 	case jose.JSONWebKey:
-		return generateToken(claims, header, jose.SignatureAlgorithm(t.Algorithm), t.Key)
+		return generateToken(claims, header, jose.SignatureAlgorithm(t.Algorithm), t)
 	case *rsa.PrivateKey:
 		return generateToken(claims, header, jose.RS256, t)
 	case *ecdsa.PrivateKey:
