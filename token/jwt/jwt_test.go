@@ -105,6 +105,7 @@ func TestGenerateJWT(t *testing.T) {
 			},
 			resetKey: func(strategy Signer) {
 				key = &jose.JSONWebKey{
+					KeyID:     "test-id",
 					Key:       gen.MustES521Key(),
 					Algorithm: "ES512",
 				}
@@ -129,7 +130,16 @@ func TestGenerateJWT(t *testing.T) {
 
 			token, sig, err := tc.strategy.Generate(context.TODO(), claims.ToMapClaims(), header)
 			require.NoError(t, err)
-			require.NotNil(t, token)
+			require.NotEmpty(t, token)
+			require.NotEmpty(t, sig)
+
+			decoded, err := tc.strategy.Decode(context.TODO(), token)
+			require.NoError(t, err)
+			require.NotNil(t, decoded)
+
+			if k, ok := key.(*jose.JSONWebKey); ok && k.KeyID != "" {
+				require.Equal(t, k.KeyID, decoded.Header["kid"])
+			}
 
 			sig, err = tc.strategy.Validate(context.TODO(), token)
 			require.NoError(t, err)
