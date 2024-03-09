@@ -179,6 +179,10 @@ func (f *Fosite) WriteIntrospectionError(ctx context.Context, rw http.ResponseWr
 //	  "active": false
 //	}
 func (f *Fosite) WriteIntrospectionResponse(ctx context.Context, rw http.ResponseWriter, r IntrospectionResponder) {
+	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
+
 	if !r.IsActive() {
 		_ = json.NewEncoder(rw).Encode(&struct {
 			Active bool `json:"active"`
@@ -226,8 +230,5 @@ func (f *Fosite) WriteIntrospectionResponse(ctx context.Context, rw http.Respons
 		response["username"] = r.GetAccessRequester().GetSession().GetUsername()
 	}
 
-	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	rw.Header().Set("Cache-Control", "no-store")
-	rw.Header().Set("Pragma", "no-cache")
 	_ = json.NewEncoder(rw).Encode(response)
 }
