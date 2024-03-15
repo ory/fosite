@@ -16,23 +16,23 @@ import (
 )
 
 func TestAuthorizeEndpointHandlers(t *testing.T) {
-	h := &oauth2.AuthorizeExplicitGrantHandler{}
+	h := &oauth2.AuthorizeExplicitGrantAuthHandler{}
 	hs := AuthorizeEndpointHandlers{}
 	hs.Append(h)
 	hs.Append(h)
-	hs.Append(&oauth2.AuthorizeExplicitGrantHandler{})
+	hs.Append(&oauth2.AuthorizeExplicitGrantAuthHandler{})
 	assert.Len(t, hs, 1)
 	assert.Equal(t, hs[0], h)
 }
 
 func TestTokenEndpointHandlers(t *testing.T) {
-	h := &oauth2.AuthorizeExplicitGrantHandler{}
+	h := &oauth2.GenericCodeTokenEndpointHandler{}
 	hs := TokenEndpointHandlers{}
 	hs.Append(h)
 	hs.Append(h)
 	// do some crazy type things and make sure dupe detection works
-	var f interface{} = &oauth2.AuthorizeExplicitGrantHandler{}
-	hs.Append(&oauth2.AuthorizeExplicitGrantHandler{})
+	var f interface{} = &oauth2.GenericCodeTokenEndpointHandler{}
+	hs.Append(&oauth2.GenericCodeTokenEndpointHandler{})
 	hs.Append(f.(TokenEndpointHandler))
 	require.Len(t, hs, 1)
 	assert.Equal(t, hs[0], h)

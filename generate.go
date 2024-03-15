@@ -9,6 +9,7 @@ package fosite
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/oauth2_storage.go github.com/ory/fosite/handler/oauth2 CoreStorage
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/oauth2_strategy.go github.com/ory/fosite/handler/oauth2 CoreStrategy
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/authorize_code_storage.go github.com/ory/fosite/handler/oauth2 AuthorizeCodeStorage
+//go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/device_code_storage.go github.com/ory/fosite/handler/rfc8628 DeviceCodeStorage
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/oauth2_auth_jwt_storage.go github.com/ory/fosite/handler/rfc7523 RFC7523KeyStorage
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/access_token_storage.go github.com/ory/fosite/handler/oauth2 AccessTokenStorage
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/refresh_token_strategy.go github.com/ory/fosite/handler/oauth2 RefreshTokenStorage
@@ -19,6 +20,7 @@ package fosite
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/access_token_strategy.go github.com/ory/fosite/handler/oauth2 AccessTokenStrategy
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/refresh_token_strategy.go github.com/ory/fosite/handler/oauth2 RefreshTokenStrategy
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/authorize_code_strategy.go github.com/ory/fosite/handler/oauth2 AuthorizeCodeStrategy
+//go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/device_code_rate_limit_strategy.go github.com/ory/fosite/handler/rfc8628 DeviceRateLimitStrategy
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/id_token_strategy.go github.com/ory/fosite/handler/openid OpenIDConnectTokenStrategy
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/pkce_storage_strategy.go github.com/ory/fosite/handler/pkce PKCERequestStorage
 //go:generate go run github.com/golang/mock/mockgen -package internal -destination internal/authorize_handler.go github.com/ory/fosite AuthorizeEndpointHandler

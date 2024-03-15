@@ -30,7 +30,7 @@ type DeviceCodeStorage interface {
 	// Make sure to also return the fosite.Requester value when returning the fosite.ErrInvalidatedDeviceCode error!
 	GetDeviceCodeSession(ctx context.Context, signature string, session fosite.Session) (request fosite.Requester, err error)
 
-	// InvalidateDeviceCodeSession is called when an device code is being used. The state of the user
+	// InvalidateDeviceCodeSession is called when a device code is being used. The state of the user
 	// code should be set to invalid and consecutive requests to GetDeviceCodeSession should return the
 	// ErrInvalidatedDeviceCode error.
 	InvalidateDeviceCodeSession(ctx context.Context, signature string) (err error)
@@ -48,7 +48,7 @@ type UserCodeStorage interface {
 	// Make sure to also return the fosite.Requester value when returning the fosite.ErrInvalidatedUserCode error!
 	GetUserCodeSession(ctx context.Context, signature string, session fosite.Session) (request fosite.Requester, err error)
 
-	// InvalidateUserCodeSession is called when an user code is being used. The state of the user
+	// InvalidateUserCodeSession is called when a user code is being used. The state of the user
 	// code should be set to invalid and consecutive requests to GetUserCodeSession should return the
 	// ErrInvalidatedUserCode error.
 	InvalidateUserCodeSession(ctx context.Context, signature string) (err error)
