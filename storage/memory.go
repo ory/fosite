@@ -432,6 +432,7 @@ func (s *MemoryStore) GetPublicKey(ctx context.Context, issuer string, subject s
 
 	return nil, fosite.ErrNotFound
 }
+
 func (s *MemoryStore) GetPublicKeys(ctx context.Context, issuer string, subject string) (*jose.JSONWebKeySet, error) {
 	s.issuerPublicKeysMutex.RLock()
 	defer s.issuerPublicKeysMutex.RUnlock()

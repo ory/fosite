@@ -5,6 +5,10 @@ package rfc8628
 
 import (
 	"context"
+	"strings"
+	"time"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/x/randx"
 	"github.com/patrickmn/go-cache"
@@ -47,7 +51,13 @@ func (h *DefaultDeviceStrategy) UserCodeSignature(ctx context.Context, token str
 
 // ValidateUserCode validates a user_code
 func (h *DefaultDeviceStrategy) ValidateUserCode(ctx context.Context, r fosite.Requester, code string) error {
-	// TODO
+	exp := r.GetSession().GetExpiresAt(fosite.UserCode)
+	if exp.IsZero() && r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx)).Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("User code expired at '%s'.", r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx))))
+	}
+	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("User code expired at '%s'.", exp))
+	}
 	return nil
 }
 
@@ -68,25 +78,33 @@ func (h *DefaultDeviceStrategy) DeviceCodeSignature(ctx context.Context, token s
 
 // ValidateDeviceCode validates a device_code
 func (h *DefaultDeviceStrategy) ValidateDeviceCode(ctx context.Context, r fosite.Requester, code string) error {
-	// TODO
-	return nil
+	exp := r.GetSession().GetExpiresAt(fosite.DeviceCode)
+	if exp.IsZero() && r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx)).Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("Device code expired at '%s'.", r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx))))
+	}
+
+	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
+		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("Device code expired at '%s'.", exp))
+	}
+
+	return h.Enigma.Validate(ctx, strings.TrimPrefix(code, "ory_dc_"))
 }
 
-// ShouldRateLimit is used to decide whether a request should be rate-limites
-func (t *DefaultDeviceStrategy) ShouldRateLimit(context context.Context, code string) bool {
+// ShouldRateLimit is used to decide whether a request should be rate-limited
+func (h *DefaultDeviceStrategy) ShouldRateLimit(context context.Context, code string) bool {
 	key := code + "_limiter"
 
-	if x, found := t.RateLimiterCache.Get(key); found {
+	if x, found := h.RateLimiterCache.Get(key); found {
 		return !x.(*rate.Limiter).Allow()
 	}
 
 	rateLimiter := rate.NewLimiter(
 		rate.Every(
-			t.Config.GetDeviceAuthTokenPollingInterval(context),
+			h.Config.GetDeviceAuthTokenPollingInterval(context),
 		),
 		1,
 	)
 
-	t.RateLimiterCache.Set(key, rateLimiter, cache.DefaultExpiration)
+	h.RateLimiterCache.Set(key, rateLimiter, cache.DefaultExpiration)
 	return false
 }

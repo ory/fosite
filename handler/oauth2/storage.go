@@ -10,14 +10,13 @@ import (
 )
 
 type CoreStorage interface {
-	AuthorizeCodeStorage
 	AccessTokenStorage
 	RefreshTokenStorage
 }
 
 // AuthorizeCodeStorage handles storage requests related to authorization codes.
 type AuthorizeCodeStorage interface {
-	// GetAuthorizeCodeSession stores the authorization request for a given authorization code.
+	// CreateAuthorizeCodeSession stores the authorization request for a given authorization code.
 	CreateAuthorizeCodeSession(ctx context.Context, code string, request fosite.Requester) (err error)
 
 	// GetAuthorizeCodeSession hydrates the session based on the given code and returns the authorization request.
