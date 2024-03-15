@@ -14,49 +14,38 @@ import (
 	"github.com/ory/fosite"
 )
 
-var _ fosite.AuthorizeEndpointHandler = (*AuthorizeExplicitGrantHandler)(nil)
-var _ fosite.TokenEndpointHandler = (*AuthorizeExplicitGrantHandler)(nil)
+var _ fosite.AuthorizeEndpointHandler = (*AuthorizeExplicitGrantAuthHandler)(nil)
 
-// AuthorizeExplicitGrantHandler is a response handler for the Authorize Code grant using the explicit grant type
+// AuthorizeExplicitGrantAuthHandler is a response handler for the Authorize Code grant using the explicit grant type
 // as defined in https://tools.ietf.org/html/rfc6749#section-4.1
-type AuthorizeExplicitGrantHandler struct {
-	AccessTokenStrategy    AccessTokenStrategy
-	RefreshTokenStrategy   RefreshTokenStrategy
-	AuthorizeCodeStrategy  AuthorizeCodeStrategy
-	CoreStorage            CoreStorage
-	TokenRevocationStorage TokenRevocationStorage
-	Config                 interface {
+type AuthorizeExplicitGrantAuthHandler struct {
+	AuthorizeCodeStrategy AuthorizeCodeStrategy
+	AuthorizeCodeStorage  AuthorizeCodeStorage
+
+	Config interface {
 		fosite.AuthorizeCodeLifespanProvider
-		fosite.AccessTokenLifespanProvider
-		fosite.RefreshTokenLifespanProvider
 		fosite.ScopeStrategyProvider
 		fosite.AudienceStrategyProvider
 		fosite.RedirectSecureCheckerProvider
-		fosite.RefreshTokenScopesProvider
 		fosite.OmitRedirectScopeParamProvider
 		fosite.SanitationAllowedProvider
 	}
 }
 
-func (c *AuthorizeExplicitGrantHandler) secureChecker(ctx context.Context) func(context.Context, *url.URL) bool {
+func (c *AuthorizeExplicitGrantAuthHandler) secureChecker(ctx context.Context) func(context.Context, *url.URL) bool {
 	if c.Config.GetRedirectSecureChecker(ctx) == nil {
 		return fosite.IsRedirectURISecure
 	}
 	return c.Config.GetRedirectSecureChecker(ctx)
 }
 
-func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
-	// This let's us define multiple response types, for example open id connect's id_token
+func (c *AuthorizeExplicitGrantAuthHandler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
+	// This allows to define multiple response types, for example OpenID Connect `id_token`
 	if !ar.GetResponseTypes().ExactOne("code") {
 		return nil
 	}
 
 	ar.SetDefaultResponseMode(fosite.ResponseModeQuery)
-
-	// Disabled because this is already handled at the authorize_request_handler
-	// if !ar.GetClient().GetResponseTypes().Has("code") {
-	// 	 return errorsx.WithStack(fosite.ErrInvalidGrant)
-	// }
 
 	if !c.secureChecker(ctx)(ctx, ar.GetRedirectURI()) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Redirect URL is using an insecure protocol, http is only allowed for hosts with suffix 'localhost', for example: http://myapp.localhost/."))
@@ -76,14 +65,14 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 	return c.IssueAuthorizeCode(ctx, ar, resp)
 }
 
-func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
+func (c *AuthorizeExplicitGrantAuthHandler) IssueAuthorizeCode(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.Config.GetAuthorizeCodeLifespan(ctx)))
-	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.GetSanitationWhiteList(ctx))); err != nil {
+	if err = c.AuthorizeCodeStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.GetSanitationWhiteList(ctx))); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
@@ -97,7 +86,7 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 	return nil
 }
 
-func (c *AuthorizeExplicitGrantHandler) GetSanitationWhiteList(ctx context.Context) []string {
+func (c *AuthorizeExplicitGrantAuthHandler) GetSanitationWhiteList(ctx context.Context) []string {
 	if allowedList := c.Config.GetSanitationWhiteList(ctx); len(allowedList) > 0 {
 		return allowedList
 	}

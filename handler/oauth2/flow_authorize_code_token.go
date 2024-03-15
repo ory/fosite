@@ -7,113 +7,86 @@ import (
 	"context"
 	"time"
 
-	"github.com/ory/x/errorsx"
+	"github.com/pkg/errors"
 
 	"github.com/ory/fosite/storage"
-
-	"github.com/pkg/errors"
+	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
 )
 
-// HandleTokenEndpointRequest implements
-// * https://tools.ietf.org/html/rfc6749#section-4.1.3 (everything)
-func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.Context, request fosite.AccessRequester) error {
-	if !c.CanHandleTokenEndpointRequest(ctx, request) {
-		return errorsx.WithStack(errorsx.WithStack(fosite.ErrUnknownRequest))
-	}
+type AuthorizeCodeHandler struct {
+	AuthorizeCodeStrategy AuthorizeCodeStrategy
+}
 
-	if !request.GetClient().GetGrantTypes().Has("authorization_code") {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"authorization_code\"."))
-	}
-
-	code := request.GetRequestForm().Get("code")
+func (c AuthorizeCodeHandler) Code(ctx context.Context, requester fosite.AccessRequester) (string, string, error) {
+	code := requester.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
-	if errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) {
-		if authorizeRequest == nil {
-			return fosite.ErrServerError.
-				WithHint("Misconfigured code lead to an error that prohibited the OAuth 2.0 Framework from processing this request.").
-				WithDebug("GetAuthorizeCodeSession must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedAuthorizeCode\".")
+	return code, signature, nil
+}
+
+func (c AuthorizeCodeHandler) ValidateCode(ctx context.Context, requester fosite.AccessRequester, code string) error {
+	return c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code)
+}
+
+type AuthorizeExplicitGrantSessionHandler struct {
+	AuthorizeCodeStorage AuthorizeCodeStorage
+}
+
+func (s AuthorizeExplicitGrantSessionHandler) Session(ctx context.Context, requester fosite.AccessRequester, codeSignature string) (fosite.Requester, error) {
+	req, err := s.AuthorizeCodeStorage.GetAuthorizeCodeSession(ctx, codeSignature, requester.GetSession())
+
+	if err != nil && errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) {
+		if req != nil {
+			return req, err
 		}
 
-		// If an authorize code is used twice, we revoke all refresh and access tokens associated with this request.
-		reqID := authorizeRequest.GetID()
-		hint := "The authorization code has already been used."
-		debug := ""
-		if revErr := c.TokenRevocationStorage.RevokeAccessToken(ctx, reqID); revErr != nil {
-			hint += " Additionally, an error occurred during processing the access token revocation."
-			debug += "Revocation of access_token lead to error " + revErr.Error() + "."
-		}
-		if revErr := c.TokenRevocationStorage.RevokeRefreshToken(ctx, reqID); revErr != nil {
-			hint += " Additionally, an error occurred during processing the refresh token revocation."
-			debug += "Revocation of refresh_token lead to error " + revErr.Error() + "."
-		}
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(hint).WithDebug(debug))
-	} else if err != nil && errors.Is(err, fosite.ErrNotFound) {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
-	} else if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		return req, fosite.ErrServerError.
+			WithHint("Misconfigured code lead to an error that prohibited the OAuth 2.0 Framework from processing this request.").
+			WithDebug("\"GetAuthorizeCodeSession\" must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedAuthorizeCode\".")
 	}
 
-	// The authorization server MUST verify that the authorization code is valid
-	// This needs to happen after store retrieval for the session to be hydrated properly
-	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
+	if err != nil && errors.Is(err, fosite.ErrNotFound) {
+		return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	// Override scopes
-	request.SetRequestedScopes(authorizeRequest.GetRequestedScopes())
-
-	// Override audiences
-	request.SetRequestedAudience(authorizeRequest.GetRequestedAudience())
-
-	// The authorization server MUST ensure that the authorization code was issued to the authenticated
-	// confidential client, or if the client is public, ensure that the
-	// code was issued to "client_id" in the request,
-	if authorizeRequest.GetClient().GetID() != request.GetClient().GetID() {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The OAuth 2.0 Client ID from this request does not match the one from the authorize request."))
+	if err != nil {
+		return nil, errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	// ensure that the "redirect_uri" parameter is present if the
-	// "redirect_uri" parameter was included in the initial authorization
-	// request as described in Section 4.1.1, and if included ensure that
-	// their values are identical.
-	forcedRedirectURI := authorizeRequest.GetRequestForm().Get("redirect_uri")
-	if forcedRedirectURI != "" && forcedRedirectURI != request.GetRequestForm().Get("redirect_uri") {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The \"redirect_uri\" from this request does not match the one from the authorize request."))
-	}
+	return req, err
+}
 
-	// Checking of POST client_id skipped, because:
-	// If the client type is confidential or the client was issued client
-	// credentials (or assigned other authentication requirements), the
-	// client MUST authenticate with the authorization server as described
-	// in Section 3.2.1.
-	request.SetSession(authorizeRequest.GetSession())
-	request.SetID(authorizeRequest.GetID())
+func (s AuthorizeExplicitGrantSessionHandler) InvalidateSession(ctx context.Context, codeSignature string) error {
+	return s.AuthorizeCodeStorage.InvalidateAuthorizeCodeSession(ctx, codeSignature)
+}
 
-	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeAuthorizationCode, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
+type AuthorizeExplicitGrantAccessRequestValidator struct{}
 
-	rtLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeAuthorizationCode, fosite.RefreshToken, c.Config.GetRefreshTokenLifespan(ctx))
-	if rtLifespan > -1 {
-		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(rtLifespan).Round(time.Second))
+func (v AuthorizeExplicitGrantAccessRequestValidator) CanHandleRequest(requester fosite.AccessRequester) bool {
+	return requester.GetGrantTypes().ExactOne("authorization_code")
+}
+
+func (v AuthorizeExplicitGrantAccessRequestValidator) ValidateGrantTypes(requester fosite.AccessRequester) error {
+	if !requester.GetClient().GetGrantTypes().Has("authorization_code") {
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use authorization grant \"authorization_code\"."))
 	}
 
 	return nil
 }
 
-func canIssueRefreshToken(ctx context.Context, c *AuthorizeExplicitGrantHandler, request fosite.Requester) bool {
-	scope := c.Config.GetRefreshTokenScopes(ctx)
-	// Require one of the refresh token scopes, if set.
-	if len(scope) > 0 && !request.GetGrantedScopes().HasOneOf(scope...) {
-		return false
+func (v AuthorizeExplicitGrantAccessRequestValidator) ValidateRedirectURI(accessRequester fosite.AccessRequester, authorizeRequester fosite.Requester) error {
+	forcedRedirectURI := authorizeRequester.GetRequestForm().Get("redirect_uri")
+	requestedRedirectURI := accessRequester.GetRequestForm().Get("redirect_uri")
+	if forcedRedirectURI != "" && forcedRedirectURI != requestedRedirectURI {
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("The \"redirect_uri\" from this request does not match the one from the authorize request."))
 	}
-	// Do not issue a refresh token to clients that cannot use the refresh token grant type.
-	if !request.GetClient().GetGrantTypes().Has("refresh_token") {
-		return false
-	}
-	return true
+
+	return nil
+}
+
+type AuthorizeExplicitTokenEndpointHandler struct {
+	GenericCodeTokenEndpointHandler
 }
 
 func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx context.Context, requester fosite.AccessRequester, responder fosite.AccessResponder) (err error) {
@@ -199,3 +172,10 @@ func (c *AuthorizeExplicitGrantHandler) CanHandleTokenEndpointRequest(ctx contex
 	// Value MUST be set to "authorization_code"
 	return requester.GetGrantTypes().ExactOne("authorization_code")
 }
+
+var (
+	_ AccessRequestValidator      = (*AuthorizeExplicitGrantAccessRequestValidator)(nil)
+	_ CodeHandler                 = (*AuthorizeCodeHandler)(nil)
+	_ SessionHandler              = (*AuthorizeExplicitGrantSessionHandler)(nil)
+	_ fosite.TokenEndpointHandler = (*AuthorizeExplicitTokenEndpointHandler)(nil)
+)

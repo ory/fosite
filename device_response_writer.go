@@ -9,7 +9,7 @@ import (
 
 // NewDeviceResponse returns a new DeviceResponder
 func (f *Fosite) NewDeviceResponse(ctx context.Context, r DeviceRequester, session Session) (DeviceResponder, error) {
-	var resp = &DeviceResponse{}
+	resp := &DeviceResponse{}
 
 	r.SetSession(session)
 	for _, h := range f.Config.GetDeviceEndpointHandlers(ctx) {
