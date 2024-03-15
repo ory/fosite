@@ -83,6 +83,14 @@ var fositeStore = &storage.MemoryStore{
 			Scopes:        []string{"fosite", "offline", "openid"},
 			Audience:      []string{tokenURL},
 		},
+		"device-client": &fosite.DefaultClient{
+			ID:         "device-client",
+			Secret:     []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
+			GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+			Scopes:     []string{"fosite", "offline", "openid"},
+			Audience:   []string{tokenURL},
+			Public:     true,
+		},
 	},
 	Users: map[string]storage.MemoryUserRelation{
 		"peter": {
@@ -190,16 +198,18 @@ var hmacStrategy = oauth2.NewHMACSHAStrategy(
 	},
 )
 
-var defaultRSAKey = gen.MustRSAKey()
-var jwtStrategy = &oauth2.DefaultJWTStrategy{
-	Signer: &jwt.DefaultSigner{
-		GetPrivateKey: func(ctx context.Context) (interface{}, error) {
-			return defaultRSAKey, nil
+var (
+	defaultRSAKey = gen.MustRSAKey()
+	jwtStrategy   = &oauth2.DefaultJWTStrategy{
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+				return defaultRSAKey, nil
+			},
 		},
-	},
-	Config:          &fosite.Config{},
-	HMACSHAStrategy: hmacStrategy,
-}
+		Config:          &fosite.Config{},
+		HMACSHAStrategy: hmacStrategy,
+	}
+)
 
 func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {
 	router := mux.NewRouter()
