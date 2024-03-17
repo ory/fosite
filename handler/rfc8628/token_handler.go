@@ -34,7 +34,7 @@ func (c DeviceCodeHandler) Code(ctx context.Context, requester fosite.AccessRequ
 	return
 }
 
-func (c DeviceCodeHandler) ValidateCode(ctx context.Context, requester fosite.AccessRequester, code string) error {
+func (c DeviceCodeHandler) ValidateCode(ctx context.Context, requester fosite.Requester, code string) error {
 	return c.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code)
 }
 
