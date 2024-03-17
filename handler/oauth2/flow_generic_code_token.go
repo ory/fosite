@@ -36,7 +36,7 @@ type CodeHandler interface {
 	Code(ctx context.Context, requester fosite.AccessRequester) (code string, signature string, err error)
 
 	// ValidateCode validates the code.
-	ValidateCode(ctx context.Context, requester fosite.AccessRequester, code string) error
+	ValidateCode(ctx context.Context, requester fosite.Requester, code string) error
 }
 
 // SessionHandler handles session-related operations.
@@ -175,7 +175,7 @@ func (c *GenericCodeTokenEndpointHandler) HandleTokenEndpointRequest(ctx context
 		return err
 	}
 
-	if err = c.ValidateCode(ctx, requester, code); err != nil {
+	if err = c.ValidateCode(ctx, ar, code); err != nil {
 		return errorsx.WithStack(err)
 	}
 
