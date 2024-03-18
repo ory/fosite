@@ -36,7 +36,7 @@ func (d *DeviceAuthHandler) HandleDeviceEndpointRequest(ctx context.Context, dar
 	}
 
 	// Store the User Code session (this has no real data other that the user and device code), can be converted into a 'full' session after user auth
-	dar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)))
+	dar.GetSession().SetExpiresAt(fosite.DeviceCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)))
 	if err := d.Storage.CreateDeviceCodeSession(ctx, deviceCodeSignature, dar.Sanitize(nil)); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}

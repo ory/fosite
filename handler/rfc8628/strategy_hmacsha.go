@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mohae/deepcopy"
+
 	"github.com/ory/x/errorsx"
 
 	"github.com/ory/x/randx"
@@ -17,6 +19,83 @@ import (
 	"github.com/ory/fosite"
 	enigma "github.com/ory/fosite/token/hmac"
 )
+
+// DeviceFlowSession is a fosite.Session container specific for the device flow.
+type DeviceFlowSession interface {
+	// BrowserFlowCompleted returns the flag indicating whether user has completed the browser flow or not.
+	BrowserFlowCompleted() bool
+
+	// SetBrowserFlowCompleted allows client to mark user has completed the browser flow.
+	SetBrowserFlowCompleted(flag bool)
+
+	fosite.Session
+}
+
+// DefaultDeviceFlowSession is a DeviceFlowSession implementation for the device flow.
+type DefaultDeviceFlowSession struct {
+	ExpiresAt            map[fosite.TokenType]time.Time `json:"expires_at"`
+	Username             string                         `json:"username"`
+	Subject              string                         `json:"subject"`
+	Extra                map[string]interface{}         `json:"extra"`
+	BrowserFlowCompleted bool                           `json:"browser_flow_completed"`
+}
+
+func (s *DefaultDeviceFlowSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
+	if s.ExpiresAt == nil {
+		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
+	}
+	s.ExpiresAt[key] = exp
+}
+
+func (s *DefaultDeviceFlowSession) GetExpiresAt(key fosite.TokenType) time.Time {
+	if s.ExpiresAt == nil {
+		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
+	}
+
+	if _, ok := s.ExpiresAt[key]; !ok {
+		return time.Time{}
+	}
+	return s.ExpiresAt[key]
+}
+
+func (s *DefaultDeviceFlowSession) GetUsername() string {
+	if s == nil {
+		return ""
+	}
+	return s.Username
+}
+
+func (s *DefaultDeviceFlowSession) SetSubject(subject string) {
+	s.Subject = subject
+}
+
+func (s *DefaultDeviceFlowSession) GetSubject() string {
+	if s == nil {
+		return ""
+	}
+
+	return s.Subject
+}
+
+func (s *DefaultDeviceFlowSession) Clone() fosite.Session {
+	if s == nil {
+		return nil
+	}
+
+	return deepcopy.Copy(s).(fosite.Session)
+}
+
+func (s *DefaultDeviceFlowSession) GetBrowserFlowCompleted() bool {
+	if s == nil {
+		return false
+	}
+
+	return s.BrowserFlowCompleted
+}
+
+func (s *DefaultDeviceFlowSession) SetBrowserFlowCompleted(flag bool) {
+	s.BrowserFlowCompleted = flag
+}
 
 // DefaultDeviceStrategy implements the default device strategy
 type DefaultDeviceStrategy struct {
