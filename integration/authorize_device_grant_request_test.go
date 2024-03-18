@@ -8,37 +8,23 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/fosite/handler/rfc8628"
+
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
-	"github.com/ory/fosite/handler/oauth2"
-	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal/gen"
-	"github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
 )
 
 func TestDeviceFlow(t *testing.T) {
-	for _, strategy := range []oauth2.AccessTokenStrategy{
-		hmacStrategy,
-	} {
-		runDeviceFlowTest(t, strategy)
-		runDeviceFlowAccessTokenTest(t, strategy)
-	}
+	runDeviceFlowTest(t)
+	runDeviceFlowAccessTokenTest(t)
 }
 
-func runDeviceFlowTest(t *testing.T, strategy interface{}) {
-	session := &defaultSession{
-		DefaultSession: &openid.DefaultSession{
-			Claims: &jwt.IDTokenClaims{
-				Subject: "peter",
-			},
-			Headers:  &jwt.Headers{},
-			Subject:  "peter",
-			Username: "peteru",
-		},
-	}
+func runDeviceFlowTest(t *testing.T) {
+	session := &rfc8628.DefaultDeviceFlowSession{}
 
 	fc := &fosite.Config{
 		DeviceVerificationURL: "https://example.com/",
@@ -67,14 +53,14 @@ func runDeviceFlowTest(t *testing.T, strategy interface{}) {
 		{
 			description: "should fail with invalid_grant",
 			setup: func() {
-				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{"authorization_code"}
+				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{string(fosite.GrantTypeAuthorizationCode)}
 			},
 			err: true,
 			check: func(t *testing.T, token *goauth.DeviceAuthResponse, err error) {
 				assert.ErrorContains(t, err, "invalid_grant")
 			},
 			cleanUp: func() {
-				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{string(fosite.GrantTypeDeviceCode)}
 			},
 		},
 		{
@@ -137,16 +123,9 @@ func runDeviceFlowTest(t *testing.T, strategy interface{}) {
 	}
 }
 
-func runDeviceFlowAccessTokenTest(t *testing.T, strategy interface{}) {
-	session := &defaultSession{
-		DefaultSession: &openid.DefaultSession{
-			Claims: &jwt.IDTokenClaims{
-				Subject: "peter",
-			},
-			Headers:  &jwt.Headers{},
-			Subject:  "peter",
-			Username: "peteru",
-		},
+func runDeviceFlowAccessTokenTest(t *testing.T) {
+	session := &rfc8628.DefaultDeviceFlowSession{
+		BrowserFlowCompleted: true,
 	}
 
 	fc := &fosite.Config{
@@ -190,7 +169,7 @@ func runDeviceFlowAccessTokenTest(t *testing.T, strategy interface{}) {
 		{
 			description: "should fail with unauthorized client",
 			setup: func() {
-				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{"authorization_code"}
+				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{string(fosite.GrantTypeAuthorizationCode)}
 			},
 			params: []goauth.AuthCodeOption{},
 			err:    true,
@@ -198,7 +177,7 @@ func runDeviceFlowAccessTokenTest(t *testing.T, strategy interface{}) {
 				assert.ErrorContains(t, err, "unauthorized_client")
 			},
 			cleanUp: func() {
-				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{string(fosite.GrantTypeDeviceCode)}
 			},
 		},
 		{
