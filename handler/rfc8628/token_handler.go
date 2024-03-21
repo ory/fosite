@@ -34,7 +34,7 @@ func (c DeviceCodeHandler) Code(ctx context.Context, requester fosite.AccessRequ
 	return
 }
 
-func (c DeviceCodeHandler) ValidateCode(ctx context.Context, requester fosite.AccessRequester, code string) error {
+func (c DeviceCodeHandler) ValidateCode(ctx context.Context, requester fosite.Requester, code string) error {
 	return c.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code)
 }
 
@@ -55,12 +55,25 @@ func (s DeviceSessionHandler) Session(ctx context.Context, requester fosite.Acce
 			WithDebug("\"GetDeviceCodeSession\" must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedDeviceCode\".")
 	}
 
+	if err != nil && errors.Is(err, fosite.ErrAuthorizationPending) {
+		return nil, err
+	}
+
 	if err != nil && errors.Is(err, fosite.ErrNotFound) {
 		return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	if err != nil {
 		return nil, errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	}
+
+	session, ok := req.GetSession().(*DefaultDeviceFlowSession)
+	if !ok {
+		return nil, fosite.ErrServerError.WithHint("Wrong authorization request session.")
+	}
+
+	if !session.GetBrowserFlowCompleted() {
+		return nil, fosite.ErrAuthorizationPending
 	}
 
 	return req, err

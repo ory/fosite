@@ -23,7 +23,7 @@ func (c AuthorizeCodeHandler) Code(ctx context.Context, requester fosite.AccessR
 	return code, signature, nil
 }
 
-func (c AuthorizeCodeHandler) ValidateCode(ctx context.Context, requester fosite.AccessRequester, code string) error {
+func (c AuthorizeCodeHandler) ValidateCode(ctx context.Context, requester fosite.Requester, code string) error {
 	return c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code)
 }
 
