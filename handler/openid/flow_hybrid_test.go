@@ -82,7 +82,7 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybrid
 			IDTokenStrategy: idStrategy,
 		},
 		Config:                        config,
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(j.Signer, config),
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(j, config),
 		OpenIDConnectRequestStorage:   storage.NewMemoryStore(),
 	}
 }
