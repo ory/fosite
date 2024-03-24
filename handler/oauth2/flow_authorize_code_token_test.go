@@ -31,8 +31,8 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 			var h GenericCodeTokenEndpointHandler
 
 			testCases := []struct {
-				areq        *fosite.AccessRequest
 				description string
+				areq        *fosite.AccessRequest
 				setup       func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config)
 				check       func(t *testing.T, aresp *fosite.AccessResponse)
 				expectErr   error
