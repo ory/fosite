@@ -67,7 +67,7 @@ func (s DeviceSessionHandler) Session(ctx context.Context, requester fosite.Acce
 		return nil, errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	session, ok := req.GetSession().(*DefaultDeviceFlowSession)
+	session, ok := req.GetSession().(DeviceFlowSession)
 	if !ok {
 		return nil, fosite.ErrServerError.WithHint("Wrong authorization request session.")
 	}

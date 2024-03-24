@@ -22,8 +22,8 @@ import (
 
 // DeviceFlowSession is a fosite.Session container specific for the device flow.
 type DeviceFlowSession interface {
-	// BrowserFlowCompleted returns the flag indicating whether user has completed the browser flow or not.
-	BrowserFlowCompleted() bool
+	// GetBrowserFlowCompleted returns the flag indicating whether user has completed the browser flow or not.
+	GetBrowserFlowCompleted() bool
 
 	// SetBrowserFlowCompleted allows client to mark user has completed the browser flow.
 	SetBrowserFlowCompleted(flag bool)
