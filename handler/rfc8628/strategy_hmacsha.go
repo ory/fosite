@@ -182,10 +182,10 @@ func (h *DefaultDeviceStrategy) ShouldRateLimit(context context.Context, code st
 		timer.NotUntil = h.getExpirationTime(context, 1)
 		exp, err := h.serializeExpiration(timer)
 		if err != nil {
-			return false, err
+			return false, errorsx.WithStack(fosite.ErrServerError.WithHintf("Failed to serialize expiration struct %s", err))
 		}
 		// Set the expiration time as value, and use the lifespan of the device code as TTL.
-		h.RateLimiterCache.Set(keyBytes, exp, int(h.Config.GetDeviceAndUserCodeLifespan(context)))
+		h.RateLimiterCache.Set(keyBytes, exp, int(h.Config.GetDeviceAndUserCodeLifespan(context).Seconds()))
 		return false, nil
 	}
 
@@ -199,9 +199,9 @@ func (h *DefaultDeviceStrategy) ShouldRateLimit(context context.Context, code st
 		expiration.NotUntil = h.getExpirationTime(context, expiration.Counter)
 		exp, err := h.serializeExpiration(expiration)
 		if err != nil {
-			return false, err
+			return false, errorsx.WithStack(fosite.ErrServerError.WithHintf("Failed to serialize expiration struct %s", err))
 		}
-		h.RateLimiterCache.Set(keyBytes, exp, int(h.Config.GetDeviceAndUserCodeLifespan(context)))
+		h.RateLimiterCache.Set(keyBytes, exp, int(h.Config.GetDeviceAndUserCodeLifespan(context).Seconds()))
 		return false, nil
 	}
 
@@ -210,9 +210,9 @@ func (h *DefaultDeviceStrategy) ShouldRateLimit(context context.Context, code st
 	expiration.Counter += 1
 	exp, err := h.serializeExpiration(expiration)
 	if err != nil {
-		return false, err
+		return false, errorsx.WithStack(fosite.ErrServerError.WithHintf("Failed to serialize expiration struct %s", err))
 	}
-	h.RateLimiterCache.Set(keyBytes, exp, int(h.Config.GetDeviceAndUserCodeLifespan(context)))
+	h.RateLimiterCache.Set(keyBytes, exp, int(h.Config.GetDeviceAndUserCodeLifespan(context).Seconds()))
 
 	return true, nil
 }
