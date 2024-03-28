@@ -2,6 +2,7 @@ module github.com/ory/fosite
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
+	github.com/coocood/freecache v1.2.4
 	github.com/cristalhq/jwt/v4 v4.0.2
 	github.com/dgraph-io/ristretto v1.0.0
 	github.com/go-jose/go-jose/v3 v3.0.3
@@ -18,7 +19,6 @@ require (
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/x v0.0.677
 	github.com/parnurzeal/gorequest v0.2.15
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
 	github.com/tidwall/gjson v1.14.3
@@ -27,7 +27,6 @@ require (
 	golang.org/x/net v0.30.0
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/text v0.21.0
-	golang.org/x/time v0.4.0
 )
 
 require (
