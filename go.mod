@@ -8,6 +8,7 @@ replace github.com/gorilla/sessions => github.com/gorilla/sessions v1.2.1
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
+	github.com/coocood/freecache v1.2.4
 	github.com/cristalhq/jwt/v4 v4.0.2
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/ecordell/optgen v0.0.9
@@ -25,7 +26,6 @@ require (
 	github.com/ory/go-convenience v0.1.0
 	github.com/ory/x v0.0.613
 	github.com/parnurzeal/gorequest v0.2.15
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/gjson v1.14.3
@@ -34,7 +34,6 @@ require (
 	golang.org/x/net v0.20.0
 	golang.org/x/oauth2 v0.15.0
 	golang.org/x/text v0.14.0
-	golang.org/x/time v0.4.0
 )
 
 require (

@@ -10,12 +10,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coocood/freecache"
 	"github.com/pkg/errors"
 
 	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite/internal"
-
-	"github.com/patrickmn/go-cache"
 
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/token/hmac"
@@ -35,11 +34,8 @@ var hmacshaStrategy = oauth2.HMACSHAStrategy{
 }
 
 var RFC8628HMACSHAStrategy = DefaultDeviceStrategy{
-	Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
-	RateLimiterCache: cache.New(
-		time.Hour*12,
-		time.Hour*24,
-	),
+	Enigma:           &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
+	RateLimiterCache: freecache.NewCache(16384 * 64),
 	Config: &fosite.Config{
 		DeviceAndUserCodeLifespan: time.Hour * 24,
 	},
@@ -268,6 +264,72 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 	}
 }
 
+func TestDeviceUserCode_HandleTokenEndpointRequest_Ratelimitting(t *testing.T) {
+	for k, strategy := range map[string]struct {
+		oauth2.CoreStrategy
+		RFC8628CodeStrategy
+	}{
+		"hmac": {&hmacshaStrategy, &RFC8628HMACSHAStrategy},
+	} {
+		t.Run("strategy="+k, func(t *testing.T) {
+			store := storage.NewMemoryStore()
+
+			h := oauth2.GenericCodeTokenEndpointHandler{
+				AccessRequestValidator: &DeviceAccessRequestValidator{},
+				CodeHandler: &DeviceCodeHandler{
+					DeviceRateLimitStrategy: strategy,
+					DeviceCodeStrategy:      strategy,
+				},
+				SessionHandler: &DeviceSessionHandler{
+					DeviceCodeStorage: store,
+				},
+				CoreStorage:          store,
+				AccessTokenStrategy:  strategy.CoreStrategy,
+				RefreshTokenStrategy: strategy.CoreStrategy,
+				Config: &fosite.Config{
+					ScopeStrategy:             fosite.HierarchicScopeStrategy,
+					AudienceMatchingStrategy:  fosite.DefaultAudienceMatchingStrategy,
+					DeviceAndUserCodeLifespan: time.Minute,
+				},
+			}
+			areq := &fosite.AccessRequest{
+				GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+				Request: fosite.Request{
+					Form: url.Values{},
+					Client: &fosite.DefaultClient{
+						ID:         "foo",
+						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+					},
+					GrantedScope: fosite.Arguments{"foo", "offline"},
+					Session:      &DefaultDeviceFlowSession{},
+					RequestedAt:  time.Now().UTC(),
+				},
+			}
+			authreq := &fosite.DeviceRequest{
+				Request: fosite.Request{
+					Client: &fosite.DefaultClient{ID: "foo", GrantTypes: []string{string(fosite.GrantTypeDeviceCode)}},
+					Session: &DefaultDeviceFlowSession{
+						BrowserFlowCompleted: true,
+					},
+					RequestedAt: time.Now().UTC(),
+				},
+			}
+
+			token, signature, err := strategy.GenerateDeviceCode(context.TODO())
+			require.NoError(t, err)
+
+			areq.Form = url.Values{"device_code": {token}}
+			require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
+			err = h.HandleTokenEndpointRequest(context.Background(), areq)
+			require.NoError(t, err, "%+v", err)
+			err = h.HandleTokenEndpointRequest(context.Background(), areq)
+			require.Error(t, fosite.ErrPollingRateLimited, err)
+			time.Sleep(10 * time.Second)
+			err = h.HandleTokenEndpointRequest(context.Background(), areq)
+			require.NoError(t, err, "%+v", err)
+		})
+	}
+}
 func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 	for k, strategy := range map[string]struct {
 		oauth2.CoreStrategy
@@ -705,7 +767,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			mockCoreStore = internal.NewMockCoreStorage(ctrl)
 			mockDeviceCodeStore = internal.NewMockDeviceCodeStorage(ctrl)
 			mockDeviceRateLimitStrategy = internal.NewMockDeviceRateLimitStrategy(ctrl)
-			mockDeviceRateLimitStrategy.EXPECT().ShouldRateLimit(gomock.Any(), gomock.Any()).Return(false).Times(1)
+			mockDeviceRateLimitStrategy.EXPECT().ShouldRateLimit(gomock.Any(), gomock.Any()).Return(false, nil).Times(1)
 			testCase.setup()
 
 			handler := oauth2.GenericCodeTokenEndpointHandler{

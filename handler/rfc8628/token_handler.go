@@ -22,7 +22,12 @@ type DeviceCodeHandler struct {
 func (c DeviceCodeHandler) Code(ctx context.Context, requester fosite.AccessRequester) (code string, signature string, err error) {
 	code = requester.GetRequestForm().Get("device_code")
 
-	if c.DeviceRateLimitStrategy.ShouldRateLimit(ctx, code) {
+	shouldRateLimit, err := c.DeviceRateLimitStrategy.ShouldRateLimit(ctx, code)
+	// TODO(nsklikas) : should we error out or just silently log it?
+	if err != nil {
+		return "", "", err
+	}
+	if shouldRateLimit {
 		return "", "", errorsx.WithStack(fosite.ErrPollingRateLimited)
 	}
 

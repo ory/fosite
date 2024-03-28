@@ -18,7 +18,7 @@ type RFC8628CodeStrategy interface {
 
 // DeviceRateLimitStrategy handles the rate limiting strategy
 type DeviceRateLimitStrategy interface {
-	ShouldRateLimit(ctx context.Context, code string) bool
+	ShouldRateLimit(ctx context.Context, code string) (bool, error)
 }
 
 // DeviceCodeStrategy handles the device_code strategy

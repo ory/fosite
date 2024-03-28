@@ -258,7 +258,7 @@ const (
 	errRegistrationNotSupportedName = "registration_not_supported"
 	errJTIKnownName                 = "jti_known"
 	errAuthorizationPending         = "authorization_pending"
-	errPollingIntervalRateLimited   = "polling_interval_rate_limited"
+	errPollingIntervalRateLimited   = "slow_down"
 	errDeviceExpiredToken           = "expired_token"
 )
 
