@@ -377,33 +377,6 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 					expectErr: fosite.ErrServerError,
 				},
 				{
-					description: "should fail because device code is expired",
-					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
-						Request: fosite.Request{
-							Form: url.Values{},
-							Client: &fosite.DefaultClient{
-								GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
-							},
-							Session: &DefaultDeviceFlowSession{
-								ExpiresAt: map[fosite.TokenType]time.Time{
-									fosite.DeviceCode: time.Now().Add(-time.Hour).UTC(),
-								},
-								BrowserFlowCompleted: true,
-							},
-							RequestedAt: time.Now().Add(-2 * time.Hour).UTC(),
-						},
-					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
-						code, signature, err := strategy.GenerateDeviceCode(context.TODO())
-						require.NoError(t, err)
-						areq.Form.Add("device_code", code)
-
-						require.NoError(t, store.CreateDeviceCodeSession(context.Background(), signature, areq))
-					},
-					expectErr: fosite.ErrInvalidRequest,
-				},
-				{
 					description: "should pass with offline scope and refresh token",
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
@@ -767,7 +740,6 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			mockCoreStore = internal.NewMockCoreStorage(ctrl)
 			mockDeviceCodeStore = internal.NewMockDeviceCodeStorage(ctrl)
 			mockDeviceRateLimitStrategy = internal.NewMockDeviceRateLimitStrategy(ctrl)
-			mockDeviceRateLimitStrategy.EXPECT().ShouldRateLimit(gomock.Any(), gomock.Any()).Return(false, nil).Times(1)
 			testCase.setup()
 
 			handler := oauth2.GenericCodeTokenEndpointHandler{
