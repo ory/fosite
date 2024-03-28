@@ -24,6 +24,10 @@ func (c AuthorizeCodeHandler) Code(ctx context.Context, requester fosite.AccessR
 }
 
 func (c AuthorizeCodeHandler) ValidateCode(ctx context.Context, requester fosite.Requester, code string) error {
+	return nil
+}
+
+func (c AuthorizeCodeHandler) ValidateCodeSession(ctx context.Context, requester fosite.Requester, code string) error {
 	return c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code)
 }
 
