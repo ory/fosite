@@ -35,8 +35,11 @@ type CodeHandler interface {
 	// Code fetches the code and code signature.
 	Code(ctx context.Context, requester fosite.AccessRequester) (code string, signature string, err error)
 
-	// ValidateCode validates the code.
+	// ValidateCode validates the code. Can be used for checks that need to run before we fetch the session from the database.
 	ValidateCode(ctx context.Context, requester fosite.Requester, code string) error
+
+	// ValidateCodeSession validates the code session.
+	ValidateCodeSession(ctx context.Context, requester fosite.Requester, code string) error
 }
 
 // SessionHandler handles session-related operations.
@@ -83,8 +86,8 @@ func (c *GenericCodeTokenEndpointHandler) PopulateTokenEndpointResponse(ctx cont
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	if err = c.ValidateCode(ctx, requester, code); err != nil {
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
+	if err = c.ValidateCodeSession(ctx, ar, code); err != nil {
+		return errorsx.WithStack(err)
 	}
 
 	for _, scope := range ar.GetRequestedScopes() {
@@ -166,6 +169,10 @@ func (c *GenericCodeTokenEndpointHandler) HandleTokenEndpointRequest(ctx context
 		return err
 	}
 
+	if err = c.ValidateCode(ctx, requester, code); err != nil {
+		return errorsx.WithStack(err)
+	}
+
 	var ar fosite.Requester
 	if ar, err = c.Session(ctx, requester, signature); err != nil {
 		if ar != nil && (errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) || errors.Is(err, fosite.ErrInvalidatedDeviceCode)) {
@@ -175,7 +182,7 @@ func (c *GenericCodeTokenEndpointHandler) HandleTokenEndpointRequest(ctx context
 		return err
 	}
 
-	if err = c.ValidateCode(ctx, ar, code); err != nil {
+	if err = c.ValidateCodeSession(ctx, ar, code); err != nil {
 		return errorsx.WithStack(err)
 	}
 
