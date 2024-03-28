@@ -6,13 +6,13 @@ package compose
 import (
 	"context"
 
+	"github.com/coocood/freecache"
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
-	"github.com/patrickmn/go-cache"
 )
 
 type CommonStrategy struct {
@@ -55,11 +55,8 @@ func NewOpenIDConnectStrategy(keyGetter func(context.Context) (interface{}, erro
 // Create a new device strategy
 func NewDeviceStrategy(config fosite.Configurator) *rfc8628.DefaultDeviceStrategy {
 	return &rfc8628.DefaultDeviceStrategy{
-		Enigma: &hmac.HMACStrategy{Config: config},
-		RateLimiterCache: cache.New(
-			config.GetDeviceAndUserCodeLifespan(context.TODO()),
-			config.GetDeviceAndUserCodeLifespan(context.TODO())*2,
-		),
-		Config: config,
+		Enigma:           &hmac.HMACStrategy{Config: config},
+		RateLimiterCache: freecache.NewCache(1024 * 1024),
+		Config:           config,
 	}
 }

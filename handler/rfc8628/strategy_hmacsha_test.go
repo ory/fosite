@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/patrickmn/go-cache"
+	"github.com/coocood/freecache"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ory/fosite"
@@ -21,7 +21,7 @@ import (
 
 var hmacshaStrategy = DefaultDeviceStrategy{
 	Enigma:           &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
-	RateLimiterCache: cache.New(24*time.Minute, 2*24*time.Minute),
+	RateLimiterCache: freecache.NewCache(16384 * 64),
 	Config: &fosite.Config{
 		AccessTokenLifespan:            time.Minute * 24,
 		AuthorizeCodeLifespan:          time.Minute * 24,
@@ -113,17 +113,30 @@ func TestHMACDeviceCode(t *testing.T) {
 
 func TestRateLimit(t *testing.T) {
 	t.Run("ratelimit no-wait", func(t *testing.T) {
-		hmacshaStrategy.RateLimiterCache.Flush()
-		assert.False(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
-		assert.False(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
-		assert.True(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
+		hmacshaStrategy.RateLimiterCache.Clear()
+		b, err := hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA")
+		assert.NoError(t, err)
+		assert.False(t, b)
+		b, err = hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA")
+		assert.NoError(t, err)
+		assert.True(t, b)
 	})
 
 	t.Run("ratelimit wait", func(t *testing.T) {
-		hmacshaStrategy.RateLimiterCache.Flush()
-		assert.False(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
-		assert.False(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
+		hmacshaStrategy.RateLimiterCache.Clear()
+		b, err := hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA")
+		assert.NoError(t, err)
+		assert.False(t, b)
 		time.Sleep(500 * time.Millisecond)
-		assert.False(t, hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA"))
+		b, err = hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA")
+		assert.NoError(t, err)
+		assert.False(t, b)
+		time.Sleep(500 * time.Millisecond)
+		b, err = hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA")
+		assert.NoError(t, err)
+		assert.False(t, b)
+		b, err = hmacshaStrategy.ShouldRateLimit(context.TODO(), "AAA")
+		assert.NoError(t, err)
+		assert.True(t, b)
 	})
 }
