@@ -22,15 +22,6 @@ type DeviceCodeHandler struct {
 func (c DeviceCodeHandler) Code(ctx context.Context, requester fosite.AccessRequester) (code string, signature string, err error) {
 	code = requester.GetRequestForm().Get("device_code")
 
-	shouldRateLimit, err := c.DeviceRateLimitStrategy.ShouldRateLimit(ctx, code)
-	// TODO(nsklikas) : should we error out or just silently log it?
-	if err != nil {
-		return "", "", err
-	}
-	if shouldRateLimit {
-		return "", "", errorsx.WithStack(fosite.ErrPollingRateLimited)
-	}
-
 	signature, err = c.DeviceCodeStrategy.DeviceCodeSignature(ctx, code)
 	if err != nil {
 		return "", "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
@@ -40,6 +31,17 @@ func (c DeviceCodeHandler) Code(ctx context.Context, requester fosite.AccessRequ
 }
 
 func (c DeviceCodeHandler) ValidateCode(ctx context.Context, requester fosite.Requester, code string) error {
+	shouldRateLimit, err := c.DeviceRateLimitStrategy.ShouldRateLimit(ctx, code)
+	if err != nil {
+		return err
+	}
+	if shouldRateLimit {
+		return errorsx.WithStack(fosite.ErrPollingRateLimited)
+	}
+	return nil
+}
+
+func (c DeviceCodeHandler) ValidateCodeSession(ctx context.Context, requester fosite.Requester, code string) error {
 	return c.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code)
 }
 

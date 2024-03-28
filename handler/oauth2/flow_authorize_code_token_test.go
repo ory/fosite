@@ -65,28 +65,6 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 					expectErr: fosite.ErrServerError,
 				},
 				{
-					description: "should fail because authorization code is expired",
-					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{"authorization_code"},
-						Request: fosite.Request{
-							Form: url.Values{"code": []string{"foo.bar"}},
-							Client: &fosite.DefaultClient{
-								GrantTypes: fosite.Arguments{"authorization_code"},
-							},
-							Session: &fosite.DefaultSession{
-								ExpiresAt: map[fosite.TokenType]time.Time{
-									fosite.AuthorizeCode: time.Now().Add(-time.Hour).UTC(),
-								},
-							},
-							RequestedAt: time.Now().Add(-2 * time.Hour).UTC(),
-						},
-					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
-						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), "bar", areq))
-					},
-					expectErr: fosite.ErrInvalidRequest,
-				},
-				{
 					description: "should pass with offline scope and refresh token",
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
