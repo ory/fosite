@@ -38,11 +38,12 @@ func (m *MockDeviceRateLimitStrategy) EXPECT() *MockDeviceRateLimitStrategyMockR
 }
 
 // ShouldRateLimit mocks base method.
-func (m *MockDeviceRateLimitStrategy) ShouldRateLimit(arg0 context.Context, arg1 string) bool {
+func (m *MockDeviceRateLimitStrategy) ShouldRateLimit(arg0 context.Context, arg1 string) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ShouldRateLimit", arg0, arg1)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // ShouldRateLimit indicates an expected call of ShouldRateLimit.
