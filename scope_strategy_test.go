@@ -132,3 +132,61 @@ func TestExactScopeStrategy2ScopeStrategy(t *testing.T) {
 
 	assert.False(t, strategy([]string{}, "foo"))
 }
+
+func TestResourceAccessScopeStrategy(t *testing.T) {
+	var strategy ScopeStrategy = ResourceAccessScopeStrategy
+	var scopes = []string{}
+
+	assert.False(t, strategy(scopes, "foo:bar:baz"))
+	assert.False(t, strategy(scopes, "foo:bar"))
+
+	scopes = []string{"*"}
+	assert.False(t, strategy(scopes, ""))
+	assert.True(t, strategy(scopes, "*"))
+	assert.False(t, strategy(scopes, "asdf.asdf"))
+
+	scopes = []string{"foo"}
+	assert.False(t, strategy(scopes, "*"))
+	assert.False(t, strategy(scopes, "foo:*"))
+	assert.False(t, strategy(scopes, "fo*"))
+	assert.True(t, strategy(scopes, "foo"))
+
+	scopes = []string{"foo-*"}
+	assert.False(t, strategy(scopes, "foo"))
+	assert.True(t, strategy(scopes, "foo-a"))
+	assert.False(t, strategy(scopes, "fo-bar"))
+	assert.True(t, strategy(scopes, "foo-*"))
+
+	scopes = []string{"foo:bar"}
+	assert.True(t, strategy(scopes, "foo:bar"))
+	assert.False(t, strategy(scopes, "foo:baz"))
+	assert.False(t, strategy(scopes, "foo:bar:baz"))
+	assert.False(t, strategy(scopes, "foo"))
+
+	scopes = []string{"foo-*:bar.read"}
+	assert.True(t, strategy(scopes, "foo-bar:bar.read"))
+	assert.False(t, strategy(scopes, "foo-bar:bar"))
+	assert.False(t, strategy(scopes, "foo:bar"))
+	assert.True(t, strategy(scopes, "foo-*:bar.read"))
+	assert.False(t, strategy(scopes, "bar-foo:foo"))
+	assert.False(t, strategy(scopes, "foo-bar:bar:baz"))
+
+	scopes = []string{"foo-*:bar.*"}
+	assert.True(t, strategy(scopes, "foo-bar:bar.read"))
+	assert.True(t, strategy(scopes, "foo-bar:bar"))
+	assert.False(t, strategy(scopes, "foo:bar"))
+	assert.True(t, strategy(scopes, "foo-*:bar.write"))
+	assert.False(t, strategy(scopes, "bar-foo:foo"))
+	assert.False(t, strategy(scopes, "foo-bar:bar:baz"))
+
+	scopes = []string{"foo-*.read:bar"}
+	assert.True(t, strategy(scopes, "foo-*.read:bar"))
+	assert.False(t, strategy(scopes, "foo-bar:bar"))
+
+	scopes = strings.Fields("hydra:clients.* openid offline hydra")
+	assert.True(t, strategy(scopes, "hydra:clients"))
+	assert.True(t, strategy(scopes, "hydra:clients.get"))
+	assert.True(t, strategy(scopes, "hydra"))
+	assert.True(t, strategy(scopes, "offline"))
+	assert.True(t, strategy(scopes, "openid"))
+}
