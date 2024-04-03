@@ -52,7 +52,7 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
 	}
 
-	err = c.OpenIDConnectRequestStorage.DeleteOpenIDConnectSession(ctx, authorizeCode)
+	err = c.OpenIDConnectRequestStorage.DeleteOpenIDConnectSession(ctx, code)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
