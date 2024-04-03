@@ -22,12 +22,15 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	authorizeCode := requester.GetRequestForm().Get("code")
-
-	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, authorizeCode, requester)
+	code := requester.GetRequestForm().Get("code")
+	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, code, requester)
 	if errors.Is(err, ErrNoSessionFound) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest.WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	}
+
+	if err := c.OpenIDConnectRequestStorage.DeleteOpenIDConnectSession(ctx, code); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
