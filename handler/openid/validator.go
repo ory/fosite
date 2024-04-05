@@ -60,9 +60,10 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 		//  unless the identity of the client can be proven, the request SHOULD
 		//  be processed as if no previous request had been approved.
 
-		checker := v.Config.GetRedirectSecureChecker(ctx)
 		if stringslice.Has(requiredPrompt, "none") {
-			if !checker(ctx, req.GetRedirectURI()) {
+			redirectURI := req.GetRedirectURI()
+			checker := v.Config.GetRedirectSecureChecker(ctx)
+			if !checker(ctx, redirectURI) {
 				return errorsx.WithStack(fosite.ErrConsentRequired.WithHint("OAuth 2.0 Client is marked public and redirect uri is not considered secure (https missing), but \"prompt=none\" was requested."))
 			}
 		}

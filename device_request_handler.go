@@ -17,7 +17,7 @@ import (
 
 // NewDeviceRequest parses an http Request returns a Device request
 func (f *Fosite) NewDeviceRequest(ctx context.Context, r *http.Request) (_ DeviceRequester, err error) {
-	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("github.com/ory/fosite").Start(ctx, "Fosite.NewAccessRequest")
+	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("github.com/ory/fosite").Start(ctx, "Fosite.NewDeviceRequest")
 	defer otelx.End(span, &err)
 
 	request := NewDeviceRequest()

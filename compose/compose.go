@@ -82,17 +82,17 @@ func ComposeAllEnabled(config *fosite.Config, storage interface{}, key interface
 		OAuth2RefreshTokenGrantFactory,
 		OAuth2ResourceOwnerPasswordCredentialsFactory,
 		RFC7523AssertionGrantFactory,
+		RFC8628DeviceFactory,
+		RFC8628DeviceAuthorizationTokenFactory,
 
 		OpenIDConnectExplicitFactory,
 		OpenIDConnectImplicitFactory,
 		OpenIDConnectHybridFactory,
 		OpenIDConnectRefreshFactory,
+		OpenIDConnectDeviceFactory,
 
 		OAuth2TokenIntrospectionFactory,
 		OAuth2TokenRevocationFactory,
-
-		RFC8628DeviceFactory,
-		RFC8628DeviceAuthorizationTokenFactory,
 
 		OAuth2PKCEFactory,
 		PushedAuthorizeHandlerFactory,
