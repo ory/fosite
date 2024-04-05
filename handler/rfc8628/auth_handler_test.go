@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,8 +17,6 @@ import (
 )
 
 func Test_HandleDeviceEndpointRequest(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	store := storage.NewMemoryStore()
 	handler := rfc8628.DeviceAuthHandler{
 		Storage:  store,
