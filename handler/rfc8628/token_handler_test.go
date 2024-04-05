@@ -35,7 +35,7 @@ var hmacshaStrategy = oauth2.NewHMACSHAStrategy(
 
 var RFC8628HMACSHAStrategy = DefaultDeviceStrategy{
 	Enigma:           &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
-	RateLimiterCache: freecache.NewCache(16384 * 64),
+	RateLimiterCache: freecache.NewCache(1024 * 1024),
 	Config: &fosite.Config{
 		DeviceAndUserCodeLifespan: time.Hour * 24,
 	},
