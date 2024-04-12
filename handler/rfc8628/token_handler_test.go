@@ -79,18 +79,28 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 				expectErr   error
 			}{
 				{
-					description: "should fail because not responsible",
+					description: "should fail because not responsible for handling the request",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{"12345678"},
+						GrantTypes: fosite.Arguments{"authorization_code"},
+						Request: fosite.Request{
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
+							Session:     &DefaultDeviceFlowSession{},
+							RequestedAt: time.Now().UTC(),
+						},
 					},
 					expectErr: fosite.ErrUnknownRequest,
 				},
 				{
 					description: "should fail because client is not granted the correct grant type",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{""},
+							},
 							Session:     &DefaultDeviceFlowSession{},
 							RequestedAt: time.Now().UTC(),
 						},
@@ -100,14 +110,17 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 				{
 					description: "should fail because device code could not be retrieved",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{GrantTypes: []string{string(fosite.GrantTypeDeviceCode)}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
 							Session:     &DefaultDeviceFlowSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, _ *fosite.DeviceRequest) {
 						deviceCode, _, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 						areq.Form = url.Values{"device_code": {deviceCode}}
@@ -117,17 +130,25 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 				{
 					description: "should fail because user has not completed the browser flow",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
-							Form:        url.Values{},
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{string(fosite.GrantTypeDeviceCode)}},
+							Form: url.Values{},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
 							Session:     &DefaultDeviceFlowSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
 						Request: fosite.Request{
-							Client: &fosite.DefaultClient{ID: "foo", GrantTypes: []string{string(fosite.GrantTypeDeviceCode)}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
+							RequestedScope: fosite.Arguments{"foo"},
+							GrantedScope:   fosite.Arguments{"foo"},
 							Session: &DefaultDeviceFlowSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{
 									fosite.DeviceCode: time.Now().Add(-time.Hour).UTC(),
@@ -149,12 +170,12 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 				{
 					description: "should fail because device code has expired",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
 								ID:         "foo",
-								GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
 							GrantedScope: fosite.Arguments{"foo", "offline"},
 							Session:      &DefaultDeviceFlowSession{},
@@ -163,7 +184,9 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 					},
 					authreq: &fosite.DeviceRequest{
 						Request: fosite.Request{
-							Client: &fosite.DefaultClient{ID: "foo", GrantTypes: []string{string(fosite.GrantTypeDeviceCode)}},
+							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
+							RequestedScope: fosite.Arguments{"foo"},
+							GrantedScope:   fosite.Arguments{"foo"},
 							Session: &DefaultDeviceFlowSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{
 									fosite.DeviceCode: time.Now().Add(-time.Hour).UTC(),
@@ -185,16 +208,21 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 				{
 					description: "should fail because client mismatch",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{string(fosite.GrantTypeDeviceCode)}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
 							Session:     &DefaultDeviceFlowSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
 						Request: fosite.Request{
-							Client: &fosite.DefaultClient{ID: "bar"},
+							Client:         &fosite.DefaultClient{ID: "bar"},
+							RequestedScope: fosite.Arguments{"foo"},
+							GrantedScope:   fosite.Arguments{"foo"},
 							Session: &DefaultDeviceFlowSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{
 									fosite.DeviceCode: time.Now().Add(time.Hour).UTC(),
@@ -215,16 +243,24 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 				{
 					description: "should pass",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{string(fosite.GrantTypeDeviceCode)}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
 							Session:     &DefaultDeviceFlowSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
 						Request: fosite.Request{
-							Client: &fosite.DefaultClient{ID: "foo", GrantTypes: []string{string(fosite.GrantTypeDeviceCode)}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
+							RequestedScope: fosite.Arguments{"foo"},
+							GrantedScope:   fosite.Arguments{"foo"},
 							Session: &DefaultDeviceFlowSession{
 								BrowserFlowCompleted: true,
 							},
@@ -264,7 +300,7 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 	}
 }
 
-func TestDeviceUserCode_HandleTokenEndpointRequest_Ratelimitting(t *testing.T) {
+func TestDeviceUserCode_HandleTokenEndpointRequest_RateLimiting(t *testing.T) {
 	for k, strategy := range map[string]struct {
 		oauth2.CoreStrategy
 		RFC8628CodeStrategy
@@ -293,21 +329,22 @@ func TestDeviceUserCode_HandleTokenEndpointRequest_Ratelimitting(t *testing.T) {
 				},
 			}
 			areq := &fosite.AccessRequest{
-				GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+				GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 				Request: fosite.Request{
 					Form: url.Values{},
 					Client: &fosite.DefaultClient{
 						ID:         "foo",
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 					},
-					GrantedScope: fosite.Arguments{"foo", "offline"},
-					Session:      &DefaultDeviceFlowSession{},
-					RequestedAt:  time.Now().UTC(),
+					Session:     &DefaultDeviceFlowSession{},
+					RequestedAt: time.Now().UTC(),
 				},
 			}
 			authreq := &fosite.DeviceRequest{
 				Request: fosite.Request{
-					Client: &fosite.DefaultClient{ID: "foo", GrantTypes: []string{string(fosite.GrantTypeDeviceCode)}},
+					Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
+					RequestedScope: fosite.Arguments{"foo"},
+					GrantedScope:   fosite.Arguments{"foo"},
 					Session: &DefaultDeviceFlowSession{
 						BrowserFlowCompleted: true,
 					},
@@ -341,36 +378,46 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			var h oauth2.GenericCodeTokenEndpointHandler
-
 			testCases := []struct {
-				areq        *fosite.AccessRequest
 				description string
-				setup       func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config)
+				areq        *fosite.AccessRequest
+				authreq     *fosite.DeviceRequest
+				setup       func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest, config *fosite.Config)
 				check       func(t *testing.T, aresp *fosite.AccessResponse)
 				expectErr   error
 			}{
 				{
-					description: "should fail because not responsible",
+					description: "should fail because not responsible for handling the request",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{"123"},
+						GrantTypes: fosite.Arguments{"authorization_code"},
+						Request: fosite.Request{
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+							},
+							Session: &DefaultDeviceFlowSession{
+								BrowserFlowCompleted: true,
+							},
+							RequestedAt: time.Now().UTC(),
+						},
 					},
 					expectErr: fosite.ErrUnknownRequest,
 				},
 				{
 					description: "should fail because device code cannot be retrieved",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
-								GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							Session:     &DefaultDeviceFlowSession{},
+							Session: &DefaultDeviceFlowSession{
+								BrowserFlowCompleted: true,
+							},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, _ *fosite.DeviceRequest, _ *fosite.Config) {
 						code, _, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 						areq.Form.Set("device_code", code)
@@ -378,27 +425,37 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 					expectErr: fosite.ErrServerError,
 				},
 				{
-					description: "should pass with offline scope and refresh token",
+					description: "should pass with offline scope and refresh token grant type",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
-								GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode), string(fosite.GrantTypeRefreshToken)},
+								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
 							},
-							GrantedScope: fosite.Arguments{"foo", "offline"},
 							Session: &DefaultDeviceFlowSession{
 								BrowserFlowCompleted: true,
 							},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+					authreq: &fosite.DeviceRequest{
+						Request: fosite.Request{
+							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
+							RequestedScope: fosite.Arguments{"foo", "bar", "offline"},
+							GrantedScope:   fosite.Arguments{"foo", "offline"},
+							Session: &DefaultDeviceFlowSession{
+								BrowserFlowCompleted: true,
+							},
+							RequestedAt: time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest, _ *fosite.Config) {
 						code, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 						areq.Form.Add("device_code", code)
 
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, areq))
+						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
 					},
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
@@ -409,28 +466,38 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 					},
 				},
 				{
-					description: "should pass with refresh token always provided",
+					description: "should pass with refresh token grant type",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
-								GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode), string(fosite.GrantTypeRefreshToken)},
+								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
 							},
-							GrantedScope: fosite.Arguments{"foo"},
 							Session: &DefaultDeviceFlowSession{
 								BrowserFlowCompleted: true,
 							},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+					authreq: &fosite.DeviceRequest{
+						Request: fosite.Request{
+							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
+							RequestedScope: fosite.Arguments{"foo", "bar"},
+							GrantedScope:   fosite.Arguments{"foo"},
+							Session: &DefaultDeviceFlowSession{
+								BrowserFlowCompleted: true,
+							},
+							RequestedAt: time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest, config *fosite.Config) {
 						config.RefreshTokenScopes = []string{}
 						code, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 						areq.Form.Add("device_code", code)
 
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, areq))
+						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
 					},
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
@@ -443,25 +510,35 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 				{
 					description: "pass and response should not have refresh token",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
-								GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							GrantedScope: fosite.Arguments{"foo"},
 							Session: &DefaultDeviceFlowSession{
 								BrowserFlowCompleted: true,
 							},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+					authreq: &fosite.DeviceRequest{
+						Request: fosite.Request{
+							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
+							RequestedScope: fosite.Arguments{"foo", "bar"},
+							GrantedScope:   fosite.Arguments{"foo"},
+							Session: &DefaultDeviceFlowSession{
+								BrowserFlowCompleted: true,
+							},
+							RequestedAt: time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest, config *fosite.Config) {
 						code, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
 						areq.Form.Add("device_code", code)
 
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, areq))
+						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
 					},
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
@@ -481,7 +558,7 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 						AccessTokenLifespan:      time.Minute,
 						RefreshTokenScopes:       []string{"offline"},
 					}
-					h = oauth2.GenericCodeTokenEndpointHandler{
+					h := oauth2.GenericCodeTokenEndpointHandler{
 						AccessRequestValidator: &DeviceAccessRequestValidator{},
 						CodeHandler: &DeviceCodeHandler{
 							DeviceRateLimitStrategy: strategy,
@@ -498,7 +575,7 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 					}
 
 					if testCase.setup != nil {
-						testCase.setup(t, testCase.areq, config)
+						testCase.setup(t, testCase.areq, testCase.authreq, config)
 					}
 
 					aresp := fosite.NewAccessResponse()
@@ -526,24 +603,37 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	var mockDeviceRateLimitStrategy *internal.MockDeviceRateLimitStrategy
 	strategy := hmacshaStrategy
 	deviceStrategy := RFC8628HMACSHAStrategy
-	request := &fosite.AccessRequest{
-		GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode)},
+
+	authreq := &fosite.DeviceRequest{
 		Request: fosite.Request{
-			Client: &fosite.DefaultClient{
-				GrantTypes: fosite.Arguments{string(fosite.GrantTypeDeviceCode), string(fosite.GrantTypeRefreshToken)},
-			},
-			GrantedScope: fosite.Arguments{"offline"},
+			Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
+			RequestedScope: fosite.Arguments{"foo", "offline"},
+			GrantedScope:   fosite.Arguments{"foo", "offline"},
 			Session: &DefaultDeviceFlowSession{
 				BrowserFlowCompleted: true,
 			},
 			RequestedAt: time.Now().UTC(),
 		},
 	}
-	token, _, err := deviceStrategy.GenerateDeviceCode(context.Background())
-	require.NoError(t, err)
-	request.Form = url.Values{"device_code": {token}}
-	response := fosite.NewAccessResponse()
+
+	areq := &fosite.AccessRequest{
+		GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
+		Request: fosite.Request{
+			Client: &fosite.DefaultClient{
+				GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
+			},
+			Session: &DefaultDeviceFlowSession{
+				BrowserFlowCompleted: true,
+			},
+			RequestedAt: time.Now().UTC(),
+		},
+	}
+	aresp := fosite.NewAccessResponse()
 	propagatedContext := context.Background()
+
+	code, _, err := deviceStrategy.GenerateDeviceCode(context.Background())
+	require.NoError(t, err)
+	areq.Form = url.Values{"device_code": {code}}
 
 	// some storage implementation that has support for transactions, notice the embedded type `storage.Transactional`
 	type coreTransactionalStore struct {
@@ -567,7 +657,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockDeviceCodeStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -601,7 +691,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockDeviceCodeStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -626,7 +716,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockDeviceCodeStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -656,7 +746,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockDeviceCodeStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -671,7 +761,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockDeviceCodeStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -696,7 +786,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockDeviceCodeStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -743,7 +833,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			mockDeviceRateLimitStrategy = internal.NewMockDeviceRateLimitStrategy(ctrl)
 			testCase.setup()
 
-			handler := oauth2.GenericCodeTokenEndpointHandler{
+			h := oauth2.GenericCodeTokenEndpointHandler{
 				AccessRequestValidator: &DeviceAccessRequestValidator{},
 				CodeHandler: &DeviceCodeHandler{
 					DeviceRateLimitStrategy: mockDeviceRateLimitStrategy,
@@ -768,7 +858,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				},
 			}
 
-			if err = handler.PopulateTokenEndpointResponse(propagatedContext, request, response); testCase.expectError != nil {
+			if err = h.PopulateTokenEndpointResponse(propagatedContext, areq, aresp); testCase.expectError != nil {
 				assert.EqualError(t, err, testCase.expectError.Error())
 			}
 		})

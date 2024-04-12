@@ -21,6 +21,10 @@ func (c *OpenIDConnectDeviceHandler) PopulateTokenEndpointResponse(ctx context.C
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
+	if !requester.GetClient().GetGrantTypes().Has(string(fosite.GrantTypeDeviceCode)) {
+		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"urn:ietf:params:oauth:grant-type:device_code\"."))
+	}
+
 	deviceCode := requester.GetRequestForm().Get("device_code")
 	signature, err := c.DeviceCodeStrategy.DeviceCodeSignature(ctx, deviceCode)
 	ar, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, signature, requester)
@@ -33,10 +37,6 @@ func (c *OpenIDConnectDeviceHandler) PopulateTokenEndpointResponse(ctx context.C
 
 	if !ar.GetGrantedScopes().Has("openid") {
 		return errorsx.WithStack(fosite.ErrMisconfiguration.WithDebug("An OpenID Connect session was found but the openid scope is missing, probably due to a broken code configuration."))
-	}
-
-	if !requester.GetClient().GetGrantTypes().Has(string(fosite.GrantTypeDeviceCode)) {
-		return errorsx.WithStack(fosite.ErrUnauthorizedClient.WithHint("The OAuth 2.0 Client is not allowed to use the authorization grant \"urn:ietf:params:oauth:grant-type:device_code\"."))
 	}
 
 	session, ok := ar.GetSession().(Session)
