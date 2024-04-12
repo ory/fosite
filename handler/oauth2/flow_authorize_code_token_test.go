@@ -28,19 +28,25 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			var h GenericCodeTokenEndpointHandler
-
 			testCases := []struct {
 				description string
 				areq        *fosite.AccessRequest
-				setup       func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config)
+				authreq     *fosite.AuthorizeRequest
+				setup       func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest, config *fosite.Config)
 				check       func(t *testing.T, aresp *fosite.AccessResponse)
 				expectErr   error
 			}{
 				{
-					description: "should fail because not responsible",
+					description: "should fail because not responsible for handling the request",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{"123"},
+						GrantTypes: fosite.Arguments{"implicit"},
+						Request: fosite.Request{
+							Client: &fosite.DefaultClient{
+								GrantTypes: fosite.Arguments{"authorization_code"},
+							},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+						},
 					},
 					expectErr: fosite.ErrUnknownRequest,
 				},
@@ -57,7 +63,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 							RequestedAt: time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+					setup: func(t *testing.T, areq *fosite.AccessRequest, _ *fosite.AuthorizeRequest, _ *fosite.Config) {
 						code, _, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
 						areq.Form.Set("code", code)
@@ -65,25 +71,37 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 					expectErr: fosite.ErrServerError,
 				},
 				{
-					description: "should pass with offline scope and refresh token",
+					description: "should pass with offline scope and refresh token grant type",
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
+								ID:         "foo",
 								GrantTypes: fosite.Arguments{"authorization_code", "refresh_token"},
 							},
-							GrantedScope: fosite.Arguments{"foo", "offline"},
-							Session:      &fosite.DefaultSession{},
-							RequestedAt:  time.Now().UTC(),
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+					authreq: &fosite.AuthorizeRequest{
+						Request: fosite.Request{
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							RequestedScope: fosite.Arguments{"foo", "bar", "offline"},
+							GrantedScope:   fosite.Arguments{"foo", "offline"},
+							Session:        &fosite.DefaultSession{},
+							RequestedAt:    time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest, _ *fosite.Config) {
 						code, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
-						areq.Form.Add("code", code)
+						areq.Form.Set("code", code)
 
-						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), signature, areq))
+						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), signature, authreq))
 					},
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
@@ -94,26 +112,38 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 					},
 				},
 				{
-					description: "should pass with refresh token always provided",
+					description: "should pass with refresh token grant type",
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
+								ID:         "foo",
 								GrantTypes: fosite.Arguments{"authorization_code", "refresh_token"},
 							},
-							GrantedScope: fosite.Arguments{"foo"},
-							Session:      &fosite.DefaultSession{},
-							RequestedAt:  time.Now().UTC(),
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+					authreq: &fosite.AuthorizeRequest{
+						Request: fosite.Request{
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							RequestedScope: fosite.Arguments{"foo", "bar"},
+							GrantedScope:   fosite.Arguments{"foo"},
+							Session:        &fosite.DefaultSession{},
+							RequestedAt:    time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest, config *fosite.Config) {
 						config.RefreshTokenScopes = []string{}
 						code, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
-						areq.Form.Add("code", code)
+						areq.Form.Set("code", code)
 
-						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), signature, areq))
+						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), signature, authreq))
 					},
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
@@ -130,19 +160,31 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						Request: fosite.Request{
 							Form: url.Values{},
 							Client: &fosite.DefaultClient{
+								ID:         "foo",
 								GrantTypes: fosite.Arguments{"authorization_code"},
 							},
-							GrantedScope: fosite.Arguments{"foo"},
-							Session:      &fosite.DefaultSession{},
-							RequestedAt:  time.Now().UTC(),
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
 						},
 					},
-					setup: func(t *testing.T, areq *fosite.AccessRequest, config *fosite.Config) {
+					authreq: &fosite.AuthorizeRequest{
+						Request: fosite.Request{
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							RequestedScope: fosite.Arguments{"foo", "bar"},
+							GrantedScope:   fosite.Arguments{"foo"},
+							Session:        &fosite.DefaultSession{},
+							RequestedAt:    time.Now().UTC(),
+						},
+					},
+					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest, _ *fosite.Config) {
 						code, sig, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
-						areq.Form.Add("code", code)
+						areq.Form.Set("code", code)
 
-						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), sig, areq))
+						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), sig, authreq))
 					},
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
@@ -162,7 +204,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						AccessTokenLifespan:      time.Minute,
 						RefreshTokenScopes:       []string{"offline"},
 					}
-					h = GenericCodeTokenEndpointHandler{
+					h := GenericCodeTokenEndpointHandler{
 						AccessRequestValidator: &AuthorizeExplicitGrantAccessRequestValidator{},
 						CodeHandler: &AuthorizeCodeHandler{
 							AuthorizeCodeStrategy: strategy,
@@ -177,7 +219,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 					}
 
 					if testCase.setup != nil {
-						testCase.setup(t, testCase.areq, config)
+						testCase.setup(t, testCase.areq, testCase.authreq, config)
 					}
 
 					aresp := fosite.NewAccessResponse()
@@ -230,9 +272,18 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 				expectErr   error
 			}{
 				{
-					description: "should fail because not responsible",
+					description: "should fail because not responsible for handling the request",
 					areq: &fosite.AccessRequest{
-						GrantTypes: fosite.Arguments{"12345678"},
+						GrantTypes: fosite.Arguments{"implicit"},
+						Request: fosite.Request{
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							Form:        url.Values{"redirect_uri": []string{"request-redir"}},
+							Session:     &fosite.DefaultSession{},
+							RequestedAt: time.Now().UTC(),
+						},
 					},
 					expectErr: fosite.ErrUnknownRequest,
 				},
@@ -241,7 +292,11 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{""}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{""},
+							},
+							Form:        url.Values{"redirect_uri": []string{"request-redir"}},
 							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
@@ -253,15 +308,19 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{GrantTypes: []string{"authorization_code"}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							Form:        url.Values{"redirect_uri": []string{"request-redir"}},
 							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
-						token, _, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
+						code, _, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
-						areq.Form = url.Values{"code": {token}}
+						areq.Form.Set("code", code)
 					},
 					expectErr: fosite.ErrInvalidGrant,
 				},
@@ -270,15 +329,27 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
 						Request: fosite.Request{
-							Form:        url.Values{"code": {"foo.bar"}},
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"authorization_code"}},
+							Form: url.Values{
+								"code":         {"foo.bar"},
+								"redirect_uri": []string{"request-redir"},
+							},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
 							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.AuthorizeRequest{
 						Request: fosite.Request{
-							Client: &fosite.DefaultClient{ID: "foo"},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							Form:           url.Values{"redirect_uri": []string{"request-redir"}},
+							RequestedScope: fosite.Arguments{"foo"},
+							GrantedScope:   fosite.Arguments{"foo"},
 							Session: &fosite.DefaultSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{
 									fosite.AuthorizeCode: time.Now().Add(-time.Hour).UTC(),
@@ -288,9 +359,9 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
-						token, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
+						code, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
-						areq.Form = url.Values{"code": {token}}
+						areq.Form.Set("code", code)
 
 						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), signature, authreq))
 					},
@@ -301,14 +372,24 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"authorization_code"}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							Form:        url.Values{"redirect_uri": []string{"request-redir"}},
 							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.AuthorizeRequest{
 						Request: fosite.Request{
-							Client: &fosite.DefaultClient{ID: "bar"},
+							Client: &fosite.DefaultClient{
+								ID:         "bar",
+								GrantTypes: []string{"authorization_code"},
+							},
+							Form:           url.Values{"redirect_uri": []string{"request-redir"}},
+							RequestedScope: fosite.Arguments{"foo"},
+							GrantedScope:   fosite.Arguments{"foo"},
 							Session: &fosite.DefaultSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{
 									fosite.AuthorizeCode: time.Now().Add(time.Hour).UTC(),
@@ -317,9 +398,9 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
-						token, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
+						code, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
-						areq.Form = url.Values{"code": {token}}
+						areq.Form.Set("code", code)
 
 						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), signature, authreq))
 					},
@@ -330,15 +411,24 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"authorization_code"}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							Form:        url.Values{},
 							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.AuthorizeRequest{
 						Request: fosite.Request{
-							Client: &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"authorization_code"}},
-							Form:   url.Values{"redirect_uri": []string{"request-redir"}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							Form:           url.Values{"redirect_uri": []string{"request-redir"}},
+							RequestedScope: fosite.Arguments{"foo"},
+							GrantedScope:   fosite.Arguments{"foo"},
 							Session: &fosite.DefaultSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{
 									fosite.AuthorizeCode: time.Now().Add(time.Hour).UTC(),
@@ -347,9 +437,9 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
-						token, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
+						code, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
-						areq.Form = url.Values{"code": {token}}
+						areq.Form.Set("code", code)
 
 						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), signature, authreq))
 					},
@@ -360,7 +450,10 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"authorization_code"}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
 							Form:        url.Values{"redirect_uri": []string{"request-redir"}},
 							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
@@ -368,16 +461,22 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					},
 					authreq: &fosite.AuthorizeRequest{
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"authorization_code"}},
-							Session:     &fosite.DefaultSession{},
-							RequestedAt: time.Now().UTC(),
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							Form:           url.Values{"redirect_uri": []string{"request-redir"}},
+							RequestedScope: fosite.Arguments{"foo"},
+							GrantedScope:   fosite.Arguments{"foo"},
+							Session:        &fosite.DefaultSession{},
+							RequestedAt:    time.Now().UTC(),
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
-						token, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
+						code, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
+						areq.Form.Set("code", code)
 
-						areq.Form = url.Values{"code": {token}}
 						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), signature, authreq))
 					},
 				},
@@ -386,23 +485,32 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 					areq: &fosite.AccessRequest{
 						GrantTypes: fosite.Arguments{"authorization_code"},
 						Request: fosite.Request{
-							Form:        url.Values{},
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: fosite.Arguments{"authorization_code"}},
+							Form: url.Values{"redirect_uri": []string{"request-redir"}},
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: fosite.Arguments{"authorization_code"},
+							},
 							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.AuthorizeRequest{
 						Request: fosite.Request{
-							Client:      &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"authorization_code"}},
-							Session:     &fosite.DefaultSession{},
-							RequestedAt: time.Now().UTC(),
+							Client: &fosite.DefaultClient{
+								ID:         "foo",
+								GrantTypes: []string{"authorization_code"},
+							},
+							Form:           url.Values{"redirect_uri": []string{"request-redir"}},
+							RequestedScope: fosite.Arguments{"foo"},
+							GrantedScope:   fosite.Arguments{"foo"},
+							Session:        &fosite.DefaultSession{},
+							RequestedAt:    time.Now().UTC(),
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.AuthorizeRequest) {
 						code, signature, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
 						require.NoError(t, err)
-						areq.Form.Add("code", code)
+						areq.Form.Set("code", code)
 
 						require.NoError(t, store.CreateAuthorizeCodeSession(context.Background(), signature, authreq))
 						require.NoError(t, store.InvalidateAuthorizeCodeSession(context.Background(), signature))
@@ -439,22 +547,36 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	var mockCoreStore *internal.MockCoreStorage
 	var mockAuthorizeStore *internal.MockAuthorizeCodeStorage
 	strategy := hmacshaStrategy
-	request := &fosite.AccessRequest{
+
+	authreq := &fosite.AuthorizeRequest{
+		Request: fosite.Request{
+			Client: &fosite.DefaultClient{
+				ID:         "foo",
+				GrantTypes: []string{"authorization_code"},
+			},
+			RequestedScope: fosite.Arguments{"foo", "offline"},
+			GrantedScope:   fosite.Arguments{"foo", "offline"},
+			Session:        &fosite.DefaultSession{},
+			RequestedAt:    time.Now().UTC(),
+		},
+	}
+
+	areq := &fosite.AccessRequest{
 		GrantTypes: fosite.Arguments{"authorization_code"},
 		Request: fosite.Request{
 			Client: &fosite.DefaultClient{
 				GrantTypes: fosite.Arguments{"authorization_code", "refresh_token"},
 			},
-			GrantedScope: fosite.Arguments{"offline"},
-			Session:      &fosite.DefaultSession{},
-			RequestedAt:  time.Now().UTC(),
+			Session:     &fosite.DefaultSession{},
+			RequestedAt: time.Now().UTC(),
 		},
 	}
-	token, _, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
-	require.NoError(t, err)
-	request.Form = url.Values{"code": {token}}
-	response := fosite.NewAccessResponse()
+	aresp := fosite.NewAccessResponse()
 	propagatedContext := context.Background()
+
+	code, _, err := strategy.GenerateAuthorizeCode(context.Background(), nil)
+	require.NoError(t, err)
+	areq.Form = url.Values{"code": {code}}
 
 	// some storage implementation that has support for transactions, notice the embedded type `storage.Transactional`
 	type transactionalStore struct {
@@ -478,7 +600,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockAuthorizeStore.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -512,7 +634,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockAuthorizeStore.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -537,7 +659,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockAuthorizeStore.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -567,7 +689,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockAuthorizeStore.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -582,7 +704,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockAuthorizeStore.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -607,7 +729,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockAuthorizeStore.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(request, nil).
+					Return(authreq, nil).
 					Times(1)
 				mockTransactional.
 					EXPECT().
@@ -658,7 +780,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 				AuthorizeCodeLifespan:    time.Minute,
 			}
-			handler := GenericCodeTokenEndpointHandler{
+			h := GenericCodeTokenEndpointHandler{
 				AccessRequestValidator: &AuthorizeExplicitGrantAccessRequestValidator{},
 				CodeHandler: &AuthorizeCodeHandler{
 					AuthorizeCodeStrategy: strategy,
@@ -678,7 +800,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				Config:               config,
 			}
 
-			if err := handler.PopulateTokenEndpointResponse(propagatedContext, request, response); testCase.expectError != nil {
+			if err := h.PopulateTokenEndpointResponse(propagatedContext, areq, aresp); testCase.expectError != nil {
 				assert.EqualError(t, err, testCase.expectError.Error())
 			}
 		})

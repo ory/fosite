@@ -25,7 +25,7 @@ type OpenIDConnectDeviceHandler struct {
 }
 
 func (c *OpenIDConnectDeviceHandler) HandleDeviceEndpointRequest(ctx context.Context, dar fosite.DeviceRequester, resp fosite.DeviceResponder) error {
-	if !(dar.GetGrantedScopes().Has("openid")) {
+	if !(dar.GetRequestedScopes().Has("openid")) {
 		return nil
 	}
 
@@ -33,7 +33,7 @@ func (c *OpenIDConnectDeviceHandler) HandleDeviceEndpointRequest(ctx context.Con
 		return nil
 	}
 
-	if len(resp.GetDeviceCode()) == 0 {
+	if resp.GetDeviceCode() == "" {
 		return errorsx.WithStack(fosite.ErrMisconfiguration.WithDebug("The device code has not been issued yet, indicating a broken code configuration."))
 	}
 

@@ -90,7 +90,7 @@ func (c *GenericCodeTokenEndpointHandler) PopulateTokenEndpointResponse(ctx cont
 		return errorsx.WithStack(err)
 	}
 
-	for _, scope := range ar.GetRequestedScopes() {
+	for _, scope := range ar.GetGrantedScopes() {
 		requester.GrantScope(scope)
 	}
 
@@ -105,7 +105,7 @@ func (c *GenericCodeTokenEndpointHandler) PopulateTokenEndpointResponse(ctx cont
 	}
 
 	var refreshToken, refreshTokenSignature string
-	if c.canIssueRefreshToken(ctx, ar) {
+	if c.canIssueRefreshToken(ctx, requester) {
 		refreshToken, refreshTokenSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
@@ -229,11 +229,14 @@ func (c *GenericCodeTokenEndpointHandler) CanHandleTokenEndpointRequest(ctx cont
 }
 
 func (c *GenericCodeTokenEndpointHandler) canIssueRefreshToken(ctx context.Context, requester fosite.Requester) bool {
-	scope := c.Config.GetRefreshTokenScopes(ctx)
-	if len(scope) > 0 && !requester.GetGrantedScopes().HasOneOf(scope...) {
+	scopes := c.Config.GetRefreshTokenScopes(ctx)
+
+	// Require one of the refresh token scopes, if set.
+	if len(scopes) > 0 && !requester.GetGrantedScopes().HasOneOf(scopes...) {
 		return false
 	}
 
+	// Do not issue a refresh token to clients that cannot use the refresh token grant type.
 	if !requester.GetClient().GetGrantTypes().Has("refresh_token") {
 		return false
 	}
