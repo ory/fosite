@@ -77,6 +77,10 @@ func (v AuthorizeExplicitGrantAccessRequestValidator) ValidateGrantTypes(request
 	return nil
 }
 
+func (v AuthorizeExplicitGrantAccessRequestValidator) GetGrantType(requester fosite.AccessRequester) fosite.GrantType {
+	return fosite.GrantTypeAuthorizationCode
+}
+
 func (v AuthorizeExplicitGrantAccessRequestValidator) ValidateRedirectURI(accessRequester fosite.AccessRequester, authorizeRequester fosite.Requester) error {
 	forcedRedirectURI := authorizeRequester.GetRequestForm().Get("redirect_uri")
 	requestedRedirectURI := accessRequester.GetRequestForm().Get("redirect_uri")

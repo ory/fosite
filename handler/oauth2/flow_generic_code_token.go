@@ -28,6 +28,9 @@ type AccessRequestValidator interface {
 
 	// ValidateRedirectURI validates the redirect uri in the access request.
 	ValidateRedirectURI(accessRequester fosite.AccessRequester, authorizeRequester fosite.Requester) error
+
+	// GetGrantType retrieves the grant type from the request.
+	GetGrantType(requester fosite.AccessRequester) fosite.GrantType
 }
 
 // CodeHandler handles authorization/device code related operations.
@@ -138,7 +141,7 @@ func (c *GenericCodeTokenEndpointHandler) PopulateTokenEndpointResponse(ctx cont
 		}
 	}
 
-	lifeSpan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeAuthorizationCode, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
+	lifeSpan := fosite.GetEffectiveLifespan(requester.GetClient(), c.GetGrantType(requester), fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
 	responder.SetAccessToken(accessToken)
 	responder.SetTokenType("bearer")
 	responder.SetExpiresIn(getExpiresIn(requester, fosite.AccessToken, lifeSpan, time.Now().UTC()))
@@ -209,10 +212,10 @@ func (c *GenericCodeTokenEndpointHandler) HandleTokenEndpointRequest(ctx context
 	requester.SetSession(ar.GetSession())
 	requester.SetID(ar.GetID())
 
-	atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeAuthorizationCode, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
+	atLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), c.GetGrantType(requester), fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
 	requester.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
 
-	rtLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), fosite.GrantTypeAuthorizationCode, fosite.RefreshToken, c.Config.GetRefreshTokenLifespan(ctx))
+	rtLifespan := fosite.GetEffectiveLifespan(requester.GetClient(), c.GetGrantType(requester), fosite.RefreshToken, c.Config.GetRefreshTokenLifespan(ctx))
 	if rtLifespan > -1 {
 		requester.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(rtLifespan).Round(time.Second))
 	}
