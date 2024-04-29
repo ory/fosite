@@ -5,12 +5,15 @@ package rfc8628
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/ory/x/errorsx"
-
 	"github.com/ory/fosite"
+	"github.com/ory/x/errorsx"
 )
+
+// MaxAttempts for retrying the generation of user codes.
+const MaxAttempts = 3
 
 // DeviceAuthHandler is a response handler for the Device Authorisation Grant as
 // defined in https://tools.ietf.org/html/rfc8628#section-3.1
@@ -25,25 +28,18 @@ type DeviceAuthHandler struct {
 
 // HandleDeviceEndpointRequest implements https://tools.ietf.org/html/rfc8628#section-3.1
 func (d *DeviceAuthHandler) HandleDeviceEndpointRequest(ctx context.Context, dar fosite.DeviceRequester, resp fosite.DeviceResponder) error {
-	deviceCode, deviceCodeSignature, err := d.Strategy.GenerateDeviceCode(ctx)
+	var err error
+
+	var deviceCode string
+	deviceCode, err = d.handleDeviceCode(ctx, dar)
 	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		return err
 	}
 
-	userCode, userCodeSignature, err := d.Strategy.GenerateUserCode(ctx)
+	var userCode string
+	userCode, err = d.handleUserCode(ctx, dar)
 	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	}
-
-	// Store the User Code session (this has no real data other that the user and device code), can be converted into a 'full' session after user auth
-	dar.GetSession().SetExpiresAt(fosite.DeviceCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)))
-	if err := d.Storage.CreateDeviceCodeSession(ctx, deviceCodeSignature, dar.Sanitize(nil)); err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	}
-
-	dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)).Round(time.Second))
-	if err := d.Storage.CreateUserCodeSession(ctx, userCodeSignature, dar.Sanitize(nil)); err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		return err
 	}
 
 	// Populate the response fields
@@ -54,4 +50,43 @@ func (d *DeviceAuthHandler) HandleDeviceEndpointRequest(ctx context.Context, dar
 	resp.SetExpiresIn(int64(time.Until(dar.GetSession().GetExpiresAt(fosite.UserCode)).Seconds()))
 	resp.SetInterval(int(d.Config.GetDeviceAuthTokenPollingInterval(ctx).Seconds()))
 	return nil
+}
+
+func (d *DeviceAuthHandler) handleDeviceCode(ctx context.Context, dar fosite.DeviceRequester) (string, error) {
+	code, signature, err := d.Strategy.GenerateDeviceCode(ctx)
+	if err != nil {
+		return "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	}
+
+	dar.GetSession().SetExpiresAt(fosite.DeviceCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)))
+	if err = d.Storage.CreateDeviceCodeSession(ctx, signature, dar.Sanitize(nil)); err != nil {
+		return "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	}
+
+	return code, nil
+}
+
+func (d *DeviceAuthHandler) handleUserCode(ctx context.Context, dar fosite.DeviceRequester) (string, error) {
+	var err error
+	var userCode, signature string
+	// Note: the retries are added here because we need to ensure uniqueness of user codes.
+	// The chances of duplicates should however be diminishing, because they are the same
+	// chance an attacker will be able to hit a valid code with few guesses. However, as
+	// used codes will probably still be around for some time before they get cleaned,
+	// the chances of hitting a duplicate here can be higher.
+	// Three retries should be plenty, as otherwise the entropy is definitely off.
+	for i := 0; i < MaxAttempts; i++ {
+		userCode, signature, err = d.Strategy.GenerateUserCode(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)).Round(time.Second))
+		if err = d.Storage.CreateUserCodeSession(ctx, signature, dar.Sanitize(nil)); err == nil {
+			return userCode, nil
+		}
+	}
+
+	errMsg := fmt.Sprintf("Exceeded user-code generation max attempts %v: %s", MaxAttempts, err.Error())
+	return "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(errMsg))
 }
