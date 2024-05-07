@@ -13,13 +13,14 @@ import (
 
 // Request is an implementation of Requester
 type Request struct {
-	ID                string       `json:"id" gorethink:"id"`
-	RequestedAt       time.Time    `json:"requestedAt" gorethink:"requestedAt"`
-	Client            Client       `json:"client" gorethink:"client"`
-	RequestedScope    Arguments    `json:"scopes" gorethink:"scopes"`
-	GrantedScope      Arguments    `json:"grantedScopes" gorethink:"grantedScopes"`
-	Form              url.Values   `json:"form" gorethink:"form"`
-	Session           Session      `json:"session" gorethink:"session"`
+	ID                string       `json:"id"`
+	RequestedAt       time.Time    `json:"requestedAt"`
+	ExpiresAt         time.Time    `json:"expiresAt"`
+	Client            Client       `json:"client"`
+	RequestedScope    Arguments    `json:"scopes"`
+	GrantedScope      Arguments    `json:"grantedScopes"`
+	Form              url.Values   `json:"form"`
+	Session           Session      `json:"session"`
 	RequestedAudience Arguments    `json:"requestedAudience"`
 	GrantedAudience   Arguments    `json:"grantedAudience"`
 	Lang              language.Tag `json:"-"`

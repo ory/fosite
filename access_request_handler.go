@@ -53,7 +53,7 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 
 	if r.Method != "POST" {
 		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s', expected 'POST'.", r.Method))
-	} else if err := r.ParseMultipartForm(1 << 20); err != nil && err != http.ErrNotMultipart {
+	} else if err := r.ParseMultipartForm(1 << 20); err != nil && !errors.Is(err, http.ErrNotMultipart) {
 		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	} else if len(r.PostForm) == 0 {
 		return accessRequest, errorsx.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
