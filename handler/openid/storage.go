@@ -22,6 +22,6 @@ type OpenIDConnectRequestStorage interface {
 	// - or an arbitrary error if an error occurred.
 	GetOpenIDConnectSession(ctx context.Context, authorizeCode string, requester fosite.Requester) (fosite.Requester, error)
 
-	// DeleteOpenIDConnectSession removes an open id connect session from the store.
+	// DeleteOpenIDConnectSession removes the OpenID Connect Session from the store.
 	DeleteOpenIDConnectSession(ctx context.Context, authorizeCode string) error
 }
