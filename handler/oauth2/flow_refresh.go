@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ory/x/errorsx"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
@@ -30,6 +29,11 @@ type RefreshTokenGrantHandler struct {
 		fosite.AudienceStrategyProvider
 		fosite.RefreshTokenScopesProvider
 	}
+
+	// IgnoreRequestedScopeNotInOriginalGrant determines the action to take when the requested scopes in the refresh
+	// flow were not originally granted. If false which is the default the handler will automatically return an error.
+	// If true the handler will filter out / ignore the scopes which were not originally granted.
+	IgnoreRequestedScopeNotInOriginalGrant bool
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-6
@@ -69,7 +73,6 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 		scopeNames := strings.Join(c.Config.GetRefreshTokenScopes(ctx), " or ")
 		hint := fmt.Sprintf("The OAuth 2.0 Client was not granted scope %s and may thus not perform the 'refresh_token' authorization grant.", scopeNames)
 		return errorsx.WithStack(fosite.ErrScopeNotGranted.WithHint(hint))
-
 	}
 
 	// The authorization server MUST ... and ensure that the refresh token was issued to the authenticated client
@@ -79,13 +82,50 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 
 	request.SetID(originalRequest.GetID())
 	request.SetSession(originalRequest.GetSession().Clone())
-	request.SetRequestedScopes(originalRequest.GetRequestedScopes())
+
+	/*
+			There are two key points in the following spec section this addresses:
+				1. If omitted the scope param should be treated as the same as the scope originally granted by the resource owner.
+				2. The REQUESTED scope MUST NOT include any scope not originally granted.
+
+			scope
+					OPTIONAL.  The scope of the access request as described by Section 3.3.  The requested scope MUST NOT
+		  			include any scope not originally granted by the resource owner, and if omitted is treated as equal to
+		   			the scope originally granted by the resource owner.
+
+			See https://www.rfc-editor.org/rfc/rfc6749#section-6
+	*/
+
+	// Addresses point 1 of the text in RFC6749 Section 6.
+	if len(request.GetRequestedScopes()) == 0 {
+		request.SetRequestedScopes(originalRequest.GetGrantedScopes())
+	}
+
 	request.SetRequestedAudience(originalRequest.GetRequestedAudience())
 
-	for _, scope := range originalRequest.GetGrantedScopes() {
-		if !c.Config.GetScopeStrategy(ctx)(request.GetClient().GetScopes(), scope) {
+	strategy := c.Config.GetScopeStrategy(ctx)
+	originalScopes := originalRequest.GetGrantedScopes()
+
+	for _, scope := range request.GetRequestedScopes() {
+		// Utilizing the fosite.ScopeStrategy from the configuration here could be a mistake in some scenarios.
+		// The client could under certain circumstances be able to escape their originally granted scopes with carefully
+		// crafted requests and/or a custom scope strategy has not been implemented with this specific scenario in mind.
+		// This should always be an exact comparison for these reasons.
+		if !originalScopes.Has(scope) {
+			if c.IgnoreRequestedScopeNotInOriginalGrant {
+				// Skips addressing point 2 of the text in RFC6749 Section 6 and instead just prevents the scope
+				// requested from being granted.
+				continue
+			} else {
+				// Addresses point 2 of the text in RFC6749 Section 6.
+				return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The requested scope '%s' was not originally granted by the resource owner.", scope))
+			}
+		}
+
+		if !strategy(request.GetClient().GetScopes(), scope) {
 			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
+
 		request.GrantScope(scope)
 	}
 
@@ -134,26 +174,36 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 		err = c.handleRefreshTokenEndpointStorageError(ctx, err)
 	}()
 
-	ts, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
+	originalRequest, err := c.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
 	if err != nil {
 		return err
-	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, ts.GetID()); err != nil {
+	} else if err := c.TokenRevocationStorage.RevokeAccessToken(ctx, originalRequest.GetID()); err != nil {
 		return err
 	}
 
-	if err := c.TokenRevocationStorage.RevokeRefreshTokenMaybeGracePeriod(ctx, ts.GetID(), signature); err != nil {
+	if err := c.TokenRevocationStorage.RevokeRefreshTokenMaybeGracePeriod(ctx, originalRequest.GetID(), signature); err != nil {
 		return err
 	}
 
 	storeReq := requester.Sanitize([]string{})
-	storeReq.SetID(ts.GetID())
+	storeReq.SetID(originalRequest.GetID())
 
 	if err = c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, storeReq); err != nil {
 		return err
 	}
 
-	if err = c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq); err != nil {
-		return err
+	if rtRequest, ok := requester.(fosite.RefreshTokenAccessRequester); ok {
+		rtStoreReq := rtRequest.SanitizeRestoreRefreshTokenOriginalRequester(originalRequest)
+
+		rtStoreReq.SetSession(requester.GetSession().Clone())
+
+		if err = c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, rtStoreReq); err != nil {
+			return err
+		}
+	} else {
+		if err = c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, storeReq); err != nil {
+			return err
+		}
 	}
 
 	responder.SetAccessToken(accessToken)
