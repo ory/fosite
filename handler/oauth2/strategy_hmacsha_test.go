@@ -17,10 +17,12 @@ import (
 )
 
 var hmacshaStrategy = HMACSHAStrategy{
-	Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
-	Config: &fosite.Config{
-		AccessTokenLifespan:   time.Hour * 24,
-		AuthorizeCodeLifespan: time.Hour * 24,
+	BaseHMACSHAStrategy: &BaseHMACSHAStrategy{
+		Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
+		Config: &fosite.Config{
+			AccessTokenLifespan:   time.Hour * 24,
+			AuthorizeCodeLifespan: time.Hour * 24,
+		},
 	},
 }
 

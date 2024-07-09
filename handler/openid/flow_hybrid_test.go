@@ -27,9 +27,11 @@ import (
 )
 
 var hmacStrategy = &oauth2.HMACSHAStrategy{
-	Enigma: &hmac.HMACStrategy{
-		Config: &fosite.Config{
-			GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows-nobody-knows"),
+	BaseHMACSHAStrategy: &oauth2.BaseHMACSHAStrategy{
+		Enigma: &hmac.HMACStrategy{
+			Config: &fosite.Config{
+				GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows-nobody-knows"),
+			},
 		},
 	},
 }
