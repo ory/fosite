@@ -31,8 +31,10 @@ type HMACSHAStrategyConfigurator interface {
 
 func NewOAuth2HMACStrategy(config HMACSHAStrategyConfigurator) *oauth2.HMACSHAStrategy {
 	return &oauth2.HMACSHAStrategy{
-		Enigma: &hmac.HMACStrategy{Config: config},
-		Config: config,
+		BaseHMACSHAStrategy: &oauth2.BaseHMACSHAStrategy{
+			Enigma: &hmac.HMACStrategy{Config: config},
+			Config: config,
+		},
 	}
 }
 
