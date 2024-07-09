@@ -93,6 +93,7 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 
 	aresp := fosite.NewAuthorizeResponse()
 	areq := fosite.NewAuthorizeRequest()
+	areq.Form = url.Values{"redirect_uri": {"https://foobar.com"}}
 
 	for k, c := range []struct {
 		description string
@@ -116,7 +117,10 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 		{
 			description: "should fail because nonce set but too short",
 			setup: func() OpenIDConnectHybridHandler {
-				areq.Form = url.Values{"nonce": {"short"}}
+				areq.Form = url.Values{
+					"redirect_uri": {"https://foobar.com"},
+					"nonce":        {"short"},
+				}
 				areq.ResponseTypes = fosite.Arguments{"token", "code"}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
@@ -131,7 +135,10 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 		{
 			description: "should fail because nonce set but too short for non-default min entropy",
 			setup: func() OpenIDConnectHybridHandler {
-				areq.Form = url.Values{"nonce": {"some-foobar-nonce-win"}}
+				areq.Form = url.Values{
+					"nonce":        {"some-foobar-nonce-win"},
+					"redirect_uri": {"https://foobar.com"},
+				}
 				areq.ResponseTypes = fosite.Arguments{"token", "code"}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
@@ -146,7 +153,10 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 		{
 			description: "should fail because session not given",
 			setup: func() OpenIDConnectHybridHandler {
-				areq.Form = url.Values{"nonce": {"long-enough"}}
+				areq.Form = url.Values{
+					"nonce":        {"long-enough"},
+					"redirect_uri": {"https://foobar.com"},
+				}
 				areq.ResponseTypes = fosite.Arguments{"token", "code"}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
@@ -181,7 +191,11 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 		{
 			description: "should pass with exact one state parameter in response",
 			setup: func() OpenIDConnectHybridHandler {
-				areq.Form = url.Values{"nonce": {"long-enough"}, "state": {""}}
+				areq.Form = url.Values{
+					"redirect_uri": {"https://foobar.com"},
+					"nonce":        {"long-enough"},
+					"state":        {""},
+				}
 				areq.Client = &fosite.DefaultClient{
 					GrantTypes:    fosite.Arguments{"authorization_code", "implicit"},
 					ResponseTypes: fosite.Arguments{"token", "code", "id_token"},
@@ -259,11 +273,20 @@ func TestHybrid_HandleAuthorizeEndpointRequest(t *testing.T) {
 			},
 		},
 		{
+			description: "should fail if redirect_uri is missing",
+			setup: func() OpenIDConnectHybridHandler {
+				areq.Form.Del("redirect_uri")
+				return makeOpenIDConnectHybridHandler(fosite.MinParameterEntropy)
+			},
+			expectErr: fosite.ErrInvalidRequest,
+		},
+		{
 			description: "should pass with custom client lifespans",
 			setup: func() OpenIDConnectHybridHandler {
 				aresp = fosite.NewAuthorizeResponse()
 				areq = fosite.NewAuthorizeRequest()
 				areq.Form.Set("nonce", "some-foobar-nonce-win")
+				areq.Form.Set("redirect_uri", "https://foobar.com")
 				areq.ResponseTypes = fosite.Arguments{"token", "code", "id_token"}
 				areq.Client = &fosite.DefaultClientWithCustomTokenLifespans{
 					DefaultClient: &fosite.DefaultClient{

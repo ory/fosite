@@ -6,6 +6,7 @@ package openid
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"testing"
 
 	"github.com/ory/fosite/internal/gen"
@@ -55,6 +56,9 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 	session := NewDefaultSession()
 	session.Claims.Subject = "foo"
 	areq.Session = session
+	areq.Form = url.Values{
+		"redirect_uri": {"https://foobar.com"},
+	}
 
 	for k, c := range []struct {
 		description string
@@ -109,6 +113,16 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 				store.EXPECT().CreateOpenIDConnectSession(gomock.Any(), "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).AnyTimes().Return(nil)
 				return h
 			},
+		},
+		{
+			description: "should fail because redirect url is missing",
+			setup: func() OpenIDConnectExplicitHandler {
+				areq.Form.Del("redirect_uri")
+				h, store := makeOpenIDConnectExplicitHandler(ctrl, fosite.MinParameterEntropy)
+				store.EXPECT().CreateOpenIDConnectSession(gomock.Any(), "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).AnyTimes().Return(nil)
+				return h
+			},
+			expectErr: fosite.ErrInvalidRequest,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
