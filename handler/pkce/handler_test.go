@@ -38,11 +38,9 @@ func (m *mockCodeStrategy) ValidateAuthorizeCode(ctx context.Context, requester 
 func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	var config fosite.Config
 	h := &Handler{
-		Storage: storage.NewMemoryStore(),
-		AuthorizeCodeStrategy: &oauth2.HMACSHAStrategy{
-			BaseHMACSHAStrategy: new(oauth2.BaseHMACSHAStrategy),
-		},
-		Config: &config,
+		Storage:               storage.NewMemoryStore(),
+		AuthorizeCodeStrategy: new(oauth2.HMACSHAStrategy),
+		Config:                &config,
 	}
 	w := fosite.NewAuthorizeResponse()
 	r := fosite.NewAuthorizeRequest()
