@@ -5,7 +5,6 @@ package oauth2
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 
 	"github.com/ory/fosite"
 	enigma "github.com/ory/fosite/token/hmac"
+	_ "unsafe"
 )
 
 type HMACSHAStrategy struct {
@@ -22,36 +22,28 @@ type HMACSHAStrategy struct {
 		fosite.RefreshTokenLifespanProvider
 		fosite.AuthorizeCodeLifespanProvider
 	}
-	prefix *string
 }
+
+type HMACPrefixFunc func(ctx context.Context, h *HMACSHAStrategy, part string) string
 
 func (h *HMACSHAStrategy) AccessTokenSignature(ctx context.Context, token string) string {
 	return h.Enigma.Signature(token)
 }
+
 func (h *HMACSHAStrategy) RefreshTokenSignature(ctx context.Context, token string) string {
 	return h.Enigma.Signature(token)
 }
+
 func (h *HMACSHAStrategy) AuthorizeCodeSignature(ctx context.Context, token string) string {
 	return h.Enigma.Signature(token)
 }
 
-func (h *HMACSHAStrategy) getPrefix(part string) string {
-	if h.prefix == nil {
-		prefix := "ory_%s_"
-		h.prefix = &prefix
-	} else if len(*h.prefix) == 0 {
-		return ""
-	}
-
-	return fmt.Sprintf(*h.prefix, part)
+func (h *HMACSHAStrategy) trimPrefix(ctx context.Context, token, part string) string {
+	return strings.TrimPrefix(token, getPrefix(ctx, h, part))
 }
 
-func (h *HMACSHAStrategy) trimPrefix(token, part string) string {
-	return strings.TrimPrefix(token, h.getPrefix(part))
-}
-
-func (h *HMACSHAStrategy) setPrefix(token, part string) string {
-	return h.getPrefix(part) + token
+func (h *HMACSHAStrategy) setPrefix(ctx context.Context, token, part string) string {
+	return getPrefix(ctx, h, part) + token
 }
 
 func (h *HMACSHAStrategy) GenerateAccessToken(ctx context.Context, _ fosite.Requester) (token string, signature string, err error) {
@@ -60,7 +52,7 @@ func (h *HMACSHAStrategy) GenerateAccessToken(ctx context.Context, _ fosite.Requ
 		return "", "", err
 	}
 
-	return h.setPrefix(token, "at"), sig, nil
+	return h.setPrefix(ctx, token, "at"), sig, nil
 }
 
 func (h *HMACSHAStrategy) ValidateAccessToken(ctx context.Context, r fosite.Requester, token string) (err error) {
@@ -73,7 +65,7 @@ func (h *HMACSHAStrategy) ValidateAccessToken(ctx context.Context, r fosite.Requ
 		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Access token expired at '%s'.", exp))
 	}
 
-	return h.Enigma.Validate(ctx, h.trimPrefix(token, "at"))
+	return h.Enigma.Validate(ctx, h.trimPrefix(ctx, token, "at"))
 }
 
 func (h *HMACSHAStrategy) GenerateRefreshToken(ctx context.Context, _ fosite.Requester) (token string, signature string, err error) {
@@ -82,21 +74,21 @@ func (h *HMACSHAStrategy) GenerateRefreshToken(ctx context.Context, _ fosite.Req
 		return "", "", err
 	}
 
-	return h.setPrefix(token, "rt"), sig, nil
+	return h.setPrefix(ctx, token, "rt"), sig, nil
 }
 
 func (h *HMACSHAStrategy) ValidateRefreshToken(ctx context.Context, r fosite.Requester, token string) (err error) {
 	var exp = r.GetSession().GetExpiresAt(fosite.RefreshToken)
 	if exp.IsZero() {
 		// Unlimited lifetime
-		return h.Enigma.Validate(ctx, h.trimPrefix(token, "rt"))
+		return h.Enigma.Validate(ctx, h.trimPrefix(ctx, token, "rt"))
 	}
 
 	if !exp.IsZero() && exp.Before(time.Now().UTC()) {
 		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Refresh token expired at '%s'.", exp))
 	}
 
-	return h.Enigma.Validate(ctx, h.trimPrefix(token, "rt"))
+	return h.Enigma.Validate(ctx, h.trimPrefix(ctx, token, "rt"))
 }
 
 func (h *HMACSHAStrategy) GenerateAuthorizeCode(ctx context.Context, _ fosite.Requester) (token string, signature string, err error) {
@@ -105,7 +97,7 @@ func (h *HMACSHAStrategy) GenerateAuthorizeCode(ctx context.Context, _ fosite.Re
 		return "", "", err
 	}
 
-	return h.setPrefix(token, "ac"), sig, nil
+	return h.setPrefix(ctx, token, "ac"), sig, nil
 }
 
 func (h *HMACSHAStrategy) ValidateAuthorizeCode(ctx context.Context, r fosite.Requester, token string) (err error) {
@@ -118,5 +110,5 @@ func (h *HMACSHAStrategy) ValidateAuthorizeCode(ctx context.Context, r fosite.Re
 		return errorsx.WithStack(fosite.ErrTokenExpired.WithHintf("Authorize code expired at '%s'.", exp))
 	}
 
-	return h.Enigma.Validate(ctx, h.trimPrefix(token, "ac"))
+	return h.Enigma.Validate(ctx, h.trimPrefix(ctx, token, "ac"))
 }
