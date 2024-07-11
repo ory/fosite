@@ -172,17 +172,17 @@ func newJWTBearerAppClient(ts *httptest.Server) *clients.JWTBearer {
 	return clients.NewJWTBearer(ts.URL + tokenRelativePath)
 }
 
-var hmacStrategy = &oauth2.HMACSHAStrategy{
-	Enigma: &hmac.HMACStrategy{
+var hmacStrategy = oauth2.NewHMACSHAStrategy(
+	&hmac.HMACStrategy{
 		Config: &fosite.Config{
 			GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows"),
 		},
 	},
-	Config: &fosite.Config{
+	&fosite.Config{
 		AccessTokenLifespan:   accessTokenLifespan,
 		AuthorizeCodeLifespan: authCodeLifespan,
 	},
-}
+)
 
 var defaultRSAKey = gen.MustRSAKey()
 var jwtStrategy = &oauth2.DefaultJWTStrategy{

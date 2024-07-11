@@ -25,7 +25,7 @@ import (
 
 func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 	for k, strategy := range map[string]CoreStrategy{
-		"hmac": &hmacshaStrategy,
+		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
@@ -241,14 +241,14 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 
 func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 	for k, strategy := range map[string]CoreStrategy{
-		"hmac": &hmacshaStrategy,
+		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			h := AuthorizeExplicitGrantHandler{
 				CoreStorage:            store,
-				AuthorizeCodeStrategy:  &hmacshaStrategy,
+				AuthorizeCodeStrategy:  hmacshaStrategy,
 				TokenRevocationStorage: store,
 				Config: &fosite.Config{
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
@@ -657,9 +657,9 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					mockTransactional,
 					mockCoreStore,
 				},
-				AccessTokenStrategy:   &strategy,
-				RefreshTokenStrategy:  &strategy,
-				AuthorizeCodeStrategy: &strategy,
+				AccessTokenStrategy:   strategy,
+				RefreshTokenStrategy:  strategy,
+				AuthorizeCodeStrategy: strategy,
 				Config: &fosite.Config{
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
 					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,

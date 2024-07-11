@@ -32,7 +32,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 	}
 
 	for k, strategy := range map[string]RefreshTokenStrategy{
-		"hmac": &hmacshaStrategy,
+		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
@@ -419,8 +419,8 @@ func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					mockTransactional,
 					mockRevocationStore,
 				},
-				AccessTokenStrategy:  &hmacshaStrategy,
-				RefreshTokenStrategy: &hmacshaStrategy,
+				AccessTokenStrategy:  hmacshaStrategy,
+				RefreshTokenStrategy: hmacshaStrategy,
 				Config: &fosite.Config{
 					AccessTokenLifespan:      time.Hour,
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
@@ -440,7 +440,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 	var aresp *fosite.AccessResponse
 
 	for k, strategy := range map[string]CoreStrategy{
-		"hmac": &hmacshaStrategy,
+		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
@@ -1071,8 +1071,8 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					mockTransactional,
 					mockRevocationStore,
 				},
-				AccessTokenStrategy:  &hmacshaStrategy,
-				RefreshTokenStrategy: &hmacshaStrategy,
+				AccessTokenStrategy:  hmacshaStrategy,
+				RefreshTokenStrategy: hmacshaStrategy,
 				Config: &fosite.Config{
 					AccessTokenLifespan:      time.Hour,
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
