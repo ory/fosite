@@ -6,8 +6,9 @@ package oauth2
 import (
 	"context"
 	"fmt"
-	enigma "github.com/ory/fosite/token/hmac"
 	"strings"
+
+	enigma "github.com/ory/fosite/token/hmac"
 
 	"github.com/ory/fosite"
 )
