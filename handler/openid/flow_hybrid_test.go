@@ -26,13 +26,10 @@ import (
 	"github.com/ory/fosite/token/jwt"
 )
 
-var hmacStrategy = &oauth2.HMACSHAStrategy{
-	Enigma: &hmac.HMACStrategy{
-		Config: &fosite.Config{
-			GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows-nobody-knows"),
-		},
-	},
-}
+var hmacStrategy = oauth2.NewHMACSHAStrategy(
+	&hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("some-super-cool-secret-that-nobody-knows-nobody-knows")}},
+	nil,
+)
 
 func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybridHandler {
 	var idStrategy = &DefaultStrategy{

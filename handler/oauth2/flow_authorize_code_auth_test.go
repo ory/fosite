@@ -24,7 +24,7 @@ func parseUrl(uu string) *url.URL {
 
 func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 	for k, strategy := range map[string]CoreStrategy{
-		"hmac": &hmacshaStrategy,
+		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()

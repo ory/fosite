@@ -39,7 +39,7 @@ func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	var config fosite.Config
 	h := &Handler{
 		Storage:               storage.NewMemoryStore(),
-		AuthorizeCodeStrategy: new(oauth2.HMACSHAStrategy),
+		AuthorizeCodeStrategy: oauth2.NewHMACSHAStrategy(nil, nil),
 		Config:                &config,
 	}
 	w := fosite.NewAuthorizeResponse()
