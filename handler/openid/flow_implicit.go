@@ -48,6 +48,18 @@ func (c *OpenIDConnectImplicitHandler) HandleAuthorizeEndpointRequest(ctx contex
 	//	return errorsx.WithStack(fosite.ErrInvalidGrant.WithDebug("The client is not allowed to use response type token and id_token"))
 	//}
 
+	// This ensures that the 'redirect_uri' parameter is present for OpenID Connect 1.0 authorization requests as per:
+	//
+	// Authorization Code Flow - https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+	// Implicit Flow - https://openid.net/specs/openid-connect-core-1_0.html#ImplicitAuthRequest
+	// Hybrid Flow - https://openid.net/specs/openid-connect-core-1_0.html#HybridAuthRequest
+	//
+	// Note: as per the Hybrid Flow documentation the Hybrid Flow has the same requirements as the Authorization Code Flow.
+	rawRedirectURI := ar.GetRequestForm().Get("redirect_uri")
+	if len(rawRedirectURI) == 0 {
+		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("The 'redirect_uri' parameter is required when using OpenID Connect 1.0."))
+	}
+
 	if nonce := ar.GetRequestForm().Get("nonce"); len(nonce) == 0 {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Parameter 'nonce' must be set when using the OpenID Connect Implicit Flow."))
 	} else if len(nonce) < c.Config.GetMinParameterEntropy(ctx) {
