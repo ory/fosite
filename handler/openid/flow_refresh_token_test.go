@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package openid
@@ -67,7 +67,7 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		t.Run("case="+c.description, func(t *testing.T) {
-			err := h.HandleTokenEndpointRequest(nil, c.areq)
+			err := h.HandleTokenEndpointRequest(context.Background(), c.areq)
 			if c.expectedErr != nil {
 				require.EqualError(t, err, c.expectedErr.Error(), "%v", err)
 			} else {
@@ -233,7 +233,7 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 	} {
 		t.Run("case="+c.description, func(t *testing.T) {
 			aresp := fosite.NewAccessResponse()
-			err := h.PopulateTokenEndpointResponse(nil, c.areq, aresp)
+			err := h.PopulateTokenEndpointResponse(context.Background(), c.areq, aresp)
 			if c.expectedErr != nil {
 				require.EqualError(t, err, c.expectedErr.Error(), "%v", err)
 			} else {

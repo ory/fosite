@@ -1,10 +1,10 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
 
 import (
-	"gopkg.in/square/go-jose.v2"
+	"github.com/go-jose/go-jose/v3"
 )
 
 // Client represents a client or an app.
@@ -63,11 +63,11 @@ type OpenIDConnectClient interface {
 	GetRequestObjectSigningAlgorithm() string
 
 	// Requested Client Authentication method for the Token Endpoint. The options are client_secret_post,
-	// client_secret_basic, client_secret_jwt, private_key_jwt, and none.
+	// client_secret_basic, private_key_jwt, and none.
 	GetTokenEndpointAuthMethod() string
 
 	// JWS [JWS] alg algorithm [JWA] that MUST be used for signing the JWT [JWT] used to authenticate the
-	// Client at the Token Endpoint for the private_key_jwt and client_secret_jwt authentication methods.
+	// Client at the Token Endpoint for the private_key_jwt authentication method.
 	GetTokenEndpointAuthSigningAlgorithm() string
 }
 

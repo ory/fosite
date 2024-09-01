@@ -1,9 +1,10 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package integration_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
-	goauth "golang.org/x/oauth2"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
@@ -37,7 +37,7 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy hst.Acc
 	for k, c := range []struct {
 		description string
 		setup       func()
-		check       func(t *testing.T, token *goauth.Token)
+		check       func(t *testing.T, token *oauth2.Token)
 		err         bool
 	}{
 		{
@@ -60,8 +60,8 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy hst.Acc
 				oauthClient = newOAuth2Client(ts)
 				oauthClient.ClientID = "custom-lifespan-client"
 			},
-			check: func(t *testing.T, token *goauth.Token) {
-				s, err := fositeStore.GetAccessTokenSession(nil, strings.Split(token.AccessToken, ".")[1], nil)
+			check: func(t *testing.T, token *oauth2.Token) {
+				s, err := fositeStore.GetAccessTokenSession(context.Background(), strings.Split(token.AccessToken, ".")[1], nil)
 				require.NoError(t, err)
 				atExp := s.GetSession().GetExpiresAt(fosite.AccessToken)
 				internal.RequireEqualTime(t, time.Now().UTC().Add(*internal.TestLifespans.PasswordGrantAccessTokenLifespan), atExp, time.Minute)
@@ -74,7 +74,7 @@ func runResourceOwnerPasswordCredentialsGrantTest(t *testing.T, strategy hst.Acc
 	} {
 		c.setup()
 
-		token, err := oauthClient.PasswordCredentialsToken(oauth2.NoContext, username, password)
+		token, err := oauthClient.PasswordCredentialsToken(context.Background(), username, password)
 		require.Equal(t, c.err, err != nil, "(%d) %s\n%s\n%s", k, c.description, c.err, err)
 		if !c.err {
 			assert.NotEmpty(t, token.AccessToken, "(%d) %s\n%s", k, c.description, token)

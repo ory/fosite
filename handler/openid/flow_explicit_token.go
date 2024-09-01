@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package openid
@@ -22,7 +22,9 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
-	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, requester.GetRequestForm().Get("code"), requester)
+	authorizeCode := requester.GetRequestForm().Get("code")
+
+	authorize, err := c.OpenIDConnectRequestStorage.GetOpenIDConnectSession(ctx, authorizeCode, requester)
 	if errors.Is(err, ErrNoSessionFound) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest.WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {
@@ -45,6 +47,11 @@ func (c *OpenIDConnectExplicitHandler) PopulateTokenEndpointResponse(ctx context
 	claims := sess.IDTokenClaims()
 	if claims.Subject == "" {
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
+	}
+
+	err = c.OpenIDConnectRequestStorage.DeleteOpenIDConnectSession(ctx, authorizeCode)
+	if err != nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	claims.AccessTokenHash = c.GetAccessTokenHash(ctx, requester, responder)

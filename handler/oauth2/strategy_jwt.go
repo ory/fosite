@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oauth2
@@ -18,7 +18,7 @@ import (
 // DefaultJWTStrategy is a JWT RS256 strategy.
 type DefaultJWTStrategy struct {
 	jwt.Signer
-	HMACSHAStrategy *HMACSHAStrategy
+	HMACSHAStrategy CoreStrategy
 	Config          interface {
 		fosite.AccessTokenIssuerProvider
 		fosite.JWTScopeFieldProvider

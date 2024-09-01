@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite_test
@@ -53,6 +53,7 @@ func TestWriteIntrospectionResponse(t *testing.T) {
 
 	rw := internal.NewMockResponseWriter(c)
 	rw.EXPECT().Write(gomock.Any()).AnyTimes()
+	rw.EXPECT().Header().AnyTimes().Return(http.Header{})
 	f.WriteIntrospectionResponse(context.Background(), rw, &IntrospectionResponse{
 		AccessRequester: NewAccessRequest(nil),
 	})

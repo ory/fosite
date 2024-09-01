@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package integration_test
@@ -12,9 +12,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"

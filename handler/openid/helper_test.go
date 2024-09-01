@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package openid
@@ -57,19 +57,19 @@ func TestGenerateIDToken(t *testing.T) {
 			setup: func() {
 				ar.Form.Set("nonce", "11111111111111111111111111111111111")
 				ar.SetSession(sess)
-				chgen.EXPECT().GenerateIDToken(nil, time.Duration(0), ar).Return("", fooErr)
+				chgen.EXPECT().GenerateIDToken(gomock.Any(), time.Duration(0), ar).Return("", fooErr)
 			},
 			expectErr: fooErr,
 		},
 		{
 			description: "should pass",
 			setup: func() {
-				chgen.EXPECT().GenerateIDToken(nil, time.Duration(0), ar).AnyTimes().Return("asdf", nil)
+				chgen.EXPECT().GenerateIDToken(gomock.Any(), time.Duration(0), ar).AnyTimes().Return("asdf", nil)
 			},
 		},
 	} {
 		c.setup()
-		token, err := h.generateIDToken(nil, time.Duration(0), ar)
+		token, err := h.generateIDToken(context.Background(), time.Duration(0), ar)
 		assert.True(t, err == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if err == nil {
 			assert.NotEmpty(t, token, "(%d) %s", k, c.description)
@@ -92,7 +92,7 @@ func TestIssueExplicitToken(t *testing.T) {
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueExplicitIDToken(nil, time.Duration(0), ar, resp)
+	err := h.IssueExplicitIDToken(context.Background(), time.Duration(0), ar, resp)
 	assert.NoError(t, err)
 }
 
@@ -109,7 +109,7 @@ func TestIssueImplicitToken(t *testing.T) {
 
 	resp.EXPECT().AddParameter("id_token", gomock.Any())
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
-	err := h.IssueImplicitIDToken(nil, time.Duration(0), ar, resp)
+	err := h.IssueImplicitIDToken(context.Background(), time.Duration(0), ar, resp)
 	assert.NoError(t, err)
 }
 
@@ -125,7 +125,7 @@ func TestGetAccessTokenHash(t *testing.T) {
 
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 
-	hash := h.GetAccessTokenHash(nil, req, resp)
+	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
 }
 
@@ -146,7 +146,7 @@ func TestGetAccessTokenHashWithDifferentKeyLength(t *testing.T) {
 
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 
-	hash := h.GetAccessTokenHash(nil, req, resp)
+	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "VNX38yiOyeqBPheW5jDsWQKa6IjJzK66", hash)
 }
 
@@ -167,7 +167,7 @@ func TestGetAccessTokenHashWithBadAlg(t *testing.T) {
 
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 
-	hash := h.GetAccessTokenHash(nil, req, resp)
+	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
 }
 
@@ -188,6 +188,6 @@ func TestGetAccessTokenHashWithMissingKeyLength(t *testing.T) {
 
 	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
 
-	hash := h.GetAccessTokenHash(nil, req, resp)
+	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
 }

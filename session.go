@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -52,9 +52,6 @@ func (s *DefaultSession) GetExpiresAt(key TokenType) time.Time {
 		s.ExpiresAt = make(map[TokenType]time.Time)
 	}
 
-	if _, ok := s.ExpiresAt[key]; !ok {
-		return time.Time{}
-	}
 	return s.ExpiresAt[key]
 }
 

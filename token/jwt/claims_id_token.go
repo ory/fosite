@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package jwt
@@ -6,7 +6,7 @@ package jwt
 import (
 	"time"
 
-	"github.com/pborman/uuid"
+	"github.com/google/uuid"
 )
 
 // IDTokenClaims represent the claims used in open id connect requests
@@ -46,7 +46,7 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 	if c.JTI != "" {
 		ret["jti"] = c.JTI
 	} else {
-		ret["jti"] = uuid.New()
+		ret["jti"] = uuid.New().String()
 	}
 
 	if len(c.Audience) > 0 {

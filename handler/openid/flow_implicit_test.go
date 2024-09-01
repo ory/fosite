@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package openid
@@ -285,7 +285,7 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			h := c.setup()
-			err := h.HandleAuthorizeEndpointRequest(nil, areq, aresp)
+			err := h.HandleAuthorizeEndpointRequest(context.Background(), areq, aresp)
 
 			if c.expectErr != nil {
 				assert.EqualError(t, err, c.expectErr.Error())

@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 // Package jwt is able to generate and validate json web tokens.
@@ -14,7 +14,7 @@ import (
 	"crypto/sha256"
 	"strings"
 
-	"gopkg.in/square/go-jose.v2"
+	"github.com/go-jose/go-jose/v3"
 
 	"github.com/ory/x/errorsx"
 

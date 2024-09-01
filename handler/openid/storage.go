@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package openid
@@ -22,7 +22,6 @@ type OpenIDConnectRequestStorage interface {
 	// - or an arbitrary error if an error occurred.
 	GetOpenIDConnectSession(ctx context.Context, authorizeCode string, requester fosite.Requester) (fosite.Requester, error)
 
-	// Deprecated: DeleteOpenIDConnectSession is not called from anywhere.
-	// Originally, it should remove an open id connect session from the store.
+	// DeleteOpenIDConnectSession removes an open id connect session from the store.
 	DeleteOpenIDConnectSession(ctx context.Context, authorizeCode string) error
 }

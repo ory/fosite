@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package compose
@@ -30,13 +30,10 @@ type HMACSHAStrategyConfigurator interface {
 }
 
 func NewOAuth2HMACStrategy(config HMACSHAStrategyConfigurator) *oauth2.HMACSHAStrategy {
-	return &oauth2.HMACSHAStrategy{
-		Enigma: &hmac.HMACStrategy{Config: config},
-		Config: config,
-	}
+	return oauth2.NewHMACSHAStrategy(&hmac.HMACStrategy{Config: config}, config)
 }
 
-func NewOAuth2JWTStrategy(keyGetter func(context.Context) (interface{}, error), strategy *oauth2.HMACSHAStrategy, config fosite.Configurator) *oauth2.DefaultJWTStrategy {
+func NewOAuth2JWTStrategy(keyGetter func(context.Context) (interface{}, error), strategy oauth2.CoreStrategy, config fosite.Configurator) *oauth2.DefaultJWTStrategy {
 	return &oauth2.DefaultJWTStrategy{
 		Signer:          &jwt.DefaultSigner{GetPrivateKey: keyGetter},
 		HMACSHAStrategy: strategy,

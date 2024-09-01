@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package jwt
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pborman/uuid"
+	"github.com/google/uuid"
 )
 
 // Enum for different types of scope encoding.
@@ -98,7 +98,7 @@ func (c *JWTClaims) ToMap() map[string]interface{} {
 	if c.JTI != "" {
 		ret["jti"] = c.JTI
 	} else {
-		ret["jti"] = uuid.New()
+		ret["jti"] = uuid.New().String()
 	}
 
 	if len(c.Audience) > 0 {

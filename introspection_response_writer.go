@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -179,6 +179,10 @@ func (f *Fosite) WriteIntrospectionError(ctx context.Context, rw http.ResponseWr
 //	  "active": false
 //	}
 func (f *Fosite) WriteIntrospectionResponse(ctx context.Context, rw http.ResponseWriter, r IntrospectionResponder) {
+	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	rw.Header().Set("Cache-Control", "no-store")
+	rw.Header().Set("Pragma", "no-cache")
+
 	if !r.IsActive() {
 		_ = json.NewEncoder(rw).Encode(&struct {
 			Active bool `json:"active"`
@@ -193,15 +197,13 @@ func (f *Fosite) WriteIntrospectionResponse(ctx context.Context, rw http.Respons
 	extraClaimsSession, ok := r.GetAccessRequester().GetSession().(ExtraClaimsSession)
 	if ok {
 		extraClaims := extraClaimsSession.GetExtraClaims()
-		if extraClaims != nil {
-			for name, value := range extraClaims {
-				switch name {
-				// We do not allow these to be set through extra claims.
-				case "exp", "client_id", "scope", "iat", "sub", "aud", "username":
-					continue
-				default:
-					response[name] = value
-				}
+		for name, value := range extraClaims {
+			switch name {
+			// We do not allow these to be set through extra claims.
+			case "exp", "client_id", "scope", "iat", "sub", "aud", "username":
+				continue
+			default:
+				response[name] = value
 			}
 		}
 	}
@@ -228,8 +230,5 @@ func (f *Fosite) WriteIntrospectionResponse(ctx context.Context, rw http.Respons
 		response["username"] = r.GetAccessRequester().GetSession().GetUsername()
 	}
 
-	rw.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	rw.Header().Set("Cache-Control", "no-store")
-	rw.Header().Set("Pragma", "no-cache")
 	_ = json.NewEncoder(rw).Encode(response)
 }

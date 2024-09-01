@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package integration_test
@@ -11,10 +11,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/pborman/uuid"
+	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
@@ -36,7 +36,7 @@ func (s *authorizeJWTBearerRequiredIATSuite) TestBadResponseWithoutIssuedAt() {
 			Subject:  firstJWTBearerSubject,
 			Audience: []string{tokenURL},
 			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
-			ID:       uuid.New(),
+			ID:       uuid.New().String(),
 		},
 	}, []string{"fosite"})
 
@@ -53,7 +53,7 @@ func (s *authorizeJWTBearerRequiredIATSuite) TestSuccessResponseWithIssuedAt() {
 			Audience: []string{tokenURL},
 			Expiry:   jwt.NewNumericDate(time.Now().Add(time.Hour)),
 			IssuedAt: jwt.NewNumericDate(time.Now()),
-			ID:       uuid.New(),
+			ID:       uuid.New().String(),
 		},
 	}, []string{"fosite"})
 

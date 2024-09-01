@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oauth2
@@ -27,20 +27,20 @@ func AccessTokenJWTToRequest(token *jwt.Token) fosite.Requester {
 	requestedAt := claims.IssuedAt
 	requestedAtClaim, ok := mapClaims["rat"]
 	if ok {
-		switch requestedAtClaim.(type) {
+		switch at := requestedAtClaim.(type) {
 		case float64:
-			requestedAt = time.Unix(int64(requestedAtClaim.(float64)), 0).UTC()
+			requestedAt = time.Unix(int64(at), 0).UTC()
 		case int64:
-			requestedAt = time.Unix(requestedAtClaim.(int64), 0).UTC()
+			requestedAt = time.Unix(at, 0).UTC()
 		}
 	}
 
 	clientId := ""
 	clientIdClaim, ok := mapClaims["client_id"]
 	if ok {
-		switch clientIdClaim.(type) {
+		switch cid := clientIdClaim.(type) {
 		case string:
-			clientId = clientIdClaim.(string)
+			clientId = cid
 		}
 	}
 

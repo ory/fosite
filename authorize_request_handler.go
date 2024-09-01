@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -6,15 +6,17 @@ package fosite
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
-	"gopkg.in/square/go-jose.v2"
+	"github.com/go-jose/go-jose/v3"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/x/errorsx"
+	"github.com/ory/x/otelx"
 
 	"github.com/pkg/errors"
 
@@ -74,7 +76,7 @@ func (f *Fosite) authorizeRequestParametersFromOpenIDConnectRequest(ctx context.
 			return errorsx.WithStack(ErrInvalidRequestURI.WithHintf("Unable to fetch OpenID Connect request parameters from 'request_uri' because status code '%d' was expected, but got '%d'.", http.StatusOK, response.StatusCode))
 		}
 
-		body, err := ioutil.ReadAll(response.Body)
+		body, err := io.ReadAll(response.Body)
 		if err != nil {
 			return errorsx.WithStack(ErrInvalidRequestURI.WithHintf("Unable to fetch OpenID Connect request parameters from 'request_uri' because body parsing failed with: %s.", err).WithWrap(err).WithDebug(err.Error()))
 		}
@@ -306,7 +308,10 @@ func (f *Fosite) authorizeRequestFromPAR(ctx context.Context, r *http.Request, r
 	return true, nil
 }
 
-func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (AuthorizeRequester, error) {
+func (f *Fosite) NewAuthorizeRequest(ctx context.Context, r *http.Request) (_ AuthorizeRequester, err error) {
+	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("github.com/ory/fosite").Start(ctx, "Fosite.NewAuthorizeRequest")
+	defer otelx.End(span, &err)
+
 	return f.newAuthorizeRequest(ctx, r, false)
 }
 

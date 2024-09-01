@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package clients
@@ -8,13 +8,12 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 
-	"gopkg.in/square/go-jose.v2"
-	"gopkg.in/square/go-jose.v2/jwt"
+	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v3/jwt"
 )
 
 // #nosec:gosec G101 - False Positive
@@ -22,7 +21,6 @@ const jwtBearerGrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
 type JWTBearer struct {
 	tokenURL string
-	header   *Header
 	client   *http.Client
 
 	Signer jose.Signer
@@ -95,7 +93,7 @@ func (c *JWTBearer) GetToken(ctx context.Context, payloadData *JWTBearerPayload,
 
 	defer response.Body.Close()
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}

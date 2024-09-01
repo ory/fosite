@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite_test
@@ -6,7 +6,7 @@ package fosite_test
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/url"
 	"strings"
 	"testing"
@@ -284,7 +284,7 @@ func TestWriteAuthorizeFormPostResponse(t *testing.T) {
 		redirectURL := "https://localhost:8080/cb"
 		//parameters :=
 		fosite.WriteAuthorizeFormPostResponse(redirectURL, c.parameters, fosite.DefaultFormPostTemplate, &responseBuffer)
-		code, state, _, _, customParams, _, err := internal.ParseFormPostResponse(redirectURL, ioutil.NopCloser(bytes.NewReader(responseBuffer.Bytes())))
+		code, state, _, _, customParams, _, err := internal.ParseFormPostResponse(redirectURL, io.NopCloser(bytes.NewReader(responseBuffer.Bytes())))
 		assert.NoError(t, err, "case %d", d)
 		c.check(code, state, customParams, d)
 
@@ -309,7 +309,7 @@ func TestIsRedirectURISecureStrict(t *testing.T) {
 	} {
 		uu, err := url.Parse(c.u)
 		require.NoError(t, err)
-		assert.Equal(t, !c.err, fosite.IsRedirectURISecureStrict(uu), "case %d", d)
+		assert.Equal(t, !c.err, fosite.IsRedirectURISecureStrict(context.Background(), uu), "case %d", d)
 	}
 }
 

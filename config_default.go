@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -67,6 +67,9 @@ var (
 type Config struct {
 	// AccessTokenLifespan sets how long an access token is going to be valid. Defaults to one hour.
 	AccessTokenLifespan time.Duration
+
+	// VerifiableCredentialsNonceLifespan sets how long a verifiable credentials nonce is going to be valid. Defaults to one hour.
+	VerifiableCredentialsNonceLifespan time.Duration
 
 	// RefreshTokenLifespan sets how long a refresh token is going to be valid. Defaults to 30 days. Set to -1 for
 	// refresh tokens that never expire.
@@ -264,8 +267,8 @@ func (c *Config) GetSecretsHasher(ctx context.Context) Hasher {
 	return c.ClientSecretsHasher
 }
 
-func (c *Config) GetTokenURL(ctx context.Context) string {
-	return c.TokenURL
+func (c *Config) GetTokenURLs(ctx context.Context) []string {
+	return []string{c.TokenURL}
 }
 
 func (c *Config) GetFormPostHTMLTemplate(ctx context.Context) *template.Template {
@@ -364,7 +367,7 @@ func (c *Config) GetAuthorizeCodeLifespan(_ context.Context) time.Duration {
 	return c.AuthorizeCodeLifespan
 }
 
-// GeIDTokenLifespan returns how long an id token should be valid. Defaults to one hour.
+// GetIDTokenLifespan returns how long an id token should be valid. Defaults to one hour.
 func (c *Config) GetIDTokenLifespan(_ context.Context) time.Duration {
 	if c.IDTokenLifespan == 0 {
 		return time.Hour
@@ -380,6 +383,14 @@ func (c *Config) GetAccessTokenLifespan(_ context.Context) time.Duration {
 	return c.AccessTokenLifespan
 }
 
+// GetNonceLifespan returns how long a nonce should be valid. Defaults to one hour.
+func (c *Config) GetVerifiableCredentialsNonceLifespan(_ context.Context) time.Duration {
+	if c.VerifiableCredentialsNonceLifespan == 0 {
+		return time.Hour
+	}
+	return c.VerifiableCredentialsNonceLifespan
+}
+
 // GetRefreshTokenLifespan sets how long a refresh token is going to be valid. Defaults to 30 days. Set to -1 for
 // refresh tokens that never expire.
 func (c *Config) GetRefreshTokenLifespan(_ context.Context) time.Duration {
@@ -389,7 +400,7 @@ func (c *Config) GetRefreshTokenLifespan(_ context.Context) time.Duration {
 	return c.RefreshTokenLifespan
 }
 
-// GetHashCost returns the bcrypt cost factor. Defaults to 12.
+// GetBCryptCost returns the bcrypt cost factor. Defaults to 12.
 func (c *Config) GetBCryptCost(_ context.Context) int {
 	if c.HashCost == 0 {
 		return DefaultBCryptWorkFactor

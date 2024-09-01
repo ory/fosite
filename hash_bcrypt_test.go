@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -97,6 +97,7 @@ func TestDefaultWorkFactor(t *testing.T) {
 	}
 
 	cost, err := bcrypt.Cost(hash)
+	assert.NoError(t, err)
 	if cost != 12 {
 		t.Errorf("got cost factor %d", cost)
 	}

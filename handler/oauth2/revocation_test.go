@@ -1,9 +1,10 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oauth2
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -235,7 +236,7 @@ func TestRevokeToken(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
 			c.mock()
-			err := h.RevokeToken(nil, token, tokenType, c.client)
+			err := h.RevokeToken(context.Background(), token, tokenType, c.client)
 
 			if c.expectErr != nil {
 				require.EqualError(t, err, c.expectErr.Error())
