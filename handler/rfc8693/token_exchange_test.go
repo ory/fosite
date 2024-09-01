@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pborman/uuid"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -109,7 +109,7 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 			handlers: []fosite.TokenEndpointHandler{genericTEHandler, accessTokenHandler},
 			areq: &fosite.AccessRequest{
 				Request: fosite.Request{
-					ID:     uuid.New(),
+					ID:     uuid.New().String(),
 					Client: store.Clients["my-client"],
 					Form: url.Values{
 						"subject_token_type": []string{rfc8693.AccessTokenType},
@@ -135,7 +135,7 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 			handlers: []fosite.TokenEndpointHandler{genericTEHandler, accessTokenHandler, customJWTHandler},
 			areq: &fosite.AccessRequest{
 				Request: fosite.Request{
-					ID:     uuid.New(),
+					ID:     uuid.New().String(),
 					Client: store.Clients["my-client"],
 					Form: url.Values{
 						"subject_token_type": []string{jwtName},
