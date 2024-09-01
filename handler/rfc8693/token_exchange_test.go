@@ -73,7 +73,7 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 		DefaultRequestedTokenType: AccessTokenType,
 	}
 
-	coreStrategy := &oauth2.HMACSHAStrategy{
+	coreStrategy := &oauth2.HMACSHAStrategyUnPrefixed{
 		Enigma: &hmac.HMACStrategy{Config: config},
 		Config: config,
 	}
