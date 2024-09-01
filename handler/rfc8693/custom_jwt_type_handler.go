@@ -1,4 +1,4 @@
-// Copyright © 2023 Ory Corp
+// Copyright © 2024 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc8693
@@ -16,7 +16,7 @@ import (
 )
 
 type CustomJWTTypeHandler struct {
-	Config      fosite.RFC8693ConfigProvider
+	Config      fosite.Configurator
 	JWTStrategy jwt.Signer
 	Storage
 }
@@ -32,8 +32,13 @@ func (c *CustomJWTTypeHandler) HandleTokenEndpointRequest(ctx context.Context, r
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the session is not of the right type."))
 	}
 
+	teConfig, _ := c.Config.(fosite.RFC8693ConfigProvider)
+	if teConfig == nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the config is not of the right type."))
+	}
+
 	form := request.GetRequestForm()
-	tokenTypes := c.Config.GetTokenTypes(ctx)
+	tokenTypes := teConfig.GetTokenTypes(ctx)
 	actorTokenType := tokenTypes[form.Get("actor_token_type")]
 	subjectTokenType := tokenTypes[form.Get("subject_token_type")]
 	if actorTokenType != nil && actorTokenType.GetType(ctx) == JWTTokenType {
@@ -75,13 +80,18 @@ func (c *CustomJWTTypeHandler) PopulateTokenEndpointResponse(ctx context.Context
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the session is not of the right type."))
 	}
 
+	teConfig, _ := c.Config.(fosite.RFC8693ConfigProvider)
+	if teConfig == nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the config is not of the right type."))
+	}
+
 	form := request.GetRequestForm()
 	requestedTokenType := form.Get("requested_token_type")
 	if requestedTokenType == "" {
-		requestedTokenType = c.Config.GetDefaultRequestedTokenType(ctx)
+		requestedTokenType = teConfig.GetDefaultRequestedTokenType(ctx)
 	}
 
-	tokenTypes := c.Config.GetTokenTypes(ctx)
+	tokenTypes := teConfig.GetTokenTypes(ctx)
 	tokenType := tokenTypes[requestedTokenType]
 	if tokenType == nil || tokenType.GetType(ctx) != JWTTokenType {
 		return nil
@@ -106,7 +116,7 @@ func (c *CustomJWTTypeHandler) CanHandleTokenEndpointRequest(ctx context.Context
 	return requester.GetGrantTypes().ExactOne("urn:ietf:params:oauth:grant-type:token-exchange")
 }
 
-func (c *CustomJWTTypeHandler) validate(ctx context.Context, request fosite.AccessRequester, tokenType fosite.RFC8693TokenType, token string) (map[string]interface{}, error) {
+func (c *CustomJWTTypeHandler) validate(ctx context.Context, _ fosite.AccessRequester, tokenType fosite.RFC8693TokenType, token string) (map[string]interface{}, error) {
 
 	jwtType, _ := tokenType.(*JWTType)
 	if jwtType == nil {
