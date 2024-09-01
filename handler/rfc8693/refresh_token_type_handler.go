@@ -14,12 +14,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+var _ fosite.TokenEndpointHandler = (*RefreshTokenTypeHandler)(nil)
+
 type RefreshTokenTypeHandler struct {
-	Config               fosite.RFC8693ConfigProvider
-	RefreshTokenLifespan time.Duration
-	RefreshTokenScopes   []string
+	Config fosite.Configurator
 	oauth2.CoreStrategy
-	ScopeStrategy fosite.ScopeStrategy
 	Storage
 }
 
@@ -73,10 +72,15 @@ func (c *RefreshTokenTypeHandler) PopulateTokenEndpointResponse(ctx context.Cont
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the session is not of the right type."))
 	}
 
+	teConfig, _ := c.Config.(fosite.RFC8693ConfigProvider)
+	if teConfig == nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the config is not of the right type."))
+	}
+
 	form := request.GetRequestForm()
 	requestedTokenType := form.Get("requested_token_type")
 	if requestedTokenType == "" {
-		requestedTokenType = c.Config.GetDefaultRequestedTokenType(ctx)
+		requestedTokenType = teConfig.GetDefaultRequestedTokenType(ctx)
 	}
 
 	if requestedTokenType != RefreshTokenType {
@@ -137,13 +141,6 @@ func (c *RefreshTokenTypeHandler) validate(ctx context.Context, request fosite.A
 		}
 	}
 
-	// Scope check
-	for _, scope := range request.GetRequestedScopes() {
-		if !c.ScopeStrategy(or.GetGrantedScopes(), scope) {
-			return nil, nil, errors.WithStack(fosite.ErrInvalidScope.WithHintf("The subject token is not granted \"%s\" and so this scope cannot be requested.", scope))
-		}
-	}
-
 	// Convert to flat session with only access token claims
 	tokenObject := session.AccessTokenClaimsMap()
 	tokenObject["client_id"] = or.GetClient().GetID()
@@ -154,24 +151,26 @@ func (c *RefreshTokenTypeHandler) validate(ctx context.Context, request fosite.A
 }
 
 func (c *RefreshTokenTypeHandler) issue(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
-	request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.RefreshTokenLifespan).Round(time.Second))
+	request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.Config.GetRefreshTokenLifespan(ctx)).Round(time.Second))
 	refresh, refreshSignature, err := c.CoreStrategy.GenerateRefreshToken(ctx, request)
 	if err != nil {
-		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
-	if refreshSignature != "" {
-		if err := c.Storage.CreateRefreshTokenSession(ctx, refreshSignature, request.Sanitize([]string{})); err != nil {
-			if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.Storage); rollBackTxnErr != nil {
-				err = rollBackTxnErr
-			}
-			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
+	if refreshSignature == "" {
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Unable to generate the refresh token signature"))
+	}
+
+	if err := c.Storage.CreateRefreshTokenSession(ctx, refreshSignature, request.Sanitize([]string{})); err != nil {
+		if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.Storage); rollBackTxnErr != nil {
+			err = rollBackTxnErr
 		}
+		return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
 	}
 
 	response.SetAccessToken(refresh)
 	response.SetTokenType("N_A")
-	response.SetExpiresIn(c.getExpiresIn(request, fosite.RefreshToken, c.RefreshTokenLifespan, time.Now().UTC()))
+	response.SetExpiresIn(c.getExpiresIn(request, fosite.RefreshToken, c.Config.GetRefreshTokenLifespan(ctx), time.Now().UTC()))
 	response.SetScopes(request.GetGrantedScopes())
 
 	return nil

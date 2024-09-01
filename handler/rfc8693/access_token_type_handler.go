@@ -14,13 +14,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+var _ fosite.TokenEndpointHandler = (*AccessTokenTypeHandler)(nil)
+
 type AccessTokenTypeHandler struct {
-	Config               fosite.RFC8693ConfigProvider
-	AccessTokenLifespan  time.Duration
-	RefreshTokenLifespan time.Duration
-	RefreshTokenScopes   []string
+	Config fosite.Configurator
 	oauth2.CoreStrategy
-	ScopeStrategy fosite.ScopeStrategy
 	Storage
 }
 
@@ -69,6 +67,11 @@ func (c *AccessTokenTypeHandler) PopulateTokenEndpointResponse(ctx context.Conte
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
 
+	teConfig, _ := c.Config.(fosite.RFC8693ConfigProvider)
+	if teConfig == nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the config is not of the right type."))
+	}
+
 	session, _ := request.GetSession().(Session)
 	if session == nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the session is not of the right type."))
@@ -77,7 +80,7 @@ func (c *AccessTokenTypeHandler) PopulateTokenEndpointResponse(ctx context.Conte
 	form := request.GetRequestForm()
 	requestedTokenType := form.Get("requested_token_type")
 	if requestedTokenType == "" {
-		requestedTokenType = c.Config.GetDefaultRequestedTokenType(ctx)
+		requestedTokenType = teConfig.GetDefaultRequestedTokenType(ctx)
 	}
 
 	if requestedTokenType != AccessTokenType {
@@ -136,13 +139,6 @@ func (c *AccessTokenTypeHandler) validate(ctx context.Context, request fosite.Ac
 		}
 	}
 
-	// Scope check
-	for _, scope := range request.GetRequestedScopes() {
-		if !c.ScopeStrategy(or.GetGrantedScopes(), scope) {
-			return nil, nil, errors.WithStack(fosite.ErrInvalidScope.WithHintf("The subject token is not granted \"%s\" and so this scope cannot be requested.", scope))
-		}
-	}
-
 	// Convert to flat session with only access token claims
 	tokenObject := session.AccessTokenClaimsMap()
 	tokenObject["client_id"] = or.GetClient().GetID()
@@ -153,7 +149,7 @@ func (c *AccessTokenTypeHandler) validate(ctx context.Context, request fosite.Ac
 }
 
 func (c *AccessTokenTypeHandler) issue(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.AccessTokenLifespan))
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.Config.GetAccessTokenLifespan(ctx)))
 
 	token, signature, err := c.CoreStrategy.GenerateAccessToken(ctx, request)
 	if err != nil {
@@ -162,9 +158,9 @@ func (c *AccessTokenTypeHandler) issue(ctx context.Context, request fosite.Acces
 		return err
 	}
 
-	issueRefreshToken := c.canIssueRefreshToken(request)
+	issueRefreshToken := c.canIssueRefreshToken(ctx, request)
 	if issueRefreshToken {
-		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.RefreshTokenLifespan).Round(time.Second))
+		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.Config.GetRefreshTokenLifespan(ctx)).Round(time.Second))
 		refresh, refreshSignature, err := c.CoreStrategy.GenerateRefreshToken(ctx, request)
 		if err != nil {
 			return errors.WithStack(fosite.ErrServerError.WithDebug(err.Error()))
@@ -184,15 +180,16 @@ func (c *AccessTokenTypeHandler) issue(ctx context.Context, request fosite.Acces
 
 	response.SetAccessToken(token)
 	response.SetTokenType("bearer")
-	response.SetExpiresIn(c.getExpiresIn(request, fosite.AccessToken, c.AccessTokenLifespan, time.Now().UTC()))
+	response.SetExpiresIn(c.getExpiresIn(request, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx), time.Now().UTC()))
 	response.SetScopes(request.GetGrantedScopes())
 
 	return nil
 }
 
-func (c *AccessTokenTypeHandler) canIssueRefreshToken(request fosite.Requester) bool {
+func (c *AccessTokenTypeHandler) canIssueRefreshToken(ctx context.Context, request fosite.Requester) bool {
 	// Require one of the refresh token scopes, if set.
-	if len(c.RefreshTokenScopes) > 0 && !request.GetGrantedScopes().HasOneOf(c.RefreshTokenScopes...) {
+	scopes := c.Config.GetRefreshTokenScopes(ctx)
+	if len(scopes) > 0 && !request.GetGrantedScopes().HasOneOf(scopes...) {
 		return false
 	}
 	// Do not issue a refresh token to clients that cannot use the refresh token grant type.

@@ -15,4 +15,7 @@ type Client interface {
 	// TokenExchangeAllowed checks if the subject token client allows the specified client
 	// to perform the exchange
 	TokenExchangeAllowed(client fosite.Client) bool
+	// ActorTokenRequired indicates that one of the allowed actor tokens must be provided
+	// in the request
+	ActorTokenRequired() bool
 }

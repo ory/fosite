@@ -11,11 +11,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+var _ fosite.TokenEndpointHandler = (*TokenExchangeGrantHandler)(nil)
+
 // TokenExchangeGrantHandler is the grant handler for RFC8693
 type TokenExchangeGrantHandler struct {
-	Config                   fosite.RFC8693ConfigProvider
-	ScopeStrategy            fosite.ScopeStrategy
-	AudienceMatchingStrategy fosite.AudienceMatchingStrategy
+	Config fosite.Configurator
 }
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.2
@@ -40,13 +40,20 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the session is not of the right type."))
 	}
 
+	teConfig, _ := c.Config.(fosite.RFC8693ConfigProvider)
+	if teConfig == nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the config is not of the right type."))
+	}
+
 	form := request.GetRequestForm()
-	configTypesSupported := c.Config.GetTokenTypes(ctx)
+	configTypesSupported := teConfig.GetTokenTypes(ctx)
 	var supportedSubjectTypes, supportedActorTypes, supportedRequestTypes fosite.Arguments
+	actorTokenRequired := false
 	if teClient, ok := client.(Client); ok {
 		supportedRequestTypes = fosite.Arguments(teClient.GetSupportedRequestTokenTypes())
 		supportedActorTypes = fosite.Arguments(teClient.GetSupportedActorTokenTypes())
 		supportedSubjectTypes = fosite.Arguments(teClient.GetSupportedSubjectTokenTypes())
+		actorTokenRequired = teClient.ActorTokenRequired()
 	}
 
 	// From https://tools.ietf.org/html/rfc8693#section-2.1:
@@ -111,12 +118,14 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 		}
 	} else if actorTokenType != "" {
 		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("\"actor_token_type\" is not empty even though the \"actor_token\" is empty."))
+	} else if actorTokenRequired {
+		return errors.WithStack(fosite.ErrInvalidRequest.WithHintf("The OAuth 2.0 client must provide an actor token."))
 	}
 
 	// check if supported
 	requestedTokenType := form.Get("requested_token_type")
 	if requestedTokenType == "" {
-		requestedTokenType = c.Config.GetDefaultRequestedTokenType(ctx)
+		requestedTokenType = teConfig.GetDefaultRequestedTokenType(ctx)
 	}
 
 	if tt := configTypesSupported[requestedTokenType]; tt == nil {
@@ -129,14 +138,30 @@ func (c *TokenExchangeGrantHandler) HandleTokenEndpointRequest(ctx context.Conte
 	}
 
 	// Check scope
-	for _, scope := range request.GetRequestedScopes() {
-		if !c.ScopeStrategy(client.GetScopes(), scope) {
+	openIDIndex := -1
+	for i, scope := range request.GetRequestedScopes() {
+		if !c.Config.GetScopeStrategy(ctx)(client.GetScopes(), scope) {
 			return errors.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
+		}
+
+		// making an assumption here that scope=openid is only present once.
+		// scope=openid makes no sense in the token exchange flow, so we are going
+		// to remove it.
+		if scope == "openid" {
+			openIDIndex = i
 		}
 	}
 
+	if openIDIndex > -1 {
+		requestedScopes := request.GetRequestedScopes()
+		requestedScopes[openIDIndex] = requestedScopes[len(requestedScopes)-1]
+		requestedScopes = requestedScopes[:len(requestedScopes)-1]
+
+		request.SetRequestedScopes(requestedScopes)
+	}
+
 	// Check audience
-	if err := c.AudienceMatchingStrategy(client.GetAudience(), request.GetRequestedAudience()); err != nil {
+	if err := c.Config.GetAudienceStrategy(ctx)(client.GetAudience(), request.GetRequestedAudience()); err != nil {
 		// TODO: Need to convert to using invalid_target
 		return err
 	}
@@ -155,13 +180,18 @@ func (c *TokenExchangeGrantHandler) PopulateTokenEndpointResponse(ctx context.Co
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the session is not of the right type."))
 	}
 
+	teConfig, _ := c.Config.(fosite.RFC8693ConfigProvider)
+	if teConfig == nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to perform token exchange because the config is not of the right type."))
+	}
+
 	form := request.GetRequestForm()
 	requestedTokenType := form.Get("requested_token_type")
 	if requestedTokenType == "" {
-		requestedTokenType = c.Config.GetDefaultRequestedTokenType(ctx)
+		requestedTokenType = teConfig.GetDefaultRequestedTokenType(ctx)
 	}
 
-	configTypesSupported := c.Config.GetTokenTypes(ctx)
+	configTypesSupported := teConfig.GetTokenTypes(ctx)
 	if tt := configTypesSupported[requestedTokenType]; tt == nil {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf(
 			"\"%s\" token type is not supported as a \"%s\".", requestedTokenType, "requested_token_type"))

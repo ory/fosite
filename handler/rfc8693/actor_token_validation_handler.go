@@ -11,6 +11,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var _ fosite.TokenEndpointHandler = (*ActorTokenValidationHandler)(nil)
+
 type ActorTokenValidationHandler struct{}
 
 // HandleTokenEndpointRequest implements https://tools.ietf.org/html/rfc6749#section-4.3.2

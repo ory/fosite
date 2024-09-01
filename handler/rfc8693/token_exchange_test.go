@@ -79,19 +79,13 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 	}
 
 	genericTEHandler := &TokenExchangeGrantHandler{
-		Config:                   config,
-		ScopeStrategy:            config.ScopeStrategy,
-		AudienceMatchingStrategy: config.AudienceMatchingStrategy,
+		Config: config,
 	}
 
 	accessTokenHandler := &AccessTokenTypeHandler{
-		Config:               config,
-		AccessTokenLifespan:  5 * time.Minute,
-		RefreshTokenLifespan: 5 * time.Minute,
-		RefreshTokenScopes:   []string{"offline"},
-		CoreStrategy:         coreStrategy,
-		ScopeStrategy:        config.ScopeStrategy,
-		Storage:              store,
+		Config:       config,
+		CoreStrategy: coreStrategy,
+		Storage:      store,
 	}
 
 	customJWTHandler := &CustomJWTTypeHandler{
@@ -194,7 +188,7 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 					//
 					err = nil
 					continue
-				} else if err != nil {
+				} else {
 					break
 				}
 			}
@@ -221,7 +215,7 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 						//
 						err = nil
 						continue
-					} else if err != nil {
+					} else {
 						break
 					}
 				}
