@@ -7,8 +7,8 @@
 package fosite
 
 import (
-	_ "github.com/golang/mock/mockgen"
 	_ "github.com/mattn/goveralls"
+	_ "go.uber.org/mock/mockgen"
 
 	_ "github.com/ory/go-acc"
 )
