@@ -15,11 +15,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/coocood/freecache"
-	"github.com/golang/mock/gomock"
 	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
+	gomock "go.uber.org/mock/gomock"
 
 	"github.com/stretchr/testify/assert"
 

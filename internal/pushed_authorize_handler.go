@@ -7,7 +7,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
 )
