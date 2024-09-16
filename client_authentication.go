@@ -16,7 +16,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v4"
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite/token/jwt"
