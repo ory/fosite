@@ -13,7 +13,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v4"
 )
 
 const defaultJWKSFetcherStrategyCachePrefix = "github.com/ory/fosite.DefaultJWKSFetcherStrategy:"

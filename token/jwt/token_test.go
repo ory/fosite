@@ -15,8 +15,8 @@ import (
 
 	"github.com/ory/fosite/internal/gen"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,7 +54,7 @@ func TestUnsignedToken(t *testing.T) {
 			parts := strings.Split(rawToken, ".")
 			require.Len(t, parts, 3)
 			require.Empty(t, parts[2])
-			tk, err := jwt.ParseSigned(rawToken)
+			tk, err := jwt.ParseSigned(rawToken, SupportedSignatureAlgorithms)
 			require.NoError(t, err)
 			require.Len(t, tk.Headers, 1)
 			require.Equal(t, tc.expectedType, tk.Headers[0].ExtraHeaders[jose.HeaderKey("typ")])
@@ -82,7 +82,7 @@ func TestJWTHeaders(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			rawToken := makeSampleTokenWithCustomHeaders(nil, jose.RS256, tc.jwtHeaders, gen.MustRSAKey())
-			tk, err := jwt.ParseSigned(rawToken)
+			tk, err := jwt.ParseSigned(rawToken, SupportedSignatureAlgorithms)
 			require.NoError(t, err)
 			require.Len(t, tk.Headers, 1)
 			require.Equal(t, tk.Headers[0].Algorithm, "RS256")
