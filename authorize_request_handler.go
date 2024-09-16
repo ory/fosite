@@ -165,6 +165,17 @@ func (f *Fosite) validateAuthorizeRedirectURI(_ *http.Request, request *Authoriz
 	// Fetch redirect URI from request
 	rawRedirURI := request.Form.Get("redirect_uri")
 
+	// This ensures that the 'redirect_uri' parameter is present for OpenID Connect 1.0 authorization requests as per:
+	//
+	// Authorization Code Flow - https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+	// Implicit Flow - https://openid.net/specs/openid-connect-core-1_0.html#ImplicitAuthRequest
+	// Hybrid Flow - https://openid.net/specs/openid-connect-core-1_0.html#HybridAuthRequest
+	//
+	// Note: as per the Hybrid Flow documentation the Hybrid Flow has the same requirements as the Authorization Code Flow.
+	if len(rawRedirURI) == 0 && request.GetRequestedScopes().Has("openid") {
+		return errorsx.WithStack(ErrInvalidRequest.WithHint("The 'redirect_uri' parameter is required when using OpenID Connect 1.0."))
+	}
+
 	// Validate redirect uri
 	redirectURI, err := MatchRedirectURIWithClientRedirectURIs(rawRedirURI, request.Client)
 	if err != nil {
@@ -176,14 +187,18 @@ func (f *Fosite) validateAuthorizeRedirectURI(_ *http.Request, request *Authoriz
 	return nil
 }
 
+func (f *Fosite) parseAuthorizeScope(_ *http.Request, request *AuthorizeRequest) error {
+	request.SetRequestedScopes(RemoveEmpty(strings.Split(request.Form.Get("scope"), " ")))
+
+	return nil
+}
+
 func (f *Fosite) validateAuthorizeScope(ctx context.Context, _ *http.Request, request *AuthorizeRequest) error {
-	scope := RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
-	for _, permission := range scope {
+	for _, permission := range request.GetRequestedScopes() {
 		if !f.Config.GetScopeStrategy(ctx)(request.Client.GetScopes(), permission) {
 			return errorsx.WithStack(ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", permission))
 		}
 	}
-	request.SetRequestedScopes(scope)
 
 	return nil
 }
@@ -363,15 +378,19 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 		return request, err
 	}
 
-	if err := f.validateAuthorizeRedirectURI(r, request); err != nil {
+	if err = f.parseAuthorizeScope(r, request); err != nil {
 		return request, err
 	}
 
-	if err := f.validateAuthorizeScope(ctx, r, request); err != nil {
+	if err = f.validateAuthorizeRedirectURI(r, request); err != nil {
 		return request, err
 	}
 
-	if err := f.validateAuthorizeAudience(ctx, r, request); err != nil {
+	if err = f.validateAuthorizeScope(ctx, r, request); err != nil {
+		return request, err
+	}
+
+	if err = f.validateAuthorizeAudience(ctx, r, request); err != nil {
 		return request, err
 	}
 
@@ -379,11 +398,11 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 		return request, errorsx.WithStack(ErrRegistrationNotSupported)
 	}
 
-	if err := f.validateResponseTypes(r, request); err != nil {
+	if err = f.validateResponseTypes(r, request); err != nil {
 		return request, err
 	}
 
-	if err := f.validateResponseMode(r, request); err != nil {
+	if err = f.validateResponseMode(r, request); err != nil {
 		return request, err
 	}
 
