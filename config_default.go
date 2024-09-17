@@ -215,6 +215,10 @@ type Config struct {
 
 	// IsPushedAuthorizeEnforced enforces pushed authorization request for /authorize
 	IsPushedAuthorizeEnforced bool
+
+	RFC8693TokenTypes map[string]RFC8693TokenType
+
+	DefaultRequestedTokenType string
 }
 
 func (c *Config) GetGlobalSecret(ctx context.Context) ([]byte, error) {
@@ -498,4 +502,12 @@ func (c *Config) GetPushedAuthorizeContextLifespan(ctx context.Context) time.Dur
 // must contain the PAR request_uri.
 func (c *Config) EnforcePushedAuthorize(ctx context.Context) bool {
 	return c.IsPushedAuthorizeEnforced
+}
+
+func (c *Config) GetTokenTypes(ctx context.Context) map[string]RFC8693TokenType {
+	return c.RFC8693TokenTypes
+}
+
+func (c *Config) GetDefaultRequestedTokenType(ctx context.Context) string {
+	return c.DefaultRequestedTokenType
 }
