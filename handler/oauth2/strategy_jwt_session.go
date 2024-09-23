@@ -40,8 +40,15 @@ func (j *JWTSession) GetJWTClaims() jwt.JWTClaimsContainer {
 
 func (j *JWTSession) GetJWTHeader() *jwt.Headers {
 	if j.JWTHeader == nil {
-		j.JWTHeader = &jwt.Headers{}
+		j.JWTHeader = &jwt.Headers{
+			Extra: map[string]interface{}{
+				"typ": "at+jwt",
+			},
+		}
+	} else if j.JWTHeader.Extra["typ"] == nil {
+		j.JWTHeader.Extra["typ"] = "at+jwt"
 	}
+
 	return j.JWTHeader
 }
 
