@@ -28,16 +28,16 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
-			handler := AuthorizeExplicitGrantHandler{
-				CoreStorage:           store,
+			handler := AuthorizeExplicitGrantAuthHandler{
 				AuthorizeCodeStrategy: strategy,
+				AuthorizeCodeStorage:  store,
 				Config: &fosite.Config{
 					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
 				},
 			}
 			for _, c := range []struct {
-				handler     AuthorizeExplicitGrantHandler
+				handler     AuthorizeExplicitGrantAuthHandler
 				areq        *fosite.AuthorizeRequest
 				description string
 				expectErr   error
@@ -122,9 +122,9 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					},
 				},
 				{
-					handler: AuthorizeExplicitGrantHandler{
-						CoreStorage:           store,
+					handler: AuthorizeExplicitGrantAuthHandler{
 						AuthorizeCodeStrategy: strategy,
+						AuthorizeCodeStorage:  store,
 						Config: &fosite.Config{
 							ScopeStrategy:            fosite.HierarchicScopeStrategy,
 							AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,

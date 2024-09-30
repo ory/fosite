@@ -9,16 +9,35 @@ import (
 	"github.com/ory/fosite/token/jwt"
 )
 
-// OAuth2AuthorizeExplicitFactory creates an OAuth2 authorize code grant ("authorize explicit flow") handler and registers
+// OAuth2AuthorizeExplicitAuthFactory creates an OAuth2 authorize code grant ("authorize explicit flow") handler and registers
 // an access token, refresh token and authorize code validator.
-func OAuth2AuthorizeExplicitFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
-	return &oauth2.AuthorizeExplicitGrantHandler{
-		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
-		AuthorizeCodeStrategy:  strategy.(oauth2.AuthorizeCodeStrategy),
-		CoreStorage:            storage.(oauth2.CoreStorage),
-		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
-		Config:                 config,
+func OAuth2AuthorizeExplicitAuthFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.AuthorizeExplicitGrantAuthHandler{
+		AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
+		AuthorizeCodeStorage:  storage.(oauth2.AuthorizeCodeStorage),
+		Config:                config,
+	}
+}
+
+// Oauth2AuthorizeExplicitTokenFactory creates an OAuth2 authorize code grant ("authorize explicit flow") token handler and registers
+// an access token, refresh token and authorize code validator.
+func Oauth2AuthorizeExplicitTokenFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &oauth2.AuthorizeExplicitTokenEndpointHandler{
+		GenericCodeTokenEndpointHandler: oauth2.GenericCodeTokenEndpointHandler{
+			AccessRequestValidator: &oauth2.AuthorizeExplicitGrantAccessRequestValidator{},
+			CodeHandler: &oauth2.AuthorizeCodeHandler{
+				AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
+			},
+			SessionHandler: &oauth2.AuthorizeExplicitGrantSessionHandler{
+				AuthorizeCodeStorage: storage.(oauth2.AuthorizeCodeStorage),
+			},
+
+			AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
+			RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
+			CoreStorage:            storage.(oauth2.CoreStorage),
+			TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+			Config:                 config,
+		},
 	}
 }
 

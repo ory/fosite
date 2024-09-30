@@ -46,6 +46,11 @@ type IDTokenLifespanProvider interface {
 	GetIDTokenLifespan(ctx context.Context) time.Duration
 }
 
+// DeviceAndUserCodeLifespanProvider returns the provider for configuring the device and user code lifespan
+type DeviceAndUserCodeLifespanProvider interface {
+	GetDeviceAndUserCodeLifespan(ctx context.Context) time.Duration
+}
+
 // ScopeStrategyProvider returns the provider for configuring the scope strategy.
 type ScopeStrategyProvider interface {
 	// GetScopeStrategy returns the scope strategy.
@@ -74,6 +79,12 @@ type RefreshTokenScopesProvider interface {
 type DisableRefreshTokenValidationProvider interface {
 	// GetDisableRefreshTokenValidation returns the disable refresh token validation flag.
 	GetDisableRefreshTokenValidation(ctx context.Context) bool
+}
+
+// DeviceProvider returns the provider for configuring the device flow
+type DeviceProvider interface {
+	GetDeviceVerificationURL(ctx context.Context) string
+	GetDeviceAuthTokenPollingInterval(ctx context.Context) time.Duration
 }
 
 // BCryptCostProvider returns the provider for configuring the BCrypt hash cost.
@@ -305,4 +316,10 @@ type PushedAuthorizeRequestConfigProvider interface {
 	// cannot pass authorize parameters at the 'authorize' endpoint. The 'authorize' endpoint
 	// must contain the PAR request_uri.
 	EnforcePushedAuthorize(ctx context.Context) bool
+}
+
+// DeviceEndpointHandlersProvider returns the provider for setting up the Device handlers.
+type DeviceEndpointHandlersProvider interface {
+	// GetDeviceEndpointHandlers returns the handlers.
+	GetDeviceEndpointHandlers(ctx context.Context) DeviceEndpointHandlers
 }

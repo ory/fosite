@@ -15,9 +15,9 @@ import (
 	"github.com/ory/fosite/internal/gen"
 
 	cristaljwt "github.com/cristalhq/jwt/v4"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
@@ -32,7 +32,7 @@ var hmacStrategy = oauth2.NewHMACSHAStrategy(
 )
 
 func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybridHandler {
-	var idStrategy = &DefaultStrategy{
+	idStrategy := &DefaultStrategy{
 		Signer: &jwt.DefaultSigner{
 			GetPrivateKey: func(_ context.Context) (interface{}, error) {
 				return gen.MustRSAKey(), nil
@@ -43,7 +43,7 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybrid
 		},
 	}
 
-	var j = &DefaultStrategy{
+	j := &DefaultStrategy{
 		Signer: &jwt.DefaultSigner{
 			GetPrivateKey: func(_ context.Context) (interface{}, error) {
 				return key, nil
@@ -61,11 +61,11 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybrid
 		AuthorizeCodeLifespan: time.Hour,
 		RefreshTokenLifespan:  time.Hour,
 	}
+	store := storage.NewMemoryStore()
 	return OpenIDConnectHybridHandler{
-		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
+		AuthorizeExplicitGrantAuthHandler: &oauth2.AuthorizeExplicitGrantAuthHandler{
 			AuthorizeCodeStrategy: hmacStrategy,
-			AccessTokenStrategy:   hmacStrategy,
-			CoreStorage:           storage.NewMemoryStore(),
+			AuthorizeCodeStorage:  store,
 			Config:                config,
 		},
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{

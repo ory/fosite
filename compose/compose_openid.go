@@ -7,6 +7,7 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/jwt"
 )
 
@@ -59,11 +60,9 @@ func OpenIDConnectImplicitFactory(config fosite.Configurator, storage interface{
 // **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
 func OpenIDConnectHybridFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectHybridHandler{
-		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
-			AccessTokenStrategy:   strategy.(oauth2.AccessTokenStrategy),
-			RefreshTokenStrategy:  strategy.(oauth2.RefreshTokenStrategy),
+		AuthorizeExplicitGrantAuthHandler: &oauth2.AuthorizeExplicitGrantAuthHandler{
 			AuthorizeCodeStrategy: strategy.(oauth2.AuthorizeCodeStrategy),
-			CoreStorage:           storage.(oauth2.CoreStorage),
+			AuthorizeCodeStorage:  storage.(oauth2.AuthorizeCodeStorage),
 			Config:                config,
 		},
 		Config: config,
@@ -77,5 +76,19 @@ func OpenIDConnectHybridFactory(config fosite.Configurator, storage interface{},
 		},
 		OpenIDConnectRequestStorage:   storage.(openid.OpenIDConnectRequestStorage),
 		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(jwt.Signer), config),
+	}
+}
+
+// OpenIDConnectDeviceFactory creates an OpenID Connect device ("device code flow") grant handler.
+//
+// **Important note:** You must add this handler *after* you have added an OAuth2 device authorization handler!
+func OpenIDConnectDeviceFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
+	return &openid.OpenIDConnectDeviceHandler{
+		OpenIDConnectRequestStorage: storage.(openid.OpenIDConnectRequestStorage),
+		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
+			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
+		},
+		DeviceCodeStrategy: strategy.(rfc8628.DeviceCodeStrategy),
+		Config:             config,
 	}
 }
