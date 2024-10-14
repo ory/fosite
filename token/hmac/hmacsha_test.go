@@ -6,6 +6,7 @@ package hmac
 import (
 	"context"
 	"crypto/sha512"
+	"fmt"
 	"testing"
 
 	"github.com/ory/fosite"
@@ -23,113 +24,111 @@ func TestGenerateFailsWithShortCredentials(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	for _, c := range []struct {
-		globalSecret []byte
-		tokenEntropy int
-	}{
-		{
-			globalSecret: []byte("1234567890123456789012345678901234567890"),
-			tokenEntropy: 32,
-		},
-		{
-			globalSecret: []byte("1234567890123456789012345678901234567890"),
-			tokenEntropy: 64,
-		},
-	} {
-		config := &fosite.Config{
-			GlobalSecret: c.globalSecret,
-			TokenEntropy: c.tokenEntropy,
-		}
-		cg := HMACStrategy{Config: config}
+	ctx := context.Background()
+	config := &fosite.Config{
+		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
+	}
+	cg := HMACStrategy{Config: config}
 
-		token, signature, err := cg.Generate(context.Background())
-		require.NoError(t, err)
-		require.NotEmpty(t, token)
-		require.NotEmpty(t, signature)
-		t.Logf("Token: %s\n Signature: %s", token, signature)
+	for _, entropy := range []int{32, 64} {
+		t.Run(fmt.Sprintf("entropy=%d", entropy), func(t *testing.T) {
+			config.TokenEntropy = entropy
 
-		err = cg.Validate(context.Background(), token)
-		require.NoError(t, err)
+			token, signature, err := cg.Generate(ctx)
+			require.NoError(t, err)
+			require.NotEmpty(t, token)
+			require.NotEmpty(t, signature)
 
-		validateSignature := cg.Signature(token)
-		assert.Equal(t, signature, validateSignature)
+			err = cg.Validate(ctx, token)
+			require.NoError(t, err)
 
-		config.GlobalSecret = []byte("baz")
-		err = cg.Validate(context.Background(), token)
-		require.Error(t, err)
+			actualSignature := cg.Signature(token)
+			assert.Equal(t, signature, actualSignature)
+
+			config.GlobalSecret = append([]byte("not"), config.GlobalSecret...)
+			err = cg.Validate(ctx, token)
+			assert.ErrorIs(t, err, fosite.ErrTokenSignatureMismatch)
+		})
 	}
 }
 
 func TestValidateSignatureRejects(t *testing.T) {
-	var err error
 	cg := HMACStrategy{
 		Config: &fosite.Config{GlobalSecret: []byte("1234567890123456789012345678901234567890")},
 	}
 	for k, c := range []string{
 		"",
 		" ",
-		"foo.bar",
+		".",
 		"foo.",
 		".foo",
 	} {
-		err = cg.Validate(context.Background(), c)
-		assert.Error(t, err)
-		t.Logf("Passed test case %d", k)
+		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+			err := cg.Validate(context.Background(), c)
+			assert.ErrorIs(t, err, fosite.ErrInvalidTokenFormat)
+		})
 	}
+
+	err := cg.Validate(context.Background(), "foo.bar")
+	assert.ErrorIs(t, err, fosite.ErrTokenSignatureMismatch)
 }
 
 func TestValidateWithRotatedKey(t *testing.T) {
-	old := HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("1234567890123456789012345678901234567890")}}
+	ctx := context.Background()
+	oldGlobalSecret := []byte("1234567890123456789012345678901234567890")
+	old := HMACStrategy{Config: &fosite.Config{GlobalSecret: oldGlobalSecret}}
 	now := HMACStrategy{Config: &fosite.Config{
 		GlobalSecret: []byte("0000000090123456789012345678901234567890"),
 		RotatedGlobalSecrets: [][]byte{
 			[]byte("abcdefgh90123456789012345678901234567890"),
-			[]byte("1234567890123456789012345678901234567890"),
+			oldGlobalSecret,
 		},
-	},
-	}
+	}}
 
-	token, _, err := old.Generate(context.Background())
+	token, _, err := old.Generate(ctx)
 	require.NoError(t, err)
 
-	require.EqualError(t, now.Validate(context.Background(), "thisisatoken.withaninvalidsignature"), fosite.ErrTokenSignatureMismatch.Error())
-	require.NoError(t, now.Validate(context.Background(), token))
+	assert.ErrorIs(t, now.Validate(ctx, "thisisatoken.withaninvalidsignature"), fosite.ErrTokenSignatureMismatch)
+	assert.NoError(t, now.Validate(ctx, token))
 }
 
 func TestValidateWithRotatedKeyInvalid(t *testing.T) {
-	old := HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("1234567890123456789012345678901234567890")}}
+	ctx := context.Background()
+	oldGlobalSecret := []byte("1234567890123456789012345678901234567890")
+	old := HMACStrategy{Config: &fosite.Config{GlobalSecret: oldGlobalSecret}}
 	now := HMACStrategy{Config: &fosite.Config{
 		GlobalSecret: []byte("0000000090123456789012345678901234567890"),
 		RotatedGlobalSecrets: [][]byte{
 			[]byte("abcdefgh90123456789012345678901"),
-			[]byte("1234567890123456789012345678901234567890"),
+			oldGlobalSecret,
 		}},
 	}
 
-	token, _, err := old.Generate(context.Background())
+	token, _, err := old.Generate(ctx)
 	require.NoError(t, err)
 
-	require.EqualError(t, now.Validate(context.Background(), token), "secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got 31 byte")
+	require.EqualError(t, now.Validate(ctx, token), "secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got 31 byte")
 
-	require.EqualError(t, (&HMACStrategy{Config: &fosite.Config{}}).Validate(context.Background(), token), "a secret for signing HMAC-SHA512/256 is expected to be defined, but none were")
+	require.EqualError(t, (&HMACStrategy{Config: &fosite.Config{}}).Validate(ctx, token), "a secret for signing HMAC-SHA512/256 is expected to be defined, but none were")
 }
 
 func TestCustomHMAC(t *testing.T) {
-	def := HMACStrategy{Config: &fosite.Config{
-		GlobalSecret: []byte("1234567890123456789012345678901234567890")},
-	}
-	sha512 := HMACStrategy{Config: &fosite.Config{
-		GlobalSecret: []byte("1234567890123456789012345678901234567890"),
+	ctx := context.Background()
+	globalSecret := []byte("1234567890123456789012345678901234567890")
+	defaultHasher := HMACStrategy{Config: &fosite.Config{
+		GlobalSecret: globalSecret,
+	}}
+	sha512Hasher := HMACStrategy{Config: &fosite.Config{
+		GlobalSecret: globalSecret,
 		HMACHasher:   sha512.New,
-	},
-	}
+	}}
 
-	token, _, err := def.Generate(context.Background())
+	token, _, err := defaultHasher.Generate(ctx)
 	require.NoError(t, err)
-	require.EqualError(t, sha512.Validate(context.Background(), token), fosite.ErrTokenSignatureMismatch.Error())
+	require.ErrorIs(t, sha512Hasher.Validate(ctx, token), fosite.ErrTokenSignatureMismatch)
 
-	token512, _, err := sha512.Generate(context.Background())
+	token512, _, err := sha512Hasher.Generate(ctx)
 	require.NoError(t, err)
-	require.NoError(t, sha512.Validate(context.Background(), token512))
-	require.EqualError(t, def.Validate(context.Background(), token512), fosite.ErrTokenSignatureMismatch.Error())
+	require.NoError(t, sha512Hasher.Validate(ctx, token512))
+	require.ErrorIs(t, defaultHasher.Validate(ctx, token512), fosite.ErrTokenSignatureMismatch)
 }
