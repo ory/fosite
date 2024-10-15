@@ -773,9 +773,9 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) createStandardClaim() jwt.Cla
 		Issuer:    "trusted_issuer",
 		Subject:   "some_ro",
 		Audience:  jwt.Audience{"https://www.example.com/token", "leela", "fry"},
-		Expiry:    jwt.NewNumericDate(time.Now().AddDate(0, 0, 23)),
+		Expiry:    jwt.NewNumericDate(time.Now().UTC().AddDate(0, 0, 23)),
 		NotBefore: nil,
-		IssuedAt:  jwt.NewNumericDate(time.Now().AddDate(0, 0, -7)),
+		IssuedAt:  jwt.NewNumericDate(time.Now().UTC().AddDate(0, 0, -7)),
 		ID:        "my_token",
 	}
 }
