@@ -95,10 +95,6 @@ func (c *PreAuthorizeCodeTokenHandler) HandleTokenEndpointRequest(ctx context.Co
 	// Copy necessary things from original pre-authorize request
 	request.SetSession(preAuthRequest.GetSession())
 	request.SetID(preAuthRequest.GetID())
-
-	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypePreAuthorizeCode, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
-
 	return nil
 }
 
@@ -122,7 +118,10 @@ func (c *PreAuthorizeCodeTokenHandler) PopulateTokenEndpointResponse(ctx context
 		}
 	}()
 
-	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(c.Config.GetAccessTokenLifespan(ctx)).Round(time.Second))
+	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypePreAuthorizeCode,
+		fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
+
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, request)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
@@ -132,7 +131,10 @@ func (c *PreAuthorizeCodeTokenHandler) PopulateTokenEndpointResponse(ctx context
 
 	var refresh, refreshSignature string
 	if c.canIssueRefreshToken(ctx, request) {
-		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.Config.GetRefreshTokenLifespan(ctx)).Round(time.Second))
+		rtLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypePreAuthorizeCode,
+			fosite.RefreshToken, c.Config.GetRefreshTokenLifespan(ctx))
+		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(rtLifespan).Round(time.Second))
+
 		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, request)
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
@@ -147,7 +149,6 @@ func (c *PreAuthorizeCodeTokenHandler) PopulateTokenEndpointResponse(ctx context
 
 	response.SetAccessToken(access)
 	response.SetTokenType("bearer")
-	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypePreAuthorizeCode, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
 	response.SetExpiresIn(getExpiresIn(request, fosite.AccessToken, atLifespan, time.Now().UTC()))
 	response.SetScopes(request.GetGrantedScopes())
 	if refresh != "" {
