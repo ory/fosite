@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/fosite/token/jwt"
+	"github.com/ory/x/randx"
 
 	"github.com/ory/fosite/i18n"
 )
@@ -229,6 +230,12 @@ type Config struct {
 
 	// IsPushedAuthorizeEnforced enforces pushed authorization request for /authorize
 	IsPushedAuthorizeEnforced bool
+
+	// UserCodeLength defines the length of the user_code
+	UserCodeLength int
+
+	// UserCodeSymbols defines the symbols that will be used to construct the user_code
+	UserCodeSymbols []rune
 }
 
 func (c *Config) GetGlobalSecret(ctx context.Context) ([]byte, error) {
@@ -539,4 +546,20 @@ func (c *Config) GetDeviceAuthTokenPollingInterval(ctx context.Context) time.Dur
 		return defaultAuthTokenPollingInterval
 	}
 	return c.DeviceAuthTokenPollingInterval
+}
+
+// GetUserCodeLength returns configured user_code length
+func (c *Config) GetUserCodeLength(ctx context.Context) int {
+	if c.UserCodeLength == 0 {
+		return 8
+	}
+	return c.UserCodeLength
+}
+
+// GetDeviceAuthTokenPollingInterval returns configured user_code allowed symbols
+func (c *Config) GetUserCodeSymbols(ctx context.Context) []rune {
+	if c.UserCodeSymbols == nil {
+		return []rune(randx.AlphaUpper)
+	}
+	return c.UserCodeSymbols
 }
