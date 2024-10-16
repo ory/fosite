@@ -32,7 +32,7 @@ var hmacStrategy = oauth2.NewHMACSHAStrategy(
 )
 
 func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybridHandler {
-	idStrategy := &DefaultStrategy{
+	var idStrategy = &DefaultStrategy{
 		Signer: &jwt.DefaultSigner{
 			GetPrivateKey: func(_ context.Context) (interface{}, error) {
 				return gen.MustRSAKey(), nil
@@ -43,7 +43,7 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybrid
 		},
 	}
 
-	j := &DefaultStrategy{
+	var j = &DefaultStrategy{
 		Signer: &jwt.DefaultSigner{
 			GetPrivateKey: func(_ context.Context) (interface{}, error) {
 				return key, nil
@@ -61,11 +61,11 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybrid
 		AuthorizeCodeLifespan: time.Hour,
 		RefreshTokenLifespan:  time.Hour,
 	}
-	store := storage.NewMemoryStore()
 	return OpenIDConnectHybridHandler{
-		AuthorizeExplicitGrantAuthHandler: &oauth2.AuthorizeExplicitGrantAuthHandler{
+		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
 			AuthorizeCodeStrategy: hmacStrategy,
-			AuthorizeCodeStorage:  store,
+			AccessTokenStrategy:   hmacStrategy,
+			CoreStorage:           storage.NewMemoryStore(),
 			Config:                config,
 		},
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
