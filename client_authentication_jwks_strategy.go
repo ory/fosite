@@ -30,19 +30,19 @@ type JWKSFetcherStrategy interface {
 // DefaultJWKSFetcherStrategy is a default implementation of the JWKSFetcherStrategy interface.
 type DefaultJWKSFetcherStrategy struct {
 	client           *retryablehttp.Client
-	cache            *ristretto.Cache
+	cache            *ristretto.Cache[string, *jose.JSONWebKeySet]
 	ttl              time.Duration
 	clientSourceFunc func(ctx context.Context) *retryablehttp.Client
 }
 
 // NewDefaultJWKSFetcherStrategy returns a new instance of the DefaultJWKSFetcherStrategy.
 func NewDefaultJWKSFetcherStrategy(opts ...func(*DefaultJWKSFetcherStrategy)) JWKSFetcherStrategy {
-	dc, err := ristretto.NewCache(&ristretto.Config{
+	dc, err := ristretto.NewCache(&ristretto.Config[string, *jose.JSONWebKeySet]{
 		NumCounters: 10000 * 10,
 		MaxCost:     10000,
 		BufferItems: 64,
 		Metrics:     false,
-		Cost: func(value interface{}) int64 {
+		Cost: func(value *jose.JSONWebKeySet) int64 {
 			return 1
 		},
 	})
@@ -71,7 +71,7 @@ func JKWKSFetcherWithDefaultTTL(ttl time.Duration) func(*DefaultJWKSFetcherStrat
 }
 
 // JWKSFetcherWithCache sets the cache to use.
-func JWKSFetcherWithCache(cache *ristretto.Cache) func(*DefaultJWKSFetcherStrategy) {
+func JWKSFetcherWithCache(cache *ristretto.Cache[string, *jose.JSONWebKeySet]) func(*DefaultJWKSFetcherStrategy) {
 	return func(s *DefaultJWKSFetcherStrategy) {
 		s.cache = cache
 	}
@@ -96,8 +96,8 @@ func JWKSFetcherWithHTTPClientSource(clientSourceFunc func(ctx context.Context) 
 // to fetch the key.
 func (s *DefaultJWKSFetcherStrategy) Resolve(ctx context.Context, location string, ignoreCache bool) (*jose.JSONWebKeySet, error) {
 	cacheKey := defaultJWKSFetcherStrategyCachePrefix + location
-	key, ok := s.cache.Get(cacheKey)
-	if !ok || ignoreCache {
+	set, found := s.cache.Get(cacheKey)
+	if !found || ignoreCache {
 		req, err := retryablehttp.NewRequest("GET", location, nil)
 		if err != nil {
 			return nil, errorsx.WithStack(ErrServerError.WithHintf("Unable to create HTTP 'GET' request to fetch  JSON Web Keys from location '%s'.", location).WithWrap(err).WithDebug(err.Error()))
@@ -127,7 +127,7 @@ func (s *DefaultJWKSFetcherStrategy) Resolve(ctx context.Context, location strin
 		return &set, nil
 	}
 
-	return key.(*jose.JSONWebKeySet), nil
+	return set, nil
 }
 
 func (s *DefaultJWKSFetcherStrategy) WaitForCache() {
