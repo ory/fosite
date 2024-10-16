@@ -15,8 +15,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/coocood/freecache"
-
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/hmac"
@@ -42,9 +40,8 @@ func TestDeviceAuth_HandleDeviceEndpointRequest(t *testing.T) {
 	h := OpenIDConnectDeviceHandler{
 		OpenIDConnectRequestStorage: store,
 		DeviceCodeStrategy: &rfc8628.DefaultDeviceStrategy{
-			Enigma:           &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobar")}},
-			RateLimiterCache: freecache.NewCache(1024 * 1024),
-			Config:           config,
+			Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobar")}},
+			Config: config,
 		},
 		Config: config,
 		IDTokenHandleHelper: &IDTokenHandleHelper{

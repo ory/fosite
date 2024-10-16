@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coocood/freecache"
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite/internal"
@@ -34,8 +33,7 @@ var hmacshaStrategy = oauth2.NewHMACSHAStrategy(
 )
 
 var RFC8628HMACSHAStrategy = DefaultDeviceStrategy{
-	Enigma:           &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
-	RateLimiterCache: freecache.NewCache(1024 * 1024),
+	Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
 	Config: &fosite.Config{
 		DeviceAndUserCodeLifespan: time.Minute * 30,
 	},
@@ -350,7 +348,7 @@ func TestDeviceUserCode_HandleTokenEndpointRequest_RateLimiting(t *testing.T) {
 			err = h.HandleTokenEndpointRequest(context.Background(), areq)
 			require.NoError(t, err, "%+v", err)
 			err = h.HandleTokenEndpointRequest(context.Background(), areq)
-			require.Error(t, fosite.ErrPollingRateLimited, err)
+			require.Error(t, fosite.ErrSlowDown, err)
 			time.Sleep(10 * time.Second)
 			err = h.HandleTokenEndpointRequest(context.Background(), areq)
 			require.NoError(t, err, "%+v", err)

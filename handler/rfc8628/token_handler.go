@@ -247,7 +247,7 @@ func (c DeviceCodeTokenEndpointHandler) validateCode(ctx context.Context, reques
 		return err
 	}
 	if shouldRateLimit {
-		return errorsx.WithStack(fosite.ErrPollingRateLimited)
+		return errorsx.WithStack(fosite.ErrSlowDown)
 	}
 	return nil
 }
