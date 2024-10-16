@@ -5,11 +5,9 @@ package rfc8628
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 	"time"
 
-	"github.com/coocood/freecache"
 	"github.com/mohae/deepcopy"
 
 	"github.com/ory/x/errorsx"
@@ -101,9 +99,8 @@ func (s *DefaultDeviceFlowSession) SetBrowserFlowCompleted(flag bool) {
 
 // DefaultDeviceStrategy implements the default device strategy
 type DefaultDeviceStrategy struct {
-	Enigma           *enigma.HMACStrategy
-	RateLimiterCache *freecache.Cache
-	Config           interface {
+	Enigma *enigma.HMACStrategy
+	Config interface {
 		fosite.DeviceProvider
 		fosite.DeviceAndUserCodeLifespanProvider
 	}
@@ -173,70 +170,5 @@ func (h *DefaultDeviceStrategy) ValidateDeviceCode(ctx context.Context, r fosite
 
 // ShouldRateLimit is used to decide whether a request should be rate-limited
 func (h *DefaultDeviceStrategy) ShouldRateLimit(context context.Context, code string) (bool, error) {
-	key := code + "_limiter"
-
-	keyBytes := []byte(key)
-	object, err := h.RateLimiterCache.Get(keyBytes)
-	// This code is not in the cache, so we just add it
-	if err != nil {
-		timer := new(expirationTimer)
-		timer.Counter = 1
-		timer.NotUntil = h.getNotUntil(context, 1)
-		exp, err := h.serializeExpiration(timer)
-		if err != nil {
-			return false, errorsx.WithStack(fosite.ErrServerError.WithHintf("Failed to serialize expiration struct %s", err))
-		}
-		// Set the expiration time as value, and use the lifespan of the device code as TTL.
-		h.RateLimiterCache.Set(keyBytes, exp, int(h.Config.GetDeviceAndUserCodeLifespan(context).Seconds()))
-		return false, nil
-	}
-
-	expiration, err := h.deserializeExpiration(object)
-	if err != nil {
-		return false, errorsx.WithStack(fosite.ErrServerError.WithHintf("Failed to store to rate limit cache: %s", err))
-	}
-
-	// The code is valid and enough time has passed since the last call.
-	if time.Now().After(expiration.NotUntil) {
-		expiration.NotUntil = h.getNotUntil(context, expiration.Counter)
-		exp, err := h.serializeExpiration(expiration)
-		if err != nil {
-			return false, errorsx.WithStack(fosite.ErrServerError.WithHintf("Failed to serialize expiration struct %s", err))
-		}
-		h.RateLimiterCache.Set(keyBytes, exp, int(h.Config.GetDeviceAndUserCodeLifespan(context).Seconds()))
-		return false, nil
-	}
-
-	// The token calls were made too fast, we need to double the interval period
-	expiration.NotUntil = h.getNotUntil(context, expiration.Counter+1)
-	expiration.Counter += 1
-	exp, err := h.serializeExpiration(expiration)
-	if err != nil {
-		return false, errorsx.WithStack(fosite.ErrServerError.WithHintf("Failed to serialize expiration struct %s", err))
-	}
-	h.RateLimiterCache.Set(keyBytes, exp, int(h.Config.GetDeviceAndUserCodeLifespan(context).Seconds()))
-
-	return true, nil
-}
-
-func (h *DefaultDeviceStrategy) getNotUntil(context context.Context, multiplier int) time.Time {
-	duration := h.Config.GetDeviceAuthTokenPollingInterval(context)
-	expiration := time.Now().Add(duration * time.Duration(multiplier)).Add(-POLLING_RATE_LIMITING_LEEWAY)
-	return expiration
-}
-
-type expirationTimer struct {
-	NotUntil time.Time
-	Counter  int
-}
-
-func (h *DefaultDeviceStrategy) serializeExpiration(exp *expirationTimer) ([]byte, error) {
-	b, err := json.Marshal(exp)
-	return b, err
-}
-
-func (h *DefaultDeviceStrategy) deserializeExpiration(b []byte) (*expirationTimer, error) {
-	timer := new(expirationTimer)
-	err := json.Unmarshal(b, timer)
-	return timer, err
+	return false, nil
 }
