@@ -49,10 +49,29 @@ func (c *IDTokenClaims) ToMap() map[string]interface{} {
 		ret["jti"] = uuid.New().String()
 	}
 
+	if _, ok := ret["aud"].([]string); !ok {
+		if _, ok := ret["aud"].(string); ok {
+			ret["aud"] = []string{ret["aud"].(string)}
+		} else {
+			ret["aud"] = []string{}
+		}
+	}
+
 	if len(c.Audience) > 0 {
-		ret["aud"] = c.Audience
-	} else {
-		ret["aud"] = []string{}
+		newAuds := []string{}
+		m := map[string]struct{}{}
+		for _, a := range c.Audience {
+			m[a] = struct{}{}
+			newAuds = append(newAuds, a)
+		}
+
+		var extraAud = ret["aud"].([]string)
+		for _, aud := range extraAud {
+			if _, ok := m[aud]; !ok {
+				newAuds = append(newAuds, aud)
+			}
+		}
+		ret["aud"] = newAuds
 	}
 
 	if !c.IssuedAt.IsZero() {

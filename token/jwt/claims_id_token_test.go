@@ -76,3 +76,53 @@ func TestIDTokenClaimsToMap(t *testing.T) {
 		"nonce":     idTokenClaims.Nonce,
 	}, idTokenClaims.ToMap())
 }
+
+func TestIDTokenClaimsToMap_new_aud(t *testing.T) {
+	// extra & overlap
+	IDClaims := &IDTokenClaims{
+		JTI:      "foo-id",
+		Audience: []string{"default"},
+		Extra: map[string]any{
+			"aud": []string{"default", "new"},
+		},
+	}
+	assert.Equal(t, map[string]any{
+		"jti": "foo-id",
+		"aud": []string{"default", "new"},
+	}, IDClaims.ToMap())
+
+	// extra & no original values
+	IDClaims = &IDTokenClaims{
+		JTI: "foo-id",
+		Extra: map[string]any{
+			"aud": []string{"default", "new"},
+		},
+	}
+	assert.Equal(t, map[string]any{
+		"jti": "foo-id",
+		"aud": []string{"default", "new"},
+	}, IDClaims.ToMap())
+
+	// only original values
+	IDClaims = &IDTokenClaims{
+		JTI:      "foo-id",
+		Audience: []string{"default"},
+	}
+	assert.Equal(t, map[string]any{
+		"jti": "foo-id",
+		"aud": []string{"default"},
+	}, IDClaims.ToMap())
+
+	// extra value is an string
+	IDClaims = &IDTokenClaims{
+		JTI:      "foo-id",
+		Audience: []string{"default"},
+		Extra: map[string]any{
+			"aud": "new",
+		},
+	}
+	assert.Equal(t, map[string]any{
+		"jti": "foo-id",
+		"aud": []string{"default", "new"},
+	}, IDClaims.ToMap())
+}
