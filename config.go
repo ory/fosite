@@ -51,6 +51,12 @@ type DeviceAndUserCodeLifespanProvider interface {
 	GetDeviceAndUserCodeLifespan(ctx context.Context) time.Duration
 }
 
+// DeviceAndUserCodeLifespanProvider returns the provider for configuring the device and user code lifespan
+type UserCodeProvider interface {
+	GetUserCodeLength(ctx context.Context) int
+	GetUserCodeSymbols(ctx context.Context) []rune
+}
+
 // ScopeStrategyProvider returns the provider for configuring the scope strategy.
 type ScopeStrategyProvider interface {
 	// GetScopeStrategy returns the scope strategy.
