@@ -11,8 +11,8 @@ import (
 
 type Storage interface {
 
-	// GetPreAuthorizeCodeSession returns pre-authorize code session
+	// GetPreAuthorizeSession returns pre-authorize code session
 	// since the specification says pre-authorize code can only be used once,
 	// implementation of this method may delete the session right away from persistence storage
-	GetPreAuthorizeCodeSession(ctx context.Context, signature string, session fosite.Session) (request fosite.PreAuthorizeCodeRequester, err error)
+	GetPreAuthorizeSession(ctx context.Context, signature string, session fosite.Session) (request fosite.PreAuthorizeRequester, err error)
 }

@@ -406,8 +406,8 @@ type DeviceAuthorizeRequester interface {
 	Requester
 }
 
-// PreAuthorizeCodeRequester is a pre-authorize endpoint's request context
-type PreAuthorizeCodeRequester interface {
+// PreAuthorizeRequester is a pre-authorize endpoint's request context
+type PreAuthorizeRequester interface {
 	// SetTxCode sets the transaction code
 	SetTxCode(txCode string)
 	// GetTxCode gets the transaction code

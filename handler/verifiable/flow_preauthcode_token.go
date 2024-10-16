@@ -62,7 +62,7 @@ func (c *PreAuthorizeCodeTokenHandler) HandleTokenEndpointRequest(ctx context.Co
 	code := request.GetRequestForm().Get("pre-authorized_code")
 
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	preAuthRequest, err := c.Storage.GetPreAuthorizeCodeSession(ctx, signature, request.GetSession())
+	preAuthRequest, err := c.Storage.GetPreAuthorizeSession(ctx, signature, request.GetSession())
 	if err != nil && errors.Is(err, fosite.ErrNotFound) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("Invalid Pre-Authorized Code or the Pre-Authorized Code has expired."))
 	} else if err != nil {
