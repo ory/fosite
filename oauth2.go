@@ -18,6 +18,8 @@ type TokenType string
 
 type GrantType string
 
+type UserAuthenticationStatus int
+
 const (
 	AccessToken   TokenType = "access_token"
 	RefreshToken  TokenType = "refresh_token"
@@ -35,10 +37,15 @@ const (
 	GrantTypeAuthorizationCode GrantType = "authorization_code"
 	GrantTypePassword          GrantType = "password"
 	GrantTypeClientCredentials GrantType = "client_credentials"
-	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"     //nolint:gosec // this is not a hardcoded credential
-	GrantTypeTokenExchange     GrantType = "urn:ietf:params:oauth:grant-type:token-exchange" //nolint:gosec // this is not a hardcoded credential
-	GrantTypeDeviceCode        GrantType = "urn:ietf:params:oauth:grant-type:device_code"    //nolint:gosec // this is not a hardcoded credential
+	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"          //nolint:gosec // this is not a hardcoded credential
+	GrantTypeTokenExchange     GrantType = "urn:ietf:params:oauth:grant-type:token-exchange"      //nolint:gosec // this is not a hardcoded credential
+	GrantTypeDeviceCode        GrantType = "urn:ietf:params:oauth:grant-type:device_code"         //nolint:gosec // this is not a hardcoded credential
+	GrantTypePreAuthorizeCode  GrantType = "urn:ietf:params:oauth:grant-type:pre-authorized_code" //nolint:gosec // this is not a hardcoded credential
 	BearerAccessToken          string    = "bearer"
+
+	UserAuthenticationPending UserAuthenticationStatus = iota
+	UserAuthenticationDenied
+	UserAuthenticationApproved
 )
 
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
@@ -396,6 +403,19 @@ type DeviceAuthorizeRequester interface {
 	GetStatus() DeviceAuthorizeStatus
 	SetLastChecked(lastChecked time.Time)
 	GetLastChecked() time.Time
+	Requester
+}
+
+// PreAuthorizeRequester is a pre-authorize endpoint's request context
+type PreAuthorizeRequester interface {
+	// SetTxCode sets the transaction code
+	SetTxCode(txCode string)
+	// GetTxCode gets the transaction code
+	GetTxCode() string
+	// SetUserAuthenticationStatus sets the authentication status: pending, failed, success
+	SetUserAuthenticationStatus(status UserAuthenticationStatus)
+	// GetUserAuthenticationStatus gets the current authentication status
+	GetUserAuthenticationStatus() UserAuthenticationStatus
 	Requester
 }
 
