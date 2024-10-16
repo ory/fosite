@@ -148,6 +148,7 @@ type Configurator interface {
 	RevocationHandlersProvider
 	UseLegacyErrorFormatProvider
 	DeviceEndpointHandlersProvider
+	UserCodeProvider
 	DeviceProvider
 }
 

@@ -103,6 +103,7 @@ type DefaultDeviceStrategy struct {
 	Config interface {
 		fosite.DeviceProvider
 		fosite.DeviceAndUserCodeLifespanProvider
+		fosite.UserCodeProvider
 	}
 }
 
@@ -110,7 +111,7 @@ var _ RFC8628CodeStrategy = (*DefaultDeviceStrategy)(nil)
 
 // GenerateUserCode generates a user_code
 func (h *DefaultDeviceStrategy) GenerateUserCode(ctx context.Context) (string, string, error) {
-	seq, err := randx.RuneSequence(8, []rune(randx.AlphaUpper))
+	seq, err := randx.RuneSequence(h.Config.GetUserCodeLength(ctx), h.Config.GetUserCodeSymbols(ctx))
 	if err != nil {
 		return "", "", err
 	}
