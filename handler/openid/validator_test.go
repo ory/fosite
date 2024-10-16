@@ -21,12 +21,11 @@ func TestValidatePrompt(t *testing.T) {
 	config := &fosite.Config{
 		MinParameterEntropy: fosite.MinParameterEntropy,
 	}
-	j := &DefaultStrategy{
+	var j = &DefaultStrategy{
 		Signer: &jwt.DefaultSigner{
 			GetPrivateKey: func(_ context.Context) (interface{}, error) {
 				return key, nil
-			},
-		},
+			}},
 		Config: &fosite.Config{
 			MinParameterEntropy: fosite.MinParameterEntropy,
 		},
@@ -34,7 +33,7 @@ func TestValidatePrompt(t *testing.T) {
 
 	v := NewOpenIDConnectRequestValidator(j, config)
 
-	genIDToken := func(c jwt.IDTokenClaims) string {
+	var genIDToken = func(c jwt.IDTokenClaims) string {
 		s, _, err := j.Generate(context.TODO(), c.ToMapClaims(), jwt.NewHeaders())
 		require.NoError(t, err)
 		return s
