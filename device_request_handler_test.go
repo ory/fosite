@@ -22,7 +22,17 @@ import (
 func TestNewDeviceRequestWithPublicClient(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockStorage(ctrl)
-	client := &DefaultClient{ID: "client_id"}
+	deviceClient := &DefaultClient{ID: "client_id"}
+	deviceClient.Public = true
+	deviceClient.Scopes = []string{"17", "42"}
+	deviceClient.Audience = []string{"aud2"}
+	deviceClient.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+
+	authCodeClient := &DefaultClient{ID: "client_id_2"}
+	authCodeClient.Public = true
+	authCodeClient.Scopes = []string{"17", "42"}
+	authCodeClient.GrantTypes = []string{"authorization_code"}
+
 	defer ctrl.Finish()
 	config := &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
 	fosite := &Fosite{Store: store, Config: config}
@@ -63,10 +73,7 @@ func TestNewDeviceRequestWithPublicClient(t *testing.T) {
 		},
 		method: "POST",
 		mock: func() {
-			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-			client.Public = true
-			client.Scopes = []string{"17", "42"}
-			client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(deviceClient, nil)
 		},
 		expectedError: ErrInvalidScope,
 	}, {
@@ -74,29 +81,22 @@ func TestNewDeviceRequestWithPublicClient(t *testing.T) {
 		form: url.Values{
 			"client_id": {"client_id"},
 			"scope":     {"17 42"},
-			"audience":  {"aud"},
+			"audience":  {"random_aud"},
 		},
 		method: "POST",
 		mock: func() {
-			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-			client.Public = true
-			client.Scopes = []string{"17", "42"}
-			client.Audience = []string{"aud2"}
-			client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(deviceClient, nil)
 		},
 		expectedError: ErrInvalidRequest,
 	}, {
 		description: "fails because it doesn't have the proper grant",
 		form: url.Values{
-			"client_id": {"client_id"},
+			"client_id": {"client_id_2"},
 			"scope":     {"17 42"},
 		},
 		method: "POST",
 		mock: func() {
-			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-			client.Public = true
-			client.Scopes = []string{"17", "42"}
-			client.GrantTypes = []string{"authorization_code"}
+			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id_2")).Return(authCodeClient, nil)
 		},
 		expectedError: ErrInvalidGrant,
 	}, {
@@ -107,10 +107,7 @@ func TestNewDeviceRequestWithPublicClient(t *testing.T) {
 		},
 		method: "POST",
 		mock: func() {
-			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-			client.Public = true
-			client.Scopes = []string{"17", "42"}
-			client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+			store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(deviceClient, nil)
 		},
 	}} {
 		t.Run(fmt.Sprintf("case=%d description=%s", k, c.description), func(t *testing.T) {
@@ -123,10 +120,8 @@ func TestNewDeviceRequestWithPublicClient(t *testing.T) {
 			}
 
 			ar, err := fosite.NewDeviceRequest(context.Background(), r)
-			if c.expectedError != nil {
-				assert.EqualError(t, err, c.expectedError.Error())
-			} else {
-				require.NoError(t, err)
+			require.ErrorIs(t, err, c.expectedError)
+			if c.expectedError == nil {
 				assert.NotNil(t, ar.GetRequestedAt())
 			}
 		})
@@ -141,6 +136,12 @@ func TestNewDeviceRequestWithClientAuthn(t *testing.T) {
 	defer ctrl.Finish()
 	config := &Config{ClientSecretsHasher: hasher, ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}
 	fosite := &Fosite{Store: store, Config: config}
+
+	client.Public = false
+	client.Secret = []byte("client_secret")
+	client.Scopes = []string{"foo", "bar"}
+	client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+
 	for k, c := range []struct {
 		header        http.Header
 		form          url.Values
@@ -148,8 +149,8 @@ func TestNewDeviceRequestWithClientAuthn(t *testing.T) {
 		expectedError error
 		mock          func()
 		expect        DeviceRequester
+		description   string
 	}{
-		// No client authn provided
 		{
 			form: url.Values{
 				"client_id": {"client_id"},
@@ -159,14 +160,26 @@ func TestNewDeviceRequestWithClientAuthn(t *testing.T) {
 			method:        "POST",
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-				client.Public = false
-				client.Secret = []byte("client_secret")
-				client.Scopes = []string{"foo", "bar"}
-				client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
 				hasher.EXPECT().Compare(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New(""))
 			},
+			description: "Should failed becaue no client authn provided.",
 		},
-		// success
+		{
+			form: url.Values{
+				"client_id": {"client_id2"},
+				"scope":     {"foo bar"},
+			},
+			header: http.Header{
+				"Authorization": {basicAuth("client_id", "client_secret")},
+			},
+			expectedError: ErrInvalidRequest,
+			method:        "POST",
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
+				hasher.EXPECT().Compare(gomock.Any(), gomock.Eq([]byte("client_secret")), gomock.Eq([]byte("client_secret"))).Return(nil)
+			},
+			description: "should fail because different client is used in authn than in form",
+		},
 		{
 			form: url.Values{
 				"client_id": {"client_id"},
@@ -178,15 +191,12 @@ func TestNewDeviceRequestWithClientAuthn(t *testing.T) {
 			method: "POST",
 			mock: func() {
 				store.EXPECT().GetClient(gomock.Any(), gomock.Eq("client_id")).Return(client, nil)
-				client.Public = false
-				client.Secret = []byte("client_secret")
-				client.Scopes = []string{"foo", "bar"}
-				client.GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
 				hasher.EXPECT().Compare(gomock.Any(), gomock.Eq([]byte("client_secret")), gomock.Eq([]byte("client_secret"))).Return(nil)
 			},
+			description: "should succeed",
 		},
 	} {
-		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case=%d description=%s", k, c.description), func(t *testing.T) {
 			c.mock()
 			r := &http.Request{
 				Header:   c.header,
@@ -196,11 +206,9 @@ func TestNewDeviceRequestWithClientAuthn(t *testing.T) {
 			}
 
 			req, err := fosite.NewDeviceRequest(context.Background(), r)
-			if c.expectedError != nil {
-				assert.EqualError(t, err, c.expectedError.Error())
-			} else {
-				require.NoError(t, err)
-				assert.NotNil(t, req.GetRequestedAt())
+			require.ErrorIs(t, err, c.expectedError)
+			if c.expectedError == nil {
+				assert.NotZero(t, req.GetRequestedAt())
 			}
 		})
 	}
