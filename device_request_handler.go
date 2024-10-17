@@ -27,7 +27,7 @@ func (f *Fosite) NewDeviceRequest(ctx context.Context, r *http.Request) (_ Devic
 		return request, errorsx.WithStack(ErrInvalidRequest.WithHintf("HTTP method is '%s', expected 'POST'.", r.Method))
 	}
 	if err := r.ParseForm(); err != nil {
-		return nil, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
+		return request, errorsx.WithStack(ErrInvalidRequest.WithHint("Unable to parse HTTP body, make sure to send a properly formatted form request body.").WithWrap(err).WithDebug(err.Error()))
 	}
 	if len(r.PostForm) == 0 {
 		return request, errorsx.WithStack(ErrInvalidRequest.WithHint("The POST body can not be empty."))
@@ -44,11 +44,11 @@ func (f *Fosite) NewDeviceRequest(ctx context.Context, r *http.Request) (_ Devic
 	request.Client = client
 
 	if !client.GetGrantTypes().Has(string(GrantTypeDeviceCode)) {
-		return nil, errorsx.WithStack(ErrInvalidGrant.WithHint("The requested OAuth 2.0 Client does not have the 'urn:ietf:params:oauth:grant-type:device_code' grant."))
+		return request, errorsx.WithStack(ErrInvalidGrant.WithHint("The requested OAuth 2.0 Client does not have the 'urn:ietf:params:oauth:grant-type:device_code' grant."))
 	}
 
 	if err := f.validateDeviceScope(ctx, r, request); err != nil {
-		return nil, err
+		return request, err
 	}
 
 	if err := f.validateAudience(ctx, r, request); err != nil {
@@ -59,12 +59,13 @@ func (f *Fosite) NewDeviceRequest(ctx context.Context, r *http.Request) (_ Devic
 }
 
 func (f *Fosite) validateDeviceScope(ctx context.Context, r *http.Request, request *DeviceRequest) error {
-	scope := RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
-	for _, permission := range scope {
-		if !f.Config.GetScopeStrategy(ctx)(request.Client.GetScopes(), permission) {
-			return errorsx.WithStack(ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", permission))
+	scopes := RemoveEmpty(strings.Split(request.Form.Get("scope"), " "))
+	scopeStrategy := f.Config.GetScopeStrategy(ctx)
+	for _, scope := range scopes {
+		if !scopeStrategy(request.Client.GetScopes(), scope) {
+			return errorsx.WithStack(ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request scope '%s'.", scope))
 		}
 	}
-	request.SetRequestedScopes(scope)
+	request.SetRequestedScopes(scopes)
 	return nil
 }
