@@ -17,21 +17,47 @@ type TokenRevocationHandler struct {
 	TokenRevocationStorage TokenRevocationStorage
 	RefreshTokenStrategy   RefreshTokenStrategy
 	AccessTokenStrategy    AccessTokenStrategy
+
+	// RevokeRefreshTokenOnRequestOnly is used to indicate if the refresh token should be revoked only if
+	// token passed to the request is a refresh token. The default behavior revokes both the access and refresh
+	// tokens if the token passed to the request is either.
+	//
+	// [RFC7009 - Section 2.1] Depending on the authorization server's revocation policy, the
+	// revocation of a particular token may cause the revocation of related
+	// tokens and the underlying authorization grant.  If the particular
+	// token is a refresh token and the authorization server supports the
+	// revocation of access tokens, then the authorization server SHOULD
+	// also invalidate all access tokens based on the same authorization
+	// grant (see Implementation Note).  If the token passed to the request
+	// is an access token, the server MAY revoke the respective refresh
+	// token as well.
+	RevokeRefreshTokenOnRequestOnly bool
 }
 
 // RevokeToken implements https://tools.ietf.org/html/rfc7009#section-2.1
 // The token type hint indicates which token type check should be performed first.
 func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, tokenType fosite.TokenType, client fosite.Client) error {
+	actualTokenType := tokenType
 	discoveryFuncs := []func() (request fosite.Requester, err error){
 		func() (request fosite.Requester, err error) {
 			// Refresh token
 			signature := r.RefreshTokenStrategy.RefreshTokenSignature(ctx, token)
-			return r.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
+			ar, err := r.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
+			if err == nil {
+				actualTokenType = fosite.RefreshToken
+			}
+
+			return ar, err
 		},
 		func() (request fosite.Requester, err error) {
 			// Access token
 			signature := r.AccessTokenStrategy.AccessTokenSignature(ctx, token)
-			return r.TokenRevocationStorage.GetAccessTokenSession(ctx, signature, nil)
+			ar, err := r.TokenRevocationStorage.GetAccessTokenSession(ctx, signature, nil)
+			if err == nil {
+				actualTokenType = fosite.AccessToken
+			}
+
+			return ar, err
 		},
 	}
 
@@ -55,7 +81,10 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 	}
 
 	requestID := ar.GetID()
-	err1 = r.TokenRevocationStorage.RevokeRefreshToken(ctx, requestID)
+	if !r.RevokeRefreshTokenOnRequestOnly || actualTokenType == fosite.RefreshToken {
+		err1 = r.TokenRevocationStorage.RevokeRefreshToken(ctx, requestID)
+	}
+
 	err2 = r.TokenRevocationStorage.RevokeAccessToken(ctx, requestID)
 
 	return storeErrorsToRevocationError(err1, err2)
