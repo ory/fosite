@@ -284,6 +284,9 @@ type AuthorizeRequester interface {
 	// GetDefaultResponseMode gets default response mode for a response type in a flow
 	GetDefaultResponseMode() ResponseModeType
 
+	// GetRequestMethod returns the authorize requests HTTP method.
+	GetRequestMethod() string
+
 	Requester
 }
 
