@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRandomBytes(t *testing.T) {
@@ -17,13 +18,11 @@ func TestRandomBytes(t *testing.T) {
 
 func TestPseudoRandomness(t *testing.T) {
 	runs := 65536
-	results := map[string]bool{}
+	results := map[string]struct{}{}
 	for i := 0; i < runs; i++ {
 		bytes, err := RandomBytes(128)
-		assert.NoError(t, err)
-
-		_, ok := results[string(bytes)]
-		assert.False(t, ok)
-		results[string(bytes)] = true
+		require.NoError(t, err)
+		results[string(bytes)] = struct{}{}
 	}
+	assert.Len(t, results, runs)
 }
