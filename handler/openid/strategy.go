@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/token/jwt"
 )
 
 type OpenIDConnectTokenStrategy interface {
 	GenerateIDToken(ctx context.Context, lifespan time.Duration, requester fosite.Requester) (token string, err error)
+	DecodeIDToken(ctx context.Context, requester fosite.Requester, token string) (*jwt.Token, error)
 }

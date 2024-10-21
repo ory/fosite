@@ -7,7 +7,6 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
-	"github.com/ory/fosite/token/jwt"
 )
 
 // OpenIDConnectExplicitFactory creates an OpenID Connect explicit ("authorize code flow") grant handler.
@@ -19,7 +18,7 @@ func OpenIDConnectExplicitFactory(config fosite.Configurator, storage interface{
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(jwt.Signer), config),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(openid.OpenIDConnectTokenStrategy), config),
 		Config:                        config,
 	}
 }
@@ -50,7 +49,7 @@ func OpenIDConnectImplicitFactory(config fosite.Configurator, storage interface{
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(jwt.Signer), config),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(openid.OpenIDConnectTokenStrategy), config),
 	}
 }
 
@@ -76,6 +75,6 @@ func OpenIDConnectHybridFactory(config fosite.Configurator, storage interface{},
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
 		OpenIDConnectRequestStorage:   storage.(openid.OpenIDConnectRequestStorage),
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(jwt.Signer), config),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(openid.OpenIDConnectTokenStrategy), config),
 	}
 }
