@@ -51,8 +51,13 @@ func (ad *RFC9396AuthorizationDetailsType) Equals(cmp *RFC9396AuthorizationDetai
 		return false
 	}
 
-	return ad.Type == cmp.Type &&
-		ad.RFC9396AuthorizationDetailsTypeHandler.GetID(ad) == cmp.RFC9396AuthorizationDetailsTypeHandler.GetID(cmp)
+	if adID, err := ad.RFC9396AuthorizationDetailsTypeHandler.GetID(ad); err != nil {
+		return false
+	} else if cmpID, err := cmp.RFC9396AuthorizationDetailsTypeHandler.GetID(cmp); err != nil {
+		return false
+	} else {
+		return ad.Type == cmp.Type && adID == cmpID
+	}
 }
 
 func (ad *RFC9396AuthorizationDetailsType) Validate() error {
@@ -128,7 +133,7 @@ func (ad *RFC9396AuthorizationDetailsType) String() string {
 type RFC9396AuthorizationDetailsTypeHandler interface {
 	Validate(t *RFC9396AuthorizationDetailsType) error
 
-	GetID(t *RFC9396AuthorizationDetailsType) string
+	GetID(t *RFC9396AuthorizationDetailsType) (string, error)
 }
 
 type RFC9396DefaultAuthorizationDetailsTypeHandler struct {
@@ -145,16 +150,16 @@ func (h *RFC9396DefaultAuthorizationDetailsTypeHandler) Validate(t *RFC9396Autho
 }
 
 // GetID generates a unique identifier to identify this object
-func (h *RFC9396DefaultAuthorizationDetailsTypeHandler) GetID(t *RFC9396AuthorizationDetailsType) string {
+func (h *RFC9396DefaultAuthorizationDetailsTypeHandler) GetID(t *RFC9396AuthorizationDetailsType) (string, error) {
 	if h.RFC9396GetAuthorizationDetailsIDStrategy == nil {
 		h.RFC9396GetAuthorizationDetailsIDStrategy = RFC9396GetAuthorizationDetailsIDDefaultStrategy
 	}
 	return h.RFC9396GetAuthorizationDetailsIDStrategy(t)
 }
 
-type RFC9396GetAuthorizationDetailsIDStrategy func(t *RFC9396AuthorizationDetailsType) string
+type RFC9396GetAuthorizationDetailsIDStrategy func(t *RFC9396AuthorizationDetailsType) (string, error)
 
-func RFC9396GetAuthorizationDetailsIDDefaultStrategy(t *RFC9396AuthorizationDetailsType) string {
+func RFC9396GetAuthorizationDetailsIDDefaultStrategy(t *RFC9396AuthorizationDetailsType) (string, error) {
 	// sort the string array first to get consistent result
 	sort.Strings(t.Actions)
 	sort.Strings(t.Datatypes)
@@ -163,16 +168,17 @@ func RFC9396GetAuthorizationDetailsIDDefaultStrategy(t *RFC9396AuthorizationDeta
 	// key is concatenation of known fields, then hash it
 	key := fmt.Sprintf("%v.%v.%v.%v.%v", t.Identifier, t.Actions, t.Datatypes, t.Locations, t.Privileges)
 	hash := sha512.Sum512([]byte(key))
-	return base64.RawURLEncoding.EncodeToString(hash[:])
+	return base64.RawURLEncoding.EncodeToString(hash[:]), nil
 }
 
-func RFC9396GetAuthorizationDetailsTypeIDJSONHashStrategy(t *RFC9396AuthorizationDetailsType) string {
+func RFC9396GetAuthorizationDetailsTypeIDJSONHashStrategy(t *RFC9396AuthorizationDetailsType) (string, error) {
 	// for this, we just hash the whole json
 	if b, err := t.MarshalJSON(); err == nil {
 		hash := sha512.Sum512(b)
-		return base64.RawURLEncoding.EncodeToString(hash[:])
+		return base64.RawURLEncoding.EncodeToString(hash[:]), nil
+	} else {
+		return "", err
 	}
-	return RFC9396GetAuthorizationDetailsIDDefaultStrategy(t) // when error, fallback to default strategy
 }
 
 // RFC9396AuthorizationDetailsStrategy is a strategy for matching authorization detail types.
