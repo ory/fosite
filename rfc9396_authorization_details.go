@@ -51,12 +51,14 @@ func (ad *RFC9396AuthorizationDetailsType) Equals(cmp *RFC9396AuthorizationDetai
 		return false
 	}
 
-	if adID, err := ad.RFC9396AuthorizationDetailsTypeHandler.GetID(ad); err != nil {
+	if ad.Type != cmp.Type {
+		return false
+	} else if adID, err := ad.RFC9396AuthorizationDetailsTypeHandler.GetID(ad); err != nil {
 		return false
 	} else if cmpID, err := cmp.RFC9396AuthorizationDetailsTypeHandler.GetID(cmp); err != nil {
 		return false
 	} else {
-		return ad.Type == cmp.Type && adID == cmpID
+		return adID == cmpID
 	}
 }
 
