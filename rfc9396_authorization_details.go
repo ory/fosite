@@ -5,9 +5,11 @@ package fosite
 
 import (
 	"context"
+	"crypto/sha512"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"slices"
+	"sort"
 
 	"github.com/ory/x/errorsx"
 )
@@ -41,7 +43,23 @@ type RFC9396AuthorizationDetailsType struct {
 }
 
 func (ad *RFC9396AuthorizationDetailsType) Equals(cmp *RFC9396AuthorizationDetailsType) bool {
-	return ad.RFC9396AuthorizationDetailsTypeHandler.Equals(ad, cmp)
+	if ad == nil && cmp == nil {
+		return true
+	}
+
+	if ad == nil || cmp == nil {
+		return false
+	}
+
+	if ad.Type != cmp.Type {
+		return false
+	} else if adID, err := ad.RFC9396AuthorizationDetailsTypeHandler.GetID(ad); err != nil {
+		return false
+	} else if cmpID, err := cmp.RFC9396AuthorizationDetailsTypeHandler.GetID(cmp); err != nil {
+		return false
+	} else {
+		return adID == cmpID
+	}
 }
 
 func (ad *RFC9396AuthorizationDetailsType) Validate() error {
@@ -115,30 +133,13 @@ func (ad *RFC9396AuthorizationDetailsType) String() string {
 }
 
 type RFC9396AuthorizationDetailsTypeHandler interface {
-	Equals(t1, t2 *RFC9396AuthorizationDetailsType) bool
-
 	Validate(t *RFC9396AuthorizationDetailsType) error
+
+	GetID(t *RFC9396AuthorizationDetailsType) (string, error)
 }
 
-type RFC9396DefaultAuthorizationDetailsTypeHandler struct{}
-
-// Equals checks if the common properties of the struct match. It ignores the Extra attributes
-// because it is not well-formed.
-func (h *RFC9396DefaultAuthorizationDetailsTypeHandler) Equals(t1, t2 *RFC9396AuthorizationDetailsType) bool {
-	if t1 == nil && t2 == nil {
-		return true
-	}
-
-	if t1 == nil || t2 == nil {
-		return false
-	}
-
-	return t1.Type == t2.Type &&
-		t1.Identifier == t2.Identifier &&
-		slices.Equal(t1.Actions, t2.Actions) &&
-		slices.Equal(t1.Datatypes, t2.Datatypes) &&
-		slices.Equal(t1.Locations, t2.Locations) &&
-		slices.Equal(t1.Privileges, t2.Privileges)
+type RFC9396DefaultAuthorizationDetailsTypeHandler struct {
+	RFC9396GetAuthorizationDetailsIDStrategy
 }
 
 // Validate validates the common properties.
@@ -148,6 +149,38 @@ func (h *RFC9396DefaultAuthorizationDetailsTypeHandler) Validate(t *RFC9396Autho
 	}
 
 	return nil
+}
+
+// GetID generates a unique identifier to identify this object
+func (h *RFC9396DefaultAuthorizationDetailsTypeHandler) GetID(t *RFC9396AuthorizationDetailsType) (string, error) {
+	if h.RFC9396GetAuthorizationDetailsIDStrategy == nil {
+		h.RFC9396GetAuthorizationDetailsIDStrategy = RFC9396GetAuthorizationDetailsIDDefaultStrategy
+	}
+	return h.RFC9396GetAuthorizationDetailsIDStrategy(t)
+}
+
+type RFC9396GetAuthorizationDetailsIDStrategy func(t *RFC9396AuthorizationDetailsType) (string, error)
+
+func RFC9396GetAuthorizationDetailsIDDefaultStrategy(t *RFC9396AuthorizationDetailsType) (string, error) {
+	// sort the string array first to get consistent result
+	sort.Strings(t.Actions)
+	sort.Strings(t.Datatypes)
+	sort.Strings(t.Locations)
+	sort.Strings(t.Privileges)
+	// key is concatenation of known fields, then hash it
+	key := fmt.Sprintf("%v.%v.%v.%v.%v", t.Identifier, t.Actions, t.Datatypes, t.Locations, t.Privileges)
+	hash := sha512.Sum512([]byte(key))
+	return base64.RawURLEncoding.EncodeToString(hash[:]), nil
+}
+
+func RFC9396GetAuthorizationDetailsTypeIDJSONHashStrategy(t *RFC9396AuthorizationDetailsType) (string, error) {
+	// for this, we just hash the whole json
+	if b, err := t.MarshalJSON(); err == nil {
+		hash := sha512.Sum512(b)
+		return base64.RawURLEncoding.EncodeToString(hash[:]), nil
+	} else {
+		return "", err
+	}
 }
 
 // RFC9396AuthorizationDetailsStrategy is a strategy for matching authorization detail types.
