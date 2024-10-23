@@ -12,7 +12,7 @@ import (
 	//"github.com/golang/mock/gomock"
 	"time"
 
-	"github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite/internal"
 
