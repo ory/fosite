@@ -8,7 +8,7 @@ import (
 )
 
 type ResourceOwnerPasswordCredentialsGrantStorage interface {
-	Authenticate(ctx context.Context, name string, secret string) error
+	Authenticate(ctx context.Context, name string, secret string) (string, error)
 	AccessTokenStorage
 	RefreshTokenStorage
 }

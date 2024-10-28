@@ -58,10 +58,14 @@ func (c *ResourceOwnerPasswordCredentialsGrantHandler) HandleTokenEndpointReques
 	password := request.GetRequestForm().Get("password")
 	if username == "" || password == "" {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Username or password are missing from the POST body."))
-	} else if err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Is(err, fosite.ErrNotFound) {
+	} else if identityID, err := c.ResourceOwnerPasswordCredentialsGrantStorage.Authenticate(ctx, username, password); errors.Is(err, fosite.ErrNotFound) {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("Unable to authenticate the provided username and password credentials.").WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	} else {
+		if sess, ok := request.GetSession().(fosite.ExtraClaimsSession); ok {
+			sess.GetExtraClaims()["identity_id"] = identityID
+		}
 	}
 
 	// Credentials must not be passed around, potentially leaking to the database!
