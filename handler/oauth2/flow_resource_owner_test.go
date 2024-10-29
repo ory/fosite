@@ -71,21 +71,21 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 				areq.Form.Set("password", "pan")
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"password"}, Scopes: []string{"foo-scope"}, Audience: []string{"https://www.ory.sh/api"}}
 
-				store.EXPECT().Authenticate(gomock.Any(), "peter", "pan").Return(fosite.ErrNotFound)
+				store.EXPECT().Authenticate(gomock.Any(), "peter", "pan").Return("", fosite.ErrNotFound)
 			},
 			expectErr: fosite.ErrInvalidGrant,
 		},
 		{
 			description: "should fail because error on lookup",
 			setup: func(config *fosite.Config) {
-				store.EXPECT().Authenticate(gomock.Any(), "peter", "pan").Return(errors.New(""))
+				store.EXPECT().Authenticate(gomock.Any(), "peter", "pan").Return("", errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
 		},
 		{
 			description: "should pass",
 			setup: func(config *fosite.Config) {
-				store.EXPECT().Authenticate(gomock.Any(), "peter", "pan").Return(nil)
+				store.EXPECT().Authenticate(gomock.Any(), "peter", "pan").Return("", nil)
 			},
 			check: func(areq *fosite.AccessRequest) {
 				//assert.NotEmpty(t, areq.GetSession().GetExpiresAt(fosite.AccessToken))

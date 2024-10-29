@@ -52,7 +52,7 @@ func TestMemoryStore_Authenticate(t *testing.T) {
 				Users:      tt.fields.Users,
 				usersMutex: tt.fields.usersMutex,
 			}
-			if err := s.Authenticate(tt.args.in0, tt.args.name, tt.args.secret); err == nil || !errors.Is(err, tt.wantErr) {
+			if _, err := s.Authenticate(tt.args.in0, tt.args.name, tt.args.secret); err == nil || !errors.Is(err, tt.wantErr) {
 				t.Errorf("Authenticate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
