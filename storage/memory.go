@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-jose/go-jose/v3"
+	"github.com/google/uuid"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
@@ -355,18 +356,18 @@ func (s *MemoryStore) DeleteRefreshTokenSession(_ context.Context, signature str
 	return nil
 }
 
-func (s *MemoryStore) Authenticate(_ context.Context, name string, secret string) error {
+func (s *MemoryStore) Authenticate(_ context.Context, name string, secret string) (subject string, err error) {
 	s.usersMutex.RLock()
 	defer s.usersMutex.RUnlock()
 
 	rel, ok := s.Users[name]
 	if !ok {
-		return fosite.ErrNotFound
+		return "", fosite.ErrNotFound
 	}
 	if rel.Password != secret {
-		return fosite.ErrNotFound.WithDebug("Invalid credentials")
+		return "", fosite.ErrNotFound.WithDebug("Invalid credentials")
 	}
-	return nil
+	return uuid.New().String(), nil
 }
 
 func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) error {
