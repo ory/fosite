@@ -36,10 +36,7 @@ type HMACStrategy struct {
 }
 
 const (
-	// key should be at least 256 bit long, making it
-	minimumEntropy int = 32
-
-	// the secrets (client and global) should each have at least 16 characters making it harder to guess them
+	minimumEntropy      = 32
 	minimumSecretLength = 32
 )
 
@@ -51,27 +48,27 @@ func (c *HMACStrategy) Generate(ctx context.Context) (string, string, error) {
 	c.Lock()
 	defer c.Unlock()
 
-	secrets, err := c.Config.GetGlobalSecret(ctx)
+	globalSecret, err := c.Config.GetGlobalSecret(ctx)
 	if err != nil {
 		return "", "", err
 	}
 
-	if len(secrets) < minimumSecretLength {
-		return "", "", errors.Errorf("secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got %d byte", len(secrets))
+	if len(globalSecret) < minimumSecretLength {
+		return "", "", errors.Errorf("secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got %d byte", len(globalSecret))
 	}
 
 	var signingKey [32]byte
-	copy(signingKey[:], secrets)
+	copy(signingKey[:], globalSecret)
 
 	entropy := c.Config.GetTokenEntropy(ctx)
 	if entropy < minimumEntropy {
 		entropy = minimumEntropy
 	}
 
-	// When creating secrets not intended for usage by human users (e.g.,
+	// When creating tokens not intended for usage by human users (e.g.,
 	// client secrets or token handles), the authorization server should
 	// include a reasonable level of entropy in order to mitigate the risk
-	// of guessing attacks.  The token value should be >=128 bits long and
+	// of guessing attacks. The token value should be >=128 bits long and
 	// constructed from a cryptographically strong random or pseudo-random
 	// number sequence (see [RFC4086] for best current practice) generated
 	// by the authorization server.
@@ -91,9 +88,13 @@ func (c *HMACStrategy) Generate(ctx context.Context) (string, string, error) {
 func (c *HMACStrategy) Validate(ctx context.Context, token string) (err error) {
 	var keys [][]byte
 
-	secrets, err := c.Config.GetGlobalSecret(ctx)
+	globalSecret, err := c.Config.GetGlobalSecret(ctx)
 	if err != nil {
 		return err
+	}
+
+	if len(globalSecret) > 0 {
+		keys = append(keys, globalSecret)
 	}
 
 	rotatedSecrets, err := c.Config.GetRotatedGlobalSecrets(ctx)
@@ -101,22 +102,20 @@ func (c *HMACStrategy) Validate(ctx context.Context, token string) (err error) {
 		return err
 	}
 
-	if len(secrets) > 0 {
-		keys = append(keys, secrets)
+	keys = append(keys, rotatedSecrets...)
+
+	if len(keys) == 0 {
+		return errors.New("a secret for signing HMAC-SHA512/256 is expected to be defined, but none were")
 	}
 
-	keys = append(keys, rotatedSecrets...)
 	for _, key := range keys {
 		if err = c.validate(ctx, key, token); err == nil {
 			return nil
 		} else if errors.Is(err, fosite.ErrTokenSignatureMismatch) {
+			// Continue to the next key. The error will be returned if it is the last key.
 		} else {
 			return err
 		}
-	}
-
-	if err == nil {
-		return errors.New("a secret for signing HMAC-SHA512/256 is expected to be defined, but none were")
 	}
 
 	return err
@@ -130,13 +129,11 @@ func (c *HMACStrategy) validate(ctx context.Context, secret []byte, token string
 	var signingKey [32]byte
 	copy(signingKey[:], secret)
 
-	split := strings.Split(token, ".")
-	if len(split) != 2 {
+	tokenKey, tokenSignature, ok := strings.Cut(token, ".")
+	if !ok {
 		return errorsx.WithStack(fosite.ErrInvalidTokenFormat)
 	}
 
-	tokenKey := split[0]
-	tokenSignature := split[1]
 	if tokenKey == "" || tokenSignature == "" {
 		return errorsx.WithStack(fosite.ErrInvalidTokenFormat)
 	}
@@ -161,13 +158,11 @@ func (c *HMACStrategy) validate(ctx context.Context, secret []byte, token string
 }
 
 func (c *HMACStrategy) Signature(token string) string {
-	split := strings.Split(token, ".")
-
-	if len(split) != 2 {
+	_, sig, ok := strings.Cut(token, ".")
+	if !ok {
 		return ""
 	}
-
-	return split[1]
+	return sig
 }
 
 func (c *HMACStrategy) generateHMAC(ctx context.Context, data []byte, key *[32]byte) []byte {

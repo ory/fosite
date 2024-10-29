@@ -67,6 +67,9 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 
 	aresp := fosite.NewAuthorizeResponse()
 	areq := fosite.NewAuthorizeRequest()
+	areq.Form = url.Values{
+		"redirect_uri": {"https://foobar.com"},
+	}
 	areq.Session = new(fosite.DefaultSession)
 
 	for k, c := range []struct {
@@ -150,7 +153,10 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		{
 			description: "should not do anything because request requirements are not met",
 			setup: func() OpenIDConnectImplicitHandler {
-				areq.Form = url.Values{"nonce": {"short"}}
+				areq.Form = url.Values{
+					"nonce":        {"short"},
+					"redirect_uri": {"https://foobar.com"},
+				}
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
 				areq.RequestedScope = fosite.Arguments{"openid"}
 				areq.Client = &fosite.DefaultClient{
@@ -165,7 +171,10 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		{
 			description: "should fail because session not set",
 			setup: func() OpenIDConnectImplicitHandler {
-				areq.Form = url.Values{"nonce": {"long-enough"}}
+				areq.Form = url.Values{
+					"nonce":        {"long-enough"},
+					"redirect_uri": {"https://foobar.com"},
+				}
 				areq.ResponseTypes = fosite.Arguments{"id_token"}
 				areq.RequestedScope = fosite.Arguments{"openid"}
 				areq.Client = &fosite.DefaultClient{
@@ -281,6 +290,14 @@ func TestImplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 				assert.NotEmpty(t, aresp.GetParameters().Get("state"))
 				assert.NotEmpty(t, aresp.GetParameters().Get("access_token"))
 			},
+		},
+		{
+			description: "should fail without redirect_uri",
+			setup: func() OpenIDConnectImplicitHandler {
+				areq.Form.Del("redirect_uri")
+				return makeOpenIDConnectImplicitHandler(4)
+			},
+			expectErr: fosite.ErrInvalidRequest,
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
