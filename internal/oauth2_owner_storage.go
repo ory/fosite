@@ -12,7 +12,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
 	fosite "github.com/ory/fosite"
 )
 
@@ -40,11 +39,12 @@ func (m *MockResourceOwnerPasswordCredentialsGrantStorage) EXPECT() *MockResourc
 }
 
 // Authenticate mocks base method.
-func (m *MockResourceOwnerPasswordCredentialsGrantStorage) Authenticate(arg0 context.Context, arg1, arg2 string) error {
+func (m *MockResourceOwnerPasswordCredentialsGrantStorage) Authenticate(arg0 context.Context, arg1, arg2 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Authenticate", arg0, arg1, arg2)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Authenticate indicates an expected call of Authenticate.

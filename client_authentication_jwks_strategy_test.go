@@ -103,7 +103,7 @@ func TestDefaultJWKSFetcherStrategy(t *testing.T) {
 	t.Run("JWKSFetcherWithCache", func(t *testing.T) {
 		ts := initServerWithKey(t)
 
-		cache, _ := ristretto.NewCache(&ristretto.Config{NumCounters: 10 * 1000, MaxCost: 1000, BufferItems: 64})
+		cache, _ := ristretto.NewCache(&ristretto.Config[string, *jose.JSONWebKeySet]{NumCounters: 10 * 1000, MaxCost: 1000, BufferItems: 64})
 		location := ts.URL
 		expected := &jose.JSONWebKeySet{}
 		require.True(t, cache.Set(defaultJWKSFetcherStrategyCachePrefix+location, expected, 1))
