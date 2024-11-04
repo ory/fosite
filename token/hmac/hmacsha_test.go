@@ -52,6 +52,20 @@ func TestGenerate(t *testing.T) {
 	}
 }
 
+func TestSignature(t *testing.T) {
+	cg := HMACStrategy{}
+
+	for token, expected := range map[string]string{
+		"":            "",
+		"foo":         "",
+		"foo.bar":     "bar",
+		"foo.bar.baz": "",
+		".":           "",
+	} {
+		assert.Equal(t, expected, cg.Signature(token))
+	}
+}
+
 func TestValidateSignatureRejects(t *testing.T) {
 	cg := HMACStrategy{
 		Config: &fosite.Config{GlobalSecret: []byte("1234567890123456789012345678901234567890")},

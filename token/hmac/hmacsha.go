@@ -157,12 +157,12 @@ func (c *HMACStrategy) validate(ctx context.Context, secret []byte, token string
 	return nil
 }
 
-func (c *HMACStrategy) Signature(token string) string {
-	_, sig, ok := strings.Cut(token, ".")
-	if !ok {
+func (*HMACStrategy) Signature(token string) string {
+	split := strings.Split(token, ".")
+	if len(split) != 2 {
 		return ""
 	}
-	return sig
+	return split[1]
 }
 
 func (c *HMACStrategy) generateHMAC(ctx context.Context, data []byte, key *[32]byte) []byte {
