@@ -52,13 +52,12 @@ func WildcardScopeStrategy(matchers []string, needle string) bool {
 	needleParts := strings.Split(needle, ".")
 	for _, matcher := range matchers {
 		matcherParts := strings.Split(matcher, ".")
-
 		if len(matcherParts) > len(needleParts) {
 			continue
 		}
 
 		var noteq bool
-		for k, c := range strings.Split(matcher, ".") {
+		for k, c := range matcherParts {
 			// this is the last item and the lengths are different
 			if k == len(matcherParts)-1 && len(matcherParts) != len(needleParts) {
 				if c != "*" {
