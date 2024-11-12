@@ -25,6 +25,8 @@ var (
 	ErrInvalidatedAuthorizeCode = stderr.New("Authorization code has ben invalidated")
 	// ErrInvalidatedDeviceCode is an error indicating that a device code has benn used previously.
 	ErrInvalidatedDeviceCode = stderr.New("Device code has been invalidated")
+	// ErrExistingUserCodeSignature is an error indicating that a row already exists with the provided user_code signature.
+	ErrExistingUserCodeSignature = stderr.New("User code signature already exists in the database")
 	// ErrSerializationFailure is an error indicating that the transactional capable storage could not guarantee
 	// consistency of Update & Delete operations on the same rows between multiple sessions.
 	ErrSerializationFailure = &RFC6749Error{

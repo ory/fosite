@@ -85,20 +85,15 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 					EXPECT().
 					GenerateDeviceCode(ctx).
 					Return("deviceCode", "signature", nil)
-				mockRFC8628CoreStorage.
-					EXPECT().
-					CreateDeviceCodeSession(ctx, "signature", gomock.Any()).
-					Return(nil)
 				mockRFC8628CodeStrategy.
 					EXPECT().
 					GenerateUserCode(ctx).
-					Return("userCode", "signature", nil).
+					Return("userCode", "signature2", nil).
 					Times(1)
 				mockRFC8628CoreStorage.
 					EXPECT().
-					CreateUserCodeSession(ctx, "signature", gomock.Any()).
-					Return(nil).
-					Times(1)
+					CreateDeviceAuthSession(ctx, "signature", "signature2", gomock.Any()).
+					Return(nil)
 			},
 			check: func(t *testing.T, resp *fosite.DeviceResponse) {
 				assert.Equal(t, "userCode", resp.GetUserCode())
@@ -111,10 +106,6 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 					EXPECT().
 					GenerateDeviceCode(ctx).
 					Return("deviceCode", "signature", nil)
-				mockRFC8628CoreStorage.
-					EXPECT().
-					CreateDeviceCodeSession(ctx, "signature", gomock.Any()).
-					Return(nil)
 				gomock.InOrder(
 					mockRFC8628CodeStrategy.
 						EXPECT().
@@ -122,15 +113,15 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 						Return("duplicatedUserCode", "duplicatedSignature", nil),
 					mockRFC8628CoreStorage.
 						EXPECT().
-						CreateUserCodeSession(ctx, "duplicatedSignature", gomock.Any()).
-						Return(errors.New("unique constraint violation")),
+						CreateDeviceAuthSession(ctx, "signature", "duplicatedSignature", gomock.Any()).
+						Return(fosite.ErrExistingUserCodeSignature),
 					mockRFC8628CodeStrategy.
 						EXPECT().
 						GenerateUserCode(ctx).
 						Return("uniqueUserCode", "uniqueSignature", nil),
 					mockRFC8628CoreStorage.
 						EXPECT().
-						CreateUserCodeSession(ctx, "uniqueSignature", gomock.Any()).
+						CreateDeviceAuthSession(ctx, "signature", "uniqueSignature", gomock.Any()).
 						Return(nil),
 				)
 			},
@@ -145,10 +136,6 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 					EXPECT().
 					GenerateDeviceCode(ctx).
 					Return("deviceCode", "signature", nil)
-				mockRFC8628CoreStorage.
-					EXPECT().
-					CreateDeviceCodeSession(ctx, "signature", gomock.Any()).
-					Return(nil)
 				mockRFC8628CodeStrategy.
 					EXPECT().
 					GenerateUserCode(ctx).
@@ -156,9 +143,30 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 					Times(rfc8628.MaxAttempts)
 				mockRFC8628CoreStorage.
 					EXPECT().
-					CreateUserCodeSession(ctx, "duplicatedSignature", gomock.Any()).
-					Return(errors.New("unique constraint violation")).
+					CreateDeviceAuthSession(ctx, "signature", "duplicatedSignature", gomock.Any()).
+					Return(fosite.ErrExistingUserCodeSignature).
 					Times(rfc8628.MaxAttempts)
+			},
+			check: func(t *testing.T, resp *fosite.DeviceResponse) {
+				assert.Empty(t, resp.GetUserCode())
+			},
+			expectError: fosite.ErrServerError,
+		},
+		{
+			description: "should fail if another error is returned",
+			setup: func() {
+				mockRFC8628CodeStrategy.
+					EXPECT().
+					GenerateDeviceCode(ctx).
+					Return("deviceCode", "signature", nil)
+				mockRFC8628CodeStrategy.
+					EXPECT().
+					GenerateUserCode(ctx).
+					Return("userCode", "userCodeSignature", nil)
+				mockRFC8628CoreStorage.
+					EXPECT().
+					CreateDeviceAuthSession(ctx, "signature", "userCodeSignature", gomock.Any()).
+					Return(errors.New("some error"))
 			},
 			check: func(t *testing.T, resp *fosite.DeviceResponse) {
 				assert.Empty(t, resp.GetUserCode())

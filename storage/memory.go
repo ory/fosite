@@ -36,21 +36,25 @@ type PublicKeyScopes struct {
 	Scopes []string
 }
 
+type DeviceAuthPair struct {
+	d string
+	u string
+}
+
 type MemoryStore struct {
 	Clients         map[string]fosite.Client
 	AuthorizeCodes  map[string]StoreAuthorizeCode
 	IDSessions      map[string]fosite.Requester
 	AccessTokens    map[string]fosite.Requester
 	RefreshTokens   map[string]StoreRefreshToken
-	DeviceCodes     map[string]fosite.Requester
-	UserCodes       map[string]fosite.Requester
+	DeviceAuths     map[string]fosite.Requester
 	PKCES           map[string]fosite.Requester
 	Users           map[string]MemoryUserRelation
 	BlacklistedJTIs map[string]time.Time
 	// In-memory request ID to token signatures
 	AccessTokenRequestIDs  map[string]string
 	RefreshTokenRequestIDs map[string]string
-	DeviceCodesRequestIDs  map[string]string
+	DeviceCodesRequestIDs  map[string]DeviceAuthPair
 	UserCodesRequestIDs    map[string]string
 	// Public keys to check signature in auth grant jwt assertion.
 	IssuerPublicKeys map[string]IssuerPublicKeys
@@ -61,15 +65,13 @@ type MemoryStore struct {
 	idSessionsMutex             sync.RWMutex
 	accessTokensMutex           sync.RWMutex
 	refreshTokensMutex          sync.RWMutex
-	userCodesMutex              sync.RWMutex
-	deviceCodesMutex            sync.RWMutex
+	deviceAuthsMutex            sync.RWMutex
 	pkcesMutex                  sync.RWMutex
 	usersMutex                  sync.RWMutex
 	blacklistedJTIsMutex        sync.RWMutex
 	accessTokenRequestIDsMutex  sync.RWMutex
 	refreshTokenRequestIDsMutex sync.RWMutex
-	userCodesRequestIDsMutex    sync.RWMutex
-	deviceCodesRequestIDsMutex  sync.RWMutex
+	deviceAuthsRequestIDsMutex  sync.RWMutex
 	issuerPublicKeysMutex       sync.RWMutex
 	parSessionsMutex            sync.RWMutex
 }
@@ -81,13 +83,12 @@ func NewMemoryStore() *MemoryStore {
 		IDSessions:             make(map[string]fosite.Requester),
 		AccessTokens:           make(map[string]fosite.Requester),
 		RefreshTokens:          make(map[string]StoreRefreshToken),
-		DeviceCodes:            make(map[string]fosite.Requester),
-		UserCodes:              make(map[string]fosite.Requester),
+		DeviceAuths:            make(map[string]fosite.Requester),
 		PKCES:                  make(map[string]fosite.Requester),
 		Users:                  make(map[string]MemoryUserRelation),
 		AccessTokenRequestIDs:  make(map[string]string),
 		RefreshTokenRequestIDs: make(map[string]string),
-		DeviceCodesRequestIDs:  make(map[string]string),
+		DeviceCodesRequestIDs:  make(map[string]DeviceAuthPair),
 		UserCodesRequestIDs:    make(map[string]string),
 		BlacklistedJTIs:        make(map[string]time.Time),
 		IssuerPublicKeys:       make(map[string]IssuerPublicKeys),
@@ -153,11 +154,10 @@ func NewExampleStore() *MemoryStore {
 		AccessTokens:           map[string]fosite.Requester{},
 		RefreshTokens:          map[string]StoreRefreshToken{},
 		PKCES:                  map[string]fosite.Requester{},
-		DeviceCodes:            make(map[string]fosite.Requester),
-		UserCodes:              make(map[string]fosite.Requester),
+		DeviceAuths:            make(map[string]fosite.Requester),
 		AccessTokenRequestIDs:  map[string]string{},
 		RefreshTokenRequestIDs: map[string]string{},
-		DeviceCodesRequestIDs:  make(map[string]string),
+		DeviceCodesRequestIDs:  make(map[string]DeviceAuthPair),
 		UserCodesRequestIDs:    make(map[string]string),
 		IssuerPublicKeys:       map[string]IssuerPublicKeys{},
 		PARSessions:            map[string]fosite.AuthorizeRequester{},
@@ -520,41 +520,25 @@ func (s *MemoryStore) RotateRefreshToken(ctx context.Context, requestID string, 
 	return s.RevokeAccessToken(ctx, requestID)
 }
 
-// CreateDeviceCodeSession stores the device code session
-func (s *MemoryStore) CreateDeviceCodeSession(_ context.Context, signature string, req fosite.Requester) error {
-	// We first lock accessTokenRequestIDsMutex and then accessTokensMutex because this is the same order
-	// locking happens in RevokeAccessToken and using the same order prevents deadlocks.
-	s.deviceCodesRequestIDsMutex.Lock()
-	defer s.deviceCodesRequestIDsMutex.Unlock()
-	s.deviceCodesMutex.Lock()
-	defer s.deviceCodesMutex.Unlock()
+// CreateDeviceAuthSession stores the device auth session
+func (s *MemoryStore) CreateDeviceAuthSession(_ context.Context, deviceCodeSignature, userCodeSignature string, req fosite.Requester) error {
+	s.deviceAuthsRequestIDsMutex.Lock()
+	defer s.deviceAuthsRequestIDsMutex.Unlock()
+	s.deviceAuthsMutex.Lock()
+	defer s.deviceAuthsMutex.Unlock()
 
-	s.DeviceCodes[signature] = req
-	s.DeviceCodesRequestIDs[req.GetID()] = signature
-	return nil
-}
-
-// UpdateDeviceCodeSession updates the device code session
-func (s *MemoryStore) UpdateDeviceCodeSession(_ context.Context, signature string, req fosite.Requester) error {
-	s.deviceCodesRequestIDsMutex.Lock()
-	defer s.deviceCodesRequestIDsMutex.Unlock()
-	s.deviceCodesMutex.Lock()
-	defer s.deviceCodesMutex.Unlock()
-
-	// Only update if exist
-	if _, exists := s.DeviceCodes[signature]; exists {
-		s.DeviceCodes[signature] = req
-		s.DeviceCodesRequestIDs[req.GetID()] = signature
-	}
+	s.DeviceAuths[deviceCodeSignature] = req
+	s.DeviceAuths[userCodeSignature] = req
+	s.DeviceCodesRequestIDs[req.GetID()] = DeviceAuthPair{d: deviceCodeSignature, u: userCodeSignature}
 	return nil
 }
 
 // GetDeviceCodeSession gets the device code session
 func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, _ fosite.Session) (fosite.Requester, error) {
-	s.deviceCodesMutex.RLock()
-	defer s.deviceCodesMutex.RUnlock()
+	s.deviceAuthsMutex.RLock()
+	defer s.deviceAuthsMutex.RUnlock()
 
-	rel, ok := s.DeviceCodes[signature]
+	rel, ok := s.DeviceAuths[signature]
 	if !ok {
 		return nil, fosite.ErrNotFound
 	}
@@ -563,46 +547,11 @@ func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, 
 
 // InvalidateDeviceCodeSession invalidates the device code session
 func (s *MemoryStore) InvalidateDeviceCodeSession(_ context.Context, code string) error {
-	s.deviceCodesRequestIDsMutex.Lock()
-	defer s.deviceCodesRequestIDsMutex.Unlock()
-	s.deviceCodesMutex.Lock()
-	defer s.deviceCodesMutex.Unlock()
+	s.deviceAuthsRequestIDsMutex.Lock()
+	defer s.deviceAuthsRequestIDsMutex.Unlock()
+	s.deviceAuthsMutex.Lock()
+	defer s.deviceAuthsMutex.Unlock()
 
-	delete(s.DeviceCodes, code)
-	return nil
-}
-
-// CreateUserCodeSession stores the user code session
-func (s *MemoryStore) CreateUserCodeSession(_ context.Context, signature string, req fosite.Requester) error {
-	s.userCodesRequestIDsMutex.Lock()
-	defer s.userCodesRequestIDsMutex.Unlock()
-	s.userCodesMutex.Lock()
-	defer s.userCodesMutex.Unlock()
-
-	s.UserCodes[signature] = req
-	s.UserCodesRequestIDs[req.GetID()] = signature
-	return nil
-}
-
-// GetUserCodeSession gets the user code session
-func (s *MemoryStore) GetUserCodeSession(_ context.Context, signature string, _ fosite.Session) (fosite.Requester, error) {
-	s.userCodesMutex.RLock()
-	defer s.userCodesMutex.RUnlock()
-
-	rel, ok := s.UserCodes[signature]
-	if !ok {
-		return nil, fosite.ErrNotFound
-	}
-	return rel, nil
-}
-
-// GetUserCodeSession invalidates the user code session
-func (s *MemoryStore) InvalidateUserCodeSession(_ context.Context, code string) error {
-	s.userCodesRequestIDsMutex.Lock()
-	defer s.userCodesRequestIDsMutex.Unlock()
-	s.userCodesMutex.Lock()
-	defer s.userCodesMutex.Unlock()
-
-	delete(s.UserCodes, code)
+	delete(s.DeviceAuths, code)
 	return nil
 }
