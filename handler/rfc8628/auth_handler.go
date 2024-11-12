@@ -30,14 +30,7 @@ type DeviceAuthHandler struct {
 func (d *DeviceAuthHandler) HandleDeviceEndpointRequest(ctx context.Context, dar fosite.DeviceRequester, resp fosite.DeviceResponder) error {
 	var err error
 
-	var deviceCode string
-	deviceCode, err = d.handleDeviceCode(ctx, dar)
-	if err != nil {
-		return err
-	}
-
-	var userCode string
-	userCode, err = d.handleUserCode(ctx, dar)
+	deviceCode, userCode, err := d.handleDeviceAuthSession(ctx, dar)
 	if err != nil {
 		return err
 	}
@@ -52,23 +45,15 @@ func (d *DeviceAuthHandler) HandleDeviceEndpointRequest(ctx context.Context, dar
 	return nil
 }
 
-func (d *DeviceAuthHandler) handleDeviceCode(ctx context.Context, dar fosite.DeviceRequester) (string, error) {
-	code, signature, err := d.Strategy.GenerateDeviceCode(ctx)
+func (d *DeviceAuthHandler) handleDeviceAuthSession(ctx context.Context, dar fosite.DeviceRequester) (string, string, error) {
+	var userCode, userCodeSignature string
+
+	deviceCode, deviceCodeSignature, err := d.Strategy.GenerateDeviceCode(ctx)
 	if err != nil {
-		return "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		return "", "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	dar.GetSession().SetExpiresAt(fosite.DeviceCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)))
-	if err = d.Storage.CreateDeviceCodeSession(ctx, signature, dar.Sanitize(nil)); err != nil {
-		return "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	}
-
-	return code, nil
-}
-
-func (d *DeviceAuthHandler) handleUserCode(ctx context.Context, dar fosite.DeviceRequester) (string, error) {
-	var err error
-	var userCode, signature string
+	dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)).Round(time.Second))
 	// Note: the retries are added here because we need to ensure uniqueness of user codes.
 	// The chances of duplicates should however be diminishing, because they are the same
 	// chance an attacker will be able to hit a valid code with few guesses. However, as
@@ -76,17 +61,16 @@ func (d *DeviceAuthHandler) handleUserCode(ctx context.Context, dar fosite.Devic
 	// the chances of hitting a duplicate here can be higher.
 	// Three retries should be plenty, as otherwise the entropy is definitely off.
 	for i := 0; i < MaxAttempts; i++ {
-		userCode, signature, err = d.Strategy.GenerateUserCode(ctx)
+		userCode, userCodeSignature, err = d.Strategy.GenerateUserCode(ctx)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
-		dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)).Round(time.Second))
-		if err = d.Storage.CreateUserCodeSession(ctx, signature, dar.Sanitize(nil)); err == nil {
-			return userCode, nil
+		if err = d.Storage.CreateDeviceAuthSession(ctx, deviceCodeSignature, userCodeSignature, dar.Sanitize(nil)); err == nil {
+			return deviceCode, userCode, nil
 		}
 	}
 
 	errMsg := fmt.Sprintf("Exceeded user-code generation max attempts %v: %s", MaxAttempts, err.Error())
-	return "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(errMsg))
+	return "", "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(errMsg))
 }

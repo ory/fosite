@@ -154,9 +154,11 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest) {
 						code, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
+						_, userCodeSignature, err := strategy.GenerateUserCode(context.TODO())
+						require.NoError(t, err)
 						areq.Form.Add("device_code", code)
 
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
+						require.NoError(t, store.CreateDeviceAuthSession(context.TODO(), signature, userCodeSignature, authreq))
 					},
 					expectErr: fosite.ErrAuthorizationPending,
 				},
@@ -192,9 +194,11 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest) {
 						code, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
+						_, userCodeSignature, err := strategy.GenerateUserCode(context.TODO())
+						require.NoError(t, err)
 						areq.Form.Add("device_code", code)
 
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
+						require.NoError(t, store.CreateDeviceAuthSession(context.TODO(), signature, userCodeSignature, authreq))
 					},
 					expectErr: fosite.ErrDeviceExpiredToken,
 				},
@@ -227,9 +231,11 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest) {
 						token, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
+						_, userCodeSignature, err := strategy.GenerateUserCode(context.TODO())
+						require.NoError(t, err)
 						areq.Form = url.Values{"device_code": {token}}
 
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
+						require.NoError(t, store.CreateDeviceAuthSession(context.TODO(), signature, userCodeSignature, authreq))
 					},
 					expectErr: fosite.ErrInvalidGrant,
 				},
@@ -263,9 +269,11 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest) {
 						token, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
+						_, userCodeSignature, err := strategy.GenerateUserCode(context.TODO())
+						require.NoError(t, err)
 
 						areq.Form = url.Values{"device_code": {token}}
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
+						require.NoError(t, store.CreateDeviceAuthSession(context.TODO(), signature, userCodeSignature, authreq))
 					},
 				},
 			}
@@ -342,9 +350,11 @@ func TestDeviceUserCode_HandleTokenEndpointRequest_RateLimiting(t *testing.T) {
 
 			token, signature, err := strategy.GenerateDeviceCode(context.TODO())
 			require.NoError(t, err)
+			_, userCodeSignature, err := strategy.GenerateUserCode(context.TODO())
+			require.NoError(t, err)
 
 			areq.Form = url.Values{"device_code": {token}}
-			require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
+			require.NoError(t, store.CreateDeviceAuthSession(context.TODO(), signature, userCodeSignature, authreq))
 			err = h.HandleTokenEndpointRequest(context.Background(), areq)
 			require.NoError(t, err, "%+v", err)
 			err = h.HandleTokenEndpointRequest(context.Background(), areq)
@@ -441,9 +451,11 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest, _ *fosite.Config) {
 						code, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
+						_, userCodeSignature, err := strategy.GenerateUserCode(context.TODO())
+						require.NoError(t, err)
 						areq.Form.Add("device_code", code)
 
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
+						require.NoError(t, store.CreateDeviceAuthSession(context.TODO(), signature, userCodeSignature, authreq))
 					},
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
@@ -483,9 +495,11 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 						config.RefreshTokenScopes = []string{}
 						code, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
+						_, userCodeSignature, err := strategy.GenerateUserCode(context.TODO())
+						require.NoError(t, err)
 						areq.Form.Add("device_code", code)
 
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
+						require.NoError(t, store.CreateDeviceAuthSession(context.TODO(), signature, userCodeSignature, authreq))
 					},
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
@@ -524,9 +538,11 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest, config *fosite.Config) {
 						code, signature, err := strategy.GenerateDeviceCode(context.TODO())
 						require.NoError(t, err)
+						_, userCodeSignature, err := strategy.GenerateUserCode(context.TODO())
+						require.NoError(t, err)
 						areq.Form.Add("device_code", code)
 
-						require.NoError(t, store.CreateDeviceCodeSession(context.TODO(), signature, authreq))
+						require.NoError(t, store.CreateDeviceAuthSession(context.TODO(), signature, userCodeSignature, authreq))
 					},
 					check: func(t *testing.T, aresp *fosite.AccessResponse) {
 						assert.NotEmpty(t, aresp.AccessToken)
