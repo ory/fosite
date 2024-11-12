@@ -123,9 +123,8 @@ var fositeStore = &storage.MemoryStore{
 	AccessTokenRequestIDs:  map[string]string{},
 	RefreshTokenRequestIDs: map[string]string{},
 	PARSessions:            map[string]fosite.AuthorizeRequester{},
-	DeviceCodes:            map[string]fosite.Requester{},
-	UserCodes:              map[string]fosite.Requester{},
-	DeviceCodesRequestIDs:  map[string]string{},
+	DeviceAuths:            map[string]fosite.Requester{},
+	DeviceCodesRequestIDs:  map[string]storage.DeviceAuthPair{},
 	UserCodesRequestIDs:    map[string]string{},
 }
 
