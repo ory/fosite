@@ -47,7 +47,7 @@ type MemoryStore struct {
 	IDSessions      map[string]fosite.Requester
 	AccessTokens    map[string]fosite.Requester
 	RefreshTokens   map[string]StoreRefreshToken
-	DeviceAuths     map[string]fosite.Requester
+	DeviceAuths     map[string]fosite.DeviceRequester
 	PKCES           map[string]fosite.Requester
 	Users           map[string]MemoryUserRelation
 	BlacklistedJTIs map[string]time.Time
@@ -83,7 +83,7 @@ func NewMemoryStore() *MemoryStore {
 		IDSessions:             make(map[string]fosite.Requester),
 		AccessTokens:           make(map[string]fosite.Requester),
 		RefreshTokens:          make(map[string]StoreRefreshToken),
-		DeviceAuths:            make(map[string]fosite.Requester),
+		DeviceAuths:            make(map[string]fosite.DeviceRequester),
 		PKCES:                  make(map[string]fosite.Requester),
 		Users:                  make(map[string]MemoryUserRelation),
 		AccessTokenRequestIDs:  make(map[string]string),
@@ -154,7 +154,7 @@ func NewExampleStore() *MemoryStore {
 		AccessTokens:           map[string]fosite.Requester{},
 		RefreshTokens:          map[string]StoreRefreshToken{},
 		PKCES:                  map[string]fosite.Requester{},
-		DeviceAuths:            make(map[string]fosite.Requester),
+		DeviceAuths:            make(map[string]fosite.DeviceRequester),
 		AccessTokenRequestIDs:  map[string]string{},
 		RefreshTokenRequestIDs: map[string]string{},
 		DeviceCodesRequestIDs:  make(map[string]DeviceAuthPair),
@@ -521,7 +521,7 @@ func (s *MemoryStore) RotateRefreshToken(ctx context.Context, requestID string, 
 }
 
 // CreateDeviceAuthSession stores the device auth session
-func (s *MemoryStore) CreateDeviceAuthSession(_ context.Context, deviceCodeSignature, userCodeSignature string, req fosite.Requester) error {
+func (s *MemoryStore) CreateDeviceAuthSession(_ context.Context, deviceCodeSignature, userCodeSignature string, req fosite.DeviceRequester) error {
 	s.deviceAuthsRequestIDsMutex.Lock()
 	defer s.deviceAuthsRequestIDsMutex.Unlock()
 	s.deviceAuthsMutex.Lock()
@@ -534,7 +534,7 @@ func (s *MemoryStore) CreateDeviceAuthSession(_ context.Context, deviceCodeSigna
 }
 
 // GetDeviceCodeSession gets the device code session
-func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, _ fosite.Session) (fosite.Requester, error) {
+func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, _ fosite.Session) (fosite.DeviceRequester, error) {
 	s.deviceAuthsMutex.RLock()
 	defer s.deviceAuthsMutex.RUnlock()
 

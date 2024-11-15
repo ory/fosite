@@ -28,25 +28,27 @@ var hmacshaStrategy = DefaultDeviceStrategy{
 	},
 }
 
-var hmacValidCase = fosite.Request{
-	Client: &fosite.DefaultClient{
-		Secret: []byte("foobarfoobarfoobarfoobar"),
-	},
-	Session: &fosite.DefaultSession{
-		ExpiresAt: map[fosite.TokenType]time.Time{
-			fosite.UserCode:   time.Now().UTC().Add(time.Hour),
-			fosite.DeviceCode: time.Now().UTC().Add(time.Hour),
+var hmacValidCase = fosite.DeviceRequest{
+	Request: fosite.Request{
+		Client: &fosite.DefaultClient{
+			Secret: []byte("foobarfoobarfoobarfoobar"),
+		},
+		Session: &fosite.DefaultSession{
+			ExpiresAt: map[fosite.TokenType]time.Time{
+				fosite.UserCode:   time.Now().UTC().Add(time.Hour),
+				fosite.DeviceCode: time.Now().UTC().Add(time.Hour),
+			},
 		},
 	},
 }
 
 func TestHMACUserCode(t *testing.T) {
 	for k, c := range []struct {
-		r    fosite.Request
+		r    fosite.DeviceRequester
 		pass bool
 	}{
 		{
-			r:    hmacValidCase,
+			r:    &hmacValidCase,
 			pass: true,
 		},
 	} {
@@ -56,7 +58,7 @@ func TestHMACUserCode(t *testing.T) {
 			regex := regexp.MustCompile("[ABCDEFGHIJKLMNOPQRSTUVWXYZ]{8}")
 			assert.Equal(t, len(regex.FindString(userCode)), len(userCode))
 
-			err = hmacshaStrategy.ValidateUserCode(context.TODO(), &c.r, userCode)
+			err = hmacshaStrategy.ValidateUserCode(context.TODO(), c.r, userCode)
 			if c.pass {
 				assert.NoError(t, err)
 				validate, _ := hmacshaStrategy.Enigma.GenerateHMACForString(context.TODO(), userCode)
@@ -73,11 +75,11 @@ func TestHMACUserCode(t *testing.T) {
 
 func TestHMACDeviceCode(t *testing.T) {
 	for k, c := range []struct {
-		r    fosite.Request
+		r    fosite.DeviceRequester
 		pass bool
 	}{
 		{
-			r:    hmacValidCase,
+			r:    &hmacValidCase,
 			pass: true,
 		},
 	} {
@@ -92,7 +94,7 @@ func TestHMACDeviceCode(t *testing.T) {
 				strings.TrimPrefix(token, "ory_dc_"),
 			} {
 				t.Run(fmt.Sprintf("prefix=%v", k == 0), func(t *testing.T) {
-					err = hmacshaStrategy.ValidateDeviceCode(context.TODO(), &c.r, token)
+					err = hmacshaStrategy.ValidateDeviceCode(context.TODO(), c.r, token)
 					if c.pass {
 						assert.NoError(t, err)
 						validate := hmacshaStrategy.Enigma.Signature(token)

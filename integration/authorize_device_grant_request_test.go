@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/ory/fosite/handler/rfc8628"
-
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/internal/gen"
@@ -24,7 +22,7 @@ func TestDeviceFlow(t *testing.T) {
 }
 
 func runDeviceFlowTest(t *testing.T) {
-	session := &rfc8628.DefaultDeviceFlowSession{}
+	session := &fosite.DefaultSession{}
 
 	fc := &fosite.Config{
 		DeviceVerificationURL: "https://example.com/",
@@ -124,9 +122,7 @@ func runDeviceFlowTest(t *testing.T) {
 }
 
 func runDeviceFlowAccessTokenTest(t *testing.T) {
-	session := &rfc8628.DefaultDeviceFlowSession{
-		BrowserFlowCompleted: true,
-	}
+	session := &fosite.DefaultSession{}
 
 	fc := &fosite.Config{
 		DeviceVerificationURL:          "https://example.com/",
@@ -147,6 +143,11 @@ func runDeviceFlowAccessTokenTest(t *testing.T) {
 		},
 	}
 	resp, _ := oauthClient.DeviceAuth(context.Background())
+	deviceCodeSignature, err := compose.NewDeviceStrategy(fc).DeviceCodeSignature(context.Background(), resp.DeviceCode)
+	require.NoError(t, err)
+	d := fositeStore.DeviceAuths[deviceCodeSignature]
+	d.SetUserCodeState(fosite.UserCodeAccepted)
+	fositeStore.DeviceAuths[deviceCodeSignature] = d
 
 	for k, c := range []struct {
 		description string

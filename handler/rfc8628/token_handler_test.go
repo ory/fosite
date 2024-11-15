@@ -79,7 +79,7 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 							Client: &fosite.DefaultClient{
 								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							Session:     &DefaultDeviceFlowSession{},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
@@ -94,7 +94,7 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 								ID:         "foo",
 								GrantTypes: []string{""},
 							},
-							Session:     &DefaultDeviceFlowSession{},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
@@ -109,7 +109,7 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 								ID:         "foo",
 								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							Session:     &DefaultDeviceFlowSession{},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
@@ -130,11 +130,12 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 								ID:         "foo",
 								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							Session:     &DefaultDeviceFlowSession{},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
+						UserCodeState: fosite.UserCodeUnused,
 						Request: fosite.Request{
 							Client: &fosite.DefaultClient{
 								ID:         "foo",
@@ -142,11 +143,10 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 							},
 							RequestedScope: fosite.Arguments{"foo"},
 							GrantedScope:   fosite.Arguments{"foo"},
-							Session: &DefaultDeviceFlowSession{
+							Session: &fosite.DefaultSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{
 									fosite.DeviceCode: time.Now().Add(-time.Hour).UTC(),
 								},
-								BrowserFlowCompleted: false,
 							},
 							RequestedAt: time.Now().Add(-2 * time.Hour).UTC(),
 						},
@@ -173,20 +173,20 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
 							GrantedScope: fosite.Arguments{"foo", "offline"},
-							Session:      &DefaultDeviceFlowSession{},
+							Session:      &fosite.DefaultSession{},
 							RequestedAt:  time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
+						UserCodeState: fosite.UserCodeAccepted,
 						Request: fosite.Request{
 							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 							RequestedScope: fosite.Arguments{"foo"},
 							GrantedScope:   fosite.Arguments{"foo"},
-							Session: &DefaultDeviceFlowSession{
+							Session: &fosite.DefaultSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{
 									fosite.DeviceCode: time.Now().Add(-time.Hour).UTC(),
 								},
-								BrowserFlowCompleted: true,
 							},
 							RequestedAt: time.Now().Add(-2 * time.Hour).UTC(),
 						},
@@ -211,20 +211,20 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 								ID:         "foo",
 								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							Session:     &DefaultDeviceFlowSession{},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
+						UserCodeState: fosite.UserCodeAccepted,
 						Request: fosite.Request{
 							Client:         &fosite.DefaultClient{ID: "bar"},
 							RequestedScope: fosite.Arguments{"foo"},
 							GrantedScope:   fosite.Arguments{"foo"},
-							Session: &DefaultDeviceFlowSession{
+							Session: &fosite.DefaultSession{
 								ExpiresAt: map[fosite.TokenType]time.Time{
 									fosite.DeviceCode: time.Now().Add(time.Hour).UTC(),
 								},
-								BrowserFlowCompleted: true,
 							},
 						},
 					},
@@ -248,11 +248,12 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 								ID:         "foo",
 								GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							Session:     &DefaultDeviceFlowSession{},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
+						UserCodeState: fosite.UserCodeAccepted,
 						Request: fosite.Request{
 							Client: &fosite.DefaultClient{
 								ID:         "foo",
@@ -260,10 +261,8 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 							},
 							RequestedScope: fosite.Arguments{"foo"},
 							GrantedScope:   fosite.Arguments{"foo"},
-							Session: &DefaultDeviceFlowSession{
-								BrowserFlowCompleted: true,
-							},
-							RequestedAt: time.Now().UTC(),
+							Session:        &fosite.DefaultSession{},
+							RequestedAt:    time.Now().UTC(),
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest) {
@@ -332,19 +331,18 @@ func TestDeviceUserCode_HandleTokenEndpointRequest_RateLimiting(t *testing.T) {
 						ID:         "foo",
 						GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 					},
-					Session:     &DefaultDeviceFlowSession{},
+					Session:     &fosite.DefaultSession{},
 					RequestedAt: time.Now().UTC(),
 				},
 			}
 			authreq := &fosite.DeviceRequest{
+				UserCodeState: fosite.UserCodeAccepted,
 				Request: fosite.Request{
 					Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 					RequestedScope: fosite.Arguments{"foo"},
 					GrantedScope:   fosite.Arguments{"foo"},
-					Session: &DefaultDeviceFlowSession{
-						BrowserFlowCompleted: true,
-					},
-					RequestedAt: time.Now().UTC(),
+					Session:        &fosite.DefaultSession{},
+					RequestedAt:    time.Now().UTC(),
 				},
 			}
 
@@ -392,9 +390,7 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 							Client: &fosite.DefaultClient{
 								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							Session: &DefaultDeviceFlowSession{
-								BrowserFlowCompleted: true,
-							},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
@@ -409,9 +405,7 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 							Client: &fosite.DefaultClient{
 								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							Session: &DefaultDeviceFlowSession{
-								BrowserFlowCompleted: true,
-							},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
@@ -431,21 +425,18 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 							Client: &fosite.DefaultClient{
 								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
 							},
-							Session: &DefaultDeviceFlowSession{
-								BrowserFlowCompleted: true,
-							},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
+						UserCodeState: fosite.UserCodeAccepted,
 						Request: fosite.Request{
 							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 							RequestedScope: fosite.Arguments{"foo", "bar", "offline"},
 							GrantedScope:   fosite.Arguments{"foo", "offline"},
-							Session: &DefaultDeviceFlowSession{
-								BrowserFlowCompleted: true,
-							},
-							RequestedAt: time.Now().UTC(),
+							Session:        &fosite.DefaultSession{},
+							RequestedAt:    time.Now().UTC(),
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest, _ *fosite.Config) {
@@ -474,21 +465,18 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 							Client: &fosite.DefaultClient{
 								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
 							},
-							Session: &DefaultDeviceFlowSession{
-								BrowserFlowCompleted: true,
-							},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
+						UserCodeState: fosite.UserCodeAccepted,
 						Request: fosite.Request{
 							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 							RequestedScope: fosite.Arguments{"foo", "bar"},
 							GrantedScope:   fosite.Arguments{"foo"},
-							Session: &DefaultDeviceFlowSession{
-								BrowserFlowCompleted: true,
-							},
-							RequestedAt: time.Now().UTC(),
+							Session:        &fosite.DefaultSession{},
+							RequestedAt:    time.Now().UTC(),
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest, config *fosite.Config) {
@@ -518,21 +506,18 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 							Client: &fosite.DefaultClient{
 								GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code"},
 							},
-							Session: &DefaultDeviceFlowSession{
-								BrowserFlowCompleted: true,
-							},
+							Session:     &fosite.DefaultSession{},
 							RequestedAt: time.Now().UTC(),
 						},
 					},
 					authreq: &fosite.DeviceRequest{
+						UserCodeState: fosite.UserCodeAccepted,
 						Request: fosite.Request{
 							Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 							RequestedScope: fosite.Arguments{"foo", "bar"},
 							GrantedScope:   fosite.Arguments{"foo"},
-							Session: &DefaultDeviceFlowSession{
-								BrowserFlowCompleted: true,
-							},
-							RequestedAt: time.Now().UTC(),
+							Session:        &fosite.DefaultSession{},
+							RequestedAt:    time.Now().UTC(),
 						},
 					},
 					setup: func(t *testing.T, areq *fosite.AccessRequest, authreq *fosite.DeviceRequest, config *fosite.Config) {
@@ -603,14 +588,13 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	deviceStrategy := RFC8628HMACSHAStrategy
 
 	authreq := &fosite.DeviceRequest{
+		UserCodeState: fosite.UserCodeAccepted,
 		Request: fosite.Request{
 			Client:         &fosite.DefaultClient{ID: "foo", GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code"}},
 			RequestedScope: fosite.Arguments{"foo", "offline"},
 			GrantedScope:   fosite.Arguments{"foo", "offline"},
-			Session: &DefaultDeviceFlowSession{
-				BrowserFlowCompleted: true,
-			},
-			RequestedAt: time.Now().UTC(),
+			Session:        &fosite.DefaultSession{},
+			RequestedAt:    time.Now().UTC(),
 		},
 	}
 
@@ -620,9 +604,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			Client: &fosite.DefaultClient{
 				GrantTypes: fosite.Arguments{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
 			},
-			Session: &DefaultDeviceFlowSession{
-				BrowserFlowCompleted: true,
-			},
+			Session:     &fosite.DefaultSession{},
 			RequestedAt: time.Now().UTC(),
 		},
 	}
