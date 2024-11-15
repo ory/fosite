@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mohae/deepcopy"
-
 	"github.com/ory/x/errorsx"
 
 	"github.com/ory/x/randx"
@@ -19,83 +17,6 @@ import (
 )
 
 const POLLING_RATE_LIMITING_LEEWAY = 200 * time.Millisecond
-
-// DeviceFlowSession is a fosite.Session container specific for the device flow.
-type DeviceFlowSession interface {
-	// GetBrowserFlowCompleted returns the flag indicating whether user has completed the browser flow or not.
-	GetBrowserFlowCompleted() bool
-
-	// SetBrowserFlowCompleted allows client to mark user has completed the browser flow.
-	SetBrowserFlowCompleted(flag bool)
-
-	fosite.Session
-}
-
-// DefaultDeviceFlowSession is a DeviceFlowSession implementation for the device flow.
-type DefaultDeviceFlowSession struct {
-	ExpiresAt            map[fosite.TokenType]time.Time `json:"expires_at"`
-	Username             string                         `json:"username"`
-	Subject              string                         `json:"subject"`
-	Extra                map[string]interface{}         `json:"extra"`
-	BrowserFlowCompleted bool                           `json:"browser_flow_completed"`
-}
-
-func (s *DefaultDeviceFlowSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
-	if s.ExpiresAt == nil {
-		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
-	}
-	s.ExpiresAt[key] = exp
-}
-
-func (s *DefaultDeviceFlowSession) GetExpiresAt(key fosite.TokenType) time.Time {
-	if s.ExpiresAt == nil {
-		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
-	}
-
-	if _, ok := s.ExpiresAt[key]; !ok {
-		return time.Time{}
-	}
-	return s.ExpiresAt[key]
-}
-
-func (s *DefaultDeviceFlowSession) GetUsername() string {
-	if s == nil {
-		return ""
-	}
-	return s.Username
-}
-
-func (s *DefaultDeviceFlowSession) SetSubject(subject string) {
-	s.Subject = subject
-}
-
-func (s *DefaultDeviceFlowSession) GetSubject() string {
-	if s == nil {
-		return ""
-	}
-
-	return s.Subject
-}
-
-func (s *DefaultDeviceFlowSession) Clone() fosite.Session {
-	if s == nil {
-		return nil
-	}
-
-	return deepcopy.Copy(s).(fosite.Session)
-}
-
-func (s *DefaultDeviceFlowSession) GetBrowserFlowCompleted() bool {
-	if s == nil {
-		return false
-	}
-
-	return s.BrowserFlowCompleted
-}
-
-func (s *DefaultDeviceFlowSession) SetBrowserFlowCompleted(flag bool) {
-	s.BrowserFlowCompleted = flag
-}
 
 // DefaultDeviceStrategy implements the default device strategy
 type DefaultDeviceStrategy struct {
@@ -129,7 +50,7 @@ func (h *DefaultDeviceStrategy) UserCodeSignature(ctx context.Context, token str
 }
 
 // ValidateUserCode validates a user_code
-func (h *DefaultDeviceStrategy) ValidateUserCode(ctx context.Context, r fosite.Requester, code string) error {
+func (h *DefaultDeviceStrategy) ValidateUserCode(ctx context.Context, r fosite.DeviceRequester, code string) error {
 	exp := r.GetSession().GetExpiresAt(fosite.UserCode)
 	if exp.IsZero() && r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx)).Before(time.Now().UTC()) {
 		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("User code expired at '%s'.", r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx))))
@@ -156,7 +77,7 @@ func (h *DefaultDeviceStrategy) DeviceCodeSignature(ctx context.Context, token s
 }
 
 // ValidateDeviceCode validates a device_code
-func (h *DefaultDeviceStrategy) ValidateDeviceCode(ctx context.Context, r fosite.Requester, code string) error {
+func (h *DefaultDeviceStrategy) ValidateDeviceCode(ctx context.Context, r fosite.DeviceRequester, code string) error {
 	exp := r.GetSession().GetExpiresAt(fosite.DeviceCode)
 	if exp.IsZero() && r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx)).Before(time.Now().UTC()) {
 		return errorsx.WithStack(fosite.ErrDeviceExpiredToken.WithHintf("Device code expired at '%s'.", r.GetRequestedAt().Add(h.Config.GetDeviceAndUserCodeLifespan(ctx))))

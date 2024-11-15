@@ -120,7 +120,7 @@ func (mr *MockRFC8628CodeStrategyMockRecorder) UserCodeSignature(arg0, arg1 any)
 }
 
 // ValidateDeviceCode mocks base method.
-func (m *MockRFC8628CodeStrategy) ValidateDeviceCode(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
+func (m *MockRFC8628CodeStrategy) ValidateDeviceCode(arg0 context.Context, arg1 fosite.DeviceRequester, arg2 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateDeviceCode", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -134,7 +134,7 @@ func (mr *MockRFC8628CodeStrategyMockRecorder) ValidateDeviceCode(arg0, arg1, ar
 }
 
 // ValidateUserCode mocks base method.
-func (m *MockRFC8628CodeStrategy) ValidateUserCode(arg0 context.Context, arg1 fosite.Requester, arg2 string) error {
+func (m *MockRFC8628CodeStrategy) ValidateUserCode(arg0 context.Context, arg1 fosite.DeviceRequester, arg2 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateUserCode", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

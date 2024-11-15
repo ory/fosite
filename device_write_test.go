@@ -26,7 +26,7 @@ func TestWriteDeviceUserResponse(t *testing.T) {
 	ctx := context.Background()
 
 	rw := httptest.NewRecorder()
-	ar := &Request{}
+	ar := &DeviceRequest{}
 	resp := &DeviceResponse{}
 	resp.SetUserCode("AAAA")
 	resp.SetDeviceCode("BBBB")

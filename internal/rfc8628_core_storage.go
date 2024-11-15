@@ -57,7 +57,7 @@ func (mr *MockRFC8628CoreStorageMockRecorder) CreateAccessTokenSession(arg0, arg
 }
 
 // CreateDeviceAuthSession mocks base method.
-func (m *MockRFC8628CoreStorage) CreateDeviceAuthSession(arg0 context.Context, arg1, arg2 string, arg3 fosite.Requester) error {
+func (m *MockRFC8628CoreStorage) CreateDeviceAuthSession(arg0 context.Context, arg1, arg2 string, arg3 fosite.DeviceRequester) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateDeviceAuthSession", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
@@ -128,10 +128,10 @@ func (mr *MockRFC8628CoreStorageMockRecorder) GetAccessTokenSession(arg0, arg1, 
 }
 
 // GetDeviceCodeSession mocks base method.
-func (m *MockRFC8628CoreStorage) GetDeviceCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Session) (fosite.Requester, error) {
+func (m *MockRFC8628CoreStorage) GetDeviceCodeSession(arg0 context.Context, arg1 string, arg2 fosite.Session) (fosite.DeviceRequester, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeviceCodeSession", arg0, arg1, arg2)
-	ret0, _ := ret[0].(fosite.Requester)
+	ret0, _ := ret[0].(fosite.DeviceRequester)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

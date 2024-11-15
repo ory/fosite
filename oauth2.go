@@ -286,6 +286,12 @@ type AccessRequester interface {
 
 // DeviceRequester is an device endpoint's request context.
 type DeviceRequester interface {
+	// GetUserCodeState returns the state of the user code
+	GetUserCodeState() UserCodeState
+
+	// SetUserCodeState sets the state of the user code
+	SetUserCodeState(state UserCodeState)
+
 	Requester
 }
 
