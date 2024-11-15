@@ -62,12 +62,12 @@ func (c *DeviceCodeTokenEndpointHandler) PopulateTokenEndpointResponse(ctx conte
 		return err
 	}
 
-	var ar fosite.Requester
+	var ar fosite.DeviceRequester
 	if ar, err = c.session(ctx, requester, signature); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	if err = c.DeviceCodeStrategy.ValidateDeviceCode(ctx, requester, code); err != nil {
+	if err = c.DeviceCodeStrategy.ValidateDeviceCode(ctx, ar, code); err != nil {
 		return errorsx.WithStack(err)
 	}
 
@@ -154,7 +154,7 @@ func (c *DeviceCodeTokenEndpointHandler) HandleTokenEndpointRequest(ctx context.
 		return errorsx.WithStack(err)
 	}
 
-	var ar fosite.Requester
+	var ar fosite.DeviceRequester
 	if ar, err = c.session(ctx, requester, signature); err != nil {
 		if ar != nil && (errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) || errors.Is(err, fosite.ErrInvalidatedDeviceCode)) {
 			return c.revokeTokens(ctx, requester.GetID())
@@ -252,7 +252,7 @@ func (c DeviceCodeTokenEndpointHandler) validateCode(ctx context.Context, reques
 	return nil
 }
 
-func (s DeviceCodeTokenEndpointHandler) session(ctx context.Context, requester fosite.AccessRequester, codeSignature string) (fosite.Requester, error) {
+func (s DeviceCodeTokenEndpointHandler) session(ctx context.Context, requester fosite.AccessRequester, codeSignature string) (fosite.DeviceRequester, error) {
 	req, err := s.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
 	if err != nil && errors.Is(err, fosite.ErrInvalidatedDeviceCode) {
@@ -265,10 +265,6 @@ func (s DeviceCodeTokenEndpointHandler) session(ctx context.Context, requester f
 			WithDebug("\"GetDeviceCodeSession\" must return a value for \"fosite.Requester\" when returning \"ErrInvalidatedDeviceCode\".")
 	}
 
-	if err != nil && errors.Is(err, fosite.ErrAuthorizationPending) {
-		return nil, err
-	}
-
 	if err != nil && errors.Is(err, fosite.ErrNotFound) {
 		return nil, errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
 	}
@@ -277,13 +273,13 @@ func (s DeviceCodeTokenEndpointHandler) session(ctx context.Context, requester f
 		return nil, errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	session, ok := req.GetSession().(DeviceFlowSession)
-	if !ok {
-		return nil, fosite.ErrServerError.WithHint("Wrong authorization request session.")
-	}
+	state := req.GetUserCodeState()
 
-	if !session.GetBrowserFlowCompleted() {
+	if state == fosite.UserCodeUnused {
 		return nil, fosite.ErrAuthorizationPending
+	}
+	if state == fosite.UserCodeRejected {
+		return nil, fosite.ErrAccessDenied
 	}
 
 	return req, err

@@ -66,7 +66,7 @@ func (d *DeviceAuthHandler) handleDeviceAuthSession(ctx context.Context, dar fos
 			return "", "", err
 		}
 
-		if err = d.Storage.CreateDeviceAuthSession(ctx, deviceCodeSignature, userCodeSignature, dar.Sanitize(nil)); err == nil {
+		if err = d.Storage.CreateDeviceAuthSession(ctx, deviceCodeSignature, userCodeSignature, dar.Sanitize(nil).(fosite.DeviceRequester)); err == nil {
 			return deviceCode, userCode, nil
 		}
 	}
