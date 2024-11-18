@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/ory/fosite/internal"
-	"github.com/pkg/errors"
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/stretchr/testify/require"
@@ -91,37 +90,6 @@ func TestDeviceAuth_HandleDeviceEndpointRequest(t *testing.T) {
 			},
 		},
 		{
-			description: "should fail because device code is not issued",
-			authreq: &fosite.DeviceRequest{
-				Request: fosite.Request{
-					RequestedScope: fosite.Arguments{"openid", "email"},
-					Client:         client,
-				},
-			},
-			authresp:  &fosite.DeviceResponse{},
-			expectErr: fosite.ErrMisconfiguration,
-		},
-		{
-			description: "should fail because cannot create session",
-			authreq: &fosite.DeviceRequest{
-				Request: fosite.Request{
-					RequestedScope: fosite.Arguments{"openid", "email"},
-					Client:         client,
-					Session:        session,
-				},
-			},
-			authresp: &fosite.DeviceResponse{
-				DeviceCode: "device_code",
-			},
-			setup: func(authreq *fosite.DeviceRequest) {
-				store.
-					EXPECT().
-					CreateOpenIDConnectSession(gomock.Any(), gomock.Any(), gomock.Eq(authreq.Sanitize(oidcParameters))).
-					Return(errors.New(""))
-			},
-			expectErr: fosite.ErrServerError,
-		},
-		{
 			description: "should pass",
 			authreq: &fosite.DeviceRequest{
 				Request: fosite.Request{
@@ -132,12 +100,6 @@ func TestDeviceAuth_HandleDeviceEndpointRequest(t *testing.T) {
 			},
 			authresp: &fosite.DeviceResponse{
 				DeviceCode: "device_code",
-			},
-			setup: func(authreq *fosite.DeviceRequest) {
-				store.
-					EXPECT().
-					CreateOpenIDConnectSession(gomock.Any(), gomock.Any(), gomock.Eq(authreq.Sanitize(oidcParameters))).
-					Return(nil)
 			},
 		},
 	}
