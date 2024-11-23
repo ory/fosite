@@ -17,7 +17,7 @@ import (
 )
 
 // NewIntrospectionRequest initiates token introspection as defined in
-// https://tools.ietf.org/search/rfc7662#section-2.1
+// https://tools.ietf.org/html/rfc7662#section-2.1
 //
 // The protected resource calls the introspection endpoint using an HTTP
 // POST [RFC7231] request with parameters sent as
