@@ -68,17 +68,17 @@ func (mr *MockResourceOwnerPasswordCredentialsGrantStorageMockRecorder) CreateAc
 }
 
 // CreateRefreshTokenSession mocks base method.
-func (m *MockResourceOwnerPasswordCredentialsGrantStorage) CreateRefreshTokenSession(arg0 context.Context, arg1 string, arg2 fosite.Requester) error {
+func (m *MockResourceOwnerPasswordCredentialsGrantStorage) CreateRefreshTokenSession(arg0 context.Context, arg1, arg2 string, arg3 fosite.Requester) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateRefreshTokenSession", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CreateRefreshTokenSession", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // CreateRefreshTokenSession indicates an expected call of CreateRefreshTokenSession.
-func (mr *MockResourceOwnerPasswordCredentialsGrantStorageMockRecorder) CreateRefreshTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockResourceOwnerPasswordCredentialsGrantStorageMockRecorder) CreateRefreshTokenSession(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRefreshTokenSession", reflect.TypeOf((*MockResourceOwnerPasswordCredentialsGrantStorage)(nil).CreateRefreshTokenSession), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRefreshTokenSession", reflect.TypeOf((*MockResourceOwnerPasswordCredentialsGrantStorage)(nil).CreateRefreshTokenSession), arg0, arg1, arg2, arg3)
 }
 
 // DeleteAccessTokenSession mocks base method.
@@ -137,4 +137,18 @@ func (m *MockResourceOwnerPasswordCredentialsGrantStorage) GetRefreshTokenSessio
 func (mr *MockResourceOwnerPasswordCredentialsGrantStorageMockRecorder) GetRefreshTokenSession(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRefreshTokenSession", reflect.TypeOf((*MockResourceOwnerPasswordCredentialsGrantStorage)(nil).GetRefreshTokenSession), arg0, arg1, arg2)
+}
+
+// RotateRefreshToken mocks base method.
+func (m *MockResourceOwnerPasswordCredentialsGrantStorage) RotateRefreshToken(arg0 context.Context, arg1, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RotateRefreshToken", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RotateRefreshToken indicates an expected call of RotateRefreshToken.
+func (mr *MockResourceOwnerPasswordCredentialsGrantStorageMockRecorder) RotateRefreshToken(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RotateRefreshToken", reflect.TypeOf((*MockResourceOwnerPasswordCredentialsGrantStorage)(nil).RotateRefreshToken), arg0, arg1, arg2)
 }

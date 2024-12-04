@@ -1,3 +1,5 @@
+export PATH 					:= .bin:${PATH}
+
 format: .bin/goimports .bin/ory node_modules  # formats the source code
 	.bin/ory dev headers copyright --type=open-source
 	.bin/goimports -w .
@@ -18,6 +20,9 @@ test:  # runs all tests
 .bin/licenses: Makefile
 	curl https://raw.githubusercontent.com/ory/ci/master/licenses/install | sh
 
+.bin/mockgen:
+	go build -o .bin/mockgen github.com/golang/mock/mockgen
+
 .bin/ory: Makefile
 	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.1.48
 	touch .bin/ory
@@ -25,5 +30,8 @@ test:  # runs all tests
 node_modules: package-lock.json
 	npm ci
 	touch node_modules
+
+gen: .bin/goimports .bin/mockgen  # generates mocks
+	./generate-mocks.sh
 
 .DEFAULT_GOAL := help
