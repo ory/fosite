@@ -51,18 +51,25 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 			return errorsx.WithStack(rErr)
 		}
 
-		return errorsx.WithStack(fosite.ErrInactiveToken.WithWrap(err).WithDebug(err.Error()))
+		return fosite.ErrInvalidGrant.WithWrap(err).
+			WithHint("The refresh token was already used.").
+			WithDebugf("Refresh token re-use was detected. All related tokens have been revoked.")
 	} else if errors.Is(err, fosite.ErrNotFound) {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebugf("The refresh token has not been found: %s", err.Error()))
+		return fosite.ErrInvalidGrant.WithWrap(err).
+			WithHint("The refresh token is malformed or not valid.").
+			WithDebug("The refresh token can not be found.")
 	} else if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	} else if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, originalRequest, refresh); err != nil {
+		return fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error())
+	}
+
+	if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, originalRequest, refresh); err != nil {
 		// The authorization server MUST ... validate the refresh token.
 		// This needs to happen after store retrieval for the session to be hydrated properly
 		if errors.Is(err, fosite.ErrTokenExpired) {
-			return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
+			return fosite.ErrInvalidGrant.WithWrap(err).
+				WithHint("The refresh token expired.")
 		}
-		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
+		return fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error())
 	}
 
 	if !(len(c.Config.GetRefreshTokenScopes(ctx)) == 0 || originalRequest.GetGrantedScopes().HasOneOf(c.Config.GetRefreshTokenScopes(ctx)...)) {
@@ -129,23 +136,20 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
-	defer func() {
-		err = c.handleRefreshTokenEndpointStorageError(ctx, err)
-	}()
 
 	storeReq := requester.Sanitize([]string{})
 	storeReq.SetID(requester.GetID())
 
 	if err = c.TokenRevocationStorage.RotateRefreshToken(ctx, requester.GetID(), signature); err != nil {
-		return err
+		return c.handleRefreshTokenEndpointStorageError(ctx, err)
 	}
 
 	if err = c.TokenRevocationStorage.CreateAccessTokenSession(ctx, accessSignature, storeReq); err != nil {
-		return err
+		return c.handleRefreshTokenEndpointStorageError(ctx, err)
 	}
 
 	if err = c.TokenRevocationStorage.CreateRefreshTokenSession(ctx, refreshSignature, accessSignature, storeReq); err != nil {
-		return err
+		return c.handleRefreshTokenEndpointStorageError(ctx, err)
 	}
 
 	responder.SetAccessToken(accessToken)
@@ -156,7 +160,7 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	responder.SetExtra("refresh_token", refreshToken)
 
 	if err = storage.MaybeCommitTx(ctx, c.TokenRevocationStorage); err != nil {
-		return err
+		return c.handleRefreshTokenEndpointStorageError(ctx, err)
 	}
 
 	return nil
@@ -214,14 +218,14 @@ func (c *RefreshTokenGrantHandler) handleRefreshTokenEndpointStorageError(ctx co
 		return errorsx.WithStack(fosite.ErrInvalidRequest.
 			WithDebugf(storageErr.Error()).
 			WithWrap(storageErr).
-			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))
+			WithHint("Failed to refresh token because of multiple concurrent requests using the same token. Please retry the request."))
 	}
 
 	if errors.Is(storageErr, fosite.ErrNotFound) || errors.Is(storageErr, fosite.ErrInactiveToken) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.
 			WithDebugf(storageErr.Error()).
 			WithWrap(storageErr).
-			WithHint("Failed to refresh token because of multiple concurrent requests using the same token which is not allowed."))
+			WithHint("Failed to refresh token. Please retry the request."))
 	}
 
 	return errorsx.WithStack(fosite.ErrServerError.WithWrap(storageErr).WithDebug(storageErr.Error()))

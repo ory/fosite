@@ -311,7 +311,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						err = store.RevokeRefreshToken(context.Background(), req.ID)
 						require.NoError(t, err)
 					},
-					expectErr: fosite.ErrInactiveToken,
+					expectErr: fosite.ErrInvalidGrant,
 				},
 			} {
 				t.Run("case="+c.description, func(t *testing.T) {
@@ -403,7 +403,7 @@ func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					Return(nil).
 					Times(1)
 			},
-			expectError: fosite.ErrInactiveToken,
+			expectError: fosite.ErrInvalidGrant,
 		},
 	} {
 		t.Run(fmt.Sprintf("scenario=%s", testCase.description), func(t *testing.T) {
