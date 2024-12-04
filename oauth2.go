@@ -145,15 +145,15 @@ type OAuth2Provider interface {
 	IntrospectToken(ctx context.Context, token string, tokenUse TokenUse, session Session, scope ...string) (TokenUse, AccessRequester, error)
 
 	// NewIntrospectionRequest initiates token introspection as defined in
-	// https://tools.ietf.org/search/rfc7662#section-2.1
+	// https://tools.ietf.org/html/rfc7662#section-2.1
 	NewIntrospectionRequest(ctx context.Context, r *http.Request, session Session) (IntrospectionResponder, error)
 
 	// WriteIntrospectionError responds with an error if token introspection failed as defined in
-	// https://tools.ietf.org/search/rfc7662#section-2.3
+	// https://tools.ietf.org/html/rfc7662#section-2.3
 	WriteIntrospectionError(ctx context.Context, rw http.ResponseWriter, err error)
 
 	// WriteIntrospectionResponse responds with token metadata discovered by token introspection as defined in
-	// https://tools.ietf.org/search/rfc7662#section-2.2
+	// https://tools.ietf.org/html/rfc7662#section-2.2
 	WriteIntrospectionResponse(ctx context.Context, rw http.ResponseWriter, r IntrospectionResponder)
 
 	// NewPushedAuthorizeRequest validates the request and produces an AuthorizeRequester object that can be stored
@@ -171,7 +171,7 @@ type OAuth2Provider interface {
 
 // IntrospectionResponder is the response object that will be returned when token introspection was successful,
 // for example when the client is allowed to perform token introspection. Refer to
-// https://tools.ietf.org/search/rfc7662#section-2.2 for more details.
+// https://tools.ietf.org/html/rfc7662#section-2.2 for more details.
 type IntrospectionResponder interface {
 	// IsActive returns true if the introspected token is active and false otherwise.
 	IsActive() bool
