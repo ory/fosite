@@ -59,7 +59,7 @@ func (c *RefreshTokenGrantHandler) HandleTokenEndpointRequest(ctx context.Contex
 			WithHint("The refresh token is malformed or not valid.").
 			WithDebug("The refresh token can not be found.")
 	} else if err != nil {
-		return fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error())
+		return fosite.ErrServerError.WithWrap(err).WithDebug(err.Error())
 	}
 
 	if err := c.RefreshTokenStrategy.ValidateRefreshToken(ctx, originalRequest, refresh); err != nil {

@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 2
           repository: ory/hydra
-          ref: 2866a0499d02341ed0603601cfe4e63b24506fcb
+          ref: a35e78e364a26c4f87f37d9f545ef10b3ffa468a
       - uses: actions/setup-go@v2
         with:
           go-version: "1.21"
