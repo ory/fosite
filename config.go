@@ -306,3 +306,9 @@ type PushedAuthorizeRequestConfigProvider interface {
 	// must contain the PAR request_uri.
 	EnforcePushedAuthorize(ctx context.Context) bool
 }
+
+type RFC8693ConfigProvider interface {
+	GetTokenTypes(ctx context.Context) map[string]RFC8693TokenType
+
+	GetDefaultRequestedTokenType(ctx context.Context) string
+}

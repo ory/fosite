@@ -32,8 +32,8 @@ const (
 	GrantTypePassword          GrantType = "password"
 	GrantTypeClientCredentials GrantType = "client_credentials"
 	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer" //nolint:gosec // this is not a hardcoded credential
-
-	BearerAccessToken string = "bearer"
+	GrantTypeTokenExchange     GrantType = "urn:ietf:params:oauth:grant-type:token-exchange"
+	BearerAccessToken          string    = "bearer"
 )
 
 // OAuth2Provider is an interface that enables you to write OAuth2 handlers with only a few lines of code.
@@ -364,4 +364,10 @@ type PushedAuthorizeResponder interface {
 type G11NContext interface {
 	// GetLang returns the current language in the context
 	GetLang() language.Tag
+}
+
+type RFC8693TokenType interface {
+	GetName(ctx context.Context) string
+
+	GetType(ctx context.Context) string
 }

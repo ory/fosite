@@ -103,7 +103,7 @@ func NewExampleStore() *MemoryStore {
 				RotatedSecrets: [][]byte{[]byte(`$2y$10$X51gLxUQJ.hGw1epgHTE5u0bt64xM0COU7K9iAp.OFg8p2pUd.1zC `)}, // = "foobaz",
 				RedirectURIs:   []string{"http://localhost:3846/callback"},
 				ResponseTypes:  []string{"id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"},
-				GrantTypes:     []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+				GrantTypes:     []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials", "urn:ietf:params:oauth:grant-type:token-exchange"},
 				Scopes:         []string{"fosite", "openid", "photos", "offline"},
 			},
 			"custom-lifespan-client": &fosite.DefaultClientWithCustomTokenLifespans{
@@ -141,6 +141,7 @@ func NewExampleStore() *MemoryStore {
 		RefreshTokens:          map[string]StoreRefreshToken{},
 		PKCES:                  map[string]fosite.Requester{},
 		AccessTokenRequestIDs:  map[string]string{},
+		BlacklistedJTIs:        map[string]time.Time{},
 		RefreshTokenRequestIDs: map[string]string{},
 		IssuerPublicKeys:       map[string]IssuerPublicKeys{},
 		PARSessions:            map[string]fosite.AuthorizeRequester{},
@@ -496,4 +497,21 @@ func (s *MemoryStore) DeletePARSession(ctx context.Context, requestURI string) (
 
 	delete(s.PARSessions, requestURI)
 	return nil
+}
+
+func (s *MemoryStore) SetTokenExchangeCustomJWT(ctx context.Context, jti string, exp time.Time) error {
+	// the memory store implementation is generic, so just re-use
+	return s.SetClientAssertionJWT(ctx, jti, exp)
+}
+
+// GetSubjectForTokenExchange computes the session subject and is used for token types where there is no way
+// to know the subject value. For some token types, such as access and refresh tokens, the subject is well-defined
+// and this function is not called.
+func (s *MemoryStore) GetSubjectForTokenExchange(ctx context.Context, requester fosite.Requester, subjectToken map[string]interface{}) (string, error) {
+	sub, _ := subjectToken["subject"].(string)
+	if sub == "" {
+		return "", fosite.ErrInvalidRequest.WithHint("No subject found.")
+	}
+
+	return sub, nil
 }
