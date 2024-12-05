@@ -11,14 +11,12 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-
-	"github.com/ory/fosite/internal"
-
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/storage"
 )
 
@@ -177,12 +175,103 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						assert.NotEqual(t, sess, areq.Session)
 						assert.NotEqual(t, time.Now().UTC().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
 						assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.GrantedScope)
-						assert.Equal(t, fosite.Arguments{"foo", "bar", "offline"}, areq.RequestedScope)
+						assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.RequestedScope)
 						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
 						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
 						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
 						assert.EqualValues(t, areq.Form.Get("or_request_id"), areq.GetID(), "Requester ID should be replaced based on the refresh token session")
 					},
+				},
+				{
+					description: "should pass with scope in form",
+					setup: func(config *fosite.Config) {
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClient{
+							ID:         "foo",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"foo", "bar", "baz", "offline"},
+						}
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						areq.Form.Add("scope", "foo bar baz offline")
+						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+							Client:         areq.Client,
+							GrantedScope:   fosite.Arguments{"foo", "bar", "baz", "offline"},
+							RequestedScope: fosite.Arguments{"foo", "bar", "baz", "offline"},
+							Session:        sess,
+							Form:           url.Values{"foo": []string{"bar"}},
+							RequestedAt:    time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+						})
+						require.NoError(t, err)
+					},
+					expect: func(t *testing.T) {
+						assert.Equal(t, fosite.Arguments{"foo", "bar", "baz", "offline"}, areq.GrantedScope)
+						assert.Equal(t, fosite.Arguments{"foo", "bar", "baz", "offline"}, areq.RequestedScope)
+					},
+				},
+				{
+					description: "should pass with scope in form and should narrow scopes",
+					setup: func(config *fosite.Config) {
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClient{
+							ID:         "foo",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"foo", "bar", "baz", "offline"},
+						}
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						areq.Form.Add("scope", "foo bar offline")
+						areq.SetRequestedScopes(fosite.Arguments{"foo", "bar", "offline"})
+
+						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+							Client:         areq.Client,
+							GrantedScope:   fosite.Arguments{"foo", "bar", "baz", "offline"},
+							RequestedScope: fosite.Arguments{"foo", "bar", "baz", "offline"},
+							Session:        sess,
+							Form:           url.Values{"foo": []string{"bar"}},
+							RequestedAt:    time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+						})
+						require.NoError(t, err)
+					},
+					expect: func(t *testing.T) {
+						assert.Equal(t, fosite.Arguments{"foo", "bar", "offline"}, areq.GrantedScope)
+						assert.Equal(t, fosite.Arguments{"foo", "bar", "offline"}, areq.RequestedScope)
+					},
+				},
+				{
+					description: "should fail with broadened scopes even if the client can request it",
+					setup: func(config *fosite.Config) {
+						areq.GrantTypes = fosite.Arguments{"refresh_token"}
+						areq.Client = &fosite.DefaultClient{
+							ID:         "foo",
+							GrantTypes: fosite.Arguments{"refresh_token"},
+							Scopes:     []string{"foo", "bar", "baz", "offline"},
+						}
+
+						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						require.NoError(t, err)
+
+						areq.Form.Add("refresh_token", token)
+						areq.Form.Add("scope", "foo bar offline")
+						areq.SetRequestedScopes(fosite.Arguments{"foo", "bar", "offline"})
+
+						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+							Client:         areq.Client,
+							GrantedScope:   fosite.Arguments{"foo", "baz", "offline"},
+							RequestedScope: fosite.Arguments{"foo", "baz", "offline"},
+							Session:        sess,
+							Form:           url.Values{"foo": []string{"bar"}},
+							RequestedAt:    time.Now().UTC().Add(-time.Hour).Round(time.Hour),
+						})
+						require.NoError(t, err)
+					},
+					expectErr: fosite.ErrInvalidScope,
 				},
 				{
 					description: "should pass with custom client lifespans",
@@ -216,7 +305,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						assert.NotEqual(t, sess, areq.Session)
 						assert.NotEqual(t, time.Now().UTC().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
 						assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.GrantedScope)
-						assert.Equal(t, fosite.Arguments{"foo", "bar", "offline"}, areq.RequestedScope)
+						assert.Equal(t, fosite.Arguments{"foo", "offline"}, areq.RequestedScope)
 						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
 						internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.RefreshTokenGrantAccessTokenLifespan).UTC(), areq.GetSession().GetExpiresAt(fosite.AccessToken), time.Minute)
 						internal.RequireEqualTime(t, time.Now().Add(*internal.TestLifespans.RefreshTokenGrantRefreshTokenLifespan).UTC(), areq.GetSession().GetExpiresAt(fosite.RefreshToken), time.Minute)
@@ -277,7 +366,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						assert.NotEqual(t, sess, areq.Session)
 						assert.NotEqual(t, time.Now().UTC().Add(-time.Hour).Round(time.Hour), areq.RequestedAt)
 						assert.Equal(t, fosite.Arguments{"foo"}, areq.GrantedScope)
-						assert.Equal(t, fosite.Arguments{"foo", "bar"}, areq.RequestedScope)
+						assert.Equal(t, fosite.Arguments{"foo"}, areq.RequestedScope)
 						assert.NotEqual(t, url.Values{"foo": []string{"bar"}}, areq.Form)
 						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
 						assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))

@@ -23,3 +23,22 @@ func NewAccessRequest(session Session) *AccessRequest {
 func (a *AccessRequest) GetGrantTypes() Arguments {
 	return a.GrantTypes
 }
+
+func (a *AccessRequest) SetGrantedScopes(scopes Arguments) {
+	a.GrantedScope = scopes
+}
+
+func (a *AccessRequest) SanitizeRestoreRefreshTokenOriginalRequester(requester Requester) Requester {
+	r := a.Sanitize(nil).(*Request)
+
+	ar := &AccessRequest{
+		Request: *r,
+	}
+
+	ar.SetID(requester.GetID())
+
+	ar.SetRequestedScopes(requester.GetRequestedScopes())
+	ar.SetGrantedScopes(requester.GetGrantedScopes())
+
+	return ar
+}
