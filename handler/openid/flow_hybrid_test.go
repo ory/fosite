@@ -15,9 +15,9 @@ import (
 	"github.com/ory/fosite/internal/gen"
 
 	cristaljwt "github.com/cristalhq/jwt/v4"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
