@@ -64,7 +64,8 @@ func (c *ClientCredentialsGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeClientCredentials, fosite.AccessToken, c.Config.GetAccessTokenLifespan(ctx))
-	return c.IssueAccessToken(ctx, atLifespan, request, response)
+	_, err := c.IssueAccessToken(ctx, atLifespan, request, response)
+	return err
 }
 
 func (c *ClientCredentialsGrantHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {

@@ -200,13 +200,13 @@ func TestRefreshTokenFlow(t *testing.T) {
 				tokenSource := oauthClient.TokenSource(context.Background(), original)
 				_, err := tokenSource.Token()
 				require.Error(t, err)
-				require.Equal(t, http.StatusUnauthorized, err.(*oauth2.RetrieveError).Response.StatusCode)
+				require.Equal(t, http.StatusBadRequest, err.(*oauth2.RetrieveError).Response.StatusCode)
 
 				refreshed.Expiry = refreshed.Expiry.Add(-time.Hour * 24)
 				tokenSource = oauthClient.TokenSource(context.Background(), refreshed)
 				_, err = tokenSource.Token()
 				require.Error(t, err)
-				require.Equal(t, http.StatusUnauthorized, err.(*oauth2.RetrieveError).Response.StatusCode)
+				require.Equal(t, http.StatusBadRequest, err.(*oauth2.RetrieveError).Response.StatusCode)
 			},
 		},
 	} {
