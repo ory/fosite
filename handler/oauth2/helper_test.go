@@ -70,10 +70,12 @@ func TestIssueAccessToken(t *testing.T) {
 		},
 	} {
 		c.mock()
-		err := helper.IssueAccessToken(context.Background(), helper.Config.GetAccessTokenLifespan(context.TODO()), areq, aresp)
+		signature, err := helper.IssueAccessToken(context.Background(), helper.Config.GetAccessTokenLifespan(context.TODO()), areq, aresp)
 		require.Equal(t, err == nil, c.err == nil)
 		if c.err != nil {
 			assert.EqualError(t, err, c.err.Error(), "Case %d", k)
+		} else {
+			assert.NotEmpty(t, signature, "Case %d", k)
 		}
 	}
 }
