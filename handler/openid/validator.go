@@ -11,10 +11,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	"github.com/pkg/errors"
-
 	"github.com/ory/fosite"
-	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/go-convenience/stringslice"
 )
 
@@ -26,11 +23,11 @@ type openIDConnectRequestValidatorConfigProvider interface {
 }
 
 type OpenIDConnectRequestValidator struct {
-	Strategy jwt.Signer
+	Strategy OpenIDConnectTokenStrategy
 	Config   openIDConnectRequestValidatorConfigProvider
 }
 
-func NewOpenIDConnectRequestValidator(strategy jwt.Signer, config openIDConnectRequestValidatorConfigProvider) *OpenIDConnectRequestValidator {
+func NewOpenIDConnectRequestValidator(strategy OpenIDConnectTokenStrategy, config openIDConnectRequestValidatorConfigProvider) *OpenIDConnectRequestValidator {
 	return &OpenIDConnectRequestValidator{
 		Strategy: strategy,
 		Config:   config,
@@ -133,11 +130,8 @@ func (v *OpenIDConnectRequestValidator) ValidatePrompt(ctx context.Context, req 
 		return nil
 	}
 
-	tokenHint, err := v.Strategy.Decode(ctx, idTokenHint)
-	var ve *jwt.ValidationError
-	if errors.As(err, &ve) && ve.Has(jwt.ValidationErrorExpired) {
-		// Expired tokens are ok
-	} else if err != nil {
+	tokenHint, err := v.Strategy.DecodeIDToken(ctx, req, idTokenHint)
+	if err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("Failed to validate OpenID Connect request as decoding id token from id_token_hint parameter failed.").WithWrap(err).WithDebug(err.Error()))
 	}
 
