@@ -82,3 +82,69 @@ func WildcardScopeStrategy(matchers []string, needle string) bool {
 
 	return false
 }
+
+func ResourceAccessScopeStrategy(matchers []string, needle string) bool {
+	needleResources := strings.Split(needle, ":")
+
+matcherloop:
+	for _, matcher := range matchers {
+		matcherResources := strings.Split(matcher, ":")
+
+		if len(matcherResources) != len(needleResources) {
+			continue matcherloop
+		}
+
+		var match bool
+
+		for index, matcherResource := range matcherResources {
+			isLastLoop := index+1 == len(matcherResources)
+			needleResource := needleResources[index]
+
+			// on the last resource we split off the verb
+			matcherVerb := ""
+			if strings.Contains(matcherResource, ".") && isLastLoop {
+				matcherVerb = matcherResource[strings.LastIndex(matcherResource, "."):]
+				matcherResource, _ = strings.CutSuffix(matcherResource, matcherVerb)
+			}
+
+			needleVerb := ""
+			if strings.Contains(needleResource, ".") && isLastLoop && matcherVerb != "" {
+				needleVerb = needleResource[strings.LastIndex(needleResource, "."):]
+				needleResource, _ = strings.CutSuffix(needleResource, needleVerb)
+			}
+
+			var exactmatch bool
+			var prefixmatch bool
+
+			if matcherResource == needleResource {
+				exactmatch = true
+			}
+			// if prefix we check only on the left side of `-`
+			if strings.HasSuffix(matcherResource, "-*") {
+				matcherPrefix, _, _ := strings.Cut(matcherResource, "-")
+				needlePrefix, _, hasPrefix := strings.Cut(needleResource, "-")
+				if hasPrefix && needlePrefix == matcherPrefix {
+					prefixmatch = true
+				}
+			}
+			match = prefixmatch || exactmatch
+
+			if !match {
+				continue matcherloop
+			}
+
+			// if matcher defines .* as verb then everything is permitted
+			// resource provider has responsibility to assume least privilege
+			if isLastLoop && matcherVerb != "" {
+				if matcherVerb == ".*" {
+					continue
+				}
+				match = matcherVerb == needleVerb
+			}
+		}
+		if match {
+			return true
+		}
+	}
+	return false
+}
