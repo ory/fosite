@@ -31,7 +31,8 @@ const (
 	GrantTypeAuthorizationCode GrantType = "authorization_code"
 	GrantTypePassword          GrantType = "password"
 	GrantTypeClientCredentials GrantType = "client_credentials"
-	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer" //nolint:gosec // this is not a hardcoded credential
+	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"     //nolint:gosec // this is not a hardcoded credential
+	GrantTypeTokenExchange     GrantType = "urn:ietf:params:oauth:grant-type:token-exchange" //nolint:gosec // this is not a hardcoded credential
 
 	BearerAccessToken string = "bearer"
 )
