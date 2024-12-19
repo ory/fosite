@@ -21,7 +21,7 @@ test:  # runs all tests
 	curl https://raw.githubusercontent.com/ory/ci/master/licenses/install | sh
 
 .bin/mockgen:
-	go build -o .bin/mockgen github.com/golang/mock/mockgen
+	go build -o .bin/mockgen go.uber.org/mock/mockgen
 
 .bin/ory: Makefile
 	curl https://raw.githubusercontent.com/ory/meta/master/install.sh | bash -s -- -b .bin ory v0.1.48

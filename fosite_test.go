@@ -13,6 +13,7 @@ import (
 	. "github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/par"
+	"github.com/ory/fosite/handler/rfc8628"
 )
 
 func TestAuthorizeEndpointHandlers(t *testing.T) {
@@ -21,6 +22,16 @@ func TestAuthorizeEndpointHandlers(t *testing.T) {
 	hs.Append(h)
 	hs.Append(h)
 	hs.Append(&oauth2.AuthorizeExplicitGrantHandler{})
+	assert.Len(t, hs, 1)
+	assert.Equal(t, hs[0], h)
+}
+
+func TestDeviceAuthorizeEndpointHandlers(t *testing.T) {
+	h := &rfc8628.DeviceAuthHandler{}
+	hs := DeviceEndpointHandlers{}
+	hs.Append(h)
+	hs.Append(h)
+	hs.Append(&rfc8628.DeviceAuthHandler{})
 	assert.Len(t, hs, 1)
 	assert.Equal(t, hs[0], h)
 }
