@@ -233,6 +233,20 @@ func (mr *MockAuthorizeRequesterMockRecorder) GetResponseTypes() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResponseTypes", reflect.TypeOf((*MockAuthorizeRequester)(nil).GetResponseTypes))
 }
 
+// GetRequestMethod mocks base method.
+func (m *MockAuthorizeRequester) GetRequestMethod() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRequestMethod")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetRequestMethod indicates an expected call of GetRequestMethod.
+func (mr *MockAuthorizeRequesterMockRecorder) GetRequestMethod() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRequestMethod", reflect.TypeOf((*MockAuthorizeRequester)(nil).GetRequestMethod))
+}
+
 // GetSession mocks base method.
 func (m *MockAuthorizeRequester) GetSession() fosite.Session {
 	m.ctrl.T.Helper()
