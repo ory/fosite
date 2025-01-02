@@ -9,7 +9,7 @@ package internal
 import (
 	"net/http"
 
-	"github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // Mock of ResponseWriter interface
