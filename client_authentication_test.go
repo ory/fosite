@@ -31,6 +31,31 @@ import (
 	"github.com/ory/fosite/storage"
 )
 
+func encryptAssertionWithRSAKey(t *testing.T, token string, pubKey *rsa.PublicKey) string {
+	eo := &jose.EncrypterOptions{}
+	eo = eo.WithContentType("JWT").WithType("JWT")
+	enc, err := jose.NewEncrypter(
+		jose.ContentEncryption("A256GCM"),
+		jose.Recipient{
+			Algorithm: jose.KeyAlgorithm("RSA-OAEP"),
+			Key:       pubKey,
+			KeyID:     "enc_key",
+		},
+		eo)
+
+	require.NoError(t, err, "unable to build encrypter; err=%v", err)
+
+	// Encrypt the token
+	o, err := enc.Encrypt([]byte(token))
+	require.NoError(t, err, "encrypting the token failed. err=%v", err)
+
+	// Serialize the encrypted token
+	token, err = o.CompactSerialize()
+	require.NoError(t, err, "serializing the encrypted token failed. err=%v", err)
+
+	return token
+}
+
 func mustGenerateRSAAssertion(t *testing.T, claims jwt.MapClaims, key *rsa.PrivateKey, kid string) string {
 	token := jwt.NewWithClaims(jose.RS256, claims)
 	token.Header["kid"] = kid
@@ -75,14 +100,22 @@ func TestAuthenticateClient(t *testing.T) {
 	const at = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
 	hasher := &BCrypt{Config: &Config{HashCost: 6}}
+	encKey := gen.MustRSAKey()
+
+	config := &Config{
+		JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
+		ClientSecretsHasher: hasher,
+		TokenURL:            "token-url",
+		HTTPClient:          retryablehttp.NewClient(),
+		JWTStrategy: jwt.NewDefaultStrategy(
+			func(ctx context.Context, context *jwt.KeyContext) (interface{}, error) {
+				return encKey, nil
+			}),
+	}
+
 	f := &Fosite{
-		Store: storage.NewMemoryStore(),
-		Config: &Config{
-			JWKSFetcherStrategy: NewDefaultJWKSFetcherStrategy(),
-			ClientSecretsHasher: hasher,
-			TokenURL:            "token-url",
-			HTTPClient:          retryablehttp.NewClient(),
-		},
+		Store:  storage.NewMemoryStore(),
+		Config: config,
 	}
 
 	barSecret, err := hasher.Hash(context.TODO(), []byte("bar"))
@@ -298,6 +331,26 @@ func TestAuthenticateClient(t *testing.T) {
 				"jti": "12345",
 				"aud": "token-url",
 			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
+			r: new(http.Request),
+		},
+		{
+			d:      "should pass with proper encrypted RSA assertion when JWKs are set within the client and client_id is set in the request",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{
+				"client_id": []string{"bar"},
+				"client_assertion": {
+					encryptAssertionWithRSAKey(t,
+						mustGenerateRSAAssertion(t, jwt.MapClaims{
+							"sub": "bar",
+							"exp": time.Now().Add(time.Hour).Unix(),
+							"iss": "bar",
+							"jti": "12345",
+							"aud": "token-url",
+						}, rsaKey, "kid-foo"),
+						&encKey.PublicKey),
+				},
+				"client_assertion_type": []string{at},
+			},
 			r: new(http.Request),
 		},
 		{
