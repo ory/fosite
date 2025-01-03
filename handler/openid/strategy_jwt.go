@@ -231,3 +231,16 @@ func (h DefaultStrategy) GenerateIDToken(ctx context.Context, lifespan time.Dura
 	token, _, err = h.Signer.Generate(ctx, claims.ToMapClaims(), sess.IDTokenHeaders())
 	return token, err
 }
+
+// DecodeIDToken decodes a JWT string.
+func (h DefaultStrategy) DecodeIDToken(ctx context.Context, _ fosite.Requester, token string) (*jwt.Token, error) {
+	idtoken, err := h.Signer.Decode(ctx, token)
+	var ve *jwt.ValidationError
+	if errors.As(err, &ve) && ve.Has(jwt.ValidationErrorExpired) {
+		// Expired tokens are ok
+	} else if err != nil {
+		return nil, errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	}
+
+	return idtoken, nil
+}

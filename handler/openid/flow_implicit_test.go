@@ -56,7 +56,7 @@ func makeOpenIDConnectImplicitHandler(minParameterEntropy int) OpenIDConnectImpl
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: idStrategy,
 		},
-		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(j.Signer, config),
+		OpenIDConnectRequestValidator: NewOpenIDConnectRequestValidator(j, config),
 		Config:                        config,
 	}
 }
