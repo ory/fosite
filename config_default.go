@@ -23,45 +23,46 @@ const (
 )
 
 var (
-	_ AuthorizeCodeLifespanProvider                = (*Config)(nil)
-	_ RefreshTokenLifespanProvider                 = (*Config)(nil)
-	_ AccessTokenLifespanProvider                  = (*Config)(nil)
-	_ ScopeStrategyProvider                        = (*Config)(nil)
-	_ AudienceStrategyProvider                     = (*Config)(nil)
-	_ RedirectSecureCheckerProvider                = (*Config)(nil)
-	_ RefreshTokenScopesProvider                   = (*Config)(nil)
-	_ DisableRefreshTokenValidationProvider        = (*Config)(nil)
-	_ AccessTokenIssuerProvider                    = (*Config)(nil)
-	_ JWTScopeFieldProvider                        = (*Config)(nil)
-	_ AllowedPromptsProvider                       = (*Config)(nil)
-	_ OmitRedirectScopeParamProvider               = (*Config)(nil)
-	_ MinParameterEntropyProvider                  = (*Config)(nil)
-	_ SanitationAllowedProvider                    = (*Config)(nil)
-	_ EnforcePKCEForPublicClientsProvider          = (*Config)(nil)
-	_ EnablePKCEPlainChallengeMethodProvider       = (*Config)(nil)
-	_ EnforcePKCEProvider                          = (*Config)(nil)
-	_ GrantTypeJWTBearerCanSkipClientAuthProvider  = (*Config)(nil)
-	_ GrantTypeJWTBearerIDOptionalProvider         = (*Config)(nil)
-	_ GrantTypeJWTBearerIssuedDateOptionalProvider = (*Config)(nil)
-	_ GetJWTMaxDurationProvider                    = (*Config)(nil)
-	_ IDTokenLifespanProvider                      = (*Config)(nil)
-	_ IDTokenIssuerProvider                        = (*Config)(nil)
-	_ JWKSFetcherStrategyProvider                  = (*Config)(nil)
-	_ ClientAuthenticationStrategyProvider         = (*Config)(nil)
-	_ SendDebugMessagesToClientsProvider           = (*Config)(nil)
-	_ ResponseModeHandlerExtensionProvider         = (*Config)(nil)
-	_ MessageCatalogProvider                       = (*Config)(nil)
-	_ FormPostHTMLTemplateProvider                 = (*Config)(nil)
-	_ TokenURLProvider                             = (*Config)(nil)
-	_ GetSecretsHashingProvider                    = (*Config)(nil)
-	_ HTTPClientProvider                           = (*Config)(nil)
-	_ HMACHashingProvider                          = (*Config)(nil)
-	_ AuthorizeEndpointHandlersProvider            = (*Config)(nil)
-	_ TokenEndpointHandlersProvider                = (*Config)(nil)
-	_ TokenIntrospectionHandlersProvider           = (*Config)(nil)
-	_ RevocationHandlersProvider                   = (*Config)(nil)
-	_ PushedAuthorizeRequestHandlersProvider       = (*Config)(nil)
-	_ PushedAuthorizeRequestConfigProvider         = (*Config)(nil)
+	_ AuthorizeCodeLifespanProvider                   = (*Config)(nil)
+	_ RefreshTokenLifespanProvider                    = (*Config)(nil)
+	_ AccessTokenLifespanProvider                     = (*Config)(nil)
+	_ ScopeStrategyProvider                           = (*Config)(nil)
+	_ AudienceStrategyProvider                        = (*Config)(nil)
+	_ RedirectSecureCheckerProvider                   = (*Config)(nil)
+	_ RefreshTokenScopesProvider                      = (*Config)(nil)
+	_ DisableRefreshTokenValidationProvider           = (*Config)(nil)
+	_ AccessTokenIssuerProvider                       = (*Config)(nil)
+	_ JWTScopeFieldProvider                           = (*Config)(nil)
+	_ AllowedPromptsProvider                          = (*Config)(nil)
+	_ OmitRedirectScopeParamProvider                  = (*Config)(nil)
+	_ MinParameterEntropyProvider                     = (*Config)(nil)
+	_ SanitationAllowedProvider                       = (*Config)(nil)
+	_ EnforcePKCEForPublicClientsProvider             = (*Config)(nil)
+	_ EnablePKCEPlainChallengeMethodProvider          = (*Config)(nil)
+	_ EnforcePKCEProvider                             = (*Config)(nil)
+	_ GrantTypeTokenExchangeCanSkipClientAuthProvider = (*Config)(nil)
+	_ GrantTypeJWTBearerCanSkipClientAuthProvider     = (*Config)(nil)
+	_ GrantTypeJWTBearerIDOptionalProvider            = (*Config)(nil)
+	_ GrantTypeJWTBearerIssuedDateOptionalProvider    = (*Config)(nil)
+	_ GetJWTMaxDurationProvider                       = (*Config)(nil)
+	_ IDTokenLifespanProvider                         = (*Config)(nil)
+	_ IDTokenIssuerProvider                           = (*Config)(nil)
+	_ JWKSFetcherStrategyProvider                     = (*Config)(nil)
+	_ ClientAuthenticationStrategyProvider            = (*Config)(nil)
+	_ SendDebugMessagesToClientsProvider              = (*Config)(nil)
+	_ ResponseModeHandlerExtensionProvider            = (*Config)(nil)
+	_ MessageCatalogProvider                          = (*Config)(nil)
+	_ FormPostHTMLTemplateProvider                    = (*Config)(nil)
+	_ TokenURLProvider                                = (*Config)(nil)
+	_ GetSecretsHashingProvider                       = (*Config)(nil)
+	_ HTTPClientProvider                              = (*Config)(nil)
+	_ HMACHashingProvider                             = (*Config)(nil)
+	_ AuthorizeEndpointHandlersProvider               = (*Config)(nil)
+	_ TokenEndpointHandlersProvider                   = (*Config)(nil)
+	_ TokenIntrospectionHandlersProvider              = (*Config)(nil)
+	_ RevocationHandlersProvider                      = (*Config)(nil)
+	_ PushedAuthorizeRequestHandlersProvider          = (*Config)(nil)
+	_ PushedAuthorizeRequestConfigProvider            = (*Config)(nil)
 )
 
 type Config struct {
@@ -150,6 +151,9 @@ type Config struct {
 
 	// GrantTypeJWTBearerMaxDuration sets the maximum time after JWT issued date, during which the JWT is considered valid.
 	GrantTypeJWTBearerMaxDuration time.Duration
+
+	// GrantTypeTokenExchangeCanSkipClientAuth indicates the stretegy to check if client authentication can be skipped.
+	GrantTypeTokenExchangeCanSkipClientAuth CanSkipClientAuthenticationStrategy
 
 	// ClientAuthenticationStrategy indicates the Strategy to authenticate client requests
 	ClientAuthenticationStrategy ClientAuthenticationStrategy
@@ -300,6 +304,12 @@ func (c *Config) GetGrantTypeJWTBearerIDOptional(ctx context.Context) bool {
 // GetGrantTypeJWTBearerCanSkipClientAuth returns the GrantTypeJWTBearerCanSkipClientAuth field.
 func (c *Config) GetGrantTypeJWTBearerCanSkipClientAuth(ctx context.Context) bool {
 	return c.GrantTypeJWTBearerCanSkipClientAuth
+}
+
+// GetGrantTypeTokenExchangeCanSkipClientAuth returns the GrantTypeTokenExchangeCanSkipClientAuth field.
+// Defaults to nil, in which case TokenExchange follows the default behavior.
+func (c *Config) GetGrantTypeTokenExchangeCanSkipClientAuth(ctx context.Context) CanSkipClientAuthenticationStrategy {
+	return c.GrantTypeTokenExchangeCanSkipClientAuth
 }
 
 // GetEnforcePKCE If set to true, public clients must use PKCE.
