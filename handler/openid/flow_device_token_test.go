@@ -218,6 +218,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 					},
 				}
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(authreq, nil)
+				store.EXPECT().DeleteOpenIDConnectSession(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			check: func(t *testing.T, aresp *fosite.AccessResponse) {
 				assert.NotEmpty(t, aresp.GetExtra("id_token"))
