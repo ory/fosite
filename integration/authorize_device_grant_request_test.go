@@ -11,6 +11,7 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 	"github.com/ory/fosite/internal/gen"
+	"github.com/ory/fosite/token/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	goauth "golang.org/x/oauth2"
@@ -58,7 +59,7 @@ func runDeviceFlowTest(t *testing.T) {
 				assert.ErrorContains(t, err, "invalid_grant")
 			},
 			cleanUp: func() {
-				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"}
 			},
 		},
 		{
@@ -122,7 +123,7 @@ func runDeviceFlowTest(t *testing.T) {
 }
 
 func runDeviceFlowAccessTokenTest(t *testing.T) {
-	session := &fosite.DefaultSession{}
+	session := newIDSession(&jwt.IDTokenClaims{Subject: "peter"})
 
 	fc := &fosite.Config{
 		DeviceVerificationURL:          "https://example.com/",
@@ -141,10 +142,16 @@ func runDeviceFlowAccessTokenTest(t *testing.T) {
 			TokenURL:      ts.URL + tokenRelativePath,
 			DeviceAuthURL: ts.URL + deviceAuthRelativePath,
 		},
+		Scopes: []string{"openid", "fosite", "offline"},
 	}
 	resp, _ := oauthClient.DeviceAuth(context.Background())
 	deviceCodeSignature, err := compose.NewDeviceStrategy(fc).DeviceCodeSignature(context.Background(), resp.DeviceCode)
 	require.NoError(t, err)
+
+	req, err := fositeStore.GetDeviceCodeSession(context.TODO(), deviceCodeSignature, nil)
+	require.NoError(t, err)
+	fositeStore.CreateOpenIDConnectSession(context.TODO(), deviceCodeSignature, req)
+
 	d := fositeStore.DeviceAuths[deviceCodeSignature]
 	d.SetUserCodeState(fosite.UserCodeAccepted)
 	fositeStore.DeviceAuths[deviceCodeSignature] = d
@@ -175,7 +182,7 @@ func runDeviceFlowAccessTokenTest(t *testing.T) {
 				assert.ErrorContains(t, err, "unauthorized_client")
 			},
 			cleanUp: func() {
-				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code"}
+				fositeStore.Clients["device-client"].(*fosite.DefaultClient).GrantTypes = []string{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"}
 			},
 		},
 		{
@@ -203,6 +210,15 @@ func runDeviceFlowAccessTokenTest(t *testing.T) {
 			check: func(t *testing.T, token *goauth.Token, err error) {
 				assert.Equal(t, "bearer", token.TokenType)
 				assert.NotEmpty(t, token.AccessToken)
+				assert.NotEmpty(t, token.RefreshToken)
+				assert.NotEmpty(t, token.Extra("id_token"))
+
+				tokenSource := oauthClient.TokenSource(context.Background(), token)
+				refreshed, err := tokenSource.Token()
+
+				assert.NotEmpty(t, refreshed.AccessToken)
+				assert.NotEmpty(t, refreshed.RefreshToken)
+				assert.NotEmpty(t, refreshed.Extra("id_token"))
 			},
 		},
 	} {
