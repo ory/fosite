@@ -16,8 +16,6 @@ import (
 	enigma "github.com/ory/fosite/token/hmac"
 )
 
-const POLLING_RATE_LIMITING_LEEWAY = 200 * time.Millisecond
-
 // DefaultDeviceStrategy implements the default device strategy
 type DefaultDeviceStrategy struct {
 	Enigma *enigma.HMACStrategy
