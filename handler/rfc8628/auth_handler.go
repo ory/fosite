@@ -55,6 +55,7 @@ func (d *DeviceAuthHandler) handleDeviceAuthSession(ctx context.Context, dar fos
 	}
 
 	dar.GetSession().SetExpiresAt(fosite.UserCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)).Round(time.Second))
+	dar.GetSession().SetExpiresAt(fosite.DeviceCode, time.Now().UTC().Add(d.Config.GetDeviceAndUserCodeLifespan(ctx)).Round(time.Second))
 	// Note: the retries are added here because we need to ensure uniqueness of user codes.
 	// The chances of duplicates should however be diminishing, because they are the same
 	// chance an attacker will be able to hit a valid code with few guesses. However, as
