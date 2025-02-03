@@ -13,7 +13,7 @@ import (
 )
 
 // WriteIntrospectionError responds with token metadata discovered by token introspection as defined in
-// https://tools.ietf.org/search/rfc7662#section-2.2
+// https://tools.ietf.org/html/rfc7662#section-2.2
 //
 // If the protected resource uses OAuth 2.0 client credentials to
 // authenticate to the introspection endpoint and its credentials are
@@ -53,7 +53,7 @@ func (f *Fosite) WriteIntrospectionError(ctx context.Context, rw http.ResponseWr
 }
 
 // WriteIntrospectionResponse responds with an error if token introspection failed as defined in
-// https://tools.ietf.org/search/rfc7662#section-2.3
+// https://tools.ietf.org/html/rfc7662#section-2.3
 //
 // The server responds with a JSON object [RFC7159] in "application/
 // json" format with the following top-level members.
