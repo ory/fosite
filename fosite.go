@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -82,6 +82,20 @@ func (a *PushedAuthorizeEndpointHandlers) Append(h PushedAuthorizeEndpointHandle
 	*a = append(*a, h)
 }
 
+// DeviceEndpointHandlers is a list of DeviceEndpointHandler
+type DeviceEndpointHandlers []DeviceEndpointHandler
+
+// Append adds an DeviceEndpointHandlers to this list. Ignores duplicates based on reflect.TypeOf.
+func (a *DeviceEndpointHandlers) Append(h DeviceEndpointHandler) {
+	for _, this := range *a {
+		if reflect.TypeOf(this) == reflect.TypeOf(h) {
+			return
+		}
+	}
+
+	*a = append(*a, h)
+}
+
 var _ OAuth2Provider = (*Fosite)(nil)
 
 type Configurator interface {
@@ -108,6 +122,7 @@ type Configurator interface {
 	RefreshTokenLifespanProvider
 	VerifiableCredentialsNonceLifespanProvider
 	AuthorizeCodeLifespanProvider
+	DeviceAndUserCodeLifespanProvider
 	TokenEntropyProvider
 	RotatedGlobalSecretsProvider
 	GlobalSecretProvider
@@ -132,6 +147,9 @@ type Configurator interface {
 	TokenIntrospectionHandlersProvider
 	RevocationHandlersProvider
 	UseLegacyErrorFormatProvider
+	DeviceEndpointHandlersProvider
+	UserCodeProvider
+	DeviceProvider
 }
 
 func NewOAuth2Provider(s Storage, c Configurator) *Fosite {

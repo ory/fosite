@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package integration_test
@@ -173,5 +173,45 @@ func pushedAuthorizeRequestHandler(t *testing.T, oauth2 fosite.OAuth2Provider, s
 		}
 
 		oauth2.WritePushedAuthorizeResponse(ctx, rw, ar, response)
+	}
+}
+
+func deviceAuthorizationEndpointHandler(t *testing.T, oauth2 fosite.OAuth2Provider, session fosite.Session) func(rw http.ResponseWriter, req *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
+		ctx := fosite.NewContext()
+
+		r, err := oauth2.NewDeviceRequest(ctx, req)
+		if err != nil {
+			t.Logf("Device auth request failed because: %+v", err)
+			t.Logf("Request: %+v", r)
+			oauth2.WriteAccessError(ctx, rw, r, err)
+			return
+		}
+
+		if r.GetRequestedScopes().Has("fosite") {
+			r.GrantScope("fosite")
+		}
+
+		if r.GetRequestedScopes().Has("offline") {
+			r.GrantScope("offline")
+		}
+
+		if r.GetRequestedScopes().Has("openid") {
+			r.GrantScope("openid")
+		}
+
+		for _, a := range r.GetRequestedAudience() {
+			r.GrantAudience(a)
+		}
+
+		response, err := oauth2.NewDeviceResponse(ctx, r, session)
+		if err != nil {
+			t.Logf("Device auth response failed because: %+v", err)
+			t.Logf("Request: %+v", r)
+			oauth2.WriteAccessError(ctx, rw, r, err)
+			return
+		}
+
+		oauth2.WriteDeviceResponse(ctx, rw, r, response)
 	}
 }

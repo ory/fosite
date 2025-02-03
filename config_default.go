@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -13,13 +13,16 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/ory/fosite/token/jwt"
+	"github.com/ory/x/randx"
 
 	"github.com/ory/fosite/i18n"
 )
 
 const (
-	defaultPARPrefix          = "urn:ietf:params:oauth:request_uri:"
-	defaultPARContextLifetime = 5 * time.Minute
+	defaultPARPrefix                 = "urn:ietf:params:oauth:request_uri:"
+	defaultPARContextLifetime        = 5 * time.Minute
+	defaultDeviceAndUserCodeLifespan = 10 * time.Minute
+	defaultAuthTokenPollingInterval  = 5 * time.Second
 )
 
 var (
@@ -83,6 +86,15 @@ type Config struct {
 
 	// IDTokenIssuer sets the default issuer of the ID Token.
 	IDTokenIssuer string
+
+	// Sets how long a device user/device code pair is valid for
+	DeviceAndUserCodeLifespan time.Duration
+
+	// DeviceAuthTokenPollingInterval sets the interval that clients should check for device code grants
+	DeviceAuthTokenPollingInterval time.Duration
+
+	// DeviceVerificationURL is the URL of the device verification endpoint, this is is included with the device code request responses
+	DeviceVerificationURL string
 
 	// HashCost sets the cost of the password hashing cost. Defaults to 12.
 	HashCost int
@@ -213,8 +225,17 @@ type Config struct {
 	// PushedAuthorizeContextLifespan is the lifespan of the PAR context
 	PushedAuthorizeContextLifespan time.Duration
 
+	// DeviceEndpointHandlers is a list of handlers that are called before the device endpoint is served.
+	DeviceEndpointHandlers DeviceEndpointHandlers
+
 	// IsPushedAuthorizeEnforced enforces pushed authorization request for /authorize
 	IsPushedAuthorizeEnforced bool
+
+	// UserCodeLength defines the length of the user_code
+	UserCodeLength int
+
+	// UserCodeSymbols defines the symbols that will be used to construct the user_code
+	UserCodeSymbols []rune
 }
 
 func (c *Config) GetGlobalSecret(ctx context.Context) ([]byte, error) {
@@ -243,6 +264,11 @@ func (c *Config) GetTokenEndpointHandlers(ctx context.Context) TokenEndpointHand
 
 func (c *Config) GetTokenIntrospectionHandlers(ctx context.Context) TokenIntrospectionHandlers {
 	return c.TokenIntrospectionHandlers
+}
+
+// GetDeviceEndpointHandlers return the Device Endpoint Handlers
+func (c *Config) GetDeviceEndpointHandlers(ctx context.Context) DeviceEndpointHandlers {
+	return c.DeviceEndpointHandlers
 }
 
 func (c *Config) GetRevocationHandlers(ctx context.Context) RevocationHandlers {
@@ -396,6 +422,15 @@ func (c *Config) GetRefreshTokenLifespan(_ context.Context) time.Duration {
 	return c.RefreshTokenLifespan
 }
 
+// GetDeviceAndUserCodeLifespan returns how long the device and user codes should be valid.
+// Defaults to 10 minutes
+func (c *Config) GetDeviceAndUserCodeLifespan(_ context.Context) time.Duration {
+	if c.DeviceAndUserCodeLifespan == 0 {
+		return defaultDeviceAndUserCodeLifespan
+	}
+	return c.DeviceAndUserCodeLifespan
+}
+
 // GetBCryptCost returns the bcrypt cost factor. Defaults to 12.
 func (c *Config) GetBCryptCost(_ context.Context) int {
 	if c.HashCost == 0 {
@@ -498,4 +533,33 @@ func (c *Config) GetPushedAuthorizeContextLifespan(ctx context.Context) time.Dur
 // must contain the PAR request_uri.
 func (c *Config) EnforcePushedAuthorize(ctx context.Context) bool {
 	return c.IsPushedAuthorizeEnforced
+}
+
+// GetDeviceVerificationURL returns the device verification URL
+func (c *Config) GetDeviceVerificationURL(ctx context.Context) string {
+	return c.DeviceVerificationURL
+}
+
+// GetDeviceAuthTokenPollingInterval returns configured device token endpoint polling interval
+func (c *Config) GetDeviceAuthTokenPollingInterval(ctx context.Context) time.Duration {
+	if c.DeviceAuthTokenPollingInterval == 0 {
+		return defaultAuthTokenPollingInterval
+	}
+	return c.DeviceAuthTokenPollingInterval
+}
+
+// GetUserCodeLength returns configured user_code length
+func (c *Config) GetUserCodeLength(ctx context.Context) int {
+	if c.UserCodeLength == 0 {
+		return 8
+	}
+	return c.UserCodeLength
+}
+
+// GetDeviceAuthTokenPollingInterval returns configured user_code allowed symbols
+func (c *Config) GetUserCodeSymbols(ctx context.Context) []rune {
+	if c.UserCodeSymbols == nil {
+		return []rune(randx.AlphaUpper)
+	}
+	return c.UserCodeSymbols
 }

@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package openid
@@ -11,9 +11,9 @@ import (
 
 	"github.com/ory/fosite/internal/gen"
 
-	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"

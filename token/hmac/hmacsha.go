@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 // Package hmac is the default implementation for generating and validating challenges. It uses SHA-512/256 to
@@ -163,6 +163,27 @@ func (*HMACStrategy) Signature(token string) string {
 		return ""
 	}
 	return split[1]
+}
+
+// GenerateHMACForString returns an HMAC for a string
+func (c *HMACStrategy) GenerateHMACForString(ctx context.Context, text string) (string, error) {
+	var signingKey [32]byte
+
+	secrets, err := c.Config.GetGlobalSecret(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if len(secrets) < minimumSecretLength {
+		return "", errors.Errorf("secret for signing HMAC-SHA512/256 is expected to be 32 byte long, got %d byte", len(secrets))
+	}
+	copy(signingKey[:], secrets)
+
+	bytes := []byte(text)
+	hashBytes := c.generateHMAC(ctx, bytes, &signingKey)
+
+	b64 := base64.RawURLEncoding.EncodeToString(hashBytes)
+	return b64, nil
 }
 
 func (c *HMACStrategy) generateHMAC(ctx context.Context, data []byte, key *[32]byte) []byte {

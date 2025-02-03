@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -23,6 +23,8 @@ const (
 	RefreshToken  TokenType = "refresh_token"
 	AuthorizeCode TokenType = "authorize_code"
 	IDToken       TokenType = "id_token"
+	UserCode      TokenType = "user_code"
+	DeviceCode    TokenType = "device_code"
 	// PushedAuthorizeRequestContext represents the PAR context object
 	PushedAuthorizeRequestContext TokenType = "par_context"
 
@@ -31,7 +33,8 @@ const (
 	GrantTypeAuthorizationCode GrantType = "authorization_code"
 	GrantTypePassword          GrantType = "password"
 	GrantTypeClientCredentials GrantType = "client_credentials"
-	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer" //nolint:gosec // this is not a hardcoded credential
+	GrantTypeJWTBearer         GrantType = "urn:ietf:params:oauth:grant-type:jwt-bearer"  //nolint:gosec // this is not a hardcoded credential
+	GrantTypeDeviceCode        GrantType = "urn:ietf:params:oauth:grant-type:device_code" //nolint:gosec // this is not a hardcoded credential
 
 	BearerAccessToken string = "bearer"
 )
@@ -58,7 +61,7 @@ type OAuth2Provider interface {
 	NewAuthorizeRequest(ctx context.Context, req *http.Request) (AuthorizeRequester, error)
 
 	// NewAuthorizeResponse iterates through all response type handlers and returns their result or
-	// ErrUnsupportedResponseType if none of the handler's were able to handle it.
+	// ErrUnsupportedResponseType if none of the handlers were able to handle it.
 	//
 	// The following specs must be considered in any implementation of this method:
 	// * https://tools.ietf.org/html/rfc6749#section-3.1.1
@@ -120,13 +123,41 @@ type OAuth2Provider interface {
 	//
 	// The following specs must be considered in any implementation of this method:
 	// * https://tools.ietf.org/html/rfc6749#section-5.2 (everything)
-	WriteAccessError(ctx context.Context, rw http.ResponseWriter, requester AccessRequester, err error)
+	WriteAccessError(ctx context.Context, rw http.ResponseWriter, requester Requester, err error)
 
 	// WriteAccessResponse writes the access response.
 	//
 	// The following specs must be considered in any implementation of this method:
 	// https://tools.ietf.org/html/rfc6749#section-5.1
 	WriteAccessResponse(ctx context.Context, rw http.ResponseWriter, requester AccessRequester, responder AccessResponder)
+
+	// NewDeviceRequest validate the OAuth 2.0 Device Authorization Flow Request
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://www.rfc-editor.org/rfc/rfc8628#section-3.1 (everything MUST be implemented)
+	// Parameters sent without a value MUST be treated as if they were
+	// omitted from the request.  The authorization server MUST ignore
+	// unrecognized request parameters.  Request and response parameters
+	// MUST NOT be included more than once.
+	NewDeviceRequest(ctx context.Context, req *http.Request) (DeviceRequester, error)
+
+	// NewDeviceResponse persists the DeviceCodeSession and UserCodeSession in the store
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://www.rfc-editor.org/rfc/rfc8628#section-3.2 (everything MUST be implemented)
+	// In response, the authorization server generates a unique device
+	// verification code and an end-user code that are valid for a limited
+	// time
+	NewDeviceResponse(ctx context.Context, requester DeviceRequester, session Session) (DeviceResponder, error)
+
+	// WriteDeviceResponse return to the user both codes and
+	// some configuration information in a JSON formatted manner
+	//
+	// The following specs must be considered in any implementation of this method:
+	// * https://www.rfc-editor.org/rfc/rfc8628#section-3.2 (everything MUST be implemented)
+	// Response is an HTTP response body using the
+	// "application/json" format [RFC8259] with a 200 (OK) status code.
+	WriteDeviceResponse(ctx context.Context, rw http.ResponseWriter, requester DeviceRequester, responder DeviceResponder)
 
 	// NewRevocationRequest handles incoming token revocation requests and validates various parameters.
 	//
@@ -176,14 +207,14 @@ type IntrospectionResponder interface {
 	// IsActive returns true if the introspected token is active and false otherwise.
 	IsActive() bool
 
-	// AccessRequester returns nil when IsActive() is false and the original access request object otherwise.
+	// GetAccessRequester returns nil when IsActive() is false and the original access request object otherwise.
 	GetAccessRequester() AccessRequester
 
 	// GetTokenUse optionally returns the type of the token that was introspected. This could be "access_token", "refresh_token",
 	// or if the type can not be determined an empty string.
 	GetTokenUse() TokenUse
 
-	//GetAccessTokenType optionally returns the type of the access token that was introspected. This could be "bearer", "mac",
+	// GetAccessTokenType optionally returns the type of the access token that was introspected. This could be "bearer", "mac",
 	// or empty string if the type of the token is refresh token.
 	GetAccessTokenType() string
 }
@@ -217,7 +248,7 @@ type Requester interface {
 	// AppendRequestedScope appends a scope to the request.
 	AppendRequestedScope(scope string)
 
-	// GetGrantScopes returns all granted scopes.
+	// GetGrantedScopes returns all granted scopes.
 	GetGrantedScopes() (grantedScopes Arguments)
 
 	// GetGrantedAudience returns all granted audiences.
@@ -247,8 +278,19 @@ type Requester interface {
 
 // AccessRequester is a token endpoint's request context.
 type AccessRequester interface {
-	// GetGrantType returns the requests grant type.
+	// GetGrantTypes returns the requests grant type.
 	GetGrantTypes() (grantTypes Arguments)
+
+	Requester
+}
+
+// DeviceRequester is an device endpoint's request context.
+type DeviceRequester interface {
+	// GetUserCodeState returns the state of the user code
+	GetUserCodeState() UserCodeState
+
+	// SetUserCodeState sets the state of the user code
+	SetUserCodeState(state UserCodeState)
 
 	Requester
 }
@@ -305,7 +347,7 @@ type AccessResponder interface {
 	// SetTokenType set's the responses mandatory token type
 	SetTokenType(tokenType string)
 
-	// SetAccessToken returns the responses access token.
+	// GetAccessToken returns the responses access token.
 	GetAccessToken() (token string)
 
 	// GetTokenType returns the responses token type.
@@ -323,7 +365,7 @@ type AuthorizeResponder interface {
 	// GetHeader returns the response's header
 	GetHeader() (header http.Header)
 
-	// AddHeader adds an header key value pair to the response
+	// AddHeader adds a header key value pair to the response
 	AddHeader(key, value string)
 
 	// GetParameters returns the response's parameters
@@ -347,7 +389,7 @@ type PushedAuthorizeResponder interface {
 	// GetHeader returns the response's header
 	GetHeader() (header http.Header)
 
-	// AddHeader adds an header key value pair to the response
+	// AddHeader adds a header key value pair to the response
 	AddHeader(key, value string)
 
 	// SetExtra sets a key value pair for the response.
@@ -364,4 +406,42 @@ type PushedAuthorizeResponder interface {
 type G11NContext interface {
 	// GetLang returns the current language in the context
 	GetLang() language.Tag
+}
+
+// DeviceResponder is the device authorization endpoint's response
+type DeviceResponder interface {
+	// GetDeviceCode returns the device_code
+	GetDeviceCode() string
+	// SetDeviceCode sets the device_code
+	SetDeviceCode(code string)
+
+	// GetUserCode returns the user_code
+	GetUserCode() string
+	// SetUserCode sets the user_code
+	SetUserCode(code string)
+
+	// GetVerificationURI returns the verification_uri
+	GetVerificationURI() string
+	// SetVerificationURI sets the verification_uri
+	SetVerificationURI(uri string)
+
+	// GetVerificationURIComplete returns the verification_uri_complete
+	GetVerificationURIComplete() string
+	// SetVerificationURIComplete sets the verification_uri_complete
+	SetVerificationURIComplete(uri string)
+
+	// GetExpiresIn returns the expires_in
+	GetExpiresIn() int64
+	// SetExpiresIn sets the expires_in
+	SetExpiresIn(seconds int64)
+
+	// GetInterval returns the interval
+	GetInterval() int
+	// SetInterval sets the interval
+	SetInterval(seconds int)
+
+	// GetHeader returns the response's header
+	GetHeader() (header http.Header)
+	// AddHeader adds a header key value pair to the response
+	AddHeader(key, value string)
 }

@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package storage
@@ -36,18 +36,26 @@ type PublicKeyScopes struct {
 	Scopes []string
 }
 
+type DeviceAuthPair struct {
+	d string
+	u string
+}
+
 type MemoryStore struct {
 	Clients         map[string]fosite.Client
 	AuthorizeCodes  map[string]StoreAuthorizeCode
 	IDSessions      map[string]fosite.Requester
 	AccessTokens    map[string]fosite.Requester
 	RefreshTokens   map[string]StoreRefreshToken
+	DeviceAuths     map[string]fosite.DeviceRequester
 	PKCES           map[string]fosite.Requester
 	Users           map[string]MemoryUserRelation
 	BlacklistedJTIs map[string]time.Time
 	// In-memory request ID to token signatures
 	AccessTokenRequestIDs  map[string]string
 	RefreshTokenRequestIDs map[string]string
+	DeviceCodesRequestIDs  map[string]DeviceAuthPair
+	UserCodesRequestIDs    map[string]string
 	// Public keys to check signature in auth grant jwt assertion.
 	IssuerPublicKeys map[string]IssuerPublicKeys
 	PARSessions      map[string]fosite.AuthorizeRequester
@@ -57,11 +65,13 @@ type MemoryStore struct {
 	idSessionsMutex             sync.RWMutex
 	accessTokensMutex           sync.RWMutex
 	refreshTokensMutex          sync.RWMutex
+	deviceAuthsMutex            sync.RWMutex
 	pkcesMutex                  sync.RWMutex
 	usersMutex                  sync.RWMutex
 	blacklistedJTIsMutex        sync.RWMutex
 	accessTokenRequestIDsMutex  sync.RWMutex
 	refreshTokenRequestIDsMutex sync.RWMutex
+	deviceAuthsRequestIDsMutex  sync.RWMutex
 	issuerPublicKeysMutex       sync.RWMutex
 	parSessionsMutex            sync.RWMutex
 }
@@ -73,10 +83,13 @@ func NewMemoryStore() *MemoryStore {
 		IDSessions:             make(map[string]fosite.Requester),
 		AccessTokens:           make(map[string]fosite.Requester),
 		RefreshTokens:          make(map[string]StoreRefreshToken),
+		DeviceAuths:            make(map[string]fosite.DeviceRequester),
 		PKCES:                  make(map[string]fosite.Requester),
 		Users:                  make(map[string]MemoryUserRelation),
 		AccessTokenRequestIDs:  make(map[string]string),
 		RefreshTokenRequestIDs: make(map[string]string),
+		DeviceCodesRequestIDs:  make(map[string]DeviceAuthPair),
+		UserCodesRequestIDs:    make(map[string]string),
 		BlacklistedJTIs:        make(map[string]time.Time),
 		IssuerPublicKeys:       make(map[string]IssuerPublicKeys),
 		PARSessions:            make(map[string]fosite.AuthorizeRequester),
@@ -141,8 +154,11 @@ func NewExampleStore() *MemoryStore {
 		AccessTokens:           map[string]fosite.Requester{},
 		RefreshTokens:          map[string]StoreRefreshToken{},
 		PKCES:                  map[string]fosite.Requester{},
+		DeviceAuths:            make(map[string]fosite.DeviceRequester),
 		AccessTokenRequestIDs:  map[string]string{},
 		RefreshTokenRequestIDs: map[string]string{},
+		DeviceCodesRequestIDs:  make(map[string]DeviceAuthPair),
+		UserCodesRequestIDs:    make(map[string]string),
 		IssuerPublicKeys:       map[string]IssuerPublicKeys{},
 		PARSessions:            map[string]fosite.AuthorizeRequester{},
 	}
@@ -412,6 +428,7 @@ func (s *MemoryStore) GetPublicKey(ctx context.Context, issuer string, subject s
 
 	return nil, fosite.ErrNotFound
 }
+
 func (s *MemoryStore) GetPublicKeys(ctx context.Context, issuer string, subject string) (*jose.JSONWebKeySet, error) {
 	s.issuerPublicKeysMutex.RLock()
 	defer s.issuerPublicKeysMutex.RUnlock()
@@ -501,4 +518,40 @@ func (s *MemoryStore) RotateRefreshToken(ctx context.Context, requestID string, 
 		return err
 	}
 	return s.RevokeAccessToken(ctx, requestID)
+}
+
+// CreateDeviceAuthSession stores the device auth session
+func (s *MemoryStore) CreateDeviceAuthSession(_ context.Context, deviceCodeSignature, userCodeSignature string, req fosite.DeviceRequester) error {
+	s.deviceAuthsRequestIDsMutex.Lock()
+	defer s.deviceAuthsRequestIDsMutex.Unlock()
+	s.deviceAuthsMutex.Lock()
+	defer s.deviceAuthsMutex.Unlock()
+
+	s.DeviceAuths[deviceCodeSignature] = req
+	s.DeviceAuths[userCodeSignature] = req
+	s.DeviceCodesRequestIDs[req.GetID()] = DeviceAuthPair{d: deviceCodeSignature, u: userCodeSignature}
+	return nil
+}
+
+// GetDeviceCodeSession gets the device code session
+func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, _ fosite.Session) (fosite.DeviceRequester, error) {
+	s.deviceAuthsMutex.RLock()
+	defer s.deviceAuthsMutex.RUnlock()
+
+	rel, ok := s.DeviceAuths[signature]
+	if !ok {
+		return nil, fosite.ErrNotFound
+	}
+	return rel, nil
+}
+
+// InvalidateDeviceCodeSession invalidates the device code session
+func (s *MemoryStore) InvalidateDeviceCodeSession(_ context.Context, code string) error {
+	s.deviceAuthsRequestIDsMutex.Lock()
+	defer s.deviceAuthsRequestIDsMutex.Unlock()
+	s.deviceAuthsMutex.Lock()
+	defer s.deviceAuthsMutex.Unlock()
+
+	delete(s.DeviceAuths, code)
+	return nil
 }

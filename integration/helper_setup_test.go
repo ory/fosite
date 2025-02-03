@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package integration_test
@@ -41,6 +41,8 @@ const (
 
 	tokenURL          = "https://www.ory.sh/api"
 	tokenRelativePath = "/token"
+
+	deviceAuthRelativePath = "/device/auth"
 )
 
 var (
@@ -55,7 +57,7 @@ var fositeStore = &storage.MemoryStore{
 			Secret:        []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
 			RedirectURIs:  []string{"http://localhost:3846/callback"},
 			ResponseTypes: []string{"id_token", "code", "token", "token code", "id_token code", "token id_token", "token code id_token"},
-			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials"},
+			GrantTypes:    []string{"implicit", "refresh_token", "authorization_code", "password", "client_credentials", "urn:ietf:params:oauth:grant-type:device_code"},
 			Scopes:        []string{"fosite", "offline", "openid"},
 			Audience:      []string{tokenURL},
 		},
@@ -80,6 +82,14 @@ var fositeStore = &storage.MemoryStore{
 			GrantTypes:    []string{"refresh_token", "authorization_code"},
 			Scopes:        []string{"fosite", "offline", "openid"},
 			Audience:      []string{tokenURL},
+		},
+		"device-client": &fosite.DefaultClient{
+			ID:         "device-client",
+			Secret:     []byte(`$2a$10$IxMdI6d.LIRZPpSfEwNoeu4rY3FhDREsxFJXikcgdRRAStxUlsuEO`), // = "foobar"
+			GrantTypes: []string{"urn:ietf:params:oauth:grant-type:device_code", "refresh_token"},
+			Scopes:     []string{"fosite", "offline", "openid"},
+			Audience:   []string{tokenURL},
+			Public:     true,
 		},
 	},
 	Users: map[string]storage.MemoryUserRelation{
@@ -113,6 +123,9 @@ var fositeStore = &storage.MemoryStore{
 	AccessTokenRequestIDs:  map[string]string{},
 	RefreshTokenRequestIDs: map[string]string{},
 	PARSessions:            map[string]fosite.AuthorizeRequester{},
+	DeviceAuths:            map[string]fosite.DeviceRequester{},
+	DeviceCodesRequestIDs:  map[string]storage.DeviceAuthPair{},
+	UserCodesRequestIDs:    map[string]string{},
 }
 
 type defaultSession struct {
@@ -184,16 +197,18 @@ var hmacStrategy = oauth2.NewHMACSHAStrategy(
 	},
 )
 
-var defaultRSAKey = gen.MustRSAKey()
-var jwtStrategy = &oauth2.DefaultJWTStrategy{
-	Signer: &jwt.DefaultSigner{
-		GetPrivateKey: func(ctx context.Context) (interface{}, error) {
-			return defaultRSAKey, nil
+var (
+	defaultRSAKey = gen.MustRSAKey()
+	jwtStrategy   = &oauth2.DefaultJWTStrategy{
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+				return defaultRSAKey, nil
+			},
 		},
-	},
-	Config:          &fosite.Config{},
-	HMACSHAStrategy: hmacStrategy,
-}
+		Config:          &fosite.Config{},
+		HMACSHAStrategy: hmacStrategy,
+	}
+)
 
 func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *httptest.Server {
 	router := mux.NewRouter()
@@ -204,6 +219,7 @@ func mockServer(t *testing.T, f fosite.OAuth2Provider, session fosite.Session) *
 	router.HandleFunc("/introspect", tokenIntrospectionHandler(t, f, session))
 	router.HandleFunc("/revoke", tokenRevocationHandler(t, f, session))
 	router.HandleFunc("/par", pushedAuthorizeRequestHandler(t, f, session))
+	router.HandleFunc(deviceAuthRelativePath, deviceAuthorizationEndpointHandler(t, f, session))
 
 	ts := httptest.NewServer(router)
 	return ts

@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc7523
@@ -20,8 +20,8 @@ import (
 
 	"github.com/go-jose/go-jose/v3"
 	"github.com/go-jose/go-jose/v3/jwt"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/internal"
@@ -773,9 +773,9 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) createStandardClaim() jwt.Cla
 		Issuer:    "trusted_issuer",
 		Subject:   "some_ro",
 		Audience:  jwt.Audience{"https://www.example.com/token", "leela", "fry"},
-		Expiry:    jwt.NewNumericDate(time.Now().AddDate(0, 0, 23)),
+		Expiry:    jwt.NewNumericDate(time.Now().UTC().AddDate(0, 0, 23)),
 		NotBefore: nil,
-		IssuedAt:  jwt.NewNumericDate(time.Now().AddDate(0, 0, -7)),
+		IssuedAt:  jwt.NewNumericDate(time.Now().UTC().AddDate(0, 0, -7)),
 		ID:        "my_token",
 	}
 }

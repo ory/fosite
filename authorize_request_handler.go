@@ -1,4 +1,4 @@
-// Copyright © 2024 Ory Corp
+// Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -390,7 +390,7 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 		return request, err
 	}
 
-	if err = f.validateAuthorizeAudience(ctx, r, request); err != nil {
+	if err = f.validateAudience(ctx, r, request); err != nil {
 		return request, err
 	}
 
