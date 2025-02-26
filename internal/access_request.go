@@ -127,6 +127,20 @@ func (mr *MockAccessRequesterMockRecorder) GetID() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetID", reflect.TypeOf((*MockAccessRequester)(nil).GetID))
 }
 
+// GetJWTClaims mocks base method.
+func (m *MockAccessRequester) GetJWTClaims() map[string]interface{} {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetJWTClaims")
+	ret0, _ := ret[0].(map[string]interface{})
+	return ret0
+}
+
+// GetJWTClaims indicates an expected call of GetJWTClaims.
+func (mr *MockAccessRequesterMockRecorder) GetJWTClaims() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJWTClaims", reflect.TypeOf((*MockAccessRequester)(nil).GetJWTClaims))
+}
+
 // GetRequestForm mocks base method.
 func (m *MockAccessRequester) GetRequestForm() url.Values {
 	m.ctrl.T.Helper()
@@ -257,6 +271,18 @@ func (m *MockAccessRequester) SetID(id string) {
 func (mr *MockAccessRequesterMockRecorder) SetID(id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetID", reflect.TypeOf((*MockAccessRequester)(nil).SetID), id)
+}
+
+// SetJWTClaims mocks base method.
+func (m *MockAccessRequester) SetJWTClaims(arg0 map[string]interface{}) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetJWTClaims", arg0)
+}
+
+// SetJWTClaims indicates an expected call of SetJWTClaims.
+func (mr *MockAccessRequesterMockRecorder) SetJWTClaims(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetJWTClaims", reflect.TypeOf((*MockAccessRequester)(nil).SetJWTClaims), arg0)
 }
 
 // SetRequestedAudience mocks base method.

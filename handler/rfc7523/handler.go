@@ -70,7 +70,8 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	}
 
 	claims := jwt.Claims{}
-	if err := token.Claims(key, &claims); err != nil {
+	rawClaims := make(map[string]interface{})
+	if err := token.Claims(key, &claims, &rawClaims); err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("Unable to verify the integrity of the 'assertion' value.").
 			WithWrap(err).WithDebug(err.Error()),
@@ -114,6 +115,8 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	atLifespan := fosite.GetEffectiveLifespan(request.GetClient(), fosite.GrantTypeJWTBearer, fosite.AccessToken, c.HandleHelper.Config.GetAccessTokenLifespan(ctx))
 	session.SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(atLifespan).Round(time.Second))
 	session.SetSubject(claims.Subject)
+
+	request.SetJWTClaims(rawClaims)
 
 	return nil
 }
