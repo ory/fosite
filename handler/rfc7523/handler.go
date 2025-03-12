@@ -10,10 +10,11 @@ import (
 
 	"github.com/ory/fosite/handler/oauth2"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 
 	"github.com/ory/fosite"
+	fositeJWT "github.com/ory/fosite/token/jwt"
 	"github.com/ory/x/errorsx"
 )
 
@@ -51,7 +52,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHintf("The assertion request parameter must be set when using grant_type of '%s'.", grantTypeJWTBearer))
 	}
 
-	token, err := jwt.ParseSigned(assertion)
+	token, err := jwt.ParseSigned(assertion, fositeJWT.SupportedSignatureAlgorithms)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("Unable to parse JSON Web Token passed in \"assertion\" request parameter.").
