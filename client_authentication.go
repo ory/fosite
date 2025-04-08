@@ -148,8 +148,8 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 
 		claims := token.Claims
 		var jti string
-		if !claims.VerifyIssuer(clientID, true) {
-			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Claim 'iss' from 'client_assertion' must match the 'client_id' of the OAuth 2.0 Client."))
+		if !claims.VerifyIssuer(client.(OpenIDConnectClient).GetJSONWebTokenClientAssertionIssuer(), true) {
+			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Claim 'iss' from 'client_assertion' must match the configured issuer for the OAuth 2.0 Client."))
 		} else if len(f.Config.GetTokenURLs(ctx)) == 0 {
 			return nil, errorsx.WithStack(ErrMisconfiguration.WithHint("The authorization server's token endpoint URL has not been set."))
 		} else if sub, ok := claims["sub"].(string); !ok || sub != clientID {
