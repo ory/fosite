@@ -64,9 +64,15 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 
 	// Override scopes
 	request.SetRequestedScopes(authorizeRequest.GetRequestedScopes())
+	for _, scope := range authorizeRequest.GetGrantedScopes() {
+		request.GrantScope(scope)
+	}
 
 	// Override audiences
 	request.SetRequestedAudience(authorizeRequest.GetRequestedAudience())
+	for _, audience := range authorizeRequest.GetGrantedAudience() {
+		request.GrantAudience(audience)
+	}
 
 	// The authorization server MUST ensure that the authorization code was issued to the authenticated
 	// confidential client, or if the client is public, ensure that the
@@ -129,14 +135,6 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	} else if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
 		// This needs to happen after store retrieval for the session to be hydrated properly
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
-	}
-
-	for _, scope := range authorizeRequest.GetGrantedScopes() {
-		requester.GrantScope(scope)
-	}
-
-	for _, audience := range authorizeRequest.GetGrantedAudience() {
-		requester.GrantAudience(audience)
 	}
 
 	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
