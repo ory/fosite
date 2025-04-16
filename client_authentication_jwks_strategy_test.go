@@ -118,7 +118,7 @@ func TestDefaultJWKSFetcherStrategy(t *testing.T) {
 	t.Run("JWKSFetcherWithTTL", func(t *testing.T) {
 		ts := initServerWithKey(t)
 
-		s := NewDefaultJWKSFetcherStrategy(JKWKSFetcherWithDefaultTTL(time.Nanosecond))
+		s := NewDefaultJWKSFetcherStrategy(JWKSFetcherWithDefaultTTL(time.Nanosecond))
 		_, err := s.Resolve(ctx, ts.URL, false)
 		require.NoError(t, err)
 		s.(*DefaultJWKSFetcherStrategy).cache.Wait()

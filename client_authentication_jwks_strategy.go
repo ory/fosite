@@ -63,8 +63,8 @@ func NewDefaultJWKSFetcherStrategy(opts ...func(*DefaultJWKSFetcherStrategy)) JW
 	return s
 }
 
-// JKWKSFetcherWithDefaultTTL sets the default TTL for the cache.
-func JKWKSFetcherWithDefaultTTL(ttl time.Duration) func(*DefaultJWKSFetcherStrategy) {
+// JWKSFetcherWithDefaultTTL sets the default TTL for the cache.
+func JWKSFetcherWithDefaultTTL(ttl time.Duration) func(*DefaultJWKSFetcherStrategy) {
 	return func(s *DefaultJWKSFetcherStrategy) {
 		s.ttl = ttl
 	}
