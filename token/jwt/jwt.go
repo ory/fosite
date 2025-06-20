@@ -57,14 +57,14 @@ func (j *DefaultSigner) Generate(ctx context.Context, claims MapClaims, header M
 		return generateToken(claims, header, jose.ES256, t)
 	case jose.OpaqueSigner:
 		switch tt := t.Public().Key.(type) {
-		case *rsa.PrivateKey:
+		case *rsa.PublicKey:
 			alg := jose.RS256
 			if len(t.Algs()) > 0 {
 				alg = t.Algs()[0]
 			}
 
 			return generateToken(claims, header, alg, t)
-		case *ecdsa.PrivateKey:
+		case *ecdsa.PublicKey:
 			alg := jose.ES256
 			if len(t.Algs()) > 0 {
 				alg = t.Algs()[0]
