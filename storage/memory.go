@@ -203,6 +203,9 @@ func (s *MemoryStore) GetClient(_ context.Context, id string) (fosite.Client, er
 }
 
 func (s *MemoryStore) SetTokenLifespans(clientID string, lifespans *fosite.ClientLifespanConfig) error {
+	s.clientsMutex.RLock()
+	defer s.clientsMutex.RUnlock()
+
 	if client, ok := s.Clients[clientID]; ok {
 		if clc, ok := client.(*fosite.DefaultClientWithCustomTokenLifespans); ok {
 			clc.SetTokenLifespans(lifespans)
@@ -388,8 +391,12 @@ func (s *MemoryStore) Authenticate(_ context.Context, name string, secret string
 }
 
 func (s *MemoryStore) RevokeRefreshToken(ctx context.Context, requestID string) error {
+	// We first lock refreshTokenRequestIDsMutex and then refreshTokensMutex because this is the same order
+	// locking happens in CreateRefreshTokenSession and using the same order prevents deadlocks.
 	s.refreshTokenRequestIDsMutex.Lock()
 	defer s.refreshTokenRequestIDsMutex.Unlock()
+	s.refreshTokensMutex.Lock()
+	defer s.refreshTokensMutex.Unlock()
 
 	if signature, exists := s.RefreshTokenRequestIDs[requestID]; exists {
 		rel, ok := s.RefreshTokens[signature]
@@ -547,8 +554,6 @@ func (s *MemoryStore) GetDeviceCodeSession(_ context.Context, signature string, 
 
 // InvalidateDeviceCodeSession invalidates the device code session
 func (s *MemoryStore) InvalidateDeviceCodeSession(_ context.Context, code string) error {
-	s.deviceAuthsRequestIDsMutex.Lock()
-	defer s.deviceAuthsRequestIDsMutex.Unlock()
 	s.deviceAuthsMutex.Lock()
 	defer s.deviceAuthsMutex.Unlock()
 
