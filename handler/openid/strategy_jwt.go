@@ -36,8 +36,8 @@ type DefaultSession struct {
 	Claims    *jwt.IDTokenClaims             `json:"id_token_claims"`
 	Headers   *jwt.Headers                   `json:"headers"`
 	ExpiresAt map[fosite.TokenType]time.Time `json:"expires_at"`
-	Username  string                         `json:"username"`
-	Subject   string                         `json:"subject"`
+	Username  string                         `json:"username,omitempty"`
+	Subject   string                         `json:"subject,omitempty"`
 }
 
 func NewDefaultSession() *DefaultSession {
