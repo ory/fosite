@@ -345,6 +345,9 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 	// Save state to the request to be returned in error conditions (https://github.com/ory/hydra/issues/1642)
 	request.State = request.Form.Get("state")
 
+	// Save the original request method in order to use in later potions of the flow.
+	request.RequestMethod = r.Method
+
 	// Check if this is a continuation from a pushed authorization request
 	if !isPARRequest {
 		if isPAR, err := f.authorizeRequestFromPAR(ctx, r, request); err != nil {
