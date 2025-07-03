@@ -111,10 +111,10 @@ func toRFCErr(v *jwt.ValidationError) *fosite.RFC6749Error {
 func (h *DefaultJWTStrategy) generate(ctx context.Context, tokenType fosite.TokenType, requester fosite.Requester) (string, string, error) {
 	if jwtSession, ok := requester.GetSession().(JWTSessionContainer); !ok {
 		return "", "", errors.Errorf("Session must be of type JWTSessionContainer but got type: %T", requester.GetSession())
-	} else if jwtSession.GetJWTClaims() == nil {
+	} else if claims := jwtSession.GetJWTClaims(); claims == nil {
 		return "", "", errors.New("GetTokenClaims() must not be nil")
 	} else {
-		claims := jwtSession.GetJWTClaims().
+		claims.
 			With(
 				jwtSession.GetExpiresAt(tokenType),
 				requester.GetGrantedScopes(),
