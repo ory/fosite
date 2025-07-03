@@ -99,6 +99,23 @@ func TestIntrospectJWT(t *testing.T) {
 				return token
 			},
 		},
+		{
+			description: "should fail bad typ",
+			token: func() string {
+				jwt := jwtValidCase(fosite.AccessToken)
+
+				s := jwt.Session.(*JWTSession)
+
+				s.JWTHeader.Extra["typ"] = "JWT"
+
+				jwt.Session = s
+
+				token, _, err := strat.GenerateAccessToken(context.Background(), jwt)
+				assert.NoError(t, err)
+				return token
+			},
+			expectErr: fosite.ErrRequestUnauthorized,
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d:%v", k, c.description), func(t *testing.T) {
 			if c.scopes == nil {
@@ -141,4 +158,65 @@ func BenchmarkIntrospectJWT(b *testing.B) {
 	}
 
 	assert.NoError(b, err)
+}
+
+func TestIsJWTProfileAccessToken(t *testing.T) {
+	testCases := []struct {
+		name     string
+		have     *jwt.Token
+		expected bool
+	}{
+		{
+			"ShouldPassTypATJWT",
+			&jwt.Token{
+				Header: map[string]interface{}{
+					"typ": "at+jwt",
+				},
+			},
+			true,
+		},
+		{
+			"ShouldPassTypApplicationATJWT",
+			&jwt.Token{
+				Header: map[string]interface{}{
+					"typ": "application/at+jwt",
+				},
+			},
+			true,
+		},
+		{
+			"ShouldFailJWT",
+			&jwt.Token{
+				Header: map[string]interface{}{
+					"typ": "JWT",
+				},
+			},
+			false,
+		},
+		{
+			"ShouldFailNoValue",
+			&jwt.Token{
+				Header: map[string]interface{}{},
+			},
+			false,
+		},
+		{
+			"ShouldFailNilValue",
+			&jwt.Token{
+				Header: nil,
+			},
+			false,
+		},
+		{
+			"ShouldFailNilInput",
+			nil,
+			false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, IsJWTProfileAccessToken(tc.have))
+		})
+	}
 }

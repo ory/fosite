@@ -194,6 +194,16 @@ func TestAccessToken(t *testing.T) {
 				require.Len(t, parts, 3, "%s - %v", token, parts)
 				assert.Equal(t, parts[2], signature)
 
+				rawHeader, err := base64.RawURLEncoding.DecodeString(parts[0])
+				require.NoError(t, err)
+
+				var header map[string]interface{}
+				require.NoError(t, json.Unmarshal(rawHeader, &header))
+
+				typ, ok := header["typ"]
+				assert.True(t, ok)
+				assert.Equal(t, "at+jwt", typ)
+
 				rawPayload, err := base64.RawURLEncoding.DecodeString(parts[1])
 				require.NoError(t, err)
 				var payload map[string]interface{}
