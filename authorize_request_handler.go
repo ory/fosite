@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v4"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/ory/fosite/i18n"
