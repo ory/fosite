@@ -409,7 +409,7 @@ func (f *Fosite) newAuthorizeRequest(ctx context.Context, r *http.Request, isPAR
 	// A fallback handler to set the default response mode in cases where we can not reach the Authorize Handlers
 	// but still need the e.g. correct error response mode.
 	if request.GetResponseMode() == ResponseModeDefault {
-		if request.ResponseTypes.ExactOne("code") {
+		if request.ResponseTypes.ExactOne("code") || request.ResponseTypes.ExactOne("none") {
 			request.SetDefaultResponseMode(ResponseModeQuery)
 		} else {
 			// If the response type is not `code` it is an implicit/hybrid (fragment) response mode.
