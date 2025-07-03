@@ -12,8 +12,9 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
-	"github.com/ory/x/errorsx"
 	"strings"
+
+	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
 
