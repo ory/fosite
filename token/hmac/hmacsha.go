@@ -12,10 +12,8 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
-	"strings"
-	"sync"
-
 	"github.com/ory/x/errorsx"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -31,7 +29,6 @@ type HMACStrategyConfigurator interface {
 
 // HMACStrategy is responsible for generating and validating challenges.
 type HMACStrategy struct {
-	sync.Mutex
 	Config HMACStrategyConfigurator
 }
 
@@ -45,9 +42,6 @@ var b64 = base64.URLEncoding.WithPadding(base64.NoPadding)
 // Generate generates a token and a matching signature or returns an error.
 // This method implements rfc6819 Section 5.1.4.2.2: Use High Entropy for Secrets.
 func (c *HMACStrategy) Generate(ctx context.Context) (string, string, error) {
-	c.Lock()
-	defer c.Unlock()
-
 	globalSecret, err := c.Config.GetGlobalSecret(ctx)
 	if err != nil {
 		return "", "", err
