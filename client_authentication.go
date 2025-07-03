@@ -187,6 +187,10 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 				strings.Join(f.Config.GetTokenURLs(ctx), "' or '")))
 		}
 
+		if accessRequest, ok := ctx.Value(AccessRequestContextKey).(*AccessRequest); ok {
+			accessRequest.SetJWTClaims(claims)
+		}
+
 		return client, nil
 	} else if len(assertionType) > 0 {
 		return nil, errorsx.WithStack(ErrInvalidRequest.WithHintf("Unknown client_assertion_type '%s'.", assertionType))

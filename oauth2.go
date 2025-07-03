@@ -281,6 +281,12 @@ type AccessRequester interface {
 	// GetGrantTypes returns the requests grant type.
 	GetGrantTypes() (grantTypes Arguments)
 
+	// GetJWTClaims returns the request's decoded JWT claims (RFC 7523).
+	GetJWTClaims() (claims map[string]interface{})
+
+	// SetJWTClaims stores decoded JWT claims for the request (RFC 7523).
+	SetJWTClaims(claims map[string]interface{})
+
 	Requester
 }
 
