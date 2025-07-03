@@ -58,6 +58,9 @@ type OpenIDConnectClient interface {
 	// public key used by the client to authenticate.
 	GetJSONWebKeysURI() string
 
+	// GetJSONWebTokenClientAssertionIssuer returns the issuer of client assertions used to authenticate.
+	GetJSONWebTokenClientAssertionIssuer() string
+
 	// JWS [JWS] alg algorithm [JWA] that MUST be used for signing Request Objects sent to the OP.
 	// All Request Objects from this Client MUST be rejected, if not signed with this algorithm.
 	GetRequestObjectSigningAlgorithm() string
@@ -94,6 +97,7 @@ type DefaultOpenIDConnectClient struct {
 	*DefaultClient
 	JSONWebKeysURI                    string              `json:"jwks_uri"`
 	JSONWebKeys                       *jose.JSONWebKeySet `json:"jwks"`
+	JSONWebTokenClientAssertionIssuer string              `json:"jwt_client_assertion_issuer"`
 	TokenEndpointAuthMethod           string              `json:"token_endpoint_auth_method"`
 	RequestURIs                       []string            `json:"request_uris"`
 	RequestObjectSigningAlgorithm     string              `json:"request_object_signing_alg"`
@@ -163,6 +167,13 @@ func (c *DefaultOpenIDConnectClient) GetJSONWebKeysURI() string {
 
 func (c *DefaultOpenIDConnectClient) GetJSONWebKeys() *jose.JSONWebKeySet {
 	return c.JSONWebKeys
+}
+
+func (c *DefaultOpenIDConnectClient) GetJSONWebTokenClientAssertionIssuer() string {
+	if c.JSONWebTokenClientAssertionIssuer == "" {
+		return c.ID
+	}
+	return c.JSONWebTokenClientAssertionIssuer
 }
 
 func (c *DefaultOpenIDConnectClient) GetTokenEndpointAuthSigningAlgorithm() string {

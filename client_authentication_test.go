@@ -466,6 +466,18 @@ func TestAuthenticateClient(t *testing.T) {
 			r: new(http.Request),
 		},
 		{
+			d:      "should pass with proper assertion when JWT client assertion issuer is set",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeysURI: ts.URL, JSONWebTokenClientAssertionIssuer: "baz", TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"iss": "baz",
+				"jti": "12345",
+				"aud": "token-url",
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
+			r: new(http.Request),
+		},
+		{
 			d:      "should fail because client_assertion sub does not match client",
 			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
 			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
@@ -485,6 +497,19 @@ func TestAuthenticateClient(t *testing.T) {
 				"sub": "bar",
 				"exp": time.Now().Add(time.Hour).Unix(),
 				"iss": "not-bar",
+				"jti": "12345",
+				"aud": "token-url",
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
+			r:         new(http.Request),
+			expectErr: ErrInvalidClient,
+		},
+		{
+			d:      "should fail because client_assertion iss does not match the configured issuer",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, JSONWebTokenClientAssertionIssuer: "baz", TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"iss": "not-baz",
 				"jti": "12345",
 				"aud": "token-url",
 			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
