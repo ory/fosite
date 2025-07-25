@@ -5,6 +5,7 @@ package oauth2
 
 import (
 	"context"
+	"time"
 
 	"github.com/ory/fosite"
 )
@@ -48,5 +49,5 @@ type RefreshTokenStorage interface {
 
 	DeleteRefreshTokenSession(ctx context.Context, signature string) (err error)
 
-	RotateRefreshToken(ctx context.Context, requestID string, refreshTokenSignature string) (err error)
+	RotateRefreshToken(ctx context.Context, requestID string, refreshTokenSignature string, nextExpiry time.Time) (err error)
 }

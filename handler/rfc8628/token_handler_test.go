@@ -12,8 +12,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	gomock "github.com/golang/mock/gomock"
 	"github.com/ory/fosite/internal"
-	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/token/hmac"

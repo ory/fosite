@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	gomock "go.uber.org/mock/gomock"
+	gomock "github.com/golang/mock/gomock"
 
 	"github.com/ory/fosite/internal"
 
@@ -551,7 +551,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -582,7 +582,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
 					Times(1)
 				mockTransactional.
@@ -605,7 +605,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(fosite.ErrSerializationFailure).
 					Times(1)
 				mockTransactional.
@@ -627,7 +627,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
 					Times(1)
 				mockTransactional.
@@ -650,7 +650,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(fosite.ErrSerializationFailure).
 					Times(1)
 				mockTransactional.
@@ -672,7 +672,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -698,7 +698,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -725,7 +725,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -758,7 +758,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -802,7 +802,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(fosite.ErrNotFound).
 					Times(1)
 				mockTransactional.
@@ -824,7 +824,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.
@@ -862,7 +862,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					Times(1)
 				mockRevocationStore.
 					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
+					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
 				mockRevocationStore.

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
+	gomock "github.com/golang/mock/gomock"
 	"github.com/ory/fosite/internal"
-	gomock "go.uber.org/mock/gomock"
 
 	"github.com/stretchr/testify/require"
 

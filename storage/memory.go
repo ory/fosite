@@ -518,7 +518,7 @@ func (s *MemoryStore) DeletePARSession(ctx context.Context, requestURI string) (
 	return nil
 }
 
-func (s *MemoryStore) RotateRefreshToken(ctx context.Context, requestID string, refreshTokenSignature string) (err error) {
+func (s *MemoryStore) RotateRefreshToken(ctx context.Context, requestID string, refreshTokenSignature string, expiresAt time.Time) (err error) {
 	// Graceful token rotation can be implemented here but it's beyond the scope of this example. Check
 	// the Ory Hydra implementation for reference.
 	if err := s.RevokeRefreshToken(ctx, requestID); err != nil {
