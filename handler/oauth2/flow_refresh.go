@@ -140,7 +140,12 @@ func (c *RefreshTokenGrantHandler) PopulateTokenEndpointResponse(ctx context.Con
 	storeReq := requester.Sanitize([]string{})
 	storeReq.SetID(requester.GetID())
 
-	if err = c.TokenRevocationStorage.RotateRefreshToken(ctx, requester.GetID(), signature); err != nil {
+	farthestExpiry := requester.GetSession().GetExpiresAt(fosite.RefreshToken)
+	if requester.GetSession().GetExpiresAt(fosite.AccessToken).After(farthestExpiry) {
+		farthestExpiry = requester.GetSession().GetExpiresAt(fosite.AccessToken)
+	}
+
+	if err = c.TokenRevocationStorage.RotateRefreshToken(ctx, requester.GetID(), signature, farthestExpiry); err != nil {
 		return c.handleRefreshTokenEndpointStorageError(ctx, err)
 	}
 
