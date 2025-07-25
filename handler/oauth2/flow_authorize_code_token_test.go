@@ -11,7 +11,7 @@ import (
 
 	"time"
 
-	gomock "go.uber.org/mock/gomock"
+	gomock "github.com/golang/mock/gomock"
 
 	"github.com/ory/fosite/internal"
 
