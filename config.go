@@ -329,3 +329,15 @@ type DeviceEndpointHandlersProvider interface {
 	// GetDeviceEndpointHandlers returns the handlers.
 	GetDeviceEndpointHandlers(ctx context.Context) DeviceEndpointHandlers
 }
+
+// TokenExchangeEnabledProvider returns the provider for configuring whether token exchange is enabled.
+type TokenExchangeEnabledProvider interface {
+	// GetTokenExchangeEnabled returns whether token exchange is enabled.
+	GetTokenExchangeEnabled(ctx context.Context) bool
+}
+
+// TokenExchangeTokenTypesProvider returns the provider for configuring supported token types for token exchange.
+type TokenExchangeTokenTypesProvider interface {
+	// GetTokenExchangeTokenTypes returns the supported token types for token exchange.
+	GetTokenExchangeTokenTypes(ctx context.Context) []string
+}

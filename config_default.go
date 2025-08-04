@@ -65,6 +65,8 @@ var (
 	_ RevocationHandlersProvider                   = (*Config)(nil)
 	_ PushedAuthorizeRequestHandlersProvider       = (*Config)(nil)
 	_ PushedAuthorizeRequestConfigProvider         = (*Config)(nil)
+	_ TokenExchangeEnabledProvider                 = (*Config)(nil)
+	_ TokenExchangeTokenTypesProvider              = (*Config)(nil)
 )
 
 type Config struct {
@@ -236,6 +238,13 @@ type Config struct {
 
 	// UserCodeSymbols defines the symbols that will be used to construct the user_code
 	UserCodeSymbols []rune
+
+	// TokenExchangeEnabled determines whether RFC 8693 Token Exchange is enabled. Defaults to false.
+	TokenExchangeEnabled bool
+
+	// TokenExchangeTokenTypes defines the supported token types for token exchange.
+	// Defaults to access_token, refresh_token, and id_token.
+	TokenExchangeTokenTypes []string
 }
 
 func (c *Config) GetGlobalSecret(ctx context.Context) ([]byte, error) {
@@ -562,4 +571,21 @@ func (c *Config) GetUserCodeSymbols(ctx context.Context) []rune {
 		return []rune(randx.AlphaUpper)
 	}
 	return c.UserCodeSymbols
+}
+
+// GetTokenExchangeEnabled returns whether RFC 8693 Token Exchange is enabled
+func (c *Config) GetTokenExchangeEnabled(ctx context.Context) bool {
+	return c.TokenExchangeEnabled
+}
+
+// GetTokenExchangeTokenTypes returns the supported token types for token exchange
+func (c *Config) GetTokenExchangeTokenTypes(ctx context.Context) []string {
+	if c.TokenExchangeTokenTypes == nil {
+		return []string{
+			"urn:ietf:params:oauth:token-type:access_token",
+			"urn:ietf:params:oauth:token-type:refresh_token",
+			"urn:ietf:params:oauth:token-type:id_token",
+		}
+	}
+	return c.TokenExchangeTokenTypes
 }
