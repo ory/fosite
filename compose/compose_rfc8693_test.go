@@ -14,13 +14,13 @@ import (
 
 func TestRFC8693TokenExchangeFactory(t *testing.T) {
 	config := &fosite.Config{
-		AccessTokenLifespan:     time.Hour,
-		RefreshTokenLifespan:    time.Hour * 24 * 30,
-		AuthorizeCodeLifespan:   time.Minute * 15,
-		GlobalSecret:            []byte("test-global-secret-32-bytes-long"),
-		TokenExchangeEnabled:    true,
-		TokenExchangeTokenTypes: []string{rfc8693.TokenTypeAccessToken},
-		ScopeStrategy:           fosite.HierarchicScopeStrategy,
+		AccessTokenLifespan:      time.Hour,
+		RefreshTokenLifespan:     time.Hour * 24 * 30,
+		AuthorizeCodeLifespan:    time.Minute * 15,
+		GlobalSecret:             []byte("test-global-secret-32-bytes-long"),
+		TokenExchangeEnabled:     true,
+		TokenExchangeTokenTypes:  []string{rfc8693.TokenTypeAccessToken},
+		ScopeStrategy:            fosite.HierarchicScopeStrategy,
 		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 	}
 
@@ -57,10 +57,10 @@ func TestRFC8693TokenExchangeFactory(t *testing.T) {
 
 	t.Run("factory skips when disabled", func(t *testing.T) {
 		disabledConfig := &fosite.Config{
-			AccessTokenLifespan:     time.Hour,
-			GlobalSecret:            []byte("test-global-secret-32-bytes-long"),
-			TokenExchangeEnabled:    false, // Disabled
-			ScopeStrategy:           fosite.HierarchicScopeStrategy,
+			AccessTokenLifespan:      time.Hour,
+			GlobalSecret:             []byte("test-global-secret-32-bytes-long"),
+			TokenExchangeEnabled:     false, // Disabled
+			ScopeStrategy:            fosite.HierarchicScopeStrategy,
 			AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 		}
 

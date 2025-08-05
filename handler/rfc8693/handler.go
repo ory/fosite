@@ -141,7 +141,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	requestedAudiences := fosite.Arguments{}
 	if audience != "" {
 		requestedAudiences = fosite.RemoveEmpty(strings.Split(audience, " "))
-		
+
 		// Validate audiences using the configured strategy
 		err := c.Config.GetAudienceStrategy(ctx)(subjectTokenInfo.Audiences, requestedAudiences)
 		if err != nil {
@@ -154,16 +154,16 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 	// Store the token exchange request for later use in PopulateTokenEndpointResponse
 	exchangeRequest := &TokenExchangeRequest{
-		SubjectToken:        subjectToken,
-		SubjectTokenType:    subjectTokenType,
-		SubjectTokenInfo:    subjectTokenInfo,
-		ActorToken:          actorToken,
-		ActorTokenType:      actorTokenType,
-		ActorTokenInfo:      actorTokenInfo,
-		RequestedTokenType:  requestedTokenType,
-		Audience:            requestedAudiences,
-		Scopes:              requestedScopes,
-		Resource:            resource,
+		SubjectToken:       subjectToken,
+		SubjectTokenType:   subjectTokenType,
+		SubjectTokenInfo:   subjectTokenInfo,
+		ActorToken:         actorToken,
+		ActorTokenType:     actorTokenType,
+		ActorTokenInfo:     actorTokenInfo,
+		RequestedTokenType: requestedTokenType,
+		Audience:           requestedAudiences,
+		Scopes:             requestedScopes,
+		Resource:           resource,
 	}
 
 	// Store the exchange request in the session
@@ -199,7 +199,7 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fos
 
 	// Create a new access token
 	lifespan := c.Config.GetAccessTokenLifespan(ctx)
-	
+
 	// Generate new token
 	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, request)
 	if err != nil {

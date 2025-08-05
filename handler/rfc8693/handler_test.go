@@ -16,23 +16,23 @@ func TestHandler_CanHandleTokenEndpointRequest(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name        string
-		grantTypes  []string
+		name         string
+		grantTypes   []string
 		shouldHandle bool
 	}{
 		{
-			name:        "should handle token exchange grant",
-			grantTypes:  []string{GrantTypeTokenExchange},
+			name:         "should handle token exchange grant",
+			grantTypes:   []string{GrantTypeTokenExchange},
 			shouldHandle: true,
 		},
 		{
-			name:        "should not handle authorization code grant",
-			grantTypes:  []string{"authorization_code"},
+			name:         "should not handle authorization code grant",
+			grantTypes:   []string{"authorization_code"},
 			shouldHandle: false,
 		},
 		{
-			name:        "should not handle client credentials grant",
-			grantTypes:  []string{"client_credentials"},
+			name:         "should not handle client credentials grant",
+			grantTypes:   []string{"client_credentials"},
 			shouldHandle: false,
 		},
 	}

@@ -47,7 +47,7 @@ func (s *ExampleStorage) StoreTokenExchange(ctx context.Context, request *TokenE
 	// - issued_token_info
 	// - scopes
 	// - audiences
-	
+
 	// This is a no-op implementation for demonstration
 	return nil
 }
@@ -56,14 +56,14 @@ func (s *ExampleStorage) StoreTokenExchange(ctx context.Context, request *TokenE
 func (s *ExampleStorage) validateAccessToken(ctx context.Context, token string, client fosite.Client) (*TokenInfo, error) {
 	// Use the access token strategy to get the signature
 	signature := s.AccessTokenStrategy.AccessTokenSignature(ctx, token)
-	
+
 	req, err := s.AccessTokenStorage.GetAccessTokenSession(ctx, signature, nil)
 	if err != nil {
 		return nil, fmt.Errorf("invalid access token: %w", err)
 	}
 
 	session := req.GetSession()
-	
+
 	// Extract token information
 	tokenInfo := &TokenInfo{
 		Subject:   session.GetSubject(),
@@ -88,14 +88,14 @@ func (s *ExampleStorage) validateRefreshToken(ctx context.Context, token string,
 	// This is a simplified implementation - in practice, you may need to handle
 	// refresh tokens differently based on your token strategy
 	signature := s.AccessTokenStrategy.AccessTokenSignature(ctx, token)
-	
+
 	req, err := s.RefreshTokenStorage.GetRefreshTokenSession(ctx, signature, nil)
 	if err != nil {
 		return nil, fmt.Errorf("invalid refresh token: %w", err)
 	}
 
 	session := req.GetSession()
-	
+
 	// Extract token information
 	tokenInfo := &TokenInfo{
 		Subject:   session.GetSubject(),

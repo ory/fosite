@@ -19,21 +19,21 @@ type TokenExchangeRequest struct {
 	ActorTokenInfo *TokenInfo `json:"actor_token_info,omitempty"`
 
 	// Request parameters
-	RequestedTokenType string            `json:"requested_token_type,omitempty"`
-	Audience           fosite.Arguments  `json:"audience,omitempty"`
-	Scopes             fosite.Arguments  `json:"scopes,omitempty"`
-	Resource           string            `json:"resource,omitempty"`
+	RequestedTokenType string           `json:"requested_token_type,omitempty"`
+	Audience           fosite.Arguments `json:"audience,omitempty"`
+	Scopes             fosite.Arguments `json:"scopes,omitempty"`
+	Resource           string           `json:"resource,omitempty"`
 }
 
 // TokenExchangeResponse represents a token exchange response
 type TokenExchangeResponse struct {
 	// Issued token information
-	AccessToken      string            `json:"access_token"`
-	IssuedTokenType  string            `json:"issued_token_type"`
-	TokenType        string            `json:"token_type"`
-	ExpiresIn        int64             `json:"expires_in,omitempty"`
-	RefreshToken     string            `json:"refresh_token,omitempty"`
-	Scope            fosite.Arguments  `json:"scope,omitempty"`
+	AccessToken     string           `json:"access_token"`
+	IssuedTokenType string           `json:"issued_token_type"`
+	TokenType       string           `json:"token_type"`
+	ExpiresIn       int64            `json:"expires_in,omitempty"`
+	RefreshToken    string           `json:"refresh_token,omitempty"`
+	Scope           fosite.Arguments `json:"scope,omitempty"`
 
 	// Additional response parameters
 	Extra map[string]interface{} `json:"extra,omitempty"`
@@ -41,8 +41,8 @@ type TokenExchangeResponse struct {
 
 // TokenExchangeSession implements fosite.Session for token exchange
 type TokenExchangeSession struct {
-	ExchangeRequest *TokenExchangeRequest `json:"exchange_request"`
-	Subject         string                `json:"subject"`
+	ExchangeRequest *TokenExchangeRequest  `json:"exchange_request"`
+	Subject         string                 `json:"subject"`
 	Extra           map[string]interface{} `json:"extra"`
 }
 

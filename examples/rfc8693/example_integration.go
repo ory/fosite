@@ -27,14 +27,14 @@ func main() {
 		RefreshTokenLifespan:  time.Hour * 24 * 30,
 		AuthorizeCodeLifespan: time.Minute * 15,
 		GlobalSecret:          []byte("my-global-secret"),
-		
+
 		// Enable RFC 8693 Token Exchange
 		TokenExchangeEnabled: true,
 		TokenExchangeTokenTypes: []string{
 			rfc8693.TokenTypeAccessToken,
 			rfc8693.TokenTypeRefreshToken,
 		},
-		
+
 		ScopeStrategy:            fosite.HierarchicScopeStrategy,
 		AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 	}
@@ -46,7 +46,7 @@ func main() {
 		&hmac.HMACStrategy{
 			Config: &fosite.Config{GlobalSecret: []byte("my-global-secret")},
 		},
-		
+
 		// Include the RFC 8693 factory
 		compose.OAuth2AuthorizeExplicitFactory,
 		compose.OAuth2AuthorizeImplicitFactory,
@@ -104,7 +104,7 @@ func handleTokenEndpoint(w http.ResponseWriter, r *http.Request, oauth2Provider 
 
 	// Create session for the request
 	session := &fosite.DefaultSession{}
-	
+
 	// Handle the token request
 	accessRequest, err := oauth2Provider.NewAccessRequest(ctx, r, session)
 	if err != nil {
@@ -149,7 +149,7 @@ func (s *ExampleStorage) ValidateActorToken(ctx context.Context, token string, t
 // StoreTokenExchange stores audit information about token exchanges
 func (s *ExampleStorage) StoreTokenExchange(ctx context.Context, request *rfc8693.TokenExchangeRequest, response *rfc8693.TokenExchangeResponse) error {
 	// In a real implementation, you would store this for auditing
-	fmt.Printf("Token Exchange: %s exchanged %s token for %s token\n", 
+	fmt.Printf("Token Exchange: %s exchanged %s token for %s token\n",
 		request.SubjectTokenInfo.Subject,
 		request.SubjectTokenType,
 		response.IssuedTokenType,
@@ -160,7 +160,7 @@ func (s *ExampleStorage) StoreTokenExchange(ctx context.Context, request *rfc869
 func (s *ExampleStorage) validateAccessToken(ctx context.Context, token string, client fosite.Client) (*rfc8693.TokenInfo, error) {
 	// This is a simplified implementation
 	// In practice, you would use the access token strategy to validate the signature
-	
+
 	// For demonstration, we'll create a mock token info
 	// In a real implementation, you would extract this from the actual token
 	return &rfc8693.TokenInfo{
