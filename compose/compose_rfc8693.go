@@ -13,12 +13,10 @@ import (
 // and registers an access token validator.
 func RFC8693TokenExchangeFactory(config fosite.Configurator, storage interface{}, strategy interface{}) interface{} {
 	return &rfc8693.Handler{
-		Storage: storage.(rfc8693.RFC8693Storage),
-		HandleHelper: &oauth2.HandleHelper{
-			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
-			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
-			Config:              config,
-		},
-		Config: config,
+		Config:               config,
+		AccessTokenStrategy:  strategy.(oauth2.AccessTokenStrategy),
+		AccessTokenStorage:   storage.(oauth2.AccessTokenStorage),
+		RefreshTokenStrategy: strategy.(oauth2.RefreshTokenStrategy),
+		RefreshTokenStorage:  storage.(oauth2.RefreshTokenStorage),
 	}
 }
