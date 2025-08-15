@@ -1,14 +1,16 @@
-// Copyright © 2025 Ory Corp
-// SPDX-License-Identifier: Apache-2.0
-
 package rfc8693
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/token/jwt"
 	"github.com/ory/x/errorsx"
 )
 
@@ -25,8 +27,6 @@ const (
 
 // Handler implements RFC 8693 OAuth 2.0 Token Exchange
 type Handler struct {
-	Storage RFC8693Storage
-
 	Config interface {
 		fosite.AccessTokenLifespanProvider
 		fosite.RefreshTokenLifespanProvider
@@ -36,18 +36,90 @@ type Handler struct {
 		fosite.TokenExchangeTokenTypesProvider
 	}
 
-	*oauth2.HandleHelper
+	AccessTokenStorage   oauth2.AccessTokenStorage
+	RefreshTokenStorage  oauth2.RefreshTokenStorage
+	AccessTokenStrategy  oauth2.AccessTokenStrategy
+	RefreshTokenStrategy oauth2.RefreshTokenStrategy
 }
 
 var _ fosite.TokenEndpointHandler = (*Handler)(nil)
 
+// Implement ValidateSubjectToken
+func (c *Handler) ValidateSubjectToken(ctx context.Context, token string, tokenType string, client fosite.Client) (*TokenInfo, error) {
+	log.Printf("Validating subject token: %s type: %s", token, tokenType)
+
+	var req fosite.Requester
+	var session fosite.Session
+	var err error
+
+	switch tokenType {
+	case TokenTypeAccessToken:
+		log.Printf("Validating accesstoken: %s", token)
+
+		signature := c.AccessTokenStrategy.AccessTokenSignature(ctx, token)
+		log.Printf("Validating accesstoken, signature: %s", signature)
+
+		req, err = c.AccessTokenStorage.GetAccessTokenSession(ctx, signature, nil)
+		if err != nil {
+			log.Printf("Failed to retrieve access token session: %v", err)
+			return nil, fmt.Errorf("invalid access token: %w", err)
+		}
+
+		session = req.GetSession()
+		if session.GetExpiresAt(fosite.AccessToken).Before(time.Now().UTC()) {
+			return nil, fmt.Errorf("access token is expired")
+		}
+	case TokenTypeRefreshToken:
+		log.Printf("Validating refreshtoken: %s", token)
+
+		signature := c.RefreshTokenStrategy.RefreshTokenSignature(ctx, token)
+		log.Printf("Validating refreshtoken, signature: %s", signature)
+
+		req, err = c.RefreshTokenStorage.GetRefreshTokenSession(ctx, signature, nil)
+		if err != nil {
+			log.Printf("Failed to retrieve refresh token session: %v", err)
+			return nil, fmt.Errorf("invalid refresh token: %w", err)
+		}
+		session = req.GetSession()
+		if session.GetExpiresAt(fosite.RefreshToken).Before(time.Now().UTC()) {
+			return nil, fmt.Errorf("refresh token is expired")
+		}
+
+	default:
+		log.Printf("Tokentype: %s not (yet) implemented", tokenType)
+		return nil, fmt.Errorf("unknown token type: %s", tokenType)
+	}
+
+	// Extract token information
+	tokenInfo := &TokenInfo{
+		Subject:   session.GetSubject(),
+		Scopes:    req.GetGrantedScopes(),
+		Audiences: req.GetGrantedAudience(),
+		TokenType: tokenType,
+		Extra:     make(map[string]interface{}),
+	}
+
+	log.Printf("✅ Subject token validated: %s, tokeninfo: %+v", token, tokenInfo)
+
+	return tokenInfo, nil
+
+}
+
+// ValidateActorToken (can delegate to ValidateSubjectToken)
+func (c *Handler) ValidateActorToken(ctx context.Context, token string, tokenType string, client fosite.Client) (*TokenInfo, error) {
+	log.Printf("Validating actor token: %s type: %s", token, tokenType)
+	return c.ValidateSubjectToken(ctx, token, tokenType, client)
+}
+
 // CanHandleTokenEndpointRequest returns true if the grant type is token exchange
 func (c *Handler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
+	log.Printf("🔗 Checking if request can be handled by Token Exchange Handler")
 	return requester.GetGrantTypes().ExactOne(GrantTypeTokenExchange)
 }
 
 // CanSkipClientAuth returns false as client authentication is required for token exchange
 func (c *Handler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
+	log.Printf("🔗 Token Exchange requires client authentication")
 	return false
 }
 
@@ -56,6 +128,8 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
+
+	log.Printf("🔗 Token exchange request received from client: %s", request.GetClient().GetID())
 
 	if !c.Config.GetTokenExchangeEnabled(ctx) {
 		return errorsx.WithStack(fosite.ErrUnsupportedGrantType.WithHint("Token exchange is disabled."))
@@ -107,7 +181,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	}
 
 	// Validate the subject token
-	subjectTokenInfo, err := c.Storage.ValidateSubjectToken(ctx, subjectToken, subjectTokenType, client)
+	subjectTokenInfo, err := c.ValidateSubjectToken(ctx, subjectToken, subjectTokenType, client)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("The subject_token is invalid.").WithWrap(err))
 	}
@@ -115,7 +189,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	// Validate the actor token if provided
 	var actorTokenInfo *TokenInfo
 	if actorToken != "" {
-		actorTokenInfo, err = c.Storage.ValidateActorToken(ctx, actorToken, actorTokenType, client)
+		actorTokenInfo, err = c.ValidateActorToken(ctx, actorToken, actorTokenType, client)
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrInvalidRequest.WithHint("The actor_token is invalid.").WithWrap(err))
 		}
@@ -167,19 +241,19 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	}
 
 	// Store the exchange request in the session
-	session := &TokenExchangeSession{
+	request.SetSession(&TokenExchangeSession{
 		ExchangeRequest: exchangeRequest,
 		Subject:         subjectTokenInfo.Subject,
 		Extra:           map[string]interface{}{},
-	}
-
-	request.SetSession(session)
+	})
 
 	return nil
 }
 
 // PopulateTokenEndpointResponse creates the token exchange response
 func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fosite.AccessRequester, response fosite.AccessResponder) error {
+	log.Printf("🔗 Populating token exchange response")
+
 	if !c.CanHandleTokenEndpointRequest(ctx, request) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest)
 	}
@@ -191,34 +265,71 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fos
 
 	exchangeRequest := session.ExchangeRequest
 
+	log.Printf("🔗 Populating token exchange response for client: %s, details: %v", request.GetClient().GetID(), exchangeRequest)
+
+	// If 'openid' scope is present, replace session with openid.DefaultSession
+	if exchangeRequest.Scopes.Has("openid") {
+		openidSession := &openid.DefaultSession{
+			Subject: session.Subject,
+		}
+
+		openidSession.Claims = &jwt.IDTokenClaims{
+			Subject: session.Subject,
+			Extra:   make(map[string]interface{}),
+		}
+
+		request.SetSession(openidSession)
+	}
+
 	// Determine the token type to issue
 	tokenType := TokenTypeAccessToken
 	if exchangeRequest.RequestedTokenType != "" {
 		tokenType = exchangeRequest.RequestedTokenType
 	}
 
-	// Create a new access token
+	// Grant requested scopes and audiences to the request before token generation
+	for _, scope := range exchangeRequest.Scopes {
+		request.GrantScope(scope)
+	}
+	for _, aud := range exchangeRequest.Audience {
+		request.GrantAudience(aud)
+	}
+
 	lifespan := c.Config.GetAccessTokenLifespan(ctx)
 
 	// Generate new token
-	token, signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, request)
+	access_token, access_token_signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, request)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
-
 	// Store the new token
-	if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, request); err != nil {
+	if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, access_token_signature, request); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	// Set the response
-	response.SetAccessToken(token)
+	response.SetAccessToken(access_token)
 	response.SetTokenType("Bearer")
 	response.SetExpiresIn(lifespan)
 	response.SetScopes(exchangeRequest.Scopes)
 
 	// Set the issued token type
 	response.SetExtra("issued_token_type", tokenType)
+
+	if tokenType == TokenTypeRefreshToken {
+		// Generate refresh token
+		refresh_token, refresh_token_signature, err := c.RefreshTokenStrategy.GenerateRefreshToken(ctx, request)
+		if err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
+
+		// Store the new refresh token
+		if err := c.RefreshTokenStorage.CreateRefreshTokenSession(ctx, refresh_token_signature, refresh_token, request); err != nil {
+			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		}
+
+		response.SetExtra("refresh_token", refresh_token)
+	}
 
 	// If actor token was provided, include actor information
 	if exchangeRequest.ActorTokenInfo != nil {
@@ -227,6 +338,7 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fos
 		})
 	}
 
+	//	c.Interface.StoreTokenExchange(ctx, exchangeRequest, exchangeResponse)
 	return nil
 }
 

@@ -1,18 +1,24 @@
 # RFC 8693 - OAuth 2.0 Token Exchange
 
-This package implements [RFC 8693 - OAuth 2.0 Token Exchange](https://tools.ietf.org/html/rfc8693) for Fosite.
+This package implements
+[RFC 8693 - OAuth 2.0 Token Exchange](https://tools.ietf.org/html/rfc8693) for
+Fosite.
 
-Feedback welcome !
-Harry Kodden, SURF harry.kodden - at - surf.nl
+Feedback welcome ! Harry Kodden, SURF harry.kodden - at - surf.nl
 
 ## Overview
 
-OAuth 2.0 Token Exchange allows clients to exchange one token for another token. This is useful for scenarios such as:
+OAuth 2.0 Token Exchange allows clients to exchange one token for another token.
+This is useful for scenarios such as:
 
-- **Token Translation**: Converting an external token (e.g., from another identity provider) into a local token
-- **Token Impersonation**: Allowing a service to act on behalf of a user with reduced privileges
-- **Token Delegation**: Delegating access to a downstream service with specific scopes
-- **Cross-Domain Token Exchange**: Exchanging tokens between different domains or services
+- **Token Translation**: Converting an external token (e.g., from another
+  identity provider) into a local token
+- **Token Impersonation**: Allowing a service to act on behalf of a user with
+  reduced privileges
+- **Token Delegation**: Delegating access to a downstream service with specific
+  scopes
+- **Cross-Domain Token Exchange**: Exchanging tokens between different domains
+  or services
 
 ## Configuration
 
@@ -31,36 +37,17 @@ config := &fosite.Config{
 }
 ```
 
-### 2. Implement RFC8693Storage Interface
-
-```go
-type MyStorage struct {
-    // Your existing storage implementation
-}
-
-func (s *MyStorage) ValidateSubjectToken(ctx context.Context, token string, tokenType string, client fosite.Client) (*rfc8693.TokenInfo, error) {
-    // Validate the subject token and return token information
-    // This should verify the token signature, expiration, and extract relevant claims
-}
-
-func (s *MyStorage) ValidateActorToken(ctx context.Context, token string, tokenType string, client fosite.Client) (*rfc8693.TokenInfo, error) {
-    // Validate the actor token (if delegation is supported)
-    // For many use cases, this can delegate to ValidateSubjectToken
-}
-
-func (s *MyStorage) StoreTokenExchange(ctx context.Context, request *rfc8693.TokenExchangeRequest, response *rfc8693.TokenExchangeResponse) error {
-    // Store audit information about the token exchange
-    // This is optional but recommended for security auditing
-}
-```
-
-### 3. Register the Handler
+### 2. Register the Handler
 
 ```go
 import (
     "github.com/ory/fosite/compose"
     "github.com/ory/fosite/handler/rfc8693"
 )
+
+// Setup the staregies for Access Token & Refresh Tokens
+AccessTokenStrategy = compose.NewOAuth2HMACStrategy(config)
+RefreshTokenStrategy = compose.NewOAuth2HMACStrategy(config)
 
 // Using the compose package
 oauth2Provider := compose.Compose(
@@ -71,14 +58,16 @@ oauth2Provider := compose.Compose(
     compose.RFC8693TokenExchangeFactory,
 )
 
+
 // Or manually
 handler := &rfc8693.Handler{
-    Storage: storage, // Must implement rfc8693.RFC8693Storage
     Config:  config,
     HandleHelper: &oauth2.HandleHelper{
-        AccessTokenStrategy: strategy,
-        AccessTokenStorage:  storage,
         Config:              config,
+        AccessTokenStorage:  storage,
+        RefreshTokenStorage: storage,
+        AccessTokenStrategy: strategy,
+        RefreshTokenStrategy strategy,
     },
 }
 oauth2Provider.TokenEndpointHandlers.Append(handler)
@@ -88,9 +77,11 @@ oauth2Provider.TokenEndpointHandlers.Append(handler)
 
 ### Client Authentication
 
-The RFC 8693 Token Exchange endpoint supports both HTTP Basic Authentication and form-based client authentication:
+The RFC 8693 Token Exchange endpoint supports both HTTP Basic Authentication and
+form-based client authentication:
 
 **HTTP Basic Authentication (Recommended):**
+
 ```http
 POST /token HTTP/1.1
 Host: server.example.com
@@ -103,6 +94,7 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 ```
 
 **Form-Based Authentication:**
+
 ```http
 POST /token HTTP/1.1
 Host: server.example.com
@@ -189,11 +181,12 @@ grant_type=urn:ietf:params:oauth:grant-type:token-exchange
 The following token types are supported by default:
 
 - `urn:ietf:params:oauth:token-type:access_token` - OAuth 2.0 access tokens
-- `urn:ietf:params:oauth:token-type:refresh_token` - OAuth 2.0 refresh tokens  
+- `urn:ietf:params:oauth:token-type:refresh_token` - OAuth 2.0 refresh tokens
 - `urn:ietf:params:oauth:token-type:id_token` - OpenID Connect ID tokens
 - `urn:ietf:params:oauth:token-type:jwt` - Generic JWT tokens
 
-You can configure which token types are supported via the `TokenExchangeTokenTypes` configuration option.
+You can configure which token types are supported via the
+`TokenExchangeTokenTypes` configuration option.
 
 ## Parameters
 
@@ -205,7 +198,8 @@ You can configure which token types are supported via the `TokenExchangeTokenTyp
 
 ### Optional Parameters
 
-- `requested_token_type`: The type of token being requested (defaults to access_token)
+- `requested_token_type`: The type of token being requested (defaults to
+  access_token)
 - `audience`: The intended audience for the issued token
 - `scope`: The requested scope (must be a subset of the subject token's scope)
 - `resource`: The physical or logical location of the target resource
@@ -225,14 +219,18 @@ Token exchange can return the following error types:
 
 ## Security Considerations
 
-1. **Client Authentication**: RFC 8693 supports both HTTP Basic Authentication and form-based client authentication. HTTP Basic Authentication is recommended as it keeps credentials out of the request body and logs.
+1. **Client Authentication**: RFC 8693 supports both HTTP Basic Authentication
+   and form-based client authentication. HTTP Basic Authentication is
+   recommended as it keeps credentials out of the request body and logs.
 2. **Token Validation**: Always properly validate subject and actor tokens
 3. **Scope Restriction**: Ensure issued tokens have equal or reduced privileges
-4. **Audience Validation**: Verify that the client is authorized for the requested audience
+4. **Audience Validation**: Verify that the client is authorized for the
+   requested audience
 5. **Rate Limiting**: Implement rate limiting to prevent abuse
 6. **Audit Logging**: Log all token exchange operations for security monitoring
 7. **Token Lifetime**: Use appropriate token lifespans for issued tokens
 
 ## Example Implementation
 
-See `example_storage.go` for a basic implementation that shows how to integrate with existing Fosite storage patterns.
+See `example_storage.go` for a basic implementation that shows how to integrate
+with existing Fosite storage patterns.

@@ -1,8 +1,9 @@
+// Copyright © 2025 Ory Corp
+// SPDX-License-Identifier: Apache-2.0
+
 package rfc8693
 
 import (
-	"context"
-
 	"github.com/ory/fosite"
 )
 
@@ -28,16 +29,4 @@ type TokenInfo struct {
 
 	// TokenType is the type of the token
 	TokenType string
-}
-
-// RFC8693Storage defines the storage interface for RFC 8693 Token Exchange
-type RFC8693Storage interface {
-	// ValidateSubjectToken validates the subject token and returns token information
-	ValidateSubjectToken(ctx context.Context, token string, tokenType string, client fosite.Client) (*TokenInfo, error)
-
-	// ValidateActorToken validates the actor token and returns token information
-	ValidateActorToken(ctx context.Context, token string, tokenType string, client fosite.Client) (*TokenInfo, error)
-
-	// StoreTokenExchange stores the token exchange information for auditing
-	StoreTokenExchange(ctx context.Context, request *TokenExchangeRequest, response *TokenExchangeResponse) error
 }
