@@ -21,6 +21,7 @@ import (
 var header = &Headers{
 	Extra: map[string]interface{}{
 		"foo": "bar",
+		"kid": "try-override-key-id",
 	},
 }
 
