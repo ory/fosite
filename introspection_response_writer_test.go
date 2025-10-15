@@ -128,6 +128,21 @@ func TestWriteIntrospectionResponseBody(t *testing.T) {
 			hasExp:   false,
 			hasExtra: true,
 		},
+		{
+			description: "should work with refresh token",
+			setup: func() {
+				ires.Active = true
+				ires.TokenUse = RefreshToken
+				sess := &DefaultSession{}
+				// Extra claims should not be exposed for refresh tokens.
+				sess.GetExtraClaims()["extra"] = "foobar"
+				sess.SetExpiresAt(ires.TokenUse, time.Now().Add(-time.Hour*2))
+				ires.AccessRequester = NewAccessRequest(sess)
+			},
+			active:   true,
+			hasExp:   true,
+			hasExtra: false,
+		},
 	} {
 		t.Run(c.description, func(t *testing.T) {
 			c.setup()
