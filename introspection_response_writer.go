@@ -194,40 +194,43 @@ func (f *Fosite) WriteIntrospectionResponse(ctx context.Context, rw http.Respons
 		"active": true,
 	}
 
-	extraClaimsSession, ok := r.GetAccessRequester().GetSession().(ExtraClaimsSession)
-	if ok {
-		extraClaims := extraClaimsSession.GetExtraClaims()
-		for name, value := range extraClaims {
-			switch name {
-			// We do not allow these to be set through extra claims.
-			case "exp", "client_id", "scope", "iat", "sub", "aud", "username":
-				continue
-			default:
-				response[name] = value
-			}
-		}
-	}
-
-	if !r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).IsZero() {
-		response["exp"] = r.GetAccessRequester().GetSession().GetExpiresAt(AccessToken).Unix()
-	}
-	if r.GetAccessRequester().GetClient().GetID() != "" {
-		response["client_id"] = r.GetAccessRequester().GetClient().GetID()
-	}
-	if len(r.GetAccessRequester().GetGrantedScopes()) > 0 {
-		response["scope"] = strings.Join(r.GetAccessRequester().GetGrantedScopes(), " ")
+	if !r.GetAccessRequester().GetSession().GetExpiresAt(r.GetTokenUse()).IsZero() {
+		response["exp"] = r.GetAccessRequester().GetSession().GetExpiresAt(r.GetTokenUse()).Unix()
 	}
 	if !r.GetAccessRequester().GetRequestedAt().IsZero() {
 		response["iat"] = r.GetAccessRequester().GetRequestedAt().Unix()
 	}
-	if r.GetAccessRequester().GetSession().GetSubject() != "" {
-		response["sub"] = r.GetAccessRequester().GetSession().GetSubject()
+	if r.GetAccessRequester().GetClient().GetID() != "" {
+		response["client_id"] = r.GetAccessRequester().GetClient().GetID()
 	}
-	if len(r.GetAccessRequester().GetGrantedAudience()) > 0 {
-		response["aud"] = r.GetAccessRequester().GetGrantedAudience()
-	}
-	if r.GetAccessRequester().GetSession().GetUsername() != "" {
-		response["username"] = r.GetAccessRequester().GetSession().GetUsername()
+
+	if r.GetTokenUse() == AccessToken {
+		extraClaimsSession, ok := r.GetAccessRequester().GetSession().(ExtraClaimsSession)
+		if ok {
+			extraClaims := extraClaimsSession.GetExtraClaims()
+			for name, value := range extraClaims {
+				switch name {
+				// We do not allow these to be set through extra claims.
+				case "exp", "client_id", "scope", "iat", "sub", "aud", "username":
+					continue
+				default:
+					response[name] = value
+				}
+			}
+		}
+
+		if len(r.GetAccessRequester().GetGrantedScopes()) > 0 {
+			response["scope"] = strings.Join(r.GetAccessRequester().GetGrantedScopes(), " ")
+		}
+		if r.GetAccessRequester().GetSession().GetSubject() != "" {
+			response["sub"] = r.GetAccessRequester().GetSession().GetSubject()
+		}
+		if len(r.GetAccessRequester().GetGrantedAudience()) > 0 {
+			response["aud"] = r.GetAccessRequester().GetGrantedAudience()
+		}
+		if r.GetAccessRequester().GetSession().GetUsername() != "" {
+			response["username"] = r.GetAccessRequester().GetSession().GetUsername()
+		}
 	}
 
 	_ = json.NewEncoder(rw).Encode(response)
