@@ -20,7 +20,7 @@ import (
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
-	h := &OpenIDConnectExplicitHandler{Config: &fosite.Config{}}
+	h := &ExplicitHandler{Config: &fosite.Config{}}
 	areq := fosite.NewAccessRequest(nil)
 	areq.Client = &fosite.DefaultClient{
 		//ResponseTypes: fosite.Arguments{"id_token"},
@@ -220,8 +220,8 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				},
 			}
 
-			h := &OpenIDConnectExplicitHandler{
-				OpenIDConnectRequestStorage: store,
+			h := &ExplicitHandler{
+				Storage: store,
 				IDTokenHandleHelper: &IDTokenHandleHelper{
 					IDTokenStrategy: j,
 				},

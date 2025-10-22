@@ -27,11 +27,11 @@ type DeviceCodeTokenEndpointHandler struct {
 	DeviceRateLimitStrategy DeviceRateLimitStrategy
 	DeviceCodeStrategy      DeviceCodeStrategy
 	UserCodeStrategy        UserCodeStrategy
-	CoreStorage             RFC8628CoreStorage
+	CoreStorage             Storage
 
 	AccessTokenStrategy    oauth2.AccessTokenStrategy
 	RefreshTokenStrategy   oauth2.RefreshTokenStrategy
-	TokenRevocationStorage oauth2.TokenRevocationStorage
+	TokenRevocationStorage oauth2.TokenRevocationStorageProvider
 	Config                 interface {
 		fosite.AccessTokenLifespanProvider
 		fosite.RefreshTokenLifespanProvider
@@ -105,16 +105,16 @@ func (c *DeviceCodeTokenEndpointHandler) PopulateTokenEndpointResponse(ctx conte
 		}
 	}()
 
-	if err = c.CoreStorage.InvalidateDeviceCodeSession(ctx, signature); err != nil {
+	if err = c.CoreStorage.DeviceAuthStorage().InvalidateDeviceCodeSession(ctx, signature); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	if err = c.CoreStorage.CreateAccessTokenSession(ctx, accessTokenSignature, requester.Sanitize([]string{})); err != nil {
+	if err = c.CoreStorage.AccessTokenStorage().CreateAccessTokenSession(ctx, accessTokenSignature, requester.Sanitize([]string{})); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	if refreshTokenSignature != "" {
-		if err = c.CoreStorage.CreateRefreshTokenSession(ctx, refreshTokenSignature, accessTokenSignature, requester.Sanitize([]string{})); err != nil {
+		if err = c.CoreStorage.RefreshTokenStorage().CreateRefreshTokenSession(ctx, refreshTokenSignature, accessTokenSignature, requester.Sanitize([]string{})); err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 	}
@@ -224,8 +224,8 @@ func (c *DeviceCodeTokenEndpointHandler) revokeTokens(ctx context.Context, reqId
 		}
 	}
 
-	revokeAndAppendErr("access", c.TokenRevocationStorage.RevokeAccessToken)
-	revokeAndAppendErr("refresh", c.TokenRevocationStorage.RevokeRefreshToken)
+	revokeAndAppendErr("access", c.TokenRevocationStorage.TokenRevocationStorage().RevokeAccessToken)
+	revokeAndAppendErr("refresh", c.TokenRevocationStorage.TokenRevocationStorage().RevokeRefreshToken)
 
 	return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint(hint).WithDebug(debug.String()))
 }
@@ -253,7 +253,7 @@ func (c DeviceCodeTokenEndpointHandler) validateCode(ctx context.Context, reques
 }
 
 func (s DeviceCodeTokenEndpointHandler) session(ctx context.Context, requester fosite.AccessRequester, codeSignature string) (fosite.DeviceRequester, error) {
-	req, err := s.CoreStorage.GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
+	req, err := s.CoreStorage.DeviceAuthStorage().GetDeviceCodeSession(ctx, codeSignature, requester.GetSession())
 
 	if err != nil && errors.Is(err, fosite.ErrInvalidatedDeviceCode) {
 		if req != nil {

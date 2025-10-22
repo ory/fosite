@@ -23,7 +23,7 @@ import (
 // expose key to verify id_token
 var key = gen.MustRSAKey()
 
-func makeOpenIDConnectExplicitHandler(ctrl *gomock.Controller, minParameterEntropy int) (OpenIDConnectExplicitHandler, *internal.MockOpenIDConnectRequestStorage) {
+func makeOpenIDConnectExplicitHandler(ctrl *gomock.Controller, minParameterEntropy int) (ExplicitHandler, *internal.MockOpenIDConnectRequestStorage) {
 	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
 	config := &fosite.Config{MinParameterEntropy: minParameterEntropy}
 
@@ -36,8 +36,8 @@ func makeOpenIDConnectExplicitHandler(ctrl *gomock.Controller, minParameterEntro
 		Config: config,
 	}
 
-	return OpenIDConnectExplicitHandler{
-		OpenIDConnectRequestStorage: store,
+	return ExplicitHandler{
+		Storage: store,
 		IDTokenHandleHelper: &IDTokenHandleHelper{
 			IDTokenStrategy: j,
 		},
@@ -62,12 +62,12 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 
 	for k, c := range []struct {
 		description string
-		setup       func() OpenIDConnectExplicitHandler
+		setup       func() ExplicitHandler
 		expectErr   error
 	}{
 		{
 			description: "should pass because not responsible for handling an empty response type",
-			setup: func() OpenIDConnectExplicitHandler {
+			setup: func() ExplicitHandler {
 				h, _ := makeOpenIDConnectExplicitHandler(ctrl, fosite.MinParameterEntropy)
 				areq.ResponseTypes = fosite.Arguments{""}
 				return h
@@ -75,7 +75,7 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should pass because scope openid is not set",
-			setup: func() OpenIDConnectExplicitHandler {
+			setup: func() ExplicitHandler {
 				h, _ := makeOpenIDConnectExplicitHandler(ctrl, fosite.MinParameterEntropy)
 				areq.ResponseTypes = fosite.Arguments{"code"}
 				areq.Client = &fosite.DefaultClient{
@@ -87,7 +87,7 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because no code set",
-			setup: func() OpenIDConnectExplicitHandler {
+			setup: func() ExplicitHandler {
 				h, _ := makeOpenIDConnectExplicitHandler(ctrl, fosite.MinParameterEntropy)
 				areq.GrantedScope = fosite.Arguments{"openid"}
 				areq.Form.Set("nonce", "11111111111111111111111111111")
@@ -98,7 +98,7 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because lookup fails",
-			setup: func() OpenIDConnectExplicitHandler {
+			setup: func() ExplicitHandler {
 				h, store := makeOpenIDConnectExplicitHandler(ctrl, fosite.MinParameterEntropy)
 				aresp.EXPECT().GetCode().AnyTimes().Return("codeexample")
 				store.EXPECT().CreateOpenIDConnectSession(gomock.Any(), "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).Return(errors.New(""))
@@ -108,7 +108,7 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should pass",
-			setup: func() OpenIDConnectExplicitHandler {
+			setup: func() ExplicitHandler {
 				h, store := makeOpenIDConnectExplicitHandler(ctrl, fosite.MinParameterEntropy)
 				store.EXPECT().CreateOpenIDConnectSession(gomock.Any(), "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).AnyTimes().Return(nil)
 				return h
@@ -116,7 +116,7 @@ func TestExplicit_HandleAuthorizeEndpointRequest(t *testing.T) {
 		},
 		{
 			description: "should fail because redirect url is missing",
-			setup: func() OpenIDConnectExplicitHandler {
+			setup: func() ExplicitHandler {
 				areq.Form.Del("redirect_uri")
 				h, store := makeOpenIDConnectExplicitHandler(ctrl, fosite.MinParameterEntropy)
 				store.EXPECT().CreateOpenIDConnectSession(gomock.Any(), "codeexample", gomock.Eq(areq.Sanitize(oidcParameters))).AnyTimes().Return(nil)

@@ -65,7 +65,7 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) OpenIDConnectHybrid
 		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
 			AuthorizeCodeStrategy: hmacStrategy,
 			AccessTokenStrategy:   hmacStrategy,
-			CoreStorage:           storage.NewMemoryStore(),
+			Storage:               storage.NewMemoryStore(),
 			Config:                config,
 		},
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{

@@ -21,7 +21,7 @@ var _ fosite.TokenEndpointHandler = (*Handler)(nil)
 
 type Handler struct {
 	AuthorizeCodeStrategy oauth2.AuthorizeCodeStrategy
-	Storage               PKCERequestStorage
+	Storage               RequestStorageProvider
 	Config                interface {
 		fosite.EnforcePKCEProvider
 		fosite.EnforcePKCEForPublicClientsProvider
@@ -31,7 +31,7 @@ type Handler struct {
 
 var _ fosite.TokenEndpointHandler = (*Handler)(nil)
 
-var verifierWrongFormat = regexp.MustCompile("[^\\w\\.\\-~]")
+var verifierWrongFormat = regexp.MustCompile("[^\\w.\\-~]")
 
 func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
@@ -58,7 +58,7 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 	}
 
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	if err := c.Storage.CreatePKCERequestSession(ctx, signature, ar.Sanitize([]string{
+	if err := c.Storage.PKCERequestStorage().CreatePKCERequestSession(ctx, signature, ar.Sanitize([]string{
 		"code_challenge",
 		"code_challenge_method",
 	})); err != nil {
@@ -132,7 +132,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	pkceRequest, err := c.Storage.GetPKCERequestSession(ctx, signature, request.GetSession())
+	pkceRequest, err := c.Storage.PKCERequestStorage().GetPKCERequestSession(ctx, signature, request.GetSession())
 
 	nv := len(verifier)
 
@@ -146,7 +146,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	if err := c.Storage.DeletePKCERequestSession(ctx, signature); err != nil {
+	if err := c.Storage.PKCERequestStorage().DeletePKCERequestSession(ctx, signature); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 

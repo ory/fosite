@@ -23,8 +23,8 @@ type AuthorizeExplicitGrantHandler struct {
 	AccessTokenStrategy    AccessTokenStrategy
 	RefreshTokenStrategy   RefreshTokenStrategy
 	AuthorizeCodeStrategy  AuthorizeCodeStrategy
-	CoreStorage            CoreStorage
-	TokenRevocationStorage TokenRevocationStorage
+	Storage                CoreStorage
+	TokenRevocationStorage TokenRevocationStorageProvider
 	Config                 interface {
 		fosite.AuthorizeCodeLifespanProvider
 		fosite.AccessTokenLifespanProvider
@@ -83,7 +83,7 @@ func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, 
 	}
 
 	ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.Config.GetAuthorizeCodeLifespan(ctx)))
-	if err := c.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.GetSanitationWhiteList(ctx))); err != nil {
+	if err := c.Storage.AuthorizeCodeStorage().CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.GetSanitationWhiteList(ctx))); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 

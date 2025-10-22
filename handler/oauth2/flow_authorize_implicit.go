@@ -21,7 +21,7 @@ var _ fosite.AuthorizeEndpointHandler = (*AuthorizeImplicitGrantTypeHandler)(nil
 type AuthorizeImplicitGrantTypeHandler struct {
 	AccessTokenStrategy AccessTokenStrategy
 	// AccessTokenStorage is used to persist session data across requests.
-	AccessTokenStorage AccessTokenStorage
+	AccessTokenStorage AccessTokenStorageProvider
 
 	Config interface {
 		fosite.AccessTokenLifespanProvider
@@ -77,7 +77,7 @@ func (c *AuthorizeImplicitGrantTypeHandler) IssueImplicitAccessToken(ctx context
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, signature, ar.Sanitize([]string{})); err != nil {
+	if err := c.AccessTokenStorage.AccessTokenStorage().CreateAccessTokenSession(ctx, signature, ar.Sanitize([]string{})); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 	resp.AddParameter("access_token", token)

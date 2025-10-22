@@ -209,7 +209,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						RefreshTokenScopes:       []string{"offline"},
 					}
 					h = AuthorizeExplicitGrantHandler{
-						CoreStorage:           store,
+						Storage:               store,
 						AuthorizeCodeStrategy: strategy,
 						AccessTokenStrategy:   strategy,
 						RefreshTokenStrategy:  strategy,
@@ -246,7 +246,7 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 			store := storage.NewMemoryStore()
 
 			h := AuthorizeExplicitGrantHandler{
-				CoreStorage:            store,
+				Storage:                store,
 				AuthorizeCodeStrategy:  hmacshaStrategy,
 				TokenRevocationStorage: store,
 				Config: &fosite.Config{
@@ -652,7 +652,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			testCase.setup()
 
 			handler := AuthorizeExplicitGrantHandler{
-				CoreStorage: transactionalStore{
+				Storage: transactionalStore{
 					mockTransactional,
 					mockCoreStore,
 				},

@@ -29,7 +29,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 			handler := AuthorizeExplicitGrantHandler{
-				CoreStorage:           store,
+				Storage:               store,
 				AuthorizeCodeStrategy: strategy,
 				Config: &fosite.Config{
 					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
@@ -123,7 +123,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 				},
 				{
 					handler: AuthorizeExplicitGrantHandler{
-						CoreStorage:           store,
+						Storage:               store,
 						AuthorizeCodeStrategy: strategy,
 						Config: &fosite.Config{
 							ScopeStrategy:            fosite.HierarchicScopeStrategy,

@@ -104,8 +104,8 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			h := ResourceOwnerPasswordCredentialsGrantHandler{
 				ResourceOwnerPasswordCredentialsGrantStorage: store,
 				HandleHelper: &HandleHelper{
-					AccessTokenStorage: store,
-					Config:             config,
+					Storage: store,
+					Config:  config,
 				},
 				Config: config,
 			}
@@ -203,7 +203,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			h = ResourceOwnerPasswordCredentialsGrantHandler{
 				ResourceOwnerPasswordCredentialsGrantStorage: store,
 				HandleHelper: &HandleHelper{
-					AccessTokenStorage:  store,
+					Storage:             store,
 					AccessTokenStrategy: chgen, Config: config,
 				},
 				RefreshTokenStrategy: rtstr, Config: config,

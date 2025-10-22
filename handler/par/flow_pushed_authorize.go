@@ -21,11 +21,25 @@ const (
 
 var b64 = base64.URLEncoding.WithPadding(base64.NoPadding)
 
-// PushedAuthorizeHandler handles the PAR request
-type PushedAuthorizeHandler struct {
-	Storage interface{}
-	Config  fosite.Configurator
-}
+type (
+	// PushedAuthorizeHandler handles the PAR request
+	PushedAuthorizeHandler struct {
+		Storage StorageProvider
+		Config  fosite.Configurator
+	}
+	// Storage holds information needed to store and retrieve PAR context.
+	Storage interface {
+		// CreatePARSession stores the pushed authorization request context. The requestURI is used to derive the key.
+		CreatePARSession(ctx context.Context, requestURI string, request fosite.AuthorizeRequester) error
+		// GetPARSession gets the push authorization request context. The caller is expected to merge the AuthorizeRequest.
+		GetPARSession(ctx context.Context, requestURI string) (fosite.AuthorizeRequester, error)
+		// DeletePARSession deletes the context.
+		DeletePARSession(ctx context.Context, requestURI string) (err error)
+	}
+	StorageProvider interface {
+		PARStorage() Storage
+	}
+)
 
 // HandlePushedAuthorizeEndpointRequest handles a pushed authorize endpoint request. To extend the handler's capabilities, the http request
 // is passed along, if further information retrieval is required. If the handler feels that he is not responsible for
@@ -34,11 +48,6 @@ func (c *PushedAuthorizeHandler) HandlePushedAuthorizeEndpointRequest(ctx contex
 	configProvider, ok := c.Config.(fosite.PushedAuthorizeRequestConfigProvider)
 	if !ok {
 		return errorsx.WithStack(fosite.ErrServerError.WithHint(fosite.ErrorPARNotSupported).WithDebug(fosite.DebugPARConfigMissing))
-	}
-
-	storage, ok := c.Storage.(fosite.PARStorage)
-	if !ok {
-		return errorsx.WithStack(fosite.ErrServerError.WithHint(fosite.ErrorPARNotSupported).WithDebug(fosite.DebugPARStorageInvalid))
 	}
 
 	if !ar.GetResponseTypes().HasOneOf("token", "code", "id_token") {
@@ -74,7 +83,7 @@ func (c *PushedAuthorizeHandler) HandlePushedAuthorizeEndpointRequest(ctx contex
 	requestURI := fmt.Sprintf("%s%s", configProvider.GetPushedAuthorizeRequestURIPrefix(ctx), b64.EncodeToString(stateKey))
 
 	// store
-	if err = storage.CreatePARSession(ctx, requestURI, ar); err != nil {
+	if err = c.Storage.PARStorage().CreatePARSession(ctx, requestURI, ar); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithHint("Unable to store the PAR session").WithWrap(err).WithDebug(err.Error()))
 	}
 

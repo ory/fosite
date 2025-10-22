@@ -14,7 +14,7 @@ import (
 )
 
 type TokenRevocationHandler struct {
-	TokenRevocationStorage TokenRevocationStorage
+	TokenRevocationStorage TokenRevocationStorageProvider
 	RefreshTokenStrategy   RefreshTokenStrategy
 	AccessTokenStrategy    AccessTokenStrategy
 }
@@ -26,12 +26,12 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 		func() (request fosite.Requester, err error) {
 			// Refresh token
 			signature := r.RefreshTokenStrategy.RefreshTokenSignature(ctx, token)
-			return r.TokenRevocationStorage.GetRefreshTokenSession(ctx, signature, nil)
+			return r.TokenRevocationStorage.TokenRevocationStorage().GetRefreshTokenSession(ctx, signature, nil)
 		},
 		func() (request fosite.Requester, err error) {
 			// Access token
 			signature := r.AccessTokenStrategy.AccessTokenSignature(ctx, token)
-			return r.TokenRevocationStorage.GetAccessTokenSession(ctx, signature, nil)
+			return r.TokenRevocationStorage.TokenRevocationStorage().GetAccessTokenSession(ctx, signature, nil)
 		},
 	}
 
@@ -55,8 +55,8 @@ func (r *TokenRevocationHandler) RevokeToken(ctx context.Context, token string, 
 	}
 
 	requestID := ar.GetID()
-	err1 = r.TokenRevocationStorage.RevokeRefreshToken(ctx, requestID)
-	err2 = r.TokenRevocationStorage.RevokeAccessToken(ctx, requestID)
+	err1 = r.TokenRevocationStorage.TokenRevocationStorage().RevokeRefreshToken(ctx, requestID)
+	err2 = r.TokenRevocationStorage.TokenRevocationStorage().RevokeAccessToken(ctx, requestID)
 
 	return storeErrorsToRevocationError(err1, err2)
 }

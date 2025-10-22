@@ -19,7 +19,7 @@ const MaxAttempts = 3
 // DeviceAuthHandler is a response handler for the Device Authorisation Grant as
 // defined in https://tools.ietf.org/html/rfc8628#section-3.1
 type DeviceAuthHandler struct {
-	Storage  RFC8628CoreStorage
+	Storage  Storage
 	Strategy RFC8628CodeStrategy
 	Config   interface {
 		fosite.DeviceProvider
@@ -68,7 +68,7 @@ func (d *DeviceAuthHandler) handleDeviceAuthSession(ctx context.Context, dar fos
 			return "", "", errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 
-		err = d.Storage.CreateDeviceAuthSession(ctx, deviceCodeSignature, userCodeSignature, dar.Sanitize(nil).(fosite.DeviceRequester))
+		err = d.Storage.DeviceAuthStorage().CreateDeviceAuthSession(ctx, deviceCodeSignature, userCodeSignature, dar.Sanitize(nil).(fosite.DeviceRequester))
 		if err == nil {
 			break
 		}

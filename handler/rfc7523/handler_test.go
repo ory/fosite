@@ -82,7 +82,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupTest() {
 		},
 		HandleHelper: &oauth2.HandleHelper{
 			AccessTokenStrategy: s.mockAccessTokenStrategy,
-			AccessTokenStorage:  s.mockAccessTokenStore,
+			Storage:             s.mockAccessTokenStore,
 			Config: &fosite.Config{
 				AccessTokenLifespan: time.Hour,
 			},
@@ -859,7 +859,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) SetupTest() {
 		},
 		HandleHelper: &oauth2.HandleHelper{
 			AccessTokenStrategy: s.mockAccessTokenStrategy,
-			AccessTokenStorage:  s.mockAccessTokenStore,
+			Storage:             s.mockAccessTokenStore,
 			Config: &fosite.Config{
 				AccessTokenLifespan: time.Hour,
 			},

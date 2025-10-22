@@ -19,7 +19,7 @@ type OpenIDConnectHybridHandler struct {
 	AuthorizeExplicitGrantHandler     *oauth2.AuthorizeExplicitGrantHandler
 	IDTokenHandleHelper               *IDTokenHandleHelper
 	OpenIDConnectRequestValidator     *OpenIDConnectRequestValidator
-	OpenIDConnectRequestStorage       OpenIDConnectRequestStorage
+	OpenIDConnectRequestStorage       RequestStorageProvider
 
 	Enigma *jwt.DefaultSigner
 
@@ -111,7 +111,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 
 		// This is required because we must limit the authorize code lifespan.
 		ar.GetSession().SetExpiresAt(fosite.AuthorizeCode, time.Now().UTC().Add(c.AuthorizeExplicitGrantHandler.Config.GetAuthorizeCodeLifespan(ctx)).Round(time.Second))
-		if err := c.AuthorizeExplicitGrantHandler.CoreStorage.CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.AuthorizeExplicitGrantHandler.GetSanitationWhiteList(ctx))); err != nil {
+		if err := c.AuthorizeExplicitGrantHandler.Storage.AuthorizeCodeStorage().CreateAuthorizeCodeSession(ctx, signature, ar.Sanitize(c.AuthorizeExplicitGrantHandler.GetSanitationWhiteList(ctx))); err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 
@@ -125,7 +125,7 @@ func (c *OpenIDConnectHybridHandler) HandleAuthorizeEndpointRequest(ctx context.
 		claims.CodeHash = hash
 
 		if ar.GetGrantedScopes().Has("openid") {
-			if err := c.OpenIDConnectRequestStorage.CreateOpenIDConnectSession(ctx, resp.GetCode(), ar.Sanitize(oidcParameters)); err != nil {
+			if err := c.OpenIDConnectRequestStorage.OpenIDConnectRequestStorage().CreateOpenIDConnectSession(ctx, resp.GetCode(), ar.Sanitize(oidcParameters)); err != nil {
 				return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 			}
 		}

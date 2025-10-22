@@ -29,7 +29,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 
 	code := request.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, request.GetSession())
+	authorizeRequest, err := c.Storage.AuthorizeCodeStorage().GetAuthorizeCodeSession(ctx, signature, request.GetSession())
 	if errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) {
 		if authorizeRequest == nil {
 			return fosite.ErrServerError.
@@ -41,11 +41,11 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 		reqID := authorizeRequest.GetID()
 		hint := "The authorization code has already been used."
 		debug := ""
-		if revErr := c.TokenRevocationStorage.RevokeAccessToken(ctx, reqID); revErr != nil {
+		if revErr := c.TokenRevocationStorage.TokenRevocationStorage().RevokeAccessToken(ctx, reqID); revErr != nil {
 			hint += " Additionally, an error occurred during processing the access token revocation."
 			debug += "Revocation of access_token lead to error " + revErr.Error() + "."
 		}
-		if revErr := c.TokenRevocationStorage.RevokeRefreshToken(ctx, reqID); revErr != nil {
+		if revErr := c.TokenRevocationStorage.TokenRevocationStorage().RevokeRefreshToken(ctx, reqID); revErr != nil {
 			hint += " Additionally, an error occurred during processing the refresh token revocation."
 			debug += "Revocation of refresh_token lead to error " + revErr.Error() + "."
 		}
@@ -123,7 +123,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 
 	code := requester.GetRequestForm().Get("code")
 	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
-	authorizeRequest, err := c.CoreStorage.GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
+	authorizeRequest, err := c.Storage.AuthorizeCodeStorage().GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	} else if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
@@ -152,24 +152,24 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		}
 	}
 
-	ctx, err = storage.MaybeBeginTx(ctx, c.CoreStorage)
+	ctx, err = storage.MaybeBeginTx(ctx, c.Storage)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 	defer func() {
 		if err != nil {
-			if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
+			if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.Storage); rollBackTxnErr != nil {
 				err = errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebugf("error: %s; rollback error: %s", err, rollBackTxnErr))
 			}
 		}
 	}()
 
-	if err = c.CoreStorage.InvalidateAuthorizeCodeSession(ctx, signature); err != nil {
+	if err = c.Storage.AuthorizeCodeStorage().InvalidateAuthorizeCodeSession(ctx, signature); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	} else if err = c.CoreStorage.CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
+	} else if err = c.Storage.AccessTokenStorage().CreateAccessTokenSession(ctx, accessSignature, requester.Sanitize([]string{})); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	} else if refreshSignature != "" {
-		if err = c.CoreStorage.CreateRefreshTokenSession(ctx, refreshSignature, accessSignature, requester.Sanitize([]string{})); err != nil {
+		if err = c.Storage.RefreshTokenStorage().CreateRefreshTokenSession(ctx, refreshSignature, accessSignature, requester.Sanitize([]string{})); err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
 	}
@@ -183,18 +183,18 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		responder.SetExtra("refresh_token", refresh)
 	}
 
-	if err = storage.MaybeCommitTx(ctx, c.CoreStorage); err != nil {
+	if err = storage.MaybeCommitTx(ctx, c.Storage); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	return nil
 }
 
-func (c *AuthorizeExplicitGrantHandler) CanSkipClientAuth(ctx context.Context, requester fosite.AccessRequester) bool {
+func (c *AuthorizeExplicitGrantHandler) CanSkipClientAuth(_ context.Context, _ fosite.AccessRequester) bool {
 	return false
 }
 
-func (c *AuthorizeExplicitGrantHandler) CanHandleTokenEndpointRequest(ctx context.Context, requester fosite.AccessRequester) bool {
+func (c *AuthorizeExplicitGrantHandler) CanHandleTokenEndpointRequest(_ context.Context, requester fosite.AccessRequester) bool {
 	// grant_type REQUIRED.
 	// Value MUST be set to "authorization_code"
 	return requester.GetGrantTypes().ExactOne("authorization_code")

@@ -36,7 +36,7 @@ func TestIssueAccessToken(t *testing.T) {
 	defer ctrl.Finish()
 
 	helper := HandleHelper{
-		AccessTokenStorage:  accessStore,
+		Storage:             accessStore,
 		AccessTokenStrategy: accessStrat,
 		Config: &fosite.Config{
 			AccessTokenLifespan: time.Hour,

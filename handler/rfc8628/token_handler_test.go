@@ -619,7 +619,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 
 	type deviceTransactionalStore struct {
 		storage.Transactional
-		RFC8628CoreStorage
+		Storage
 	}
 
 	testCases := []struct {

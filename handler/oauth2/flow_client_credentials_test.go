@@ -26,7 +26,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 
 	h := ClientCredentialsGrantHandler{
 		HandleHelper: &HandleHelper{
-			AccessTokenStorage:  store,
+			Storage:             store,
 			AccessTokenStrategy: chgen,
 			Config: &fosite.Config{
 				AccessTokenLifespan: time.Hour,
@@ -111,7 +111,7 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 
 	h := ClientCredentialsGrantHandler{
 		HandleHelper: &HandleHelper{
-			AccessTokenStorage:  store,
+			Storage:             store,
 			AccessTokenStrategy: chgen,
 			Config: &fosite.Config{
 				AccessTokenLifespan: time.Hour,
