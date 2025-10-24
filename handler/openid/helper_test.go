@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package openid
+package openid_test
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal/gen"
 
 	"github.com/pkg/errors"
@@ -20,7 +21,7 @@ import (
 	"github.com/ory/fosite/token/jwt"
 )
 
-var strat = &DefaultStrategy{
+var strat = &openid.DefaultStrategy{
 	Signer: &jwt.DefaultSigner{
 		GetPrivateKey: func(_ context.Context) (interface{}, error) {
 			return gen.MustRSAKey(), nil
@@ -39,13 +40,13 @@ func TestGenerateIDToken(t *testing.T) {
 	defer ctrl.Finish()
 
 	ar := fosite.NewAccessRequest(nil)
-	sess := &DefaultSession{
+	sess := &openid.DefaultSession{
 		Claims: &jwt.IDTokenClaims{
 			Subject: "peter",
 		},
 		Headers: &jwt.Headers{},
 	}
-	h := &IDTokenHandleHelper{IDTokenStrategy: chgen}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: chgen}
 
 	for k, c := range []struct {
 		description string
@@ -69,14 +70,13 @@ func TestGenerateIDToken(t *testing.T) {
 		},
 	} {
 		c.setup()
-		token, err := h.generateIDToken(context.Background(), time.Duration(0), ar)
+		token, err := openid.CallGenerateIDToken(context.Background(), time.Duration(0), ar, h)
 		assert.True(t, err == c.expectErr, "(%d) %s\n%s\n%s", k, c.description, err, c.expectErr)
 		if err == nil {
 			assert.NotEmpty(t, token, "(%d) %s", k, c.description)
 		}
 		t.Logf("Passed test case %d", k)
 	}
-
 }
 
 func TestIssueExplicitToken(t *testing.T) {
@@ -86,12 +86,12 @@ func TestIssueExplicitToken(t *testing.T) {
 
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&DefaultSession{Claims: &jwt.IDTokenClaims{
+	ar.SetSession(&openid.DefaultSession{Claims: &jwt.IDTokenClaims{
 		Subject: "peter",
 	}, Headers: &jwt.Headers{}})
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
-	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
 	err := h.IssueExplicitIDToken(context.Background(), time.Duration(0), ar, resp)
 	assert.NoError(t, err)
 }
@@ -103,12 +103,12 @@ func TestIssueImplicitToken(t *testing.T) {
 
 	ar := fosite.NewAuthorizeRequest()
 	ar.Form = url.Values{"nonce": {"111111111111"}}
-	ar.SetSession(&DefaultSession{Claims: &jwt.IDTokenClaims{
+	ar.SetSession(&openid.DefaultSession{Claims: &jwt.IDTokenClaims{
 		Subject: "peter",
 	}, Headers: &jwt.Headers{}})
 
 	resp.EXPECT().AddParameter("id_token", gomock.Any())
-	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
 	err := h.IssueImplicitIDToken(context.Background(), time.Duration(0), ar, resp)
 	assert.NoError(t, err)
 }
@@ -123,7 +123,7 @@ func TestGetAccessTokenHash(t *testing.T) {
 	req.EXPECT().GetSession().Return(nil)
 	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
 
-	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
 
 	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
@@ -141,10 +141,10 @@ func TestGetAccessTokenHashWithDifferentKeyLength(t *testing.T) {
 			"alg": "RS384",
 		},
 	}
-	req.EXPECT().GetSession().Return(&DefaultSession{Headers: headers})
+	req.EXPECT().GetSession().Return(&openid.DefaultSession{Headers: headers})
 	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
 
-	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
 
 	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "VNX38yiOyeqBPheW5jDsWQKa6IjJzK66", hash)
@@ -162,10 +162,10 @@ func TestGetAccessTokenHashWithBadAlg(t *testing.T) {
 			"alg": "R",
 		},
 	}
-	req.EXPECT().GetSession().Return(&DefaultSession{Headers: headers})
+	req.EXPECT().GetSession().Return(&openid.DefaultSession{Headers: headers})
 	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
 
-	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
 
 	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
@@ -183,10 +183,10 @@ func TestGetAccessTokenHashWithMissingKeyLength(t *testing.T) {
 			"alg": "RS",
 		},
 	}
-	req.EXPECT().GetSession().Return(&DefaultSession{Headers: headers})
+	req.EXPECT().GetSession().Return(&openid.DefaultSession{Headers: headers})
 	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
 
-	h := &IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
 
 	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)

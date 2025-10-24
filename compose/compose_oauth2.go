@@ -41,7 +41,7 @@ func OAuth2RefreshTokenGrantFactory(config fosite.Configurator, storage fosite.S
 	return &oauth2.RefreshTokenGrantHandler{
 		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
 		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
-		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorage),
+		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorageProvider),
 		Config:                 config,
 	}
 }
@@ -51,7 +51,7 @@ func OAuth2RefreshTokenGrantFactory(config fosite.Configurator, storage fosite.S
 func OAuth2AuthorizeImplicitFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeImplicitGrantTypeHandler{
 		AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
-		AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
+		AccessTokenStorage:  storage.(oauth2.AccessTokenStorageProvider),
 		Config:              config,
 	}
 }

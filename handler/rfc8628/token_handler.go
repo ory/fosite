@@ -12,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite/handler/oauth2"
-	"github.com/ory/fosite/storage"
 	"github.com/ory/x/errorsx"
 
 	"github.com/ory/fosite"
@@ -93,13 +92,13 @@ func (c *DeviceCodeTokenEndpointHandler) PopulateTokenEndpointResponse(ctx conte
 		}
 	}
 
-	ctx, err = storage.MaybeBeginTx(ctx, c.CoreStorage)
+	ctx, err = fosite.MaybeBeginTx(ctx, c.CoreStorage)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 	defer func() {
 		if err != nil {
-			if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
+			if rollBackTxnErr := fosite.MaybeRollbackTx(ctx, c.CoreStorage); rollBackTxnErr != nil {
 				err = errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebugf("error: %s; rollback error: %s", err, rollBackTxnErr))
 			}
 		}
@@ -128,7 +127,7 @@ func (c *DeviceCodeTokenEndpointHandler) PopulateTokenEndpointResponse(ctx conte
 		responder.SetExtra("refresh_token", refreshToken)
 	}
 
-	if err = storage.MaybeCommitTx(ctx, c.CoreStorage); err != nil {
+	if err = fosite.MaybeCommitTx(ctx, c.CoreStorage); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 

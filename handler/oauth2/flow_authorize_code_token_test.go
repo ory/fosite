@@ -1,18 +1,20 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package oauth2
+package oauth2_test
 
 import (
 	"context"
 	"fmt"
 	"net/url"
-	"testing" //"time"
-
+	"testing"
 	"time"
+
+	//"time"
 
 	gomock "go.uber.org/mock/gomock"
 
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/internal"
 
 	"github.com/ory/fosite" //"github.com/ory/fosite/internal"
@@ -23,13 +25,13 @@ import (
 )
 
 func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
-	for k, strategy := range map[string]CoreStrategy{
+	for k, strategy := range map[string]oauth2.CoreStrategy{
 		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			var h AuthorizeExplicitGrantHandler
+			var h oauth2.AuthorizeExplicitGrantHandler
 			for _, c := range []struct {
 				areq        *fosite.AccessRequest
 				description string
@@ -208,7 +210,7 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 						AccessTokenLifespan:      time.Minute,
 						RefreshTokenScopes:       []string{"offline"},
 					}
-					h = AuthorizeExplicitGrantHandler{
+					h = oauth2.AuthorizeExplicitGrantHandler{
 						Storage:               store,
 						AuthorizeCodeStrategy: strategy,
 						AccessTokenStrategy:   strategy,
@@ -239,13 +241,13 @@ func TestAuthorizeCode_PopulateTokenEndpointResponse(t *testing.T) {
 }
 
 func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
-	for k, strategy := range map[string]CoreStrategy{
+	for k, strategy := range map[string]oauth2.CoreStrategy{
 		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			h := AuthorizeExplicitGrantHandler{
+			h := oauth2.AuthorizeExplicitGrantHandler{
 				Storage:                store,
 				AuthorizeCodeStrategy:  hmacshaStrategy,
 				TokenRevocationStorage: store,
@@ -462,10 +464,10 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	response := fosite.NewAccessResponse()
 	propagatedContext := context.Background()
 
-	// some storage implementation that has support for transactions, notice the embedded type `storage.Transactional`
+	// some storage implementation that has support for transactions, notice the embedded type `fosite.Transactional`
 	type transactionalStore struct {
-		storage.Transactional
-		CoreStorage
+		fosite.Transactional
+		oauth2.CoreStorage
 	}
 
 	for _, testCase := range []struct {
@@ -651,7 +653,7 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			mockCoreStore = internal.NewMockCoreStorage(ctrl)
 			testCase.setup()
 
-			handler := AuthorizeExplicitGrantHandler{
+			handler := oauth2.AuthorizeExplicitGrantHandler{
 				Storage: transactionalStore{
 					mockTransactional,
 					mockCoreStore,

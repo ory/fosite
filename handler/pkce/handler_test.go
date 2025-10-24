@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package pkce
+package pkce_test
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/pkce"
 	"github.com/ory/fosite/storage"
 )
 
@@ -37,7 +38,7 @@ func (m *mockCodeStrategy) ValidateAuthorizeCode(ctx context.Context, requester 
 
 func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	var config fosite.Config
-	h := &Handler{
+	h := &pkce.Handler{
 		Storage:               storage.NewMemoryStore(),
 		AuthorizeCodeStrategy: oauth2.NewHMACSHAStrategy(nil, nil),
 		Config:                &config,
@@ -85,7 +86,7 @@ func TestPKCEHandlerValidate(t *testing.T) {
 	s := storage.NewMemoryStore()
 	ms := &mockCodeStrategy{}
 	config := &fosite.Config{}
-	h := &Handler{Storage: s, AuthorizeCodeStrategy: ms, Config: config}
+	h := &pkce.Handler{Storage: s, AuthorizeCodeStrategy: ms, Config: config}
 	pc := &fosite.DefaultClient{Public: true}
 
 	s256verifier := "KGCt4m8AmjUvIR5ArTByrmehjtbxn1A49YpTZhsH8N7fhDr7LQayn9xx6mck"
@@ -374,7 +375,7 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
-			h := &Handler{
+			h := &pkce.Handler{
 				Config: &fosite.Config{
 					EnforcePKCE:                    tc.force,
 					EnforcePKCEForPublicClients:    tc.forcePublic,
@@ -383,9 +384,9 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 			}
 
 			if tc.expectErr {
-				assert.Error(t, h.validate(context.Background(), tc.challenge, tc.method, tc.client))
+				assert.Error(t, pkce.CallValidate(context.Background(), tc.challenge, tc.method, tc.client, h))
 			} else {
-				assert.NoError(t, h.validate(context.Background(), tc.challenge, tc.method, tc.client))
+				assert.NoError(t, pkce.CallValidate(context.Background(), tc.challenge, tc.method, tc.client, h))
 			}
 		})
 	}

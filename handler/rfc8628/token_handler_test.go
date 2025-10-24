@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package rfc8628
+package rfc8628_test
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/hmac"
 
 	"github.com/ory/fosite"
@@ -24,7 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var hmacshaStrategy = oauth2.NewHMACSHAStrategy(
+var hmacshaStrategyOAuth = oauth2.NewHMACSHAStrategy(
 	&hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
 	&fosite.Config{
 		AccessTokenLifespan:   time.Hour * 24,
@@ -32,7 +33,7 @@ var hmacshaStrategy = oauth2.NewHMACSHAStrategy(
 	},
 )
 
-var RFC8628HMACSHAStrategy = DefaultDeviceStrategy{
+var RFC8628HMACSHAStrategy = rfc8628.DefaultDeviceStrategy{
 	Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar")}},
 	Config: &fosite.Config{
 		DeviceAndUserCodeLifespan: time.Minute * 30,
@@ -42,14 +43,14 @@ var RFC8628HMACSHAStrategy = DefaultDeviceStrategy{
 func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 	for k, strategy := range map[string]struct {
 		oauth2.CoreStrategy
-		RFC8628CodeStrategy
+		rfc8628.RFC8628CodeStrategy
 	}{
-		"hmac": {hmacshaStrategy, &RFC8628HMACSHAStrategy},
+		"hmac": {hmacshaStrategyOAuth, &RFC8628HMACSHAStrategy},
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			h := DeviceCodeTokenEndpointHandler{
+			h := rfc8628.DeviceCodeTokenEndpointHandler{
 				DeviceRateLimitStrategy: strategy,
 				DeviceCodeStrategy:      strategy,
 				UserCodeStrategy:        strategy,
@@ -303,14 +304,14 @@ func TestDeviceUserCode_HandleTokenEndpointRequest(t *testing.T) {
 func TestDeviceUserCode_HandleTokenEndpointRequest_RateLimiting(t *testing.T) {
 	for k, strategy := range map[string]struct {
 		oauth2.CoreStrategy
-		RFC8628CodeStrategy
+		rfc8628.RFC8628CodeStrategy
 	}{
-		"hmac": {hmacshaStrategy, &RFC8628HMACSHAStrategy},
+		"hmac": {hmacshaStrategyOAuth, &RFC8628HMACSHAStrategy},
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 
-			h := DeviceCodeTokenEndpointHandler{
+			h := rfc8628.DeviceCodeTokenEndpointHandler{
 				DeviceRateLimitStrategy: strategy,
 				DeviceCodeStrategy:      strategy,
 				UserCodeStrategy:        strategy,
@@ -367,9 +368,9 @@ func TestDeviceUserCode_HandleTokenEndpointRequest_RateLimiting(t *testing.T) {
 func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 	for k, strategy := range map[string]struct {
 		oauth2.CoreStrategy
-		RFC8628CodeStrategy
+		rfc8628.RFC8628CodeStrategy
 	}{
-		"hmac": {hmacshaStrategy, &RFC8628HMACSHAStrategy},
+		"hmac": {hmacshaStrategyOAuth, &RFC8628HMACSHAStrategy},
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
@@ -547,7 +548,7 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 						AccessTokenLifespan:      time.Minute,
 						RefreshTokenScopes:       []string{"offline"},
 					}
-					h := DeviceCodeTokenEndpointHandler{
+					h := rfc8628.DeviceCodeTokenEndpointHandler{
 						DeviceRateLimitStrategy: strategy,
 						DeviceCodeStrategy:      strategy,
 						UserCodeStrategy:        strategy,
@@ -584,7 +585,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	var mockTransactional *internal.MockTransactional
 	var mockCoreStore *internal.MockRFC8628CoreStorage
 	var mockDeviceRateLimitStrategy *internal.MockDeviceRateLimitStrategy
-	strategy := hmacshaStrategy
+	strategy := hmacshaStrategyOAuth
 	deviceStrategy := RFC8628HMACSHAStrategy
 
 	authreq := &fosite.DeviceRequest{
@@ -615,11 +616,11 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	require.NoError(t, err)
 	areq.Form = url.Values{"device_code": {code}}
 
-	// some storage implementation that has support for transactions, notice the embedded type `storage.Transactional`
+	// some storage implementation that has support for transactions, notice the embedded type `fosite.Transactional`
 
 	type deviceTransactionalStore struct {
-		storage.Transactional
-		Storage
+		fosite.Transactional
+		rfc8628.Storage
 	}
 
 	testCases := []struct {
@@ -808,7 +809,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			mockDeviceRateLimitStrategy = internal.NewMockDeviceRateLimitStrategy(ctrl)
 			testCase.setup()
 
-			h := DeviceCodeTokenEndpointHandler{
+			h := rfc8628.DeviceCodeTokenEndpointHandler{
 				DeviceCodeStrategy:      &deviceStrategy,
 				UserCodeStrategy:        &deviceStrategy,
 				DeviceRateLimitStrategy: mockDeviceRateLimitStrategy,

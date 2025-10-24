@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package openid
+package openid_test
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/hmac"
@@ -26,7 +27,7 @@ import (
 )
 
 func TestDeviceToken_HandleTokenEndpointRequest(t *testing.T) {
-	h := OpenIDConnectDeviceHandler{
+	h := openid.OpenIDConnectDeviceHandler{
 		Config: &fosite.Config{},
 	}
 	areq := fosite.NewAccessRequest(nil)
@@ -55,22 +56,22 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 	}
 
-	h := OpenIDConnectDeviceHandler{
+	h := openid.OpenIDConnectDeviceHandler{
 		OpenIDConnectRequestStorage: store,
 		DeviceCodeStrategy: &rfc8628.DefaultDeviceStrategy{
 			Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobar")}},
 			Config: config,
 		},
 		Config: config,
-		IDTokenHandleHelper: &IDTokenHandleHelper{
-			IDTokenStrategy: &DefaultStrategy{
+		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
+			IDTokenStrategy: &openid.DefaultStrategy{
 				Signer: signer,
 				Config: config,
 			},
 		},
 	}
 
-	session := &DefaultSession{
+	session := &openid.DefaultSession{
 		Claims: &jwt.IDTokenClaims{
 			Subject: "foo",
 		},
@@ -115,7 +116,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 			},
 			aresp: fosite.NewAccessResponse(),
 			setup: func(areq *fosite.AccessRequest) {
-				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(nil, ErrNoSessionFound)
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(nil, openid.ErrNoSessionFound)
 			},
 			expectErr: fosite.ErrUnknownRequest,
 		},
@@ -192,7 +193,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 					Request: fosite.Request{
 						Client:       client,
 						GrantedScope: fosite.Arguments{"openid", "email"},
-						Session:      NewDefaultSession(),
+						Session:      openid.NewDefaultSession(),
 					},
 				}
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(authreq, nil)

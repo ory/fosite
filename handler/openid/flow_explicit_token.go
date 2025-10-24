@@ -24,7 +24,7 @@ func (c *ExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, req
 
 	authorizeCode := requester.GetRequestForm().Get("code")
 
-	authorize, err := c.Storage.GetOpenIDConnectSession(ctx, authorizeCode, requester)
+	authorize, err := c.Storage.OpenIDConnectRequestStorage().GetOpenIDConnectSession(ctx, authorizeCode, requester)
 	if errors.Is(err, ErrNoSessionFound) {
 		return errorsx.WithStack(fosite.ErrUnknownRequest.WithWrap(err).WithDebug(err.Error()))
 	} else if err != nil {
@@ -49,7 +49,7 @@ func (c *ExplicitHandler) PopulateTokenEndpointResponse(ctx context.Context, req
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("Failed to generate id token because subject is an empty string."))
 	}
 
-	err = c.Storage.DeleteOpenIDConnectSession(ctx, authorizeCode)
+	err = c.Storage.OpenIDConnectRequestStorage().DeleteOpenIDConnectSession(ctx, authorizeCode)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}

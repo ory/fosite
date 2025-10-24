@@ -9,8 +9,6 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	"github.com/ory/fosite/storage"
-
 	"github.com/pkg/errors"
 
 	"github.com/ory/fosite"
@@ -152,13 +150,13 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		}
 	}
 
-	ctx, err = storage.MaybeBeginTx(ctx, c.Storage)
+	ctx, err = fosite.MaybeBeginTx(ctx, c.Storage)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 	defer func() {
 		if err != nil {
-			if rollBackTxnErr := storage.MaybeRollbackTx(ctx, c.Storage); rollBackTxnErr != nil {
+			if rollBackTxnErr := fosite.MaybeRollbackTx(ctx, c.Storage); rollBackTxnErr != nil {
 				err = errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebugf("error: %s; rollback error: %s", err, rollBackTxnErr))
 			}
 		}
@@ -183,7 +181,7 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		responder.SetExtra("refresh_token", refresh)
 	}
 
-	if err = storage.MaybeCommitTx(ctx, c.Storage); err != nil {
+	if err = fosite.MaybeCommitTx(ctx, c.Storage); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 

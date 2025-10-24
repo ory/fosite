@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package oauth2
+package oauth2_test
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/internal"
 )
 
@@ -88,7 +89,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 				store.EXPECT().Authenticate(gomock.Any(), "peter", "pan").Return("", nil)
 			},
 			check: func(areq *fosite.AccessRequest) {
-				//assert.NotEmpty(t, areq.GetSession().GetExpiresAt(fosite.AccessToken))
+				// assert.NotEmpty(t, areq.GetSession().GetExpiresAt(fosite.AccessToken))
 				assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.AccessToken))
 				assert.Equal(t, time.Now().Add(time.Hour).UTC().Round(time.Second), areq.GetSession().GetExpiresAt(fosite.RefreshToken))
 			},
@@ -101,9 +102,9 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 				ScopeStrategy:            fosite.HierarchicScopeStrategy,
 				AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 			}
-			h := ResourceOwnerPasswordCredentialsGrantHandler{
+			h := oauth2.ResourceOwnerPasswordCredentialsGrantHandler{
 				ResourceOwnerPasswordCredentialsGrantStorage: store,
-				HandleHelper: &HandleHelper{
+				HandleHelper: &oauth2.HandleHelper{
 					Storage: store,
 					Config:  config,
 				},
@@ -136,7 +137,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 	var areq *fosite.AccessRequest
 	var aresp *fosite.AccessResponse
 	config := &fosite.Config{}
-	var h ResourceOwnerPasswordCredentialsGrantHandler
+	var h oauth2.ResourceOwnerPasswordCredentialsGrantHandler
 	h.Config = config
 
 	for k, c := range []struct {
@@ -200,9 +201,9 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				RefreshTokenScopes:  []string{"offline"},
 				AccessTokenLifespan: time.Hour,
 			}
-			h = ResourceOwnerPasswordCredentialsGrantHandler{
+			h = oauth2.ResourceOwnerPasswordCredentialsGrantHandler{
 				ResourceOwnerPasswordCredentialsGrantStorage: store,
-				HandleHelper: &HandleHelper{
+				HandleHelper: &oauth2.HandleHelper{
 					Storage:             store,
 					AccessTokenStrategy: chgen, Config: config,
 				},

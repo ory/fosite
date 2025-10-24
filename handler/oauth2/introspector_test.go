@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package oauth2
+package oauth2_test
 
 import (
 	"context"
@@ -17,6 +17,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/internal"
 )
 
@@ -28,7 +29,7 @@ func TestIntrospectToken(t *testing.T) {
 	defer ctrl.Finish()
 
 	config := &fosite.Config{}
-	v := &CoreValidator{
+	v := &oauth2.CoreValidator{
 		CoreStrategy: chgen,
 		CoreStorage:  store,
 		Config:       config,

@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package oauth2
+package oauth2_test
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 
 	gomock "go.uber.org/mock/gomock"
 
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/internal"
 
 	"github.com/pkg/errors"
@@ -31,12 +32,12 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 		},
 	}
 
-	for k, strategy := range map[string]RefreshTokenStrategy{
+	for k, strategy := range map[string]oauth2.RefreshTokenStrategy{
 		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
-			var handler *RefreshTokenGrantHandler
+			var handler *oauth2.RefreshTokenGrantHandler
 			for _, c := range []struct {
 				description string
 				setup       func(config *fosite.Config)
@@ -322,7 +323,7 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 						RefreshTokenScopes:       []string{"offline"},
 					}
-					handler = &RefreshTokenGrantHandler{
+					handler = &oauth2.RefreshTokenGrantHandler{
 						TokenRevocationStorage: store,
 						RefreshTokenStrategy:   strategy,
 						Config:                 config,
@@ -353,11 +354,6 @@ func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	var mockRevocationStore *internal.MockTokenRevocationStorage
 	request := fosite.NewAccessRequest(&fosite.DefaultSession{})
 	propagatedContext := context.Background()
-
-	type transactionalStore struct {
-		storage.Transactional
-		TokenRevocationStorage
-	}
 
 	for _, testCase := range []struct {
 		description string
@@ -414,13 +410,12 @@ func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			mockRevocationStore = internal.NewMockTokenRevocationStorage(ctrl)
 			testCase.setup()
 
-			handler := RefreshTokenGrantHandler{
-				TokenRevocationStorage: transactionalStore{
-					mockTransactional,
-					mockRevocationStore,
-				},
-				AccessTokenStrategy:  hmacshaStrategy,
-				RefreshTokenStrategy: hmacshaStrategy,
+			store := storage.NewMemoryStore()
+
+			handler := oauth2.RefreshTokenGrantHandler{
+				TokenRevocationStorage: store,
+				AccessTokenStrategy:    hmacshaStrategy,
+				RefreshTokenStrategy:   hmacshaStrategy,
 				Config: &fosite.Config{
 					AccessTokenLifespan:      time.Hour,
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
@@ -439,7 +434,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 	var areq *fosite.AccessRequest
 	var aresp *fosite.AccessResponse
 
-	for k, strategy := range map[string]CoreStrategy{
+	for k, strategy := range map[string]oauth2.CoreStrategy{
 		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
@@ -493,7 +488,7 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 						ScopeStrategy:            fosite.HierarchicScopeStrategy,
 						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 					}
-					h := RefreshTokenGrantHandler{
+					h := oauth2.RefreshTokenGrantHandler{
 						TokenRevocationStorage: store,
 						RefreshTokenStrategy:   strategy,
 						AccessTokenStrategy:    strategy,
@@ -529,10 +524,10 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 	response := fosite.NewAccessResponse()
 	propagatedContext := context.Background()
 
-	// some storage implementation that has support for transactions, notice the embedded type `storage.Transactional`
+	// some storage implementation that has support for transactions, notice the embedded type `fosite.Transactional`
 	type transactionalStore struct {
-		storage.Transactional
-		TokenRevocationStorage
+		fosite.Transactional
+		oauth2.TokenRevocationStorage
 	}
 
 	for _, testCase := range []struct {
@@ -897,14 +892,12 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 			mockRevocationStore = internal.NewMockTokenRevocationStorage(ctrl)
 			testCase.setup()
 
-			handler := RefreshTokenGrantHandler{
-				// Notice how we are passing in a store that has support for transactions!
-				TokenRevocationStorage: transactionalStore{
-					mockTransactional,
-					mockRevocationStore,
-				},
-				AccessTokenStrategy:  hmacshaStrategy,
-				RefreshTokenStrategy: hmacshaStrategy,
+			store := storage.NewMemoryStore()
+
+			handler := oauth2.RefreshTokenGrantHandler{
+				TokenRevocationStorage: store,
+				AccessTokenStrategy:    hmacshaStrategy,
+				RefreshTokenStrategy:   hmacshaStrategy,
 				Config: &fosite.Config{
 					AccessTokenLifespan:      time.Hour,
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,

@@ -13,6 +13,10 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/openid"
+	"github.com/ory/fosite/handler/pkce"
+	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/internal"
 )
 
@@ -94,6 +98,42 @@ func NewMemoryStore() *MemoryStore {
 		IssuerPublicKeys:       make(map[string]IssuerPublicKeys),
 		PARSessions:            make(map[string]fosite.AuthorizeRequester),
 	}
+}
+
+func (s *MemoryStore) ClientManager() fosite.ClientManager {
+	return s
+}
+
+func (s *MemoryStore) AuthorizeCodeStorage() oauth2.AuthorizeCodeStorage {
+	return s
+}
+
+func (s *MemoryStore) AccessTokenStorage() oauth2.AccessTokenStorage {
+	return s
+}
+
+func (s *MemoryStore) RefreshTokenStorage() oauth2.RefreshTokenStorage {
+	return s
+}
+
+func (s *MemoryStore) TokenRevocationStorage() oauth2.TokenRevocationStorage {
+	return s
+}
+
+func (s *MemoryStore) OpenIDConnectRequestStorage() openid.RequestStorage {
+	return s
+}
+
+func (s *MemoryStore) PKCERequestStorage() pkce.RequestStorage {
+	return s
+}
+
+func (s *MemoryStore) PARStorage() fosite.PARStorage {
+	return s
+}
+
+func (s *MemoryStore) DeviceAuthStorage() rfc8628.DeviceAuthStorage {
+	return s
 }
 
 type StoreAuthorizeCode struct {

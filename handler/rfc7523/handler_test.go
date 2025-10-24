@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package rfc7523
+package rfc7523_test
 
 import (
 	"context"
@@ -16,16 +16,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
+	"github.com/ory/fosite/handler/rfc7523"
+	"github.com/ory/fosite/internal"
 
 	"github.com/go-jose/go-jose/v3"
 	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/stretchr/testify/suite"
 	gomock "go.uber.org/mock/gomock"
-
-	"github.com/ory/fosite"
-	"github.com/ory/fosite/internal"
 )
+
+// #nosec:gosec G101 - False Positive
+const grantTypeJWTBearer = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
 // Define the suite, and absorb the built-in basic suite
 // functionality from testify - including a T() method which
@@ -39,7 +42,7 @@ type AuthorizeJWTGrantRequestHandlerTestSuite struct {
 	mockAccessTokenStrategy *internal.MockAccessTokenStrategy
 	mockAccessTokenStore    *internal.MockAccessTokenStorage
 	accessRequest           *fosite.AccessRequest
-	handler                 *Handler
+	handler                 *rfc7523.Handler
 }
 
 // Setup before each test in the suite.
@@ -69,7 +72,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupTest() {
 	s.accessRequest = fosite.NewAccessRequest(new(fosite.DefaultSession))
 	s.accessRequest.Form = url.Values{}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
-	s.handler = &Handler{
+	s.handler = &rfc7523.Handler{
 		Storage: s.mockStore,
 		Config: &fosite.Config{
 			ScopeStrategy:                        fosite.HierarchicScopeStrategy,
@@ -815,7 +818,7 @@ type AuthorizeJWTGrantPopulateTokenEndpointTestSuite struct {
 	mockAccessTokenStore    *internal.MockAccessTokenStorage
 	accessRequest           *fosite.AccessRequest
 	accessResponse          *fosite.AccessResponse
-	handler                 *Handler
+	handler                 *rfc7523.Handler
 }
 
 // Setup before each test in the suite.
@@ -846,7 +849,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) SetupTest() {
 	s.accessRequest.Form = url.Values{}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
 	s.accessResponse = fosite.NewAccessResponse()
-	s.handler = &Handler{
+	s.handler = &rfc7523.Handler{
 		Storage: s.mockStore,
 		Config: &fosite.Config{
 			ScopeStrategy:                        fosite.HierarchicScopeStrategy,

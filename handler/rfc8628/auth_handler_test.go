@@ -25,7 +25,7 @@ func Test_HandleDeviceEndpointRequest(t *testing.T) {
 	store := storage.NewMemoryStore()
 	handler := rfc8628.DeviceAuthHandler{
 		Storage:  store,
-		Strategy: &hmacshaStrategy,
+		Strategy: &hmacshaStrategyDefault,
 		Config: &fosite.Config{
 			DeviceAndUserCodeLifespan:      time.Minute * 10,
 			DeviceAuthTokenPollingInterval: time.Second * 5,

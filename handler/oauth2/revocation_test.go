@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package oauth2
+package oauth2_test
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/internal"
 )
 
@@ -23,7 +24,7 @@ func TestRevokeToken(t *testing.T) {
 	ar := internal.NewMockAccessRequester(ctrl)
 	defer ctrl.Finish()
 
-	h := TokenRevocationHandler{
+	h := oauth2.TokenRevocationHandler{
 		TokenRevocationStorage: store,
 		RefreshTokenStrategy:   rtStrat,
 		AccessTokenStrategy:    atStrat,
@@ -145,7 +146,6 @@ func TestRevokeToken(t *testing.T) {
 			},
 		},
 		{
-
 			description: "should pass - refresh token discovery first; refresh token is inactive",
 			expectErr:   nil,
 			client:      &fosite.DefaultClient{ID: "bar"},

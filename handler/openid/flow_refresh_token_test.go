@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package openid
+package openid_test
 
 import (
 	"context"
@@ -12,12 +12,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
 )
 
 func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
-	h := &OpenIDConnectRefreshHandler{Config: &fosite.Config{}}
+	h := &openid.OpenIDConnectRefreshHandler{Config: &fosite.Config{}}
 	for _, c := range []struct {
 		areq        *fosite.AccessRequest
 		expectedErr error
@@ -59,9 +60,9 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 					GrantedScope: []string{"openid"},
 					Client: &fosite.DefaultClient{
 						GrantTypes: []string{"refresh_token"},
-						//ResponseTypes: []string{"id_token"},
+						// ResponseTypes: []string{"id_token"},
 					},
-					Session: &DefaultSession{},
+					Session: &openid.DefaultSession{},
 				},
 			},
 		},
@@ -78,7 +79,7 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 }
 
 func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T) {
-	var j = &DefaultStrategy{
+	j := &openid.DefaultStrategy{
 		Signer: &jwt.DefaultSigner{
 			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
 				return key, nil
@@ -89,8 +90,8 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 		},
 	}
 
-	h := &OpenIDConnectRefreshHandler{
-		IDTokenHandleHelper: &IDTokenHandleHelper{
+	h := &openid.OpenIDConnectRefreshHandler{
+		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: j,
 		},
 		Config: &fosite.Config{},
@@ -140,9 +141,9 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 					GrantedScope: []string{"openid"},
 					Client: &fosite.DefaultClient{
 						GrantTypes: []string{"refresh_token"},
-						//ResponseTypes: []string{"id_token"},
+						// ResponseTypes: []string{"id_token"},
 					},
-					Session: &DefaultSession{
+					Session: &openid.DefaultSession{
 						Subject: "foo",
 						Claims: &jwt.IDTokenClaims{
 							Subject: "foo",
@@ -173,11 +174,11 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 					Client: &fosite.DefaultClientWithCustomTokenLifespans{
 						DefaultClient: &fosite.DefaultClient{
 							GrantTypes: []string{"refresh_token"},
-							//ResponseTypes: []string{"id_token"},
+							// ResponseTypes: []string{"id_token"},
 						},
 						TokenLifespans: &internal.TestLifespans,
 					},
-					Session: &DefaultSession{
+					Session: &openid.DefaultSession{
 						Subject: "foo",
 						Claims: &jwt.IDTokenClaims{
 							Subject: "foo",
@@ -207,9 +208,9 @@ func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T)
 					GrantedScope: []string{"openid"},
 					Client: &fosite.DefaultClient{
 						GrantTypes: []string{"refresh_token"},
-						//ResponseTypes: []string{"id_token"},
+						// ResponseTypes: []string{"id_token"},
 					},
-					Session: &DefaultSession{
+					Session: &openid.DefaultSession{
 						Subject: "foo",
 						Claims:  &jwt.IDTokenClaims{},
 					},

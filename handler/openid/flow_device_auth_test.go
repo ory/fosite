@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package openid
+package openid_test
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/token/hmac"
 	"github.com/ory/fosite/token/jwt"
@@ -36,22 +37,22 @@ func TestDeviceAuth_HandleDeviceEndpointRequest(t *testing.T) {
 		},
 	}
 
-	h := OpenIDConnectDeviceHandler{
+	h := openid.OpenIDConnectDeviceHandler{
 		OpenIDConnectRequestStorage: store,
 		DeviceCodeStrategy: &rfc8628.DefaultDeviceStrategy{
 			Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobar")}},
 			Config: config,
 		},
 		Config: config,
-		IDTokenHandleHelper: &IDTokenHandleHelper{
-			IDTokenStrategy: &DefaultStrategy{
+		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
+			IDTokenStrategy: &openid.DefaultStrategy{
 				Signer: signer,
 				Config: config,
 			},
 		},
 	}
 
-	session := &DefaultSession{
+	session := &openid.DefaultSession{
 		Claims: &jwt.IDTokenClaims{
 			Subject: "foo",
 		},

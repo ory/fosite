@@ -6,9 +6,8 @@ package openid
 import (
 	"context"
 
-	"github.com/ory/fosite/handler/rfc8628"
-
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/rfc8628"
 )
 
 // OpenIDConnectDeviceHandler a response handler for the Device Authorization Grant with OpenID Connect identity layer

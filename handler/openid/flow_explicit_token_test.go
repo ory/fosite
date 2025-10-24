@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package openid
+package openid_test
 
 import (
 	"context"
@@ -15,15 +15,16 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/internal"
 	"github.com/ory/fosite/token/jwt"
 )
 
 func TestHandleTokenEndpointRequest(t *testing.T) {
-	h := &ExplicitHandler{Config: &fosite.Config{}}
+	h := &openid.ExplicitHandler{Config: &fosite.Config{}}
 	areq := fosite.NewAccessRequest(nil)
 	areq.Client = &fosite.DefaultClient{
-		//ResponseTypes: fosite.Arguments{"id_token"},
+		// ResponseTypes: fosite.Arguments{"id_token"},
 	}
 	assert.EqualError(t, h.HandleTokenEndpointRequest(context.Background(), areq), fosite.ErrUnknownRequest.Error())
 }
@@ -47,7 +48,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			setup: func(store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
-				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(nil, ErrNoSessionFound)
+				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), "foobar", req).Return(nil, openid.ErrNoSessionFound)
 			},
 			expectErr: fosite.ErrUnknownRequest,
 		},
@@ -94,7 +95,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				}
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
-				storedSession := &DefaultSession{
+				storedSession := &openid.DefaultSession{
 					Claims: &jwt.IDTokenClaims{Subject: "peter"},
 				}
 				storedReq := fosite.NewAuthorizeRequest()
@@ -125,7 +126,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				}
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
-				storedSession := &DefaultSession{
+				storedSession := &openid.DefaultSession{
 					Claims: &jwt.IDTokenClaims{Subject: "peter"},
 				}
 				storedReq := fosite.NewAuthorizeRequest()
@@ -153,7 +154,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			setup: func(store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
-				storedSession := &DefaultSession{
+				storedSession := &openid.DefaultSession{
 					Claims: &jwt.IDTokenClaims{Subject: ""},
 				}
 				storedReq := fosite.NewAuthorizeRequest()
@@ -183,7 +184,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				}
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
-				storedSession := &DefaultSession{
+				storedSession := &openid.DefaultSession{
 					Claims: &jwt.IDTokenClaims{Subject: "peter"},
 				}
 				storedReq := fosite.NewAuthorizeRequest()
@@ -200,7 +201,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
 			defer ctrl.Finish()
 
-			session := &DefaultSession{
+			session := &openid.DefaultSession{
 				Claims: &jwt.IDTokenClaims{
 					Subject: "peter",
 				},
@@ -209,7 +210,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 			aresp := fosite.NewAccessResponse()
 			areq := fosite.NewAccessRequest(session)
 
-			var j = &DefaultStrategy{
+			j := &openid.DefaultStrategy{
 				Signer: &jwt.DefaultSigner{
 					GetPrivateKey: func(ctx context.Context) (interface{}, error) {
 						return key, nil
@@ -220,9 +221,9 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 				},
 			}
 
-			h := &ExplicitHandler{
+			h := &openid.ExplicitHandler{
 				Storage: store,
-				IDTokenHandleHelper: &IDTokenHandleHelper{
+				IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 					IDTokenStrategy: j,
 				},
 				Config: &fosite.Config{},

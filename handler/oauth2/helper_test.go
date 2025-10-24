@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package oauth2
+package oauth2_test
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/internal"
 )
 
@@ -24,7 +25,7 @@ func TestGetExpiresIn(t *testing.T) {
 			fosite.AccessToken: now.Add(time.Hour),
 		},
 	})
-	assert.Equal(t, time.Hour, getExpiresIn(r, fosite.AccessToken, time.Millisecond, now))
+	assert.Equal(t, time.Hour, oauth2.CallGetExpiresIn(r, fosite.AccessToken, time.Millisecond, now))
 }
 
 func TestIssueAccessToken(t *testing.T) {
@@ -35,7 +36,7 @@ func TestIssueAccessToken(t *testing.T) {
 	accessStore := internal.NewMockAccessTokenStorage(ctrl)
 	defer ctrl.Finish()
 
-	helper := HandleHelper{
+	helper := oauth2.HandleHelper{
 		Storage:             accessStore,
 		AccessTokenStrategy: accessStrat,
 		Config: &fosite.Config{

@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package oauth2
+package oauth2_test
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/internal"
 )
 
@@ -114,13 +115,15 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 		})
 	}
 }
-func makeAuthorizeImplicitGrantTypeHandler(ctrl *gomock.Controller) (AuthorizeImplicitGrantTypeHandler,
-	*internal.MockAccessTokenStorage, *internal.MockAccessTokenStrategy, *internal.MockAuthorizeResponder) {
+
+func makeAuthorizeImplicitGrantTypeHandler(ctrl *gomock.Controller) (oauth2.AuthorizeImplicitGrantTypeHandler,
+	*internal.MockAccessTokenStorage, *internal.MockAccessTokenStrategy, *internal.MockAuthorizeResponder,
+) {
 	store := internal.NewMockAccessTokenStorage(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 
-	h := AuthorizeImplicitGrantTypeHandler{
+	h := oauth2.AuthorizeImplicitGrantTypeHandler{
 		AccessTokenStorage:  store,
 		AccessTokenStrategy: chgen,
 		Config: &fosite.Config{

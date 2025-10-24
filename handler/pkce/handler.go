@@ -9,12 +9,11 @@ import (
 	"encoding/base64"
 	"regexp"
 
+	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/fosite"
-	"github.com/ory/fosite/handler/oauth2"
 )
 
 var _ fosite.TokenEndpointHandler = (*Handler)(nil)

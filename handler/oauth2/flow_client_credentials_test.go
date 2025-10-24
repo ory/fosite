@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package oauth2
+package oauth2_test
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	gomock "go.uber.org/mock/gomock"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/internal"
 )
 
@@ -24,8 +25,8 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 	areq := internal.NewMockAccessRequester(ctrl)
 	defer ctrl.Finish()
 
-	h := ClientCredentialsGrantHandler{
-		HandleHelper: &HandleHelper{
+	h := oauth2.ClientCredentialsGrantHandler{
+		HandleHelper: &oauth2.HandleHelper{
 			Storage:             store,
 			AccessTokenStrategy: chgen,
 			Config: &fosite.Config{
@@ -109,8 +110,8 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 	aresp := fosite.NewAccessResponse()
 	defer ctrl.Finish()
 
-	h := ClientCredentialsGrantHandler{
-		HandleHelper: &HandleHelper{
+	h := oauth2.ClientCredentialsGrantHandler{
+		HandleHelper: &oauth2.HandleHelper{
 			Storage:             store,
 			AccessTokenStrategy: chgen,
 			Config: &fosite.Config{

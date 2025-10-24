@@ -1,7 +1,7 @@
 // Copyright © 2025 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
-package oauth2
+package oauth2_test
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite"
+	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/storage"
 )
 
@@ -23,12 +24,12 @@ func parseUrl(uu string) *url.URL {
 }
 
 func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
-	for k, strategy := range map[string]CoreStrategy{
+	for k, strategy := range map[string]oauth2.CoreStrategy{
 		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
-			handler := AuthorizeExplicitGrantHandler{
+			handler := oauth2.AuthorizeExplicitGrantHandler{
 				Storage:               store,
 				AuthorizeCodeStrategy: strategy,
 				Config: &fosite.Config{
@@ -37,7 +38,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 				},
 			}
 			for _, c := range []struct {
-				handler     AuthorizeExplicitGrantHandler
+				handler     oauth2.AuthorizeExplicitGrantHandler
 				areq        *fosite.AuthorizeRequest
 				description string
 				expectErr   error
@@ -122,7 +123,7 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 					},
 				},
 				{
-					handler: AuthorizeExplicitGrantHandler{
+					handler: oauth2.AuthorizeExplicitGrantHandler{
 						Storage:               store,
 						AuthorizeCodeStrategy: strategy,
 						Config: &fosite.Config{
