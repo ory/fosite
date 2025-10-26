@@ -16,7 +16,7 @@ import (
 // **Important note:** You must add this handler *after* you have added an OAuth2 authorize code handler!
 func OpenIDConnectExplicitFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &openid.ExplicitHandler{
-		Storage: storage.(openid.RequestStorageProvider),
+		Storage: storage.(openid.OIDCRequestStorageProvider),
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
@@ -76,7 +76,7 @@ func OpenIDConnectHybridFactory(config fosite.Configurator, storage fosite.Stora
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},
-		OpenIDConnectRequestStorage:   storage.(openid.RequestStorageProvider),
+		OpenIDConnectRequestStorage:   storage.(openid.OIDCRequestStorageProvider),
 		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(strategy.(jwt.Signer), config),
 	}
 }
@@ -86,7 +86,7 @@ func OpenIDConnectHybridFactory(config fosite.Configurator, storage fosite.Stora
 // **Important note:** You must add this handler *after* you have added an OAuth2 device authorization handler!
 func OpenIDConnectDeviceFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &openid.OpenIDConnectDeviceHandler{
-		OpenIDConnectRequestStorage: storage.(openid.RequestStorageProvider),
+		OpenIDConnectRequestStorage: storage.(openid.OIDCRequestStorageProvider),
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
 			IDTokenStrategy: strategy.(openid.OpenIDConnectTokenStrategy),
 		},

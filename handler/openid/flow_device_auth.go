@@ -12,7 +12,7 @@ import (
 
 // OpenIDConnectDeviceHandler a response handler for the Device Authorization Grant with OpenID Connect identity layer
 type OpenIDConnectDeviceHandler struct {
-	OpenIDConnectRequestStorage RequestStorageProvider
+	OpenIDConnectRequestStorage OIDCRequestStorageProvider
 	DeviceCodeStrategy          rfc8628.DeviceCodeStrategy
 
 	Config interface {

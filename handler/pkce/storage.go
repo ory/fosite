@@ -10,12 +10,12 @@ import (
 )
 
 type (
-	RequestStorage interface {
+	PKCERequestStorage interface {
 		GetPKCERequestSession(ctx context.Context, signature string, session fosite.Session) (fosite.Requester, error)
 		CreatePKCERequestSession(ctx context.Context, signature string, requester fosite.Requester) error
 		DeletePKCERequestSession(ctx context.Context, signature string) error
 	}
-	RequestStorageProvider interface {
-		PKCERequestStorage() RequestStorage
+	PKCERequestStorageProvider interface {
+		PKCERequestStorage() PKCERequestStorage
 	}
 )

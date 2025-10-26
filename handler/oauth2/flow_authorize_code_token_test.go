@@ -446,6 +446,9 @@ func TestAuthorizeCode_HandleTokenEndpointRequest(t *testing.T) {
 func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	var mockTransactional *internal.MockTransactional
 	var mockCoreStore *internal.MockCoreStorage
+	var mockAuthorizeCodeStorage *internal.MockAuthorizeCodeStorage
+	var mockAccessTokenStorage *internal.MockAccessTokenStorage
+	var mockRefreshTokenStorage *internal.MockRefreshTokenStorage
 	strategy := hmacshaStrategy
 	request := &fosite.AccessRequest{
 		GrantTypes: fosite.Arguments{"authorization_code"},
@@ -478,30 +481,58 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "transaction should be committed successfully if no errors occur",
 			setup: func() {
+				// Set up CoreStorage to return the authorize code storage mock
 				mockCoreStore.
+					EXPECT().
+					AuthorizeCodeStorage().
+					Return(mockAuthorizeCodeStorage).
+					Times(2)
+
+				// Set up authorize code storage expectations
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(request, nil).
 					Times(1)
-				mockTransactional.
-					EXPECT().
-					BeginTX(propagatedContext).
-					Return(propagatedContext, nil)
-				mockCoreStore.
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
+
+				// Set up CoreStorage to return the access token storage mock
 				mockCoreStore.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+
+				// Set up access token storage expectations
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
+
+				// Set up CoreStorage to return the refresh token storage mock
 				mockCoreStore.
+					EXPECT().
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(1)
+
+				// Set up refresh token storage expectations
+				mockRefreshTokenStorage.
 					EXPECT().
 					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
+
+				// Set up transaction expectations
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
 				mockTransactional.
 					EXPECT().
 					Commit(propagatedContext).
@@ -512,20 +543,30 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "transaction should be rolled back if `InvalidateAuthorizeCodeSession` returns an error",
 			setup: func() {
+				// Set up CoreStorage to return the authorize code storage mock
 				mockCoreStore.
+					EXPECT().
+					AuthorizeCodeStorage().
+					Return(mockAuthorizeCodeStorage).
+					Times(2)
+
+				// Set up authorize code storage expectations
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(request, nil).
 					Times(1)
-				mockTransactional.
-					EXPECT().
-					BeginTX(propagatedContext).
-					Return(propagatedContext, nil)
-				mockCoreStore.
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
 					Times(1)
+
+				// Set up transaction expectations
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
 				mockTransactional.
 					EXPECT().
 					Rollback(propagatedContext).
@@ -537,25 +578,44 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "transaction should be rolled back if `CreateAccessTokenSession` returns an error",
 			setup: func() {
+				// Set up CoreStorage to return the authorize code storage mock
 				mockCoreStore.
+					EXPECT().
+					AuthorizeCodeStorage().
+					Return(mockAuthorizeCodeStorage).
+					Times(2)
+
+				// Set up authorize code storage expectations
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(request, nil).
 					Times(1)
-				mockTransactional.
-					EXPECT().
-					BeginTX(propagatedContext).
-					Return(propagatedContext, nil)
-				mockCoreStore.
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
+
+				// Set up CoreStorage to return the access token storage mock
 				mockCoreStore.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+
+				// Set up access token storage expectations
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
 					Times(1)
+
+				// Set up transaction expectations
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
 				mockTransactional.
 					EXPECT().
 					Rollback(propagatedContext).
@@ -567,11 +627,21 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should result in a server error if transaction cannot be created",
 			setup: func() {
+				// Set up CoreStorage to return the authorize code storage mock
 				mockCoreStore.
+					EXPECT().
+					AuthorizeCodeStorage().
+					Return(mockAuthorizeCodeStorage).
+					Times(1)
+
+				// Set up authorize code storage expectations
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(request, nil).
 					Times(1)
+
+				// Set up transaction expectations
 				mockTransactional.
 					EXPECT().
 					BeginTX(propagatedContext).
@@ -582,20 +652,30 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should result in a server error if transaction cannot be rolled back",
 			setup: func() {
+				// Set up CoreStorage to return the authorize code storage mock
 				mockCoreStore.
+					EXPECT().
+					AuthorizeCodeStorage().
+					Return(mockAuthorizeCodeStorage).
+					Times(2)
+
+				// Set up authorize code storage expectations
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(request, nil).
 					Times(1)
-				mockTransactional.
-					EXPECT().
-					BeginTX(propagatedContext).
-					Return(propagatedContext, nil)
-				mockCoreStore.
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
 					Times(1)
+
+				// Set up transaction expectations
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
 				mockTransactional.
 					EXPECT().
 					Rollback(propagatedContext).
@@ -607,30 +687,58 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should result in a server error if transaction cannot be committed",
 			setup: func() {
+				// Set up CoreStorage to return the authorize code storage mock
 				mockCoreStore.
+					EXPECT().
+					AuthorizeCodeStorage().
+					Return(mockAuthorizeCodeStorage).
+					Times(2)
+
+				// Set up authorize code storage expectations
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					GetAuthorizeCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(request, nil).
 					Times(1)
-				mockTransactional.
-					EXPECT().
-					BeginTX(propagatedContext).
-					Return(propagatedContext, nil)
-				mockCoreStore.
+				mockAuthorizeCodeStorage.
 					EXPECT().
 					InvalidateAuthorizeCodeSession(gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
+
+				// Set up CoreStorage to return the access token storage mock
 				mockCoreStore.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+
+				// Set up access token storage expectations
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
+
+				// Set up CoreStorage to return the refresh token storage mock
 				mockCoreStore.
+					EXPECT().
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(1)
+
+				// Set up refresh token storage expectations
+				mockRefreshTokenStorage.
 					EXPECT().
 					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
+
+				// Set up transaction expectations
+				mockTransactional.
+					EXPECT().
+					BeginTX(propagatedContext).
+					Return(propagatedContext, nil)
 				mockTransactional.
 					EXPECT().
 					Commit(propagatedContext).
@@ -649,8 +757,13 @@ func TestAuthorizeCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
+			// Initialize all mocks
 			mockTransactional = internal.NewMockTransactional(ctrl)
 			mockCoreStore = internal.NewMockCoreStorage(ctrl)
+			mockAuthorizeCodeStorage = internal.NewMockAuthorizeCodeStorage(ctrl)
+			mockAccessTokenStorage = internal.NewMockAccessTokenStorage(ctrl)
+			mockRefreshTokenStorage = internal.NewMockRefreshTokenStorage(ctrl)
+
 			testCase.setup()
 
 			handler := oauth2.AuthorizeExplicitGrantHandler{

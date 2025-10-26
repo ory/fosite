@@ -24,7 +24,7 @@ import (
 func TestDeviceAuth_HandleDeviceEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
+	store := internal.NewMockOIDCRequestStorageProvider(ctrl)
 
 	config := &fosite.Config{
 		MinParameterEntropy:       fosite.MinParameterEntropy,

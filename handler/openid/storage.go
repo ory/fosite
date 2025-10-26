@@ -12,7 +12,7 @@ import (
 var ErrNoSessionFound = fosite.ErrNotFound
 
 type (
-	RequestStorage interface {
+	OIDCRequestStorage interface {
 		// CreateOpenIDConnectSession creates an open id connect session
 		// for a given authorize code. This is relevant for explicit open id connect flow.
 		CreateOpenIDConnectSession(ctx context.Context, authorizeCode string, requester fosite.Requester) error
@@ -26,7 +26,7 @@ type (
 		// DeleteOpenIDConnectSession removes an open id connect session from the store.
 		DeleteOpenIDConnectSession(ctx context.Context, authorizeCode string) error
 	}
-	RequestStorageProvider interface {
-		OpenIDConnectRequestStorage() RequestStorage
+	OIDCRequestStorageProvider interface {
+		OpenIDConnectRequestStorage() OIDCRequestStorage
 	}
 )

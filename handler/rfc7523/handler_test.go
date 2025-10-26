@@ -40,7 +40,7 @@ type AuthorizeJWTGrantRequestHandlerTestSuite struct {
 	mockCtrl                *gomock.Controller
 	mockStore               *internal.MockRFC7523KeyStorage
 	mockAccessTokenStrategy *internal.MockAccessTokenStrategy
-	mockAccessTokenStore    *internal.MockAccessTokenStorage
+	mockAccessTokenStore    *internal.MockAccessTokenStorageProvider
 	accessRequest           *fosite.AccessRequest
 	handler                 *rfc7523.Handler
 }
@@ -68,7 +68,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupTest() {
 	s.mockCtrl = gomock.NewController(s.T())
 	s.mockStore = internal.NewMockRFC7523KeyStorage(s.mockCtrl)
 	s.mockAccessTokenStrategy = internal.NewMockAccessTokenStrategy(s.mockCtrl)
-	s.mockAccessTokenStore = internal.NewMockAccessTokenStorage(s.mockCtrl)
+	s.mockAccessTokenStore = internal.NewMockAccessTokenStorageProvider(s.mockCtrl)
 	s.accessRequest = fosite.NewAccessRequest(new(fosite.DefaultSession))
 	s.accessRequest.Form = url.Values{}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
@@ -811,14 +811,15 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) createJWS(keys ...jose.JSONWe
 type AuthorizeJWTGrantPopulateTokenEndpointTestSuite struct {
 	suite.Suite
 
-	privateKey              *rsa.PrivateKey
-	mockCtrl                *gomock.Controller
-	mockStore               *internal.MockRFC7523KeyStorage
-	mockAccessTokenStrategy *internal.MockAccessTokenStrategy
-	mockAccessTokenStore    *internal.MockAccessTokenStorage
-	accessRequest           *fosite.AccessRequest
-	accessResponse          *fosite.AccessResponse
-	handler                 *rfc7523.Handler
+	privateKey                   *rsa.PrivateKey
+	mockCtrl                     *gomock.Controller
+	mockStore                    *internal.MockRFC7523KeyStorage
+	mockAccessTokenStrategy      *internal.MockAccessTokenStrategy
+	mockAccessTokenStore         *internal.MockAccessTokenStorage
+	mockAccessTokenStoreProvider *internal.MockAccessTokenStorageProvider
+	accessRequest                *fosite.AccessRequest
+	accessResponse               *fosite.AccessResponse
+	handler                      *rfc7523.Handler
 }
 
 // Setup before each test in the suite.
@@ -845,6 +846,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) SetupTest() {
 	s.mockStore = internal.NewMockRFC7523KeyStorage(s.mockCtrl)
 	s.mockAccessTokenStrategy = internal.NewMockAccessTokenStrategy(s.mockCtrl)
 	s.mockAccessTokenStore = internal.NewMockAccessTokenStorage(s.mockCtrl)
+	s.mockAccessTokenStoreProvider = internal.NewMockAccessTokenStorageProvider(s.mockCtrl)
 	s.accessRequest = fosite.NewAccessRequest(new(fosite.DefaultSession))
 	s.accessRequest.Form = url.Values{}
 	s.accessRequest.Client = &fosite.DefaultClient{GrantTypes: []string{grantTypeJWTBearer}}
@@ -862,7 +864,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) SetupTest() {
 		},
 		HandleHelper: &oauth2.HandleHelper{
 			AccessTokenStrategy: s.mockAccessTokenStrategy,
-			Storage:             s.mockAccessTokenStore,
+			Storage:             s.mockAccessTokenStoreProvider,
 			Config: &fosite.Config{
 				AccessTokenLifespan: time.Hour,
 			},
@@ -913,6 +915,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestAccessTokenIssuedS
 	token := "token"
 	sig := "sig"
 	s.mockAccessTokenStrategy.EXPECT().GenerateAccessToken(ctx, s.accessRequest).Return(token, sig, nil)
+	s.mockAccessTokenStoreProvider.EXPECT().AccessTokenStorage().Return(s.mockAccessTokenStore).Times(1)
 	s.mockAccessTokenStore.EXPECT().CreateAccessTokenSession(ctx, sig, s.accessRequest.Sanitize([]string{}))
 
 	// act
@@ -943,6 +946,7 @@ func (s *AuthorizeJWTGrantPopulateTokenEndpointTestSuite) TestAccessTokenIssuedS
 	token := "token"
 	sig := "sig"
 	s.mockAccessTokenStrategy.EXPECT().GenerateAccessToken(ctx, s.accessRequest).Return(token, sig, nil)
+	s.mockAccessTokenStoreProvider.EXPECT().AccessTokenStorage().Return(s.mockAccessTokenStore).Times(1)
 	s.mockAccessTokenStore.EXPECT().CreateAccessTokenSession(ctx, sig, s.accessRequest.Sanitize([]string{}))
 
 	// act

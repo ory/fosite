@@ -20,14 +20,14 @@ import (
 
 func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	store := internal.NewMockClientCredentialsGrantStorage(ctrl)
+	provider := internal.NewMockAccessTokenStorageProvider(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	areq := internal.NewMockAccessRequester(ctrl)
 	defer ctrl.Finish()
 
 	h := oauth2.ClientCredentialsGrantHandler{
 		HandleHelper: &oauth2.HandleHelper{
-			Storage:             store,
+			Storage:             provider,
 			AccessTokenStrategy: chgen,
 			Config: &fosite.Config{
 				AccessTokenLifespan: time.Hour,
@@ -105,6 +105,7 @@ func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockClientCredentialsGrantStorage(ctrl)
+	provider := internal.NewMockAccessTokenStorageProvider(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	areq := fosite.NewAccessRequest(new(fosite.DefaultSession))
 	aresp := fosite.NewAccessResponse()
@@ -112,7 +113,7 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 
 	h := oauth2.ClientCredentialsGrantHandler{
 		HandleHelper: &oauth2.HandleHelper{
-			Storage:             store,
+			Storage:             provider,
 			AccessTokenStrategy: chgen,
 			Config: &fosite.Config{
 				AccessTokenLifespan: time.Hour,
@@ -150,6 +151,7 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 				areq.Session = &fosite.DefaultSession{}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"client_credentials"}}
 				chgen.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return("tokenfoo.bar", "bar", nil)
+				provider.EXPECT().AccessTokenStorage().Return(store).Times(1)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 			},
 		},

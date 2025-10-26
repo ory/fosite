@@ -20,7 +20,7 @@ var _ fosite.TokenEndpointHandler = (*Handler)(nil)
 
 type Handler struct {
 	AuthorizeCodeStrategy oauth2.AuthorizeCodeStrategy
-	Storage               RequestStorageProvider
+	Storage               PKCERequestStorageProvider
 	Config                interface {
 		fosite.EnforcePKCEProvider
 		fosite.EnforcePKCEForPublicClientsProvider

@@ -12,7 +12,7 @@ import (
 )
 
 type ExplicitHandler struct {
-	Storage                       RequestStorageProvider
+	Storage                       OIDCRequestStorageProvider
 	OpenIDConnectRequestValidator *OpenIDConnectRequestValidator
 
 	Config interface {
@@ -22,10 +22,13 @@ type ExplicitHandler struct {
 	*IDTokenHandleHelper
 }
 
-var _ fosite.AuthorizeEndpointHandler = (*ExplicitHandler)(nil)
-var _ fosite.TokenEndpointHandler = (*ExplicitHandler)(nil)
+var (
+	_ fosite.AuthorizeEndpointHandler = (*ExplicitHandler)(nil)
+	_ fosite.TokenEndpointHandler     = (*ExplicitHandler)(nil)
+)
 
-var oidcParameters = []string{"grant_type",
+var oidcParameters = []string{
+	"grant_type",
 	"max_age",
 	"prompt",
 	"acr_values",

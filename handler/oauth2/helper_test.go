@@ -34,10 +34,11 @@ func TestIssueAccessToken(t *testing.T) {
 	aresp := &fosite.AccessResponse{Extra: map[string]interface{}{}}
 	accessStrat := internal.NewMockAccessTokenStrategy(ctrl)
 	accessStore := internal.NewMockAccessTokenStorage(ctrl)
+	provider := internal.NewMockAccessTokenStorageProvider(ctrl)
 	defer ctrl.Finish()
 
 	helper := oauth2.HandleHelper{
-		Storage:             accessStore,
+		Storage:             provider,
 		AccessTokenStrategy: accessStrat,
 		Config: &fosite.Config{
 			AccessTokenLifespan: time.Hour,
@@ -58,6 +59,7 @@ func TestIssueAccessToken(t *testing.T) {
 		{
 			mock: func() {
 				accessStrat.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return("token", "signature", nil)
+				provider.EXPECT().AccessTokenStorage().Return(accessStore).Times(1)
 				accessStore.EXPECT().CreateAccessTokenSession(gomock.Any(), "signature", gomock.Eq(areq.Sanitize([]string{}))).Return(errors.New(""))
 			},
 			err: errors.New(""),
@@ -65,6 +67,7 @@ func TestIssueAccessToken(t *testing.T) {
 		{
 			mock: func() {
 				accessStrat.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return("token", "signature", nil)
+				provider.EXPECT().AccessTokenStorage().Return(accessStore).Times(1)
 				accessStore.EXPECT().CreateAccessTokenSession(gomock.Any(), "signature", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 			},
 			err: nil,

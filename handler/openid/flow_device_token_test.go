@@ -42,7 +42,8 @@ func TestDeviceToken_HandleTokenEndpointRequest(t *testing.T) {
 func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
+	store := internal.NewMockOIDCRequestStorage(ctrl)
+	provider := internal.NewMockOIDCRequestStorageProvider(ctrl)
 
 	config := &fosite.Config{
 		MinParameterEntropy:       fosite.MinParameterEntropy,
@@ -57,7 +58,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 	}
 
 	h := openid.OpenIDConnectDeviceHandler{
-		OpenIDConnectRequestStorage: store,
+		OpenIDConnectRequestStorage: provider,
 		DeviceCodeStrategy: &rfc8628.DefaultDeviceStrategy{
 			Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobar")}},
 			Config: config,
@@ -116,6 +117,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 			},
 			aresp: fosite.NewAccessResponse(),
 			setup: func(areq *fosite.AccessRequest) {
+				provider.EXPECT().OpenIDConnectRequestStorage().Return(store).Times(1)
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(nil, openid.ErrNoSessionFound)
 			},
 			expectErr: fosite.ErrUnknownRequest,
@@ -131,6 +133,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 				},
 			},
 			setup: func(areq *fosite.AccessRequest) {
+				provider.EXPECT().OpenIDConnectRequestStorage().Return(store).Times(1)
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(nil, errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
@@ -153,6 +156,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 						Session:      session,
 					},
 				}
+				provider.EXPECT().OpenIDConnectRequestStorage().Return(store).Times(1)
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(authreq, nil)
 			},
 			expectErr: fosite.ErrMisconfiguration,
@@ -174,6 +178,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 						GrantedScope: fosite.Arguments{"openid", "email"},
 					},
 				}
+				provider.EXPECT().OpenIDConnectRequestStorage().Return(store).Times(1)
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(authreq, nil)
 			},
 			expectErr: fosite.ErrServerError,
@@ -196,6 +201,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 						Session:      openid.NewDefaultSession(),
 					},
 				}
+				provider.EXPECT().OpenIDConnectRequestStorage().Return(store).Times(1)
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(authreq, nil)
 			},
 			expectErr: fosite.ErrServerError,
@@ -218,6 +224,7 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 						Session:      session,
 					},
 				}
+				provider.EXPECT().OpenIDConnectRequestStorage().Return(store).Times(2)
 				store.EXPECT().GetOpenIDConnectSession(gomock.Any(), gomock.Any(), areq).Return(authreq, nil)
 				store.EXPECT().DeleteOpenIDConnectSession(gomock.Any(), gomock.Any()).Return(nil)
 			},

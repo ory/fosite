@@ -19,7 +19,7 @@ type OpenIDConnectHybridHandler struct {
 	AuthorizeExplicitGrantHandler     *oauth2.AuthorizeExplicitGrantHandler
 	IDTokenHandleHelper               *IDTokenHandleHelper
 	OpenIDConnectRequestValidator     *OpenIDConnectRequestValidator
-	OpenIDConnectRequestStorage       RequestStorageProvider
+	OpenIDConnectRequestStorage       OIDCRequestStorageProvider
 
 	Enigma *jwt.DefaultSigner
 

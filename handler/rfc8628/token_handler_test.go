@@ -5,12 +5,11 @@ package rfc8628_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"testing"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/ory/fosite/internal"
 	gomock "go.uber.org/mock/gomock"
@@ -583,7 +582,10 @@ func TestDeviceUserCode_PopulateTokenEndpointResponse(t *testing.T) {
 
 func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 	var mockTransactional *internal.MockTransactional
-	var mockCoreStore *internal.MockRFC8628CoreStorage
+	var mockCoreStore *internal.MockRFC8628Storage
+	var mockDeviceAuthStore *internal.MockDeviceAuthStorage
+	var mockAccessTokenStore *internal.MockAccessTokenStorage
+	var mockRefreshTokenStore *internal.MockRefreshTokenStorage
 	var mockDeviceRateLimitStrategy *internal.MockDeviceRateLimitStrategy
 	strategy := hmacshaStrategyOAuth
 	deviceStrategy := RFC8628HMACSHAStrategy
@@ -631,7 +633,10 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "transaction should be committed successfully if no errors occur",
 			setup: func() {
-				mockCoreStore.
+				mockCoreStore.EXPECT().DeviceAuthStorage().Return(mockDeviceAuthStore).Times(2)
+				mockCoreStore.EXPECT().AccessTokenStorage().Return(mockAccessTokenStore).Times(1)
+				mockCoreStore.EXPECT().RefreshTokenStorage().Return(mockRefreshTokenStore).Times(1)
+				mockDeviceAuthStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(authreq, nil).
@@ -639,18 +644,19 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockTransactional.
 					EXPECT().
 					BeginTX(propagatedContext).
-					Return(propagatedContext, nil)
-				mockCoreStore.
+					Return(propagatedContext, nil).
+					Times(1)
+				mockDeviceAuthStore.
 					EXPECT().
 					InvalidateDeviceCodeSession(gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockCoreStore.
+				mockAccessTokenStore.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockCoreStore.
+				mockRefreshTokenStore.
 					EXPECT().
 					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
@@ -665,7 +671,8 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "transaction should be rolled back if `InvalidateDeviceCodeSession` returns an error",
 			setup: func() {
-				mockCoreStore.
+				mockCoreStore.EXPECT().DeviceAuthStorage().Return(mockDeviceAuthStore).Times(2)
+				mockDeviceAuthStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(authreq, nil).
@@ -673,8 +680,9 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 				mockTransactional.
 					EXPECT().
 					BeginTX(propagatedContext).
-					Return(propagatedContext, nil)
-				mockCoreStore.
+					Return(propagatedContext, nil).
+					Times(1)
+				mockDeviceAuthStore.
 					EXPECT().
 					InvalidateDeviceCodeSession(gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
@@ -690,7 +698,9 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "transaction should be rolled back if `CreateAccessTokenSession` returns an error",
 			setup: func() {
-				mockCoreStore.
+				mockCoreStore.EXPECT().DeviceAuthStorage().Return(mockDeviceAuthStore).Times(2)
+				mockCoreStore.EXPECT().AccessTokenStorage().Return(mockAccessTokenStore).Times(1)
+				mockDeviceAuthStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(authreq, nil).
@@ -699,12 +709,12 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil)
-				mockCoreStore.
+				mockDeviceAuthStore.
 					EXPECT().
 					InvalidateDeviceCodeSession(gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockCoreStore.
+				mockAccessTokenStore.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
@@ -720,7 +730,8 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should result in a server error if transaction cannot be created",
 			setup: func() {
-				mockCoreStore.
+				mockCoreStore.EXPECT().DeviceAuthStorage().Return(mockDeviceAuthStore).Times(1)
+				mockDeviceAuthStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(authreq, nil).
@@ -735,7 +746,8 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should result in a server error if transaction cannot be rolled back",
 			setup: func() {
-				mockCoreStore.
+				mockCoreStore.EXPECT().DeviceAuthStorage().Return(mockDeviceAuthStore).Times(2)
+				mockDeviceAuthStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(authreq, nil).
@@ -744,7 +756,7 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil)
-				mockCoreStore.
+				mockDeviceAuthStore.
 					EXPECT().
 					InvalidateDeviceCodeSession(gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
@@ -760,7 +772,10 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 		{
 			description: "should result in a server error if transaction cannot be committed",
 			setup: func() {
-				mockCoreStore.
+				mockCoreStore.EXPECT().DeviceAuthStorage().Return(mockDeviceAuthStore).Times(2)
+				mockCoreStore.EXPECT().AccessTokenStorage().Return(mockAccessTokenStore).Times(1)
+				mockCoreStore.EXPECT().RefreshTokenStorage().Return(mockRefreshTokenStore).Times(1)
+				mockDeviceAuthStore.
 					EXPECT().
 					GetDeviceCodeSession(gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(authreq, nil).
@@ -769,17 +784,17 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil)
-				mockCoreStore.
+				mockDeviceAuthStore.
 					EXPECT().
 					InvalidateDeviceCodeSession(gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockCoreStore.
+				mockAccessTokenStore.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockCoreStore.
+				mockRefreshTokenStore.
 					EXPECT().
 					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
@@ -805,7 +820,11 @@ func TestDeviceUserCodeTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockTransactional = internal.NewMockTransactional(ctrl)
-			mockCoreStore = internal.NewMockRFC8628CoreStorage(ctrl)
+			mockCoreStore = internal.NewMockRFC8628Storage(ctrl)
+			mockDeviceAuthStore = internal.NewMockDeviceAuthStorage(ctrl)
+			mockAccessTokenStore = internal.NewMockAccessTokenStorage(ctrl)
+			mockRefreshTokenStore = internal.NewMockRefreshTokenStorage(ctrl)
+			mockDeviceRateLimitStrategy = internal.NewMockDeviceRateLimitStrategy(ctrl)
 			mockDeviceRateLimitStrategy = internal.NewMockDeviceRateLimitStrategy(ctrl)
 			testCase.setup()
 

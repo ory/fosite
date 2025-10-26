@@ -120,11 +120,11 @@ func (s *MemoryStore) TokenRevocationStorage() oauth2.TokenRevocationStorage {
 	return s
 }
 
-func (s *MemoryStore) OpenIDConnectRequestStorage() openid.RequestStorage {
+func (s *MemoryStore) OpenIDConnectRequestStorage() openid.OIDCRequestStorage {
 	return s
 }
 
-func (s *MemoryStore) PKCERequestStorage() pkce.RequestStorage {
+func (s *MemoryStore) PKCERequestStorage() pkce.PKCERequestStorage {
 	return s
 }
 

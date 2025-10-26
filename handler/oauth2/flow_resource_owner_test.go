@@ -23,6 +23,7 @@ import (
 func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockResourceOwnerPasswordCredentialsGrantStorage(ctrl)
+	provider := internal.NewMockAccessTokenStorageProvider(ctrl)
 	defer ctrl.Finish()
 
 	areq := fosite.NewAccessRequest(new(fosite.DefaultSession))
@@ -105,7 +106,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 			h := oauth2.ResourceOwnerPasswordCredentialsGrantHandler{
 				ResourceOwnerPasswordCredentialsGrantStorage: store,
 				HandleHelper: &oauth2.HandleHelper{
-					Storage: store,
+					Storage: provider,
 					Config:  config,
 				},
 				Config: config,
@@ -128,6 +129,7 @@ func TestResourceOwnerFlow_HandleTokenEndpointRequest(t *testing.T) {
 func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	store := internal.NewMockResourceOwnerPasswordCredentialsGrantStorage(ctrl)
+	provider := internal.NewMockAccessTokenStorageProvider(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	rtstr := internal.NewMockRefreshTokenStrategy(ctrl)
 	mockAT := "accesstoken.foo.bar"
@@ -158,6 +160,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			setup: func(config *fosite.Config) {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				chgen.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return(mockAT, "bar", nil)
+				provider.EXPECT().AccessTokenStorage().Return(store).Times(1)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 			},
 			expect: func() {
@@ -170,6 +173,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				areq.GrantTypes = fosite.Arguments{"password"}
 				areq.GrantScope("offline")
 				rtstr.EXPECT().GenerateRefreshToken(gomock.Any(), areq).Return(mockRT, "bar", nil)
+				provider.EXPECT().AccessTokenStorage().Return(store).Times(1)
 				store.EXPECT().CreateRefreshTokenSession(gomock.Any(), "bar", "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 				chgen.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return(mockAT, "bar", nil)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
@@ -184,6 +188,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 				config.RefreshTokenScopes = []string{}
 				areq.GrantTypes = fosite.Arguments{"password"}
 				chgen.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return(mockAT, "bar", nil)
+				provider.EXPECT().AccessTokenStorage().Return(store).Times(1)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
 				rtstr.EXPECT().GenerateRefreshToken(gomock.Any(), areq).Return(mockRT, "bar", nil)
 				store.EXPECT().CreateRefreshTokenSession(gomock.Any(), "bar", "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
@@ -204,7 +209,7 @@ func TestResourceOwnerFlow_PopulateTokenEndpointResponse(t *testing.T) {
 			h = oauth2.ResourceOwnerPasswordCredentialsGrantHandler{
 				ResourceOwnerPasswordCredentialsGrantStorage: store,
 				HandleHelper: &oauth2.HandleHelper{
-					Storage:             store,
+					Storage:             provider,
 					AccessTokenStrategy: chgen, Config: config,
 				},
 				RefreshTokenStrategy: rtstr, Config: config,

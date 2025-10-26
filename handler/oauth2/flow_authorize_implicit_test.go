@@ -26,7 +26,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 
 	areq := fosite.NewAuthorizeRequest()
 	areq.Session = new(fosite.DefaultSession)
-	h, store, chgen, aresp := makeAuthorizeImplicitGrantTypeHandler(ctrl)
+	h, store, provider, chgen, aresp := makeAuthorizeImplicitGrantTypeHandler(ctrl)
 
 	for k, c := range []struct {
 		description string
@@ -83,6 +83,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 			setup: func() {
 				areq.RequestedAudience = fosite.Arguments{"https://www.ory.sh/api"}
 				chgen.EXPECT().GenerateAccessToken(gomock.Any(), areq).AnyTimes().Return("access.ats", "ats", nil)
+				provider.EXPECT().AccessTokenStorage().Return(store).Times(1)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), "ats", gomock.Eq(areq.Sanitize([]string{}))).Return(errors.New(""))
 			},
 			expectErr: fosite.ErrServerError,
@@ -93,6 +94,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 				areq.State = "state"
 				areq.GrantedScope = fosite.Arguments{"scope"}
 
+				provider.EXPECT().AccessTokenStorage().Return(store).Times(1)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), "ats", gomock.Eq(areq.Sanitize([]string{}))).AnyTimes().Return(nil)
 
 				aresp.EXPECT().AddParameter("access_token", "access.ats")
@@ -117,14 +119,15 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 }
 
 func makeAuthorizeImplicitGrantTypeHandler(ctrl *gomock.Controller) (oauth2.AuthorizeImplicitGrantTypeHandler,
-	*internal.MockAccessTokenStorage, *internal.MockAccessTokenStrategy, *internal.MockAuthorizeResponder,
+	*internal.MockAccessTokenStorage, *internal.MockAccessTokenStorageProvider, *internal.MockAccessTokenStrategy, *internal.MockAuthorizeResponder,
 ) {
 	store := internal.NewMockAccessTokenStorage(ctrl)
+	provider := internal.NewMockAccessTokenStorageProvider(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 
 	h := oauth2.AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStorage:  store,
+		AccessTokenStorage:  provider,
 		AccessTokenStrategy: chgen,
 		Config: &fosite.Config{
 			AccessTokenLifespan:      time.Hour,
@@ -133,7 +136,7 @@ func makeAuthorizeImplicitGrantTypeHandler(ctrl *gomock.Controller) (oauth2.Auth
 		},
 	}
 
-	return h, store, chgen, aresp
+	return h, store, provider, chgen, aresp
 }
 
 func TestDefaultResponseMode_AuthorizeImplicit_EndpointHandler(t *testing.T) {
@@ -142,7 +145,7 @@ func TestDefaultResponseMode_AuthorizeImplicit_EndpointHandler(t *testing.T) {
 
 	areq := fosite.NewAuthorizeRequest()
 	areq.Session = new(fosite.DefaultSession)
-	h, store, chgen, aresp := makeAuthorizeImplicitGrantTypeHandler(ctrl)
+	h, store, provider, chgen, aresp := makeAuthorizeImplicitGrantTypeHandler(ctrl)
 
 	areq.State = "state"
 	areq.GrantedScope = fosite.Arguments{"scope"}
@@ -155,6 +158,7 @@ func TestDefaultResponseMode_AuthorizeImplicit_EndpointHandler(t *testing.T) {
 		TokenLifespans: &internal.TestLifespans,
 	}
 
+	provider.EXPECT().AccessTokenStorage().Return(store).Times(1)
 	store.EXPECT().CreateAccessTokenSession(gomock.Any(), "ats", gomock.Eq(areq.Sanitize([]string{}))).AnyTimes().Return(nil)
 
 	aresp.EXPECT().AddParameter("access_token", "access.ats")

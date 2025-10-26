@@ -59,7 +59,9 @@ func Test_HandleDeviceEndpointRequest(t *testing.T) {
 }
 
 func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
-	var mockRFC8628CoreStorage *internal.MockRFC8628CoreStorage
+	var mockRFC8628Storage *internal.MockRFC8628Storage
+	var mockRFC8628CoreStorage *internal.MockDeviceAuthStorage
+	// var mockRFC8628StorageProvider *internal.MockDeviceAuthStorageProvider
 	var mockRFC8628CodeStrategy *internal.MockRFC8628CodeStrategy
 
 	ctx := context.Background()
@@ -90,6 +92,11 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 					GenerateUserCode(ctx).
 					Return("userCode", "signature2", nil).
 					Times(1)
+				mockRFC8628Storage.
+					EXPECT().
+					DeviceAuthStorage().
+					Return(mockRFC8628CoreStorage).
+					Times(1)
 				mockRFC8628CoreStorage.
 					EXPECT().
 					CreateDeviceAuthSession(ctx, "signature", "signature2", gomock.Any()).
@@ -111,6 +118,11 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 						EXPECT().
 						GenerateUserCode(ctx).
 						Return("duplicatedUserCode", "duplicatedSignature", nil),
+					mockRFC8628Storage.
+						EXPECT().
+						DeviceAuthStorage().
+						Return(mockRFC8628CoreStorage).
+						Times(1),
 					mockRFC8628CoreStorage.
 						EXPECT().
 						CreateDeviceAuthSession(ctx, "signature", "duplicatedSignature", gomock.Any()).
@@ -119,6 +131,11 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 						EXPECT().
 						GenerateUserCode(ctx).
 						Return("uniqueUserCode", "uniqueSignature", nil),
+					mockRFC8628Storage.
+						EXPECT().
+						DeviceAuthStorage().
+						Return(mockRFC8628CoreStorage).
+						Times(1),
 					mockRFC8628CoreStorage.
 						EXPECT().
 						CreateDeviceAuthSession(ctx, "signature", "uniqueSignature", gomock.Any()).
@@ -140,6 +157,11 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 					EXPECT().
 					GenerateUserCode(ctx).
 					Return("duplicatedUserCode", "duplicatedSignature", nil).
+					Times(rfc8628.MaxAttempts)
+				mockRFC8628Storage.
+					EXPECT().
+					DeviceAuthStorage().
+					Return(mockRFC8628CoreStorage).
 					Times(rfc8628.MaxAttempts)
 				mockRFC8628CoreStorage.
 					EXPECT().
@@ -163,6 +185,11 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 					EXPECT().
 					GenerateUserCode(ctx).
 					Return("userCode", "userCodeSignature", nil)
+				mockRFC8628Storage.
+					EXPECT().
+					DeviceAuthStorage().
+					Return(mockRFC8628CoreStorage).
+					Times(1)
 				mockRFC8628CoreStorage.
 					EXPECT().
 					CreateDeviceAuthSession(ctx, "signature", "userCodeSignature", gomock.Any()).
@@ -180,11 +207,13 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			mockRFC8628CoreStorage = internal.NewMockRFC8628CoreStorage(ctrl)
+			// mockRFC8628StorageProvider = internal.NewMockDeviceAuthStorageProvider(ctrl)
+			mockRFC8628CoreStorage = internal.NewMockDeviceAuthStorage(ctrl)
+			mockRFC8628Storage = internal.NewMockRFC8628Storage(ctrl)
 			mockRFC8628CodeStrategy = internal.NewMockRFC8628CodeStrategy(ctrl)
 
 			h := rfc8628.DeviceAuthHandler{
-				Storage:  mockRFC8628CoreStorage,
+				Storage:  mockRFC8628Storage,
 				Strategy: mockRFC8628CodeStrategy,
 				Config: &fosite.Config{
 					DeviceAndUserCodeLifespan:      time.Minute * 10,
