@@ -19,9 +19,9 @@ import (
 var _ fosite.TokenEndpointHandler = (*Handler)(nil)
 
 type Handler struct {
-	AuthorizeCodeStrategy oauth2.AuthorizeCodeStrategy
-	Storage               PKCERequestStorageProvider
-	Config                interface {
+	Strategy oauth2.AuthorizeCodeStrategy
+	Storage  PKCERequestStorageProvider
+	Config   interface {
 		fosite.EnforcePKCEProvider
 		fosite.EnforcePKCEForPublicClientsProvider
 		fosite.EnablePKCEPlainChallengeMethodProvider
@@ -56,7 +56,7 @@ func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.
 		return errorsx.WithStack(fosite.ErrServerError.WithDebug("The PKCE handler must be loaded after the authorize code handler."))
 	}
 
-	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
+	signature := c.Strategy.AuthorizeCodeSignature(ctx, code)
 	if err := c.Storage.PKCERequestStorage().CreatePKCERequestSession(ctx, signature, ar.Sanitize([]string{
 		"code_challenge",
 		"code_challenge_method",
@@ -130,7 +130,7 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	verifier := request.GetRequestForm().Get("code_verifier")
 
 	code := request.GetRequestForm().Get("code")
-	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
+	signature := c.Strategy.AuthorizeCodeSignature(ctx, code)
 	pkceRequest, err := c.Storage.PKCERequestStorage().GetPKCERequestSession(ctx, signature, request.GetSession())
 
 	nv := len(verifier)
@@ -215,7 +215,6 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 			return errorsx.WithStack(fosite.ErrInvalidGrant.
 				WithHint("The PKCE code challenge did not match the code verifier."))
 		}
-		break
 	case "plain":
 		fallthrough
 	default:

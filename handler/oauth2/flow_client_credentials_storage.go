@@ -3,6 +3,6 @@
 
 package oauth2
 
-type ClientCredentialsGrantStorage interface {
-	AccessTokenStorage
-}
+// type ClientCredentialsGrantStorage interface {
+// 	AccessTokenStorage
+// }

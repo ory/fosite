@@ -21,17 +21,11 @@ const (
 
 var b64 = base64.URLEncoding.WithPadding(base64.NoPadding)
 
-type (
-	// PushedAuthorizeHandler handles the PAR request
-	PushedAuthorizeHandler struct {
-		Storage StorageProvider
-		Config  fosite.Configurator
-	}
-
-	StorageProvider interface {
-		fosite.PARStorageProvider
-	}
-)
+// PushedAuthorizeHandler handles the PAR request
+type PushedAuthorizeHandler struct {
+	Storage fosite.PARStorageProvider
+	Config  fosite.Configurator
+}
 
 // HandlePushedAuthorizeEndpointRequest handles a pushed authorize endpoint request. To extend the handler's capabilities, the http request
 // is passed along, if further information retrieval is required. If the handler feels that he is not responsible for

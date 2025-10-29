@@ -49,7 +49,7 @@ func makeOpenIDConnectImplicitHandler(minParameterEntropy int) openid.OpenIDConn
 	}
 
 	return openid.OpenIDConnectImplicitHandler{
-		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
+		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantHandler{
 			Config:              config,
 			AccessTokenStrategy: hmacStrategy,
 			AccessTokenStorage:  storage.NewMemoryStore(),

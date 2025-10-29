@@ -13,7 +13,11 @@ import (
 	"github.com/ory/fosite"
 )
 
-var _ CoreStrategy = (*HMACSHAStrategy)(nil)
+var (
+	_ AuthorizeCodeStrategy = (*HMACSHAStrategy)(nil)
+	_ AccessTokenStrategy   = (*HMACSHAStrategy)(nil)
+	_ RefreshTokenStrategy  = (*HMACSHAStrategy)(nil)
+)
 
 type HMACSHAStrategy struct {
 	*HMACSHAStrategyUnPrefixed

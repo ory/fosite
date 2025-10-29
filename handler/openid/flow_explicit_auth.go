@@ -11,8 +11,13 @@ import (
 	"github.com/ory/fosite"
 )
 
+var (
+	_ fosite.AuthorizeEndpointHandler = (*ExplicitHandler)(nil)
+	_ fosite.TokenEndpointHandler     = (*ExplicitHandler)(nil)
+)
+
 type ExplicitHandler struct {
-	Storage                       OIDCRequestStorageProvider
+	Storage                       OpenIDConnectRequestStorageProvider
 	OpenIDConnectRequestValidator *OpenIDConnectRequestValidator
 
 	Config interface {
@@ -21,11 +26,6 @@ type ExplicitHandler struct {
 
 	*IDTokenHandleHelper
 }
-
-var (
-	_ fosite.AuthorizeEndpointHandler = (*ExplicitHandler)(nil)
-	_ fosite.TokenEndpointHandler     = (*ExplicitHandler)(nil)
-)
 
 var oidcParameters = []string{
 	"grant_type",

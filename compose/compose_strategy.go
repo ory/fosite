@@ -15,9 +15,16 @@ import (
 )
 
 type CommonStrategy struct {
-	oauth2.CoreStrategy
-	rfc8628.RFC8628CodeStrategy
+	oauth2.AuthorizeCodeStrategyProvider
+	oauth2.AccessTokenStrategyProvider
+	oauth2.RefreshTokenStrategyProvider
+
 	openid.OpenIDConnectTokenStrategy
+
+	rfc8628.DeviceRateLimitStrategyProvider
+	rfc8628.DeviceCodeStrategyProvider
+	rfc8628.UserCodeStrategyProvider
+
 	jwt.Signer
 }
 
@@ -38,9 +45,9 @@ func NewOAuth2HMACStrategy(config HMACSHAStrategyConfigurator) *oauth2.HMACSHASt
 
 func NewOAuth2JWTStrategy(keyGetter func(context.Context) (interface{}, error), strategy oauth2.CoreStrategy, config fosite.Configurator) *oauth2.DefaultJWTStrategy {
 	return &oauth2.DefaultJWTStrategy{
-		Signer:          &jwt.DefaultSigner{GetPrivateKey: keyGetter},
-		HMACSHAStrategy: strategy,
-		Config:          config,
+		Signer:   &jwt.DefaultSigner{GetPrivateKey: keyGetter},
+		Strategy: strategy,
+		Config:   config,
 	}
 }
 

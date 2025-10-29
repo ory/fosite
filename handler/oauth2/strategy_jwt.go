@@ -18,8 +18,11 @@ import (
 // DefaultJWTStrategy is a JWT RS256 strategy.
 type DefaultJWTStrategy struct {
 	jwt.Signer
-	HMACSHAStrategy CoreStrategy
-	Config          interface {
+	Strategy interface {
+		AuthorizeCodeStrategyProvider
+		RefreshTokenStrategyProvider
+	}
+	Config interface {
 		fosite.AccessTokenIssuerProvider
 		fosite.JWTScopeFieldProvider
 	}
@@ -48,27 +51,27 @@ func (h *DefaultJWTStrategy) ValidateAccessToken(ctx context.Context, _ fosite.R
 }
 
 func (h DefaultJWTStrategy) RefreshTokenSignature(ctx context.Context, token string) string {
-	return h.HMACSHAStrategy.RefreshTokenSignature(ctx, token)
+	return h.Strategy.RefreshTokenStrategy().RefreshTokenSignature(ctx, token)
 }
 
 func (h DefaultJWTStrategy) AuthorizeCodeSignature(ctx context.Context, token string) string {
-	return h.HMACSHAStrategy.AuthorizeCodeSignature(ctx, token)
+	return h.Strategy.AuthorizeCodeStrategy().AuthorizeCodeSignature(ctx, token)
 }
 
 func (h *DefaultJWTStrategy) GenerateRefreshToken(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
-	return h.HMACSHAStrategy.GenerateRefreshToken(ctx, req)
+	return h.Strategy.RefreshTokenStrategy().GenerateRefreshToken(ctx, req)
 }
 
 func (h *DefaultJWTStrategy) ValidateRefreshToken(ctx context.Context, req fosite.Requester, token string) error {
-	return h.HMACSHAStrategy.ValidateRefreshToken(ctx, req, token)
+	return h.Strategy.RefreshTokenStrategy().ValidateRefreshToken(ctx, req, token)
 }
 
 func (h *DefaultJWTStrategy) GenerateAuthorizeCode(ctx context.Context, req fosite.Requester) (token string, signature string, err error) {
-	return h.HMACSHAStrategy.GenerateAuthorizeCode(ctx, req)
+	return h.Strategy.AuthorizeCodeStrategy().GenerateAuthorizeCode(ctx, req)
 }
 
 func (h *DefaultJWTStrategy) ValidateAuthorizeCode(ctx context.Context, req fosite.Requester, token string) error {
-	return h.HMACSHAStrategy.ValidateAuthorizeCode(ctx, req, token)
+	return h.Strategy.AuthorizeCodeStrategy().ValidateAuthorizeCode(ctx, req, token)
 }
 
 func validate(ctx context.Context, jwtStrategy jwt.Signer, token string) (t *jwt.Token, err error) {
@@ -79,7 +82,7 @@ func validate(ctx context.Context, jwtStrategy jwt.Signer, token string) (t *jwt
 	}
 
 	var e *jwt.ValidationError
-	if err != nil && errors.As(err, &e) {
+	if errors.As(err, &e) {
 		err = errorsx.WithStack(toRFCErr(e).WithWrap(err).WithDebug(err.Error()))
 	}
 

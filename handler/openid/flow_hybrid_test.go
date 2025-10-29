@@ -69,7 +69,7 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) openid.OpenIDConnec
 			Storage:               storage.NewMemoryStore(),
 			Config:                config,
 		},
-		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantTypeHandler{
+		AuthorizeImplicitGrantHandler: &oauth2.AuthorizeImplicitGrantHandler{
 			Config: &fosite.Config{
 				AccessTokenLifespan: time.Hour,
 			},

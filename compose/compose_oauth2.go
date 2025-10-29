@@ -13,12 +13,18 @@ import (
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeExplicitFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeExplicitGrantHandler{
-		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
-		AuthorizeCodeStrategy:  strategy.(oauth2.AuthorizeCodeStrategy),
-		Storage:                storage.(oauth2.CoreStorage),
-		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorageProvider),
-		Config:                 config,
+		Strategy: strategy.(interface {
+			oauth2.AccessTokenStrategyProvider
+			oauth2.RefreshTokenStrategyProvider
+			oauth2.AuthorizeCodeStrategyProvider
+		}),
+		Storage: storage.(interface {
+			oauth2.AuthorizeCodeStorageProvider
+			oauth2.AccessTokenStorageProvider
+			oauth2.RefreshTokenStorageProvider
+			oauth2.TokenRevocationStorageProvider
+		}),
+		Config: config,
 	}
 }
 
@@ -26,12 +32,9 @@ func OAuth2AuthorizeExplicitFactory(config fosite.Configurator, storage fosite.S
 // an access token, refresh token and authorize code validator.
 func OAuth2ClientCredentialsGrantFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &oauth2.ClientCredentialsGrantHandler{
-		HandleHelper: &oauth2.HandleHelper{
-			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
-			Storage:             storage.(oauth2.AccessTokenStorageProvider),
-			Config:              config,
-		},
-		Config: config,
+		Strategy: strategy.(oauth2.AccessTokenStrategyProvider),
+		Storage:  storage.(oauth2.AccessTokenStorageProvider),
+		Config:   config,
 	}
 }
 
@@ -39,18 +42,24 @@ func OAuth2ClientCredentialsGrantFactory(config fosite.Configurator, storage fos
 // an access token, refresh token and authorize code validator.nmj
 func OAuth2RefreshTokenGrantFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &oauth2.RefreshTokenGrantHandler{
-		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
-		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorageProvider),
-		Config:                 config,
+		Strategy: strategy.(interface {
+			oauth2.AccessTokenStrategyProvider
+			oauth2.RefreshTokenStrategyProvider
+		}),
+		Storage: storage.(interface {
+			oauth2.AccessTokenStorageProvider
+			oauth2.RefreshTokenStorageProvider
+			oauth2.TokenRevocationStorageProvider
+		}),
+		Config: config,
 	}
 }
 
 // OAuth2AuthorizeImplicitFactory creates an OAuth2 implicit grant ("authorize implicit flow") handler and registers
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeImplicitFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
-	return &oauth2.AuthorizeImplicitGrantTypeHandler{
-		AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
+	return &oauth2.AuthorizeImplicitGrantHandler{
+		AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategyProvider),
 		AccessTokenStorage:  storage.(oauth2.AccessTokenStorageProvider),
 		Config:              config,
 	}

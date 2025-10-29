@@ -9,23 +9,30 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ory/x/errorsx"
-
 	"github.com/ory/fosite"
+	"github.com/ory/x/errorsx"
 )
 
-var _ fosite.AuthorizeEndpointHandler = (*AuthorizeExplicitGrantHandler)(nil)
-var _ fosite.TokenEndpointHandler = (*AuthorizeExplicitGrantHandler)(nil)
+var (
+	_ fosite.AuthorizeEndpointHandler = (*AuthorizeExplicitGrantHandler)(nil)
+	_ fosite.TokenEndpointHandler     = (*AuthorizeExplicitGrantHandler)(nil)
+)
 
 // AuthorizeExplicitGrantHandler is a response handler for the Authorize Code grant using the explicit grant type
 // as defined in https://tools.ietf.org/html/rfc6749#section-4.1
 type AuthorizeExplicitGrantHandler struct {
-	AccessTokenStrategy    AccessTokenStrategy
-	RefreshTokenStrategy   RefreshTokenStrategy
-	AuthorizeCodeStrategy  AuthorizeCodeStrategy
-	Storage                CoreStorage
-	TokenRevocationStorage TokenRevocationStorageProvider
-	Config                 interface {
+	Storage interface {
+		AuthorizeCodeStorageProvider
+		AccessTokenStorageProvider
+		RefreshTokenStorageProvider
+		TokenRevocationStorageProvider
+	}
+	Strategy interface {
+		AuthorizeCodeStrategyProvider
+		AccessTokenStrategyProvider
+		RefreshTokenStrategyProvider
+	}
+	Config interface {
 		fosite.AuthorizeCodeLifespanProvider
 		fosite.AccessTokenLifespanProvider
 		fosite.RefreshTokenLifespanProvider
@@ -77,7 +84,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleAuthorizeEndpointRequest(ctx conte
 }
 
 func (c *AuthorizeExplicitGrantHandler) IssueAuthorizeCode(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
-	code, signature, err := c.AuthorizeCodeStrategy.GenerateAuthorizeCode(ctx, ar)
+	code, signature, err := c.Strategy.AuthorizeCodeStrategy().GenerateAuthorizeCode(ctx, ar)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}

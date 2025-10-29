@@ -118,7 +118,7 @@ func TestAuthorizeImplicit_EndpointHandler(t *testing.T) {
 	}
 }
 
-func makeAuthorizeImplicitGrantTypeHandler(ctrl *gomock.Controller) (oauth2.AuthorizeImplicitGrantTypeHandler,
+func makeAuthorizeImplicitGrantTypeHandler(ctrl *gomock.Controller) (oauth2.AuthorizeImplicitGrantHandler,
 	*internal.MockAccessTokenStorage, *internal.MockAccessTokenStorageProvider, *internal.MockAccessTokenStrategy, *internal.MockAuthorizeResponder,
 ) {
 	store := internal.NewMockAccessTokenStorage(ctrl)
@@ -126,7 +126,7 @@ func makeAuthorizeImplicitGrantTypeHandler(ctrl *gomock.Controller) (oauth2.Auth
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
 	aresp := internal.NewMockAuthorizeResponder(ctrl)
 
-	h := oauth2.AuthorizeImplicitGrantTypeHandler{
+	h := oauth2.AuthorizeImplicitGrantHandler{
 		AccessTokenStorage:  provider,
 		AccessTokenStrategy: chgen,
 		Config: &fosite.Config{

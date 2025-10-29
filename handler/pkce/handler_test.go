@@ -39,9 +39,9 @@ func (m *mockCodeStrategy) ValidateAuthorizeCode(ctx context.Context, requester 
 func TestPKCEHandleAuthorizeEndpointRequest(t *testing.T) {
 	var config fosite.Config
 	h := &pkce.Handler{
-		Storage:               storage.NewMemoryStore(),
-		AuthorizeCodeStrategy: oauth2.NewHMACSHAStrategy(nil, nil),
-		Config:                &config,
+		Storage:  storage.NewMemoryStore(),
+		Strategy: oauth2.NewHMACSHAStrategy(nil, nil),
+		Config:   &config,
 	}
 	w := fosite.NewAuthorizeResponse()
 	r := fosite.NewAuthorizeRequest()
@@ -86,7 +86,7 @@ func TestPKCEHandlerValidate(t *testing.T) {
 	s := storage.NewMemoryStore()
 	ms := &mockCodeStrategy{}
 	config := &fosite.Config{}
-	h := &pkce.Handler{Storage: s, AuthorizeCodeStrategy: ms, Config: config}
+	h := &pkce.Handler{Storage: s, Strategy: ms, Config: config}
 	pc := &fosite.DefaultClient{Public: true}
 
 	s256verifier := "KGCt4m8AmjUvIR5ArTByrmehjtbxn1A49YpTZhsH8N7fhDr7LQayn9xx6mck"

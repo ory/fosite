@@ -7,11 +7,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/ory/fosite"
 	"github.com/ory/x/errorsx"
 
 	"github.com/pkg/errors"
-
-	"github.com/ory/fosite"
 )
 
 // HandleTokenEndpointRequest implements
@@ -26,7 +25,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 	}
 
 	code := request.GetRequestForm().Get("code")
-	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
+	signature := c.Strategy.AuthorizeCodeStrategy().AuthorizeCodeSignature(ctx, code)
 	authorizeRequest, err := c.Storage.AuthorizeCodeStorage().GetAuthorizeCodeSession(ctx, signature, request.GetSession())
 	if errors.Is(err, fosite.ErrInvalidatedAuthorizeCode) {
 		if authorizeRequest == nil {
@@ -39,11 +38,11 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 		reqID := authorizeRequest.GetID()
 		hint := "The authorization code has already been used."
 		debug := ""
-		if revErr := c.TokenRevocationStorage.TokenRevocationStorage().RevokeAccessToken(ctx, reqID); revErr != nil {
+		if revErr := c.Storage.TokenRevocationStorage().RevokeAccessToken(ctx, reqID); revErr != nil {
 			hint += " Additionally, an error occurred during processing the access token revocation."
 			debug += "Revocation of access_token lead to error " + revErr.Error() + "."
 		}
-		if revErr := c.TokenRevocationStorage.TokenRevocationStorage().RevokeRefreshToken(ctx, reqID); revErr != nil {
+		if revErr := c.Storage.TokenRevocationStorage().RevokeRefreshToken(ctx, reqID); revErr != nil {
 			hint += " Additionally, an error occurred during processing the refresh token revocation."
 			debug += "Revocation of refresh_token lead to error " + revErr.Error() + "."
 		}
@@ -56,7 +55,7 @@ func (c *AuthorizeExplicitGrantHandler) HandleTokenEndpointRequest(ctx context.C
 
 	// The authorization server MUST verify that the authorization code is valid
 	// This needs to happen after store retrieval for the session to be hydrated properly
-	if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, request, code); err != nil {
+	if err := c.Strategy.AuthorizeCodeStrategy().ValidateAuthorizeCode(ctx, request, code); err != nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.WithWrap(err).WithDebug(err.Error()))
 	}
 
@@ -120,11 +119,11 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 	}
 
 	code := requester.GetRequestForm().Get("code")
-	signature := c.AuthorizeCodeStrategy.AuthorizeCodeSignature(ctx, code)
+	signature := c.Strategy.AuthorizeCodeStrategy().AuthorizeCodeSignature(ctx, code)
 	authorizeRequest, err := c.Storage.AuthorizeCodeStorage().GetAuthorizeCodeSession(ctx, signature, requester.GetSession())
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	} else if err := c.AuthorizeCodeStrategy.ValidateAuthorizeCode(ctx, requester, code); err != nil {
+	} else if err := c.Strategy.AuthorizeCodeStrategy().ValidateAuthorizeCode(ctx, requester, code); err != nil {
 		// This needs to happen after store retrieval for the session to be hydrated properly
 		return errorsx.WithStack(fosite.ErrInvalidRequest.WithWrap(err).WithDebug(err.Error()))
 	}
@@ -137,14 +136,14 @@ func (c *AuthorizeExplicitGrantHandler) PopulateTokenEndpointResponse(ctx contex
 		requester.GrantAudience(audience)
 	}
 
-	access, accessSignature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, requester)
+	access, accessSignature, err := c.Strategy.AccessTokenStrategy().GenerateAccessToken(ctx, requester)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	var refresh, refreshSignature string
 	if canIssueRefreshToken(ctx, c, authorizeRequest) {
-		refresh, refreshSignature, err = c.RefreshTokenStrategy.GenerateRefreshToken(ctx, requester)
+		refresh, refreshSignature, err = c.Strategy.RefreshTokenStrategy().GenerateRefreshToken(ctx, requester)
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
