@@ -37,6 +37,18 @@ func (h DefaultJWTStrategy) signature(token string) string {
 	return split[2]
 }
 
+func (h *DefaultJWTStrategy) AuthorizeCodeStrategy() AuthorizeCodeStrategy {
+	return h
+}
+
+func (h *DefaultJWTStrategy) AccessTokenStrategy() AccessTokenStrategy {
+	return h
+}
+
+func (h *DefaultJWTStrategy) RefreshTokenStrategy() RefreshTokenStrategy {
+	return h
+}
+
 func (h DefaultJWTStrategy) AccessTokenSignature(ctx context.Context, token string) string {
 	return h.signature(token)
 }

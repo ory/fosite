@@ -21,14 +21,16 @@ import (
 	"github.com/ory/fosite/token/jwt"
 )
 
-var strat = &openid.DefaultStrategy{
-	Signer: &jwt.DefaultSigner{
-		GetPrivateKey: func(_ context.Context) (interface{}, error) {
-			return gen.MustRSAKey(), nil
+var stratProvider = mockOpenIDConnectTokenStrategyProvider{
+	strategy: openid.DefaultStrategy{
+		Signer: &jwt.DefaultSigner{
+			GetPrivateKey: func(_ context.Context) (interface{}, error) {
+				return gen.MustRSAKey(), nil
+			},
 		},
-	},
-	Config: &fosite.Config{
-		MinParameterEntropy: fosite.MinParameterEntropy,
+		Config: &fosite.Config{
+			MinParameterEntropy: fosite.MinParameterEntropy,
+		},
 	},
 }
 
@@ -37,6 +39,7 @@ var fooErr = errors.New("foo")
 func TestGenerateIDToken(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	chgen := internal.NewMockOpenIDConnectTokenStrategy(ctrl)
+	chgenp := internal.NewMockOpenIDConnectTokenStrategyProvider(ctrl)
 	defer ctrl.Finish()
 
 	ar := fosite.NewAccessRequest(nil)
@@ -46,7 +49,7 @@ func TestGenerateIDToken(t *testing.T) {
 		},
 		Headers: &jwt.Headers{},
 	}
-	h := &openid.IDTokenHandleHelper{IDTokenStrategy: chgen}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: chgenp}
 
 	for k, c := range []struct {
 		description string
@@ -58,6 +61,7 @@ func TestGenerateIDToken(t *testing.T) {
 			setup: func() {
 				ar.Form.Set("nonce", "11111111111111111111111111111111111")
 				ar.SetSession(sess)
+				chgenp.EXPECT().OpenIDConnectTokenStrategy().Return(chgen).Times(1)
 				chgen.EXPECT().GenerateIDToken(gomock.Any(), time.Duration(0), ar).Return("", fooErr)
 			},
 			expectErr: fooErr,
@@ -65,6 +69,7 @@ func TestGenerateIDToken(t *testing.T) {
 		{
 			description: "should pass",
 			setup: func() {
+				chgenp.EXPECT().OpenIDConnectTokenStrategy().Return(chgen).Times(1)
 				chgen.EXPECT().GenerateIDToken(gomock.Any(), time.Duration(0), ar).AnyTimes().Return("asdf", nil)
 			},
 		},
@@ -91,7 +96,7 @@ func TestIssueExplicitToken(t *testing.T) {
 	}, Headers: &jwt.Headers{}})
 
 	resp.EXPECT().SetExtra("id_token", gomock.Any())
-	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: stratProvider}
 	err := h.IssueExplicitIDToken(context.Background(), time.Duration(0), ar, resp)
 	assert.NoError(t, err)
 }
@@ -108,7 +113,7 @@ func TestIssueImplicitToken(t *testing.T) {
 	}, Headers: &jwt.Headers{}})
 
 	resp.EXPECT().AddParameter("id_token", gomock.Any())
-	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: stratProvider}
 	err := h.IssueImplicitIDToken(context.Background(), time.Duration(0), ar, resp)
 	assert.NoError(t, err)
 }
@@ -123,7 +128,7 @@ func TestGetAccessTokenHash(t *testing.T) {
 	req.EXPECT().GetSession().Return(nil)
 	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
 
-	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: stratProvider}
 
 	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
@@ -144,7 +149,7 @@ func TestGetAccessTokenHashWithDifferentKeyLength(t *testing.T) {
 	req.EXPECT().GetSession().Return(&openid.DefaultSession{Headers: headers})
 	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
 
-	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: stratProvider}
 
 	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "VNX38yiOyeqBPheW5jDsWQKa6IjJzK66", hash)
@@ -165,7 +170,7 @@ func TestGetAccessTokenHashWithBadAlg(t *testing.T) {
 	req.EXPECT().GetSession().Return(&openid.DefaultSession{Headers: headers})
 	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
 
-	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: stratProvider}
 
 	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)
@@ -186,7 +191,7 @@ func TestGetAccessTokenHashWithMissingKeyLength(t *testing.T) {
 	req.EXPECT().GetSession().Return(&openid.DefaultSession{Headers: headers})
 	resp.EXPECT().GetAccessToken().Return("7a35f818-9164-48cb-8c8f-e1217f44228431c41102-d410-4ed5-9276-07ba53dfdcd8")
 
-	h := &openid.IDTokenHandleHelper{IDTokenStrategy: strat}
+	h := &openid.IDTokenHandleHelper{IDTokenStrategy: stratProvider}
 
 	hash := h.GetAccessTokenHash(context.Background(), req, resp)
 	assert.Equal(t, "Zfn_XBitThuDJiETU3OALQ", hash)

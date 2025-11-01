@@ -21,11 +21,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type mockStrategyProvider struct {
+	strategy *rfc8628.DefaultDeviceStrategy
+}
+
+func (p mockStrategyProvider) DeviceRateLimitStrategy() rfc8628.DeviceRateLimitStrategy {
+	return p.strategy
+}
+
+func (p mockStrategyProvider) DeviceCodeStrategy() rfc8628.DeviceCodeStrategy {
+	return p.strategy
+}
+
+func (p mockStrategyProvider) UserCodeStrategy() rfc8628.UserCodeStrategy {
+	return p.strategy
+}
+
 func Test_HandleDeviceEndpointRequest(t *testing.T) {
 	store := storage.NewMemoryStore()
 	handler := rfc8628.DeviceAuthHandler{
 		Storage:  store,
-		Strategy: &hmacshaStrategyDefault,
+		Strategy: mockStrategyProvider{strategy: &hmacshaStrategyDefault},
 		Config: &fosite.Config{
 			DeviceAndUserCodeLifespan:      time.Minute * 10,
 			DeviceAuthTokenPollingInterval: time.Second * 5,
@@ -59,10 +75,20 @@ func Test_HandleDeviceEndpointRequest(t *testing.T) {
 }
 
 func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
-	var mockRFC8628Storage *internal.MockRFC8628Storage
-	var mockRFC8628CoreStorage *internal.MockDeviceAuthStorage
-	// var mockRFC8628StorageProvider *internal.MockDeviceAuthStorageProvider
-	var mockRFC8628CodeStrategy *internal.MockRFC8628CodeStrategy
+	// var mockRFC8628Storage *internal.MockRFC8628Storage
+	// var mockRFC8628DeviceAuthStorage *internal.MockDeviceAuthStorage
+	// // var mockRFC8628StorageProvider *internal.MockDeviceAuthStorageProvider
+	// var mockRFC8628CodeStrategy *internal.MockRFC8628CodeStrategy
+
+	var mockDeviceAuthStorage *internal.MockDeviceAuthStorage
+	var mockDeviceAuthStorageProvider *internal.MockDeviceAuthStorageProvider
+	var mockAccessTokenStorageProvider *internal.MockAccessTokenStorageProvider
+	var mockRefreshTokenStorageProvider *internal.MockRefreshTokenStorageProvider
+	var mockDeviceRateLimitStrategyProvider *internal.MockDeviceRateLimitStrategyProvider
+	var mockDeviceCodeStrategy *internal.MockDeviceCodeStrategy
+	var mockDeviceCodeStrategyProvider *internal.MockDeviceCodeStrategyProvider
+	var mockUserCodeStrategy *internal.MockUserCodeStrategy
+	var mockUserCodeStrategyProvider *internal.MockUserCodeStrategyProvider
 
 	ctx := context.Background()
 	req := &fosite.DeviceRequest{
@@ -83,21 +109,23 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 		{
 			description: "should pass when generating a unique user code at the first attempt",
 			setup: func() {
-				mockRFC8628CodeStrategy.
+				mockDeviceCodeStrategyProvider.EXPECT().DeviceCodeStrategy().Return(mockDeviceCodeStrategy)
+				mockDeviceCodeStrategy.
 					EXPECT().
 					GenerateDeviceCode(ctx).
 					Return("deviceCode", "signature", nil)
-				mockRFC8628CodeStrategy.
+				mockUserCodeStrategyProvider.EXPECT().UserCodeStrategy().Return(mockUserCodeStrategy)
+				mockUserCodeStrategy.
 					EXPECT().
 					GenerateUserCode(ctx).
 					Return("userCode", "signature2", nil).
 					Times(1)
-				mockRFC8628Storage.
+				mockDeviceAuthStorageProvider.
 					EXPECT().
 					DeviceAuthStorage().
-					Return(mockRFC8628CoreStorage).
+					Return(mockDeviceAuthStorage).
 					Times(1)
-				mockRFC8628CoreStorage.
+				mockDeviceAuthStorage.
 					EXPECT().
 					CreateDeviceAuthSession(ctx, "signature", "signature2", gomock.Any()).
 					Return(nil)
@@ -109,34 +137,37 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 		{
 			description: "should pass when generating a unique user code within allowed attempts",
 			setup: func() {
-				mockRFC8628CodeStrategy.
+				mockDeviceCodeStrategyProvider.EXPECT().DeviceCodeStrategy().Return(mockDeviceCodeStrategy)
+				mockDeviceCodeStrategy.
 					EXPECT().
 					GenerateDeviceCode(ctx).
 					Return("deviceCode", "signature", nil)
 				gomock.InOrder(
-					mockRFC8628CodeStrategy.
+					mockUserCodeStrategyProvider.EXPECT().UserCodeStrategy().Return(mockUserCodeStrategy),
+					mockUserCodeStrategy.
 						EXPECT().
 						GenerateUserCode(ctx).
 						Return("duplicatedUserCode", "duplicatedSignature", nil),
-					mockRFC8628Storage.
+					mockDeviceAuthStorageProvider.
 						EXPECT().
 						DeviceAuthStorage().
-						Return(mockRFC8628CoreStorage).
+						Return(mockDeviceAuthStorage).
 						Times(1),
-					mockRFC8628CoreStorage.
+					mockDeviceAuthStorage.
 						EXPECT().
 						CreateDeviceAuthSession(ctx, "signature", "duplicatedSignature", gomock.Any()).
 						Return(fosite.ErrExistingUserCodeSignature),
-					mockRFC8628CodeStrategy.
+					mockUserCodeStrategyProvider.EXPECT().UserCodeStrategy().Return(mockUserCodeStrategy),
+					mockUserCodeStrategy.
 						EXPECT().
 						GenerateUserCode(ctx).
 						Return("uniqueUserCode", "uniqueSignature", nil),
-					mockRFC8628Storage.
+					mockDeviceAuthStorageProvider.
 						EXPECT().
 						DeviceAuthStorage().
-						Return(mockRFC8628CoreStorage).
+						Return(mockDeviceAuthStorage).
 						Times(1),
-					mockRFC8628CoreStorage.
+					mockDeviceAuthStorage.
 						EXPECT().
 						CreateDeviceAuthSession(ctx, "signature", "uniqueSignature", gomock.Any()).
 						Return(nil),
@@ -149,21 +180,23 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 		{
 			description: "should fail after maximum retries to generate a unique user code",
 			setup: func() {
-				mockRFC8628CodeStrategy.
+				mockDeviceCodeStrategyProvider.EXPECT().DeviceCodeStrategy().Return(mockDeviceCodeStrategy)
+				mockDeviceCodeStrategy.
 					EXPECT().
 					GenerateDeviceCode(ctx).
 					Return("deviceCode", "signature", nil)
-				mockRFC8628CodeStrategy.
+				mockUserCodeStrategyProvider.EXPECT().UserCodeStrategy().Return(mockUserCodeStrategy).Times(rfc8628.MaxAttempts)
+				mockUserCodeStrategy.
 					EXPECT().
 					GenerateUserCode(ctx).
 					Return("duplicatedUserCode", "duplicatedSignature", nil).
 					Times(rfc8628.MaxAttempts)
-				mockRFC8628Storage.
+				mockDeviceAuthStorageProvider.
 					EXPECT().
 					DeviceAuthStorage().
-					Return(mockRFC8628CoreStorage).
+					Return(mockDeviceAuthStorage).
 					Times(rfc8628.MaxAttempts)
-				mockRFC8628CoreStorage.
+				mockDeviceAuthStorage.
 					EXPECT().
 					CreateDeviceAuthSession(ctx, "signature", "duplicatedSignature", gomock.Any()).
 					Return(fosite.ErrExistingUserCodeSignature).
@@ -177,20 +210,22 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 		{
 			description: "should fail if another error is returned",
 			setup: func() {
-				mockRFC8628CodeStrategy.
+				mockDeviceCodeStrategyProvider.EXPECT().DeviceCodeStrategy().Return(mockDeviceCodeStrategy)
+				mockDeviceCodeStrategy.
 					EXPECT().
 					GenerateDeviceCode(ctx).
 					Return("deviceCode", "signature", nil)
-				mockRFC8628CodeStrategy.
+				mockUserCodeStrategyProvider.EXPECT().UserCodeStrategy().Return(mockUserCodeStrategy)
+				mockUserCodeStrategy.
 					EXPECT().
 					GenerateUserCode(ctx).
 					Return("userCode", "userCodeSignature", nil)
-				mockRFC8628Storage.
+				mockDeviceAuthStorageProvider.
 					EXPECT().
 					DeviceAuthStorage().
-					Return(mockRFC8628CoreStorage).
+					Return(mockDeviceAuthStorage).
 					Times(1)
-				mockRFC8628CoreStorage.
+				mockDeviceAuthStorage.
 					EXPECT().
 					CreateDeviceAuthSession(ctx, "signature", "userCodeSignature", gomock.Any()).
 					Return(errors.New("some error"))
@@ -208,13 +243,45 @@ func Test_HandleDeviceEndpointRequestWithRetry(t *testing.T) {
 			defer ctrl.Finish()
 
 			// mockRFC8628StorageProvider = internal.NewMockDeviceAuthStorageProvider(ctrl)
-			mockRFC8628CoreStorage = internal.NewMockDeviceAuthStorage(ctrl)
-			mockRFC8628Storage = internal.NewMockRFC8628Storage(ctrl)
-			mockRFC8628CodeStrategy = internal.NewMockRFC8628CodeStrategy(ctrl)
+			// mockRFC8628DeviceAuthStorage = internal.NewMockDeviceAuthStorage(ctrl)
+			// mockRFC8628DeviceAuthStorageProvider = internal.NewMockDeviceAuthStorageProvider(ctrl)
+			// mockRFC8628Storage = internal.NewMockRFC8628Storage(ctrl)
+			// mockRFC8628CodeStrategy = internal.NewMockRFC8628CodeStrategy(ctrl)
+			// mockRFC8628CodeStrategyProvider = internal.NewMockRFC8628CodeStrategyProvider(ctrl)
+
+			mockDeviceAuthStorage = internal.NewMockDeviceAuthStorage(ctrl)
+			mockDeviceAuthStorageProvider = internal.NewMockDeviceAuthStorageProvider(ctrl)
+			mockAccessTokenStorageProvider = internal.NewMockAccessTokenStorageProvider(ctrl)
+			mockRefreshTokenStorageProvider = internal.NewMockRefreshTokenStorageProvider(ctrl)
+			mockDeviceRateLimitStrategyProvider = internal.NewMockDeviceRateLimitStrategyProvider(ctrl)
+			mockDeviceCodeStrategy = internal.NewMockDeviceCodeStrategy(ctrl)
+			mockDeviceCodeStrategyProvider = internal.NewMockDeviceCodeStrategyProvider(ctrl)
+			mockUserCodeStrategy = internal.NewMockUserCodeStrategy(ctrl)
+			mockUserCodeStrategyProvider = internal.NewMockUserCodeStrategyProvider(ctrl)
+
+			mockStorage := struct {
+				*internal.MockDeviceAuthStorageProvider
+				*internal.MockAccessTokenStorageProvider
+				*internal.MockRefreshTokenStorageProvider
+			}{
+				MockDeviceAuthStorageProvider:   mockDeviceAuthStorageProvider,
+				MockAccessTokenStorageProvider:  mockAccessTokenStorageProvider,
+				MockRefreshTokenStorageProvider: mockRefreshTokenStorageProvider,
+			}
+
+			mockStrategy := struct {
+				*internal.MockDeviceRateLimitStrategyProvider
+				*internal.MockDeviceCodeStrategyProvider
+				*internal.MockUserCodeStrategyProvider
+			}{
+				MockDeviceRateLimitStrategyProvider: mockDeviceRateLimitStrategyProvider,
+				MockDeviceCodeStrategyProvider:      mockDeviceCodeStrategyProvider,
+				MockUserCodeStrategyProvider:        mockUserCodeStrategyProvider,
+			}
 
 			h := rfc8628.DeviceAuthHandler{
-				Storage:  mockRFC8628Storage,
-				Strategy: mockRFC8628CodeStrategy,
+				Storage:  mockStorage,
+				Strategy: mockStrategy,
 				Config: &fosite.Config{
 					DeviceAndUserCodeLifespan:      time.Minute * 10,
 					DeviceAuthTokenPollingInterval: time.Second * 5,

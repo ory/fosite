@@ -63,7 +63,7 @@ func TestHMACAccessToken(t *testing.T) {
 	for k, c := range []struct {
 		r      fosite.Request
 		pass   bool
-		strat  oauth2.CoreStrategy
+		strat  any
 		prefix string
 	}{
 		{

@@ -70,9 +70,9 @@ func ComposeAllEnabled(config *fosite.Config, storage fosite.Storage, key interf
 		config,
 		storage,
 		&CommonStrategy{
-			CoreStrategy:               NewOAuth2HMACStrategy(config),
-			RFC8628CodeStrategy:        NewDeviceStrategy(config),
-			OpenIDConnectTokenStrategy: NewOpenIDConnectStrategy(keyGetter, config),
+			coreStrategy:               NewOAuth2HMACStrategy(config),
+			rfc8628CodeStrategy:        NewDeviceStrategy(config),
+			openIDConnectTokenStrategy: NewOpenIDConnectStrategy(keyGetter, config),
 			Signer:                     &jwt.DefaultSigner{GetPrivateKey: keyGetter},
 		},
 		OAuth2AuthorizeExplicitFactory,

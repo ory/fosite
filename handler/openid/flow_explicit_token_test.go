@@ -32,20 +32,20 @@ func TestHandleTokenEndpointRequest(t *testing.T) {
 func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 	for k, c := range []struct {
 		description string
-		setup       func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest)
+		setup       func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest)
 		expectErr   error
 		check       func(t *testing.T, aresp *fosite.AccessResponse)
 	}{
 		{
 			description: "should fail because current request has invalid grant type",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"some_other_grant_type"}
 			},
 			expectErr: fosite.ErrUnknownRequest,
 		},
 		{
 			description: "should fail because storage lookup returns not found",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
 				provider.EXPECT().OpenIDConnectRequestStorage().Return(store).Times(1)
@@ -55,7 +55,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should fail because storage lookup fails",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
 				provider.EXPECT().OpenIDConnectRequestStorage().Return(store).Times(1)
@@ -65,7 +65,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should fail because stored request is missing openid scope",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
 				provider.EXPECT().OpenIDConnectRequestStorage().Return(store).Times(1)
@@ -75,7 +75,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should fail because current request's client does not have authorization_code grant type",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.Client = &fosite.DefaultClient{
 					GrantTypes: fosite.Arguments{"some_other_grant_type"},
 				}
@@ -90,7 +90,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should pass with custom client lifespans",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.Client = &fosite.DefaultClientWithCustomTokenLifespans{
 					DefaultClient: &fosite.DefaultClient{
 						GrantTypes: fosite.Arguments{"authorization_code"},
@@ -125,7 +125,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should pass",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.Client = &fosite.DefaultClient{
 					GrantTypes: fosite.Arguments{"authorization_code"},
 				}
@@ -157,7 +157,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should fail because stored request's session is missing subject claim",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
 				storedSession := &openid.DefaultSession{
@@ -173,7 +173,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should fail because stored request is missing session",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.GrantTypes = fosite.Arguments{"authorization_code"}
 				req.Form.Set("code", "foobar")
 				storedReq := fosite.NewAuthorizeRequest()
@@ -186,7 +186,7 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 		{
 			description: "should fail because storage returns error when deleting openid session",
-			setup: func(provider *internal.MockOIDCRequestStorageProvider, store *internal.MockOIDCRequestStorage, req *fosite.AccessRequest) {
+			setup: func(provider *internal.MockOpenIDConnectRequestStorageProvider, store *internal.MockOpenIDConnectRequestStorage, req *fosite.AccessRequest) {
 				req.Client = &fosite.DefaultClient{
 					GrantTypes: fosite.Arguments{"authorization_code"},
 				}
@@ -207,8 +207,9 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, c.description), func(t *testing.T) {
 			ctrl := gomock.NewController(t)
-			store := internal.NewMockOIDCRequestStorage(ctrl)
-			provider := internal.NewMockOIDCRequestStorageProvider(ctrl)
+			store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
+			provider := internal.NewMockOpenIDConnectRequestStorageProvider(ctrl)
+			openIDTokenStrategyProvider := internal.NewMockOpenIDConnectTokenStrategyProvider(ctrl)
 			defer ctrl.Finish()
 
 			session := &openid.DefaultSession{
@@ -230,11 +231,12 @@ func TestExplicit_PopulateTokenEndpointResponse(t *testing.T) {
 					MinParameterEntropy: fosite.MinParameterEntropy,
 				},
 			}
+			openIDTokenStrategyProvider.EXPECT().OpenIDConnectTokenStrategy().Return(j).AnyTimes()
 
 			h := &openid.ExplicitHandler{
 				Storage: provider,
 				IDTokenHandleHelper: &openid.IDTokenHandleHelper{
-					IDTokenStrategy: j,
+					IDTokenStrategy: openIDTokenStrategyProvider,
 				},
 				Config: &fosite.Config{},
 			}

@@ -12,7 +12,7 @@ import (
 // OAuth2PKCEFactory creates a PKCE handler.
 func OAuth2PKCEFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &pkce.Handler{
-		Strategy: strategy.(oauth2.AuthorizeCodeStrategy),
+		Strategy: strategy.(oauth2.AuthorizeCodeStrategyProvider),
 		Storage:  storage.(pkce.PKCERequestStorageProvider),
 		Config:   config,
 	}

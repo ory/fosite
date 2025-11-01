@@ -10,11 +10,11 @@ import (
 )
 
 // RFC8628CodeStrategy is the code strategy needed for the DeviceAuthHandler
-// type RFC8628CodeStrategy interface {
-// 	DeviceRateLimitStrategy
-// 	DeviceCodeStrategy
-// 	UserCodeStrategy
-// }
+type RFC8628CodeStrategy interface {
+	DeviceRateLimitStrategy
+	DeviceCodeStrategy
+	UserCodeStrategy
+}
 
 // DeviceRateLimitStrategy handles the rate limiting strategy
 type DeviceRateLimitStrategy interface {

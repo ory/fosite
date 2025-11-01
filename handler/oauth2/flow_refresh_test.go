@@ -324,9 +324,12 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 						RefreshTokenScopes:       []string{"offline"},
 					}
 					handler = &oauth2.RefreshTokenGrantHandler{
-						TokenRevocationStorage: store,
-						RefreshTokenStrategy:   strategy,
-						Config:                 config,
+						Storage: store,
+						Strategy: strategy.(interface {
+							oauth2.AccessTokenStrategyProvider
+							oauth2.RefreshTokenStrategyProvider
+						}),
+						Config: config,
 					}
 
 					areq = fosite.NewAccessRequest(&fosite.DefaultSession{})
@@ -350,9 +353,15 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 }
 
 func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
-	var mockTransactional *internal.MockTransactional
-	var mockRevocationStoreProvider *internal.MockTokenRevocationStorageProvider
-	var mockRevocationStore *internal.MockTokenRevocationStorage
+	var (
+		mockTransactional                  *internal.MockTransactional
+		mockTokenRevocationStorageProvider *internal.MockTokenRevocationStorageProvider
+		mockTokenRevocationStorage         *internal.MockTokenRevocationStorage
+		mockAccessTokenStorageProvider     *internal.MockAccessTokenStorageProvider
+		mockRefreshTokenStorageProvider    *internal.MockRefreshTokenStorageProvider
+		mockRefreshTokenStorage            *internal.MockRefreshTokenStorage
+	)
+
 	request := fosite.NewAccessRequest(&fosite.DefaultSession{})
 	propagatedContext := context.Background()
 
@@ -369,12 +378,12 @@ func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					ID:         "foo",
 					GrantTypes: fosite.Arguments{"refresh_token"},
 				}
-				mockRevocationStoreProvider.
+				mockRefreshTokenStorageProvider.
 					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
-					Times(4)
-				mockRevocationStore.
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(2)
+				mockRefreshTokenStorage.
 					EXPECT().
 					GetRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(request, fosite.ErrInactiveToken).
@@ -383,18 +392,23 @@ func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStore.
+					Times(1)
+				mockRefreshTokenStorage.
 					EXPECT().
 					DeleteRefreshTokenSession(propagatedContext, gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockTokenRevocationStorageProvider.
+					EXPECT().
+					TokenRevocationStorage().
+					Return(mockTokenRevocationStorage).
+					Times(2)
+				mockTokenRevocationStorage.
 					EXPECT().
 					RevokeRefreshToken(propagatedContext, gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockTokenRevocationStorage.
 					EXPECT().
 					RevokeAccessToken(propagatedContext, gomock.Any()).
 					Return(nil).
@@ -403,7 +417,7 @@ func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
 					EXPECT().
 					Commit(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: fosite.ErrInvalidGrant,
 		},
@@ -413,20 +427,39 @@ func TestRefreshFlowTransactional_HandleTokenEndpointRequest(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockTransactional = internal.NewMockTransactional(ctrl)
-			mockRevocationStoreProvider = internal.NewMockTokenRevocationStorageProvider(ctrl)
-			mockRevocationStore = internal.NewMockTokenRevocationStorage(ctrl)
-			testCase.setup()
+
+			mockTokenRevocationStorageProvider = internal.NewMockTokenRevocationStorageProvider(ctrl)
+			mockTokenRevocationStorage = internal.NewMockTokenRevocationStorage(ctrl)
+
+			mockAccessTokenStorageProvider = internal.NewMockAccessTokenStorageProvider(ctrl)
+
+			mockRefreshTokenStorageProvider = internal.NewMockRefreshTokenStorageProvider(ctrl)
+			mockRefreshTokenStorage = internal.NewMockRefreshTokenStorage(ctrl)
+
+			// define concrete types
+			mockStorage := struct {
+				*internal.MockAccessTokenStorageProvider
+				*internal.MockRefreshTokenStorageProvider
+				*internal.MockTokenRevocationStorageProvider
+				*internal.MockTransactional
+			}{
+				MockAccessTokenStorageProvider:     mockAccessTokenStorageProvider,
+				MockRefreshTokenStorageProvider:    mockRefreshTokenStorageProvider,
+				MockTokenRevocationStorageProvider: mockTokenRevocationStorageProvider,
+				MockTransactional:                  mockTransactional,
+			}
 
 			handler := oauth2.RefreshTokenGrantHandler{
-				TokenRevocationStorage: mockRevocationStoreProvider,
-				AccessTokenStrategy:    hmacshaStrategy,
-				RefreshTokenStrategy:   hmacshaStrategy,
+				Storage:  mockStorage,
+				Strategy: hmacshaStrategy,
 				Config: &fosite.Config{
 					AccessTokenLifespan:      time.Hour,
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
 					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 				},
 			}
+
+			testCase.setup()
 
 			if err := handler.HandleTokenEndpointRequest(propagatedContext, request); testCase.expectError != nil {
 				assert.EqualError(t, err, testCase.expectError.Error())
@@ -466,21 +499,21 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 						areq.RequestedScope = fosite.Arguments{"foo", "bar"}
 						areq.GrantedScope = fosite.Arguments{"foo", "bar"}
 
-						token, signature, err := strategy.GenerateRefreshToken(context.Background(), nil)
+						token, signature, err := strategy.RefreshTokenStrategy().GenerateRefreshToken(context.Background(), nil)
 						require.NoError(t, err)
 						require.NoError(t, store.CreateRefreshTokenSession(context.Background(), signature, "", areq))
 						areq.Form.Add("refresh_token", token)
 					},
 					check: func(t *testing.T) {
-						signature := strategy.RefreshTokenSignature(context.Background(), areq.Form.Get("refresh_token"))
+						signature := strategy.RefreshTokenStrategy().RefreshTokenSignature(context.Background(), areq.Form.Get("refresh_token"))
 
 						// The old refresh token should be deleted
 						_, err := store.GetRefreshTokenSession(context.Background(), signature, nil)
 						require.Error(t, err)
 
 						assert.Equal(t, "req-id", areq.ID)
-						require.NoError(t, strategy.ValidateAccessToken(context.Background(), areq, aresp.GetAccessToken()))
-						require.NoError(t, strategy.ValidateRefreshToken(context.Background(), areq, aresp.ToMap()["refresh_token"].(string)))
+						require.NoError(t, strategy.AccessTokenStrategy().ValidateAccessToken(context.Background(), areq, aresp.GetAccessToken()))
+						require.NoError(t, strategy.RefreshTokenStrategy().ValidateRefreshToken(context.Background(), areq, aresp.ToMap()["refresh_token"].(string)))
 						assert.Equal(t, "bearer", aresp.GetTokenType())
 						assert.NotEmpty(t, aresp.ToMap()["expires_in"])
 						assert.Equal(t, "foo bar", aresp.ToMap()["scope"])
@@ -494,10 +527,12 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 						AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 					}
 					h := oauth2.RefreshTokenGrantHandler{
-						TokenRevocationStorage: store,
-						RefreshTokenStrategy:   strategy,
-						AccessTokenStrategy:    strategy,
-						Config:                 config,
+						Storage: store,
+						Strategy: strategy.(interface {
+							oauth2.AccessTokenStrategyProvider
+							oauth2.RefreshTokenStrategyProvider
+						}),
+						Config: config,
 					}
 					areq = fosite.NewAccessRequest(&fosite.DefaultSession{})
 					aresp = fosite.NewAccessResponse()
@@ -523,18 +558,18 @@ func TestRefreshFlow_PopulateTokenEndpointResponse(t *testing.T) {
 }
 
 func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
-	var mockTransactional *internal.MockTransactional
-	var mockRevocationStoreProvider *internal.MockTokenRevocationStorageProvider
-	var mockRevocationStore *internal.MockTokenRevocationStorage
+	var (
+		mockTransactional                  *internal.MockTransactional
+		mockTokenRevocationStorageProvider *internal.MockTokenRevocationStorageProvider
+		mockAccessTokenStorageProvider     *internal.MockAccessTokenStorageProvider
+		mockAccessTokenStorage             *internal.MockAccessTokenStorage
+		mockRefreshTokenStorageProvider    *internal.MockRefreshTokenStorageProvider
+		mockRefreshTokenStorage            *internal.MockRefreshTokenStorage
+	)
+
 	request := fosite.NewAccessRequest(&fosite.DefaultSession{})
 	response := fosite.NewAccessResponse()
 	propagatedContext := context.Background()
-
-	// some storage implementation that has support for transactions, notice the embedded type `fosite.Transactional`
-	// type transactionalStore struct {
-	// 	fosite.Transactional
-	// 	oauth2.TokenRevocationStorage
-	// }
 
 	for _, testCase := range []struct {
 		description string
@@ -549,23 +584,28 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
+					Times(1)
+				mockRefreshTokenStorageProvider.
 					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
-					Times(3)
-				mockRevocationStore.
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(2)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockAccessTokenStorageProvider.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorage.
 					EXPECT().
 					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
@@ -574,7 +614,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Commit(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 		},
 		{
@@ -585,13 +625,13 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
-					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorageProvider.
+					EXPECT().
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(1)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
@@ -600,7 +640,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: fosite.ErrServerError,
 		},
@@ -613,13 +653,13 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
-					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorageProvider.
+					EXPECT().
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(1)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(fosite.ErrSerializationFailure).
@@ -628,7 +668,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: fosite.ErrInvalidRequest,
 		},
@@ -640,13 +680,13 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
-					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorageProvider.
+					EXPECT().
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(1)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
@@ -655,7 +695,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: fosite.ErrServerError,
 		},
@@ -668,13 +708,13 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
-					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorageProvider.
+					EXPECT().
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(1)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(fosite.ErrSerializationFailure).
@@ -683,7 +723,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: fosite.ErrInvalidRequest,
 		},
@@ -695,18 +735,23 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
+					Times(1)
+				mockRefreshTokenStorageProvider.
 					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
-					Times(2)
-				mockRevocationStore.
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(1)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockAccessTokenStorageProvider.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(fosite.ErrSerializationFailure).
@@ -715,7 +760,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: fosite.ErrInvalidRequest,
 		},
@@ -726,18 +771,23 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
+					Times(1)
+				mockRefreshTokenStorageProvider.
 					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
-					Times(2)
-				mockRevocationStore.
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(1)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockAccessTokenStorageProvider.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
@@ -746,7 +796,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: fosite.ErrServerError,
 		},
@@ -758,23 +808,28 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
+					Times(1)
+				mockRefreshTokenStorageProvider.
 					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
-					Times(3)
-				mockRevocationStore.
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(2)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockAccessTokenStorageProvider.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorage.
 					EXPECT().
 					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(errors.New("Whoops, a nasty database error occurred!")).
@@ -783,7 +838,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: fosite.ErrServerError,
 		},
@@ -796,23 +851,28 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
+					Times(1)
+				mockRefreshTokenStorageProvider.
 					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
-					Times(3)
-				mockRevocationStore.
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(2)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockAccessTokenStorageProvider.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorage.
 					EXPECT().
 					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(fosite.ErrSerializationFailure).
@@ -821,7 +881,7 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: fosite.ErrInvalidRequest,
 		},
@@ -829,23 +889,13 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 			description: "should result in a server error if transaction cannot be created",
 			setup: func() {
 				request.GrantTypes = fosite.Arguments{"refresh_token"}
-				mockRevocationStoreProvider.
-					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
-					Times(1)
-				mockRevocationStore.
-					EXPECT().
-					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
-					Return(fosite.ErrNotFound).
-					Times(1)
 				mockTransactional.
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(nil, errors.New("Could not create transaction!")).
-					Times(0)
+					Times(1)
 			},
-			expectError: fosite.ErrInvalidRequest,
+			expectError: fosite.ErrServerError,
 		},
 		{
 			description: "should result in a server error if transaction cannot be rolled back",
@@ -855,13 +905,13 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
-					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorageProvider.
+					EXPECT().
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(1)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(fosite.ErrNotFound).
@@ -870,9 +920,9 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(errors.New("Could not rollback transaction!")).
-					Times(0)
+					Times(1)
 			},
-			expectError: fosite.ErrInvalidRequest,
+			expectError: fosite.ErrServerError,
 		},
 		{
 			description: "should result in a server error if transaction cannot be committed",
@@ -882,23 +932,28 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
+					Times(1)
+				mockRefreshTokenStorageProvider.
 					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
-					Times(3)
-				mockRevocationStore.
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(2)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockAccessTokenStorageProvider.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorage.
 					EXPECT().
 					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
@@ -907,12 +962,12 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Commit(propagatedContext).
 					Return(errors.New("Could not commit transaction!")).
-					Times(0)
+					Times(1)
 				mockTransactional.
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: nil,
 		},
@@ -925,23 +980,28 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					BeginTX(propagatedContext).
 					Return(propagatedContext, nil).
-					Times(0)
-				mockRevocationStoreProvider.
+					Times(1)
+				mockRefreshTokenStorageProvider.
 					EXPECT().
-					TokenRevocationStorage().
-					Return(mockRevocationStore).
-					Times(3)
-				mockRevocationStore.
+					RefreshTokenStorage().
+					Return(mockRefreshTokenStorage).
+					Times(2)
+				mockRefreshTokenStorage.
 					EXPECT().
 					RotateRefreshToken(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockAccessTokenStorageProvider.
+					EXPECT().
+					AccessTokenStorage().
+					Return(mockAccessTokenStorage).
+					Times(1)
+				mockAccessTokenStorage.
 					EXPECT().
 					CreateAccessTokenSession(propagatedContext, gomock.Any(), gomock.Any()).
 					Return(nil).
 					Times(1)
-				mockRevocationStore.
+				mockRefreshTokenStorage.
 					EXPECT().
 					CreateRefreshTokenSession(propagatedContext, gomock.Any(), gomock.Any(), gomock.Any()).
 					Return(nil).
@@ -950,12 +1010,12 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 					EXPECT().
 					Commit(propagatedContext).
 					Return(fosite.ErrSerializationFailure).
-					Times(0)
+					Times(1)
 				mockTransactional.
 					EXPECT().
 					Rollback(propagatedContext).
 					Return(nil).
-					Times(0)
+					Times(1)
 			},
 			expectError: nil,
 		},
@@ -965,20 +1025,39 @@ func TestRefreshFlowTransactional_PopulateTokenEndpointResponse(t *testing.T) {
 			defer ctrl.Finish()
 
 			mockTransactional = internal.NewMockTransactional(ctrl)
-			mockRevocationStoreProvider = internal.NewMockTokenRevocationStorageProvider(ctrl)
-			mockRevocationStore = internal.NewMockTokenRevocationStorage(ctrl)
-			testCase.setup()
+
+			mockTokenRevocationStorageProvider = internal.NewMockTokenRevocationStorageProvider(ctrl)
+
+			mockAccessTokenStorageProvider = internal.NewMockAccessTokenStorageProvider(ctrl)
+			mockAccessTokenStorage = internal.NewMockAccessTokenStorage(ctrl)
+
+			mockRefreshTokenStorageProvider = internal.NewMockRefreshTokenStorageProvider(ctrl)
+			mockRefreshTokenStorage = internal.NewMockRefreshTokenStorage(ctrl)
+
+			// define concrete types
+			mockStorage := struct {
+				*internal.MockAccessTokenStorageProvider
+				*internal.MockRefreshTokenStorageProvider
+				*internal.MockTokenRevocationStorageProvider
+				*internal.MockTransactional
+			}{
+				MockAccessTokenStorageProvider:     mockAccessTokenStorageProvider,
+				MockRefreshTokenStorageProvider:    mockRefreshTokenStorageProvider,
+				MockTokenRevocationStorageProvider: mockTokenRevocationStorageProvider,
+				MockTransactional:                  mockTransactional,
+			}
 
 			handler := oauth2.RefreshTokenGrantHandler{
-				TokenRevocationStorage: mockRevocationStoreProvider,
-				AccessTokenStrategy:    hmacshaStrategy,
-				RefreshTokenStrategy:   hmacshaStrategy,
+				Storage:  mockStorage,
+				Strategy: hmacshaStrategy,
 				Config: &fosite.Config{
 					AccessTokenLifespan:      time.Hour,
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
 					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 				},
 			}
+
+			testCase.setup()
 
 			if err := handler.PopulateTokenEndpointResponse(propagatedContext, request, response); testCase.expectError != nil {
 				assert.EqualError(t, err, testCase.expectError.Error())

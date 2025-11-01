@@ -16,6 +16,7 @@ import (
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/handler/openid"
 	"github.com/ory/fosite/handler/pkce"
+	"github.com/ory/fosite/handler/rfc7523"
 	"github.com/ory/fosite/handler/rfc8628"
 	"github.com/ory/fosite/internal"
 )
@@ -120,7 +121,7 @@ func (s *MemoryStore) TokenRevocationStorage() oauth2.TokenRevocationStorage {
 	return s
 }
 
-func (s *MemoryStore) OpenIDConnectRequestStorage() openid.OIDCRequestStorage {
+func (s *MemoryStore) OpenIDConnectRequestStorage() openid.OpenIDConnectRequestStorage {
 	return s
 }
 
@@ -133,6 +134,10 @@ func (s *MemoryStore) PARStorage() fosite.PARStorage {
 }
 
 func (s *MemoryStore) DeviceAuthStorage() rfc8628.DeviceAuthStorage {
+	return s
+}
+
+func (s *MemoryStore) RFC7523KeyStorage() rfc7523.RFC7523KeyStorage {
 	return s
 }
 

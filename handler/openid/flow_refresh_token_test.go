@@ -79,20 +79,22 @@ func TestOpenIDConnectRefreshHandler_HandleTokenEndpointRequest(t *testing.T) {
 }
 
 func TestOpenIDConnectRefreshHandler_PopulateTokenEndpointResponse(t *testing.T) {
-	j := &openid.DefaultStrategy{
-		Signer: &jwt.DefaultSigner{
-			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
-				return key, nil
+	defaultStrategyProvider := mockOpenIDConnectTokenStrategyProvider{
+		strategy: openid.DefaultStrategy{
+			Signer: &jwt.DefaultSigner{
+				GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+					return key, nil
+				},
 			},
-		},
-		Config: &fosite.Config{
-			MinParameterEntropy: fosite.MinParameterEntropy,
+			Config: &fosite.Config{
+				MinParameterEntropy: fosite.MinParameterEntropy,
+			},
 		},
 	}
 
 	h := &openid.OpenIDConnectRefreshHandler{
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
-			IDTokenStrategy: j,
+			IDTokenStrategy: defaultStrategyProvider,
 		},
 		Config: &fosite.Config{},
 	}

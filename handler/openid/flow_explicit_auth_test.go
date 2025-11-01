@@ -33,12 +33,13 @@ var oidcParameters = []string{
 	"nonce",
 }
 
-func makeOpenIDConnectExplicitHandler(ctrl *gomock.Controller, minParameterEntropy int) (openid.ExplicitHandler, *internal.MockOIDCRequestStorage, *internal.MockOIDCRequestStorageProvider) {
-	store := internal.NewMockOIDCRequestStorage(ctrl)
-	provider := internal.NewMockOIDCRequestStorageProvider(ctrl)
+func makeOpenIDConnectExplicitHandler(ctrl *gomock.Controller, minParameterEntropy int) (openid.ExplicitHandler, *internal.MockOpenIDConnectRequestStorage, *internal.MockOpenIDConnectRequestStorageProvider) {
+	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
+	provider := internal.NewMockOpenIDConnectRequestStorageProvider(ctrl)
+	openIDTokenStrategyProvider := internal.NewMockOpenIDConnectTokenStrategyProvider(ctrl)
 	config := &fosite.Config{MinParameterEntropy: minParameterEntropy}
 
-	j := &openid.DefaultStrategy{
+	defaultStrategy := &openid.DefaultStrategy{
 		Signer: &jwt.DefaultSigner{
 			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
 				return key, nil
@@ -46,13 +47,14 @@ func makeOpenIDConnectExplicitHandler(ctrl *gomock.Controller, minParameterEntro
 		},
 		Config: config,
 	}
+	openIDTokenStrategyProvider.EXPECT().OpenIDConnectTokenStrategy().Return(defaultStrategy).AnyTimes()
 
 	return openid.ExplicitHandler{
 		Storage: provider,
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
-			IDTokenStrategy: j,
+			IDTokenStrategy: openIDTokenStrategyProvider,
 		},
-		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(j.Signer, config),
+		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(defaultStrategy.Signer, config),
 		Config:                        config,
 	}, store, provider
 }

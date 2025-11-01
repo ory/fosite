@@ -24,12 +24,20 @@ import (
 func TestDeviceAuth_HandleDeviceEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	store := internal.NewMockOIDCRequestStorageProvider(ctrl)
+	store := internal.NewMockOpenIDConnectRequestStorageProvider(ctrl)
+	strategyProvider := internal.NewMockDeviceCodeStrategyProvider(ctrl)
+	openIDTokenStrategyProvider := internal.NewMockOpenIDConnectTokenStrategyProvider(ctrl)
 
 	config := &fosite.Config{
 		MinParameterEntropy:       fosite.MinParameterEntropy,
 		DeviceAndUserCodeLifespan: time.Hour * 24,
 	}
+
+	strategy := &rfc8628.DefaultDeviceStrategy{
+		Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobar")}},
+		Config: config,
+	}
+	strategyProvider.EXPECT().DeviceCodeStrategy().Return(strategy).Times(0)
 
 	signer := &jwt.DefaultSigner{
 		GetPrivateKey: func(ctx context.Context) (interface{}, error) {
@@ -37,18 +45,18 @@ func TestDeviceAuth_HandleDeviceEndpointRequest(t *testing.T) {
 		},
 	}
 
-	h := openid.OpenIDConnectDeviceHandler{
-		OpenIDConnectRequestStorage: store,
-		DeviceCodeStrategy: &rfc8628.DefaultDeviceStrategy{
-			Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobar")}},
-			Config: config,
-		},
+	defaultStrategy := &openid.DefaultStrategy{
+		Signer: signer,
 		Config: config,
+	}
+	openIDTokenStrategyProvider.EXPECT().OpenIDConnectTokenStrategy().Return(defaultStrategy).Times(0)
+
+	h := openid.OpenIDConnectDeviceHandler{
+		Storage:  store,
+		Strategy: strategyProvider,
+		Config:   config,
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
-			IDTokenStrategy: &openid.DefaultStrategy{
-				Signer: signer,
-				Config: config,
-			},
+			IDTokenStrategy: openIDTokenStrategyProvider,
 		},
 	}
 

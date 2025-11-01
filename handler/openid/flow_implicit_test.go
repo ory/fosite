@@ -30,13 +30,15 @@ func makeOpenIDConnectImplicitHandler(minParameterEntropy int) openid.OpenIDConn
 		ScopeStrategy:       fosite.HierarchicScopeStrategy,
 	}
 
-	idStrategy := &openid.DefaultStrategy{
-		Signer: &jwt.DefaultSigner{
-			GetPrivateKey: func(ctx context.Context) (interface{}, error) {
-				return gen.MustRSAKey(), nil
+	defaultStrategyProvider := mockOpenIDConnectTokenStrategyProvider{
+		strategy: openid.DefaultStrategy{
+			Signer: &jwt.DefaultSigner{
+				GetPrivateKey: func(ctx context.Context) (interface{}, error) {
+					return gen.MustRSAKey(), nil
+				},
 			},
+			Config: config,
 		},
-		Config: config,
 	}
 
 	j := &openid.DefaultStrategy{
@@ -50,12 +52,12 @@ func makeOpenIDConnectImplicitHandler(minParameterEntropy int) openid.OpenIDConn
 
 	return openid.OpenIDConnectImplicitHandler{
 		AuthorizeImplicitGrantTypeHandler: &oauth2.AuthorizeImplicitGrantHandler{
-			Config:              config,
-			AccessTokenStrategy: hmacStrategy,
-			AccessTokenStorage:  storage.NewMemoryStore(),
+			Config:   config,
+			Strategy: hmacStrategy,
+			Storage:  storage.NewMemoryStore(),
 		},
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
-			IDTokenStrategy: idStrategy,
+			IDTokenStrategy: defaultStrategyProvider,
 		},
 		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(j.Signer, config),
 		Config:                        config,

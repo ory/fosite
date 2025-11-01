@@ -19,9 +19,9 @@ var _ fosite.AuthorizeEndpointHandler = (*AuthorizeImplicitGrantHandler)(nil)
 // AuthorizeImplicitGrantHandler is a response handler for the Authorize Code grant using the implicit grant type
 // as defined in https://tools.ietf.org/html/rfc6749#section-4.2
 type AuthorizeImplicitGrantHandler struct {
-	AccessTokenStrategy AccessTokenStrategyProvider
-	AccessTokenStorage  AccessTokenStorageProvider
-	Config              interface {
+	Strategy AccessTokenStrategyProvider
+	Storage  AccessTokenStorageProvider
+	Config   interface {
 		fosite.AccessTokenLifespanProvider
 		fosite.ScopeStrategyProvider
 		fosite.AudienceStrategyProvider
@@ -70,12 +70,12 @@ func (c *AuthorizeImplicitGrantHandler) IssueImplicitAccessToken(ctx context.Con
 	}
 
 	// Generate the access token
-	token, signature, err := c.AccessTokenStrategy.AccessTokenStrategy().GenerateAccessToken(ctx, ar)
+	token, signature, err := c.Strategy.AccessTokenStrategy().GenerateAccessToken(ctx, ar)
 	if err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	if err := c.AccessTokenStorage.AccessTokenStorage().CreateAccessTokenSession(ctx, signature, ar.Sanitize([]string{})); err != nil {
+	if err := c.Storage.AccessTokenStorage().CreateAccessTokenSession(ctx, signature, ar.Sanitize([]string{})); err != nil {
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 

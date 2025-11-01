@@ -11,7 +11,7 @@ import (
 // PushedAuthorizeHandlerFactory creates the basic PAR handler
 func PushedAuthorizeHandlerFactory(config fosite.Configurator, storage fosite.Storage, _ interface{}) interface{} {
 	return &par.PushedAuthorizeHandler{
-		Storage: storage.(par.StorageProvider),
+		Storage: storage.(fosite.PARStorageProvider),
 		Config:  config,
 	}
 }

@@ -12,13 +12,11 @@ import (
 
 // OpenIDConnectDeviceHandler a response handler for the Device Authorization Grant with OpenID Connect identity layer
 type OpenIDConnectDeviceHandler struct {
-	OpenIDConnectRequestStorage OpenIDConnectRequestStorageProvider
-	DeviceCodeStrategy          rfc8628.DeviceCodeStrategy
-
-	Config interface {
+	Storage  OpenIDConnectRequestStorageProvider
+	Strategy rfc8628.DeviceCodeStrategyProvider
+	Config   interface {
 		fosite.IDTokenLifespanProvider
 	}
-
 	*IDTokenHandleHelper
 }
 

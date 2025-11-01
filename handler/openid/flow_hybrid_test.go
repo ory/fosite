@@ -32,15 +32,25 @@ var hmacStrategy = oauth2.NewHMACSHAStrategy(
 	nil,
 )
 
+type mockOpenIDConnectTokenStrategyProvider struct {
+	strategy openid.DefaultStrategy
+}
+
+func (p mockOpenIDConnectTokenStrategyProvider) OpenIDConnectTokenStrategy() openid.OpenIDConnectTokenStrategy {
+	return p.strategy
+}
+
 func makeOpenIDConnectHybridHandler(minParameterEntropy int) openid.OpenIDConnectHybridHandler {
-	idStrategy := &openid.DefaultStrategy{
-		Signer: &jwt.DefaultSigner{
-			GetPrivateKey: func(_ context.Context) (interface{}, error) {
-				return gen.MustRSAKey(), nil
+	defaultStrategyProvider := mockOpenIDConnectTokenStrategyProvider{
+		strategy: openid.DefaultStrategy{
+			Signer: &jwt.DefaultSigner{
+				GetPrivateKey: func(_ context.Context) (interface{}, error) {
+					return gen.MustRSAKey(), nil
+				},
 			},
-		},
-		Config: &fosite.Config{
-			MinParameterEntropy: minParameterEntropy,
+			Config: &fosite.Config{
+				MinParameterEntropy: minParameterEntropy,
+			},
 		},
 	}
 
@@ -64,20 +74,19 @@ func makeOpenIDConnectHybridHandler(minParameterEntropy int) openid.OpenIDConnec
 	}
 	return openid.OpenIDConnectHybridHandler{
 		AuthorizeExplicitGrantHandler: &oauth2.AuthorizeExplicitGrantHandler{
-			AuthorizeCodeStrategy: hmacStrategy,
-			AccessTokenStrategy:   hmacStrategy,
-			Storage:               storage.NewMemoryStore(),
-			Config:                config,
+			Strategy: hmacStrategy,
+			Storage:  storage.NewMemoryStore(),
+			Config:   config,
 		},
 		AuthorizeImplicitGrantHandler: &oauth2.AuthorizeImplicitGrantHandler{
 			Config: &fosite.Config{
 				AccessTokenLifespan: time.Hour,
 			},
-			AccessTokenStrategy: hmacStrategy,
-			AccessTokenStorage:  storage.NewMemoryStore(),
+			Strategy: hmacStrategy,
+			Storage:  storage.NewMemoryStore(),
 		},
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
-			IDTokenStrategy: idStrategy,
+			IDTokenStrategy: defaultStrategyProvider,
 		},
 		Config:                        config,
 		OpenIDConnectRequestValidator: openid.NewOpenIDConnectRequestValidator(j.Signer, config),

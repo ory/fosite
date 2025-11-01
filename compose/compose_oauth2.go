@@ -59,9 +59,9 @@ func OAuth2RefreshTokenGrantFactory(config fosite.Configurator, storage fosite.S
 // an access token, refresh token and authorize code validator.
 func OAuth2AuthorizeImplicitFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &oauth2.AuthorizeImplicitGrantHandler{
-		AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategyProvider),
-		AccessTokenStorage:  storage.(oauth2.AccessTokenStorageProvider),
-		Config:              config,
+		Strategy: strategy.(oauth2.AccessTokenStrategyProvider),
+		Storage:  storage.(oauth2.AccessTokenStorageProvider),
+		Config:   config,
 	}
 }
 
@@ -73,23 +73,27 @@ func OAuth2AuthorizeImplicitFactory(config fosite.Configurator, storage fosite.S
 // is discouraged see: https://www.scottbrady91.com/oauth/why-the-resource-owner-password-credentials-grant-type-is-not-authentication-nor-suitable-for-modern-applications
 func OAuth2ResourceOwnerPasswordCredentialsFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &oauth2.ResourceOwnerPasswordCredentialsGrantHandler{
-		ResourceOwnerPasswordCredentialsGrantStorage: storage.(oauth2.ResourceOwnerPasswordCredentialsGrantStorage),
-		HandleHelper: &oauth2.HandleHelper{
-			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
-			Storage:             storage.(oauth2.AccessTokenStorageProvider),
-			Config:              config,
-		},
-		RefreshTokenStrategy: strategy.(oauth2.RefreshTokenStrategy),
-		Config:               config,
+		Strategy: strategy.(interface {
+			oauth2.AccessTokenStrategyProvider
+			oauth2.RefreshTokenStrategyProvider
+		}),
+		Storage: storage.(oauth2.ResourceOwnerPasswordCredentialsGrantStorage),
+		Config:  config,
 	}
 }
 
 // OAuth2TokenRevocationFactory creates an OAuth2 token revocation handler.
 func OAuth2TokenRevocationFactory(_ fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &oauth2.TokenRevocationHandler{
-		TokenRevocationStorage: storage.(oauth2.TokenRevocationStorageProvider),
-		AccessTokenStrategy:    strategy.(oauth2.AccessTokenStrategy),
-		RefreshTokenStrategy:   strategy.(oauth2.RefreshTokenStrategy),
+		Strategy: strategy.(interface {
+			oauth2.AccessTokenStrategyProvider
+			oauth2.RefreshTokenStrategyProvider
+		}),
+		Storage: storage.(interface {
+			oauth2.AccessTokenStorageProvider
+			oauth2.RefreshTokenStorageProvider
+			oauth2.TokenRevocationStorageProvider
+		}),
 	}
 }
 
@@ -97,9 +101,15 @@ func OAuth2TokenRevocationFactory(_ fosite.Configurator, storage fosite.Storage,
 // an access token and refresh token validator.
 func OAuth2TokenIntrospectionFactory(config fosite.Configurator, storage fosite.Storage, strategy interface{}) interface{} {
 	return &oauth2.CoreValidator{
-		CoreStrategy: strategy.(oauth2.CoreStrategy),
-		CoreStorage:  storage.(oauth2.CoreStorage),
-		Config:       config,
+		Strategy: strategy.(interface {
+			oauth2.AccessTokenStrategyProvider
+			oauth2.RefreshTokenStrategyProvider
+		}),
+		Storage: storage.(interface {
+			oauth2.AccessTokenStorageProvider
+			oauth2.RefreshTokenStorageProvider
+		}),
+		Config: config,
 	}
 }
 

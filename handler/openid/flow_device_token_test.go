@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/ory/fosite/handler/openid"
@@ -42,14 +41,22 @@ func TestDeviceToken_HandleTokenEndpointRequest(t *testing.T) {
 func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	store := internal.NewMockOIDCRequestStorage(ctrl)
-	provider := internal.NewMockOIDCRequestStorageProvider(ctrl)
+
+	store := internal.NewMockOpenIDConnectRequestStorage(ctrl)
+	provider := internal.NewMockOpenIDConnectRequestStorageProvider(ctrl)
+	strategyProvider := internal.NewMockDeviceCodeStrategyProvider(ctrl)
+	openIDTokenStrategyProvider := internal.NewMockOpenIDConnectTokenStrategyProvider(ctrl)
 
 	config := &fosite.Config{
 		MinParameterEntropy:       fosite.MinParameterEntropy,
 		DeviceAndUserCodeLifespan: time.Hour * 24,
 		IDTokenLifespan:           time.Hour * 24,
 	}
+	strategy := &rfc8628.DefaultDeviceStrategy{
+		Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobar")}},
+		Config: config,
+	}
+	strategyProvider.EXPECT().DeviceCodeStrategy().Return(strategy).AnyTimes()
 
 	signer := &jwt.DefaultSigner{
 		GetPrivateKey: func(ctx context.Context) (interface{}, error) {
@@ -57,18 +64,18 @@ func TestDeviceToken_PopulateTokenEndpointResponse(t *testing.T) {
 		},
 	}
 
-	h := openid.OpenIDConnectDeviceHandler{
-		OpenIDConnectRequestStorage: provider,
-		DeviceCodeStrategy: &rfc8628.DefaultDeviceStrategy{
-			Enigma: &hmac.HMACStrategy{Config: &fosite.Config{GlobalSecret: []byte("foobar")}},
-			Config: config,
-		},
+	defaultStrategy := &openid.DefaultStrategy{
+		Signer: signer,
 		Config: config,
+	}
+	openIDTokenStrategyProvider.EXPECT().OpenIDConnectTokenStrategy().Return(defaultStrategy).AnyTimes()
+
+	h := openid.OpenIDConnectDeviceHandler{
+		Storage:  provider,
+		Strategy: strategyProvider,
+		Config:   config,
 		IDTokenHandleHelper: &openid.IDTokenHandleHelper{
-			IDTokenStrategy: &openid.DefaultStrategy{
-				Signer: signer,
-				Config: config,
-			},
+			IDTokenStrategy: openIDTokenStrategyProvider,
 		},
 	}
 

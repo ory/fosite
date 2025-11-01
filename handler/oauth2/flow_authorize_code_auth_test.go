@@ -24,14 +24,18 @@ func parseUrl(uu string) *url.URL {
 }
 
 func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
-	for k, strategy := range map[string]oauth2.CoreStrategy{
+	for k, strategy := range map[string]any{
 		"hmac": hmacshaStrategy,
 	} {
 		t.Run("strategy="+k, func(t *testing.T) {
 			store := storage.NewMemoryStore()
 			handler := oauth2.AuthorizeExplicitGrantHandler{
-				Storage:               store,
-				AuthorizeCodeStrategy: strategy,
+				Storage: store,
+				Strategy: strategy.(interface {
+					oauth2.AccessTokenStrategyProvider
+					oauth2.RefreshTokenStrategyProvider
+					oauth2.AuthorizeCodeStrategyProvider
+				}),
 				Config: &fosite.Config{
 					AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
 					ScopeStrategy:            fosite.HierarchicScopeStrategy,
@@ -124,8 +128,12 @@ func TestAuthorizeCode_HandleAuthorizeEndpointRequest(t *testing.T) {
 				},
 				{
 					handler: oauth2.AuthorizeExplicitGrantHandler{
-						Storage:               store,
-						AuthorizeCodeStrategy: strategy,
+						Storage: store,
+						Strategy: strategy.(interface {
+							oauth2.AccessTokenStrategyProvider
+							oauth2.RefreshTokenStrategyProvider
+							oauth2.AuthorizeCodeStrategyProvider
+						}),
 						Config: &fosite.Config{
 							ScopeStrategy:            fosite.HierarchicScopeStrategy,
 							AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,

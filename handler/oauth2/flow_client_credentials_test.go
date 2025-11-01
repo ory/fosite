@@ -21,21 +21,17 @@ import (
 func TestClientCredentials_HandleTokenEndpointRequest(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	provider := internal.NewMockAccessTokenStorageProvider(ctrl)
-	chgen := internal.NewMockAccessTokenStrategy(ctrl)
+	chgenp := internal.NewMockAccessTokenStrategyProvider(ctrl)
 	areq := internal.NewMockAccessRequester(ctrl)
 	defer ctrl.Finish()
 
 	h := oauth2.ClientCredentialsGrantHandler{
-		HandleHelper: &oauth2.HandleHelper{
-			Storage:             provider,
-			AccessTokenStrategy: chgen,
-			Config: &fosite.Config{
-				AccessTokenLifespan: time.Hour,
-			},
-		},
+		Storage:  provider,
+		Strategy: chgenp,
 		Config: &fosite.Config{
 			ScopeStrategy:            fosite.HierarchicScopeStrategy,
 			AudienceMatchingStrategy: fosite.DefaultAudienceMatchingStrategy,
+			AccessTokenLifespan:      time.Hour,
 		},
 	}
 	for k, c := range []struct {
@@ -107,20 +103,17 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 	store := internal.NewMockClientCredentialsGrantStorage(ctrl)
 	provider := internal.NewMockAccessTokenStorageProvider(ctrl)
 	chgen := internal.NewMockAccessTokenStrategy(ctrl)
+	chgenp := internal.NewMockAccessTokenStrategyProvider(ctrl)
 	areq := fosite.NewAccessRequest(new(fosite.DefaultSession))
 	aresp := fosite.NewAccessResponse()
 	defer ctrl.Finish()
 
 	h := oauth2.ClientCredentialsGrantHandler{
-		HandleHelper: &oauth2.HandleHelper{
-			Storage:             provider,
-			AccessTokenStrategy: chgen,
-			Config: &fosite.Config{
-				AccessTokenLifespan: time.Hour,
-			},
-		},
+		Storage:  provider,
+		Strategy: chgenp,
 		Config: &fosite.Config{
-			ScopeStrategy: fosite.HierarchicScopeStrategy,
+			ScopeStrategy:       fosite.HierarchicScopeStrategy,
+			AccessTokenLifespan: time.Hour,
 		},
 	}
 	for k, c := range []struct {
@@ -150,6 +143,7 @@ func TestClientCredentials_PopulateTokenEndpointResponse(t *testing.T) {
 				areq.GrantTypes = fosite.Arguments{"client_credentials"}
 				areq.Session = &fosite.DefaultSession{}
 				areq.Client = &fosite.DefaultClient{GrantTypes: fosite.Arguments{"client_credentials"}}
+				chgenp.EXPECT().AccessTokenStrategy().Return(chgen).Times(1)
 				chgen.EXPECT().GenerateAccessToken(gomock.Any(), areq).Return("tokenfoo.bar", "bar", nil)
 				provider.EXPECT().AccessTokenStorage().Return(store).Times(1)
 				store.EXPECT().CreateAccessTokenSession(gomock.Any(), "bar", gomock.Eq(areq.Sanitize([]string{}))).Return(nil)
