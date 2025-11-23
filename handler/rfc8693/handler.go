@@ -43,6 +43,8 @@ type Handler struct {
 	RefreshTokenStorage  oauth2.RefreshTokenStorage
 	AccessTokenStrategy  oauth2.AccessTokenStrategy
 	RefreshTokenStrategy oauth2.RefreshTokenStrategy
+
+	*oauth2.HandleHelper
 }
 
 var _ fosite.TokenEndpointHandler = (*Handler)(nil)
@@ -303,21 +305,11 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fos
 	// Set expiration on the session
 	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(lifespan))
 
-	// Generate new token
-	access_token, access_token_signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, request)
+	// Generate new token using HandleHelper
+	_, err := c.IssueAccessToken(ctx, lifespan, request, response)
 	if err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+		return err
 	}
-	// Store the new token
-	if err := c.AccessTokenStorage.CreateAccessTokenSession(ctx, access_token_signature, request); err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	}
-
-	// Set the response
-	response.SetAccessToken(access_token)
-	response.SetTokenType("Bearer")
-	response.SetExpiresIn(lifespan)
-	response.SetScopes(exchangeRequest.Scopes)
 
 	// Set the issued token type
 	response.SetExtra("issued_token_type", tokenType)

@@ -18,5 +18,10 @@ func RFC8693TokenExchangeFactory(config fosite.Configurator, storage interface{}
 		AccessTokenStorage:   storage.(oauth2.AccessTokenStorage),
 		RefreshTokenStrategy: strategy.(oauth2.RefreshTokenStrategy),
 		RefreshTokenStorage:  storage.(oauth2.RefreshTokenStorage),
+		HandleHelper: &oauth2.HandleHelper{
+			AccessTokenStrategy: strategy.(oauth2.AccessTokenStrategy),
+			AccessTokenStorage:  storage.(oauth2.AccessTokenStorage),
+			Config:              config,
+		},
 	}
 }

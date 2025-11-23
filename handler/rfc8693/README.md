@@ -66,6 +66,11 @@ handler := &rfc8693.Handler{
     RefreshTokenStorage:  storage,
     AccessTokenStrategy:  strategy,
     RefreshTokenStrategy: strategy,
+    HandleHelper: &oauth2.HandleHelper{
+        AccessTokenStrategy: strategy,
+        AccessTokenStorage:  storage,
+        Config:              config,
+    },
 }
 oauth2Provider.TokenEndpointHandlers.Append(handler)
 ```
