@@ -61,14 +61,11 @@ oauth2Provider := compose.Compose(
 
 // Or manually
 handler := &rfc8693.Handler{
-    Config:  config,
-    HandleHelper: &oauth2.HandleHelper{
-        Config:              config,
-        AccessTokenStorage:  storage,
-        RefreshTokenStorage: storage,
-        AccessTokenStrategy: strategy,
-        RefreshTokenStrategy strategy,
-    },
+    Config:               config,
+    AccessTokenStorage:   storage,
+    RefreshTokenStorage:  storage,
+    AccessTokenStrategy:  strategy,
+    RefreshTokenStrategy: strategy,
 }
 oauth2Provider.TokenEndpointHandlers.Append(handler)
 ```
