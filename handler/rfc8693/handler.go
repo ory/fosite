@@ -297,6 +297,9 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fos
 
 	lifespan := c.Config.GetAccessTokenLifespan(ctx)
 
+	// Set expiration on the session
+	request.GetSession().SetExpiresAt(fosite.AccessToken, time.Now().UTC().Add(lifespan))
+
 	// Generate new token
 	access_token, access_token_signature, err := c.AccessTokenStrategy.GenerateAccessToken(ctx, request)
 	if err != nil {
@@ -322,6 +325,9 @@ func (c *Handler) PopulateTokenEndpointResponse(ctx context.Context, request fos
 		if err != nil {
 			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 		}
+
+		// Set expiration for refresh token
+		request.GetSession().SetExpiresAt(fosite.RefreshToken, time.Now().UTC().Add(c.Config.GetRefreshTokenLifespan(ctx)))
 
 		// Store the new refresh token
 		if err := c.RefreshTokenStorage.CreateRefreshTokenSession(ctx, refresh_token_signature, refresh_token, request); err != nil {

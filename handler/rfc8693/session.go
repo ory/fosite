@@ -44,9 +44,10 @@ type TokenExchangeResponse struct {
 
 // TokenExchangeSession implements fosite.Session for token exchange
 type TokenExchangeSession struct {
-	ExchangeRequest *TokenExchangeRequest  `json:"exchange_request"`
-	Subject         string                 `json:"subject"`
-	Extra           map[string]interface{} `json:"extra"`
+	ExchangeRequest *TokenExchangeRequest          `json:"exchange_request"`
+	Subject         string                         `json:"subject"`
+	Extra           map[string]interface{}         `json:"extra"`
+	ExpiresAt       map[fosite.TokenType]time.Time `json:"expires_at"`
 }
 
 // GetSubject returns the subject identifier
@@ -64,14 +65,20 @@ func (s *TokenExchangeSession) GetUsername() string {
 	return s.Subject
 }
 
-// SetExpiresAt sets token expiration (not applicable for token exchange session)
+// SetExpiresAt sets token expiration
 func (s *TokenExchangeSession) SetExpiresAt(key fosite.TokenType, exp time.Time) {
-	// Token exchange sessions don't have expiration themselves
+	if s.ExpiresAt == nil {
+		s.ExpiresAt = make(map[fosite.TokenType]time.Time)
+	}
+	s.ExpiresAt[key] = exp
 }
 
-// GetExpiresAt returns token expiration (not applicable for token exchange session)
+// GetExpiresAt returns token expiration
 func (s *TokenExchangeSession) GetExpiresAt(key fosite.TokenType) time.Time {
-	return time.Time{}
+	if s.ExpiresAt == nil {
+		return time.Time{}
+	}
+	return s.ExpiresAt[key]
 }
 
 // Clone creates a copy of the session
@@ -83,6 +90,11 @@ func (s *TokenExchangeSession) Clone() fosite.Session {
 	extra := make(map[string]interface{})
 	for k, v := range s.Extra {
 		extra[k] = v
+	}
+
+	expiresAt := make(map[fosite.TokenType]time.Time)
+	for k, v := range s.ExpiresAt {
+		expiresAt[k] = v
 	}
 
 	var exchangeRequest *TokenExchangeRequest
@@ -105,5 +117,6 @@ func (s *TokenExchangeSession) Clone() fosite.Session {
 		ExchangeRequest: exchangeRequest,
 		Subject:         s.Subject,
 		Extra:           extra,
+		ExpiresAt:       expiresAt,
 	}
 }
