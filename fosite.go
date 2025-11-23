@@ -150,6 +150,8 @@ type Configurator interface {
 	DeviceEndpointHandlersProvider
 	UserCodeProvider
 	DeviceProvider
+	TokenExchangeEnabledProvider
+	TokenExchangeTokenTypesProvider
 }
 
 func NewOAuth2Provider(s Storage, c Configurator) *Fosite {

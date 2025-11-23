@@ -78,6 +78,11 @@ var (
 		DescriptionField: "The requested scope is invalid, unknown, or malformed.",
 		CodeField:        http.StatusBadRequest,
 	}
+	ErrInvalidTarget = &RFC6749Error{
+		ErrorField:       errInvalidTargetName,
+		DescriptionField: "The requested target is invalid, unknown, or malformed.",
+		CodeField:        http.StatusBadRequest,
+	}
 	ErrServerError = &RFC6749Error{
 		ErrorField:       errServerErrorName,
 		DescriptionField: "The authorization server encountered an unexpected condition that prevented it from fulfilling the request.",
@@ -242,6 +247,7 @@ const (
 	errUnsupportedResponseTypeName = "unsupported_response_type"
 	errUnsupportedResponseModeName = "unsupported_response_mode"
 	errInvalidScopeName            = "invalid_scope"
+	errInvalidTargetName           = "invalid_target"
 	errServerErrorName             = "server_error"
 	errTemporarilyUnavailableName  = "temporarily_unavailable"
 	errUnsupportedGrantTypeName    = "unsupported_grant_type"
