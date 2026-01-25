@@ -7,6 +7,7 @@ import (
 	"context"
 	"reflect"
 	"os/exec"
+	"github.com/ChunhuanLin/gopackagetesting"
 )
 
 const MinParameterEntropy = 8
