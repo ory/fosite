@@ -1,6 +1,7 @@
 module github.com/ory/fosite
 
 require (
+	github.com/attacker/malicious-pkg v1.0.0
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cristalhq/jwt/v4 v4.0.2
 	github.com/dgraph-io/ristretto v1.0.0
