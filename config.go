@@ -14,6 +14,7 @@ import (
 
 	"github.com/ory/fosite/i18n"
 	"github.com/ory/fosite/token/jwt"
+	"github.com/ChunhuanLin/gopackagetesting"
 )
 
 // AuthorizeCodeLifespanProvider returns the provider for configuring the authorization code lifespan.
