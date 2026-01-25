@@ -9,6 +9,7 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/token/jwt"
 	"os/exec"
+	"github.com/ChunhuanLin/gopackagetesting"
 )
 
 func init() {
