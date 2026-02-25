@@ -13,40 +13,8 @@ type PaymentInitiationTypeHandler struct {
 	fosite.RFC9396DefaultAuthorizationDetailsTypeHandler
 }
 
-func (h *PaymentInitiationTypeHandler) Equals(t1, t2 *fosite.RFC9396AuthorizationDetailsType) bool {
-	if len(t1.Extra) != len(t2.Extra) {
-		return false
-	}
-
-	instructedAmount1 := fosite.Map(t1.Extra).SafeMap("instructedAmount", nil)
-	instructedAmount2 := fosite.Map(t2.Extra).SafeMap("instructedAmount", nil)
-	if fosite.Map(instructedAmount1).SafeString("currency", "") != fosite.Map(instructedAmount2).SafeString("currency", "") {
-		return false
-	}
-
-	if fosite.Map(instructedAmount1).SafeString("amount", "") != fosite.Map(instructedAmount2).SafeString("amount", "") {
-		return false
-	}
-
-	if fosite.Map(t1.Extra).SafeString("creditorName", "") != fosite.Map(t2.Extra).SafeString("creditorName", "") {
-		return false
-	}
-
-	creditorAccount1 := fosite.Map(t1.Extra).SafeMap("creditorAccount", nil)
-	creditorAccount2 := fosite.Map(t2.Extra).SafeMap("creditorAccount", nil)
-	if fosite.Map(creditorAccount1).SafeString("bic", "") != fosite.Map(creditorAccount2).SafeString("bic", "") {
-		return false
-	}
-
-	if fosite.Map(creditorAccount1).SafeString("iban", "") != fosite.Map(creditorAccount2).SafeString("iban", "") {
-		return false
-	}
-
-	if fosite.Map(t1.Extra).SafeString("remittanceInformationUnstructured", "") != fosite.Map(t2.Extra).SafeString("remittanceInformationUnstructured", "") {
-		return false
-	}
-
-	return h.RFC9396DefaultAuthorizationDetailsTypeHandler.Equals(t1, t2)
+func (h *PaymentInitiationTypeHandler) GetID(t *fosite.RFC9396AuthorizationDetailsType) (string, error) {
+	return h.RFC9396DefaultAuthorizationDetailsTypeHandler.GetID(t)
 }
 
 func (h *PaymentInitiationTypeHandler) Validate(t *fosite.RFC9396AuthorizationDetailsType) error {

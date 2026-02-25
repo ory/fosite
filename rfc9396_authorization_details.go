@@ -100,12 +100,23 @@ func (ad *RFC9396AuthorizationDetailsType) UnmarshalJSON(data []byte) error {
 
 func (ad *RFC9396AuthorizationDetailsType) MarshalJSON() ([]byte, error) {
 	m := map[string]interface{}{
-		"type":       ad.Type,
-		"actions":    ad.Actions,
-		"datatypes":  ad.Datatypes,
-		"identifier": ad.Identifier,
-		"locations":  ad.Locations,
-		"privileges": ad.Privileges,
+		"type": ad.Type,
+	}
+
+	if len(ad.Actions) > 0 {
+		m["actions"] = ad.Actions
+	}
+	if len(ad.Datatypes) > 0 {
+		m["datatypes"] = ad.Datatypes
+	}
+	if len(ad.Identifier) > 0 {
+		m["identifier"] = ad.Identifier
+	}
+	if len(ad.Locations) > 0 {
+		m["locations"] = ad.Locations
+	}
+	if len(ad.Privileges) > 0 {
+		m["privileges"] = ad.Privileges
 	}
 
 	for k, v := range ad.Extra {
