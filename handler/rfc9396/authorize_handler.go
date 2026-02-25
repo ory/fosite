@@ -106,7 +106,7 @@ func validateAndEnrichRequester(ctx context.Context, c fosite.Client, req fosite
 		}
 
 		if client != nil && strategy != nil && !strategy(client.GetAuthorizationDetailTypes(), ad.Type) {
-			return errorsx.WithStack(fosite.ErrInvalidScope.WithHintf("The OAuth 2.0 Client is not allowed to request authorization details of type '%s'.", ad.Type))
+			return errorsx.WithStack(fosite.ErrInvalidAuthorizationDetails.WithHintf("The OAuth 2.0 Client is not allowed to request authorization details of type '%s'.", ad.Type))
 		}
 
 		ad.DecorateWithTypeHandler(ctx, config)
