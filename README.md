@@ -484,7 +484,7 @@ go test ./...
 
 Simple, right? Now you are ready to go! Make sure to run `go test ./...` often,
 detecting problems with your code rather sooner than later. Please read
-[CONTRIBUTE.md] before creating pull requests and issues.
+[CONTRIBUTE.md](./CONTRIBUTING.md) before creating pull requests and issues.
 
 ### Refresh mock objects
 
