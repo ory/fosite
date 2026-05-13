@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc7523
@@ -432,6 +432,36 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithoutRequiredI
 	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because of missing iat claim in assertion")
 	s.Equal(
 		"The JWT in \"assertion\" request parameter MUST contain an \"iat\" (issued at) claim.",
+		fosite.ErrorToRFC6749Error(err).HintField,
+	)
+}
+
+func (s *AuthorizeJWTGrantRequestHandlerTestSuite) TestAssertionWithIssueDateInFuture() {
+	// arrange
+	ctx := context.Background()
+	s.accessRequest.GrantTypes = []string{grantTypeJWTBearer}
+	keyID := "my_key"
+	pubKey := s.createJWK(s.privateKey.Public(), keyID)
+	issuedAt := time.Now().Add(time.Hour)
+	cl := s.createStandardClaim()
+	cl.IssuedAt = jwt.NewNumericDate(issuedAt)
+	cl.Expiry = jwt.NewNumericDate(issuedAt.Add(time.Minute))
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerIssuedDateOptional = false
+	s.handler.Config.(*fosite.Config).GrantTypeJWTBearerMaxDuration = time.Hour * 24 * 30
+	s.accessRequest.Form.Add("assertion", s.createTestAssertion(cl, keyID))
+	s.mockStore.EXPECT().GetPublicKey(ctx, cl.Issuer, cl.Subject, keyID).Return(&pubKey, nil)
+
+	// act
+	err := s.handler.HandleTokenEndpointRequest(ctx, s.accessRequest)
+
+	// assert
+	s.True(errors.Is(err, fosite.ErrInvalidGrant))
+	s.EqualError(err, fosite.ErrInvalidGrant.Error(), "expected error, because iat claim in assertion is in the future")
+	s.Equal(
+		fmt.Sprintf(
+			"The JWT in \"assertion\" request parameter contains an \"iat\" (issued at) claim with value \"%s\" that is in the future.",
+			cl.IssuedAt.Time().Format(time.RFC3339),
+		),
 		fosite.ErrorToRFC6749Error(err).HintField,
 	)
 }
