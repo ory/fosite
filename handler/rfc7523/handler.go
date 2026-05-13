@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc7523
@@ -261,6 +261,15 @@ func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, ke
 	if !c.Config.GetGrantTypeJWTBearerIssuedDateOptional(ctx) && claims.IssuedAt == nil {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"iat\" (issued at) claim."),
+		)
+	}
+
+	if claims.IssuedAt != nil && claims.IssuedAt.Time().After(time.Now()) {
+		return errorsx.WithStack(fosite.ErrInvalidGrant.
+			WithHintf(
+				"The JWT in \"assertion\" request parameter contains an \"iat\" (issued at) claim with value \"%s\" that is in the future.",
+				claims.IssuedAt.Time().Format(time.RFC3339),
+			),
 		)
 	}
 
