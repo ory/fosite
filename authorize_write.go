@@ -23,7 +23,7 @@ func (f *Fosite) WriteAuthorizeResponse(ctx context.Context, rw http.ResponseWri
 	switch rm := ar.GetResponseMode(); rm {
 	case ResponseModeFormPost:
 		//form_post
-		rw.Header().Add("Content-Type", "text/html;charset=UTF-8")
+		rw.Header().Set("Content-Type", "text/html;charset=UTF-8")
 		WriteAuthorizeFormPostResponse(redir.String(), resp.GetParameters(), GetPostFormHTMLTemplate(ctx, f), rw)
 		return
 	case ResponseModeQuery, ResponseModeDefault:
