@@ -4,6 +4,7 @@
 package fosite_test
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"net/http"
@@ -445,4 +446,105 @@ func TestNewAccessRequestWithMixedClientAuth(t *testing.T) {
 
 func basicAuth(username, password string) string {
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
+}
+
+// TestNewAccessRequest_RFC8707Resource exercises the RFC 8707 "resource"
+// parameter through the full NewAccessRequest pipeline. It verifies that:
+//  1. A valid "resource" parameter is parsed and surfaced on the request via
+//     GetRequestedAudience(), so downstream handlers can bind the audience.
+//  2. An invalid "resource" parameter (relative URI, fragment) is rejected
+//     before client authentication or handler dispatch.
+//  3. Existing "audience"-only requests are unaffected (backward compatibility).
+func TestNewAccessRequest_RFC8707Resource(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	store := internal.NewMockStorage(ctrl)
+	handler := internal.NewMockTokenEndpointHandler(ctrl)
+	handler.EXPECT().CanHandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+	handler.EXPECT().CanSkipClientAuth(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
+	hasher := internal.NewMockHasher(ctrl)
+
+	config := &Config{
+		ClientSecretsHasher:      hasher,
+		AudienceMatchingStrategy: DefaultAudienceMatchingStrategy,
+		TokenEndpointHandlers:    TokenEndpointHandlers{handler},
+	}
+	f := &Fosite{Store: store, Config: config}
+
+	for _, tc := range []struct {
+		name         string
+		form         url.Values
+		wantErr      bool
+		wantAudience []string
+	}{
+		{
+			name: "resource only, single valid URI",
+			form: url.Values{
+				"grant_type": {"foo"},
+				"resource":   {"https://mcp.example.com"},
+			},
+			wantAudience: []string{"https://mcp.example.com"},
+		},
+		{
+			name: "resource only, multiple valid URIs",
+			form: url.Values{
+				"grant_type": {"foo"},
+				"resource":   {"https://a.example.com", "https://b.example.com"},
+			},
+			wantAudience: []string{"https://a.example.com", "https://b.example.com"},
+		},
+		{
+			name: "audience and resource merged",
+			form: url.Values{
+				"grant_type": {"foo"},
+				"audience":   {"https://aud.example.com"},
+				"resource":   {"https://res.example.com"},
+			},
+			wantAudience: []string{"https://aud.example.com", "https://res.example.com"},
+		},
+		{
+			name: "audience only is unchanged (backward compat)",
+			form: url.Values{
+				"grant_type": {"foo"},
+				"audience":   {"https://aud.example.com"},
+			},
+			wantAudience: []string{"https://aud.example.com"},
+		},
+		{
+			name: "invalid resource (relative URI) is rejected",
+			form: url.Values{
+				"grant_type": {"foo"},
+				"resource":   {"/relative/path"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid resource (fragment) is rejected",
+			form: url.Values{
+				"grant_type": {"foo"},
+				"resource":   {"https://mcp.example.com/api#section"},
+			},
+			wantErr: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if !tc.wantErr {
+				handler.EXPECT().HandleTokenEndpointRequest(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			}
+
+			r := &http.Request{
+				Header:   http.Header{},
+				PostForm: tc.form,
+				Form:     tc.form,
+				Method:   "POST",
+			}
+			ar, err := f.NewAccessRequest(context.Background(), r, new(DefaultSession))
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.wantAudience, []string(ar.GetRequestedAudience()))
+		})
+	}
 }

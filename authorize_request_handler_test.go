@@ -277,6 +277,121 @@ func TestNewAuthorizeRequest(t *testing.T) {
 				},
 			},
 		},
+		/* RFC 8707 resource parameter — single value */
+		{
+			desc: "RFC 8707 resource parameter (single)",
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+				"resource":      {"https://mcp.example.com"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					ResponseTypes: []string{"code token"},
+					RedirectURIs:  []string{"https://foo.bar/cb"},
+					Scopes:        []string{"foo", "bar"},
+					Audience:      []string{"https://mcp.example.com"},
+				}, nil)
+			},
+			expect: &AuthorizeRequest{
+				RedirectURI:   redir,
+				ResponseTypes: []string{"code", "token"},
+				State:         "strong-state",
+				Request: Request{
+					Client: &DefaultClient{
+						ResponseTypes: []string{"code token"}, RedirectURIs: []string{"https://foo.bar/cb"},
+						Scopes:   []string{"foo", "bar"},
+						Audience: []string{"https://mcp.example.com"},
+					},
+					RequestedScope:    []string{"foo", "bar"},
+					RequestedAudience: []string{"https://mcp.example.com"},
+				},
+			},
+		},
+		/* RFC 8707 resource parameter merged with audience parameter */
+		{
+			desc: "RFC 8707 resource parameter merged with audience parameter",
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+				"audience":      {"https://aud.example.com"},
+				"resource":      {"https://res.example.com"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					ResponseTypes: []string{"code token"},
+					RedirectURIs:  []string{"https://foo.bar/cb"},
+					Scopes:        []string{"foo", "bar"},
+					Audience:      []string{"https://aud.example.com", "https://res.example.com"},
+				}, nil)
+			},
+			expect: &AuthorizeRequest{
+				RedirectURI:   redir,
+				ResponseTypes: []string{"code", "token"},
+				State:         "strong-state",
+				Request: Request{
+					Client: &DefaultClient{
+						ResponseTypes: []string{"code token"}, RedirectURIs: []string{"https://foo.bar/cb"},
+						Scopes:   []string{"foo", "bar"},
+						Audience: []string{"https://aud.example.com", "https://res.example.com"},
+					},
+					RequestedScope:    []string{"foo", "bar"},
+					RequestedAudience: []string{"https://aud.example.com", "https://res.example.com"},
+				},
+			},
+		},
+		/* RFC 8707 resource parameter — invalid (relative URI) is rejected */
+		{
+			desc: "RFC 8707 resource parameter (invalid relative URI)",
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+				"resource":      {"/relative/path"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					ResponseTypes: []string{"code token"},
+					RedirectURIs:  []string{"https://foo.bar/cb"},
+					Scopes:        []string{"foo", "bar"},
+					Audience:      []string{"https://mcp.example.com"},
+				}, nil)
+			},
+			expectedError: ErrInvalidRequest,
+		},
+		/* RFC 8707 resource parameter — invalid (fragment) is rejected */
+		{
+			desc: "RFC 8707 resource parameter (fragment rejected)",
+			conf: &Fosite{Store: store, Config: &Config{ScopeStrategy: ExactScopeStrategy, AudienceMatchingStrategy: DefaultAudienceMatchingStrategy}},
+			query: url.Values{
+				"redirect_uri":  {"https://foo.bar/cb"},
+				"client_id":     {"1234"},
+				"response_type": {"code token"},
+				"state":         {"strong-state"},
+				"scope":         {"foo bar"},
+				"resource":      {"https://mcp.example.com/api#section"},
+			},
+			mock: func() {
+				store.EXPECT().GetClient(gomock.Any(), "1234").Return(&DefaultClient{
+					ResponseTypes: []string{"code token"},
+					RedirectURIs:  []string{"https://foo.bar/cb"},
+					Scopes:        []string{"foo", "bar"},
+					Audience:      []string{"https://mcp.example.com"},
+				}, nil)
+			},
+			expectedError: ErrInvalidRequest,
+		},
 		/* redirect_uri with special character in protocol*/
 		{
 			desc: "redirect_uri with special character",

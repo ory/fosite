@@ -65,6 +65,12 @@ func (f *Fosite) NewAccessRequest(ctx context.Context, r *http.Request, session 
 	}
 
 	accessRequest.SetRequestedScopes(RemoveEmpty(strings.Split(r.PostForm.Get("scope"), " ")))
+	// RFC 8707: validate the shape of any "resource" parameter values (absolute URI,
+	// no fragment) before they are merged into the audience list by GetAudiences.
+	// If "resource" is absent, ValidateResourceIndicators is a no-op.
+	if _, err := ValidateResourceIndicators(r.PostForm); err != nil {
+		return accessRequest, err
+	}
 	accessRequest.SetRequestedAudience(GetAudiences(r.PostForm))
 	accessRequest.GrantTypes = RemoveEmpty(strings.Split(r.PostForm.Get("grant_type"), " "))
 	if len(accessRequest.GrantTypes) < 1 {
