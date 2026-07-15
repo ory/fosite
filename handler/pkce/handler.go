@@ -146,10 +146,6 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
 	}
 
-	if err := c.Storage.DeletePKCERequestSession(ctx, signature); err != nil {
-		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-	}
-
 	challenge := pkceRequest.GetRequestForm().Get("code_challenge")
 	method := pkceRequest.GetRequestForm().Get("code_challenge_method")
 	client := pkceRequest.GetClient()
@@ -160,7 +156,9 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	nc := len(challenge)
 
 	if !c.Config.GetEnforcePKCE(ctx) && nc == 0 && nv == 0 {
-		return nil
+		// No challenge was bound and none is required, so this is a valid
+		// non-PKCE exchange. Consume the session before allowing it through.
+		return c.consumePKCERequestSession(ctx, signature)
 	}
 
 	// NOTE: The code verifier SHOULD have enough entropy to make it
@@ -180,6 +178,13 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The PKCE code verifier must only contain [a-Z], [0-9], '-', '.', '_', '~'."))
 	} else if nc == 0 {
+		// A verifier was presented against a session that never had a challenge
+		// bound to it. There is nothing here a downgrade could exploit, so the
+		// session is consumed before rejecting the request.
+		if err := c.consumePKCERequestSession(ctx, signature); err != nil {
+			return err
+		}
+
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The PKCE code verifier was provided but the code challenge was absent from the authorization request."))
 	}
@@ -205,6 +210,12 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 	// as normal (as defined by OAuth 2.0 [RFC6749]).  If the values are not
 	// equal, an error response indicating "invalid_grant" as described in
 	// Section 5.2 of [RFC6749] MUST be returned.
+	//
+	// The session is deleted only once the verifier is confirmed to match the
+	// bound challenge below -- never beforehand, and never on a failed match.
+	// Deleting it on a failed attempt would strip the challenge, after which
+	// the same code could be replayed with no verifier at all, downgrading the
+	// exchange to a non-PKCE one.
 	switch method {
 	case "S256":
 		hash := sha256.New()
@@ -226,6 +237,17 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		}
 	}
 
+	return c.consumePKCERequestSession(ctx, signature)
+}
+
+// consumePKCERequestSession deletes the PKCE request session tied to
+// signature. Call this only once a request has been fully validated, or
+// determined not to need PKCE at all -- see the downgrade note in
+// HandleTokenEndpointRequest.
+func (c *Handler) consumePKCERequestSession(ctx context.Context, signature string) error {
+	if err := c.Storage.DeletePKCERequestSession(ctx, signature); err != nil {
+		return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
+	}
 	return nil
 }
 

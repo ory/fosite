@@ -391,6 +391,109 @@ func TestPKCEHandleTokenEndpointRequest(t *testing.T) {
 	}
 }
 
+// sessionExists reports whether a PKCE request session is still stored under
+// signature.
+func sessionExists(t *testing.T, s PKCERequestStorage, signature string) bool {
+	t.Helper()
+	_, err := s.GetPKCERequestSession(context.Background(), signature, nil)
+	if err == nil {
+		return true
+	}
+	require.ErrorIs(t, err, fosite.ErrNotFound)
+	return false
+}
+
+// TestHandleTokenEndpointRequest_SessionLifecycle locks in when
+// HandleTokenEndpointRequest consumes (deletes) the PKCE request session tied
+// to a code, per the downgrade note on that method: never on a failed
+// verification, so a failed attempt can't strip a bound challenge and let the
+// same code be replayed with no verifier as a non-PKCE exchange.
+func TestHandleTokenEndpointRequest_SessionLifecycle(t *testing.T) {
+	s256verifier := "KGCt4m8AmjUvIR5ArTByrmehjtbxn1A49YpTZhsH8N7fhDr7LQayn9xx6mck"
+	hash := sha256.New()
+	hash.Write([]byte(s256verifier))
+	s256challenge := base64.RawURLEncoding.EncodeToString(hash.Sum([]byte{}))
+
+	for _, tc := range []struct {
+		d               string
+		force           bool
+		challenge       string
+		method          string
+		verifier        string
+		wantErr         bool
+		wantSessionLeft bool
+	}{
+		{
+			d:         "match: session is consumed",
+			challenge: s256challenge,
+			method:    "S256",
+			verifier:  s256verifier,
+		},
+		{
+			d:               "mismatch: session survives so a retry can't downgrade",
+			challenge:       s256challenge,
+			method:          "S256",
+			verifier:        "wrong-verifier-wrong-verifier-wrong-verifier",
+			wantErr:         true,
+			wantSessionLeft: true,
+		},
+		{
+			d:               "verifier missing when a challenge was bound: session survives",
+			challenge:       s256challenge,
+			method:          "S256",
+			wantErr:         true,
+			wantSessionLeft: true,
+		},
+		{
+			d:        "no challenge or verifier, not enforced: session is consumed",
+			verifier: "",
+		},
+		{
+			d:        "verifier presented against a session with no bound challenge: session is consumed",
+			method:   "S256",
+			verifier: s256verifier,
+			wantErr:  true,
+		},
+	} {
+		t.Run(tc.d, func(t *testing.T) {
+			s := storage.NewMemoryStore()
+			ms := &mockCodeStrategy{signature: "code-under-test"}
+			h := &Handler{
+				Storage:               s,
+				AuthorizeCodeStrategy: ms,
+				Config:                &fosite.Config{EnforcePKCE: tc.force},
+			}
+			client := &fosite.DefaultClient{}
+
+			ar := fosite.NewAuthorizeRequest()
+			ar.Client = client
+			if tc.challenge != "" {
+				ar.Form.Add("code_challenge", tc.challenge)
+			}
+			if tc.method != "" {
+				ar.Form.Add("code_challenge_method", tc.method)
+			}
+			require.NoError(t, s.CreatePKCERequestSession(context.Background(), ms.signature, ar))
+
+			r := fosite.NewAccessRequest(nil)
+			r.Client = client
+			r.GrantTypes = fosite.Arguments{"authorization_code"}
+			if tc.verifier != "" {
+				r.Form.Add("code_verifier", tc.verifier)
+			}
+
+			err := h.HandleTokenEndpointRequest(context.Background(), r)
+			if tc.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.Equal(t, tc.wantSessionLeft, sessionExists(t, s, ms.signature))
+		})
+	}
+}
+
 func newtesterr(err error) error {
 	if err == nil {
 		return nil
