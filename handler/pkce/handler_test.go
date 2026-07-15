@@ -545,6 +545,34 @@ func TestHandlerHonorsCustomCodeVerifierStrategy(t *testing.T) {
 	assert.NoError(t, h.HandleTokenEndpointRequest(context.Background(), r))
 }
 
+// TestCustomCodeVerifierStrategyStillRequiresRegisteredChallenge proves
+// Handler still rejects a code_verifier with no bound code_challenge before
+// ever consulting the strategy's ValidateChallenge, regardless of how
+// permissive the strategy's ValidateVerifierFormat is.
+func TestCustomCodeVerifierStrategyStillRequiresRegisteredChallenge(t *testing.T) {
+	s := storage.NewMemoryStore()
+	ms := &mockCodeStrategy{signature: "no-challenge-code"}
+	h := &Handler{
+		Storage:               s,
+		AuthorizeCodeStrategy: ms,
+		Config:                &fosite.Config{},
+		Verifier:              permissiveCodeVerifierStrategy{},
+	}
+	client := &fosite.DefaultClient{}
+
+	ar := fosite.NewAuthorizeRequest()
+	ar.Client = client
+	require.NoError(t, s.CreatePKCERequestSession(context.Background(), ms.signature, ar))
+
+	r := fosite.NewAccessRequest(nil)
+	r.Client = client
+	r.GrantTypes = fosite.Arguments{"authorization_code"}
+	r.Form.Add("code_verifier", "short")
+
+	err := h.HandleTokenEndpointRequest(context.Background(), r)
+	assert.EqualError(t, newtesterr(err), "The provided authorization grant (e.g., authorization code, resource owner credentials) or refresh token is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client. The PKCE code verifier was provided but the code challenge was absent from the authorization request.")
+}
+
 func newtesterr(err error) error {
 	if err == nil {
 		return nil

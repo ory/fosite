@@ -33,7 +33,8 @@ type CodeVerifierStrategy interface {
 	ValidateVerifierFormat(ctx context.Context, verifier string) error
 
 	// ValidateChallenge compares verifier against challenge using method. It
-	// returns an error if they do not match, or if method is not supported.
+	// returns an error if they do not match, or if method is not "S256",
+	// "plain", or empty.
 	ValidateChallenge(ctx context.Context, method, challenge, verifier string) error
 }
 
@@ -105,13 +106,14 @@ func (DefaultCodeVerifierStrategy) ValidateChallenge(_ context.Context, method, 
 			return errorsx.WithStack(fosite.ErrInvalidGrant.
 				WithHint("The PKCE code challenge did not match the code verifier."))
 		}
-	case "plain":
-		fallthrough
-	default:
+	case "plain", "":
 		if verifier != challenge {
 			return errorsx.WithStack(fosite.ErrInvalidGrant.
 				WithHint("The PKCE code challenge did not match the code verifier."))
 		}
+	default:
+		return errorsx.WithStack(fosite.ErrInvalidRequest.
+			WithHint("The code_challenge_method is not supported, use S256 instead."))
 	}
 
 	return nil
