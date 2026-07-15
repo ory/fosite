@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ory/x/errorsx"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -492,6 +494,55 @@ func TestHandleTokenEndpointRequest_SessionLifecycle(t *testing.T) {
 			assert.Equal(t, tc.wantSessionLeft, sessionExists(t, s, ms.signature))
 		})
 	}
+}
+
+// permissiveCodeVerifierStrategy is a CodeVerifierStrategy stub that skips the
+// RFC 7636 length and character-set checks DefaultCodeVerifierStrategy applies,
+// while still requiring an exact match between verifier and challenge. It
+// stands in for authorization servers migrating from a provider that never
+// enforced RFC 7636's minimum verifier length.
+type permissiveCodeVerifierStrategy struct{}
+
+func (permissiveCodeVerifierStrategy) ValidateVerifierFormat(_ context.Context, _ string) error {
+	return nil
+}
+
+func (permissiveCodeVerifierStrategy) ValidateChallenge(_ context.Context, _, challenge, verifier string) error {
+	if verifier != challenge {
+		return errorsx.WithStack(fosite.ErrInvalidGrant.WithHint("stub: verifier does not match challenge"))
+	}
+	return nil
+}
+
+// TestHandlerHonorsCustomCodeVerifierStrategy proves Handler defers verifier
+// format and comparison entirely to a custom Verifier when one is set, rather
+// than only being able to relax those rules by forking HandleTokenEndpointRequest.
+func TestHandlerHonorsCustomCodeVerifierStrategy(t *testing.T) {
+	s := storage.NewMemoryStore()
+	ms := &mockCodeStrategy{signature: "short-verifier-code"}
+	h := &Handler{
+		Storage:               s,
+		AuthorizeCodeStrategy: ms,
+		Config:                &fosite.Config{EnablePKCEPlainChallengeMethod: true},
+		Verifier:              permissiveCodeVerifierStrategy{},
+	}
+	client := &fosite.DefaultClient{}
+
+	ar := fosite.NewAuthorizeRequest()
+	ar.Client = client
+	ar.Form.Add("code_challenge", "short")
+	ar.Form.Add("code_challenge_method", "plain")
+	require.NoError(t, s.CreatePKCERequestSession(context.Background(), ms.signature, ar))
+
+	r := fosite.NewAccessRequest(nil)
+	r.Client = client
+	r.GrantTypes = fosite.Arguments{"authorization_code"}
+	r.Form.Add("code_verifier", "short")
+
+	// DefaultCodeVerifierStrategy would reject "short" outright (below the
+	// 43-character RFC 7636 minimum); the custom strategy above has no such
+	// floor, so the exact match succeeds.
+	assert.NoError(t, h.HandleTokenEndpointRequest(context.Background(), r))
 }
 
 func newtesterr(err error) error {

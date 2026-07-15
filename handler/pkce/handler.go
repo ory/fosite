@@ -5,9 +5,6 @@ package pkce
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/base64"
-	"regexp"
 
 	"github.com/ory/x/errorsx"
 
@@ -27,11 +24,24 @@ type Handler struct {
 		fosite.EnforcePKCEForPublicClientsProvider
 		fosite.EnablePKCEPlainChallengeMethodProvider
 	}
+
+	// Verifier validates the code_verifier's format and its match against a
+	// bound code_challenge. If nil, DefaultCodeVerifierStrategy is used, which
+	// enforces RFC 7636 as written. See CodeVerifierStrategy for when to
+	// override this.
+	Verifier CodeVerifierStrategy
 }
 
 var _ fosite.TokenEndpointHandler = (*Handler)(nil)
 
-var verifierWrongFormat = regexp.MustCompile("[^\\w\\.\\-~]")
+// codeVerifierStrategy returns Verifier, defaulting to
+// DefaultCodeVerifierStrategy when unset.
+func (c *Handler) codeVerifierStrategy() CodeVerifierStrategy {
+	if c.Verifier == nil {
+		return DefaultCodeVerifierStrategy{}
+	}
+	return c.Verifier
+}
 
 func (c *Handler) HandleAuthorizeEndpointRequest(ctx context.Context, ar fosite.AuthorizeRequester, resp fosite.AuthorizeResponder) error {
 	// This let's us define multiple response types, for example open id connect's id_token
@@ -161,22 +171,10 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 		return c.consumePKCERequestSession(ctx, signature)
 	}
 
-	// NOTE: The code verifier SHOULD have enough entropy to make it
-	// 	impractical to guess the value.  It is RECOMMENDED that the output of
-	// 	a suitable random number generator be used to create a 32-octet
-	// 	sequence.  The octet sequence is then base64url-encoded to produce a
-	// 	43-octet URL safe string to use as the code verifier.
-
-	// Validation
-	if nv < 43 {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The PKCE code verifier must be at least 43 characters."))
-	} else if nv > 128 {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The PKCE code verifier can not be longer than 128 characters."))
-	} else if verifierWrongFormat.MatchString(verifier) {
-		return errorsx.WithStack(fosite.ErrInvalidGrant.
-			WithHint("The PKCE code verifier must only contain [a-Z], [0-9], '-', '.', '_', '~'."))
+	// Validation. See DefaultCodeVerifierStrategy for the RFC 7636 rules this
+	// applies by default, and CodeVerifierStrategy for how to change them.
+	if err := c.codeVerifierStrategy().ValidateVerifierFormat(ctx, verifier); err != nil {
+		return err
 	} else if nc == 0 {
 		// A verifier was presented against a session that never had a challenge
 		// bound to it. There is nothing here a downgrade could exploit, so the
@@ -189,52 +187,13 @@ func (c *Handler) HandleTokenEndpointRequest(ctx context.Context, request fosite
 			WithHint("The PKCE code verifier was provided but the code challenge was absent from the authorization request."))
 	}
 
-	// Upon receipt of the request at the token endpoint, the server
-	// verifies it by calculating the code challenge from the received
-	// "code_verifier" and comparing it with the previously associated
-	// "code_challenge", after first transforming it according to the
-	// "code_challenge_method" method specified by the client.
-	//
-	// 	If the "code_challenge_method" from Section 4.3 was "S256", the
-	// received "code_verifier" is hashed by SHA-256, base64url-encoded, and
-	// then compared to the "code_challenge", i.e.:
-	//
-	// BASE64URL-ENCODE(SHA256(ASCII(code_verifier))) == code_challenge
-	//
-	// If the "code_challenge_method" from Section 4.3 was "plain", they are
-	// compared directly, i.e.:
-	//
-	// code_verifier == code_challenge.
-	//
-	// 	If the values are equal, the token endpoint MUST continue processing
-	// as normal (as defined by OAuth 2.0 [RFC6749]).  If the values are not
-	// equal, an error response indicating "invalid_grant" as described in
-	// Section 5.2 of [RFC6749] MUST be returned.
-	//
 	// The session is deleted only once the verifier is confirmed to match the
 	// bound challenge below -- never beforehand, and never on a failed match.
 	// Deleting it on a failed attempt would strip the challenge, after which
 	// the same code could be replayed with no verifier at all, downgrading the
 	// exchange to a non-PKCE one.
-	switch method {
-	case "S256":
-		hash := sha256.New()
-		if _, err := hash.Write([]byte(verifier)); err != nil {
-			return errorsx.WithStack(fosite.ErrServerError.WithWrap(err).WithDebug(err.Error()))
-		}
-
-		if base64.RawURLEncoding.EncodeToString(hash.Sum([]byte{})) != challenge {
-			return errorsx.WithStack(fosite.ErrInvalidGrant.
-				WithHint("The PKCE code challenge did not match the code verifier."))
-		}
-		break
-	case "plain":
-		fallthrough
-	default:
-		if verifier != challenge {
-			return errorsx.WithStack(fosite.ErrInvalidGrant.
-				WithHint("The PKCE code challenge did not match the code verifier."))
-		}
+	if err := c.codeVerifierStrategy().ValidateChallenge(ctx, method, challenge, verifier); err != nil {
+		return err
 	}
 
 	return c.consumePKCERequestSession(ctx, signature)
