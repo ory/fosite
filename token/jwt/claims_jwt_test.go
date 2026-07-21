@@ -73,6 +73,26 @@ func TestClaimsFromMap(t *testing.T) {
 	assert.Equal(t, jwtClaims, &claims)
 }
 
+func TestClaimsFromMapAudienceInterfaceSlice(t *testing.T) {
+	// A JWT decoded into MapClaims carries a multi-value aud as []interface{}
+	// (JSON arrays never decode to []string), which is what introspection feeds
+	// back through FromMap. The audience must survive that round-trip.
+	var claims JWTClaims
+	claims.FromMap(map[string]interface{}{
+		"aud": []interface{}{"aud-1", "aud-2"},
+	})
+	assert.Equal(t, []string{"aud-1", "aud-2"}, claims.Audience)
+}
+
+func TestClaimsFromMapAudienceString(t *testing.T) {
+	// A single-valued aud may be encoded as a bare string per RFC 7519.
+	var claims JWTClaims
+	claims.FromMap(map[string]interface{}{
+		"aud": "aud-1",
+	})
+	assert.Equal(t, []string{"aud-1"}, claims.Audience)
+}
+
 func TestScopeFieldString(t *testing.T) {
 	jwtClaimsWithString := jwtClaims.WithScopeField(JWTScopeFieldString)
 	// Making a copy of jwtClaimsMap.

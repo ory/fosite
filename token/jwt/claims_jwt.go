@@ -159,10 +159,18 @@ func (c *JWTClaims) FromMap(m map[string]interface{}) {
 				c.Issuer = s
 			}
 		case "aud":
-			if s, ok := v.(string); ok {
-				c.Audience = []string{s}
-			} else if s, ok := v.([]string); ok {
-				c.Audience = s
+			switch aud := v.(type) {
+			case string:
+				c.Audience = []string{aud}
+			case []string:
+				c.Audience = aud
+			case []interface{}:
+				c.Audience = make([]string, 0, len(aud))
+				for _, a := range aud {
+					if s, ok := a.(string); ok {
+						c.Audience = append(c.Audience, s)
+					}
+				}
 			}
 		case "iat":
 			c.IssuedAt = toTime(v, c.IssuedAt)
