@@ -77,6 +77,12 @@ type ResponseModeClient interface {
 	GetResponseModes() []ResponseModeType
 }
 
+// CredentialIssuerClient represents a client capable of handling requests in credential issuance context
+type CredentialIssuerClient interface {
+	// IsCredentialIssuerClient returns true, if this client is marked as credential issuer client.
+	IsCredentialIssuerClient() bool
+}
+
 // DefaultClient is a simple default implementation of the Client interface.
 type DefaultClient struct {
 	ID             string   `json:"id"`

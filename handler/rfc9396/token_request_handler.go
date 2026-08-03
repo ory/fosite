@@ -48,5 +48,6 @@ func (h *TokenRequestHandler) CanHandleTokenEndpointRequest(ctx context.Context,
 		string(fosite.GrantTypeJWTBearer),
 		string(fosite.GrantTypePassword),
 		string(fosite.GrantTypeTokenExchange),
+		string(fosite.GrantTypePreAuthorizeCode),
 		string(fosite.GrantTypeRefreshToken))
 }

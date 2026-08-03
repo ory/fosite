@@ -6,8 +6,6 @@ replace github.com/gobuffalo/packr => github.com/gobuffalo/packr v1.30.1
 
 replace github.com/gorilla/sessions => github.com/gorilla/sessions v1.2.1
 
-replace github.com/ory/x => github.com/vivshankar/ory-x v0.0.655-1
-
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2
 	github.com/cristalhq/jwt/v4 v4.0.2
@@ -25,7 +23,7 @@ require (
 	github.com/oleiade/reflections v1.0.1
 	github.com/ory/go-acc v0.2.9-0.20230103102148-6b1c9a70dbbe
 	github.com/ory/go-convenience v0.1.0
-	github.com/ory/x v0.0.575
+	github.com/ory/x v0.0.655
 	github.com/parnurzeal/gorequest v0.2.15
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
@@ -100,5 +98,3 @@ require (
 )
 
 go 1.22
-
-toolchain go1.22.5
