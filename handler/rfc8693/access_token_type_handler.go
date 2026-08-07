@@ -40,7 +40,7 @@ func (c *AccessTokenTypeHandler) HandleTokenEndpointRequest(ctx context.Context,
 
 	if form.Get("actor_token_type") == AccessTokenType {
 		token := form.Get("actor_token")
-		if _, unpacked, err := c.validate(ctx, request, token); err != nil {
+		if _, unpacked, err := c.validate(ctx, request, token, false); err != nil {
 			return err
 		} else {
 			session.SetActorToken(unpacked)
@@ -49,7 +49,7 @@ func (c *AccessTokenTypeHandler) HandleTokenEndpointRequest(ctx context.Context,
 
 	if form.Get("subject_token_type") == AccessTokenType {
 		token := form.Get("subject_token")
-		if subjectTokenSession, unpacked, err := c.validate(ctx, request, token); err != nil {
+		if subjectTokenSession, unpacked, err := c.validate(ctx, request, token, true); err != nil {
 			return err
 		} else {
 			session.SetSubjectToken(unpacked)
@@ -106,7 +106,7 @@ func (c *AccessTokenTypeHandler) CanHandleTokenEndpointRequest(ctx context.Conte
 	return requester.GetGrantTypes().ExactOne("urn:ietf:params:oauth:grant-type:token-exchange")
 }
 
-func (c *AccessTokenTypeHandler) validate(ctx context.Context, request fosite.AccessRequester, token string) (fosite.Session, map[string]interface{}, error) {
+func (c *AccessTokenTypeHandler) validate(ctx context.Context, request fosite.AccessRequester, token string, isSubjectToken bool) (fosite.Session, map[string]interface{}, error) {
 
 	session, _ := request.GetSession().(Session)
 	if session == nil {
@@ -124,9 +124,9 @@ func (c *AccessTokenTypeHandler) validate(ctx context.Context, request fosite.Ac
 		return nil, nil, err
 	}
 
-	subjectTokenClientID := or.GetClient().GetID()
+	tokenClientID := or.GetClient().GetID()
 	// forbid original subjects client to exchange its own token
-	if client.GetID() == subjectTokenClientID {
+	if isSubjectToken && client.GetID() == tokenClientID {
 		return nil, nil, errors.WithStack(fosite.ErrRequestForbidden.WithHint("Clients are not allowed to perform a token exchange on their own tokens."))
 	}
 
@@ -135,7 +135,7 @@ func (c *AccessTokenTypeHandler) validate(ctx context.Context, request fosite.Ac
 		allowed := subjectTokenClient.TokenExchangeAllowed(client)
 		if !allowed {
 			return nil, nil, errors.WithStack(fosite.ErrRequestForbidden.WithHintf(
-				"The OAuth 2.0 client is not permitted to exchange a subject token issued to client %s", subjectTokenClientID))
+				"The OAuth 2.0 client is not permitted to exchange a subject token issued to client %s", tokenClientID))
 		}
 	}
 

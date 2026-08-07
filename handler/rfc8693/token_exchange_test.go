@@ -68,7 +68,7 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 			RefreshTokenType: &DefaultTokenType{
 				Name: RefreshTokenType,
 			},
-			customJWTType.GetName(nil): customJWTType,
+			customJWTType.GetName(t.Context()): customJWTType,
 		},
 		DefaultRequestedTokenType: AccessTokenType,
 	}
@@ -160,6 +160,55 @@ func TestAccessTokenExchangeImpersonation(t *testing.T) {
 				require.NoError(t, err, "Error occurred during introspection; err=%v", err)
 
 				assert.EqualValues(t, "peter_for_jwt", req.GetSession().GetSubject(), "Subject did not match the expected value")
+			},
+		},
+		{
+			handlers: []fosite.TokenEndpointHandler{genericTEHandler, accessTokenHandler},
+			areq: &fosite.AccessRequest{
+				Request: fosite.Request{
+					ID:     uuid.New().String(),
+					Client: store.Clients["my-client"],
+					Form: url.Values{
+						"subject_token_type": []string{rfc8693.AccessTokenType},
+						"subject_token": []string{createAccessToken(t.Context(), coreStrategy, store,
+							store.Clients["my-client"])},
+					},
+					Session: &rfc8693.DefaultSession{
+						DefaultSession: &openid.DefaultSession{},
+						Extra:          map[string]any{},
+					},
+				},
+			},
+			description: "should fail because the access token is issued to the same client",
+			expectErr:   fosite.ErrRequestForbidden.WithHint("Clients are not allowed to perform a token exchange on their own tokens."),
+		},
+		{
+			handlers: []fosite.TokenEndpointHandler{genericTEHandler, accessTokenHandler},
+			areq: &fosite.AccessRequest{
+				Request: fosite.Request{
+					ID:     uuid.New().String(),
+					Client: store.Clients["my-client"],
+					Form: url.Values{
+						"subject_token_type": []string{rfc8693.AccessTokenType},
+						"subject_token": []string{createAccessToken(t.Context(), coreStrategy, store,
+							store.Clients["custom-lifespan-client"])},
+						"actor_token_type": []string{rfc8693.AccessTokenType},
+						"actor_token": []string{createAccessToken(t.Context(), coreStrategy, store,
+							store.Clients["my-client"])},
+					},
+					Session: &rfc8693.DefaultSession{
+						DefaultSession: &openid.DefaultSession{},
+						Extra:          map[string]any{},
+					},
+				},
+			},
+			description: "should fail because the access token is issued to the same client",
+			expect: func(t *testing.T, areq *fosite.AccessRequest, aresp *fosite.AccessResponse) {
+				assert.NotEmpty(t, aresp.AccessToken, "Access token is empty; %+v", aresp)
+				req, err := introspectAccessToken(context.Background(), aresp.AccessToken, coreStrategy, store)
+				require.NoError(t, err, "Error occurred during introspection; err=%v", err)
+
+				assert.EqualValues(t, "peter", req.GetSession().GetSubject(), "Subject did not match the expected value")
 			},
 		},
 	} {

@@ -40,7 +40,7 @@ func (c *RefreshTokenTypeHandler) HandleTokenEndpointRequest(ctx context.Context
 
 	if form.Get("actor_token_type") == RefreshTokenType {
 		token := form.Get("actor_token")
-		if _, unpacked, err := c.validate(ctx, request, token); err != nil {
+		if _, unpacked, err := c.validate(ctx, request, token, false); err != nil {
 			return err
 		} else {
 			session.SetActorToken(unpacked)
@@ -49,7 +49,7 @@ func (c *RefreshTokenTypeHandler) HandleTokenEndpointRequest(ctx context.Context
 
 	if form.Get("subject_token_type") == RefreshTokenType {
 		token := form.Get("subject_token")
-		if subjectTokenSession, unpacked, err := c.validate(ctx, request, token); err != nil {
+		if subjectTokenSession, unpacked, err := c.validate(ctx, request, token, true); err != nil {
 			return err
 		} else {
 			session.SetSubjectToken(unpacked)
@@ -106,7 +106,7 @@ func (c *RefreshTokenTypeHandler) CanHandleTokenEndpointRequest(ctx context.Cont
 	return requester.GetGrantTypes().ExactOne("urn:ietf:params:oauth:grant-type:token-exchange")
 }
 
-func (c *RefreshTokenTypeHandler) validate(ctx context.Context, request fosite.AccessRequester, token string) (
+func (c *RefreshTokenTypeHandler) validate(ctx context.Context, request fosite.AccessRequester, token string, isSubjectToken bool) (
 	fosite.Session, map[string]interface{}, error) {
 
 	session, _ := request.GetSession().(Session)
@@ -127,7 +127,7 @@ func (c *RefreshTokenTypeHandler) validate(ctx context.Context, request fosite.A
 
 	tokenClientID := or.GetClient().GetID()
 	// forbid original subjects client to exchange its own token
-	if client.GetID() == tokenClientID {
+	if isSubjectToken && client.GetID() == tokenClientID {
 		return nil, nil, errors.WithStack(
 			fosite.ErrRequestForbidden.WithHint("Clients are not allowed to perform a token exchange on their own tokens."))
 	}
