@@ -222,7 +222,7 @@ func (c *Handler) findPublicKeyForToken(ctx context.Context, token *jwt.JSONWebT
 	return nil, errorsx.WithStack(keyNotFoundErr)
 }
 
-func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, key *jose.JSONWebKey) error {
+func (c *Handler) validateTokenClaims(ctx context.Context, claims jwt.Claims, _ *jose.JSONWebKey) error {
 	if len(claims.Audience) == 0 {
 		return errorsx.WithStack(fosite.ErrInvalidGrant.
 			WithHint("The JWT in \"assertion\" request parameter MUST contain an \"aud\" (audience) claim."),

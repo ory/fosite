@@ -194,12 +194,12 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 							Scopes:     []string{"foo", "bar", "baz", "offline"},
 						}
 
-						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						token, sig, err := strategy.GenerateRefreshToken(t.Context(), nil)
 						require.NoError(t, err)
 
 						areq.Form.Add("refresh_token", token)
 						areq.Form.Add("scope", "foo bar baz offline")
-						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+						err = store.CreateRefreshTokenSession(t.Context(), sig, &fosite.Request{
 							Client:         areq.Client,
 							GrantedScope:   fosite.Arguments{"foo", "bar", "baz", "offline"},
 							RequestedScope: fosite.Arguments{"foo", "bar", "baz", "offline"},
@@ -224,14 +224,14 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 							Scopes:     []string{"foo", "bar", "baz", "offline"},
 						}
 
-						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						token, sig, err := strategy.GenerateRefreshToken(t.Context(), nil)
 						require.NoError(t, err)
 
 						areq.Form.Add("refresh_token", token)
 						areq.Form.Add("scope", "foo bar offline")
 						areq.SetRequestedScopes(fosite.Arguments{"foo", "bar", "offline"})
 
-						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+						err = store.CreateRefreshTokenSession(t.Context(), sig, &fosite.Request{
 							Client:         areq.Client,
 							GrantedScope:   fosite.Arguments{"foo", "bar", "baz", "offline"},
 							RequestedScope: fosite.Arguments{"foo", "bar", "baz", "offline"},
@@ -256,14 +256,14 @@ func TestRefreshFlow_HandleTokenEndpointRequest(t *testing.T) {
 							Scopes:     []string{"foo", "bar", "baz", "offline"},
 						}
 
-						token, sig, err := strategy.GenerateRefreshToken(nil, nil)
+						token, sig, err := strategy.GenerateRefreshToken(t.Context(), nil)
 						require.NoError(t, err)
 
 						areq.Form.Add("refresh_token", token)
 						areq.Form.Add("scope", "foo bar offline")
 						areq.SetRequestedScopes(fosite.Arguments{"foo", "bar", "offline"})
 
-						err = store.CreateRefreshTokenSession(nil, sig, &fosite.Request{
+						err = store.CreateRefreshTokenSession(t.Context(), sig, &fosite.Request{
 							Client:         areq.Client,
 							GrantedScope:   fosite.Arguments{"foo", "baz", "offline"},
 							RequestedScope: fosite.Arguments{"foo", "baz", "offline"},

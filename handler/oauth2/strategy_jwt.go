@@ -79,7 +79,7 @@ func validate(ctx context.Context, jwtStrategy jwt.Signer, token string) (t *jwt
 	}
 
 	var e *jwt.ValidationError
-	if err != nil && errors.As(err, &e) {
+	if errors.As(err, &e) {
 		err = errorsx.WithStack(toRFCErr(e).WithWrap(err).WithDebug(err.Error()))
 	}
 

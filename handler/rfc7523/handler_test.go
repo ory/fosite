@@ -44,7 +44,7 @@ type AuthorizeJWTGrantRequestHandlerTestSuite struct {
 
 // Setup before each test in the suite.
 func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupSuite() {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 512) // fast RSA for testing
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048) // fast RSA for testing
 	if err != nil {
 		s.FailNowf("failed to setup test suite", "failed to generate RSA private key: %s", err.Error())
 	}
