@@ -158,11 +158,13 @@ func (c *HMACStrategy) validate(ctx context.Context, secret []byte, token string
 }
 
 func (*HMACStrategy) Signature(token string) string {
-	split := strings.Split(token, ".")
-	if len(split) != 2 {
+	// strings.Count first so we never allocate a full Split slice for an
+	// attacker-controlled token that packs in a huge number of dots.
+	if strings.Count(token, ".") != 1 {
 		return ""
 	}
-	return split[1]
+	_, sig, _ := strings.Cut(token, ".")
+	return sig
 }
 
 // GenerateHMACForString returns an HMAC for a string

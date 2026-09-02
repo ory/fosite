@@ -7,6 +7,8 @@ import (
 	"context"
 	"crypto/sha512"
 	"fmt"
+	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/ory/fosite"
@@ -64,6 +66,28 @@ func TestSignature(t *testing.T) {
 	} {
 		assert.Equal(t, expected, cg.Signature(token))
 	}
+}
+
+func TestSignatureDoesNotAllocateUnboundedlyForManyDots(t *testing.T) {
+	// Regression test for a memory exhaustion DoS: Signature used to call
+	// strings.Split on the whole token before checking how many parts it
+	// had. strings.Split builds a []string with one entry per part, so a
+	// token packed with millions of dots forced a multi-megabyte
+	// allocation for that slice alone, on every request, before the part
+	// count was even checked. This asserts the bytes allocated for a
+	// huge token stay small (a few KB), not proportional to its size.
+	cg := HMACStrategy{}
+	token := strings.Repeat(".", 5_000_000)
+
+	var before, after runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&before)
+	cg.Signature(token)
+	runtime.ReadMemStats(&after)
+
+	allocatedBytes := after.TotalAlloc - before.TotalAlloc
+	assert.Less(t, allocatedBytes, uint64(64*1024),
+		"Signature allocated %d bytes for a %d-byte token, want it bounded regardless of token size", allocatedBytes, len(token))
 }
 
 func TestValidateSignatureRejects(t *testing.T) {
