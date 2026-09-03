@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package hmac
@@ -76,6 +76,8 @@ func TestValidateSignatureRejects(t *testing.T) {
 		".",
 		"foo.",
 		".foo",
+		"$foo.bar",
+		"foo.$bar",
 	} {
 		t.Run(fmt.Sprintf("case=%d", k), func(t *testing.T) {
 			err := cg.Validate(context.Background(), c)
@@ -85,6 +87,32 @@ func TestValidateSignatureRejects(t *testing.T) {
 
 	err := cg.Validate(context.Background(), "foo.bar")
 	assert.ErrorIs(t, err, fosite.ErrTokenSignatureMismatch)
+}
+
+func TestValidateRejectsInvalidBase64AsRFC6749Error(t *testing.T) {
+	ctx := context.Background()
+	cg := HMACStrategy{
+		Config: &fosite.Config{GlobalSecret: []byte("1234567890123456789012345678901234567890")},
+	}
+
+	token, _, err := cg.Generate(ctx)
+	require.NoError(t, err)
+
+	for name, candidate := range map[string]string{
+		"prefixed_dollar":   "$" + token,
+		"invalid_key":       "$foo.bar",
+		"invalid_signature": "foo.$bar",
+	} {
+		t.Run(name, func(t *testing.T) {
+			err := cg.Validate(ctx, candidate)
+			require.Error(t, err)
+			assert.ErrorIs(t, err, fosite.ErrInvalidTokenFormat)
+
+			rfc := fosite.ErrorToRFC6749Error(err)
+			assert.Equal(t, "invalid_token", rfc.ErrorField)
+			assert.NotEqual(t, "The error is unrecognizable", rfc.DescriptionField)
+		})
+	}
 }
 
 func TestValidateWithRotatedKey(t *testing.T) {

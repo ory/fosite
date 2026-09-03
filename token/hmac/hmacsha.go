@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 // Package hmac is the default implementation for generating and validating challenges. It uses SHA-512/256 to
@@ -140,12 +140,12 @@ func (c *HMACStrategy) validate(ctx context.Context, secret []byte, token string
 
 	decodedTokenSignature, err := b64.DecodeString(tokenSignature)
 	if err != nil {
-		return errorsx.WithStack(err)
+		return errorsx.WithStack(fosite.ErrInvalidTokenFormat.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	decodedTokenKey, err := b64.DecodeString(tokenKey)
 	if err != nil {
-		return errorsx.WithStack(err)
+		return errorsx.WithStack(fosite.ErrInvalidTokenFormat.WithWrap(err).WithDebug(err.Error()))
 	}
 
 	expectedMAC := c.generateHMAC(ctx, decodedTokenKey, &signingKey)
