@@ -129,6 +129,8 @@ func TestAuthenticateClient(t *testing.T) {
 		r             *http.Request
 		form          url.Values
 		expectErr     error
+		expectStatus  int
+		expectDesc    string
 	}{
 		{
 			d:         "should fail because authentication can not be determined",
@@ -516,6 +518,53 @@ func TestAuthenticateClient(t *testing.T) {
 			r:         new(http.Request),
 			expectErr: ErrInvalidClient,
 		},
+		{
+			d:      "should fail because client_assertion is expired",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(-time.Hour).Unix(),
+				"iss": "bar",
+				"jti": "expired-jti",
+				"aud": "token-url",
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
+			r:            new(http.Request),
+			expectErr:    ErrInvalidClient,
+			expectStatus: http.StatusBadRequest,
+			expectDesc:   "The client_assertion JWT expired. Claim 'exp' from 'client_assertion' must not be in the past.",
+		},
+		{
+			d:      "should fail because client_assertion is not valid yet",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"nbf": time.Now().Add(time.Hour).Unix(),
+				"iss": "bar",
+				"jti": "nbf-jti",
+				"aud": "token-url",
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
+			r:            new(http.Request),
+			expectErr:    ErrInvalidClient,
+			expectStatus: http.StatusBadRequest,
+			expectDesc:   "The client_assertion JWT is not valid yet. Claim 'nbf' from 'client_assertion' must not be in the future.",
+		},
+		{
+			d:      "should fail because client_assertion was used before it was issued",
+			client: &DefaultOpenIDConnectClient{DefaultClient: &DefaultClient{ID: "bar", Secret: barSecret}, JSONWebKeys: rsaJwks, TokenEndpointAuthMethod: "private_key_jwt"},
+			form: url.Values{"client_id": []string{"bar"}, "client_assertion": {mustGenerateRSAAssertion(t, jwt.MapClaims{
+				"sub": "bar",
+				"exp": time.Now().Add(time.Hour).Unix(),
+				"iat": time.Now().Add(time.Hour).Unix(),
+				"iss": "bar",
+				"jti": "iat-jti",
+				"aud": "token-url",
+			}, rsaKey, "kid-foo")}, "client_assertion_type": []string{at}},
+			r:            new(http.Request),
+			expectErr:    ErrInvalidClient,
+			expectStatus: http.StatusBadRequest,
+			expectDesc:   "The client_assertion JWT was used before it was issued. Claim 'iat' from 'client_assertion' must not be in the future.",
+		},
 	} {
 		t.Run(fmt.Sprintf("case=%d/description=%s", k, tc.d), func(t *testing.T) {
 			store := storage.NewMemoryStore()
@@ -525,6 +574,13 @@ func TestAuthenticateClient(t *testing.T) {
 			c, err := f.AuthenticateClient(context.Background(), tc.r, tc.form)
 			if tc.expectErr != nil {
 				require.EqualError(t, err, tc.expectErr.Error())
+				rfc := ErrorToRFC6749Error(err)
+				if tc.expectStatus != 0 {
+					assert.Equal(t, tc.expectStatus, rfc.StatusCode())
+				}
+				if tc.expectDesc != "" {
+					assert.Equal(t, tc.expectDesc, rfc.GetDescription())
+				}
 				return
 			}
 
