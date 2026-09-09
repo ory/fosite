@@ -133,17 +133,9 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 			}
 		})
 		if err != nil {
-			// Do not re-process already enhanced errors
-			var e *jwt.ValidationError
-			if errors.As(err, &e) {
-				if e.Inner != nil {
-					return nil, e.Inner
-				}
-				return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Unable to verify the integrity of the 'client_assertion' value.").WithWrap(err).WithDebug(err.Error()))
-			}
-			return nil, err
+			return nil, clientAssertionJWTError(err)
 		} else if err := token.Claims.Valid(); err != nil {
-			return nil, errorsx.WithStack(ErrInvalidClient.WithHint("Unable to verify the request object because its claims could not be validated, check if the expiry time is set correctly.").WithWrap(err).WithDebug(err.Error()))
+			return nil, clientAssertionJWTError(err)
 		}
 
 		claims := token.Claims
@@ -222,6 +214,43 @@ func (f *Fosite) DefaultClientAuthenticationStrategy(ctx context.Context, r *htt
 	}
 
 	return client, nil
+}
+
+// clientAssertionJWTError maps JWT parse/validation errors for client_assertion.
+func clientAssertionJWTError(err error) error {
+	var e *jwt.ValidationError
+	if !errors.As(err, &e) {
+		return err
+	}
+
+	// Key lookup already returned an RFC6749 error (for example unknown client).
+	if e.Inner != nil {
+		var rfc *RFC6749Error
+		if errors.As(e.Inner, &rfc) {
+			return e.Inner
+		}
+	}
+
+	switch {
+	case e.Has(jwt.ValidationErrorExpired):
+		return invalidClientAssertionJWT("The client_assertion JWT expired.", "Claim 'exp' from 'client_assertion' must not be in the past.", err)
+	case e.Has(jwt.ValidationErrorNotValidYet):
+		return invalidClientAssertionJWT("The client_assertion JWT is not valid yet.", "Claim 'nbf' from 'client_assertion' must not be in the future.", err)
+	case e.Has(jwt.ValidationErrorIssuedAt):
+		return invalidClientAssertionJWT("The client_assertion JWT was used before it was issued.", "Claim 'iat' from 'client_assertion' must not be in the future.", err)
+	default:
+		return errorsx.WithStack(ErrInvalidClient.WithHint("Unable to verify the integrity of the 'client_assertion' value.").WithWrap(err).WithDebug(err.Error()))
+	}
+}
+
+func invalidClientAssertionJWT(description, hint string, cause error) error {
+	rfcErr := ErrInvalidClient.WithDescription(description).WithHint(hint)
+	if cause != nil {
+		rfcErr = rfcErr.WithWrap(cause).WithDebug(cause.Error())
+	}
+	// RFC 6749 section 5.2 defaults token-endpoint errors to HTTP 400.
+	rfcErr.CodeField = http.StatusBadRequest
+	return errorsx.WithStack(rfcErr)
 }
 
 func audienceMatchesTokenURLs(claims jwt.MapClaims, tokenURLs []string) bool {
