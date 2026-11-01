@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package fosite
@@ -13,7 +13,7 @@ import (
 
 	"github.com/ory/x/errorsx"
 
-	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v4"
 )
 
 const defaultJWKSFetcherStrategyCachePrefix = "github.com/ory/fosite.DefaultJWKSFetcherStrategy:"

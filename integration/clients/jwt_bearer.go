@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package clients
@@ -12,8 +12,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 )
 
 // #nosec:gosec G101 - False Positive
@@ -69,7 +69,7 @@ func (c *JWTBearer) GetToken(ctx context.Context, payloadData *JWTBearerPayload,
 		Claims(payloadData.Claims).
 		Claims(payloadData.PrivateClaims)
 
-	assertion, err := builder.CompactSerialize()
+	assertion, err := builder.Serialize()
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc7523
@@ -18,8 +18,8 @@ import (
 
 	"github.com/ory/fosite/handler/oauth2"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/stretchr/testify/suite"
 	gomock "go.uber.org/mock/gomock"
 
@@ -44,7 +44,7 @@ type AuthorizeJWTGrantRequestHandlerTestSuite struct {
 
 // Setup before each test in the suite.
 func (s *AuthorizeJWTGrantRequestHandlerTestSuite) SetupSuite() {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 512) // fast RSA for testing
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048) // fast RSA for testing
 	if err != nil {
 		s.FailNowf("failed to setup test suite", "failed to generate RSA private key: %s", err.Error())
 	}
@@ -760,7 +760,7 @@ func (s *AuthorizeJWTGrantRequestHandlerTestSuite) createTestAssertion(cl jwt.Cl
 		s.FailNowf("failed to create test assertion", "failed to create signer: %s", err.Error())
 	}
 
-	raw, err := jwt.Signed(sig).Claims(cl).CompactSerialize()
+	raw, err := jwt.Signed(sig).Claims(cl).Serialize()
 	if err != nil {
 		s.FailNowf("failed to create test assertion", "failed to sign assertion: %s", err.Error())
 	}

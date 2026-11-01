@@ -1,16 +1,17 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package jwt
 
 import (
+	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"reflect"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 
 	"github.com/ory/x/errorsx"
 )
@@ -99,7 +100,7 @@ func (t *Token) SignedString(k interface{}) (rawToken string, err error) {
 	// go-jose CompactSerialize() only support explicit maps
 	// as claims or structs but not type aliases from maps.
 	claims := map[string]interface{}(t.Claims)
-	rawToken, err = jwt.Signed(signer).Claims(claims).CompactSerialize()
+	rawToken, err = jwt.Signed(signer).Claims(claims).Serialize()
 	if err != nil {
 		err = &ValidationError{Errors: ValidationErrorClaimsInvalid, Inner: err}
 		return
@@ -163,7 +164,7 @@ func Parse(tokenString string, keyFunc Keyfunc) (*Token, error) {
 // If everything is kosher, err will be nil
 func ParseWithClaims(rawToken string, claims MapClaims, keyFunc Keyfunc) (*Token, error) {
 	// Parse the token.
-	parsedToken, err := jwt.ParseSigned(rawToken)
+	parsedToken, err := jwt.ParseSigned(rawToken, []jose.SignatureAlgorithm{jose.HS256, jose.HS384, jose.HS512, jose.RS256, jose.RS384, jose.RS512, jose.ES256, jose.ES384, jose.ES512, jose.PS256, jose.PS384, jose.PS512, jose.EdDSA, "none"})
 	if err != nil {
 		return &Token{}, &ValidationError{Errors: ValidationErrorMalformed, text: err.Error()}
 	}
@@ -235,7 +236,22 @@ func ParseWithClaims(rawToken string, claims MapClaims, keyFunc Keyfunc) (*Token
 // if underline value of v is not a pointer
 // it creates a pointer of it and returns it
 func pointer(v interface{}) interface{} {
-	if reflect.ValueOf(v).Kind() != reflect.Ptr {
+	// JOSE v4 accepts symmetric and Ed25519 keys as slices, not pointers.
+	switch key := v.(type) {
+	case []byte, ed25519.PublicKey:
+		return key
+	case *[]byte:
+		if key == nil {
+			return v
+		}
+		return *key
+	case *ed25519.PublicKey:
+		if key == nil {
+			return v
+		}
+		return *key
+	}
+	if reflect.ValueOf(v).Kind() != reflect.Pointer {
 		value := reflect.New(reflect.ValueOf(v).Type())
 		value.Elem().Set(reflect.ValueOf(v))
 		return value.Interface()

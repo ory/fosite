@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package rfc7523
@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v4"
 )
 
 // RFC7523KeyStorage holds information needed to validate jwt assertion in authorization grants.

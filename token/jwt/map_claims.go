@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package jwt
@@ -10,7 +10,7 @@ import (
 	"errors"
 	"time"
 
-	jjson "github.com/go-jose/go-jose/v3/json"
+	jjson "github.com/go-jose/go-jose/v4/json"
 
 	"github.com/ory/x/errorsx"
 )

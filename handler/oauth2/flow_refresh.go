@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package oauth2
@@ -216,14 +216,14 @@ func (c *RefreshTokenGrantHandler) handleRefreshTokenEndpointStorageError(ctx co
 
 	if errors.Is(storageErr, fosite.ErrSerializationFailure) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.
-			WithDebugf(storageErr.Error()).
+			WithDebugf("%s", storageErr.Error()).
 			WithWrap(storageErr).
 			WithHint("Failed to refresh token because of multiple concurrent requests using the same token. Please retry the request."))
 	}
 
 	if errors.Is(storageErr, fosite.ErrNotFound) || errors.Is(storageErr, fosite.ErrInactiveToken) {
 		return errorsx.WithStack(fosite.ErrInvalidRequest.
-			WithDebugf(storageErr.Error()).
+			WithDebugf("%s", storageErr.Error()).
 			WithWrap(storageErr).
 			WithHint("Failed to refresh token. Please retry the request."))
 	}

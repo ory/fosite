@@ -1,16 +1,29 @@
+version: "2"
 linters:
   enable:
     - gosec
   disable:
-    - ineffassign
-    - deadcode
-    - unused
-    - structcheck
-    - gosimple
     - bodyclose
+    - ineffassign
     - staticcheck
-
-run:
-  skip-files:
-    - ".+_test.go"
-    - ".+_test_.+.go"
+    - unused
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - .+_test\.go
+      - .+_test_.+\.go
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
