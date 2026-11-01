@@ -1,4 +1,4 @@
-// Copyright © 2025 Ory Corp
+// Copyright © 2026 Ory Corp
 // SPDX-License-Identifier: Apache-2.0
 
 package jwt
@@ -251,7 +251,7 @@ func pointer(v interface{}) interface{} {
 		}
 		return *key
 	}
-	if reflect.ValueOf(v).Kind() != reflect.Ptr {
+	if reflect.ValueOf(v).Kind() != reflect.Pointer {
 		value := reflect.New(reflect.ValueOf(v).Type())
 		value.Elem().Set(reflect.ValueOf(v))
 		return value.Interface()
